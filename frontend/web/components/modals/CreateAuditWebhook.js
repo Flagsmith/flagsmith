@@ -18,6 +18,7 @@ const CreateAuditWebhook = class extends Component {
       super(props, context);
       this.state = {
           enabled: this.props.isEdit ? this.props.webhook.enabled : true,
+          secret: this.props.isEdit ? this.props.webhook.secret : '',
           url: this.props.isEdit ? this.props.webhook.url : '',
           error: false,
       };
@@ -26,6 +27,7 @@ const CreateAuditWebhook = class extends Component {
   save = () => {
       const webhook = {
           url: this.state.url,
+          secret: this.state.secret,
           enabled: this.state.enabled,
       };
       if (this.props.isEdit) {
@@ -74,13 +76,27 @@ const CreateAuditWebhook = class extends Component {
                               </div>
                               <div>
                                   <Switch
-                                    defaultChecked={enabled}
-                                    checked={enabled}
-                                    onChange={enabled => this.setState({ enabled })}
+                                      defaultChecked={enabled}
+                                      checked={enabled}
+                                      onChange={enabled => this.setState({ enabled })}
                                   />
                               </div>
                           </FormGroup>
                       </Row>
+                          <Flex className="mb-4 mr-4">
+                              <div>
+                                  <label>Secret (Optional) - <a className="text-info" target="_blank" href="https://docs.flagsmith.com/advanced-use/system-administration#validating-signature">More info</a> </label>
+                              </div>
+                              <Input
+                                  ref={e => this.input = e}
+                                  value={this.state.secret}
+                                  onChange={e => this.setState({ secret: Utils.safeParseEventValue(e) })}
+                                  isValid={url && url.length}
+                                  type="text"
+                                  inputClassName="input--wide"
+                                  placeholder="Secret"
+                              />
+                          </Flex>
                       <FormGroup className="mb-4 ml-1">
                           <div>
                               <label>Example Payload </label>

@@ -235,7 +235,6 @@ const OrganisationSettingsPage = class extends Component {
                                                     <div className="mt-4">
                                                         <div>
                                                             <JSONReference title={"Organisation"} json={organisation}/>
-                                                            <JSONReference title={"Webhooks"} json={webhooks}/>
                                                             <form key={organisation.id} onSubmit={this.save}>
                                                                 <h5>Organisation Name</h5>
                                                                 <Row>
@@ -305,88 +304,6 @@ const OrganisationSettingsPage = class extends Component {
                                                             )}
                                                         </div>
                                                     </div>
-                                                </FormGroup>
-
-                                                <FormGroup className="m-y-3">
-                                                    <Row className="mb-3" space>
-                                                        <h3 className="m-b-0">Audit Webhooks</h3>
-                                                        <Button onClick={this.createWebhook}>
-                                                            Create audit webhook
-                                                        </Button>
-                                                    </Row>
-                                                    <p>
-                                                        Audit webhooks let you know when audit logs occur, you can configure 1 or more audit webhooks per organisation.
-                                                        {' '}
-                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
-                                                    </p>
-                                                    {webhooksLoading && !webhooks ? (
-                                                        <Loader />
-                                                    ) : (
-                                                        <PanelSearch
-                                                            id="webhook-list"
-                                                            title={(
-                                                                <Tooltip
-                                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
-                                                                    place="right"
-                                                                >
-                                                                    {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                                                </Tooltip>
-                                                            )}
-                                                            className="no-pad"
-                                                            icon="ion-md-cloud"
-                                                            items={webhooks}
-                                                            renderRow={webhook => (
-                                                                <Row
-                                                                    onClick={() => {
-                                                                        this.editWebhook(webhook);
-                                                                    }} space className="list-item clickable cursor-pointer"
-                                                                    key={webhook.id}
-                                                                >
-                                                                    <div>
-                                                                        <ButtonLink>
-                                                                            {webhook.url}
-                                                                        </ButtonLink>
-                                                                        <div className="list-item-footer faint">
-                                                                            Created
-                                                                            {' '}
-                                                                            {moment(webhook.created_date).format('DD/MMM/YYYY')}
-                                                                        </div>
-                                                                    </div>
-                                                                    <Row>
-                                                                        <Switch checked={webhook.enabled} />
-                                                                        <button
-                                                                            id="delete-invite"
-                                                                            type="button"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                e.preventDefault();
-                                                                                this.deleteWebhook(webhook);
-                                                                            }}
-                                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                                        >
-                                                                            <RemoveIcon />
-                                                                        </button>
-                                                                    </Row>
-                                                                </Row>
-                                                            )}
-                                                            renderNoResults={(
-                                                                <Panel
-                                                                    icon="ion-md-cloud"
-                                                                    title={(
-                                                                        <Tooltip
-                                                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
-                                                                            place="right"
-                                                                        >
-                                                                            {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
-                                                                        </Tooltip>
-                                                                    )}
-                                                                >
-                                                                    You currently have no webhooks configured for this organisation.
-                                                                </Panel>
-                                                            )}
-                                                            isLoading={this.props.webhookLoading}
-                                                        />
-                                                    )}
                                                 </FormGroup>
                                                 {Utils.getFlagsmithHasFeature('force_2fa') && (
                                                     <div>
@@ -775,7 +692,92 @@ const OrganisationSettingsPage = class extends Component {
                                                 </FormGroup>
                                             </TabItem>
 
-                                            {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
+                                            <TabItem tabLabel="Webhooks" tabIcon="ion-md-cloud" >
+                                                <FormGroup className="mt-4">
+                                                    <JSONReference title={"Webhooks"} json={webhooks}/>
+
+                                                    <Row className="mb-3" space>
+                                                        <h3 className="m-b-0">Audit Webhooks</h3>
+                                                        <Button onClick={this.createWebhook}>
+                                                            Create audit webhook
+                                                        </Button>
+                                                    </Row>
+                                                    <p>
+                                                        Audit webhooks let you know when audit logs occur, you can configure 1 or more audit webhooks per organisation.
+                                                        {' '}
+                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
+                                                    </p>
+                                                    {webhooksLoading && !webhooks ? (
+                                                        <Loader />
+                                                    ) : (
+                                                        <PanelSearch
+                                                            id="webhook-list"
+                                                            title={(
+                                                                <Tooltip
+                                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
+                                                                    place="right"
+                                                                >
+                                                                    {Constants.strings.WEBHOOKS_DESCRIPTION}
+                                                                </Tooltip>
+                                                            )}
+                                                            className="no-pad"
+                                                            icon="ion-md-cloud"
+                                                            items={webhooks}
+                                                            renderRow={webhook => (
+                                                                <Row
+                                                                    onClick={() => {
+                                                                        this.editWebhook(webhook);
+                                                                    }} space className="list-item clickable cursor-pointer"
+                                                                    key={webhook.id}
+                                                                >
+                                                                    <div>
+                                                                        <ButtonLink>
+                                                                            {webhook.url}
+                                                                        </ButtonLink>
+                                                                        <div className="list-item-footer faint">
+                                                                            Created
+                                                                            {' '}
+                                                                            {moment(webhook.created_date).format('DD/MMM/YYYY')}
+                                                                        </div>
+                                                                    </div>
+                                                                    <Row>
+                                                                        <Switch checked={webhook.enabled} />
+                                                                        <button
+                                                                            id="delete-invite"
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                e.preventDefault();
+                                                                                this.deleteWebhook(webhook);
+                                                                            }}
+                                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                                        >
+                                                                            <RemoveIcon />
+                                                                        </button>
+                                                                    </Row>
+                                                                </Row>
+                                                            )}
+                                                            renderNoResults={(
+                                                                <Panel
+                                                                    icon="ion-md-cloud"
+                                                                    title={(
+                                                                        <Tooltip
+                                                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
+                                                                            place="right"
+                                                                        >
+                                                                            {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
+                                                                        </Tooltip>
+                                                                    )}
+                                                                >
+                                                                    You currently have no webhooks configured for this organisation.
+                                                                </Panel>
+                                                            )}
+                                                            isLoading={this.props.webhookLoading}
+                                                        />
+                                                    )}
+                                                </FormGroup>
+                                            </TabItem>
+                                                {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 3 && (
                                                         <OrganisationUsage organisationId={AccountStore.getOrganisation().id}/>
