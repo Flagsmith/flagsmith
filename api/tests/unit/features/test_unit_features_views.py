@@ -7,6 +7,7 @@ from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
+from audit.constants import FEATURE_DELETED_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -464,11 +465,13 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
     assert AuditLog.objects.get(
         related_object_type=RelatedObjectType.FEATURE.name,
         related_object_id=feature.id,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     )
     # and audit logs exists for all feature states for that feature
     assert AuditLog.objects.filter(
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         related_object_id__in=feature_states_ids,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     ).count() == len(feature_states_ids)
 
 
