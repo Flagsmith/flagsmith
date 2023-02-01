@@ -154,9 +154,8 @@ export default class Rule extends PureComponent {
 
 
         const formattedValue = value === null ? null : `${value}`;
-        if (prop === "value" && rules[i].operator === "PERCENTAGE_SPLIT" && (`${value}`?.match(/\D/) || value >100)) {
-
-        } else {
+        const invalidPercentageSplit = prop === "value" && rules[i].operator === "PERCENTAGE_SPLIT" && (`${value}`?.match(/\D/) || value > 100);
+        if (!invalidPercentageSplit) {
             // split operator by append
             rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
         }
