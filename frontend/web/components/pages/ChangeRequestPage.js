@@ -247,10 +247,10 @@ const ChangeRequestsPage = class extends Component {
                                     <div className="col-md-12">
 
                                         {
-                                            isScheduled && !!changeRequest.committed_at && (
+                                            isScheduled && (
                                                 <Row>
                                                     <InfoMessage icon="ion-md-calendar" title="Scheduled Change">
-                                                        This feature change is scheduled to go live at {scheduledDate.format('Do MMM YYYY hh:mma')}. You can still edit / remove the change request before this date.
+                                                        This feature change {changeRequest?.committedAt?"is scheduled to" : "would"} go live at {scheduledDate.format('Do MMM YYYY hh:mma')}{changeRequest?.committedAt?"":" if it is approved and published"}.{!!changeRequest?.committedAt && "You can still edit / remove the change request before this date."}
                                                     </InfoMessage>
                                                 </Row>
 
