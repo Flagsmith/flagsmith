@@ -572,7 +572,7 @@ def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(
 
     # When
     multivariate_value = feature_state.get_multivariate_feature_state_value(
-        identity_id=identity.id
+        identity_hash_key=identity.get_hash_key()
     )
 
     # Then

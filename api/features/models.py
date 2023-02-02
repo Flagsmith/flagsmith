@@ -534,7 +534,7 @@ class FeatureState(
         return {"type": type, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
-        self, identity_id: int
+        self, identity_hash_key: str
     ) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
         # so we just convert them to a list and use python operations from here to
@@ -542,7 +542,7 @@ class FeatureState(
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = (
-            get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
+            get_hashed_percentage_for_object_ids([self.id, identity_hash_key]) * 100
         )
 
         # Iterate over the mv options in order of id (so we get the same value each
