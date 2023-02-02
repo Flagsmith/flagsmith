@@ -498,10 +498,12 @@ class FeatureState(
             self.get_feature_state_key_name(fsv_type): value,
         }
 
-    def get_feature_state_value_by_id(self, identity_id: int = None) -> typing.Any:
+    def get_feature_state_value_by_hash_key(
+        self, identity_hash_key: typing.Union[str, int] = None
+    ) -> typing.Any:
         feature_state_value = (
-            self.get_multivariate_feature_state_value(identity_id)
-            if self.feature.type == MULTIVARIATE and identity_id
+            self.get_multivariate_feature_state_value(identity_hash_key)
+            if self.feature.type == MULTIVARIATE and identity_hash_key
             else getattr(self, "feature_state_value", None)
         )
 
@@ -511,7 +513,8 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
-        return self.get_feature_state_value_by_id(getattr(identity, "id", None))
+        identity_hash_key = identity.get_hash_key() if identity else None
+        return self.get_feature_state_value_by_hash_key(identity_hash_key)
 
     def get_feature_state_value_defaults(self) -> dict:
         if (
