@@ -161,12 +161,20 @@ def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_cha
     ),
 )
 def test_feature_state_get_create_log_message_calls_correct_helper_function(
-    mocker, feature_segment_id, identity_id, expected_function_name
+    mocker,
+    feature_segment_id,
+    identity_id,
+    environment,
+    feature,
+    expected_function_name,
 ):
     # Given
     mock_audit_helpers = mocker.patch("features.models.audit_helpers")
     feature_state = FeatureState(
-        feature_segment_id=feature_segment_id, identity_id=identity_id
+        feature_segment_id=feature_segment_id,
+        identity_id=identity_id,
+        environment=environment,
+        feature=feature,
     )
 
     # When
