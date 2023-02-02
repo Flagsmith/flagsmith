@@ -615,3 +615,28 @@ def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, proj
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_feature_state_value_triggers_dynamo_rebuild(
+    client, project, environment, feature, feature_state, settings, mocker
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    mock_environment_class = mocker.patch("audit.signals.Environment")
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps({"feature_state_value": "new value"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    mock_environment_class.write_environments_to_dynamodb.assert_called_once()
