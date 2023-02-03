@@ -6,18 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('environments', '0028_add_use_mv_v2_evaluation'),
+        ("environments", "0028_add_use_mv_v2_evaluation"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='environment',
-            name='use_mv_v2_evaluation',
-            field=models.BooleanField(default=True, help_text='Enable this to have consistent multivariate evaluations across all SDKs. '),
+            model_name="environment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=True,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+            ),
         ),
         migrations.AlterField(
-            model_name='historicalenvironment',
-            name='use_mv_v2_evaluation',
-            field=models.BooleanField(default=True, help_text='Enable this to have consistent multivariate evaluations across all SDKs. '),
+            model_name="historicalenvironment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=True,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+            ),
         ),
     ]

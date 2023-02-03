@@ -6,20 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('environments', '0027_auto_20230106_0626'),
+        ("environments", "0027_auto_20230106_0626"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='environment',
-            name='use_mv_v2_evaluation',
-            field=models.BooleanField(default=False, help_text='Enable this to have consistent multivariate evaluations across all SDKs. '),
+            model_name="environment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=False,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='historicalenvironment',
-            name='use_mv_v2_evaluation',
-            field=models.BooleanField(default=False, help_text='Enable this to have consistent multivariate evaluations across all SDKs. '),
+            model_name="historicalenvironment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=False,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+            ),
             preserve_default=False,
         ),
     ]
