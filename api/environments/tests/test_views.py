@@ -523,6 +523,7 @@ def test_should_create_environments(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["description"] == description
+    assert response.json()["use_mv_v2_evaluation"] is True
 
     # and user is admin
     if not is_master_api_key_client:

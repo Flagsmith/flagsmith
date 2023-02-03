@@ -99,7 +99,7 @@ class Environment(
         "disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
     )
     use_mv_v2_evaluation = models.BooleanField(
-        default=False,
+        default=True,
         help_text="Enable this to have consistent multivariate evaluations across all SDKs. ",
     )
 
