@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name="use_mv_v2_evaluation",
             field=models.BooleanField(
                 default=False,
-                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(in local and server side mode)",
             ),
             preserve_default=False,
         ),
@@ -24,8 +24,25 @@ class Migration(migrations.Migration):
             name="use_mv_v2_evaluation",
             field=models.BooleanField(
                 default=False,
-                help_text="Enable this to have consistent multivariate evaluations across all SDKs(on local and sever side mode)",
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(in local and server side mode)",
             ),
             preserve_default=False,
+        ),
+        # Update the default to true for the new environments
+        migrations.AlterField(
+            model_name="environment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=True,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(in local and server side mode)",
+            ),
+        ),
+        migrations.AlterField(
+            model_name="historicalenvironment",
+            name="use_mv_v2_evaluation",
+            field=models.BooleanField(
+                default=True,
+                help_text="Enable this to have consistent multivariate evaluations across all SDKs(in local and server side mode)",
+            ),
         ),
     ]

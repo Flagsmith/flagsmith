@@ -103,8 +103,8 @@ class Environment(
     use_mv_v2_evaluation = models.BooleanField(
         default=True,
         help_text=(
-            "Enable this to have consistent multivariate evaluations across all SDKs(on"
-            " local and sever side mode)"
+            "Enable this to have consistent multivariate evaluations across all SDKs(in"
+            " local and server side mode)"
         ),
     )
 
