@@ -25,7 +25,7 @@ def test_migrate_use_mv_v2_evaluation(migrator):
 
     # When
     new_state = migrator.apply_tested_migration(
-        ("environments", "0029_add_default_value_for_use_mv_v2_evaluation")
+        ("environments", "0028_add_use_mv_v2_evaluation")
     )
     NewEnvironment = new_state.apps.get_model("environments", "Environment")
 
