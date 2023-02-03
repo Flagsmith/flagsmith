@@ -721,6 +721,11 @@ class FeatureState(
             # feature states
             return
 
+        if self.environment.created_date > self.feature.created_date:
+            # Don't create an audit log record for feature states created when
+            # creating an environment
+            return
+
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:

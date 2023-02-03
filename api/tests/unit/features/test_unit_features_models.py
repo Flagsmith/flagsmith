@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
+from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.workflows.core.models import ChangeRequest
 
@@ -160,12 +161,20 @@ def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_cha
     ),
 )
 def test_feature_state_get_create_log_message_calls_correct_helper_function(
-    mocker, feature_segment_id, identity_id, expected_function_name
+    mocker,
+    feature_segment_id,
+    identity_id,
+    environment,
+    feature,
+    expected_function_name,
 ):
     # Given
     mock_audit_helpers = mocker.patch("features.models.audit_helpers")
     feature_state = FeatureState(
-        feature_segment_id=feature_segment_id, identity_id=identity_id
+        feature_segment_id=feature_segment_id,
+        identity_id=identity_id,
+        environment=environment,
+        feature=feature,
     )
 
     # When
@@ -176,3 +185,33 @@ def test_feature_state_get_create_log_message_calls_correct_helper_function(
     # Then
     expected_function = getattr(mock_audit_helpers, expected_function_name)
     expected_function.assert_called_once_with(feature_state)
+
+
+def test_feature_state_get_create_log_message_returns_null_if_environment_created_after_feature(
+    feature, mocker
+):
+    # Given
+    environment = Environment.objects.create(
+        name="Test environment", project=feature.project
+    )
+    feature_state = FeatureState.objects.get(environment=environment, feature=feature)
+
+    # When
+    log = feature_state.get_create_log_message(mocker.MagicMock())
+
+    # Then
+    assert log is None
+
+
+def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(
+    environment, mocker
+):
+    # Given
+    feature = Feature.objects.create(name="test_feature", project=environment.project)
+    feature_state = FeatureState.objects.get(environment=environment, feature=feature)
+
+    # When
+    log = feature_state.get_create_log_message(mocker.MagicMock())
+
+    # Then
+    assert log is not None
