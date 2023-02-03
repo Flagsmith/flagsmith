@@ -7,7 +7,7 @@ from django.conf import settings
     reason="Skip migration tests to speed up tests where necessary",
 )
 def test_migrate_use_mv_v2_evaluation(migrator):
-    # Given - the migration state is at 0027 (before the migration we want to test)
+    # Given
     old_state = migrator.apply_initial_migration(
         ("environments", "0027_auto_20230106_0626")
     )
