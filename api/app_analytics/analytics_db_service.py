@@ -34,16 +34,6 @@ def get_usage_data(
     )
 
 
-def _get_environment_ids_for_org(organisation) -> List[int]:
-    environment_ids = Environment.objects.filter(
-        project_id__in=organisation.projects.all().values_list("id", flat=True)
-    ).values_list("id", flat=True)
-    # We need to do this to prevent Django from generating a query that
-    # references the environments and projects tables,
-    # as they do not exist in the analytics database.
-    return [id for id in environment_ids]
-
-
 def get_usage_data_from_local_db(
     organisation, environment_id=None, project_id=None, period: int = 30
 ) -> List[UsageData]:
@@ -130,3 +120,12 @@ def get_feature_evaluation_data_from_local_db(
             )
         )
     return usage_list
+
+
+def _get_environment_ids_for_org(organisation) -> List[int]:
+    # We need to do this to prevent Django from generating a query that
+    # references the environments and projects tables,
+    # as they do not exist in the analytics database.
+    return [
+        e.id for e in Environment.objects.filter(project__organisation=organisation)
+    ]

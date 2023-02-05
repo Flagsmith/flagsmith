@@ -83,6 +83,9 @@ class Task(models.Model):
         )
 
     def schedule_next_run(self) -> "Task":
+        if not self.run_every:
+            raise ValueError("Cannot schedule next run for a task without a run_every")
+
         next_task_schedule = self.scheduled_for + self.run_every
         return Task(
             scheduled_for=next_task_schedule,

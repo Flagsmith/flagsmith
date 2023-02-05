@@ -1,4 +1,4 @@
-from marshmallow import INCLUDE, Schema, fields, post_load, pre_load
+from marshmallow import EXCLUDE, Schema, fields, post_load, pre_load
 
 from .dataclasses import FeatureEvaluationData, UsageData
 
@@ -8,7 +8,7 @@ class FeatureEvaluationDataSchema(Schema):
     day = fields.Date(allow_none=True)
 
     class Meta:
-        unknown = INCLUDE
+        unknown = EXCLUDE
 
     @pre_load
     def preprocess(self, data, **kwargs):
@@ -36,7 +36,7 @@ class UsageDataSchema(Schema):
     day = fields.Date(data_key="name", allow_none=True)
 
     class Meta:
-        unknown = INCLUDE
+        unknown = EXCLUDE
 
     @post_load
     def make_usage_data(self, data, **kwargs):

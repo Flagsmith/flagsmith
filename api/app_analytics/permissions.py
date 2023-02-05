@@ -18,4 +18,4 @@ class UsageDataPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Object level permissions are not required for the usage data API
-        return NotImplementedError
+        raise NotImplementedError()
