@@ -64,6 +64,9 @@ def get_start_of_current_bucket(bucket_size: int) -> datetime:
 def populate_api_usage_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
+    if bucket_size > 60:
+        raise ValueError("Bucket size cannot be greater than 60 minutes")
+
     start_of_current_bucket = get_start_of_current_bucket(
         bucket_size,
     )
