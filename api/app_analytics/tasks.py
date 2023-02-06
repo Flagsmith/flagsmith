@@ -150,7 +150,7 @@ def _get_feature_evaluation_source_data(
             .annotate(count=Sum("total_count"))
         )
     return (
-        FeatureEvaluationRaw.objects.filter(filters, bucket_size=source_bucket_size)
+        FeatureEvaluationRaw.objects.filter(filters)
         .values("environment_id", "feature_name")
         .annotate(count=Sum("evaluation_count"))
     )

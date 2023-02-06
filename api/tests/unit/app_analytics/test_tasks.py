@@ -50,7 +50,11 @@ def test_populate_api_usage_bucket_15m_bucket(freezer):
     populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - we should have four buckets
-    buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
+    buckets = (
+        APIUsageBucket.objects.filter(bucket_size=15, environment_id=environment_id)
+        .order_by("created_at")
+        .all()
+    )
 
     assert len(buckets) == 4
     assert buckets[0].created_at.isoformat() == "2023-01-19T07:00:00+00:00"
@@ -72,7 +76,11 @@ def test_populate_api_usage_bucket_15m_bucket(freezer):
     populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - we should have another four buckets created by the second run
-    buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
+    buckets = (
+        APIUsageBucket.objects.filter(bucket_size=15, environment_id=environment_id)
+        .order_by("created_at")
+        .all()
+    )
     assert len(buckets) == 8
 
     # with 15 events each
@@ -220,7 +228,11 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
 
     # Then - we should have four buckets
     buckets = (
-        FeatureEvaluationBucket.objects.filter(bucket_size=bucket_size)
+        FeatureEvaluationBucket.objects.filter(
+            bucket_size=bucket_size,
+            environment_id=environment_id,
+            feature_name=feature_name,
+        )
         .order_by("created_at")
         .all()
     )
@@ -246,7 +258,9 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
 
     # Then - we should have another four buckets created by the second run
     buckets = (
-        FeatureEvaluationBucket.objects.filter(bucket_size=15)
+        FeatureEvaluationBucket.objects.filter(
+            bucket_size=15, environment_id=environment_id, feature_name=feature_name
+        )
         .order_by("created_at")
         .all()
     )
