@@ -17,16 +17,10 @@ class Resource(models.IntegerChoices):
 
     @classmethod
     def get_from_resource_name(cls, resource: str) -> int:
-        return (
-            {
-                "flags": cls.FLAGS,
-                "identities": cls.IDENTITIES,
-                "traits": cls.TRAITS,
-                "environment-document": cls.ENVIRONMENT_DOCUMENT,
-            }
-            .get(resource)
-            .value
-        )
+        try:
+            return getattr(cls, resource.upper().replace("-", "_")).value
+        except (KeyError, AttributeError) as err:
+            raise ValueError("Invalid resource: {resource}") from err
 
 
 class APIUsageRaw(models.Model):
