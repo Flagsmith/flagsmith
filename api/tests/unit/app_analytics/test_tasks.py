@@ -129,34 +129,6 @@ def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
         assert bucket.created_at == start_time
 
 
-# @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
-# @pytest.mark.django_db(databases=["analytics"])
-# def test_populate_api_usage_bucket_using_a_bucket(freezer):
-#     # Given
-#     environment_id = 1
-
-#     # let's create 3, 5m buckets
-#     now = timezone.now()
-#     for _ in range(3):
-#         APIUsageBucket.objects.create(
-#             environment_id=environment_id,
-#             resource=Resource.FLAGS,
-#             total_count=100,
-#             created_at=now,
-#             bucket_size=5,
-#         )
-#         now = now - timezone.timedelta(minutes=5)
-
-#     # move the time to 9:47
-#     freezer.move_to(timezone.now().replace(minute=47))
-
-#     # When
-#     populate_api_usage_bucket(bucket_size=15, run_every=60, source_bucket_size=5)
-
-#     # Then
-#     assert APIUsageBucket.objects.filter(bucket_size=15, total_count=300).count() == 1
-
-
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_track_request(environment):
     # Given
