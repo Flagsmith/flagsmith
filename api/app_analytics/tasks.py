@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
@@ -123,7 +124,7 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
 
-    populate_bucket_size_task.delay(settings.ANALYTICS_READ_BUCKET_SIZE, 60)
+    populate_bucket_size_task.delay(ANALYTICS_READ_BUCKET_SIZE, 60)
 
 
 def populate_feature_evaluation_bucket(

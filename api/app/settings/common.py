@@ -68,7 +68,6 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
-ANALYTICS_READ_BUCKET_SIZE = env.int("ANALYTICS_READ_BUCKET_SIZE", default=15)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -282,7 +281,11 @@ if GOOGLE_ANALYTICS_KEY:
 
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+
 if USE_POSTGRES_FOR_ANALYTICS:
+    if INFLUXDB_TOKEN:
+        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
+
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
