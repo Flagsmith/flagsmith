@@ -15,6 +15,17 @@ from .models import (
     FeatureEvaluationRaw,
 )
 
+if settings.USE_POSTGRES_FOR_ANALYTICS:
+
+    @register_task_handler(run_every=60)
+    def populate_bucket_size_task(
+        bucket_size: int, run_every: int, source_bucket_size: int = None
+    ):
+        populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
+        populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
+
+    populate_bucket_size_task.delay(ANALYTICS_READ_BUCKET_SIZE, 60)
+
 
 @register_task_handler()
 def track_feature_evaluation(environment_id, feature_evaluations):
@@ -40,6 +51,62 @@ def track_request(resource: int, host: str, environment_key: str):
         resource=resource,
         host=host,
     )
+
+
+def get_start_of_current_bucket(bucket_size: int) -> datetime:
+    current_time = timezone.now().replace(second=0, microsecond=0)
+    start_of_current_bucket = current_time - timezone.timedelta(
+        minutes=current_time.minute % bucket_size
+    )
+    return start_of_current_bucket
+
+
+def populate_api_usage_bucket(
+    bucket_size: int, run_every: int, source_bucket_size: int = None
+):
+    start_of_current_bucket = get_start_of_current_bucket(
+        bucket_size,
+    )
+
+    for i in range(1, (run_every // bucket_size) + 1):
+        process_from = start_of_current_bucket - timezone.timedelta(
+            minutes=bucket_size * i
+        )
+        process_to = process_from + timezone.timedelta(minutes=bucket_size)
+        data = _get_api_usage_source_data(process_from, process_to, source_bucket_size)
+        for row in data:
+            APIUsageBucket.objects.create(
+                environment_id=row["environment_id"],
+                resource=row["resource"],
+                total_count=row["count"],
+                bucket_size=bucket_size,
+                created_at=process_from,
+            )
+
+
+def populate_feature_evaluation_bucket(
+    bucket_size: int, run_every: int, source_bucket_size: int = None
+):
+    start_of_current_bucket = get_start_of_current_bucket(
+        bucket_size,
+    )
+
+    for i in range(1, (run_every // bucket_size) + 1):
+        process_from = start_of_current_bucket - timezone.timedelta(
+            minutes=bucket_size * i
+        )
+        process_to = process_from + timezone.timedelta(minutes=bucket_size)
+        data = _get_feature_evaluation_source_data(
+            process_from, process_to, source_bucket_size
+        )
+        for row in data:
+            FeatureEvaluationBucket.objects.create(
+                environment_id=row["environment_id"],
+                feature_name=row["feature_name"],
+                total_count=row["count"],
+                bucket_size=bucket_size,
+                created_at=process_from,
+            )
 
 
 def _get_api_usage_source_data(
@@ -82,71 +149,3 @@ def _get_feature_evaluation_source_data(
         .values("environment_id", "feature_name")
         .annotate(count=Sum("evaluation_count"))
     )
-
-
-def get_start_of_current_bucket(bucket_size: int) -> datetime:
-    current_time = timezone.now().replace(second=0, microsecond=0)
-    start_of_current_bucket = current_time - timezone.timedelta(
-        minutes=current_time.minute % bucket_size
-    )
-    return start_of_current_bucket
-
-
-def populate_api_usage_bucket(
-    bucket_size: int, run_every: int, source_bucket_size: int = None
-):
-    start_of_current_bucket = get_start_of_current_bucket(
-        bucket_size,
-    )
-
-    for i in range(1, (run_every // bucket_size) + 1):
-        process_from = start_of_current_bucket - timezone.timedelta(
-            minutes=bucket_size * i
-        )
-        process_to = process_from + timezone.timedelta(minutes=bucket_size)
-        data = _get_api_usage_source_data(process_from, process_to, source_bucket_size)
-        for row in data:
-            APIUsageBucket.objects.create(
-                environment_id=row["environment_id"],
-                resource=row["resource"],
-                total_count=row["count"],
-                bucket_size=bucket_size,
-                created_at=process_from,
-            )
-
-
-if settings.USE_POSTGRES_FOR_ANALYTICS:
-
-    @register_task_handler(run_every=60)
-    def populate_bucket_size_task(
-        bucket_size: int, run_every: int, source_bucket_size: int = None
-    ):
-        populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
-        populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
-
-    populate_bucket_size_task.delay(ANALYTICS_READ_BUCKET_SIZE, 60)
-
-
-def populate_feature_evaluation_bucket(
-    bucket_size: int, run_every: int, source_bucket_size: int = None
-):
-    start_of_current_bucket = get_start_of_current_bucket(
-        bucket_size,
-    )
-
-    for i in range(1, (run_every // bucket_size) + 1):
-        process_from = start_of_current_bucket - timezone.timedelta(
-            minutes=bucket_size * i
-        )
-        process_to = process_from + timezone.timedelta(minutes=bucket_size)
-        data = _get_feature_evaluation_source_data(
-            process_from, process_to, source_bucket_size
-        )
-        for row in data:
-            FeatureEvaluationBucket.objects.create(
-                environment_id=row["environment_id"],
-                feature_name=row["feature_name"],
-                total_count=row["count"],
-                bucket_size=bucket_size,
-                created_at=process_from,
-            )
