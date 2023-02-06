@@ -90,8 +90,10 @@ def populate_feature_evaluation_bucket(
     start_of_current_bucket = get_start_of_current_bucket(
         bucket_size,
     )
+    # number of buckets that can be processed in `run_every` time
+    num_of_buckets = run_every // bucket_size
 
-    for i in range(1, (run_every // bucket_size) + 1):
+    for i in range(1, num_of_buckets + 1):
         process_from = start_of_current_bucket - timezone.timedelta(
             minutes=bucket_size * i
         )
