@@ -264,7 +264,7 @@ def get_multiple_event_list_for_feature(
 
 
 def get_feature_evaluation_data(
-    environment_id, feature_name, period: str = "30d"
+    feature_name: str, environment_id: int, period: str = "30d"
 ) -> typing.List[FeatureEvaluationData]:
     data = get_multiple_event_list_for_feature(
         feature_name=feature_name, environment_id=environment_id, period=period

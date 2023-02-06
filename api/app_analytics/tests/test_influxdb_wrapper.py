@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import mock
 
 import app_analytics
@@ -7,8 +8,10 @@ from app_analytics.influxdb_wrapper import (
     build_filter_string,
     get_event_list_for_organisation,
     get_events_for_organisation,
+    get_feature_evaluation_data,
     get_multiple_event_list_for_feature,
     get_multiple_event_list_for_organisation,
+    get_usage_data,
 )
 from django.conf import settings
 
@@ -202,3 +205,80 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
 
     # Then
     mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
+
+
+def test_get_usage_data(mocker):
+    # Given
+    influx_data = [
+        {
+            "Environment-document": None,
+            "name": "2023-02-02",
+            "Flags": 200,
+            "Identities": 300,
+            "Traits": 400,
+        },
+        {
+            "Environment-document": 10,
+            "name": "2023-02-03",
+            "Flags": 10,
+            "Identities": 20,
+            "Traits": 30,
+        },
+    ]
+    mocked_get_multiple_event_list_for_organisation = mocker.patch(
+        "app_analytics.influxdb_wrapper.get_multiple_event_list_for_organisation",
+        return_value=influx_data,
+    )
+
+    # When
+    usage_data = get_usage_data(org_id)
+
+    # Then
+    mocked_get_multiple_event_list_for_organisation.assert_called_once_with(
+        org_id, None, None
+    )
+
+    assert len(usage_data) == 2
+
+    assert usage_data[0].day == date(year=2023, month=2, day=2)
+    assert usage_data[0].flags == 200
+    assert usage_data[0].identities == 300
+    assert usage_data[0].traits == 400
+    assert usage_data[0].environment_document is None
+
+    assert usage_data[1].day == date(year=2023, month=2, day=3)
+    assert usage_data[1].flags == 10
+    assert usage_data[1].identities == 20
+    assert usage_data[1].traits == 30
+    assert usage_data[1].environment_document == 10
+
+
+def test_get_feature_evaluation_data(mocker):
+    # Given
+    influx_data = [
+        {"some-feature": 100, "datetime": "2023-01-08"},
+        {"some-feature": 200, "datetime": "2023-01-09"},
+    ]
+    mocked_get_multiple_event_list_for_feature = mocker.patch(
+        "app_analytics.influxdb_wrapper.get_multiple_event_list_for_feature",
+        return_value=influx_data,
+    )
+
+    # When
+    feature_evaluation_data = get_feature_evaluation_data(
+        feature_name,
+        env_id,
+    )
+
+    # Then
+    mocked_get_multiple_event_list_for_feature.assert_called_once_with(
+        feature_name=feature_name, environment_id=env_id, period="30d"
+    )
+
+    assert len(feature_evaluation_data) == 2
+
+    assert feature_evaluation_data[0].day == date(year=2023, month=1, day=8)
+    assert feature_evaluation_data[0].count == 100
+
+    assert feature_evaluation_data[1].day == date(year=2023, month=1, day=9)
+    assert feature_evaluation_data[1].count == 200
