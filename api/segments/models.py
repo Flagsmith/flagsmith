@@ -5,12 +5,12 @@ import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from core.models import (
     AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
-from softdelete.models import SoftDeleteObject
 
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
@@ -53,9 +53,8 @@ IN = "IN"
 
 
 class Segment(
-    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
-    SoftDeleteObject,
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT

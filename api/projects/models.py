@@ -3,13 +3,12 @@ from __future__ import unicode_literals
 
 import re
 
-from core.models import AbstractBaseExportableModel
+from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
 from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
-from softdelete.models import SoftDeleteObject
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -22,7 +21,7 @@ from projects.managers import ProjectManager
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 
 
-class Project(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject):
+class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
