@@ -186,6 +186,10 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
                 },
                 {
+                    "name": "ANALYTICS_DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
+                },
+                {
                     "name": "DJANGO_SECRET_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
                 },
