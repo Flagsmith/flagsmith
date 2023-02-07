@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "custom_auth",
     "admin_sso",
     "api",
+    "core",
     "corsheaders",
     "users",
     "organisations",
