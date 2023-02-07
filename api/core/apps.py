@@ -13,6 +13,8 @@ class BaseAppConfig(AppConfig):
     based on the creation of HistoricalRecords (as per functionality in django-simple-history).
     """
 
+    name = "core"
+
     def ready(self):
         from core.signals import (
             add_master_api_key,
