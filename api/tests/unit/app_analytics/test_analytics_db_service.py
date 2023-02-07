@@ -11,9 +11,14 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
+from django.conf import settings
 from django.utils import timezone
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    reason="Skip test if analytics database is configured",
+)
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_usage_data_from_local_db(organisation, environment, settings):
     environment_id = environment.id
@@ -62,6 +67,10 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
         assert data.day == today - timedelta(days=29 - count)
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    reason="Skip test if analytics database is configured",
+)
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_total_events_count(organisation, environment, settings):
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -103,6 +112,10 @@ def test_get_total_events_count(organisation, environment, settings):
     assert total_events_count == 10 * len(Resource) * 30
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    reason="Skip test if analytics database is configured",
+)
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_feature_evaluation_data_from_local_db(feature, environment, settings):
     environment_id = environment.id

@@ -14,7 +14,13 @@ from app_analytics.tasks import (
     track_feature_evaluation,
     track_request,
 )
+from django.conf import settings
 from django.utils import timezone
+
+if "analytics" not in settings.DATABASES:
+    pytest.skip(
+        "Skip test if analytics database is configured", allow_module_level=True
+    )
 
 
 def _create_api_usage_event(environment_id: str, when: datetime):
