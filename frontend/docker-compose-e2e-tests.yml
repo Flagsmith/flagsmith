@@ -12,6 +12,11 @@ services:
             POSTGRES_DB: flagsmith
         container_name: flagsmith_postgres
 
+    wait-for-db:
+        image: willwill/wait-for-it
+        command:
+            - db:5432
+
     flagsmith-api:
         build:
             context: ../
@@ -26,7 +31,7 @@ services:
         ports:
             - '8000:8000'
         depends_on:
-            - db
+            - wait-for-db
         links:
             - db:db
 
