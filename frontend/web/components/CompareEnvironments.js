@@ -4,6 +4,8 @@ import EnvironmentSelect from './EnvironmentSelect';
 import data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import FeatureRow from './FeatureRow';
+import { Tag } from './AddEditTags';
+import FeatureListStore from '../../common/stores/feature-list-store';
 
 const featureNameWidth = 300;
 
@@ -21,6 +23,7 @@ class CompareEnvironments extends Component {
         this.state = {
             environmentLeft: props.environmentId,
             environmentRight: '',
+            showArchived: false,
             projectFlags: null,
             isLoading: true,
         };
@@ -76,6 +79,17 @@ class CompareEnvironments extends Component {
 
     onSave = () => this.fetch()
 
+
+    filter = (items)=> {
+        if(!items) return items
+
+        return items.filter((v)=>{
+            if (this.state.showArchived) {
+                return true
+            }
+            return !v.projectFlag.is_archived
+        })
+    }
 
     render() {
         return (
@@ -197,6 +211,18 @@ class CompareEnvironments extends Component {
                                         )}
                                         {!this.state.isLoading && (this.state.changes && !!this.state.changes.length) && (
                                             <div className="mt-4" style={{ minWidth: 800 }}>
+                                                <Row>
+                                                    <Tag
+                                                        selected={this.state.showArchived}
+                                                        onClick={() => {
+                                                            FeatureListStore.isLoading = true;
+                                                            this.setState({ showArchived: !this.state.showArchived });
+                                                        }}
+                                                        className="px-2 py-2 ml-2 mr-2"
+                                                        tag={{ label: 'Archived' }}
+                                                    />
+                                                </Row>
+
                                                 <PanelSearch
                                                   title={
                                                         (
@@ -230,7 +256,7 @@ class CompareEnvironments extends Component {
                                                         )
                                                     )}
                                                   className="no-pad mt-2"
-                                                  items={this.state.changes}
+                                                  items={this.filter(this.state.changes)}
                                                   renderRow={(p, i) => renderRow(p, i, !p.enabledChanged, !p.valueChanged)}
                                                 />
                                             </div>
@@ -272,7 +298,7 @@ class CompareEnvironments extends Component {
                                                             )
                                                         )}
                                                       className="no-pad mt-2"
-                                                      items={this.state.same}
+                                                      items={this.filter(this.state.same)}
                                                       renderRow={(p, i) => renderRow(p, i, !p.enabledChanged, !p.valueChanged)}
                                                     />
                                                 </div>
