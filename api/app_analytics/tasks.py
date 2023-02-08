@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Tuple
 
 from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
@@ -54,6 +55,9 @@ def track_request(resource: int, host: str, environment_key: str):
 
 
 def get_start_of_current_bucket(bucket_size: int) -> datetime:
+    if bucket_size > 60:
+        raise ValueError("Bucket size cannot be greater than 60 minutes")
+
     current_time = timezone.now().replace(second=0, microsecond=0)
     start_of_current_bucket = current_time - timezone.timedelta(
         minutes=current_time.minute % bucket_size
@@ -61,48 +65,47 @@ def get_start_of_current_bucket(bucket_size: int) -> datetime:
     return start_of_current_bucket
 
 
+def get_time_buckets(bucket_size, run_every) -> List[Tuple[datetime, datetime]]:
+    start_of_first_bucket = get_start_of_current_bucket(bucket_size)
+    time_buckets = []
+
+    # number of buckets that can be processed in `run_every` time
+    num_of_buckets = run_every // bucket_size
+
+    for i in range(num_of_buckets):
+        # NOTE: we start processing from `current - 1` buckets since the current bucket is
+        # still open
+        end_time = start_of_first_bucket - timezone.timedelta(minutes=bucket_size * i)
+        start_time = end_time - timezone.timedelta(minutes=bucket_size)
+        time_buckets.append((start_time, end_time))
+
+    return time_buckets
+
+
 def populate_api_usage_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
-    if bucket_size > 60:
-        raise ValueError("Bucket size cannot be greater than 60 minutes")
+    for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
 
-    start_of_current_bucket = get_start_of_current_bucket(
-        bucket_size,
-    )
-
-    for i in range(1, (run_every // bucket_size) + 1):
-        process_from = start_of_current_bucket - timezone.timedelta(
-            minutes=bucket_size * i
+        data = _get_api_usage_source_data(
+            bucket_start_time, bucket_end_time, source_bucket_size
         )
-        process_to = process_from + timezone.timedelta(minutes=bucket_size)
-        data = _get_api_usage_source_data(process_from, process_to, source_bucket_size)
         for row in data:
             APIUsageBucket.objects.create(
                 environment_id=row["environment_id"],
                 resource=row["resource"],
                 total_count=row["count"],
                 bucket_size=bucket_size,
-                created_at=process_from,
+                created_at=bucket_start_time,
             )
 
 
 def populate_feature_evaluation_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
-    start_of_current_bucket = get_start_of_current_bucket(
-        bucket_size,
-    )
-    # number of buckets that can be processed in `run_every` time
-    num_of_buckets = run_every // bucket_size
-
-    for i in range(1, num_of_buckets + 1):
-        process_from = start_of_current_bucket - timezone.timedelta(
-            minutes=bucket_size * i
-        )
-        process_to = process_from + timezone.timedelta(minutes=bucket_size)
+    for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_feature_evaluation_source_data(
-            process_from, process_to, source_bucket_size
+            bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
             FeatureEvaluationBucket.objects.create(
@@ -110,7 +113,7 @@ def populate_feature_evaluation_bucket(
                 feature_name=row["feature_name"],
                 total_count=row["count"],
                 bucket_size=bucket_size,
-                created_at=process_from,
+                created_at=bucket_start_time,
             )
 
 
