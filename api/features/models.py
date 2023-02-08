@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from core.models import (
     AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import (
@@ -27,7 +28,6 @@ from django_lifecycle import (
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
-from softdelete.models import SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -80,9 +80,8 @@ if typing.TYPE_CHECKING:
 
 
 class Feature(
-    SoftDeleteObject,
+    SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     name = models.CharField(max_length=2000)
@@ -301,9 +300,8 @@ class FeatureSegment(
 
 
 class FeatureState(
-    SoftDeleteObject,
+    SoftDeleteExportableModel,
     LifecycleModelMixin,
-    AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
@@ -788,9 +786,7 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(
-    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
-):
+class FeatureStateValue(AbstractBaseFeatureValueModel, SoftDeleteExportableModel):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )

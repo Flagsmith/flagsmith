@@ -3,7 +3,7 @@ import typing
 
 from core.helpers import get_current_site_url
 from core.models import (
-    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.conf import settings
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 class ChangeRequest(
     LifecycleModelMixin,
-    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     related_object_type = RelatedObjectType.CHANGE_REQUEST

@@ -5,6 +5,7 @@ import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from core.models import (
     AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import ValidationError
@@ -52,7 +53,8 @@ IN = "IN"
 
 
 class Segment(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
