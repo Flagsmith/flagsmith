@@ -11,7 +11,9 @@ from organisations.subscriptions.serializers.mixins import (
 )
 from projects.models import Project
 from projects.serializers import ProjectSerializer
-from util.drf_writable_nested.serializers import WritableNestedModelSerializer
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+)
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -45,27 +47,13 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "banner_text",
             "banner_colour",
             "hide_disabled_flags",
-            "metadata",
         )
-
-    def save(self, **kwargs):
-        # maybe move this to a mixin
-        self.check_required_metadata(self.validated_data.pop("metadata", []))
-
-        metadata = self.initial_data.pop("metadata", None)
-        metadata_serializer = MetadataSerializer(
-            data=metadata, many=True, context=self.context
-        )
-        metadata_serializer.is_valid(raise_exception=True)
-
-        instance = super().save(**kwargs)
-
-        metadata_serializer.save(content_object=instance)
-        return instance
 
 
 class EnvironmentSerializerWithMetadata(
-    MetadataSerializerMixin, WritableNestedModelSerializer, EnvironmentSerializerLight
+    MetadataSerializerMixin,
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+    EnvironmentSerializerLight,
 ):
 
     metadata = MetadataSerializer(required=False, many=True)

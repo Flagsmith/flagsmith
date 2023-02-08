@@ -3,7 +3,9 @@ from rest_framework import serializers
 
 from organisations.models import Organisation
 from projects.models import Project
-from util.drf_writable_nested.serializers import WritableNestedModelSerializer
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+)
 from util.util import str_to_bool
 
 from .models import (
@@ -27,7 +29,7 @@ class MetadataModelFieldIsRequiredForSerializer(serializers.ModelSerializer):
         fields = ("content_type", "object_id")
 
 
-class MetaDataModelFieldSerializer(WritableNestedModelSerializer):
+class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     is_required_for = MetadataModelFieldIsRequiredForSerializer(
         many=True, required=False
     )
