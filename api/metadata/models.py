@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from core.models import AbstractBaseExportableModel
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -20,6 +22,7 @@ class FieldType(models.TextChoices):
     STRING = "str"
     BOOLEAN = "bool"
     FLOAT = "float"
+    URL = "url"
 
 
 class MetadataField(AbstractBaseExportableModel):
@@ -31,6 +34,40 @@ class MetadataField(AbstractBaseExportableModel):
     )
     description = models.TextField(blank=True, null=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+
+    def is_field_value_valid(self, field_value: str) -> bool:
+        if len(field_value) > FIELD_VALUE_MAX_LENGTH:
+            return False
+        return self.__getattribute__(f"validate_{self.type}")(field_value)
+
+    def validate_int(self, field_value: str):
+        try:
+            int(field_value)
+        except ValueError:
+            return False
+        return True
+
+    def validate_float(self, field_value: str):
+        try:
+            float(field_value)
+        except ValueError:
+            return False
+        return True
+
+    def validate_bool(self, field_value: str):
+        if field_value.lower() in ["true", "false"]:
+            return True
+        return False
+
+    def validate_url(self, field_value: str):
+        try:
+            result = urlparse(field_value)
+            return all([result.scheme, result.netloc])
+        except ValueError:
+            return False
+
+    def validate_str(self, field_value: str):
+        return True
 
     class Meta:
         unique_together = ("name", "organisation")

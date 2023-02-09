@@ -6,10 +6,8 @@ from projects.models import Project
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-from util.util import str_to_bool
 
 from .models import (
-    FIELD_VALUE_MAX_LENGTH,
     Metadata,
     MetadataField,
     MetadataModelField,
@@ -50,25 +48,11 @@ class MetadataSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super().validate(data)
-        expected_type = data["model_field"].field.type
-
-        try:
-            casting_function = {
-                "int": int,
-                "float": float,
-                "str": str,
-                "bool": str_to_bool,
-            }[expected_type]
-            casting_function(data["field_value"])
-        except ValueError:
+        if not data["model_field"].field.is_field_value_valid(data["field_value"]):
             raise serializers.ValidationError(
-                f"Invalid data type. Must be the string representation of {expected_type}"
+                f"Invalid value for field {data['model_field'].field.name}"
             )
 
-        if expected_type == "str" and len(data["field_value"]) > FIELD_VALUE_MAX_LENGTH:
-            raise serializers.ValidationError(
-                f"Value string is too long. Must be less than {FIELD_VALUE_MAX_LENGTH} character"
-            )
         return data
 
 

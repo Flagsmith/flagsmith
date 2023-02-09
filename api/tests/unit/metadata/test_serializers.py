@@ -1,6 +1,10 @@
 import pytest
 
-from metadata.models import MetadataField, MetadataModelField
+from metadata.models import (
+    FIELD_VALUE_MAX_LENGTH,
+    MetadataField,
+    MetadataModelField,
+)
 from metadata.serializers import MetadataSerializer
 
 
@@ -17,6 +21,9 @@ from metadata.serializers import MetadataSerializer
         ("bool", "false", True),
         ("bool", "10", False),
         ("bool", "string", False),
+        ("url", "not a valid url", False),
+        ("url", "https://flagsmith.com", True),
+        ("string", "a long string" * FIELD_VALUE_MAX_LENGTH, False),
     ],
 )
 def test_metadata_serializer_validate_validates_field_value_type_correctly(
