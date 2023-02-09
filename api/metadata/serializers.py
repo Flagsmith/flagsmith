@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Model
 from rest_framework import serializers
 
 from organisations.models import Organisation
@@ -63,11 +64,14 @@ class MetadataSerializerMixin:
     def get_project_from_validated_data(self, validated_data) -> Project:
         raise NotImplementedError()
 
-    def get_fetch_method(self, model_name):
-        return {
-            "project": self.get_project_from_validated_data,
-            "organisation": self.get_organisation_from_validated_data,
-        }[model_name]
+    def get_required_for_object(
+        self, requirement: MetadataModelFieldRequirement, data: dict
+    ) -> Model:
+        model_name = requirement.content_type.model
+        try:
+            return getattr(self, f"get_{model_name}_from_validated_data")(data)
+        except AttributeError:
+            raise ValueError(f"get_{model_name}_from_validated_data does not exists")
 
     def validate_required_metadata(self, data):
         metadata = data.get("metadata", [])
@@ -75,23 +79,24 @@ class MetadataSerializerMixin:
         content_type = ContentType.objects.get_for_model(self.Meta.model)
 
         organisation = self.get_organisation_from_validated_data(data)
-        required_for_qs = MetadataModelFieldRequirement.objects.filter(
+
+        requirements = MetadataModelFieldRequirement.objects.filter(
             model_field__content_type=content_type,
             model_field__field__organisation=organisation,
         )
-        for required_for in required_for_qs:
-            model_name = required_for.content_type.model
-            object = self.get_fetch_method(model_name)(data)
-            if object.id == required_for.object_id:
+
+        for requirement in requirements:
+            required_for = self.get_required_for_object(requirement, data)
+            if required_for.id == requirement.object_id:
                 if not any(
                     [
-                        field["model_field"] == required_for.model_field
+                        field["model_field"] == requirement.model_field
                         for field in metadata
                     ]
                 ):
                     raise serializers.ValidationError(
                         {
-                            "metadata": f"Missing required metadata field: {required_for.model_field.field.name}"
+                            "metadata": f"Missing required metadata field: {requirement.model_field.field.name}"
                         }
                     )
 
