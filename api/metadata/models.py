@@ -98,6 +98,9 @@ class MetadataModelFieldRequirement(AbstractBaseExportableModel):
         MetadataModelField, on_delete=models.CASCADE, related_name="is_required_for"
     )
 
+    class Meta:
+        unique_together = ("content_type", "object_id", "model_field")
+
 
 class Metadata(AbstractBaseExportableModel):
     """This model represents the actual metadata attached to a specific instance of a model
