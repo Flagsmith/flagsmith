@@ -32,7 +32,12 @@ from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.webhook.models import WebhookConfiguration
-from metadata.models import Metadata, MetadataField, MetadataModelField
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.invites.models import InviteLink
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
@@ -141,6 +146,9 @@ def test_export_metadata(environment, organisation, settings):
     environment_metadata_field = MetadataModelField.objects.create(
         field=metadata_field, content_type=environment_type
     )
+    required_for_project = MetadataModelFieldRequirement.objects.create(
+        model_field=environment_metadata_field, content_object=environment.project
+    )
 
     environment_metadata = Metadata.objects.create(
         object_id=environment.id,
@@ -169,8 +177,19 @@ def test_export_metadata(environment, organisation, settings):
 
         call_command("loaddata", f.name, format="json")
 
-    # Finally, all the loaded objects should now exists
+    # Finally
+    # Metadata field exists
     assert MetadataField.objects.filter(uuid=metadata_field.uuid)
+
+    # metadata model field requirements are correctly wired up
+    metadata_model_field = MetadataModelField.objects.get(
+        uuid=environment_metadata_field.uuid
+    )
+    requrired_for_project = MetadataModelFieldRequirement.objects.get(
+        uuid=required_for_project.uuid
+    )
+    assert metadata_model_field == requrired_for_project.model_field
+    assert requrired_for_project.content_type.model == "project"
 
     # and metadata correctly points to the loaded environment
     metadata = Metadata.objects.get(uuid=environment_metadata.uuid)

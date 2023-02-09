@@ -31,7 +31,12 @@ from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.webhook.models import WebhookConfiguration
-from metadata.models import Metadata, MetadataField, MetadataModelField
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.invites.models import InviteLink
 from organisations.models import (
     Organisation,
@@ -90,6 +95,10 @@ def export_metadata(organisation_id: int) -> typing.List[dict]:
         _EntityExportConfig(MetadataField, Q(organisation__id=organisation_id)),
         _EntityExportConfig(
             MetadataModelField, Q(field__organisation__id=organisation_id)
+        ),
+        _EntityExportConfig(
+            MetadataModelFieldRequirement,
+            Q(model_field__field__organisation__id=organisation_id),
         ),
         _EntityExportConfig(
             Metadata, Q(model_field__field__organisation__id=organisation_id)
