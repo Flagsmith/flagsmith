@@ -30,6 +30,9 @@ function serve() {
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
 }
+function migrate_analytics_db(){
+    python manage.py migrate --database analytics
+}
 function import_organisation_from_s3(){
     python manage.py importorganisationfroms3 "$1" "$2"
 }
@@ -62,6 +65,8 @@ elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
 elif [ "$1" == "dump-organisation-to-local-fs" ]; then
     dump_organisation_to_local_fs "$2" "$3"
+elif [ "$1" == "migrate_analytics_db" ]; then
+    migrate_analytics_db
 else
    echo "ERROR: unrecognised command '$1'"
 fi
