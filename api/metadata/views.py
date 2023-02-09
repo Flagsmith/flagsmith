@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .models import (
     METADATA_SUPPORTED_MODELS,
-    REQUIRED_FOR_MODELS,
+    SUPPORTED_REQUIREMENTS_MAPPING,
     MetadataField,
     MetadataModelField,
 )
@@ -112,7 +112,7 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         if not model_name:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         qs = ContentType.objects.filter(
-            model__in=REQUIRED_FOR_MODELS.get(model_name, [])
+            model__in=SUPPORTED_REQUIREMENTS_MAPPING.get(model_name, {}).keys()
         )
         serializer = ContentTypeSerializer(qs, many=True)
 

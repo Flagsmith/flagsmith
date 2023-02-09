@@ -6,14 +6,20 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from organisations.models import Organisation
+from projects.models import Project
 
 from .fields import GenericObjectID
 
 FIELD_VALUE_MAX_LENGTH = 2000
 
 METADATA_SUPPORTED_MODELS = ["environment"]
-REQUIRED_FOR_MODELS = {
-    "environment": ["organisation", "project"],
+SUPPORTED_REQUIREMENTS_MAPPING = {
+    "environment": {
+        "organisation": lambda org_id: org_id,
+        "project": lambda project_id: Project.objects.get(
+            id=project_id
+        ).organisation.id,
+    }
 }
 
 

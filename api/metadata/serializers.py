@@ -9,6 +9,7 @@ from util.drf_writable_nested.serializers import (
 )
 
 from .models import (
+    SUPPORTED_REQUIREMENTS_MAPPING,
     Metadata,
     MetadataField,
     MetadataModelField,
@@ -34,6 +35,22 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
     class Meta:
         model = MetadataModelField
         fields = ("id", "field", "content_type", "is_required_for")
+
+    def validate(self, data):
+        data = super().validate(data)
+        for requirement in data.get("is_required_for", []):
+            get_org_id_func = SUPPORTED_REQUIREMENTS_MAPPING.get(
+                data["content_type"].model
+            )[requirement["content_type"].model]
+
+            if (
+                get_org_id_func(requirement["object_id"])
+                != data["field"].organisation_id
+            ):
+                raise serializers.ValidationError(
+                    "The requirement organisation does not match the field organisation"
+                )
+        return data
 
 
 class ContentTypeSerializer(serializers.ModelSerializer):
@@ -71,7 +88,7 @@ class MetadataSerializerMixin:
         try:
             return getattr(self, f"get_{model_name}_from_validated_data")(data)
         except AttributeError:
-            raise ValueError(f"get_{model_name}_from_validated_data does not exists")
+            raise ValueError(f"`get_{model_name}_from_validated_data` does not exists")
 
     def validate_required_metadata(self, data):
         metadata = data.get("metadata", [])
