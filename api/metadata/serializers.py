@@ -13,7 +13,7 @@ from .models import (
     Metadata,
     MetadataField,
     MetadataModelField,
-    MetadataModelFieldIsRequiredFor,
+    MetadataModelFieldRequirement,
 )
 
 
@@ -23,16 +23,14 @@ class MetadataFieldSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "type", "description", "organisation")
 
 
-class MetadataModelFieldIsRequiredForSerializer(serializers.ModelSerializer):
+class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MetadataModelFieldIsRequiredFor
+        model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
-    is_required_for = MetadataModelFieldIsRequiredForSerializer(
-        many=True, required=False
-    )
+    is_required_for = MetadataModelFieldRequirementSerializer(many=True, required=False)
 
     class Meta:
         model = MetadataModelField
@@ -93,7 +91,7 @@ class MetadataSerializerMixin:
         content_type = ContentType.objects.get_for_model(self.Meta.model)
 
         organisation = self.get_organisation_from_validated_data(data)
-        required_for_qs = MetadataModelFieldIsRequiredFor.objects.filter(
+        required_for_qs = MetadataModelFieldRequirement.objects.filter(
             model_field__content_type=content_type,
             model_field__field__organisation=organisation,
         )

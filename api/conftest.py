@@ -23,7 +23,7 @@ from metadata.models import (
     Metadata,
     MetadataField,
     MetadataModelField,
-    MetadataModelFieldIsRequiredFor,
+    MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
@@ -327,7 +327,7 @@ def required_a_environment_metadata_field(
         content_type=environment_type,
     )
 
-    MetadataModelFieldIsRequiredFor.objects.create(
+    MetadataModelFieldRequirement.objects.create(
         content_type=project_content_type, object_id=project.id, model_field=model_field
     )
     return model_field
@@ -373,8 +373,3 @@ def environment_content_type():
 @pytest.fixture()
 def project_content_type():
     return ContentType.objects.get_for_model(Project)
-
-
-@pytest.fixture(autouse=True)
-def task_processor_synchronously(settings):
-    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY

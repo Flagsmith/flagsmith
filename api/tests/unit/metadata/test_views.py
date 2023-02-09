@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework import status
 
-from metadata.models import MetadataModelField, MetadataModelFieldIsRequiredFor
+from metadata.models import MetadataModelField, MetadataModelFieldRequirement
 from metadata.views import METADATA_SUPPORTED_MODELS
 
 
@@ -241,7 +241,7 @@ def test_update_model_metadata_field(
     assert response.json()["id"] == required_a_environment_metadata_field.id
     assert response.json()["is_required_for"] == []
     assert (
-        MetadataModelFieldIsRequiredFor.objects.filter(
+        MetadataModelFieldRequirement.objects.filter(
             model_field=required_a_environment_metadata_field
         ).count()
         == 0

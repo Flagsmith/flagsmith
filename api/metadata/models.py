@@ -23,6 +23,8 @@ class FieldType(models.TextChoices):
 
 
 class MetadataField(AbstractBaseExportableModel):
+    """This model represents a metadata field(specific to an organisation) that can be attached to any model"""
+
     name = models.CharField(max_length=255)
     type = models.CharField(
         max_length=255, choices=FieldType.choices, default=FieldType.STRING
@@ -35,6 +37,10 @@ class MetadataField(AbstractBaseExportableModel):
 
 
 class MetadataModelField(AbstractBaseExportableModel):
+    """This model represents a metadata field that is attached to a specific model
+    e.g: `Environment`
+    """
+
     field = models.ForeignKey(MetadataField, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
 
@@ -42,7 +48,12 @@ class MetadataModelField(AbstractBaseExportableModel):
         unique_together = ("field", "content_type")
 
 
-class MetadataModelFieldIsRequiredFor(AbstractBaseExportableModel):
+class MetadataModelFieldRequirement(AbstractBaseExportableModel):
+    """This model stores information about the requirement status of a `MetadataModelField` with respect to
+    a parent object. e.g: if the `MetadataModelField` is attached to an `Environment` model,
+    the parent object can be an instance of `Project` or `Organization`.
+    """
+
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = GenericObjectID()
     content_object = GenericForeignKey("content_type", "object_id")
@@ -52,6 +63,11 @@ class MetadataModelFieldIsRequiredFor(AbstractBaseExportableModel):
 
 
 class Metadata(AbstractBaseExportableModel):
+    """This model represents the actual metadata attached to a specific instance of a model
+    e.g: Environment.objects.get(id=1).metadata
+
+    """
+
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = GenericObjectID()
     content_object = GenericForeignKey("content_type", "object_id")
