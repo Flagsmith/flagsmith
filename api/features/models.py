@@ -98,13 +98,17 @@ class Feature(
         ),
         on_delete=models.CASCADE,
     )
-    initial_value = models.CharField(max_length=20000, null=True, default=None, blank=True)
+    initial_value = models.CharField(
+        max_length=20000, null=True, default=None, blank=True
+    )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, blank=True, default=STANDARD)
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
-    owners = models.ManyToManyField("users.FFAdminUser", related_name="owned_features", blank=True)
+    owners = models.ManyToManyField(
+        "users.FFAdminUser", related_name="owned_features", blank=True
+    )
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -127,7 +131,9 @@ class Feature(
                 environment=env,
                 identity=None,
                 feature_segment=None,
-                enabled=False if self.project.prevent_flag_defaults else self.default_enabled,
+                enabled=False
+                if self.project.prevent_flag_defaults
+                else self.default_enabled,
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -138,7 +144,11 @@ class Feature(
         super(Feature, self).validate_unique(*args, **kwargs)
 
         # handle case insensitive names per project, as above check allows it
-        if Feature.objects.filter(project=self.project, name__iexact=self.name).exclude(pk=self.pk).exists():
+        if (
+            Feature.objects.filter(project=self.project, name__iexact=self.name)
+            .exclude(pk=self.pk)
+            .exists()
+        ):
             raise ValidationError(
                 {
                     NON_FIELD_ERRORS: [
@@ -165,7 +175,9 @@ class Feature(
 
 
 def get_next_segment_priority(feature):
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by("-priority")
+    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
+        "-priority"
+    )
     if feature_segments.count() == 0:
         return 1
     else:
@@ -173,8 +185,12 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
-    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
-    segment = models.ForeignKey("segments.Segment", related_name="feature_segments", on_delete=models.CASCADE)
+    feature = models.ForeignKey(
+        Feature, on_delete=models.CASCADE, related_name="feature_segments"
+    )
+    segment = models.ForeignKey(
+        "segments.Segment", related_name="feature_segments", on_delete=models.CASCADE
+    )
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,
@@ -214,7 +230,12 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
         ordering = ("priority",)
 
     def __str__(self):
-        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
+        return (
+            "FeatureSegment for "
+            + self.feature.name
+            + " with priority "
+            + str(self.priority)
+        )
 
     def __lt__(self, other):
         """
@@ -267,7 +288,9 @@ class FeatureState(
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
 
-    feature = models.ForeignKey(Feature, related_name="feature_states", on_delete=models.CASCADE)
+    feature = models.ForeignKey(
+        Feature, related_name="feature_states", on_delete=models.CASCADE
+    )
 
     environment = models.ForeignKey(
         "environments.Environment",
@@ -319,26 +342,36 @@ class FeatureState(
         :return: True if self is higher priority than other
         """
         if self.environment_id != other.environment_id:
-            raise ValueError("Cannot compare feature states as they belong to different environments.")
+            raise ValueError(
+                "Cannot compare feature states as they belong to different environments."
+            )
 
         if self.feature_id != other.feature_id:
-            raise ValueError("Cannot compare feature states as they belong to different features.")
+            raise ValueError(
+                "Cannot compare feature states as they belong to different features."
+            )
 
         if self.identity_id:
             # identity is the highest priority so we can always return true
             if other.identity_id and self.identity_id != other.identity_id:
-                raise ValueError("Cannot compare feature states as they are for different identities.")
+                raise ValueError(
+                    "Cannot compare feature states as they are for different identities."
+                )
             return True
 
         if self.feature_segment_id:
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
-            return not (other.identity_id or self.feature_segment < other.feature_segment)
+            return not (
+                other.identity_id or self.feature_segment < other.feature_segment
+            )
 
         if self.type == other.type:
-            return (self.version is not None and other.version is not None and self.version > other.version) or (
-                self.version is not None and other.version is None
-            )
+            return (
+                self.version is not None
+                and other.version is not None
+                and self.version > other.version
+            ) or (self.version is not None and other.version is None)
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -381,7 +414,11 @@ class FeatureState(
 
     @property
     def is_live(self) -> bool:
-        return self.version is not None and self.live_from is not None and self.live_from <= timezone.now()
+        return (
+            self.version is not None
+            and self.live_from is not None
+            and self.live_from <= timezone.now()
+        )
 
     @property
     def is_scheduled(self) -> bool:
@@ -456,7 +493,10 @@ class FeatureState(
         return self.get_feature_state_value_by_id(getattr(identity, "id", None))
 
     def get_feature_state_value_defaults(self) -> dict:
-        if self.feature.initial_value is None or self.feature.project.prevent_flag_defaults:
+        if (
+            self.feature.initial_value is None
+            or self.feature.project.prevent_flag_defaults
+        ):
             return {}
 
         value = self.feature.initial_value
@@ -469,13 +509,17 @@ class FeatureState(
 
         return {"type": type, key_name: parse_func(value)}
 
-    def get_multivariate_feature_state_value(self, identity_id: int) -> AbstractBaseFeatureValueModel:
+    def get_multivariate_feature_state_value(
+        self, identity_id: int
+    ) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
         # so we just convert them to a list and use python operations from here to
         # avoid further queries to the DB
         mv_options = list(self.multivariate_feature_state_values.all())
 
-        percentage_value = get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
+        percentage_value = (
+            get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
+        )
 
         # Iterate over the mv options in order of id (so we get the same value each
         # time) to determine the correct value to return to the identity based on
@@ -509,7 +553,8 @@ class FeatureState(
             identity=self.identity,
         ).exists():
             raise ValidationError(
-                "Feature state already exists for this environment, feature, " "version, segment & identity combination"
+                "Feature state already exists for this environment, feature, "
+                "version, segment & identity combination"
             )
 
     @hook(BEFORE_CREATE)
@@ -581,7 +626,9 @@ class FeatureState(
         # Get all feature states for a given environment with a valid live_from in the
         # past. Note: includes all versions for a given environment / feature
         # combination. We filter for the latest version later on.
-        feature_states = cls.objects.select_related("feature", "feature_state_value").filter(
+        feature_states = cls.objects.select_related(
+            "feature", "feature_state_value"
+        ).filter(
             environment_id=environment_id,
             live_from__isnull=False,
             live_from__lte=timezone.now(),
@@ -604,18 +651,25 @@ class FeatureState(
                 feature_state.identity_id,
             )
             current_feature_state = feature_states_dict.get(key)
-            if not current_feature_state or feature_state.version > current_feature_state.version:
+            if (
+                not current_feature_state
+                or feature_state.version > current_feature_state.version
+            ):
                 feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
 
     @classmethod
-    def get_environment_flags_queryset(cls, environment_id: int, feature_name: str = None) -> QuerySet:
+    def get_environment_flags_queryset(
+        cls, environment_id: int, feature_name: str = None
+    ) -> QuerySet:
         """
         Get a queryset of the latest live versions of an environments' feature states
         """
 
-        feature_states_list = cls.get_environment_flags_list(environment_id, feature_name)
+        feature_states_list = cls.get_environment_flags_list(
+            environment_id, feature_name
+        )
         return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @classmethod
@@ -697,7 +751,11 @@ class FeatureState(
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)
 
-        if history_instance.history_type == "+" and self.feature_segment_id is None and self.identity_id is None:
+        if (
+            history_instance.history_type == "+"
+            and self.feature_segment_id is None
+            and self.identity_id is None
+        ):
             kwargs["skip_signals"] = "send_environments_to_dynamodb"
 
         return kwargs
@@ -717,7 +775,9 @@ class FeatureStateValue(
     related_object_type = RelatedObjectType.FEATURE_STATE
     history_record_class_path = "features.models.HistoricalFeatureStateValue"
 
-    feature_state = models.OneToOneField(FeatureState, related_name="feature_state_value", on_delete=models.CASCADE)
+    feature_state = models.OneToOneField(
+        FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
+    )
 
     objects = FeatureStateValueManager()
 
