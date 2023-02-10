@@ -51,7 +51,7 @@ class MetadataModelFieldPermissions(IsAuthenticated):
                     in [
                         "list",
                         "supported_content_types",
-                        "supported_required_for_model",
+                        "supported_required_for_models",
                     ]
                     or view.detail
                 ):

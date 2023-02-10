@@ -108,9 +108,9 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["GET"],
-        url_path="supported-required-for-model",
+        url_path="supported-required-for-models",
     )
-    def supported_required_for_model(self, request, organisation_pk=None):
+    def supported_required_for_models(self, request, organisation_pk=None):
         serializer = SupportedRequiredForModelQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
