@@ -338,12 +338,12 @@ def test_get_supported_content_type(admin_client, organisation):
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == len(METADATA_SUPPORTED_MODELS)
 
-    assert set([content_type["model"] for content_type in response.json()]) == set(
+    assert set(content_type["model"] for content_type in response.json()) == set(
         METADATA_SUPPORTED_MODELS
     )
 
 
-def test_get_supported_required_for_model(admin_client, organisation):
+def test_get_supported_required_for_models(admin_client, organisation):
     # Given
     base_url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-required-for-models",
@@ -357,5 +357,5 @@ def test_get_supported_required_for_model(admin_client, organisation):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 2
-    assert response.json()[1]["model"] == "organisation"
-    assert response.json()[0]["model"] == "project"
+    assert response.json()[0]["model"] == "organisation"
+    assert response.json()[1]["model"] == "project"
