@@ -9,7 +9,7 @@
             "command": [
                 "migrate",
                 "&&",
-                "migrate_analytics_db"
+                "migrate-analytics-db"
 
             ],
             "environment": [
