@@ -27,18 +27,19 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
-from simple_history.models import HistoricalRecords
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
-    FEATURE_SEGMENT_UPDATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
+    FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
@@ -97,17 +98,13 @@ class Feature(
         ),
         on_delete=models.CASCADE,
     )
-    initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
-    )
+    initial_value = models.CharField(max_length=20000, null=True, default=None, blank=True)
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, blank=True, default=STANDARD)
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
-    owners = models.ManyToManyField(
-        "users.FFAdminUser", related_name="owned_features", blank=True
-    )
+    owners = models.ManyToManyField("users.FFAdminUser", related_name="owned_features", blank=True)
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -130,9 +127,7 @@ class Feature(
                 environment=env,
                 identity=None,
                 feature_segment=None,
-                enabled=False
-                if self.project.prevent_flag_defaults
-                else self.default_enabled,
+                enabled=False if self.project.prevent_flag_defaults else self.default_enabled,
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -143,11 +138,7 @@ class Feature(
         super(Feature, self).validate_unique(*args, **kwargs)
 
         # handle case insensitive names per project, as above check allows it
-        if (
-            Feature.objects.filter(project=self.project, name__iexact=self.name)
-            .exclude(pk=self.pk)
-            .exists()
-        ):
+        if Feature.objects.filter(project=self.project, name__iexact=self.name).exclude(pk=self.pk).exists():
             raise ValidationError(
                 {
                     NON_FIELD_ERRORS: [
@@ -174,29 +165,16 @@ class Feature(
 
 
 def get_next_segment_priority(feature):
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
-        "-priority"
-    )
+    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by("-priority")
     if feature_segments.count() == 0:
         return 1
     else:
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(
-    AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
-    OrderedModelBase,
-):
-    history_record_class_path = "features.models.HistoricalFeatureSegment"
-    related_object_type = RelatedObjectType.FEATURE
-
-    feature = models.ForeignKey(
-        Feature, on_delete=models.CASCADE, related_name="feature_segments"
-    )
-    segment = models.ForeignKey(
-        "segments.Segment", related_name="feature_segments", on_delete=models.CASCADE
-    )
+class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
+    segment = models.ForeignKey("segments.Segment", related_name="feature_segments", on_delete=models.CASCADE)
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,
@@ -236,12 +214,7 @@ class FeatureSegment(
         ordering = ("priority",)
 
     def __str__(self):
-        return (
-            "FeatureSegment for "
-            + self.feature.name
-            + " with priority "
-            + str(self.priority)
-        )
+        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
 
     def __lt__(self, other):
         """
@@ -262,41 +235,28 @@ class FeatureSegment(
     def get_value(self):
         return get_correctly_typed_value(self.value_type, self.value)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return FEATURE_SEGMENT_UPDATED_MESSAGE % (
-            self.feature.name,
-            self.environment.name,
+    @classmethod
+    def validate_new_priorities(
+        cls, new_feature_segment_id_priorities: typing.Iterable[typing.Dict[str, int]]
+    ) -> typing.Tuple[bool, typing.List["FeatureSegment"]]:
+        changed = False
+        existing_feature_segments = cls.objects.filter(
+            id__in=[pair["id"] for pair in new_feature_segment_id_priorities]
         )
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        return self.get_create_log_message(history_instance)
+        existing_feature_segment_id_priorities = [
+            {"id": fs.id, "priority": fs.priority} for fs in existing_feature_segments
+        ]
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
-        return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-            self.feature.name,
-            self.segment.name,
-        )
+        def sort_function(d):
+            return d["priority"]
 
-    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
-        # TODO: this is here to maintain current behaviour but should probably be fixed
-        if history_instance.history_type == "-":
-            feature_state = (
-                self.feature_states.first()
-            )  # due to incorrect foreign key rather than 1-1
-            return getattr(feature_state, "id", None)
-        return self.feature_id
+        if sorted(existing_feature_segment_id_priorities, key=sort_function) != sorted(
+            new_feature_segment_id_priorities, key=sort_function
+        ):
+            changed = True
 
-    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
-        # TODO: this is here to maintain current behaviour but should probably be fixed
-        if history_instance.history_type == "-":
-            return RelatedObjectType.FEATURE_STATE
-        return RelatedObjectType.FEATURE
-
-    def _get_environment(self) -> typing.Optional["Environment"]:
-        return self.environment
-
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.feature.project
+        return changed, existing_feature_segments
 
 
 class FeatureState(
@@ -307,9 +267,7 @@ class FeatureState(
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
 
-    feature = models.ForeignKey(
-        Feature, related_name="feature_states", on_delete=models.CASCADE
-    )
+    feature = models.ForeignKey(Feature, related_name="feature_states", on_delete=models.CASCADE)
 
     environment = models.ForeignKey(
         "environments.Environment",
@@ -361,36 +319,26 @@ class FeatureState(
         :return: True if self is higher priority than other
         """
         if self.environment_id != other.environment_id:
-            raise ValueError(
-                "Cannot compare feature states as they belong to different environments."
-            )
+            raise ValueError("Cannot compare feature states as they belong to different environments.")
 
         if self.feature_id != other.feature_id:
-            raise ValueError(
-                "Cannot compare feature states as they belong to different features."
-            )
+            raise ValueError("Cannot compare feature states as they belong to different features.")
 
         if self.identity_id:
             # identity is the highest priority so we can always return true
             if other.identity_id and self.identity_id != other.identity_id:
-                raise ValueError(
-                    "Cannot compare feature states as they are for different identities."
-                )
+                raise ValueError("Cannot compare feature states as they are for different identities.")
             return True
 
         if self.feature_segment_id:
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
-            return not (
-                other.identity_id or self.feature_segment < other.feature_segment
-            )
+            return not (other.identity_id or self.feature_segment < other.feature_segment)
 
         if self.type == other.type:
-            return (
-                self.version is not None
-                and other.version is not None
-                and self.version > other.version
-            ) or (self.version is not None and other.version is None)
+            return (self.version is not None and other.version is not None and self.version > other.version) or (
+                self.version is not None and other.version is None
+            )
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -433,11 +381,7 @@ class FeatureState(
 
     @property
     def is_live(self) -> bool:
-        return (
-            self.version is not None
-            and self.live_from is not None
-            and self.live_from <= timezone.now()
-        )
+        return self.version is not None and self.live_from is not None and self.live_from <= timezone.now()
 
     @property
     def is_scheduled(self) -> bool:
@@ -512,10 +456,7 @@ class FeatureState(
         return self.get_feature_state_value_by_id(getattr(identity, "id", None))
 
     def get_feature_state_value_defaults(self) -> dict:
-        if (
-            self.feature.initial_value is None
-            or self.feature.project.prevent_flag_defaults
-        ):
+        if self.feature.initial_value is None or self.feature.project.prevent_flag_defaults:
             return {}
 
         value = self.feature.initial_value
@@ -528,17 +469,13 @@ class FeatureState(
 
         return {"type": type, key_name: parse_func(value)}
 
-    def get_multivariate_feature_state_value(
-        self, identity_id: int
-    ) -> AbstractBaseFeatureValueModel:
+    def get_multivariate_feature_state_value(self, identity_id: int) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
         # so we just convert them to a list and use python operations from here to
         # avoid further queries to the DB
         mv_options = list(self.multivariate_feature_state_values.all())
 
-        percentage_value = (
-            get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
-        )
+        percentage_value = get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
 
         # Iterate over the mv options in order of id (so we get the same value each
         # time) to determine the correct value to return to the identity based on
@@ -572,8 +509,7 @@ class FeatureState(
             identity=self.identity,
         ).exists():
             raise ValidationError(
-                "Feature state already exists for this environment, feature, "
-                "version, segment & identity combination"
+                "Feature state already exists for this environment, feature, " "version, segment & identity combination"
             )
 
     @hook(BEFORE_CREATE)
@@ -645,9 +581,7 @@ class FeatureState(
         # Get all feature states for a given environment with a valid live_from in the
         # past. Note: includes all versions for a given environment / feature
         # combination. We filter for the latest version later on.
-        feature_states = cls.objects.select_related(
-            "feature", "feature_state_value"
-        ).filter(
+        feature_states = cls.objects.select_related("feature", "feature_state_value").filter(
             environment_id=environment_id,
             live_from__isnull=False,
             live_from__lte=timezone.now(),
@@ -670,25 +604,18 @@ class FeatureState(
                 feature_state.identity_id,
             )
             current_feature_state = feature_states_dict.get(key)
-            if (
-                not current_feature_state
-                or feature_state.version > current_feature_state.version
-            ):
+            if not current_feature_state or feature_state.version > current_feature_state.version:
                 feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
 
     @classmethod
-    def get_environment_flags_queryset(
-        cls, environment_id: int, feature_name: str = None
-    ) -> QuerySet:
+    def get_environment_flags_queryset(cls, environment_id: int, feature_name: str = None) -> QuerySet:
         """
         Get a queryset of the latest live versions of an environments' feature states
         """
 
-        feature_states_list = cls.get_environment_flags_list(
-            environment_id, feature_name
-        )
+        feature_states_list = cls.get_environment_flags_list(environment_id, feature_name)
         return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @classmethod
@@ -732,7 +659,7 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        if self.change_request and not self.change_request.committed_at:
+        if self.change_request_id and not self.change_request.committed_at:
             return
 
         if self.identity:
@@ -770,11 +697,7 @@ class FeatureState(
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)
 
-        if (
-            history_instance.history_type == "+"
-            and self.feature_segment_id is None
-            and self.identity_id is None
-        ):
+        if history_instance.history_type == "+" and self.feature_segment_id is None and self.identity_id is None:
             kwargs["skip_signals"] = "send_environments_to_dynamodb"
 
         return kwargs
@@ -786,12 +709,15 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel, SoftDeleteExportableModel):
-    feature_state = models.OneToOneField(
-        FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
-    )
+class FeatureStateValue(
+    AbstractBaseFeatureValueModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    related_object_type = RelatedObjectType.FEATURE_STATE
+    history_record_class_path = "features.models.HistoricalFeatureStateValue"
 
-    history = HistoricalRecords(excluded_fields=["uuid"])
+    feature_state = models.OneToOneField(FeatureState, related_name="feature_state_value", on_delete=models.CASCADE)
 
     objects = FeatureStateValueManager()
 
@@ -802,3 +728,28 @@ class FeatureStateValue(AbstractBaseFeatureValueModel, SoftDeleteExportableModel
         clone.feature_state = feature_state
         clone.save()
         return clone
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        fs = self.feature_state
+
+        if fs.change_request_id and not fs.change_request.committed_at:
+            return
+
+        feature = fs.feature
+
+        if fs.identity_id:
+            return IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
+                feature.name,
+                fs.identity.identifier,
+            )
+        elif fs.feature_segment_id:
+            segment = fs.feature_segment.segment
+            return SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
+                feature.name,
+                segment.name,
+            )
+
+        return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.feature_state.environment
