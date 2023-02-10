@@ -50,8 +50,8 @@ class MetadataModelFieldPermissions(IsAuthenticated):
                     view.action
                     in [
                         "list",
-                        "get_supported_content_types",
-                        "get_supported_required_for_model",
+                        "supported_content_types",
+                        "supported_required_for_model",
                     ]
                     or view.detail
                 ):

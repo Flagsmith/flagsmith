@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -21,6 +21,7 @@ from .serializers import (
     ContentTypeSerializer,
     MetadataFieldSerializer,
     MetaDataModelFieldSerializer,
+    SupportedRequiredForModelQuerySerializer,
 )
 
 
@@ -91,28 +92,32 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["GET"],
-        url_path="get-supported-content_types",
+        url_path="supported-content-types",
     )
-    def get_supported_content_types(self, request, organisation_pk=None):
+    def supported_content_types(self, request, organisation_pk=None):
         qs = ContentType.objects.filter(model__in=METADATA_SUPPORTED_MODELS)
         serializer = ContentTypeSerializer(qs, many=True)
 
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        method="GET", responses={200: ContentTypeSerializer(many=True)}
+        method="GET",
+        responses={200: ContentTypeSerializer(many=True)},
+        request_body=SupportedRequiredForModelQuerySerializer,
     )
     @action(
         detail=False,
         methods=["GET"],
-        url_path="get-supported-required-for-model",
+        url_path="supported-required-for-model",
     )
-    def get_supported_required_for_model(self, request, organisation_pk=None):
-        model_name = request.query_params.get("model_name")
-        if not model_name:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+    def supported_required_for_model(self, request, organisation_pk=None):
+        serializer = SupportedRequiredForModelQuerySerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
         qs = ContentType.objects.filter(
-            model__in=SUPPORTED_REQUIREMENTS_MAPPING.get(model_name, {}).keys()
+            model__in=SUPPORTED_REQUIREMENTS_MAPPING.get(
+                serializer.data["model_name"], {}
+            ).keys()
         )
         serializer = ContentTypeSerializer(qs, many=True)
 

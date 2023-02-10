@@ -17,6 +17,10 @@ from .models import (
 )
 
 
+class SupportedRequiredForModelQuerySerializer(serializers.Serializer):
+    model_name = serializers.CharField(required=True)
+
+
 class MetadataFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetadataField
