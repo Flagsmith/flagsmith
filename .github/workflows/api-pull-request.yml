@@ -59,10 +59,13 @@ jobs:
             - name: Check isort imports
               run: isort --check .
 
+            - name: Create analytics database
+              run: sudo -u postgres psql -c 'create database analytics;'
+
             - name: Run Tests
               env:
                   DATABASE_URL: "postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres"
-                  ANALYTICS_DATABASE_URL: "postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres"
+                  ANALYTICS_DATABASE_URL: "postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/analytics"
                   DJANGO_SETTINGS_MODULE: "app.settings.test"
                   LOG_LEVEL: "INFO"
               run: |
