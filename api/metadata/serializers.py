@@ -43,17 +43,24 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
     def validate(self, data):
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
-            get_org_id_func = SUPPORTED_REQUIREMENTS_MAPPING.get(
-                data["content_type"].model
-            )[requirement["content_type"].model]
-
-            if (
-                get_org_id_func(requirement["object_id"])
-                != data["field"].organisation_id
-            ):
+            try:
+                get_org_id_func = SUPPORTED_REQUIREMENTS_MAPPING[
+                    data["content_type"].model
+                ][requirement["content_type"].model]
+            except KeyError:
                 raise serializers.ValidationError(
-                    "The requirement organisation does not match the field organisation"
+                    "Invalid requirement for model {}".format(
+                        data["content_type"].model
+                    )
                 )
+
+                if (
+                    get_org_id_func(requirement["object_id"])
+                    != data["field"].organisation_id
+                ):
+                    raise serializers.ValidationError(
+                        "The requirement organisation does not match the field organisation"
+                    )
         return data
 
 
