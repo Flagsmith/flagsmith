@@ -30,13 +30,21 @@ def test_list_feature_segments(
     # Given
     base_url = reverse("api-v1:features:feature-segment-list")
     url = f"{base_url}?environment={environment.id}&feature={feature.id}"
-    environment_2 = Environment.objects.create(project=project, name="Test environment 2")
+    environment_2 = Environment.objects.create(
+        project=project, name="Test environment 2"
+    )
     segment_2 = Segment.objects.create(project=project, name="Segment 2")
     segment_3 = Segment.objects.create(project=project, name="Segment 3")
 
-    FeatureSegment.objects.create(feature=feature, segment=segment_2, environment=environment)
-    FeatureSegment.objects.create(feature=feature, segment=segment_3, environment=environment)
-    FeatureSegment.objects.create(feature=feature, segment=segment, environment=environment_2)
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment_2, environment=environment
+    )
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment_3, environment=environment
+    )
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment_2
+    )
 
     # When
     with django_assert_num_queries(num_queries):
@@ -68,8 +76,12 @@ def test_list_feature_segments_is_feature_specific(
     base_url = reverse("api-v1:features:feature-segment-list")
     url = f"{base_url}?environment={environment.id}&feature={feature.id}"
 
-    segment = Segment.objects.create(project=project, name="Test segment", feature=feature)
-    FeatureSegment.objects.create(feature=feature, segment=segment, environment=environment)
+    segment = Segment.objects.create(
+        project=project, name="Test segment", feature=feature
+    )
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
 
     # When
     response = client.get(url)
@@ -81,7 +93,9 @@ def test_list_feature_segments_is_feature_specific(
     assert response_json["results"][0]["is_feature_specific"]
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_create_feature_segment(segment, feature, environment, client):
     # Given
     data = {
@@ -100,10 +114,14 @@ def test_create_feature_segment(segment, feature, environment, client):
     assert response_json["id"]
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_delete_feature_segment(segment, feature, environment, client):
     # Given
-    feature_segment = FeatureSegment.objects.create(feature=feature, environment=environment, segment=segment)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, environment=environment, segment=segment
+    )
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
 
     # When
@@ -114,8 +132,12 @@ def test_delete_feature_segment(segment, feature, environment, client):
     assert not FeatureSegment.objects.filter(id=feature_segment.id).exists()
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
-def test_priority_of_multiple_feature_segments(feature_segment, project, client, environment, feature):
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_priority_of_multiple_feature_segments(
+    feature_segment, project, client, environment, feature
+):
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
@@ -144,10 +166,16 @@ def test_priority_of_multiple_feature_segments(feature_segment, project, client,
     assert json_response[1]["id"] == another_feature_segment.id
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
-def test_get_feature_segment_by_uuid(feature_segment, project, client, environment, feature):
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_feature_segment_by_uuid(
+    feature_segment, project, client, environment, feature
+):
     # Given
-    url = reverse("api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid])
+    url = reverse(
+        "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
+    )
 
     # When
     response = client.get(url)
@@ -159,8 +187,12 @@ def test_get_feature_segment_by_uuid(feature_segment, project, client, environme
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
-def test_get_feature_segment_by_id(feature_segment, project, client, environment, feature):
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_feature_segment_by_id(
+    feature_segment, project, client, environment, feature
+):
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
 
@@ -174,7 +206,9 @@ def test_get_feature_segment_by_id(feature_segment, project, client, environment
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(
     client, feature_based_segment, project, environment
 ):
@@ -194,11 +228,14 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["feature"][0]
-        == "Can only create segment override(using this segment) for feature %d" % feature_based_segment.feature.id
+        == "Can only create segment override(using this segment) for feature %d"
+        % feature_based_segment.feature.id
     )
 
 
-@pytest.mark.parametrize("client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")])
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(
     client, feature_based_segment, project, environment, feature
 ):

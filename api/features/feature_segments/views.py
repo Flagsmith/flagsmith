@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 )
 @method_decorator(
     name="update_priorities",
-    decorator=swagger_auto_schema(responses={200: FeatureSegmentListSerializer(many=True)}),
+    decorator=swagger_auto_schema(
+        responses={200: FeatureSegmentListSerializer(many=True)}
+    ),
 )
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,
@@ -37,13 +39,21 @@ class FeatureSegmentViewSet(
 
     def get_queryset(self):
         if hasattr(self.request, "master_api_key"):
-            permitted_projects = Project.objects.filter(organisation_id=self.request.master_api_key.organisation_id)
+            permitted_projects = Project.objects.filter(
+                organisation_id=self.request.master_api_key.organisation_id
+            )
         else:
-            permitted_projects = self.request.user.get_permitted_projects(permissions=["VIEW_PROJECT"])
-        queryset = FeatureSegment.objects.filter(feature__project__in=permitted_projects)
+            permitted_projects = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
+        queryset = FeatureSegment.objects.filter(
+            feature__project__in=permitted_projects
+        )
 
         if self.action == "list":
-            filter_serializer = FeatureSegmentQuerySerializer(data=self.request.query_params)
+            filter_serializer = FeatureSegmentQuerySerializer(
+                data=self.request.query_params
+            )
             filter_serializer.is_valid(raise_exception=True)
             return queryset.select_related("segment").filter(**filter_serializer.data)
 
@@ -71,19 +81,30 @@ class FeatureSegmentViewSet(
 
         # TODO: refactor / test this
 
-        changed, existing_feature_segments = FeatureSegment.validate_new_priorities(serializer.data)
+        changed, existing_feature_segments = FeatureSegment.validate_new_priorities(
+            serializer.data
+        )
         if not changed:
-            return Response(FeatureSegmentListSerializer(instance=existing_feature_segments, many=True).data)
+            return Response(
+                FeatureSegmentListSerializer(
+                    instance=existing_feature_segments, many=True
+                ).data
+            )
 
         updated_instances = serializer.save()
         create_segment_priorities_changed_audit_log.delay(
             kwargs={
-                "previous_priorities": [{"id": fs.id, "priority": fs.priority} for fs in existing_feature_segments],
+                "previous_priorities": [
+                    {"id": fs.id, "priority": fs.priority}
+                    for fs in existing_feature_segments
+                ],
                 "feature_segment_ids": [i.id for i in updated_instances],
                 "user_id": request.user.id,
             }
         )
-        return Response(FeatureSegmentListSerializer(instance=updated_instances, many=True).data)
+        return Response(
+            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
+        )
 
     @action(
         detail=False,

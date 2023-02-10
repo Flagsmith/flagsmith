@@ -26,9 +26,11 @@ IDENTITY_FEATURE_STATE_CREATED_MESSAGE = (
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and identity '%s'"
 )
+# fmt: off
 IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE = (
     "Remote config value updated for identity override on feature '%s' and identity '%s'."
 )
+# fmt: on
 SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Segment override scheduled for %s for feature '%s' and segment '%s'"
 )

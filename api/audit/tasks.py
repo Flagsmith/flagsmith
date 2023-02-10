@@ -40,7 +40,10 @@ def create_audit_log_from_historical_record(
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
 
-    if history_instance.history_type == "~" and not history_instance.diff_against(history_instance.prev_record).changes:
+    if (
+        history_instance.history_type == "~"
+        and not history_instance.diff_against(history_instance.prev_record).changes
+    ):
         return
 
     instance = history_instance.instance
