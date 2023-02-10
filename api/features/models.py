@@ -257,27 +257,67 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
     @classmethod
-    def validate_new_priorities(
-        cls, new_feature_segment_id_priorities: typing.Iterable[typing.Dict[str, int]]
-    ) -> typing.Tuple[bool, typing.List["FeatureSegment"]]:
-        changed = False
-        existing_feature_segments = cls.objects.filter(
-            id__in=[pair["id"] for pair in new_feature_segment_id_priorities]
+    def update_priorities(
+        cls, new_feature_segment_id_priorities: typing.List[typing.Tuple[int, int]]
+    ) -> typing.Tuple[
+        bool, typing.List[typing.Tuple[int, int]], QuerySet["FeatureSegment"]
+    ]:
+        """
+        Method to update the priorities of multiple feature segments at once.
+
+        :param new_feature_segment_id_priorities: a list of 2-tuples containing the id, new priority value of
+            the feature segments
+        :return: a 3-tuple consisting of:
+            - a boolean detailing whether any changes were made
+            - a list of 2-tuples containing the id, old priority value of the feature segments
+            - a queryset containing the updated feature segment model objects
+        """
+        feature_segments = cls.objects.filter(
+            id__in=[pair[0] for pair in new_feature_segment_id_priorities]
         )
 
-        existing_feature_segment_id_priorities = [
-            {"id": fs.id, "priority": fs.priority} for fs in existing_feature_segments
+        existing_feature_segment_id_priority_pairs = cls.to_id_priority_tuple_pairs(
+            feature_segments
+        )
+
+        def sort_function(id_priority_pair):
+            priority = id_priority_pair[1]
+            return priority
+
+        if sorted(
+            existing_feature_segment_id_priority_pairs, key=sort_function
+        ) == sorted(new_feature_segment_id_priorities, key=sort_function):
+            # no changes needed - do nothing (but return existing feature segments)
+            return False, existing_feature_segment_id_priority_pairs, feature_segments
+
+        id_priority_dict = dict(new_feature_segment_id_priorities)
+
+        for fs in feature_segments:
+            new_priority = id_priority_dict[fs.id]
+            fs.to(new_priority)
+
+        # since the `to` method updates the priority in place, we don't need to refresh
+        # the objects from the database.
+        return True, existing_feature_segment_id_priority_pairs, feature_segments
+
+    @staticmethod
+    def to_id_priority_tuple_pairs(
+        feature_segments: typing.Union[
+            typing.Iterable["FeatureSegment"], typing.Iterable[dict]
         ]
+    ) -> typing.List[typing.Tuple[int, int]]:
+        """
+        Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples
+        consisting of the id, priority of the feature segments.
+        """
+        id_priority_pairs = []
+        for fs in feature_segments:
+            if isinstance(fs, dict):
+                id_priority_pairs.append((fs["id"], fs["priority"]))
+            else:
+                id_priority_pairs.append((fs.id, fs.priority))
 
-        def sort_function(d):
-            return d["priority"]
-
-        if sorted(existing_feature_segment_id_priorities, key=sort_function) != sorted(
-            new_feature_segment_id_priorities, key=sort_function
-        ):
-            changed = True
-
-        return changed, existing_feature_segments
+        return id_priority_pairs
 
 
 class FeatureState(

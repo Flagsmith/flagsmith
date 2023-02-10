@@ -136,16 +136,26 @@ def test_delete_feature_segment(segment, feature, environment, client):
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_priority_of_multiple_feature_segments(
-    feature_segment, project, client, environment, feature
+    feature_segment,
+    project,
+    client,
+    environment,
+    feature,
+    mocker,
+    admin_user,
+    master_api_key,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
     # another segment and feature segments for the same feature
     another_segment = Segment.objects.create(name="Another segment", project=project)
-
     another_feature_segment = FeatureSegment.objects.create(
         segment=another_segment, environment=environment, feature=feature
+    )
+
+    mocked_create_segment_priorities_changed_audit_log = mocker.patch(
+        "features.feature_segments.serializers.create_segment_priorities_changed_audit_log"
     )
 
     # reorder the feature segments
@@ -164,6 +174,22 @@ def test_priority_of_multiple_feature_segments(
     json_response = response.json()
     assert json_response[0]["id"] == feature_segment.id
     assert json_response[1]["id"] == another_feature_segment.id
+
+    mocked_create_segment_priorities_changed_audit_log.delay.assert_called_once_with(
+        kwargs={
+            "previous_id_priority_pairs": [
+                (feature_segment.id, 0),
+                (another_feature_segment.id, 1),
+            ],
+            "feature_segment_ids": [feature_segment.id, another_feature_segment.id],
+            "user_id": None
+            if "HTTP_AUTHORIZATION" in client._credentials
+            else admin_user.id,
+            "master_api_key_id": master_api_key[0].id
+            if "HTTP_AUTHORIZATION" in client._credentials
+            else None,
+        }
+    )
 
 
 @pytest.mark.parametrize(

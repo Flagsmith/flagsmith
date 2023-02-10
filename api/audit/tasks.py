@@ -83,9 +83,10 @@ def create_audit_log_from_historical_record(
 
 @register_task_handler()
 def create_segment_priorities_changed_audit_log(
-    previous_priorities: typing.List[dict],
+    previous_id_priority_pairs: typing.List[typing.Tuple[int, int]],
     feature_segment_ids: typing.List[int],
-    user_id: int,
+    user_id: int = None,
+    master_api_key_id: int = None,
 ):
     """
     This needs to be a separate task called by the view itself. This is because the OrderedModelBase class
@@ -125,4 +126,5 @@ def create_segment_priorities_changed_audit_log(
         author_id=user_id,
         related_object_id=feature.id,
         related_object_type=RelatedObjectType.FEATURE.name,
+        master_api_key_id=master_api_key_id,
     )

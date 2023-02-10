@@ -9,7 +9,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from audit.tasks import create_segment_priorities_changed_audit_log
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -68,42 +67,18 @@ class FeatureSegmentViewSet(
 
         return FeatureSegmentListSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "update_priorities":
-            # update the serializer kwargs to ensure docs here are correct
-            kwargs = {**kwargs, "many": True, "partial": True}
-        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
+    @swagger_auto_schema(
+        methods=["POST"],
+        request_body=FeatureSegmentChangePrioritiesSerializer(many=True),
+        responses={200: FeatureSegmentListSerializer(many=True)},
+    )
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-
-        # TODO: refactor / test this
-
-        changed, existing_feature_segments = FeatureSegment.validate_new_priorities(
-            serializer.data
-        )
-        if not changed:
-            return Response(
-                FeatureSegmentListSerializer(
-                    instance=existing_feature_segments, many=True
-                ).data
-            )
-
-        updated_instances = serializer.save()
-        create_segment_priorities_changed_audit_log.delay(
-            kwargs={
-                "previous_priorities": [
-                    {"id": fs.id, "priority": fs.priority}
-                    for fs in existing_feature_segments
-                ],
-                "feature_segment_ids": [i.id for i in updated_instances],
-                "user_id": request.user.id,
-            }
-        )
+        feature_segments = serializer.save()
         return Response(
-            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
+            FeatureSegmentListSerializer(instance=feature_segments, many=True).data
         )
 
     @action(

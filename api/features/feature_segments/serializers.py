@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from audit.tasks import create_segment_priorities_changed_audit_log
 from features.models import FeatureSegment
 
 
@@ -92,25 +93,36 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
 
         return validated_attrs
 
+    def create(self, validated_data):
+        id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
+        (
+            changed,
+            previous_id_priority_pairs,
+            feature_segments,
+        ) = FeatureSegment.update_priorities(id_priority_pairs)
 
-class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
+        if changed:
+            create_segment_priorities_changed_audit_log.delay(
+                kwargs={
+                    "previous_id_priority_pairs": previous_id_priority_pairs,
+                    "feature_segment_ids": [pair[0] for pair in id_priority_pairs],
+                    "user_id": getattr(self.context["request"].user, "id", None),
+                    "master_api_key_id": self.context["request"].master_api_key.id
+                    if hasattr(self.context["request"], "master_api_key")
+                    else None,
+                }
+            )
+
+        return feature_segments
+
+
+class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):
     priority = serializers.IntegerField(
         min_value=0, help_text="Value to change the feature segment's priority to."
     )
     id = serializers.IntegerField()
 
     class Meta:
+        model = FeatureSegment
+        fields = ("id", "priority")
         list_serializer_class = FeatureSegmentChangePrioritiesListSerializer
-
-    def create(self, validated_data):
-        try:
-            instance = FeatureSegment.objects.get(id=validated_data["id"])
-            return self.update(instance, validated_data)
-        except FeatureSegment.DoesNotExist:
-            raise serializers.ValidationError(
-                "No feature segment exists with id: %s" % validated_data["id"]
-            )
-
-    def update(self, instance, validated_data):
-        instance.to(validated_data["priority"])
-        return instance
