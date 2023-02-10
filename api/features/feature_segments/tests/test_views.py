@@ -175,6 +175,12 @@ def test_priority_of_multiple_feature_segments(
     assert json_response[0]["id"] == feature_segment.id
     assert json_response[1]["id"] == another_feature_segment.id
 
+    expected_user_id = (
+        None if "HTTP_AUTHORIZATION" in client._credentials else admin_user.id
+    )
+    expected_master_api_key_id = (
+        master_api_key[0].id if "HTTP_AUTHORIZATION" in client._credentials else None
+    )
     mocked_create_segment_priorities_changed_audit_log.delay.assert_called_once_with(
         kwargs={
             "previous_id_priority_pairs": [
@@ -182,12 +188,8 @@ def test_priority_of_multiple_feature_segments(
                 (another_feature_segment.id, 1),
             ],
             "feature_segment_ids": [feature_segment.id, another_feature_segment.id],
-            "user_id": None
-            if "HTTP_AUTHORIZATION" in client._credentials
-            else admin_user.id,
-            "master_api_key_id": master_api_key[0].id
-            if "HTTP_AUTHORIZATION" in client._credentials
-            else None,
+            "user_id": expected_user_id,
+            "master_api_key_id": expected_master_api_key_id,
         }
     )
 
