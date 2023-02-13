@@ -70,8 +70,8 @@ def register_task_handler(task_name: str = None):
 
 
 def register_recurring_task(
+    run_every: timedelta,
     task_name: str = None,
-    run_every: timedelta = None,
     args: typing.Tuple = (),
     kwargs: typing.Dict = None,
 ):
@@ -86,7 +86,6 @@ def register_recurring_task(
         task_module = getmodule(f).__name__.rsplit(".")[-1]
         task_identifier = f"{task_module}.{task_name}"
         register_task(task_identifier, f)
-
         task = Task.schedule_task(
             schedule_for=timezone.now(),
             task_identifier=task_identifier,
