@@ -17,7 +17,8 @@ class FeatureEvaluationDataSchema(Schema):
         #     "datetime": "2021-01-01",
         #     "some_feature_name": 10
         # }
-        return {"day": data.pop("datetime"), "count": data.popitem()[1]}
+        _, count = data.popitem()[1]
+        return {"day": data.pop("datetime"), "count": count}
 
     @post_load
     def make_usage_data(self, data, **kwargs):
