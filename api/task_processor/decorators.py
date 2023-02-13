@@ -76,7 +76,7 @@ def register_recurring_task(
     kwargs: typing.Dict = None,
 ):
     if not os.environ.get("RUN_BY_PROCESSOR"):
-        # Register the task only if it is by the task processor
+        # Do not register recurring tasks if not running by task processor
         return lambda f: f
 
     def decorator(f: typing.Callable):

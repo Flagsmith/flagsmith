@@ -23,6 +23,10 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Used by the `register_recurring_task` decorator
+        # to decide wether it should register the task or not.
+        os.environ["RUN_BY_PROCESSOR"] = "True"
+
         signal.signal(signal.SIGINT, self._exit_gracefully)
         signal.signal(signal.SIGTERM, self._exit_gracefully)
 
@@ -60,7 +64,6 @@ class Command(BaseCommand):
         sleep_interval_ms = options["sleepintervalms"]
         grace_period_ms = options["graceperiodms"]
         queue_pop_size = options["queuepopsize"]
-        os.environ["RUN_BY_PROCESSOR"] = "True"
 
         self._threads.extend(
             [
