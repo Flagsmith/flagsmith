@@ -108,7 +108,7 @@ class UsageDataAPIViewSet(viewsets.GenericViewSet):
     @swagger_auto_schema(
         responses={200: UsageTotalCountSerializer()},
     )
-    @action(detail=False, methods=["GET"])
+    @action(detail=False, methods=["GET"], url_path="total-count")
     def total_count(self, request, organisation_pk=None):
         organisation = self._get_organisation()
         count = get_total_events_count(organisation)

@@ -7,7 +7,10 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from environments.models import Environment
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 
 from .models import (
     APIUsageBucket,
@@ -18,14 +21,15 @@ from .models import (
 
 if settings.USE_POSTGRES_FOR_ANALYTICS:
 
-    @register_task_handler(run_every=60)
-    def populate_bucket_size_task(
+    @register_recurring_task(
+        run_every=60,
+        kwargs={"bucket_size": ANALYTICS_READ_BUCKET_SIZE, "run_every": 60},
+    )
+    def populate_bucket(
         bucket_size: int, run_every: int, source_bucket_size: int = None
     ):
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
-
-    populate_bucket_size_task.delay(ANALYTICS_READ_BUCKET_SIZE, 60)
 
 
 @register_task_handler()

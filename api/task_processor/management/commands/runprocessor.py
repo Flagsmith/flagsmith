@@ -1,4 +1,5 @@
 import logging
+import os
 import signal
 import time
 import typing
@@ -59,6 +60,7 @@ class Command(BaseCommand):
         sleep_interval_ms = options["sleepintervalms"]
         grace_period_ms = options["graceperiodms"]
         queue_pop_size = options["queuepopsize"]
+        os.environ["RUN_BY_PROCESSOR"] = "True"
 
         self._threads.extend(
             [

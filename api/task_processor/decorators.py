@@ -1,4 +1,5 @@
 import logging
+import os
 import typing
 from datetime import datetime, timedelta
 from inspect import getmodule
@@ -14,7 +15,7 @@ from task_processor.task_run_method import TaskRunMethod
 logger = logging.getLogger(__name__)
 
 
-def register_task_handler(task_name: str = None, run_every: timedelta = None):
+def register_task_handler(task_name: str = None):
     def decorator(f: typing.Callable):
         nonlocal task_name
 
@@ -22,10 +23,6 @@ def register_task_handler(task_name: str = None, run_every: timedelta = None):
         task_module = getmodule(f).__name__.rsplit(".")[-1]
         task_identifier = f"{task_module}.{task_name}"
         register_task(task_identifier, f)
-        if run_every and not settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR:
-            raise ValueError(
-                "run_every can only be used with TASK_PROCESSOR run method"
-            )
 
         def delay(
             *,
@@ -53,7 +50,6 @@ def register_task_handler(task_name: str = None, run_every: timedelta = None):
                 task = Task.schedule_task(
                     schedule_for=delay_until or timezone.now(),
                     task_identifier=task_identifier,
-                    run_every=run_every,
                     args=args,
                     kwargs=kwargs,
                 )
@@ -69,5 +65,36 @@ def register_task_handler(task_name: str = None, run_every: timedelta = None):
         f.task_identifier = task_identifier
 
         return f
+
+    return decorator
+
+
+def register_recurring_task(
+    task_name: str = None,
+    run_every: timedelta = None,
+    args: typing.Tuple = (),
+    kwargs: typing.Dict = None,
+):
+    if not os.environ.get("RUN_BY_PROCESSOR"):
+        # Register the task only if it is by the task processor
+        return lambda f: f
+
+    def decorator(f: typing.Callable):
+        nonlocal task_name
+
+        task_name = task_name or f.__name__
+        task_module = getmodule(f).__name__.rsplit(".")[-1]
+        task_identifier = f"{task_module}.{task_name}"
+        register_task(task_identifier, f)
+
+        task = Task.schedule_task(
+            schedule_for=timezone.now(),
+            task_identifier=task_identifier,
+            run_every=run_every,
+            args=args,
+            kwargs=kwargs,
+        )
+        task.save()
+        return task
 
     return decorator
