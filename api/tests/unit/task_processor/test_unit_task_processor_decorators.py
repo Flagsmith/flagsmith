@@ -47,7 +47,7 @@ def test_register_task_handler_run_in_thread(mocker, caplog):
     )
 
 
-def test_register_recurring_task_creates_task(mocker, db, monkeypatch):
+def test_register_recurring_task(mocker, db, monkeypatch):
     # Given
     monkeypatch.setenv("RUN_BY_PROCESSOR", "True")
 
@@ -60,7 +60,7 @@ def test_register_recurring_task_creates_task(mocker, db, monkeypatch):
         kwargs=task_kwargs,
     )
     def a_function(first_arg, second_arg):
-        pass
+        return first_arg + second_arg
 
     # Then
     task_identifier = "test_unit_task_processor_decorators.a_function"
@@ -69,3 +69,4 @@ def test_register_recurring_task_creates_task(mocker, db, monkeypatch):
     assert task.run_every == run_every
 
     assert get_task(task_identifier)
+    assert task.run() == "foobar"
