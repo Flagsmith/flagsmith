@@ -27,6 +27,7 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
+from simple_history.models import HistoricalRecords
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -42,6 +43,7 @@ from audit.constants import (
     SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from audit.tasks import create_segment_priorities_changed_audit_log
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -258,10 +260,9 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
 
     @classmethod
     def update_priorities(
-        cls, new_feature_segment_id_priorities: typing.List[typing.Tuple[int, int]]
-    ) -> typing.Tuple[
-        bool, typing.List[typing.Tuple[int, int]], QuerySet["FeatureSegment"]
-    ]:
+        cls,
+        new_feature_segment_id_priorities: typing.List[typing.Tuple[int, int]],
+    ) -> QuerySet["FeatureSegment"]:
         """
         Method to update the priorities of multiple feature segments at once.
 
@@ -288,7 +289,7 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
             existing_feature_segment_id_priority_pairs, key=sort_function
         ) == sorted(new_feature_segment_id_priorities, key=sort_function):
             # no changes needed - do nothing (but return existing feature segments)
-            return False, existing_feature_segment_id_priority_pairs, feature_segments
+            return feature_segments
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
@@ -296,9 +297,24 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
             new_priority = id_priority_dict[fs.id]
             fs.to(new_priority)
 
+        request = getattr(HistoricalRecords.thread, "request", None)
+        if request:
+            create_segment_priorities_changed_audit_log.delay(
+                kwargs={
+                    "previous_id_priority_pairs": existing_feature_segment_id_priority_pairs,
+                    "feature_segment_ids": [
+                        pair[0] for pair in new_feature_segment_id_priorities
+                    ],
+                    "user_id": getattr(request.user, "id", None),
+                    "master_api_key_id": request.master_api_key.id
+                    if hasattr(request, "master_api_key")
+                    else None,
+                }
+            )
+
         # since the `to` method updates the priority in place, we don't need to refresh
         # the objects from the database.
-        return True, existing_feature_segment_id_priority_pairs, feature_segments
+        return feature_segments
 
     @staticmethod
     def to_id_priority_tuple_pairs(

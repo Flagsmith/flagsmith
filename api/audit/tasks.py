@@ -4,14 +4,13 @@ from django.contrib.auth import get_user_model
 
 from audit.constants import FEATURE_STATE_WENT_LIVE_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
-from features.models import FeatureSegment, FeatureState
 from task_processor.decorators import register_task_handler
-
-user_model = get_user_model()
 
 
 @register_task_handler()
 def create_feature_state_went_live_audit_log(feature_state_id: int):
+    from features.models import FeatureState
+
     feature_state = FeatureState.objects.get(id=feature_state_id)
 
     if not feature_state.change_request:
@@ -45,6 +44,8 @@ def create_audit_log_from_historical_record(
         and not history_instance.diff_against(history_instance.prev_record).changes
     ):
         return
+
+    user_model = get_user_model()
 
     instance = history_instance.instance
     history_user = user_model.objects.filter(id=history_user_id).first()
@@ -111,6 +112,8 @@ def create_segment_priorities_changed_audit_log(
     """
 
     # TODO: use previous priorities to show what changed.
+
+    from features.models import FeatureSegment
 
     feature_segments = FeatureSegment.objects.filter(id__in=feature_segment_ids)
     if not feature_segments:

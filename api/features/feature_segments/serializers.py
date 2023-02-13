@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from audit.tasks import create_segment_priorities_changed_audit_log
 from features.models import FeatureSegment
 
 
@@ -95,25 +94,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
         id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
-        (
-            changed,
-            previous_id_priority_pairs,
-            feature_segments,
-        ) = FeatureSegment.update_priorities(id_priority_pairs)
-
-        if changed:
-            create_segment_priorities_changed_audit_log.delay(
-                kwargs={
-                    "previous_id_priority_pairs": previous_id_priority_pairs,
-                    "feature_segment_ids": [pair[0] for pair in id_priority_pairs],
-                    "user_id": getattr(self.context["request"].user, "id", None),
-                    "master_api_key_id": self.context["request"].master_api_key.id
-                    if hasattr(self.context["request"], "master_api_key")
-                    else None,
-                }
-            )
-
-        return feature_segments
+        return FeatureSegment.update_priorities(id_priority_pairs)
 
 
 class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):
