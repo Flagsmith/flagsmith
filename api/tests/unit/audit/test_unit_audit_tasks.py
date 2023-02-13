@@ -19,7 +19,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_
     mocked_historical_record_model_class.objects.get.return_value = history_instance
 
     mocked_user_model_class = mocker.MagicMock()
-    monkeypatch.setattr("audit.tasks.user_model", mocked_user_model_class)
+    mocker.patch("audit.tasks.get_user_model", return_value=mocked_user_model_class)
     mocked_user_model_class.objects.filter.return_value.first.return_value = None
 
     mocked_audit_log_model_class = mocker.patch("audit.tasks.AuditLog")
@@ -64,7 +64,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
     mocked_historical_record_model_class.objects.get.return_value = history_instance
 
     mocked_user_model_class = mocker.MagicMock()
-    monkeypatch.setattr("audit.tasks.user_model", mocked_user_model_class)
+    mocker.patch("audit.tasks.get_user_model", return_value=mocked_user_model_class)
     mocked_user_model_class.objects.filter.return_value.first.return_value = (
         history_user
     )
@@ -118,7 +118,7 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     mocked_historical_record_model_class.objects.get.return_value = history_instance
 
     mocked_user_model_class = mocker.MagicMock()
-    monkeypatch.setattr("audit.tasks.user_model", mocked_user_model_class)
+    mocker.patch("audit.tasks.get_user_model", return_value=mocked_user_model_class)
     mocked_user_model_class.objects.filter.return_value.first.return_value = (
         history_user
     )

@@ -242,12 +242,11 @@ def test_feature_segment_update_priorities_when_no_changes(
     )
 
     # When
-    changed, _, returned_feature_segments = FeatureSegment.update_priorities(
+    returned_feature_segments = FeatureSegment.update_priorities(
         new_feature_segment_id_priorities=existing_id_priority_pairs
     )
 
     # Then
-    assert changed is False
     assert list(returned_feature_segments) == list(existing_feature_segments)
 
     mocked_create_segment_priorities_changed_audit_log.delay.assert_not_called()
@@ -278,12 +277,11 @@ def test_feature_segment_update_priorities_when_changes(
     new_id_priority_pairs = [(feature_segment.id, 1), (another_feature_segment.id, 0)]
 
     # When
-    changed, _, returned_feature_segments = FeatureSegment.update_priorities(
+    returned_feature_segments = FeatureSegment.update_priorities(
         new_feature_segment_id_priorities=new_id_priority_pairs
     )
 
     # Then
-    assert changed is True
     assert sorted(
         FeatureSegment.to_id_priority_tuple_pairs(returned_feature_segments),
         key=lambda t: t[1],
