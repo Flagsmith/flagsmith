@@ -1,5 +1,11 @@
+from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from audit.tasks import create_audit_log_from_historical_record
+from audit.tasks import (
+    create_audit_log_from_historical_record,
+    create_segment_priorities_changed_audit_log,
+)
+from features.models import FeatureSegment
+from segments.models import Segment
 
 
 def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_key(
@@ -149,3 +155,31 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
         log=log_message,
         master_api_key=None,
     )
+
+
+def test_create_segment_priorities_changed_audit_log(
+    admin_user, feature_segment, feature, environment
+):
+    # Given
+    another_segment = Segment.objects.create(
+        project=environment.project, name="Another Segment"
+    )
+    another_feature_segment = FeatureSegment.objects.create(
+        feature=feature, environment=environment, segment=another_segment
+    )
+
+    # When
+    create_segment_priorities_changed_audit_log(
+        previous_id_priority_pairs=[
+            (feature_segment.id, 0),
+            (another_feature_segment, 1),
+        ],
+        feature_segment_ids=[feature_segment.id, another_feature_segment.id],
+        user_id=admin_user.id,
+    )
+
+    # Then
+    assert AuditLog.objects.filter(
+        environment=environment,
+        log=f"Segment overrides re-ordered for feature '{feature.name}'.",
+    ).exists()

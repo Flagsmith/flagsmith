@@ -126,6 +126,7 @@ def create_segment_priorities_changed_audit_log(
     AuditLog.objects.create(
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",
         environment=environment,
+        project_id=environment.project_id,
         author_id=user_id,
         related_object_id=feature.id,
         related_object_type=RelatedObjectType.FEATURE.name,
