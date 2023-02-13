@@ -2,12 +2,11 @@ import typing
 from importlib import import_module
 
 from django.db import models
-from django.db.models import Model
+from django.db.models import Model, Q
 from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
-from environments.models import Environment
 from projects.models import Project
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
@@ -82,14 +81,15 @@ class AuditLog(LifecycleModel):
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
             return
 
-        if self.environment:
-            environments = Environment.objects.filter(id=self.environment_id)
-        else:
-            environments = self.project.environments.all()
+        environments_filter = Q()
+        if self.environment_id:
+            environments_filter = Q(id=self.environment_id)
 
         # Use a queryset to perform update to prevent signals being called at this point.
         # Since we're re-saving the environment, we don't want to duplicate signals.
-        environments.update(updated_at=self.created_date)
+        self.project.environments.filter(environments_filter).update(
+            updated_at=self.created_date
+        )
 
     @hook(BEFORE_CREATE)
     def add_project(self):

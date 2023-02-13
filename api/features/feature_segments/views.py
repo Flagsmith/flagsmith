@@ -67,19 +67,18 @@ class FeatureSegmentViewSet(
 
         return FeatureSegmentListSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "update_priorities":
-            # update the serializer kwargs to ensure docs here are correct
-            kwargs = {**kwargs, "many": True, "partial": True}
-        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
+    @swagger_auto_schema(
+        methods=["POST"],
+        request_body=FeatureSegmentChangePrioritiesSerializer(many=True),
+        responses={200: FeatureSegmentListSerializer(many=True)},
+    )
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        updated_instances = serializer.save()
+        feature_segments = serializer.save()
         return Response(
-            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
+            FeatureSegmentListSerializer(instance=feature_segments, many=True).data
         )
 
     @action(

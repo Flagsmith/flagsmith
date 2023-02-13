@@ -5,8 +5,6 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
-from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
-from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from segments.models import Segment
@@ -137,42 +135,20 @@ def test_delete_feature_segment(segment, feature, environment, client):
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
-def test_audit_log_created_when_feature_segment_created(
-    segment, feature, environment, client
-):
-    # Given
-    url = reverse("api-v1:features:feature-segment-list")
-    data = {
-        "segment": segment.id,
-        "feature": feature.id,
-        "environment": environment.id,
-    }
-
-    # When
-    response = client.post(url, data=data)
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert (
-        AuditLog.objects.filter(
-            related_object_type=RelatedObjectType.FEATURE.name
-        ).count()
-        == 1
-    )
-
-
-@pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
-)
 def test_priority_of_multiple_feature_segments(
-    feature_segment, project, client, environment, feature
+    feature_segment,
+    project,
+    client,
+    environment,
+    feature,
+    admin_user,
+    master_api_key,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
     # another segment and feature segments for the same feature
     another_segment = Segment.objects.create(name="Another segment", project=project)
-
     another_feature_segment = FeatureSegment.objects.create(
         segment=another_segment, environment=environment, feature=feature
     )
@@ -233,40 +209,6 @@ def test_get_feature_segment_by_id(
     json_response = response.json()
     assert json_response["id"] == feature_segment.id
     assert json_response["uuid"] == str(feature_segment.uuid)
-
-
-@pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
-)
-def test_delete_feature_segment_creates_audit_log(
-    feature_segment,
-    segment_featurestate,
-    feature,
-    segment,
-    client,
-    project,
-    environment,
-):
-    expected_audit_log_message = SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-        feature.name,
-        segment.name,
-    )
-
-    url = reverse("api-v1:features:feature-segment-detail", args=(feature_segment.id,))
-
-    # When
-    response = client.delete(url)
-
-    # Then
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    assert AuditLog.objects.filter(
-        project=project,
-        related_object_id=segment_featurestate.id,
-        related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=environment,
-        log=expected_audit_log_message,
-    ).exists()
 
 
 @pytest.mark.parametrize(

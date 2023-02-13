@@ -63,21 +63,47 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):
         return instance.segment.feature is not None
 
 
-class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
+class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
+    def validate(self, attrs):
+        validated_attrs = super().validate(attrs)
+        feature_segments = list(
+            FeatureSegment.objects.filter(
+                id__in=[item["id"] for item in validated_attrs]
+            )
+        )
+
+        # TODO: what if length == 0?
+        if not len(feature_segments) == len(attrs):
+            raise serializers.ValidationError(
+                "Some of the provided ids were not found."
+            )
+
+        environments = set()
+        features = set()
+
+        for feature_segment in feature_segments:
+            environments.add(feature_segment.environment)
+            features.add(feature_segment.feature)
+
+        if not len(environments) == len(features) == 1:
+            raise serializers.ValidationError(
+                "All feature segments must belong to the same feature & environment."
+            )
+
+        return validated_attrs
+
+    def create(self, validated_data):
+        id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
+        return FeatureSegment.update_priorities(id_priority_pairs)
+
+
+class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):
     priority = serializers.IntegerField(
         min_value=0, help_text="Value to change the feature segment's priority to."
     )
     id = serializers.IntegerField()
 
-    def create(self, validated_data):
-        try:
-            instance = FeatureSegment.objects.get(id=validated_data["id"])
-            return self.update(instance, validated_data)
-        except FeatureSegment.DoesNotExist:
-            raise serializers.ValidationError(
-                "No feature segment exists with id: %s" % validated_data["id"]
-            )
-
-    def update(self, instance, validated_data):
-        instance.to(validated_data["priority"])
-        return instance
+    class Meta:
+        model = FeatureSegment
+        fields = ("id", "priority")
+        list_serializer_class = FeatureSegmentChangePrioritiesListSerializer
