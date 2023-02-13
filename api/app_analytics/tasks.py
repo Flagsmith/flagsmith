@@ -78,11 +78,10 @@ def get_time_buckets(
     start_of_first_bucket = get_start_of_current_bucket(bucket_size)
     time_buckets = []
 
-    run_every_in_minutes = run_every.total_seconds() / 60
+    run_every_in_minutes = int(run_every.total_seconds() / 60)
 
     # number of buckets that can be processed in `run_every` time
     num_of_buckets = run_every_in_minutes // bucket_size
-
     for i in range(num_of_buckets):
         # NOTE: we start processing from `current - 1` buckets since the current bucket is
         # still open
