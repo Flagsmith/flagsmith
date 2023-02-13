@@ -93,7 +93,16 @@ def register_recurring_task(
             args=args,
             kwargs=kwargs,
         )
-        task.save()
+        task, _ = Task.objects.update_or_create(
+            task_identifier=task.task_identifier,
+            completed=False,
+            run_every=task.run_every,
+            defaults={
+                "scheduled_for": task.scheduled_for,
+                "serialized_args": task.serialized_args,
+                "serialized_kwargs": task.serialized_kwargs,
+            },
+        )
         return task
 
     return decorator
