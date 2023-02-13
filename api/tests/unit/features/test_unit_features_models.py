@@ -4,8 +4,9 @@ import pytest
 from django.utils import timezone
 
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.workflows.core.models import ChangeRequest
+from segments.models import Segment
 
 now = timezone.now()
 yesterday = now - timedelta(days=1)
@@ -215,3 +216,82 @@ def test_feature_state_get_create_log_message_returns_message_if_environment_cre
 
     # Then
     assert log is not None
+
+
+def test_feature_segment_update_priorities_when_no_changes(
+    project, environment, feature, feature_segment, admin_user, mocker
+):
+    # Given
+    mocked_create_segment_priorities_changed_audit_log = mocker.patch(
+        "features.models.create_segment_priorities_changed_audit_log"
+    )
+
+    another_segment = Segment.objects.create(project=project, name="Another segment")
+    FeatureSegment.objects.create(
+        feature=feature,
+        segment=another_segment,
+        environment=environment,
+        priority=feature_segment.priority + 1,
+    )
+
+    existing_feature_segments = FeatureSegment.objects.filter(
+        environment=environment, feature=feature
+    )
+    existing_id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(
+        existing_feature_segments
+    )
+
+    # When
+    returned_feature_segments = FeatureSegment.update_priorities(
+        new_feature_segment_id_priorities=existing_id_priority_pairs
+    )
+
+    # Then
+    assert list(returned_feature_segments) == list(existing_feature_segments)
+
+    mocked_create_segment_priorities_changed_audit_log.delay.assert_not_called()
+
+
+def test_feature_segment_update_priorities_when_changes(
+    project, environment, feature, feature_segment, admin_user, mocker
+):
+    # Given
+    mocked_create_segment_priorities_changed_audit_log = mocker.patch(
+        "features.models.create_segment_priorities_changed_audit_log"
+    )
+    mocked_historical_records = mocker.patch("features.models.HistoricalRecords")
+    mocked_request = mocker.MagicMock()
+    mocked_historical_records.thread.request = mocked_request
+
+    another_segment = Segment.objects.create(project=project, name="Another segment")
+    another_feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=another_segment,
+        environment=environment,
+        priority=feature_segment.priority + 1,
+    )
+
+    existing_id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(
+        feature.feature_segments.filter(environment=environment)
+    )
+    new_id_priority_pairs = [(feature_segment.id, 1), (another_feature_segment.id, 0)]
+
+    # When
+    returned_feature_segments = FeatureSegment.update_priorities(
+        new_feature_segment_id_priorities=new_id_priority_pairs
+    )
+
+    # Then
+    assert sorted(
+        FeatureSegment.to_id_priority_tuple_pairs(returned_feature_segments),
+        key=lambda t: t[1],
+    ) == sorted(new_id_priority_pairs, key=lambda t: t[1])
+
+    mocked_create_segment_priorities_changed_audit_log.delay.assert_called_once_with(
+        kwargs={
+            "previous_id_priority_pairs": existing_id_priority_pairs,
+            "feature_segment_ids": [feature_segment.id, another_feature_segment.id],
+            "user_id": mocked_request.user.id,
+            "master_api_key_id": mocked_request.master_api_key.id,
+        }
+    )
