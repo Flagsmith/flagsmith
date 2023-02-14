@@ -66,6 +66,9 @@ class MultivariateFeatureOption(
         if not self.feature.deleted_at:
             return f"Multivariate option removed from feature '{self.feature.name}'."
 
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.feature_id
+
     def _get_project(self) -> typing.Optional["Project"]:
         return self.feature.project
 
@@ -128,6 +131,9 @@ class MultivariateFeatureStateValue(
             return f"Multivariate value changed for feature '{feature.name}' and segment '{segment.name}'."
 
         return f"Multivariate value changed for feature '{feature.name}'."
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.feature_state.feature_id
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.feature_state.environment
