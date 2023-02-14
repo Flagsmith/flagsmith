@@ -29,7 +29,7 @@ class MultivariateFeatureOption(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
-    historical_records_class_path = (
+    history_record_class_path = (
         "features.multivariate.models.HistoricalMultivariateFeatureOption"
     )
     related_object_type = RelatedObjectType.FEATURE
@@ -75,7 +75,7 @@ class MultivariateFeatureStateValue(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
-    historical_records_class_path = (
+    history_record_class_path = (
         "features.multivariate.models.HistoricalMultivariateFeatureStateValue"
     )
     related_object_type = RelatedObjectType.FEATURE_STATE
