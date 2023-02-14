@@ -60,10 +60,11 @@ class MultivariateFeatureOption(
             )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return f"Multivariate option added to feature {self.feature.name}."
+        return f"Multivariate option added to feature '{self.feature.name}'."
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
-        return f"Multivariate option removed from feature {self.feature.name}"
+        if not self.feature.deleted_at:
+            return f"Multivariate option removed from feature '{self.feature.name}'."
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.feature.project
@@ -121,12 +122,12 @@ class MultivariateFeatureStateValue(
 
         if feature_state.identity_id:
             identifier = feature_state.identity.identifier
-            return f"Multivariate value changed for feature '{feature.name}' and identity '{identifier}'"
+            return f"Multivariate value changed for feature '{feature.name}' and identity '{identifier}'."
         elif feature_state.feature_segment_id:
             segment = feature_state.feature_segment.segment
-            return f"Multivariate value changed for feature '{feature.name}' and segment '{segment.name}'"
+            return f"Multivariate value changed for feature '{feature.name}' and segment '{segment.name}'."
 
-        return f"Multivariate value changed for feature: {feature.name}"
+        return f"Multivariate value changed for feature '{feature.name}'."
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.feature_state.environment
