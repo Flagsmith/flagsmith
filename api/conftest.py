@@ -125,6 +125,11 @@ def segment(project):
 
 
 @pytest.fixture()
+def segment_rule(segment):
+    return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+
+@pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
 
