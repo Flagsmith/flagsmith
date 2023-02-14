@@ -372,7 +372,7 @@ class Condition(
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         if not self._get_segment().deleted_at:
-            return f"Condition removed from segment '{self._get_segment()}'."
+            return f"Condition removed from segment '{self._get_segment().name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self._get_segment().id

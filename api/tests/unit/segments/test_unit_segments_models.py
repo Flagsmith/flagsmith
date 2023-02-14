@@ -1,4 +1,4 @@
-from segments.models import PERCENTAGE_SPLIT, Condition
+from segments.models import EQUAL, PERCENTAGE_SPLIT, Condition
 
 
 def test_percentage_split_calculation_divides_value_by_100_before_comparison(
@@ -19,3 +19,107 @@ def test_percentage_split_calculation_divides_value_by_100_before_comparison(
 
     # Then
     assert not result
+
+
+def test_condition_get_create_log_message_for_condition_created_with_segment(
+    segment, segment_rule, mocker
+):
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=True,
+    )
+
+    mock_history_instance = mocker.MagicMock()
+
+    # When
+    msg = condition.get_create_log_message(mock_history_instance)
+
+    # Then
+    assert msg is None
+
+
+def test_condition_get_create_log_message_for_condition_not_created_with_segment(
+    segment, segment_rule, mocker
+):
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    mock_history_instance = mocker.MagicMock()
+
+    # When
+    msg = condition.get_create_log_message(mock_history_instance)
+
+    # Then
+    assert msg == f"Condition added to segment '{segment.name}'."
+
+
+def test_condition_get_delete_log_message_for_valid_segment(
+    segment, segment_rule, mocker
+):
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    mock_history_instance = mocker.MagicMock()
+
+    # When
+    msg = condition.get_delete_log_message(mock_history_instance)
+
+    # Then
+    assert msg == f"Condition removed from segment '{segment.name}'."
+
+
+def test_condition_get_delete_log_message_for_deleted_segment(
+    segment, segment_rule, mocker
+):
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+    segment.delete()
+
+    mock_history_instance = mocker.MagicMock()
+
+    # When
+    msg = condition.get_delete_log_message(mock_history_instance)
+
+    # Then
+    assert msg is None
+
+
+def test_condition_get_update_log_message(segment, segment_rule, mocker):
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    mock_history_instance = mocker.MagicMock()
+
+    # When
+    msg = condition.get_update_log_message(mock_history_instance)
+
+    # Then
+    assert msg == f"Condition updated on segment '{segment.name}'."
