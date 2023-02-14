@@ -181,7 +181,7 @@ class _EditPermissionsModal extends Component {
                               {
                                   this.state.parentError && (
                                       <InfoMessage>
-                                          The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit user permissions to view this {this.props.parentLevel}. If the user does not belong to any groups with this permissions, you may have to adjust their permissions in <a onClick={() => {
+                                          The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit permission to view this {this.props.parentLevel}. If the user does not belong to any groups with this permission, you may have to adjust their permissions in <a onClick={() => {
                                           this.props.push(this.props.parentSettingsLink);
                                           closeModal();
                                       }}
