@@ -112,7 +112,7 @@ class _AbstractBaseAuditableModel(models.Model):
         """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+    def get_audit_log_related_object_id(self, history_instance) -> int:
         """Override the related object ID in cases where it shouldn't be self.id"""
         return self.id
 
