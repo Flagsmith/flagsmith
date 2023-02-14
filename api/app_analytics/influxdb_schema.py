@@ -18,6 +18,8 @@ class FeatureEvaluationDataSchema(Schema):
         #     "some_feature_name": 10
         # }
         day = data.pop("datetime")
+        # Use popitem because we don't know the name of the feature
+        # and it's the only item left in the dict
         _, count = data.popitem()[1]
         return {"day": day, "count": count}
 
