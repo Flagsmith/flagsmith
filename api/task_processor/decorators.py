@@ -86,21 +86,15 @@ def register_recurring_task(
         task_module = getmodule(f).__name__.rsplit(".")[-1]
         task_identifier = f"{task_module}.{task_name}"
         register_task(task_identifier, f)
-        task = Task.schedule_task(
-            schedule_for=timezone.now(),
-            task_identifier=task_identifier,
-            run_every=run_every,
-            args=args,
-            kwargs=kwargs,
-        )
+
         task, _ = Task.objects.update_or_create(
-            task_identifier=task.task_identifier,
+            task_identifier=task_identifier,
             completed=False,
-            run_every=task.run_every,
+            run_every=run_every,
             defaults={
-                "scheduled_for": task.scheduled_for,
-                "serialized_args": task.serialized_args,
-                "serialized_kwargs": task.serialized_kwargs,
+                "scheduled_for": timezone.now(),
+                "serialized_args": Task.serialize_data(args or tuple()),
+                "serialized_kwargs": Task.serialize_data(kwargs or dict()),
             },
         )
         return task

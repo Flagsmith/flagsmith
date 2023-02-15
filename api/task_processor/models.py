@@ -47,8 +47,8 @@ class Task(models.Model):
         return Task(
             task_identifier=task_identifier,
             run_every=run_every,
-            serialized_args=cls._serialize_data(args or tuple()),
-            serialized_kwargs=cls._serialize_data(kwargs or dict()),
+            serialized_args=cls.serialize_data(args or tuple()),
+            serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )
 
     @classmethod
@@ -112,22 +112,22 @@ class Task(models.Model):
     @property
     def args(self) -> typing.List[typing.Any]:
         if self.serialized_args:
-            return self._deserialize_data(self.serialized_args)
+            return self.deserialize_data(self.serialized_args)
         return []
 
     @property
     def kwargs(self) -> typing.Dict[str, typing.Any]:
         if self.serialized_kwargs:
-            return self._deserialize_data(self.serialized_kwargs)
+            return self.deserialize_data(self.serialized_kwargs)
         return {}
 
     @staticmethod
-    def _serialize_data(data: typing.Any):
+    def serialize_data(data: typing.Any):
         # TODO: add datetime support if needed
         return json.dumps(data)
 
     @staticmethod
-    def _deserialize_data(data: typing.Any):
+    def deserialize_data(data: typing.Any):
         return json.loads(data)
 
 
