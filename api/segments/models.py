@@ -1,5 +1,6 @@
 import logging
 import typing
+from copy import deepcopy
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
@@ -73,6 +74,25 @@ class Segment(
 
     def __str__(self):
         return "Segment - %s" % self.name
+
+    @staticmethod
+    def id_exists_in_rules_data(rules_data: typing.List[dict]):
+        _rules_data = deepcopy(rules_data)
+        for rule_data in _rules_data:
+            conditions_to_check = rule_data.get("conditions", [])
+            rules_to_check = rule_data.get("rules", [])
+
+            while rules_to_check:
+                rule = rules_to_check.pop()
+                if rule.get("id"):
+                    return True
+                rules_to_check.extend(rule.get("rules", []))
+                conditions_to_check.extend(rule.get("conditions", []))
+
+            while conditions_to_check:
+                condition = conditions_to_check.pop()
+                if condition.get("id"):
+                    return True
 
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
