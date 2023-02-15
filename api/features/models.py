@@ -848,6 +848,11 @@ class FeatureStateValue(
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
+        # TODO:
+        #  - seems like we're getting audit log records for FSVs where string_value goes from
+        #    None -> '' - need to fix this
+        #  - need to verify that we're getting the correct 'segment override' created message
+
         if fs.change_request_id and not fs.change_request.committed_at:
             return
 
