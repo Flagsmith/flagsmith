@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
@@ -7,9 +9,11 @@ from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
 
 
 class ConditionSerializer(serializers.ModelSerializer):
+    delete = serializers.BooleanField(write_only=True, required=False)
+
     class Meta:
         model = Condition
-        fields = ("id", "operator", "property", "value", "description")
+        fields = ("id", "operator", "property", "value", "description", "delete")
 
     def validate(self, attrs):
         super(ConditionSerializer, self).validate(attrs)
@@ -24,12 +28,13 @@ class ConditionSerializer(serializers.ModelSerializer):
 
 
 class RuleSerializer(serializers.ModelSerializer):
+    delete = serializers.BooleanField(write_only=True, required=False)
     conditions = ConditionSerializer(many=True, required=False)
     rules = ListSerializer(child=RecursiveField(), required=False)
 
     class Meta:
         model = SegmentRule
-        fields = ("id", "type", "rules", "conditions")
+        fields = ("id", "type", "rules", "conditions", "delete")
 
 
 class SegmentSerializer(serializers.ModelSerializer):
@@ -94,6 +99,9 @@ class SegmentSerializer(serializers.ModelSerializer):
             child_rule = self._update_or_create_segment_rule(
                 rule_data, segment=segment, rule=rule
             )
+            if not child_rule:
+                # child rule was deleted
+                continue
 
             self._update_or_create_conditions(
                 conditions, child_rule, is_create=is_create
@@ -106,18 +114,27 @@ class SegmentSerializer(serializers.ModelSerializer):
     @staticmethod
     def _update_or_create_segment_rule(
         rule_data: dict, segment: Segment = None, rule: SegmentRule = None
-    ):
+    ) -> typing.Optional[SegmentRule]:
+        rule_id = rule_data.pop("id", None)
+        if rule_data.get("delete"):
+            SegmentRule.objects.filter(id=rule_id).delete()
+            return
+
         segment_rule, _ = SegmentRule.objects.update_or_create(
-            id=rule_data.pop("id", None),
-            defaults={"segment": segment, "rule": rule, **rule_data},
+            id=rule_id, defaults={"segment": segment, "rule": rule, **rule_data}
         )
         return segment_rule
 
     @staticmethod
     def _update_or_create_conditions(conditions_data, rule, is_create: bool = False):
         for condition in conditions_data:
+            condition_id = condition.pop("id", None)
+            if condition.get("delete"):
+                Condition.objects.filter(id=condition_id).delete()
+                continue
+
             Condition.objects.update_or_create(
-                id=condition.pop("id", None),
+                id=condition_id,
                 defaults={**condition, "created_with_segment": is_create, "rule": rule},
             )
 
