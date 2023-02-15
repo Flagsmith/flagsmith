@@ -38,7 +38,7 @@ def _create_api_usage_event(environment_id: str, when: datetime):
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket_15m_bucket(freezer):
+def test_populate_api_usage_bucket_multiple_runs(freezer):
     # Given
     environment_id = 1
     bucket_size = 15
@@ -143,6 +143,7 @@ def test_populate_api_usage_bucket(freezer, bucket_size, runs_every_minutes):
     for bucket in buckets:
         start_time = start_time - timezone.timedelta(minutes=bucket_size)
         assert bucket.created_at == start_time
+        assert bucket.total_count == bucket_size
 
 
 @pytest.mark.django_db(databases=["analytics", "default"])
@@ -189,19 +190,6 @@ def test_track_feature_evaluation():
         ).count()
         == 1
     )
-
-
-def _create_feature_evaluation_event(environment_id, feature_name, count, when):
-    event = FeatureEvaluationRaw.objects.create(
-        environment_id=environment_id,
-        feature_name=feature_name,
-        evaluation_count=count,
-    )
-    # update created_at
-    event.created_at = when
-    event.save()
-
-    return event
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -267,7 +255,9 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
     # Then - we should have another four buckets created by the second run
     buckets = (
         FeatureEvaluationBucket.objects.filter(
-            bucket_size=15, environment_id=environment_id, feature_name=feature_name
+            bucket_size=bucket_size,
+            environment_id=environment_id,
+            feature_name=feature_name,
         )
         .order_by("created_at")
         .all()
@@ -316,3 +306,16 @@ def test_populate_api_usage_bucket_using_a_bucket(freezer):
 
     # Then
     assert APIUsageBucket.objects.filter(bucket_size=15, total_count=300).count() == 1
+
+
+def _create_feature_evaluation_event(environment_id, feature_name, count, when):
+    event = FeatureEvaluationRaw.objects.create(
+        environment_id=environment_id,
+        feature_name=feature_name,
+        evaluation_count=count,
+    )
+    # update created_at
+    event.created_at = when
+    event.save()
+
+    return event
