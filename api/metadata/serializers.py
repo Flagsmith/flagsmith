@@ -97,7 +97,7 @@ class MetadataSerializer(serializers.ModelSerializer):
         return data
 
 
-class MetadataSerializerMixin:
+class SerializerWithMetadata(serializers.BaseSerializer):
     def get_organisation_from_validated_data(self, validated_data) -> Organisation:
         raise NotImplementedError()
 
