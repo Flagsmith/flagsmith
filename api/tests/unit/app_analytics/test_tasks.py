@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 from app_analytics.models import (
@@ -53,7 +53,7 @@ def test_populate_api_usage_bucket_multiple_runs(freezer):
 
     # Next, let's go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timezone.timedelta(hours=1))
-    populate_api_usage_bucket(bucket_size, run_every=timedelta(minutes=60))
+    populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - we should have four buckets
     buckets = (
@@ -79,7 +79,7 @@ def test_populate_api_usage_bucket_multiple_runs(freezer):
 
     # Now, let's move forward 1hr and run this again
     freezer.move_to(timezone.now() + timezone.timedelta(hours=1))
-    populate_api_usage_bucket(bucket_size, run_every=timedelta(minutes=60))
+    populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - we should have another four buckets created by the second run
     buckets = (
@@ -104,27 +104,25 @@ def test_populate_api_usage_bucket_multiple_runs(freezer):
 
 
 @pytest.mark.parametrize(
-    "bucket_size, runs_every_minutes",
+    "bucket_size, runs_every",
     [(15, 60), (10, 60), (10, 30), (30, 30), (60, 60), (10, 10), (60, 60 * 4)],
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_api_usage_bucket(freezer, bucket_size, runs_every_minutes):
+def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
     # Given
     environment_id = 1
     now = timezone.now()
     # let's create events at every 1 minutes
     # for the last two hours, i.e: from 9:09:47
-    for i in range(runs_every_minutes * 2):
+    for i in range(runs_every * 2):
         _create_api_usage_event(environment_id, now - timezone.timedelta(minutes=1 * i))
         # create events in some other environments as well - just to make sure
         # we don't aggregate them in the same environment
         _create_api_usage_event(999, now - timezone.timedelta(minutes=1 * i))
 
     # When
-    populate_api_usage_bucket(
-        bucket_size, run_every=timedelta(minutes=runs_every_minutes)
-    )
+    populate_api_usage_bucket(bucket_size, run_every=runs_every)
 
     # Then
     buckets = (
@@ -137,7 +135,7 @@ def test_populate_api_usage_bucket(freezer, bucket_size, runs_every_minutes):
         .all()
     )
 
-    assert len(buckets) == runs_every_minutes // bucket_size
+    assert len(buckets) == runs_every // bucket_size
     # and
     start_time = timezone.now().replace(minute=0, second=0, microsecond=0)
     for bucket in buckets:
@@ -220,7 +218,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
         )
     # Next, let's go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timezone.timedelta(hours=1))
-    populate_feature_evaluation_bucket(bucket_size, run_every=timedelta(minutes=60))
+    populate_feature_evaluation_bucket(bucket_size, run_every=60)
 
     # Then - we should have four buckets
     buckets = (
@@ -250,7 +248,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer):
 
     # Now, let's move forward 1hr and run this again
     freezer.move_to(timezone.now() + timezone.timedelta(hours=1))
-    populate_feature_evaluation_bucket(bucket_size, run_every=timedelta(minutes=60))
+    populate_feature_evaluation_bucket(bucket_size, run_every=60)
 
     # Then - we should have another four buckets created by the second run
     buckets = (
@@ -300,9 +298,7 @@ def test_populate_api_usage_bucket_using_a_bucket(freezer):
     freezer.move_to(timezone.now().replace(minute=47))
 
     # When
-    populate_api_usage_bucket(
-        bucket_size=15, run_every=timedelta(minutes=60), source_bucket_size=5
-    )
+    populate_api_usage_bucket(bucket_size=15, run_every=60, source_bucket_size=5)
 
     # Then
     assert APIUsageBucket.objects.filter(bucket_size=15, total_count=300).count() == 1

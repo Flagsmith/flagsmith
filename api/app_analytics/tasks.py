@@ -22,14 +22,14 @@ from .models import (
 if settings.USE_POSTGRES_FOR_ANALYTICS:
 
     @register_recurring_task(
-        run_every=timedelta(minutes=ANALYTICS_READ_BUCKET_SIZE),
+        run_every=timedelta(minutes=1),
         kwargs={
             "bucket_size": ANALYTICS_READ_BUCKET_SIZE,
             "run_every": ANALYTICS_READ_BUCKET_SIZE,
         },
     )
     def populate_bucket(
-        bucket_size: int, run_every: timedelta, source_bucket_size: int = None
+        bucket_size: int, run_every: int, source_bucket_size: int = None
     ):
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
@@ -73,15 +73,13 @@ def get_start_of_current_bucket(bucket_size: int) -> datetime:
 
 
 def get_time_buckets(
-    bucket_size: int, run_every: timedelta
+    bucket_size: int, run_every: int
 ) -> List[Tuple[datetime, datetime]]:
     start_of_first_bucket = get_start_of_current_bucket(bucket_size)
     time_buckets = []
 
-    run_every_in_minutes = int(run_every.total_seconds() / 60)
-
     # number of buckets that can be processed in `run_every` time
-    num_of_buckets = run_every_in_minutes // bucket_size
+    num_of_buckets = run_every // bucket_size
     for i in range(num_of_buckets):
         # NOTE: we start processing from `current - 1` buckets since the current bucket is
         # still open
@@ -93,7 +91,7 @@ def get_time_buckets(
 
 
 def populate_api_usage_bucket(
-    bucket_size: int, run_every: timedelta, source_bucket_size: int = None
+    bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
 
@@ -111,7 +109,7 @@ def populate_api_usage_bucket(
 
 
 def populate_feature_evaluation_bucket(
-    bucket_size: int, run_every: timedelta, source_bucket_size: int = None
+    bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_feature_evaluation_source_data(
