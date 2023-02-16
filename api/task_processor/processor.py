@@ -25,10 +25,6 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
         task_runs = []
 
         for task in tasks:
-            if task.run_every is not None and not task.is_next_run_scheduled:
-                next_task = task.schedule_next_run()
-                next_task.save()
-
             executed_task, task_run = _run_task(task)
             executed_tasks.append(executed_task)
             task_runs.append(task_run)
@@ -37,6 +33,10 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
             Task.objects.bulk_update(
                 executed_tasks, fields=["completed", "num_failures"]
             )
+
+        if task.run_every is not None and not task.is_next_run_scheduled:
+            next_task = task.schedule_next_run()
+            next_task.save()
 
         if task_runs:
             TaskRun.objects.bulk_create(task_runs)

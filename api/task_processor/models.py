@@ -34,6 +34,20 @@ class Task(models.Model):
                 condition=models.Q(completed=False, num_failures__lt=3),
             )
         ]
+        # This unique constraints is in place to prevent `register_recurring_task`
+        # from creating a duplicate recurring task.
+        # NOTE: we are using `num_failures=0` instead of `num_failures_lt=3`
+        # because we schedule the next_task(for recurring task)
+        # after the first execution of the task (event if the task fails(i.e at num_failures = 1))
+        constraints = [
+            models.UniqueConstraint(
+                fields=["task_identifier", "run_every"],
+                name="unique_run_every_tasks",
+                condition=models.Q(
+                    run_every__isnull=False, completed=False, num_failures=0
+                ),
+            ),
+        ]
 
     @classmethod
     def create(
