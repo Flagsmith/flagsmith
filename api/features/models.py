@@ -848,6 +848,19 @@ class FeatureStateValue(
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
+        changes = history_instance.diff_against(history_instance.prev_record).changes
+        if (
+            len(changes) == 1
+            and changes[0].field == "string_value"
+            and changes[0].old in (None, "")
+            and changes[0].new in (None, "")
+        ):
+            # When we create a new segment override, for some reason, there are changes made to the
+            # existing segment overrides which change the string value between null and empty string
+            # since this change has no significant impact on the platform, we simply check for it here
+            # and ignore it.
+            return
+
         # TODO:
         #  - seems like we're getting audit log records for FSVs where string_value goes from
         #    None -> '' - need to fix this
