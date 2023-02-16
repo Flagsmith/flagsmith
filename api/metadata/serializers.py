@@ -17,6 +17,12 @@ from .models import (
 )
 
 
+class MetadataFieldQuerySerializer(serializers.Serializer):
+    organisation = serializers.IntegerField(
+        required=True, help_text="Organisation ID to filter by"
+    )
+
+
 class SupportedRequiredForModelQuerySerializer(serializers.Serializer):
     model_name = serializers.CharField(required=True)
 
@@ -25,6 +31,12 @@ class MetadataFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetadataField
         fields = ("id", "name", "type", "description", "organisation")
+
+
+class MetadataModelFieldQuerySerializer(serializers.Serializer):
+    content_type = serializers.IntegerField(
+        required=False, help_text="Content type of the model to filter by."
+    )
 
 
 class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):
@@ -99,7 +111,9 @@ class MetadataSerializerMixin:
         try:
             return getattr(self, f"get_{model_name}_from_validated_data")(data)
         except AttributeError:
-            raise ValueError(f"`get_{model_name}_from_validated_data` does not exists")
+            raise ValueError(
+                f"`get_{model_name}_from_validated_data` method does not exist"
+            )
 
     def validate_required_metadata(self, data):
         metadata = data.get("metadata", [])

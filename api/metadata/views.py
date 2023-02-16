@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
-from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -19,7 +18,9 @@ from .permissions import (
 )
 from .serializers import (
     ContentTypeSerializer,
+    MetadataFieldQuerySerializer,
     MetadataFieldSerializer,
+    MetadataModelFieldQuerySerializer,
     MetaDataModelFieldSerializer,
     SupportedRequiredForModelQuerySerializer,
 )
@@ -27,17 +28,7 @@ from .serializers import (
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "organisation",
-                openapi.IN_QUERY,
-                "ID of the organisation to filter by.",
-                required=True,
-                type=openapi.TYPE_INTEGER,
-            )
-        ]
-    ),
+    decorator=swagger_auto_schema(query_serializer=MetadataFieldQuerySerializer),
 )
 class MetadataFieldViewSet(viewsets.ModelViewSet):
     permission_classes = [MetadataFieldPermissions]
@@ -48,7 +39,9 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
             organisation__in=self.request.user.organisations.all()
         )
         if self.action == "list":
-            organisation_id = self.request.query_params.get("organisation")
+            serializer = MetadataFieldQuerySerializer(data=self.request.query_params)
+            serializer.is_valid(raise_exception=True)
+            organisation_id = serializer.validated_data["organisation"]
 
             if organisation_id is None:
                 raise ValidationError("organisation parameter is required")
@@ -59,17 +52,7 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "content_type",
-                openapi.IN_QUERY,
-                "Content type of the model to filter by.",
-                required=False,
-                type=openapi.TYPE_INTEGER,
-            )
-        ]
-    ),
+    decorator=swagger_auto_schema(query_serializer=MetadataModelFieldQuerySerializer),
 )
 class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
     permission_classes = [MetadataModelFieldPermissions]
@@ -79,7 +62,9 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         queryset = MetadataModelField.objects.filter(
             field__organisation_id=self.kwargs.get("organisation_pk")
         )
-        content_type = self.request.query_params.get("content_type")
+        serializer = MetadataModelFieldQuerySerializer(data=self.request.query_params)
+        serializer.is_valid(raise_exception=True)
+        content_type = serializer.validated_data.get("content_type")
 
         if content_type:
             queryset = queryset.filter(content_type__id=content_type)
@@ -103,7 +88,7 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         method="GET",
         responses={200: ContentTypeSerializer(many=True)},
-        request_body=SupportedRequiredForModelQuerySerializer,
+        query_serializer=SupportedRequiredForModelQuerySerializer,
     )
     @action(
         detail=False,

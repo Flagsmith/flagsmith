@@ -20,7 +20,7 @@ SUPPORTED_REQUIREMENTS_MAPPING = {
         "organisation": lambda org_id: org_id,
         "project": lambda project_id: Project.objects.get(
             id=project_id
-        ).organisation.id,
+        ).organisation_id,
     }
 }
 
@@ -29,8 +29,8 @@ class FieldType(models.TextChoices):
     INTEGER = "int"
     STRING = "str"
     BOOLEAN = "bool"
-    FLOAT = "float"
     URL = "url"
+    MULTILINE_STRING = "multiline_str"
 
 
 class MetadataField(AbstractBaseExportableModel):
