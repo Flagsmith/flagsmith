@@ -35,9 +35,7 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
     serializer_class = MetadataFieldSerializer
 
     def get_queryset(self):
-        queryset = MetadataField.objects.filter(
-            organisation__in=self.request.user.organisations.all()
-        )
+        queryset = MetadataField.objects.filter(organisation__users=self.request.user)
         if self.action == "list":
             serializer = MetadataFieldQuerySerializer(data=self.request.query_params)
             serializer.is_valid(raise_exception=True)

@@ -55,13 +55,6 @@ class MetadataField(AbstractBaseExportableModel):
             return False
         return True
 
-    def validate_float(self, field_value: str):
-        try:
-            float(field_value)
-        except ValueError:
-            return False
-        return True
-
     def validate_bool(self, field_value: str):
         if field_value.lower() in ["true", "false"]:
             return True
@@ -75,6 +68,9 @@ class MetadataField(AbstractBaseExportableModel):
             return False
 
     def validate_str(self, field_value: str):
+        return True
+
+    def validate_multiline_str(self, field_value: str):
         return True
 
     class Meta:

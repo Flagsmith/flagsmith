@@ -13,8 +13,6 @@ from metadata.serializers import MetadataSerializer
     [
         ("int", "1", True),
         ("int", "string", False),
-        ("float", "1.0", True),
-        ("float", "string", False),
         ("bool", "True", True),
         ("bool", "true", True),
         ("bool", "False", True),
@@ -23,7 +21,9 @@ from metadata.serializers import MetadataSerializer
         ("bool", "string", False),
         ("url", "not a valid url", False),
         ("url", "https://flagsmith.com", True),
-        ("string", "a long string" * FIELD_VALUE_MAX_LENGTH, False),
+        ("str", "a long string" * FIELD_VALUE_MAX_LENGTH, False),
+        ("str", "a valid string", True),
+        ("multiline_str", "a valid string", True),
     ],
 )
 def test_metadata_serializer_validate_validates_field_value_type_correctly(

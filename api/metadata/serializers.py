@@ -66,13 +66,13 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
                     )
                 )
 
-                if (
-                    get_org_id_func(requirement["object_id"])
-                    != data["field"].organisation_id
-                ):
-                    raise serializers.ValidationError(
-                        "The requirement organisation does not match the field organisation"
-                    )
+            if (
+                get_org_id_func(requirement["object_id"])
+                != data["field"].organisation_id
+            ):
+                raise serializers.ValidationError(
+                    "The requirement organisation does not match the field organisation"
+                )
         return data
 
 
