@@ -50,9 +50,7 @@ def test_sdk_analytics_allows_valid_data(mocker, settings, environment, feature)
 
 def test_get_usage_data(mocker, admin_client, organisation):
     # Given
-    url = reverse(
-        "api-v1:organisations:organisation-usage-data-list", args=[organisation.id]
-    )
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
     mocked_get_usage_data = mocker.patch(
         "app_analytics.views.get_usage_data",
         return_value=[
@@ -85,10 +83,23 @@ def test_get_usage_data(mocker, admin_client, organisation):
     mocked_get_usage_data.assert_called_once_with(organisation)
 
 
+def test_get_usage_data_for_non_admin_user_returns_403(
+    mocker, test_user_client, organisation
+):
+    # Given
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_get_total_usage_count(mocker, admin_client, organisation):
     # Given
     url = reverse(
-        "api-v1:organisations:organisation-usage-data-total-count",
+        "api-v1:organisations:usage-data-total-count",
         args=[organisation.id],
     )
     mocked_get_total_events_count = mocker.patch(
@@ -103,3 +114,18 @@ def test_get_total_usage_count(mocker, admin_client, organisation):
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"count": 100}
     mocked_get_total_events_count.assert_called_once_with(organisation)
+
+
+def test_get_total_usage_count_for_non_admin_user_returns_403(
+    mocker, test_user_client, organisation
+):
+    # Given
+    url = reverse(
+        "api-v1:organisations:usage-data-total-count",
+        args=[organisation.id],
+    )
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

@@ -1,5 +1,9 @@
-from app_analytics.views import UsageDataAPIViewSet
+from app_analytics.views import (
+    get_usage_data_total_count_view,
+    get_usage_data_view,
+)
 from django.conf.urls import include, url
+from django.urls import path
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
@@ -51,15 +55,19 @@ organisations_router.register(
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
 )
-organisations_router.register(
-    "usage-data",
-    UsageDataAPIViewSet,
-    basename="organisation-usage-data",
-)
-
 app_name = "organisations"
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(organisations_router.urls)),
+    path(
+        "org/<int:organisation_pk>/usage-data/",
+        get_usage_data_view,
+        name="usage-data",
+    ),
+    path(
+        "org/<int:organisation_pk>/usage-data/total-count",
+        get_usage_data_total_count_view,
+        name="usage-data-total-count",
+    ),
 ]

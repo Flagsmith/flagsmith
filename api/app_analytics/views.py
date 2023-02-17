@@ -8,8 +8,8 @@ from app_analytics.tasks import track_feature_evaluation
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -97,36 +97,34 @@ class SelfHostedTelemetryAPIView(CreateAPIView):
     serializer_class = TelemetrySerializer
 
 
-class UsageDataAPIViewSet(viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticated, UsageDataPermission)
-    http_method_names = ["get", "head", "options", "trace"]
+@swagger_auto_schema(
+    responses={200: UsageTotalCountSerializer()},
+    methods=["GET"],
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, UsageDataPermission])
+def get_usage_data_total_count_view(request, organisation_pk=None):
+    organisation = Organisation.objects.get(id=organisation_pk)
+    count = get_total_events_count(organisation)
+    serializer = UsageTotalCountSerializer(data={"count": count})
+    serializer.is_valid(raise_exception=True)
 
-    def _get_organisation(self):
-        organisation_pk = self.kwargs.get("organisation_pk")
-        return Organisation.objects.get(pk=organisation_pk)
+    return Response(serializer.data)
 
-    @swagger_auto_schema(
-        responses={200: UsageTotalCountSerializer()},
-    )
-    @action(detail=False, methods=["GET"], url_path="total-count")
-    def total_count(self, request, organisation_pk=None):
-        organisation = self._get_organisation()
-        count = get_total_events_count(organisation)
-        serializer = UsageTotalCountSerializer(data={"count": count})
-        serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.data)
+@swagger_auto_schema(
+    query_serializer=UsageDataQuerySerializer(),
+    responses={200: UsageDataSerializer()},
+    methods=["GET"],
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, UsageDataPermission])
+def get_usage_data_view(request, organisation_pk=None):
+    filters = UsageDataQuerySerializer(data=request.query_params)
+    filters.is_valid(raise_exception=True)
 
-    @swagger_auto_schema(
-        query_serializer=UsageDataQuerySerializer(),
-        responses={200: UsageDataSerializer()},
-    )
-    def list(self, request, organisation_pk=None):
-        filters = UsageDataQuerySerializer(data=request.query_params)
-        filters.is_valid(raise_exception=True)
+    organisation = Organisation.objects.get(id=organisation_pk)
+    usage_data = get_usage_data(organisation, **filters.data)
+    serializer = UsageDataSerializer(usage_data, many=True)
 
-        organisation = self._get_organisation()
-        usage_data = get_usage_data(organisation, **filters.data)
-        serializer = UsageDataSerializer(usage_data, many=True)
-
-        return Response(serializer.data)
+    return Response(serializer.data)
