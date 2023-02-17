@@ -5,9 +5,54 @@ from datetime import datetime, timedelta
 
 from django.db import models
 from django.utils import timezone
+from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
 
 from task_processor.exceptions import TaskProcessingError
 from task_processor.task_registry import registered_tasks
+
+
+class InitialRecurringTask(LifecycleModelMixin, models.Model):
+    """This model is used to ensure that we don't create duplicate recurring
+    tasks.
+
+    Details: If we let `register_recurring_task` create a `Task` directly, we
+    may end up with duplicate tasks if multiple instances of taskprocessor try
+    to create the same task concurrently. To prevent this, we first create an
+    `InitialRecurringTask` object with a unique constraint on `task_identifier`
+    and `run_every`. After that, we use the `after_create` hook to create a
+    `Task` object.
+
+    We can theoretically achieve the same thing by creating a unique partial
+    index on `Task`, but due to the way we schedule the next task (in case of
+    recurring tasks), the code ends up being more complex and less readable.
+    """
+
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    scheduled_for = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    run_every = models.DurationField()
+
+    task_identifier = models.CharField(max_length=200)
+    serialized_args = models.TextField(blank=True, null=True)
+    serialized_kwargs = models.TextField(blank=True, null=True)
+
+    @hook(AFTER_CREATE)
+    def create_task(self):
+        Task.objects.create(
+            scheduled_for=self.scheduled_for,
+            task_identifier=self.task_identifier,
+            run_every=self.run_every,
+            serialized_args=self.serialized_args,
+            serialized_kwargs=self.serialized_kwargs,
+        )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["task_identifier", "run_every"],
+                name="unique_run_every_tasks",
+            ),
+        ]
 
 
 class Task(models.Model):
@@ -33,20 +78,6 @@ class Task(models.Model):
                 fields=["scheduled_for"],
                 condition=models.Q(completed=False, num_failures__lt=3),
             )
-        ]
-        # This unique constraints is in place to prevent `register_recurring_task`
-        # from creating a duplicate recurring task.
-        # NOTE: we are using `num_failures=0` instead of `num_failures_lt=3`
-        # because we schedule the next_task(for recurring task)
-        # after the first execution of the task (event if the task fails(i.e at num_failures = 1))
-        constraints = [
-            models.UniqueConstraint(
-                fields=["task_identifier", "run_every"],
-                name="unique_run_every_tasks",
-                condition=models.Q(
-                    run_every__isnull=False, completed=False, num_failures=0
-                ),
-            ),
         ]
 
     @classmethod
