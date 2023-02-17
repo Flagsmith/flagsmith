@@ -877,11 +877,6 @@ class FeatureStateValue(
             # and ignore it.
             return
 
-        # TODO:
-        #  - seems like we're getting audit log records for FSVs where string_value goes from
-        #    None -> '' - need to fix this
-        #  - need to verify that we're getting the correct 'segment override' created message
-
         if fs.change_request_id and not fs.change_request.committed_at:
             return
 
