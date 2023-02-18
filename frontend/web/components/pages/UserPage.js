@@ -507,6 +507,7 @@ const UserPage = class extends Component {
                                                                             onClick={() => this.editTrait({
                                                                                 trait_value,
                                                                                 trait_key,
+                                                                                id,
                                                                             })}
                                                                             className="flex flex-1"
                                                                           >
