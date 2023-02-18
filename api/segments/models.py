@@ -5,6 +5,7 @@ import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from core.models import (
     AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import ValidationError
@@ -52,7 +53,8 @@ IN = "IN"
 
 
 class Segment(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
@@ -162,7 +164,12 @@ class SegmentRule(AbstractBaseExportableModel):
         return rule.segment
 
 
-class Condition(AbstractBaseExportableModel):
+class Condition(
+    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+):
+    history_record_class_path = "segments.models.HistoricalCondition"
+    related_object_type = RelatedObjectType.SEGMENT
+
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),
         (GREATER_THAN, "Greater than"),
@@ -184,6 +191,11 @@ class Condition(AbstractBaseExportableModel):
     property = models.CharField(blank=True, null=True, max_length=1000)
     value = models.CharField(max_length=1000, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+
+    created_with_segment = models.BooleanField(
+        default=False,
+        help_text="Field to denote whether a condition was created along with segment or added after creation.",
+    )
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
@@ -350,3 +362,28 @@ class Condition(AbstractBaseExportableModel):
             return re.compile(str(self.value)).match(value) is not None
 
         return False
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return f"Condition updated on segment '{self._get_segment().name}'."
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        if not self.created_with_segment:
+            return f"Condition added to segment '{self._get_segment().name}'."
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        if not self._get_segment().deleted_at:
+            return f"Condition removed from segment '{self._get_segment().name}'."
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self._get_segment().id
+
+    def _get_segment(self) -> Segment:
+        """
+        Temporarily cache the segment on the condition object to reduce number of queries.
+        """
+        if not hasattr(self, "segment"):
+            setattr(self, "segment", self.rule.get_segment())
+        return self.segment
+
+    def _get_project(self) -> typing.Optional[Project]:
+        return self.rule.get_segment().project

@@ -108,9 +108,7 @@ class CompareEnvironments extends Component {
                     this.state.environmentLeft && this.state.environmentRight ? (
                         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
                             {({ }, {
-                                environmentHasFlag,
                                 toggleFlag,
-                                editFlag,
                                 removeFlag,
                             }) => {
                                 const renderRow = (p, i, fadeEnabled, fadeValue) => {
@@ -147,7 +145,6 @@ class CompareEnvironments extends Component {
                                                               index={i}
                                                               canDelete={permission}
                                                               toggleFlag={toggleFlag}
-                                                              editFlag={editFlag}
                                                               removeFlag={removeFlag}
                                                               projectFlag={p.projectFlag}
                                                             />
@@ -172,7 +169,6 @@ class CompareEnvironments extends Component {
                                                               index={i}
                                                               canDelete={permission}
                                                               toggleFlag={toggleFlag}
-                                                              editFlag={editFlag}
                                                               removeFlag={removeFlag}
                                                               projectFlag={p.projectFlag}
                                                             />

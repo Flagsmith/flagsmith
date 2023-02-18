@@ -77,11 +77,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     getManageUserPermissionDescription() {
         return 'Manage Identities';
     },
-    getTraitEndpointMethod() {
+    getTraitEndpointMethod(id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
-        return 'post';
+        return id ? 'put' : 'post';
     },
     getIsEdge() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -103,11 +103,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
-    getUpdateTraitEndpoint(environmentId, userId) {
+    getUpdateTraitEndpoint(environmentId, userId, id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
-        return `${Project.api}traits/`;
+        return `${Project.api}environments/${environmentId}/identities/${userId}/traits/${id ? `${id}/` : ''}`;
     },
     getTraitEndpoint(environmentId, userId) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -324,6 +324,34 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         return {
             type: 'unicode',
+            boolean_value: null,
+            integer_value: null,
+            string_value: value === null ? null : val || '',
+        };
+    },
+    valueToTrait(value) {
+        const val = Utils.getTypedValue(value);
+
+        if (typeof val === 'boolean') {
+            return {
+                value_type: 'bool',
+                boolean_value: val,
+                integer_value: null,
+                string_value: null,
+            };
+        }
+
+        if (typeof val === 'number') {
+            return {
+                value_type: 'int',
+                boolean_value: null,
+                integer_value: val,
+                string_value: null,
+            };
+        }
+
+        return {
+            value_type: 'unicode',
             boolean_value: null,
             integer_value: null,
             string_value: value === null ? null : val || '',
