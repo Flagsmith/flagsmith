@@ -110,7 +110,7 @@ const FeatureList = class extends Component<FeatureListType> {
         return (
             <div className="widget-container" data-test="features-page" id="features-page">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
+                    {({ projectFlags, environmentFlags }, { toggleFlag, removeFlag }) => {
                         const isLoading = FeatureListStore.isLoading;
                         return (
                             <div>

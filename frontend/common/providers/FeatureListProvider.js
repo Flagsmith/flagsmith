@@ -54,25 +54,8 @@ const FeatureListProvider = class extends React.Component {
         AppActions.createFlag(projectId, environmentId, flag, segmentOverrides);
     };
 
-    editFlag = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
-            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
-                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
-                return {
-                    ...v,
-                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
-                };
-            }),
-        }), (newProjectFlag) => {
-            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
-                ...environmentFlag,
-                multivariate_feature_state_values: flag.multivariate_options,
-            }, segmentOverrides);
-        });
-    };
-
-    editFlagValue = (projectId, environmentId, flag, projectFlag, environmentFlag) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, {
+    editFeatureValue = (projectId, environmentId, flag, projectFlag, environmentFlag) => {
+        AppActions.editFeatureMv(projectId, Object.assign({}, projectFlag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
                 return {
@@ -88,25 +71,15 @@ const FeatureListProvider = class extends React.Component {
         });
     };
 
-    editFlagSegments = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, onComplete) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, {
-            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
-                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
-                return {
-                    ...v,
-                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
-                };
-            }),
-        }), (newProjectFlag) => {
-            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
-                ...environmentFlag,
-                multivariate_feature_state_values: flag.multivariate_options,
-            }, segmentOverrides, 'SEGMENT', onComplete);
-        });
+    editFeatureSegments = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, onComplete) => {
+        AppActions.editEnvironmentFlag(projectId, environmentId, flag, projectFlag, {
+            ...environmentFlag,
+            multivariate_feature_state_values: flag.multivariate_options,
+        }, segmentOverrides, 'SEGMENT', onComplete);
     };
 
-    editFlagSettings = (projectId, environmentId, flag, projectFlag) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+    editFeatureSettings = (projectId, environmentId, flag, projectFlag) => {
+        AppActions.editFeature(projectId, Object.assign({}, projectFlag, flag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
                 return {
@@ -122,7 +95,7 @@ const FeatureListProvider = class extends React.Component {
     };
 
     createChangeRequest = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest, commit) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+        AppActions.editFeatureMv(projectId, Object.assign({}, projectFlag, flag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
                 return {
@@ -154,10 +127,9 @@ const FeatureListProvider = class extends React.Component {
                     setFlag: this.setFlag,
                     createFlag: this.createFlag,
                     createChangeRequest: this.createChangeRequest,
-                    editFlag: this.editFlag,
-                    editFlagValue: this.editFlagValue,
-                    editFlagSettings: this.editFlagSettings,
-                    editFlagSegments: this.editFlagSegments,
+                    editFeatureValue: this.editFeatureValue,
+                    editFeatureSettings: this.editFeatureSettings,
+                    editFeatureSegments: this.editFeatureSegments,
                     removeFlag: this.removeFlag,
                 },
             )
