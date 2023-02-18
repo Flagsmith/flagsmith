@@ -48,7 +48,6 @@ const CreateAuditWebhook = class extends Component {
                 id={this.props.projectId}
             >
                 {({ project }) => (
-
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -97,6 +96,40 @@ const CreateAuditWebhook = class extends Component {
                                 placeholder="Secret"
                             />
                         </Flex>
+                        <Flex className="mb-4 mr-4">
+                            {error && <ErrorMessage error="Could not create a webhook for this url, please ensure you include http or https." />}
+                            <div className={isEdit ? 'footer' : ''}>
+                                <div className="mb-3">
+                                    <p className="text-right">
+                                        This will {isEdit ? 'update' : 'create'} a webhook for the Organisation
+                                        {' '}
+                                        <strong>
+                                            {AccountStore.getOrganisation().name}
+                                        </strong>
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <TestWebhook json={Constants.exampleAuditWebhook} webhook={this.state.url} />
+                                </div>
+                                <div className="text-right">
+                                    {isEdit ? (
+                                        <Button
+                                            className="mt-3" data-test="update-feature-btn" id="update-feature-btn"
+                                            disabled={isSaving || !url}
+                                        >
+                                            {isSaving ? 'Creating' : 'Update Webhook'}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className="mt-3" data-test="create-feature-btn" id="create-feature-btn"
+                                            disabled={isSaving || !url}
+                                        >
+                                            {isSaving ? 'Creating' : 'Create Webhook'}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </Flex>
                         <FormGroup className="mb-4 ml-1">
                             <div>
                                 <label>Example Payload </label>
@@ -104,40 +137,8 @@ const CreateAuditWebhook = class extends Component {
                                 <Highlight forceExpanded style={{ marginBottom: 10 }} className="json">
                                     {exampleJSON}
                                 </Highlight>
-                                <div className="text-center">
-                                    <TestWebhook json={Constants.exampleAuditWebhook} webhook={this.state.url}/>
-                                </div>
                             </div>
                         </FormGroup>
-                        {error && <ErrorMessage error="Could not create a webhook for this url, please ensure you include http or https."/>}
-                        <div className={isEdit ? 'footer' : ''}>
-                            <div className="mb-3">
-                                <p className="text-right">
-                                    This will {isEdit ? 'update' : 'create'} a webhook the organisation
-                                    {' '}
-                                    <strong>
-                                        {AccountStore.getOrganisation().name}
-                                    </strong>
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                {isEdit ? (
-                                    <Button
-                                        className="mt-3" data-test="update-feature-btn" id="update-feature-btn"
-                                        disabled={isSaving || !url}
-                                    >
-                                        {isSaving ? 'Creating' : 'Update Webhook'}
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className="mt-3" data-test="create-feature-btn" id="create-feature-btn"
-                                        disabled={isSaving || !url}
-                                    >
-                                        {isSaving ? 'Creating' : 'Create Webhook'}
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
                     </form>
                 )}
             </ProjectProvider>
