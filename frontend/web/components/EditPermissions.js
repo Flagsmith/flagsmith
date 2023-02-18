@@ -7,7 +7,7 @@ import AvailablePermissionsProvider from '../../common/providers/AvailablePermis
 import _data from '../../common/data/base/_data';
 import UserGroupList from './UserGroupList';
 import InfoMessage from './InfoMessage';
-// import propTypes from 'prop-types';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class _EditPermissionsModal extends Component {
   static displayName = 'EditPermissionsModal';
@@ -181,7 +181,7 @@ class _EditPermissionsModal extends Component {
                               {
                                   this.state.parentError && (
                                       <InfoMessage>
-                                          The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit user permissions to view this {this.props.parentLevel}. If the user does not belong to any groups with this permissions, you may have to adjust their permissions in <a onClick={() => {
+                                          The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit permission to view this {this.props.parentLevel}. If the user does not belong to any groups with this permission, you may have to adjust their permissions in <a onClick={() => {
                                           this.props.push(this.props.parentSettingsLink);
                                           closeModal();
                                       }}
@@ -275,7 +275,7 @@ export default class EditPermissions extends PureComponent {
                                                 id="org-members-list"
                                                 title=""
                                                 className="panel--transparent"
-                                                items={users}
+                                                items={_.sortBy(users, 'first_name')}
                                                 renderRow={({ id, first_name, last_name, email, role }) => {
                                                     const onClick = () => {
                                                         if (role !== 'ADMIN') {

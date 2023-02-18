@@ -1,20 +1,20 @@
 import React, { Component } from 'react';
+import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import _data from 'common/data/base/_data';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import FeatureListStore from 'common/stores/feature-list-store';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
-import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
-import data from '../../../common/data/base/_data';
-import ProjectStore from '../../../common/stores/project-store';
-import _data from '../../../common/data/base/_data';
 import SegmentOverrides from '../SegmentOverrides';
 import AddEditTags from '../AddEditTags';
-import Constants from '../../../common/constants';
+import Constants from 'common/constants';
 import FlagOwners from '../FlagOwners';
-import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
-import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
@@ -540,7 +540,7 @@ const CreateFlag = class extends Component {
                         AppActions.refreshFeatures(this.props.projectId, this.props.environmentId);
                     }}
                     >
-                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
+                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFeatureSettings, editFeatureValue, editFeatureSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 this.setState({ valueChanged: false });
                                 if ((is4Eyes || schedule) && !identity) {
@@ -575,22 +575,22 @@ const CreateFlag = class extends Component {
                                     />);
                                 } else if (document.getElementById('language-validation-error')) {
                                     openConfirm('Validation error', 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?', () => {
-                                        this.save(editFlagValue, isSaving);
+                                        this.save(editFeatureValue, isSaving);
                                     }, null, 'Save', 'Cancel');
                                 } else {
-                                    this.save(editFlagValue, isSaving);
+                                    this.save(editFeatureValue, isSaving);
                                 }
                             };
 
                             const saveSettings = () => {
                                 this.setState({ settingsChanged: false });
-                                this.save(editFlagSettings, isSaving);
+                                this.save(editFeatureSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
                                 this.setState({ segmentsChanged: false });
 
-                                this.save(editFlagSegments, isSaving);
+                                this.save(editFeatureSegments, isSaving);
                             };
 
                             const onCreateFeature = () => {
@@ -1056,7 +1056,6 @@ const CreateFlag = class extends Component {
                                 </Permission>
                             );
                         }}
-
                     </Provider>
                 )}
             </ProjectProvider>

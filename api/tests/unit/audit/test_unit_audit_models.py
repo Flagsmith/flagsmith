@@ -147,3 +147,14 @@ def test_audit_log_history_record(mocker):
     mocked_model_class.objects.get.assert_called_once_with(
         id=audit_log.history_record_id
     )
+
+
+def test_audit_log_save_project_is_added_if_not_set(environment):
+    # Given
+    audit_log = AuditLog(environment=environment)
+
+    # When
+    audit_log.save()
+
+    # Then
+    assert audit_log.project == environment.project

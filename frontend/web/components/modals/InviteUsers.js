@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import Tabs from '../base/forms/Tabs';
-import TabItem from '../base/forms/TabItem';
 import Button from '../base/forms/Button';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const InviteUsers = class extends Component {
     static displayName = 'InviteUsers'
@@ -153,7 +152,6 @@ const InviteUsers = class extends Component {
                                 </Button>
                             </div>
                         </form>
-
                     </div>
                 )}
             </OrganisationProvider>
