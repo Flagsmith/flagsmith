@@ -72,8 +72,8 @@ class TheComponent extends Component {
     render() {
         const { projectId, projectFlag, permission, environmentFlags, environmentId, projectFlags, removeFlag, toggleFlag } = this.props;
         const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
-        const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
-        const isProtected = hasProtectedTag(projectFlag, parseInt(projectId));
+        const readOnly = this.props.readOnly || Utils.getFlagsmithHasFeature('read_only_mode');
+        const isProtected = hasProtectedTag(projectFlag, projectId);
         const environment = ProjectStore.getEnvironment(environmentId);
         const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals);
 
@@ -221,7 +221,7 @@ class TheComponent extends Component {
                                             </button>
                                         )}
                                     >
-                                        {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
+                                        {isProtected ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
                                     </Tooltip>
                                 </Column>
                             ))}

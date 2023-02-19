@@ -2,7 +2,6 @@ import React, {FC, ReactNode, useEffect, useRef, useState} from 'react'; // we n
 import {RouterChildContext} from "react-router";
 import {find, sortBy} from 'lodash'
 
-const Utils = require('common/utils/utils')
 import Constants from 'common/constants'
 import useSearchThrottle from "common/useSearchThrottle";
 import {Segment} from "common/types/responses";
@@ -17,7 +16,8 @@ import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
 import CreateSegmentModal from '../modals/CreateSegment';
 import PanelSearch from '../PanelSearch'
 import JSONReference from "../JSONReference";
-
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Utils from 'common/utils/utils'
 type SegmentsPageType = {
     router: RouterChildContext['router']
     match: {

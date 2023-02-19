@@ -1,3 +1,4 @@
+import Project from '../project';
 const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 window.Project = require('../project');

@@ -25,6 +25,8 @@ import Rule from './Rule';
 import Switch from "../Switch";
 import TabItem from '../base/forms/TabItem';
 import Tabs from '../base/forms/Tabs';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import JSONReference from "../JSONReference";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 

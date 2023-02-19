@@ -17,7 +17,8 @@ import Tabs from './base/forms/Tabs';
 import UserGroupList from './UserGroupList';
 import {PermissionLevel} from "common/types/requests";
 import {RouterChildContext} from "react-router";
-import {useGetAvailablePermissionsQuery} from "../../common/services/useAvailablePermissions";
+import {useGetAvailablePermissionsQuery} from "common/services/useAvailablePermissions";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 
 type EditPermissionModalType = {

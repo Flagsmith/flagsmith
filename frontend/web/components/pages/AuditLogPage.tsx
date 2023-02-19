@@ -1,17 +1,12 @@
-import React, { Component, useEffect, useRef, useState } from 'react';
-import moment from 'moment';
-import { FC } from 'react'; // we need this to make JSX compile
-import PanelSearch from '../PanelSearch'
-
-const ConfigProvider = require('common/providers/ConfigProvider');
-const ProjectProvider = require('common/providers/ProjectProvider');
+import React, { FC, useState } from 'react'; // we need this to make JSX compile
+import ConfigProvider from 'common/providers/ConfigProvider';
 import ToggleChip from '../ToggleChip';
 import Utils from 'common/utils/utils';
-import { AuditLogItem, Project } from 'common/types/responses';
-import { RouterChildContext } from 'react-router';
-import { useGetAuditLogsQuery } from 'common/services/useAuditLog';
-import useSearchThrottle from 'common/useSearchThrottle';
-import AuditLog from "../AuditLog";
+import { Project } from 'common/types/responses';
+import { RoutPanelSearcherChildContext } from 'react-router';
+import AuditLog from '../AuditLog';
+
+const ProjectProvider = require('common/providers/ProjectProvider');
 
 type AuditLogType = {
     router: RouterChildContext['router']
@@ -69,13 +64,16 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                                 </ProjectProvider>
                                 <FormGroup>
                                     <AuditLog
-                                        onSearchChange={(search:string)=>{
+                                        onSearchChange={(search: string) => {
                                             props.router.history.replace(`${document.location.pathname}?${Utils.toParam({
                                                 env: environment,
                                                 search,
-                                                })}`);
+                                            })}`);
                                         }}
-                                        pageSize={10} environmentId={environment} projectId={projectId}/>
+                                        pageSize={10}
+                                        environmentId={environment}
+                                        projectId={projectId}
+                                    />
                                 </FormGroup>
                             </div>
                         </div>

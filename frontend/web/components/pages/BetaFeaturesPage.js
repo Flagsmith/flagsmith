@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import Switch from '../Switch';
 import EditBetaFeatureModal from '../modals/EditBetaFeature';
-import Format from "../../../common/utils/format";
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Format from "common/utils/format";
 
 const BetaFeaturesPage = class extends Component {
     static displayName = 'BetaFeaturesPage';
@@ -125,7 +126,6 @@ const BetaFeaturesPage = class extends Component {
                                           itemHeight={65}
                                         />
                                     )}
-
                                 </div>
                             </div>
                         );

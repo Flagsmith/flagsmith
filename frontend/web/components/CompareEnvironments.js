@@ -4,7 +4,8 @@ import EnvironmentSelect from './EnvironmentSelect';
 import data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import FeatureRow from './FeatureRow';
-import Permission from "../../common/providers/Permission";
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
 
 const featureNameWidth = 300;
 

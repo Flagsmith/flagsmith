@@ -19,6 +19,18 @@ export type Req = {
     project: string
     environments?: string
   }>
+  getOrganisations: {}
+  getProjects: {
+    organisationId: string
+  }
+  getEnvironments: {
+    projectId: string
+  }
+  getOrganisationUsage: {
+    organisationId: string
+    projectId?:string
+    environmentId?:string
+  }
   deleteIdentity: {
     id: string
     environmentId: string

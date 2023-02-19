@@ -1,6 +1,13 @@
+import pytest
+from django.conf import settings
+
 from organisations.models import OrganisationRole
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(
     migrator,
 ):

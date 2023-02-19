@@ -2,6 +2,7 @@ import React, {Component, useEffect, FC, useState} from 'react';
 import {RouterChildContext} from "react-router";
 import {Link} from "react-router-dom";
 import {useHasPermission} from "common/providers/Permission";
+import ConfigProvider from "common/providers/ConfigProvider";
 
 import Constants from 'common/constants';
 import {useDeleteIdentityMutation, useGetIdentitiesQuery} from "common/services/useIdentity";

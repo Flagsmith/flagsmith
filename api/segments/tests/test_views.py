@@ -8,7 +8,8 @@ from flag_engine.api.document_builders import build_identity_document
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule

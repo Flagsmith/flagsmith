@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import ConfirmRemoveEnvironment from '../modals/ConfirmRemoveEnvironment';
-import ProjectStore from '../../../common/stores/project-store';
-import ConfigProvider from '../../../common/providers/ConfigProvider';
-import withWebhooks from '../../../common/providers/withWebhooks';
+import ProjectStore from 'common/stores/project-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import withWebhooks from 'common/providers/withWebhooks';
 import CreateWebhookModal from '../modals/CreateWebhook';
 import ConfirmRemoveWebhook from '../modals/ConfirmRemoveWebhook';
 import EditPermissions from '../EditPermissions';
@@ -10,7 +10,6 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
-import { ColourSelect } from '../AddEditTags';
 import JSONReference from "../JSONReference";
 import ColourSelect from '../tags/ColourSelect';
 const EnvironmentSettingsPage = class extends Component {
@@ -493,7 +492,6 @@ const EnvironmentSettingsPage = class extends Component {
                                             </FormGroup>
                                         </TabItem>
                                     </Tabs>
-
                                 )}
                             </div>
                         );

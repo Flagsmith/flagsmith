@@ -1,11 +1,12 @@
 import React from 'react';
 import { Component } from 'react';
 import { groupBy } from 'lodash';
-import _data from '../../../common/data/base/_data';
-import ProjectStore from '../../../common/stores/project-store';
+import _data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import FeatureListStore from 'common/stores/feature-list-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import SegmentOverrides from '../SegmentOverrides';
-import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
-import FeatureListStore from '../../../common/stores/feature-list-store';
 import FlagSelect from '../FlagSelect';
 import InfoMessage from '../InfoMessage';
 import EnvironmentSelect from '../EnvironmentSelect';
@@ -360,8 +361,6 @@ class SegmentOverridesInnerAdd extends Component {
                     );
                 }}
             </FeatureListProvider>
-
-
         );
     }
 }
