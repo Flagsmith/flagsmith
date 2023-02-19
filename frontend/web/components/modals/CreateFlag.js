@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import Constants from 'common/constants';
 import data from 'common/data/base/_data';
 import ProjectStore from 'common/stores/project-store';
 import ConfigProvider from 'common/providers/ConfigProvider';
@@ -9,7 +10,6 @@ import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import SegmentOverrides from '../SegmentOverrides';
 import AddEditTags from '../tags/AddEditTags';
-import Constants from 'common/constants';
 import FlagOwners from '../FlagOwners';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
@@ -18,9 +18,7 @@ import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
-import Permission from "../../../common/providers/Permission";
-
-const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+import Permission from "common/providers/Permission";
 
 const CreateFlag = class extends Component {
     static displayName = 'CreateFlag'
@@ -283,6 +281,8 @@ const CreateFlag = class extends Component {
             description,
             enabledSegment,
         } = this.state;
+        const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+
         const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;

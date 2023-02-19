@@ -26,8 +26,7 @@ type UsersPageType = {
         }
     }
 }
-
-const Utils = require("common/utils/utils")
+import Utils from "common/utils/utils";
 const UsersPage: FC<UsersPageType> = (props) => {
     const [page, setPage] = useState<{
         number: number,

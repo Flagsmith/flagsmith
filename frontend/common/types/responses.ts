@@ -7,14 +7,15 @@ export type PagedResponse<T> = {
   results: T[];
 }
 export type FlagsmithValue = string | number | boolean | null
+export type SegmentCondition = {
+  operator: string;
+  property: string;
+  value: string;
+}
 export type SegmentRule = {
   type: string;
   rules: SegmentRule[];
-  conditions: {
-    operator: string;
-    property: string;
-    value: FlagsmithValue;
-  }[];
+  conditions: [];
 }
 export type Segment = {
   id: number;
@@ -57,13 +58,6 @@ export type User = {
 }
 
 export type ProjectSummary = Omit<Project, 'environments'>
-export type AuditLogItem = {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: "ADMIN" | "USER"
-}
 
 export type UserGroup = {
   external_id: string|null
@@ -145,22 +139,57 @@ export type MultivariateFeatureStateValue = {
   percentage_allocation: number;
 }
 
+
+export type FeatureStateValue = {
+  boolean_value?: any;
+  float_value?: number
+  integer_value?: any;
+  string_value: string;
+  type: string;
+}
+
+export type MultiVartiateOption =  {
+  id: number;
+  uuid: string;
+  type: string;
+  integer_value?: number;
+  string_value: string;
+  boolean_value?: boolean;
+  default_percentage_allocation: number;
+}
+
+export type FeatureState = {
+  id: number;
+  feature_state_value: string;
+  multivariate_feature_state_values: MultivariateFeatureStateValue[];
+  identity?: any;
+  uuid: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  version?: number;
+  live_from?: string;
+  hide_from_client?: string;
+  feature: number;
+  environment: number;
+  feature_segment?: number;
+  change_request?: number;
+}
+
 export type ProjectFlag = {
-    change_request?: number;
-    created_at: string;
-    enabled: boolean;
-    environment: number;
-    feature: number;
-    feature_segment?: number;
-    feature_state_value: FlagsmithValue;
-    id: number;
-    identity?: number;
-    live_from: string;
-    multivariate_feature_state_values: MultivariateFeatureStateValue[];
-    tags?: number[]
-    updated_at: string;
-    uuid?: string;
-    version?: number;
+  id: number;
+  name: string;
+  type: string;
+  default_enabled: boolean;
+  initial_value: string;
+  created_date: Date;
+  description?: any;
+  tags: any[];
+  multivariate_options: MultiVartiateOption[];
+  is_archived: boolean;
+  owners: User[];
+  uuid: string;
+  project: number;
 }
 
 export type Res = {

@@ -11,6 +11,7 @@ import { getTags } from "common/services/useTag";
 import { getStore } from "common/store";
 import JSONReference from "../JSONReference";
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
 
@@ -90,7 +91,7 @@ const FeaturesPage = class extends Component {
     createFeaturePermission(el) {
         return (
             <Permission level="project" permission="CREATE_FEATURE" id={this.props.match.params.projectId}>
-                {({ permission, isLoading }) => (permission ? (
+                {({ permission }) => (permission ? (
                     el(permission)
                 ) : Utils.renderWithPermission(permission, Constants.projectPermissions('Create Feature'), el(permission)))}
             </Permission>

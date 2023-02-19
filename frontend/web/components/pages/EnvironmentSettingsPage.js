@@ -12,6 +12,7 @@ import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import JSONReference from "../JSONReference";
 import ColourSelect from '../tags/ColourSelect';
+import Constants from 'common/constants';
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
 

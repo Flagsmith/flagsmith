@@ -2,16 +2,19 @@ import React, {Component, useEffect, useState} from 'react';
 import TagFilter from '../tags/TagFilter';
 import Tag from "../tags/Tag";
 import FeatureRow from '../FeatureRow';
-import FeatureListStore from '../../../common/stores/feature-list-store';
-import ProjectStore from '../../../common/stores/project-store';
+import FeatureListStore from 'common/stores/feature-list-store';
+import ProjectStore from 'common/stores/project-store';
 import {useCustomWidgetOptionString} from '@datadog/ui-extensions-react';
 import client from "../datadog-client";
-import NavIconSmall from '../svg/NavIconSmall';
+const FeatureListProvider = require('common/providers/FeatureListProvider')
 const AppActions = require("common/dispatcher/app-actions")
 const ES6Component = require("common/ES6Component")
 import AuditLog from "../AuditLog";
-import {getStore} from "../../../common/store";
-import Permission from "../../../common/providers/Permission";
+import API from "../../project/api"
+import {getStore} from "common/store";
+import Permission from "common/providers/Permission";
+import Constants from 'common/constants';
+import Utils from 'common/utils/utils';
 import {Provider} from 'react-redux';
 import OrgEnvironmentSelect from "../OrgEnvironmentSelect";
 let isWidget = false;
@@ -27,15 +30,14 @@ type FeatureListType = {
 }
 
 const FeatureList = class extends Component<FeatureListType> {
-    state = {}
-    constructor(props, context) {
+    state =  {
+        tags: [],
+        showArchived: false,
+        search: null,
+        sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+    }
+    constructor(props:any, context:any) {
         super(props, context);
-        this.state = {
-            tags: [],
-            showArchived: false,
-            search: null,
-            sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
-        };
         ES6Component(this);
         AppActions.getProject(this.props.projectId);
         AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
@@ -57,10 +59,6 @@ const FeatureList = class extends Component<FeatureListType> {
     componentWillUnmount() {
         document.body.classList.remove("widget-mode")
     }
-    componentWillUnmount() {
-        document.body.classList.add("widget-mode")
-    }
-
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
     };
@@ -229,7 +227,7 @@ export default function Widget() {
     if (!API.getCookie("t")) {
         return null
     }
-    const [error, setError] = useState<string|null>(null);
+    const [error, setError] = useState<boolean>(false);
     const [_projectId, setProjectId] = useState<string|null>(projectId||null);
     const [_environmentId, setEnvironmentId] = useState<string|null>(environmentId||null);
     const [organisationId, setOrganisationId] = useState<string|null>(null);

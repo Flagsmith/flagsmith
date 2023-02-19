@@ -8,6 +8,7 @@ import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import RegexTester from "../RegexTester";
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'

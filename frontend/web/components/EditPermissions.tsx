@@ -4,8 +4,8 @@ import _data from 'common/data/base/_data';
 import {AvailablePermission, GroupPermission, User, UserGroup, UserPermission} from "common/types/responses";
 const OrganisationProvider = require('common/providers/OrganisationProvider');
 const AppActions = require('common/dispatcher/app-actions');
-const Utils = require('common/utils/utils');
-const AccountStore = require('common/stores/account-store');
+import Utils from "common/utils/utils";
+import AccountStore from "common/stores/account-store"
 import Format from 'common/utils/format';
 const Project = require('common/project');
 import PanelSearch from './PanelSearch'

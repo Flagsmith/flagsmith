@@ -4,8 +4,9 @@ import HistoryIcon from './HistoryIcon';
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
 import CreateFlagModal from './modals/CreateFlag';
-import ProjectStore from '../../common/stores/project-store';
-import Permission from "../../common/providers/Permission";
+import ProjectStore from 'common/stores/project-store';
+import Permission from "common/providers/Permission";
+import Constants from "common/constants";
 import { hasProtectedTag } from "../../common/utils/hasProtectedTag"; // we need this to make JSX compile
 
 

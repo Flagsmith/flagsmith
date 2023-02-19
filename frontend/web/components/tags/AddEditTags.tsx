@@ -1,11 +1,11 @@
 import React, {FC, useMemo, useState} from 'react'
 import {filter as loFilter} from 'lodash'
-import {useHasPermission} from "../../../common/providers/Permission";
+import {useHasPermission} from "common/providers/Permission";
+import Utils from "common/utils/utils";
 import InlineModal from "../InlineModal";
-import Constants from "../../../common/constants";
-const Utils = require("common/utils/utils")
+import Constants from "common/constants";
 import TagValues from "./TagValues";
-import {useDeleteTagMutation, useGetTagsQuery} from "../../../common/services/useTag";
+import {useDeleteTagMutation, useGetTagsQuery} from "common/services/useTag";
 import {Tag as TTag} from "../../../common/types/responses";
 import Button, {ButtonLink} from "../base/forms/Button";
 import Tag from "./Tag";

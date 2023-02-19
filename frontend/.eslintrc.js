@@ -1,5 +1,5 @@
 module.exports = {
-    'parser': 'babel-eslint',
+    "parser": "@typescript-eslint/parser",
     'env': {
         'browser': true,
         'node': true,
@@ -8,6 +8,7 @@ module.exports = {
     'extends': [
         'prettier',
         'prettier/react',
+        "plugin:@typescript-eslint/recommended",
         'airbnb',
         'plugin:react/recommended',
     ],
@@ -15,8 +16,15 @@ module.exports = {
         'import',
         'prettier',
         'react',
+        "@typescript-eslint"
     ],
     'rules': {
+        "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "typescript-eslint/no-empty-interface": "off",
+        "@typescript-eslint/no-namespace": "off",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-explicit-any": "off",
         'indent': [
             'error', 4,
             {
@@ -94,7 +102,6 @@ module.exports = {
         'Any': true,
         'AppActions': true,
         'AsyncStorage': true,
-        'Constants': true,
         'Cookies': true,
         'Dispatcher': true,
         'E2E': true,

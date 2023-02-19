@@ -1,5 +1,5 @@
-// import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import Constants from 'common/constants';
 
 const splitIfValue = (v, append) => (append ? v.split(append) : [v === null ? '' : v]);
 

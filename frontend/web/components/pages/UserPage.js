@@ -16,6 +16,7 @@ import JSONReference from "../JSONReference";
 import Constants from "common/constants";
 import IdentitySegmentsProvider from "common/providers/IdentitySegmentsProvider";
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from 'common/providers/Permission';
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {

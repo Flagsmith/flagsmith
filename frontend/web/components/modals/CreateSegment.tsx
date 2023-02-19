@@ -12,7 +12,7 @@ import {
 } from "common/services/useSegment";
 import IdentitySegmentsProvider from "common/providers/IdentitySegmentsProvider"
 import Format from "common/utils/format"
-const Utils = require("common/utils/utils")
+import Utils from "common/utils/utils";
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import Button, {ButtonLink, ButtonOutline} from "../base/forms/Button";
@@ -28,25 +28,7 @@ import Tabs from '../base/forms/Tabs';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import JSONReference from "../JSONReference";
 
-const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
-const defaultSegment: Omit<Segment, "id" | "uuid" | "project"> & { id?: number, uuid?: string, project?: number } = {
-    name: "",
-    description: "",
-    rules: [{
-        type: 'ALL',
-        conditions: [],
-        rules: [
-            {
-                type: 'ANY',
-                conditions: [
-                    {...Constants.defaultRule},
-                ],
-                rules: []
-            },
-        ],
-    }],
-};
 
 type PageType = {
     number: number,
@@ -55,7 +37,7 @@ type PageType = {
 }
 
 type CreateSegmentType = {
-    projectId: string
+    projectId: number | string
     searchInput: string
     environmentId: string
     identitiesLoading: boolean
@@ -87,13 +69,32 @@ const CreateSegment: FC<CreateSegmentType> = ({
   page,
   projectId,
   readOnly,
-  segment = defaultSegment,
+  segment: _segment,
   setEnvironmentId,
   searchInput,
   setSearchInput,
   setPage,
 }) => {
+    const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
+    const defaultSegment: Omit<Segment, "id" | "uuid" | "project"> & { id?: number, uuid?: string, project?: number } = {
+        name: "",
+        description: "",
+        rules: [{
+            type: 'ALL',
+            conditions: [],
+            rules: [
+                {
+                    type: 'ANY',
+                    conditions: [
+                        {...Constants.defaultRule},
+                    ],
+                    rules: []
+                },
+            ],
+        }],
+    };
+    const segment = _segment || defaultSegment
     const [createSegment, {isSuccess: createSuccess,data:createSegmentData, isError:createError, isLoading:creating}] = useCreateSegmentMutation()
     const [editSegment, {isSuccess: updateSuccess,data:updateSegmentData, isError:updateError, isLoading:updating}] = useUpdateSegmentMutation()
 
@@ -136,8 +137,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
     const save = (e: FormEvent) => {
         Utils.preventDefault(e);
-        const segmentData = {
+        const segmentData: Omit<Segment, 'id'|'uuid'> = {
             description,
+            project: projectId,
             name,
             rules,
             feature: feature,
@@ -337,7 +339,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     value for each rule.</div>
             }
             {isEdit && (
-                <JSONReference title={"Segment"} json={this.props.segment}/>
+                <JSONReference title={"Segment"} json={segment}/>
             )}
             {readOnly ? (
                 <div className="text-right">

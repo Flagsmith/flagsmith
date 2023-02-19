@@ -1,6 +1,6 @@
 import React, {FC, useState} from 'react'
 import InlineModal from "../InlineModal";
-import Constants from "../../../common/constants";
+import Constants from "common/constants";
 import Tag from "./Tag";
 
 type ColourSelectType = {

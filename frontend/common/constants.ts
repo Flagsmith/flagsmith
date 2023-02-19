@@ -1,3 +1,5 @@
+import { OAuthType } from 'common/types/requests';
+
 const keywords = {
     URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
     LIB_NAME: 'flagsmith',
@@ -16,7 +18,7 @@ const keywords = {
     FEATURE_NAME_ALT_VALUE: 'big',
 };
 
-const Constants = {
+export default {
     tagColors: [
         '#3d4db6',
         '#ea5a45',
@@ -59,8 +61,8 @@ const Constants = {
         'CREATE_FIRST_SEGMENT': { 'event': 'First Segment created', 'category': 'First' },
         'CREATE_ORGANISATION': { 'event': 'Organisation created', 'category': 'Organisation' },
         'CREATE_FIRST_ORGANISATION': { 'event': 'First Organisation created', 'category': 'First' },
-        'REFERRER_CONVERSION': referrer => ({ 'event': `${referrer} converted`, 'category': 'Referrer' }),
-        'REFERRER_REGISTERED': referrer => ({ 'event': `${referrer} registered`, 'category': 'Referrer' }),
+        'REFERRER_CONVERSION': (referrer:string) => ({ 'event': `${referrer} converted`, 'category': 'Referrer' }),
+        'REFERRER_REGISTERED': (referrer:string) => ({ 'event': `${referrer} registered`, 'category': 'Referrer' }),
         'CREATE_PROJECT': { 'event': 'Project created', 'category': 'Project' },
         'CREATE_FIRST_PROJECT': { 'event': 'First Project created', 'category': 'First' },
         'CREATE_USER_FEATURE': { 'event': 'User feature created', 'category': 'User Features' },
@@ -76,10 +78,10 @@ const Constants = {
         'EDIT_PROJECT': { 'event': 'Project edited', 'category': 'Project' },
         'EDIT_USER_FEATURE': { 'event': 'User feature edited', 'category': 'Features' },
         'INVITE': { 'event': 'Invite sent', 'category': 'Invite' },
-        'ACCEPT_INVITE': org => ({ 'event': 'Invite accepted', 'category': 'Invite', extra: org }),
+        'ACCEPT_INVITE': (org:any) => ({ 'event': 'Invite accepted', 'category': 'Invite', extra: org }),
         'LOGIN_DEMO': { 'event': 'User demo login', 'category': 'User' },
         'LOGIN': { 'event': 'User login', 'category': 'User' },
-        'OAUTH': type => ({ 'event': `User oauth ${type}`, 'category': 'User' }),
+        'OAUTH': (type:OAuthType) => ({ 'event': `User oauth ${type}`, 'category': 'User' }),
         'REGISTER': { 'event': 'User register', 'category': 'User' },
         'REMOVE_ENVIRONMENT': { 'event': 'Environment edited', 'category': 'Environment' },
         'REMOVE_FEATURE': { 'event': 'Feature removed', 'category': 'Features' },
@@ -97,11 +99,8 @@ const Constants = {
     modals: {
         'PAYMENT': 'Payment Modal',
     },
-
-    adminPermissions: () => 'To use this feature you need the to be admin of the organisation.<br/>Please contact a member of this organisation who has administrator privileges.',
-    projectPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
-    environmentPermissions: perm => `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
-    organisationPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`,
+    projectPermissions: (perm:string) => `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+    environmentPermissions: (perm:string) => `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
     pages: {
         'ACCOUNT': 'Account Page',
         'AUDIT_LOG': 'Audit Log Page',
@@ -128,7 +127,7 @@ const Constants = {
         TAGS_DESCRIPTION: 'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
         HIDE_FROM_SDKS_DESCRIPTION: 'Enable this if you want to prevent the Flagsmith API from returning this feature regardless of if it is enabled. Use this if you don\'t want users to see that a feature name whilst it is in development.',
         SEGMENT_OVERRIDES_DESCRIPTION: 'Set different values for your feature based on what segments users are in.',
-        ENVIRONMENT_OVERRIDE_DESCRIPTION: name => `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
+        ENVIRONMENT_OVERRIDE_DESCRIPTION: (name:string) => `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
         IDENTITY_OVERRIDES_DESCRIPTION: 'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
         REMOTE_CONFIG_DESCRIPTION: 'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
         REMOTE_CONFIG_DESCRIPTION_VARIATION: 'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
@@ -147,7 +146,7 @@ const Constants = {
             'Node JS': 'javascript',
         },
 
-        'CREATE_USER': (envId, userId) => ({
+        'CREATE_USER': (envId:string, userId:string) => ({
             '.NET': require('./code-help/create-user/create-user-dotnet')(envId, keywords),
             'curl': require('./code-help/create-user/create-user-curl')(envId, keywords, userId),
             'Flutter': require('./code-help/create-user/create-user-flutter')(envId, keywords),
@@ -165,7 +164,7 @@ const Constants = {
             'Rust': require('./code-help/create-user/create-user-rust')(envId, keywords),
         }),
 
-        'USER_TRAITS': (envId, userId) => ({
+        'USER_TRAITS': (envId:string, userId?:string) => ({
             '.NET': require('./code-help/traits/traits-dotnet')(envId, keywords, userId),
             'curl': require('./code-help/traits/traits-curl')(envId, keywords, userId),
             'Flutter': require('./code-help/traits/traits-flutter')(envId, keywords, userId),
@@ -183,7 +182,7 @@ const Constants = {
             'Rust': require('./code-help/traits/traits-rust')(envId, keywords, userId),
         }),
 
-        'INIT': envId => ({
+        'INIT': (envId:string) => ({
             '.NET': require('./code-help/init/init-dotnet')(envId, keywords),
             'curl': require('./code-help/init/init-curl')(envId, keywords),
             'Flutter': require('./code-help/init/init-flutter')(envId, keywords),
@@ -224,8 +223,7 @@ const Constants = {
         'ADMIN': 'Organisation Administrator',
         'USER': 'User',
     },
-    exampleWebhook: `
-{
+    exampleWebhook: `{
  "data": {
   "changed_by": "Ben Rometsch",
   "new_state": {
@@ -299,4 +297,3 @@ const Constants = {
  "related_object_type": "FEATURE"
 }`,
 };
-module.exports = Constants;

@@ -2,7 +2,7 @@ import React, {FC, KeyboardEvent, useEffect, useRef, useState} from 'react'
 import {Tag as TTag} from "common/types/responses";
 import Constants from "common/constants";
 import Permission from "common/providers/Permission";
-const Utils = require("common/utils/utils");
+import Utils from "common/utils/utils";
 import {useCreateTagMutation, useUpdateTagMutation} from "common/services/useTag";
 
 import InputGroup from '../base/forms/InputGroup'

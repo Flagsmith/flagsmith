@@ -1,8 +1,5 @@
-// import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import AccountStore from '../../common/stores/account-store';
 import TwoFactor from './SimpleTwoFactor';
-import ErrorMessage from './ErrorMessage';
 
 export default class TheComponent extends PureComponent {
   static displayName = 'TheComponent';

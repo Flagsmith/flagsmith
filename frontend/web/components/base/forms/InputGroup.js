@@ -2,8 +2,6 @@
  * Created by kylejohnson on 25/07/2016.
  */
 import React, { Component } from 'react';
-import Constants from '../../../../common/constants';
-
 const InputGroup = class extends Component {
     static displayName = 'InputGroup'
 

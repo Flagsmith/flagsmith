@@ -4,16 +4,17 @@ export type PagedRequest<T> =  T & {
   page?:number
   page_size?: number
 }
+export type OAuthType = "github" | "saml"  | 'google'
 export type PermissionLevel = "organisation" | "project" | "environment"
 export type Req = {
   getSegments: PagedRequest<{
     q?:string
-    projectId: string
+    projectId: number | string
     identity?:number
   }>
-  deleteSegment: {projectId:string, id:number}
-  updateSegment: {projectId:string, segment: Segment}
-  createSegment: {projectId:string, segment: Omit<Segment,"id"|"uuid"|"project">}
+  deleteSegment: {projectId:number | string, id:number}
+  updateSegment: {projectId:number | string, segment: Segment}
+  createSegment: {projectId:number | string, segment: Omit<Segment,"id"|"uuid"|"project">}
   getAuditLogs: PagedRequest<{
     search?:string
     project: string

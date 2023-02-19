@@ -7,14 +7,14 @@ import ToggleChip from '../components/ToggleChip';
 import Input from '../components/base/forms/Input'
 import InputGroup from '../components/base/forms/InputGroup'
 import PanelSearch from '../components/PanelSearch'
-
+import AccountStore from 'common/stores/account-store'
 window.AppActions = require('../../common/dispatcher/app-actions');
 window.Actions = require('../../common/dispatcher/action-constants');
 window.ES6Component = require('../../common/ES6Component');
 
 window.IdentityProvider = require('../../common/providers/IdentityProvider');
 window.AccountProvider = require('../../common/providers/AccountProvider');
-window.AccountStore = require('../../common/stores/account-store');
+window.AccountStore = AccountStore;
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider');
 window.OrganisationProvider = require('../../common/providers/OrganisationProvider');
 window.ProjectProvider = require('../../common/providers/ProjectProvider');

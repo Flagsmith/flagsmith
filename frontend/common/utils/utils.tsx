@@ -1,24 +1,37 @@
-const React = require('react');
-const semver = require('semver');
-const ProjectStore = require('../../common/stores/project-store');
+import AccountStore from 'common/stores/account-store';
+import ProjectStore from 'common/stores/project-store';
+import Project from 'common/project';
+import {
+    SegmentCondition,
+    Project as ProjectType,
+    MultivariateFeatureStateValue,
+    MultiVartiateOption, FeatureStateValue, FlagsmithValue, ProjectFlag, FeatureState
+} from 'common/types/responses';
+import flagsmith from "flagsmith";
+import {ReactNode} from "react";
+import _ from "lodash";
 
-let flagsmithBetaFeatures = null;
+const semver = require('semver');
+
+let flagsmithBetaFeatures: string[] | null = null;
 const planNames = {
     free: 'Free',
     scaleUp: 'Scale-Up',
     sideProject: 'Side Project',
-    startup:  'Startup',
-    enterprise:  'Enterprise'
-}
-module.exports = Object.assign({}, require('./base/_utils'), {
-    numberWithCommas(x) {
+    startup: 'Startup',
+    enterprise: 'Enterprise',
+};
+const Utils = Object.assign({}, require('./base/_utils'), {
+    numberWithCommas(x:number) {
+        if (typeof x !== 'number') return '';
         return x.toString()
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
-    loadScriptPromise(url) {
-        return new Promise((resolve, reject) => {
+    loadScriptPromise(url:string) {
+        return new Promise((resolve) => {
             const cb = function () {
+                // @ts-ignore
                 this.removeEventListener('load', cb);
                 resolve(null);
             };
@@ -31,11 +44,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         });
     },
 
-    changeRequestsEnabled(value) {
+    changeRequestsEnabled(value: number | null | undefined) {
         return typeof value === 'number';
     },
 
-    escapeHtml(html) {
+    escapeHtml(html:string) {
         const text = document.createTextNode(html);
         const p = document.createElement('p');
         p.appendChild(text);
@@ -53,7 +66,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'MANAGE_IDENTITIES';
     },
-    getManageFeaturePermission(isChangeRequest, isUser) {
+    getManageFeaturePermission(isChangeRequest: boolean) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'CREATE_CHANGE_REQUEST';
         }
@@ -62,7 +75,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'ADMIN';
     },
-    getManageFeaturePermissionDescription(isChangeRequest, user) {
+    getManageFeaturePermissionDescription(isChangeRequest:boolean) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Create Change Request';
         }
@@ -78,57 +91,70 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'Manage Identities';
     },
     getTraitEndpointMethod() {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        const model  = ProjectStore.model as null | ProjectType;
+
+        if (Utils.getFlagsmithHasFeature('edge_identities') && model?.use_edge_identities) {
             return 'put';
         }
         return 'post';
     },
     getIsEdge() {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        const model  = ProjectStore.model as null | ProjectType;
+
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && model?.use_edge_identities) {
             return true;
         }
         return false;
     },
     openChat() {
+        // @ts-ignore
         if (typeof $crisp !== 'undefined') {
+            // @ts-ignore
             $crisp.push(['do', 'chat:open']);
         }
+        // @ts-ignore
         if (window.zE) {
+            // @ts-ignore
             zE('messenger', 'open');
         }
     },
     isMigrating() {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS' || ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
+        const model  = ProjectStore.model as null | ProjectType;
+        if (Utils.getFlagsmithHasFeature('edge_identities') && (model?.migration_status === 'MIGRATION_IN_PROGRESS' || model?.migration_status === 'MIGRATION_SCHEDULED')) {
             return true;
         }
         return false;
     },
-    getUpdateTraitEndpoint(environmentId, userId) {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getUpdateTraitEndpoint(environmentId:string, userId:string) {
+        const model  = ProjectStore.model as null | ProjectType;
+
+        if (Utils.getFlagsmithHasFeature('edge_identities') && model?.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}traits/`;
     },
-    getTraitEndpoint(environmentId, userId) {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getTraitEndpoint(environmentId:string, userId:string) {
+        const model  = ProjectStore.model as null | ProjectType;
+
+        if (Utils.getFlagsmithHasFeature('edge_identities') && model?.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`;
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
     },
-    removeElementFromArray(array, index) {
+    removeElementFromArray(array:any[], index:number) {
         return array.slice(0, index).concat(array.slice(index + 1));
     },
-    findOperator(operator, value, operators) {
-        const findAppended = `${value}`.includes(':') ? (operators || []).find((v) => {
+    findOperator(operator:SegmentCondition['operator'], value: string, conditions: SegmentCondition[]) {
+        const findAppended = `${value}`.includes(':') ? (conditions || []).find((v) => {
             const split = value.split(':');
             const targetKey = `:${split[split.length - 1]}`;
             return v.value === operator + targetKey;
         }) : false;
         if (findAppended) return findAppended;
 
-        return operators.find(v => v.value === operator);
+        return conditions.find(v => v.value === operator);
     },
-    validateRule(rule) {
+    validateRule(rule:SegmentCondition) {
         if (!rule) return false;
 
         const operators = Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : [];
@@ -167,14 +193,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
     },
 
-    getShouldSendIdentityToTraits(_project) {
+    getShouldSendIdentityToTraits(_project: ProjectType) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
-    getShouldUpdateTraitOnDelete(_project) {
+    getShouldUpdateTraitOnDelete(_project: ProjectType) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
@@ -182,15 +208,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return false;
     },
 
-    getShouldShowProjectTraits(_project) {
-        const project = _project || ProjectStore.model;
-        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
-            return false;
-        }
-        return true;
-    },
-
-    getIdentitiesEndpoint(_project) {
+    getIdentitiesEndpoint(_project: ProjectType) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-identities';
@@ -198,7 +216,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'identities';
     },
 
-    getSDKEndpoint(_project) {
+    getSDKEndpoint(_project: ProjectType) {
         const project = _project || ProjectStore.model;
 
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
@@ -207,7 +225,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return Project.api;
     },
 
-    getShouldHideIdentityOverridesTab(_project) {
+    getShouldHideIdentityOverridesTab(_project: ProjectType) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
@@ -215,7 +233,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return false;
     },
 
-    getFeatureStatesEndpoint(_project) {
+    getFeatureStatesEndpoint(_project: ProjectType) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-featurestates';
@@ -229,10 +247,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         } if (flagsmithBetaFeatures) {
             return flagsmithBetaFeatures;
         }
-        let res;
+        let res: Record<string, {flag:string, hasEnabled: boolean, description: string}[]>;
         try {
             res = JSON.parse(flagsmith.getValue('beta_features'));
-            const features = [];
+            const features: string[] = [];
             Object.keys(res).map((v) => {
                 res[v].map((v) => {
                     features.push(v.flag);
@@ -245,7 +263,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return flagsmithBetaFeatures || [];
     },
 
-    getFlagsmithValue(key) {
+    getFlagsmithValue(key:string) {
         const betaFeatures = Utils.parseBetaFeatures();
         if (betaFeatures.includes(key)) {
             if (typeof flagsmith.getTrait(`${key}-opt-in-value`) !== 'undefined') {
@@ -255,7 +273,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return flagsmith.getValue(key);
     },
 
-    getFlagsmithHasFeature(key) {
+    getFlagsmithHasFeature(key:string) {
         const betaFeatures = Utils.parseBetaFeatures();
         if (betaFeatures.includes(key)) {
             if (typeof flagsmith.getTrait(`${key}-opt-in-enabled`) === 'boolean') {
@@ -265,7 +283,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return flagsmith.hasFeature(key);
     },
 
-    renderWithPermission(permission, name, el) {
+    renderWithPermission(permission:boolean, name:string, el:ReactNode) {
         return permission ? (
             el
         ) : (
@@ -279,7 +297,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
 
-    calculateControl(multivariateOptions, variations) {
+    calculateControl(multivariateOptions: MultiVartiateOption[], variations?: MultivariateFeatureStateValue[]) {
         if (!multivariateOptions || !multivariateOptions.length) {
             return 100;
         }
@@ -291,7 +309,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         });
         return 100 - total;
     },
-    featureStateToValue(featureState) {
+    featureStateToValue(featureState: FeatureStateValue) {
         if (!featureState) {
             return null;
         }
@@ -304,7 +322,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
     },
-    valueToFeatureState(value) {
+    valueToFeatureState(value: FlagsmithValue) {
         const val = Utils.getTypedValue(value);
 
         if (typeof val === 'boolean') {
@@ -332,7 +350,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             string_value: value === null ? null : val || '',
         };
     },
-    getFlagValue(projectFlag, environmentFlag, identityFlag, multivariate_options) {
+    getFlagValue(projectFlag: ProjectFlag, environmentFlag: FeatureState, identityFlag: FeatureState, multivariate_options: MultivariateFeatureStateValue[]) {
         if (!environmentFlag) {
             return {
                 name: projectFlag.name,
@@ -377,7 +395,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         };
     },
 
-    getTypedValue(str, boolToString) {
+    getTypedValue(str: FlagsmithValue, boolToString?: boolean) {
         if (typeof str === 'undefined') {
             return '';
         }
@@ -411,23 +429,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return str;
     },
 
-    scrollToTop: (timeout = 500) => {
-        $('html,body')
-            .animate({ scrollTop: 0 }, timeout);
-    },
-
-    scrollToElement: (selector, timeout = 500) => {
-        const el = $(selector);
-        if (!el || !el.offset) return;
-        $('html,body')
-            .animate({ scrollTop: el.offset().top }, timeout);
-    },
-
-    scrollToSignUp: () => {
-        Utils.scrollToElement('.signup-form');
-    },
-
-    getPlansPermission: (permission) => {
+    getPlansPermission: (permission: string) => {
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
@@ -439,33 +441,27 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return false;
         }
         const found = _.find(
-            plans.map(plan => Utils.getPlanPermission(plan, permission)),
+            plans.map((plan:string) => Utils.getPlanPermission(plan, permission)),
             perm => !!perm,
         );
         return !!found;
     },
-    appendImage: (src) => {
+    appendImage: (src:string) => {
         const img = document.createElement('img');
         img.src = src;
         document.body.appendChild(img);
     },
-    getPlanPermission: (plan, permission) => {
+    getPlanPermission: (plan:string, permission:string) => {
         let valid = true;
-        const planName = Utils.getPlanName(plan)
+        const planName = Utils.getPlanName(plan);
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
         if (!plan || planName === planNames.free) {
             return false;
         }
-        const date = AccountStore.getDate();
-        const cutOff = moment('03-11-20', 'DD-MM-YY');
-        // if (date && moment(date)
-        //     .valueOf() < cutOff.valueOf()) {
-        //     return true;
-        // }
         const isSideProjectOrGreater = planName !== planNames.sideProject;
-        const isScaleupOrGreater = isSideProjectOrGreater && planName!== planNames.startup;
+        const isScaleupOrGreater = isSideProjectOrGreater && planName !== planNames.startup;
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = isScaleupOrGreater;
@@ -510,19 +506,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return valid;
     },
 
-    getPlanName: (plan) => {
-        if (plan && plan.includes("scale-up")) {
+    getPlanName: (plan:string) => {
+        if (plan && plan.includes('scale-up')) {
             return planNames.scaleUp;
         }
-        if (plan && plan.includes("side-project")) {
+        if (plan && plan.includes('side-project')) {
             return planNames.sideProject;
         }
-        if (plan && plan.includes("startup")) {
+        if (plan && plan.includes('startup')) {
             return planNames.startup;
         }
-        if (plan && plan.includes("enterprise")) {
+        if (plan && plan.includes('enterprise')) {
             return planNames.enterprise;
         }
-        return planNames.free
+        return planNames.free;
     },
 });
+
+export default Utils;

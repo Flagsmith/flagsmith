@@ -290,6 +290,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id,
         });
     },
+    getIdentitySegments(projectId, id) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.GET_IDENTITY_SEGMENTS,
+            projectId,
+            id,
+        });
+    },
     createOrganisation(name) {
         Dispatcher.handleViewAction({
             actionType: Actions.CREATE_ORGANISATION,

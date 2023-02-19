@@ -5,6 +5,7 @@ import ServiceLevelAgreement from './ServiceLevelAgreementPage';
 import Footer from '../Footer';
 import TermsOfService from './TermsOfServicePage';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 
 const TermsPoliciesPage = class extends React.Component {
     static contextTypes = {

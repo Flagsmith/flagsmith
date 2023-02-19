@@ -1,7 +1,7 @@
 const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
-
+import Constants from 'common/constants';
 const controller = {
     register: ({ email, password, first_name, last_name, marketing_consent_given }) => {
         store.saving();
@@ -35,15 +35,6 @@ const controller = {
             sign_up_type: API.getInviteType(),
         })
             .then((res) => {
-                // const isDemo = email == Project.demoAccount.email;
-                // store.isDemo = isDemo;
-                // if (isDemo) {
-                //     AsyncStorage.setItem('isDemo', `${isDemo}`);
-                //     API.trackEvent(Constants.events.LOGIN_DEMO);
-                // } else {
-                //     API.trackEvent(Constants.events.LOGIN);
-                //     API.identify(email);
-                // }
                 if (res.ephemeral_token) {
                     store.ephemeral_token = res.ephemeral_token;
                     store.model = {
@@ -439,4 +430,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 });
 
 controller.store = store;
-module.exports = controller.store;
+export default controller.store;
