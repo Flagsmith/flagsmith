@@ -3,7 +3,7 @@ from threading import Thread
 
 from django.utils import timezone
 
-from task_processor.processor import run_tasks
+from task_processor.processor import run_recurring_tasks, run_tasks
 
 
 class TaskRunner(Thread):
@@ -25,6 +25,7 @@ class TaskRunner(Thread):
         while not self._stopped:
             self.last_checked_for_tasks = timezone.now()
             run_tasks(self.queue_pop_size)
+            run_recurring_tasks(self.queue_pop_size)
             time.sleep(self.sleep_interval_millis / 1000)
 
     def stop(self):

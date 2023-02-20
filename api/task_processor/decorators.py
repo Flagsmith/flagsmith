@@ -8,7 +8,7 @@ from threading import Thread
 from django.conf import settings
 from django.utils import timezone
 
-from task_processor.models import InitialRecurringTask, Task
+from task_processor.models import RecurringTask, Task
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
 
@@ -76,7 +76,7 @@ def register_recurring_task(
     kwargs: typing.Dict = None,
 ):
     if not os.environ.get("RUN_BY_PROCESSOR"):
-        # Do not register recurring tasks if not running by task processor
+        # Do not register recurring tasks if not invoked by task processor
         return lambda f: f
 
     def decorator(f: typing.Callable):
@@ -88,11 +88,10 @@ def register_recurring_task(
 
         register_task(task_identifier, f)
 
-        task, _ = InitialRecurringTask.objects.get_or_create(
+        task, _ = RecurringTask.objects.get_or_create(
             task_identifier=task_identifier,
             run_every=run_every,
             defaults={
-                "scheduled_for": timezone.now(),
                 "serialized_args": Task.serialize_data(args or tuple()),
                 "serialized_kwargs": Task.serialize_data(kwargs or dict()),
             },

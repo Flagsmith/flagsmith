@@ -6,7 +6,7 @@ from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
-from task_processor.models import Task
+from task_processor.models import RecurringTask
 from task_processor.task_registry import get_task
 
 
@@ -64,7 +64,7 @@ def test_register_recurring_task(mocker, db, monkeypatch):
 
     # Then
     task_identifier = "test_unit_task_processor_decorators.a_function"
-    task = Task.objects.get(task_identifier=task_identifier)
+    task = RecurringTask.objects.get(task_identifier=task_identifier)
     assert task.serialized_kwargs == json.dumps(task_kwargs)
     assert task.run_every == run_every
 

@@ -1,6 +1,5 @@
 import time
 import uuid
-from datetime import timedelta
 from threading import Thread
 
 from django.db import transaction
@@ -33,57 +32,6 @@ def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
 
     task.refresh_from_db()
     assert task.completed
-
-
-def test_run_tasks_creates_a_new_task_for_recurring_task(db):
-    # Given
-    run_every = timedelta(minutes=5)
-    task = Task.create(
-        _create_organisation.task_identifier,
-        run_every=run_every,
-    )
-    task.save()
-
-    # When
-    run_tasks()
-
-    # Then
-    assert Task.objects.count() == 2
-    new_task = Task.objects.exclude(pk=task.pk).get()
-    assert new_task.run_every == run_every
-    assert new_task.scheduled_for == task.scheduled_for + run_every
-    assert new_task.task_identifier == task.task_identifier
-    assert new_task.serialized_args == task.serialized_args
-    assert new_task.serialized_kwargs == task.serialized_kwargs
-    assert new_task.num_failures == 0
-    assert new_task.completed is False
-
-
-def test_run_tasks_avoids_creating_a_new_task_for_recurring_task_if_it_already_exists(
-    db,
-):
-    # Given
-    run_every = timedelta(minutes=5)
-    task = Task.create(
-        _create_organisation.task_identifier,
-        run_every=run_every,
-    )
-    task.save()
-
-    # When - we run the `run_tasks` twice
-    run_tasks()
-    run_tasks()
-
-    # Then - we only have two tasks
-    assert Task.objects.count() == 2
-    new_task = Task.objects.exclude(pk=task.pk).get()
-    assert new_task.run_every == run_every
-    assert new_task.scheduled_for == task.scheduled_for + run_every
-    assert new_task.task_identifier == task.task_identifier
-    assert new_task.serialized_args == task.serialized_args
-    assert new_task.serialized_kwargs == task.serialized_kwargs
-    assert new_task.num_failures == 0
-    assert new_task.completed is False
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
