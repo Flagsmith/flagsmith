@@ -174,6 +174,21 @@ def test_priority_of_multiple_feature_segments(
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
+def test_update_priorities_empty_list(client):
+    # Given
+    url = reverse("api-v1:features:feature-segment-update-priorities")
+
+    # When
+    response = client.post(url, data=json.dumps([]), content_type="application/json")
+
+    # Then the segments are reordered
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_get_feature_segment_by_uuid(
     feature_segment, project, client, environment, feature
 ):
