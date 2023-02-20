@@ -193,7 +193,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <div className="overflow-visible">
             <div>
                 <div className="mb-2">
-                    {rules[0].rules.map((rule, i) => (
+                    {rules[0].rules.filter((rule)=> !rule.delete).map((rule, i) => (
                         <div key={i}>
                             {i > 0 && (
                                 <Row className="and-divider my-1">

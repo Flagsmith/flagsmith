@@ -16,6 +16,10 @@ export default class Rule extends PureComponent {
         const operator = operatorObj && operatorObj.value;
         const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
 
+        if (rule.delete) {
+            return null
+        }
+
         const valuePlaceholder = rule.hideValue ? 'Value (N/A)' : rule.valuePlaceholder || 'Value';
         return (
             <div className="rule__row reveal" key={i}>
@@ -125,16 +129,8 @@ export default class Rule extends PureComponent {
             </div>
         );
     }
-
     removeRule = (i) => {
-        const { props: { rule: { conditions: rules } } } = this;
-
-        if (rules.length === 1) {
-            this.props.onRemove();
-        } else {
-            rules.splice(i, 1);
-            this.props.onChange(this.props.rule);
-        }
+        this.setRuleProperty(i, "delete", {value:true})
     }
 
     setRuleProperty = (i, prop, { value }) => {
@@ -160,6 +156,11 @@ export default class Rule extends PureComponent {
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';
         }
+
+        if(!this.props.rule.conditions.filter((condition)=>!condition.delete).length) {
+            this.props.rule.delete = true
+        }
+
         this.props.onChange(this.props.rule);
     }
 

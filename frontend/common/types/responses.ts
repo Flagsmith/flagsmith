@@ -15,6 +15,8 @@ export type SegmentCondition = {
 export type SegmentRule = {
   type: string;
   rules: SegmentRule[];
+
+  delete?: boolean
   conditions: [];
 }
 export type Segment = {
