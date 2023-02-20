@@ -193,28 +193,33 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <div className="overflow-visible">
             <div>
                 <div className="mb-2">
-                    {rules[0].rules.filter((rule)=> !rule.delete).map((rule, i) => (
-                        <div key={i}>
-                            {i > 0 && (
-                                <Row className="and-divider my-1">
-                                    <Flex className="and-divider__line"/>
-                                    {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
-                                    <Flex className="and-divider__line"/>
-                                </Row>
-                            )}
-                            <Rule
-                                showDescription={showDescriptions}
-                                readOnly={readOnly}
-                                data-test={`rule-${i}`}
-                                rule={rule}
-                                operators={
-                                    Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
-                                }
-                                onRemove={() => removeRule(0, i)}
-                                onChange={(v: SegmentRule) => updateRule(0, i, v)}
-                            />
-                        </div>
-                    ))}
+                    {rules[0].rules.map((rule, i) => {
+                        if(rule.delete) {
+                            return null
+                        }
+                        return (
+                            <div key={i}>
+                                {i > 0 && (
+                                    <Row className="and-divider my-1">
+                                        <Flex className="and-divider__line"/>
+                                        {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
+                                        <Flex className="and-divider__line"/>
+                                    </Row>
+                                )}
+                                <Rule
+                                    showDescription={showDescriptions}
+                                    readOnly={readOnly}
+                                    data-test={`rule-${i}`}
+                                    rule={rule}
+                                    operators={
+                                        Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
+                                    }
+                                    onRemove={() => removeRule(0, i)}
+                                    onChange={(v: SegmentRule) => updateRule(0, i, v)}
+                                />
+                            </div>
+                        )
+                    })}
                 </div>
                 <Row className="justify-content-center">
                     {!readOnly && (
