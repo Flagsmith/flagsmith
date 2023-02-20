@@ -217,13 +217,12 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
 
 
 def test_sync_identity_document_features_removes_deleted_features(
-    mocker, identity_document_without_fs, environment, feature
+    edge_identity_dynamo_wrapper_mock,
+    identity_document_without_fs,
+    environment,
+    feature,
 ):
     # Given
-    dynamo_wrapper_mock = mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper"
-    )
-
     identity_document = deepcopy(identity_document_without_fs)
     identity_uuid = identity_document["identity_uuid"]
 
@@ -241,11 +240,17 @@ def test_sync_identity_document_features_removes_deleted_features(
             "enabled": True,
         }
     )
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.return_value = (
+        identity_document_without_fs
+    )
 
     # When
     sync_identity_document_features(identity_uuid)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
-    dynamo_wrapper_mock.put_item.assert_called_with(identity_document_without_fs)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        identity_uuid
+    )
+    edge_identity_dynamo_wrapper_mock.put_item.assert_called_with(
+        identity_document_without_fs
+    )

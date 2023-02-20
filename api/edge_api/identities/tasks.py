@@ -1,12 +1,6 @@
 import logging
 import typing
 
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
-
-from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
@@ -77,8 +71,10 @@ def call_environment_webhook_for_feature_state_change(
 
 @register_task_handler()
 def sync_identity_document_features(identity_uuid: str):
-    identity = build_identity_model(
-        Identity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
+    from .models import EdgeIdentity
+
+    identity = EdgeIdentity.from_identity_document(
+        EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
     )
 
     valid_feature_names = set(
@@ -87,5 +83,5 @@ def sync_identity_document_features(identity_uuid: str):
         ).values_list("feature__name", flat=True)
     )
 
-    identity.prune_features(valid_feature_names)
-    Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+    identity.synchronise_features(valid_feature_names)
+    EdgeIdentity.dynamo_wrapper.put_item(identity.to_document())

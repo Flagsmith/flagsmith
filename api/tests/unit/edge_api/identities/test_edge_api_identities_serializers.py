@@ -3,6 +3,7 @@ from flag_engine.api.document_builders import build_identity_document
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from flag_engine.identities.builders import build_identity_model
 
+from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
@@ -16,7 +17,9 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     mocker, identity, feature, admin_user
 ):
     # Given
-    identity_model = build_identity_model(build_identity_document(identity))
+    identity_model = EdgeIdentity.from_identity_document(
+        build_identity_document(identity)
+    )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user)
 
@@ -26,7 +29,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     )
 
     mock_dynamo_wrapper = mocker.patch(
-        "edge_api.identities.serializers.Identity.dynamo_wrapper"
+        "edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper"
     )
 
     # When
@@ -52,7 +55,9 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     mocker, identity, feature, admin_user
 ):
     # Given
-    identity_model = build_identity_model(build_identity_document(identity))
+    identity_model = EdgeIdentity.from_identity_document(
+        build_identity_document(identity)
+    )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user)
 
@@ -68,7 +73,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
         context={"view": view, "request": request},
     )
 
-    mocker.patch("edge_api.identities.serializers.Identity.dynamo_wrapper")
+    mocker.patch("edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper")
     mock_call_environment_webhook = mocker.patch(
         "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )
@@ -101,7 +106,9 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
     mocker, identity, feature, admin_user
 ):
     # Given
-    identity_model = build_identity_model(build_identity_document(identity))
+    identity_model = EdgeIdentity.from_identity_document(
+        build_identity_document(identity)
+    )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user)
 
@@ -127,7 +134,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
         context={"view": view, "request": request},
     )
 
-    mocker.patch("edge_api.identities.serializers.Identity.dynamo_wrapper")
+    mocker.patch("edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper")
     mock_call_environment_webhook = mocker.patch(
         "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )

@@ -107,15 +107,10 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):
     ) -> typing.Union[str, int, bool]:
         identity = self.context["identity"]
 
-        if isinstance(identity, Identity):
-            identity_id = identity.id
-        else:
-            identity_id = identity.django_id or identity.identity_uuid
-
         if isinstance(instance, FeatureState):
-            return instance.get_feature_state_value_by_id(identity_id)
+            return instance.get_feature_state_value_by_id(identity.id)
 
-        return instance.get_value(identity_id)
+        return instance.get_value(identity.id)
 
     def get_overridden_by(self, instance) -> typing.Optional[str]:
         if getattr(instance, "feature_segment_id", None) is not None:

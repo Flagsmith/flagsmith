@@ -1,6 +1,4 @@
-from edge_api.identities.edge_identity_service import (
-    get_all_feature_states_for_edge_identity,
-)
+from edge_api.identities.models import EdgeIdentity
 from features.models import FeatureSegment, FeatureState, FeatureStateValue
 from segments.models import Segment
 
@@ -11,10 +9,13 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     # Given
     another_segment = Segment.objects.create(name="another_segment", project=project)
 
-    dynamo_wrapper_mock = mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
+    edge_identity_dynamo_wrapper_mock = mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
     )
-    dynamo_wrapper_mock.get_segment_ids.return_value = [segment.id, another_segment.id]
+    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = [
+        segment.id,
+        another_segment.id,
+    ]
 
     feature_segment_p1 = FeatureSegment.objects.create(
         segment=segment, feature=feature, environment=environment, priority=1
@@ -40,14 +41,15 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     identity_model = mocker.MagicMock(
         environment_api_key=environment.api_key, identity_features=[]
     )
+    edge_identity = EdgeIdentity(identity_model)
 
     # When
-    feature_states, _ = get_all_feature_states_for_edge_identity(identity_model)
+    feature_states, _ = edge_identity.get_all_feature_states()
 
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == segment_override_p1
 
-    dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
+    edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
         identity_model=identity_model
     )

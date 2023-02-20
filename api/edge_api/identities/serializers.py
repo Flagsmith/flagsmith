@@ -18,13 +18,13 @@ from flag_engine.utils.exceptions import (
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
+from .models import EdgeIdentity
 from .tasks import call_environment_webhook_for_feature_state_change
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
@@ -40,11 +40,11 @@ class EdgeIdentitySerializer(serializers.Serializer):
         self.instance = EngineIdentity(
             identifier=identifier, environment_api_key=environment_api_key
         )
-        if Identity.dynamo_wrapper.get_item(self.instance.composite_key):
+        if EdgeIdentity.dynamo_wrapper.get_item(self.instance.composite_key):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
-        Identity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
+        EdgeIdentity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
         return self.instance
 
 
@@ -130,7 +130,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
-        identity = self.context["view"].identity
+        identity: EdgeIdentity = self.context["view"].identity
         feature_state_value = self.validated_data.pop("feature_state_value", None)
 
         previous_state = copy.deepcopy(self.instance)
@@ -138,11 +138,12 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         if not self.instance:
             self.instance = EngineFeatureStateModel(**self.validated_data)
             try:
-                identity.identity_features.append(self.instance)
+                identity.add_feature_override(self.instance)
             except DuplicateFeatureState as e:
                 raise serializers.ValidationError(
                     "Feature state already exists."
                 ) from e
+
         self.instance.set_value(feature_state_value)
         self.instance.enabled = self.validated_data.get(
             "enabled", self.instance.enabled
@@ -153,7 +154,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         try:
-            identity_dict = build_identity_dict(identity)
+            identity_dict = identity.to_document()
         except InvalidPercentageAllocation as e:
             raise serializers.ValidationError(
                 {
@@ -162,12 +163,11 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 }
             ) from e
 
-        Identity.dynamo_wrapper.put_item(identity_dict)
+        EdgeIdentity.dynamo_wrapper.put_item(identity_dict)
 
-        identity_id = identity.django_id or identity.identity_uuid
-        new_value = self.instance.get_value(identity_id)
+        new_value = self.instance.get_value(identity.id)
         previous_value = (
-            previous_state.get_value(identity_id) if previous_state else None
+            previous_state.get_value(identity.id) if previous_state else None
         )
 
         # TODO: use async processor instead of `run_in_thread`
@@ -175,7 +175,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             kwargs={
                 "feature_id": self.instance.feature.id,
                 "environment_api_key": identity.environment_api_key,
-                "identity_id": identity_id,
+                "identity_id": identity.id,
                 "identity_identifier": identity.identifier,
                 "changed_by_user_id": self.context["request"].user.id,
                 "new_enabled_state": self.instance.enabled,
