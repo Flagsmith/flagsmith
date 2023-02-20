@@ -186,7 +186,14 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
+class FeatureSegment(
+    AbstractBaseExportableModel,
+    OrderedModelBase,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    history_record_class_path = "features.models.HistoricalFeatureSegment"
+    related_object_type = RelatedObjectType.FEATURE
+
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -334,6 +341,18 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
                 id_priority_pairs.append((fs.id, fs.priority))
 
         return id_priority_pairs
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.feature_id
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+            self.feature.name,
+            self.segment.name,
+        )
+
+    def _get_environment(self) -> "Environment":
+        return self.environment
 
 
 class FeatureState(
@@ -786,16 +805,13 @@ class FeatureState(
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         try:
-            if self.identity:
+            if self.identity_id:
                 return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
                     self.feature.name,
                     self.identity.identifier,
                 )
-            elif self.feature_segment:
-                return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-                    self.feature.name,
-                    self.feature_segment.segment.name,
-                )
+            elif self.feature_segment_id:
+                return None  # handled by FeatureSegment
 
             # TODO: this is here to maintain current functionality, however, I'm not
             #  sure that we want to create an audit log record in this case
@@ -847,6 +863,19 @@ class FeatureStateValue(
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
+
+        changes = history_instance.diff_against(history_instance.prev_record).changes
+        if (
+            len(changes) == 1
+            and changes[0].field == "string_value"
+            and changes[0].old in (None, "")
+            and changes[0].new in (None, "")
+        ):
+            # When we create a new segment override, for some reason, there are changes made to the
+            # existing segment overrides which change the string value between null and empty string
+            # since this change has no significant impact on the platform, we simply check for it here
+            # and ignore it.
+            return
 
         if fs.change_request_id and not fs.change_request.committed_at:
             return
