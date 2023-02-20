@@ -16,6 +16,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
+from segments.models import Segment
 from users.models import FFAdminUser
 
 
@@ -640,3 +641,59 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     # Then
     assert response.status_code == 200
     mock_environment_class.write_environments_to_dynamodb.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_segment_overrides_creates_correct_audit_log_messages(
+    client, feature, segment, environment
+):
+    # Given
+    another_segment = Segment.objects.create(
+        name="Another segment", project=segment.project
+    )
+
+    feature_segments_url = reverse("api-v1:features:feature-segment-list")
+    feature_states_url = reverse("api-v1:features:featurestates-list")
+
+    # When
+    # we create 2 segment overrides for the feature
+    for _segment in (segment, another_segment):
+        feature_segment_response = client.post(
+            feature_segments_url,
+            data={
+                "feature": feature.id,
+                "segment": _segment.id,
+                "environment": environment.id,
+            },
+        )
+        assert feature_segment_response.status_code == status.HTTP_201_CREATED
+        feature_segment_id = feature_segment_response.json()["id"]
+        feature_state_response = client.post(
+            feature_states_url,
+            data={
+                "feature": feature.id,
+                "feature_segment": feature_segment_id,
+                "environment": environment.id,
+                "enabled": True,
+            },
+        )
+        assert feature_state_response.status_code == status.HTTP_201_CREATED
+
+    # Then
+    assert AuditLog.objects.count() == 2
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{segment.name}'"
+        ).count()
+        == 1
+    )
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{another_segment.name}'"
+        ).count()
+        == 1
+    )
