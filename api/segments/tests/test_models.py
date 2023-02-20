@@ -10,25 +10,6 @@ from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db
-class SegmentTestCase(TestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test Org")
-        self.project = Project.objects.create(
-            name="Test Project", organisation=self.organisation
-        )
-        self.environment = Environment.objects.create(
-            name="Test Environment", project=self.project
-        )
-        self.identity = Identity.objects.create(
-            environment=self.environment, identifier="test_identity"
-        )
-
-    def tearDown(self) -> None:
-        Segment.objects.all().delete()
-        Identity.objects.all().delete()
-
-
-@pytest.mark.django_db
 class SegmentRuleTest(TestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test Org")
