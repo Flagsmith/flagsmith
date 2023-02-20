@@ -62,8 +62,8 @@ const CreateSegment = class extends Component {
     }
 
     validateRules = (rules) => {
-        if (!rules || !rules[0] || !rules[0].rules) {
-            return false;
+        if (!rules[0]?.rules?.find((v)=>!v.delete)) {
+            return false
         }
         const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
 
@@ -151,7 +151,7 @@ const CreateSegment = class extends Component {
             <div className="overflow-visible">
                 <div>
                     <div className="mb-2">
-                        {rules[0].rules.map((rule, i) => (
+                        {rules[0].rules.filter((rule)=> !rule.delete).map((rule, i) => (
                             <div key={i}>
                                 {i > 0 && (
                                     <Row className="and-divider my-1">
