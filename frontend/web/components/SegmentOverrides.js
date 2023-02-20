@@ -190,6 +190,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             <FormGroup className="mb-4">
                                 <VariationOptions
                                   preventRemove
+                                  readOnlyValue
                                   disabled={readOnly}
                                   controlValue={controlValue}
                                   variationOverrides={mvOptions}

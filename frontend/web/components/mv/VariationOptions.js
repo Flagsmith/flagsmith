@@ -4,7 +4,20 @@ import VariationValue from './VariationValue';
 import ValueEditor from '../ValueEditor';
 import InfoMessage from '../InfoMessage';
 
-export default function VariationOptions({ multivariateOptions, disabled, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue, preventRemove }) {
+export default function VariationOptions({
+    controlValue,
+    disabled,
+    multivariateOptions,
+    preventRemove,
+    readOnlyValue,
+    removeVariation,
+    select,
+    setValue,
+    setVariations,
+    updateVariation,
+    variationOverrides,
+    weightTitle,
+}) {
     const invalid = multivariateOptions.length && controlValue < 0;
     if (!multivariateOptions || !multivariateOptions.length) {
         return null;
@@ -54,7 +67,7 @@ export default function VariationOptions({ multivariateOptions, disabled, select
                             <div className="panel-content">
                                 <Row>
                                     <Flex>
-                                        <ValueEditor value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
+                                        <ValueEditor disabled={true} value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
                                     </Flex>
                                     <div
                                       data-test={`select-variation-${Utils.featureStateToValue(theValue)}`}
@@ -77,6 +90,7 @@ export default function VariationOptions({ multivariateOptions, disabled, select
                         <VariationValue
                           key={i}
                           index={i}
+                          readOnlyValue={readOnlyValue}
                           preventRemove={preventRemove || disabled}
                           value={theValue}
                           onChange={(e) => {
