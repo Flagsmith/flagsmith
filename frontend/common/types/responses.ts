@@ -143,9 +143,9 @@ export type MultivariateFeatureStateValue = {
 
 
 export type FeatureStateValue = {
-  boolean_value?: any;
+  boolean_value?: boolean;
   float_value?: number
-  integer_value?: any;
+  integer_value?: boolean;
   string_value: string;
   type: string;
 }
@@ -164,7 +164,7 @@ export type FeatureState = {
   id: number;
   feature_state_value: string;
   multivariate_feature_state_values: MultivariateFeatureStateValue[];
-  identity?: any;
+  identity?: string;
   uuid: string;
   enabled: boolean;
   created_at: string;
@@ -185,8 +185,8 @@ export type ProjectFlag = {
   default_enabled: boolean;
   initial_value: string;
   created_date: Date;
-  description?: any;
-  tags: any[];
+  description?: string;
+  tags: number[];
   multivariate_options: MultiVartiateOption[];
   is_archived: boolean;
   owners: User[];
