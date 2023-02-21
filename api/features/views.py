@@ -195,7 +195,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_serializer=GetInfluxDataQuerySerializer(),
         responses={200: FeatureInfluxDataSerializer()},
         deprecated=True,
-        operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/usage-data​/",
+        operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):
