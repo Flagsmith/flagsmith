@@ -105,6 +105,32 @@ def test_run_recurring_tasks_multiple_runs(db, run_by_processor):
         assert task_run.error_details is None
 
 
+def test_run_recurring_tasks_only_executes_tasks_and_interval_set_by_run_every(
+    db, run_by_processor
+):
+    # Given
+    organisation_name = "test-org"
+    task_identifier = "test_unit_task_processor_processor._create_organisation"
+
+    @register_recurring_task(
+        run_every=timedelta(milliseconds=100), args=(organisation_name,)
+    )
+    def _create_organisation(organisation_name):
+        Organisation.objects.create(name=organisation_name)
+
+    task = RecurringTask.objects.get(task_identifier=task_identifier)
+
+    # When - we call run_recurring_tasks twice
+    run_recurring_tasks()
+    run_recurring_tasks()
+
+    # Then - we expect the task to have been run once
+
+    assert Organisation.objects.filter(name=organisation_name).count() == 1
+
+    assert RecurringTaskRun.objects.filter(task=task).count() == 1
+
+
 def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
     db, run_by_processor
 ):
