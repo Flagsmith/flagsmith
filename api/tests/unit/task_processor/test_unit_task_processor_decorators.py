@@ -2,6 +2,8 @@ import json
 import logging
 from datetime import timedelta
 
+import pytest
+
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
@@ -53,6 +55,7 @@ def test_register_recurring_task(mocker, db, monkeypatch):
 
     task_kwargs = {"first_arg": "foo", "second_arg": "bar"}
     run_every = timedelta(minutes=10)
+    task_identifier = "test_unit_task_processor_decorators.a_function"
 
     # When
     @register_recurring_task(
@@ -63,10 +66,34 @@ def test_register_recurring_task(mocker, db, monkeypatch):
         return first_arg + second_arg
 
     # Then
-    task_identifier = "test_unit_task_processor_decorators.a_function"
     task = RecurringTask.objects.get(task_identifier=task_identifier)
     assert task.serialized_kwargs == json.dumps(task_kwargs)
     assert task.run_every == run_every
 
     assert get_task(task_identifier)
     assert task.run() == "foobar"
+
+
+def test_register_recurring_task_does_nothing_if_not_run_by_processor(
+    mocker, db, monkeypatch
+):
+    # Given
+    monkeypatch.setenv("RUN_BY_PROCESSOR", None)
+
+    task_kwargs = {"first_arg": "foo", "second_arg": "bar"}
+    run_every = timedelta(minutes=10)
+    task_identifier = "test_unit_task_processor_decorators.a_function"
+
+    # When
+    @register_recurring_task(
+        run_every=run_every,
+        kwargs=task_kwargs,
+    )
+    def a_function(first_arg, second_arg):
+        return first_arg + second_arg
+
+    # Then
+    assert not RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+
+    with pytest.rasies(KeyError):
+        assert get_task(task_identifier)
