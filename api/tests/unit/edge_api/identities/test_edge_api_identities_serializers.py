@@ -20,7 +20,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
         build_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
-    request = mocker.MagicMock(user=admin_user)
+    request = mocker.MagicMock(user=admin_user, master_api_key=None)
 
     serializer = EdgeIdentityFeatureStateSerializer(
         data={"feature_state_value": "foo", "feature": feature.id},
@@ -58,7 +58,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
         build_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
-    request = mocker.MagicMock(user=admin_user)
+    request = mocker.MagicMock(user=admin_user, master_api_key=None)
 
     new_enabled_state = True
     new_value = "foo"
