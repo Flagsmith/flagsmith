@@ -67,7 +67,6 @@ class EdgeIdentity:
         this function contains two distinct types: features.models.FeatureState &
         flag_engine.features.models.FeatureStateModel.
 
-        :param identity: the IdentityModel to get the feature states for
         :return: tuple of (list of feature states, set of feature names that were overridden
             for the identity specifically)
         """
