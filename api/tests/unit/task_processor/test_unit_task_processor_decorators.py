@@ -49,10 +49,8 @@ def test_register_task_handler_run_in_thread(mocker, caplog):
     )
 
 
-def test_register_recurring_task(mocker, db, monkeypatch):
+def test_register_recurring_task(mocker, db, run_by_processor):
     # Given
-    monkeypatch.setenv("RUN_BY_PROCESSOR", "True")
-
     task_kwargs = {"first_arg": "foo", "second_arg": "bar"}
     run_every = timedelta(minutes=10)
     task_identifier = "test_unit_task_processor_decorators.a_function"
@@ -74,11 +72,8 @@ def test_register_recurring_task(mocker, db, monkeypatch):
     assert task.run() == "foobar"
 
 
-def test_register_recurring_task_does_nothing_if_not_run_by_processor(
-    mocker, db, monkeypatch
-):
+def test_register_recurring_task_does_nothing_if_not_run_by_processor(mocker, db):
     # Given
-    monkeypatch.setenv("RUN_BY_PROCESSOR", None)
 
     task_kwargs = {"first_arg": "foo", "second_arg": "bar"}
     run_every = timedelta(minutes=10)
