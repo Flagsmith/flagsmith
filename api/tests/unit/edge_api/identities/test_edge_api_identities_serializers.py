@@ -1,7 +1,6 @@
 from django.utils import timezone
 from flag_engine.api.document_builders import build_identity_document
 from flag_engine.features.models import FeatureModel, FeatureStateModel
-from flag_engine.identities.builders import build_identity_model
 
 from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
@@ -169,7 +168,7 @@ def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_fo
     # Given
     identity_document = build_identity_document(identity)
     del identity_document["django_id"]  # delete django id to simulate an edge identity
-    identity_model = build_identity_model(identity_document)
+    identity_model = EdgeIdentity.from_identity_document(identity_document)
 
     feature_state = FeatureState.objects.get(
         feature=multivariate_feature, environment=environment
