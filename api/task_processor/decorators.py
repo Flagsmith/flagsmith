@@ -92,8 +92,8 @@ def register_recurring_task(
             task_identifier=task_identifier,
             run_every=run_every,
             defaults={
-                "serialized_args": Task.serialize_data(args or tuple()),
-                "serialized_kwargs": Task.serialize_data(kwargs or dict()),
+                "serialized_args": RecurringTask.serialize_data(args or tuple()),
+                "serialized_kwargs": RecurringTask.serialize_data(kwargs or dict()),
             },
         )
         return task

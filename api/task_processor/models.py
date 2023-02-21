@@ -152,6 +152,10 @@ class RecurringTask(AbstractBaseTask):
         # otherwise, we should not execute it
         return False
 
+    @property
+    def is_task_registered(self) -> bool:
+        return self.task_identifier in registered_tasks
+
 
 class TaskResult(models.Choices):
     SUCCESS = "SUCCESS"
