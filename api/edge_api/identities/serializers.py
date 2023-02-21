@@ -154,7 +154,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         try:
-            identity_dict = identity.to_document()
+            identity.save(user_id=self.context["request"].user.id)
         except InvalidPercentageAllocation as e:
             raise serializers.ValidationError(
                 {
@@ -163,14 +163,14 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 }
             ) from e
 
-        EdgeIdentity.dynamo_wrapper.put_item(identity_dict)
-
         new_value = self.instance.get_value(identity.id)
         previous_value = (
             previous_state.get_value(identity.id) if previous_state else None
         )
 
-        # TODO: use async processor instead of `run_in_thread`
+        # TODO:
+        #  - use async processor instead of `run_in_thread`
+        #  - move this logic to the EdgeIdentity model
         call_environment_webhook_for_feature_state_change.run_in_thread(
             kwargs={
                 "feature_id": self.instance.feature.id,

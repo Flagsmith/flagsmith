@@ -1,3 +1,4 @@
+import copy
 import typing
 
 from django.db.models import Prefetch, Q
@@ -14,6 +15,7 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
+from .audit import generate_audit_log_records, generate_change_dict
 from .tasks import sync_identity_document_features
 
 
@@ -22,6 +24,7 @@ class EdgeIdentity:
 
     def __init__(self, engine_identity_model: IdentityModel):
         self._engine_identity_model = engine_identity_model
+        self._initial_state = copy.deepcopy(self)
 
     @classmethod
     def from_identity_document(cls, identity_document: dict) -> "EdgeIdentity":
@@ -147,6 +150,14 @@ class EdgeIdentity:
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
         self._engine_identity_model.identity_features.remove(feature_state)
 
+    def save(self, user_id: int):
+        self.dynamo_wrapper.put_item(self.to_document())
+        changes = self._get_changes(self._initial_state)
+        if changes:
+            generate_audit_log_records(
+                self.environment_api_key, self.identifier, user_id, changes
+            )
+
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {
             fs.feature.name for fs in self._engine_identity_model.identity_features
@@ -159,3 +170,39 @@ class EdgeIdentity:
 
     def to_document(self) -> dict:
         return build_identity_dict(self._engine_identity_model)
+
+    def _get_changes(self, previous_instance: "EdgeIdentity") -> dict:
+        changes = {}
+        feature_changes = changes.setdefault("feature_overrides", {})
+        previous_feature_overrides = {
+            fs.featurestate_uuid: fs for fs in previous_instance.feature_overrides
+        }
+        current_feature_overrides = {
+            fs.featurestate_uuid: fs for fs in self.feature_overrides
+        }
+
+        for uuid_, previous_fs in previous_feature_overrides.items():
+            current_matching_fs = current_feature_overrides.get(uuid_)
+            if current_matching_fs is None:
+                feature_changes[previous_fs.feature.name] = generate_change_dict(
+                    change_type="-", identity=self, old=previous_fs
+                )
+            elif (
+                current_matching_fs.enabled != previous_fs.enabled
+                and current_matching_fs.get_value(self.id)
+                != previous_fs.get_value(self.id)
+            ):
+                feature_changes[previous_fs.feature.name] = generate_change_dict(
+                    change_type="~",
+                    identity=self,
+                    new=current_matching_fs,
+                    old=previous_fs,
+                )
+
+        for uuid_, previous_fs in current_feature_overrides.items():
+            if uuid_ not in previous_feature_overrides:
+                feature_changes[previous_fs.feature.name] = generate_change_dict(
+                    change_type="+", identity=self, new=previous_fs
+                )
+
+        return changes

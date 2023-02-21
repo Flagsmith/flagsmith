@@ -256,7 +256,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         self.identity.remove_feature_override(instance)
-        EdgeIdentity.dynamo_wrapper.put_item(self.identity.to_document())
+        self.identity.save(user_id=self.request.user.id)
 
     @swagger_auto_schema(responses={200: IdentityAllFeatureStatesSerializer(many=True)})
     @action(detail=False, methods=["GET"])
@@ -323,5 +323,5 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         feature_state = self.identity.get_feature_state_by_feature_name_or_id(feature)
         if feature_state:
             self.identity.remove_feature_override(feature_state)
-            EdgeIdentity.dynamo_wrapper.put_item(self.identity.to_document())
+            self.identity.save(user_id=request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
