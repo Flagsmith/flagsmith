@@ -1,4 +1,8 @@
+from datetime import timedelta
+
+from django.core.exceptions import ValidationError
 from django.db import models
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 
 
 class Resource(models.IntegerChoices):
@@ -33,12 +37,38 @@ class APIUsageRaw(models.Model):
         index_together = (("environment_id", "created_at"),)
 
 
-class APIUsageBucket(models.Model):
-    environment_id = models.PositiveIntegerField()
-    resource = models.IntegerField(choices=Resource.choices)
-    total_count = models.PositiveIntegerField()
-    created_at = models.DateTimeField()
+class AbstractBucket(LifecycleModelMixin, models.Model):
     bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
+    created_at = models.DateTimeField()
+    total_count = models.PositiveIntegerField()
+    environment_id = models.PositiveIntegerField()
+
+    class Meta:
+        abstract = True
+
+    def check_overlapping_buckets(self, filters):
+        overlapping_buckets = self.__class__.objects.filter(
+            environment_id=self.environment_id,
+            bucket_size=self.bucket_size,
+            created_at__gte=self.created_at,
+            created_at__lt=self.created_at + timedelta(minutes=self.bucket_size),
+        )
+        overlapping_buckets = overlapping_buckets.filter(filters)
+
+        if overlapping_buckets.exists():
+            raise ValidationError(
+                "Cannot create bucket starting at {self.created_at} with size {self.bucket_size} minutes,"
+                "because it overlaps with existing buckets"
+            )
+
+
+class APIUsageBucket(AbstractBucket):
+    resource = models.IntegerField(choices=Resource.choices)
+
+    @hook(BEFORE_CREATE)
+    def check_overlapping_buckets(self):
+        filter = models.Q(resource=self.resource)
+        super().check_overlapping_buckets(filter)
 
 
 class FeatureEvaluationRaw(models.Model):
@@ -48,10 +78,10 @@ class FeatureEvaluationRaw(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class FeatureEvaluationBucket(models.Model):
+class FeatureEvaluationBucket(AbstractBucket):
     feature_name = models.CharField(max_length=2000)
-    environment_id = models.PositiveIntegerField()
 
-    total_count = models.PositiveIntegerField()
-    created_at = models.DateTimeField()
-    bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
+    @hook(BEFORE_CREATE)
+    def check_overlapping_buckets(self):
+        filter = models.Q(feature_name=self.feature_name)
+        super().check_overlapping_buckets(filter)
