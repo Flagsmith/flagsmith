@@ -2,6 +2,7 @@ import logging
 import typing
 
 from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
@@ -90,7 +91,12 @@ def sync_identity_document_features(identity_uuid: str):
 
 @register_task_handler()
 def generate_audit_log_records(
-    environment_api_key: str, identifier: str, user_id: int, changes: dict
+    environment_api_key: str,
+    identifier: str,
+    identity_uuid: str,
+    changes: dict,
+    user_id: int = None,
+    master_api_key_id: int = None,
 ):
     audit_records = []
 
@@ -113,6 +119,9 @@ def generate_audit_log_records(
                 environment=environment,
                 log=log,
                 author_id=user_id,
+                related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+                related_object_uuid=identity_uuid,
+                master_api_key_id=master_api_key_id,
             )
         )
 

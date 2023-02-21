@@ -10,10 +10,12 @@ from flag_engine.identities.builders import (
 from flag_engine.identities.models import IdentityModel
 from flag_engine.utils.collections import IdentityFeaturesList
 
+from api_keys.models import MasterAPIKey
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from users.models import FFAdminUser
 
 from .audit import generate_change_dict
 from .tasks import generate_audit_log_records, sync_identity_document_features
@@ -150,7 +152,7 @@ class EdgeIdentity:
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
         self._engine_identity_model.identity_features.remove(feature_state)
 
-    def save(self, user_id: int):
+    def save(self, user: FFAdminUser = None, master_api_key: MasterAPIKey = None):
         self.dynamo_wrapper.put_item(self.to_document())
         changes = self._get_changes(self._initial_state)
         if changes:
@@ -159,8 +161,10 @@ class EdgeIdentity:
                 kwargs={
                     "environment_api_key": self.environment_api_key,
                     "identifier": self.identifier,
-                    "user_id": user_id,
+                    "user_id": getattr(user, "id", None),
                     "changes": changes,
+                    "identity_uuid": self.identity_uuid,
+                    "master_api_key_id": getattr(master_api_key, "id", None),
                 }
             )
 

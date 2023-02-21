@@ -42,6 +42,7 @@ class AuditLog(LifecycleModel):
     )
     related_object_id = models.IntegerField(null=True)
     related_object_type = models.CharField(max_length=20, null=True)
+    related_object_uuid = models.CharField(max_length=36, null=True)
 
     skip_signals = models.CharField(
         null=True,
@@ -78,7 +79,10 @@ class AuditLog(LifecycleModel):
         # the value of a given feature in an environment) or ENVIRONMENT
         # since the environment itself has no impact on the feature states
         # within it
-        if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
+        if (
+            self.related_object_type is None
+            or self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name
+        ):
             return
 
         environments_filter = Q()

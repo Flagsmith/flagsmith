@@ -130,7 +130,10 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
-        identity: EdgeIdentity = self.context["view"].identity
+        view = self.context["view"]
+        request = self.context["request"]
+
+        identity: EdgeIdentity = view.identity
         feature_state_value = self.validated_data.pop("feature_state_value", None)
 
         previous_state = copy.deepcopy(self.instance)
@@ -154,7 +157,11 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         try:
-            identity.save(user_id=self.context["request"].user.id)
+            request = self.context
+            identity.save(
+                user=request.user,
+                master_api_key=getattr(request, "master_api_key", None),
+            )
         except InvalidPercentageAllocation as e:
             raise serializers.ValidationError(
                 {
@@ -177,7 +184,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 "environment_api_key": identity.environment_api_key,
                 "identity_id": identity.id,
                 "identity_identifier": identity.identifier,
-                "changed_by_user_id": self.context["request"].user.id,
+                "changed_by_user_id": request.user.id,
                 "new_enabled_state": self.instance.enabled,
                 "new_value": new_value,
                 "previous_enabled_state": getattr(previous_state, "enabled", None),
