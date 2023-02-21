@@ -157,7 +157,6 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         try:
-            request = self.context
             identity.save(
                 user=request.user,
                 master_api_key=getattr(request, "master_api_key", None),
