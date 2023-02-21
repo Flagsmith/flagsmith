@@ -557,7 +557,6 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-
             feature_states = FeatureState.get_environment_flags_list(
                 environment_id=request.environment.id,
                 feature_name=request.GET["feature"],
