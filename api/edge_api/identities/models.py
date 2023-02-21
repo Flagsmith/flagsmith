@@ -15,8 +15,8 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
-from .audit import generate_audit_log_records, generate_change_dict
-from .tasks import sync_identity_document_features
+from .audit import generate_change_dict
+from .tasks import generate_audit_log_records, sync_identity_document_features
 
 
 class EdgeIdentity:
@@ -154,8 +154,14 @@ class EdgeIdentity:
         self.dynamo_wrapper.put_item(self.to_document())
         changes = self._get_changes(self._initial_state)
         if changes:
-            generate_audit_log_records(
-                self.environment_api_key, self.identifier, user_id, changes
+            # TODO: would this be simpler if we put a wrapper around FeatureStateModel instead?
+            generate_audit_log_records.delay(
+                kwargs={
+                    "environment_api_key": self.environment_api_key,
+                    "identifier": self.identifier,
+                    "user_id": user_id,
+                    "changes": changes,
+                }
             )
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
