@@ -612,7 +612,6 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     feature,
     mv_option_50_percent,
 ):
-
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs

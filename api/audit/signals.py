@@ -92,7 +92,6 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
 @track_only_feature_related_events
 @handle_skipped_signals
 def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
-
     new_relic_config = _get_integration_config(instance, "new_relic_config")
     if not new_relic_config:
         return
@@ -109,7 +108,6 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
 @track_only_feature_related_events
 @handle_skipped_signals
 def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
-
     dynatrace_config = _get_integration_config(instance, "dynatrace_config")
     if not dynatrace_config:
         return

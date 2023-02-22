@@ -114,7 +114,6 @@ def test_get_request_body_from_user_with_paid_organisations(
 
 
 def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings):
-
     # Given
     mock_session = mocker.MagicMock()
     mocked_headers = mocker.patch(

@@ -105,7 +105,6 @@ def test_update_feature_state(client, environment, feature_state, feature, ident
 def test_update_feature_state_for_identity_with_identifier(
     client, environment, identity_featurestate, feature, identity, identity_identifier
 ):
-
     # Given
     url = reverse("api-v1:features:featurestates-detail", args=[identity_featurestate])
 
