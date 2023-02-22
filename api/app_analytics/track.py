@@ -12,7 +12,7 @@ from util.util import postpone
 
 logger = logging.getLogger(__name__)
 
-environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 GOOGLE_ANALYTICS_BASE_URL = "https://www.google-analytics.com"
 GOOGLE_ANALYTICS_COLLECT_URL = GOOGLE_ANALYTICS_BASE_URL + "/collect"

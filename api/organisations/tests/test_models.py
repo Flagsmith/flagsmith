@@ -334,3 +334,17 @@ def test_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
 
     # and add_single_seat was not called
     mocked_add_single_seat.assert_not_called()
+
+
+def test_organisation_update_clears_environment_caches(
+    mocker, organisation, environment
+):
+    # Given
+    mock_environment_cache = mocker.patch("organisations.models.environment_cache")
+
+    # When
+    organisation.name += "update"
+    organisation.save()
+
+    # Then
+    mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])

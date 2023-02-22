@@ -6,6 +6,7 @@ from django.db.models import Q
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
+    AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
 )
@@ -38,3 +39,7 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):
             )
             return
         Environment.write_environments_to_dynamodb(Q(id=self.environment_id))
+
+    @hook(AFTER_UPDATE)
+    def clear_environment_cache(self):
+        self.environment.clear_environment_cache()
