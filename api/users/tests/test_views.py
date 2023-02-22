@@ -3,6 +3,7 @@ from unittest.case import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth import login
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -433,3 +434,24 @@ def test_user_permission_group_can_update_external_id(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["external_id"] == external_id
+
+
+def test_users_in_organisation_have_last_login(
+    admin_client, organisation, rf, mocker, admin_user
+):
+    # Given
+    req = rf.get("/")
+    req.session = mocker.MagicMock()
+
+    # let's log the user in to generate `last_login`
+    login(req, admin_user, backend="django.contrib.auth.backends.ModelBackend")
+    url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.id]
+    )
+
+    # When
+    res = admin_client.get(url)
+
+    # Then
+    assert res.json()[0]["last_login"] is not None
+    assert res.status_code == status.HTTP_200_OK

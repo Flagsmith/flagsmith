@@ -152,6 +152,7 @@ class ProjectFeatureTestCase(TestCase):
             "email": user_3.email,
             "first_name": user_3.first_name,
             "last_name": user_3.last_name,
+            "last_login": None,
         }
 
     def test_audit_log_created_when_feature_state_created_for_identity(self):
