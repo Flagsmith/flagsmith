@@ -50,6 +50,8 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         search = serializer.data.get("search")
         if search:
             q = q & Q(log__icontains=search)
-        return AuditLog.objects.filter(q).select_related(
-            "project", "environment", "author"
+        return (
+            AuditLog.objects.filter(q)
+            .distinct()
+            .select_related("project", "environment", "author")
         )

@@ -9,8 +9,8 @@ const CreateTrait = class extends Component {
 
     constructor(props, context) {
         super(props, context);
-        const { props: { trait_key, trait_value } } = this;
-        this.state = { trait_key, trait_value };
+        const { props: { trait_key, trait_value, id } } = this;
+        this.state = { trait_key, trait_value, id };
     }
 
     close() {
@@ -138,10 +138,10 @@ const CreateTrait = class extends Component {
     }
 
     save = (func, isSaving) => {
-        const { props: { identity, environmentId }, state: { trait_key, trait_value } } = this;
+        const { props: { identity, environmentId }, state: { trait_key, trait_value, id } } = this;
         func({
             identity,
-            trait: { trait_value, trait_key },
+            trait: { trait_value, trait_key, id },
             environmentId,
         });
     }

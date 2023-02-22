@@ -169,7 +169,6 @@ class FeatureTestCase(TestCase):
         feature.full_clean()  # should not raise error as the same Object
 
     def test_when_create_feature_with_tags_then_success(self):
-
         # Given
         tag1 = Tag.objects.create(
             label="Test Tag",

@@ -29,7 +29,7 @@ jobs:
                 cd api
                 python -m pip install --upgrade pip
                 python -m pip install --upgrade setuptools
-                pip install -r requirements-dev.txt
+                pip install -r requirements-all.txt
                 pip install packaging==21.3
                 python -m pip install pip-audit
                 pip-audit
