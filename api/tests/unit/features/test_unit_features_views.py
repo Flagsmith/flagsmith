@@ -536,12 +536,14 @@ def test_add_owners_adds_owner(client, project):
         "email": user_1.email,
         "first_name": user_1.first_name,
         "last_name": user_1.last_name,
+        "last_login": None,
     }
     assert json_response["owners"][1] == {
         "id": user_2.id,
         "email": user_2.email,
         "first_name": user_2.first_name,
         "last_name": user_2.last_name,
+        "last_login": None,
     }
 
 
