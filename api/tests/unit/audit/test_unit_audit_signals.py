@@ -1,5 +1,3 @@
-from django.db.models import Q
-
 from audit.models import AuditLog
 from audit.signals import (
     send_environments_to_dynamodb,
@@ -19,7 +17,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
 
@@ -56,7 +54,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_project(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        Q(project=dynamo_enabled_project)
+        project_id=dynamo_enabled_project.id
     )
 
 
@@ -96,7 +94,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment_and_project(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
 

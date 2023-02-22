@@ -22,7 +22,7 @@ def test_amplitude_configuration_save_writes_environment_to_dynamodb(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        Q(id=environment.id)
+        environment_id=environment.id
     )
 
 

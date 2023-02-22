@@ -42,7 +42,6 @@ from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
-from projects.models import Project
 from segments.models import Segment
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -66,7 +65,7 @@ class Environment(
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)
     project = models.ForeignKey(
-        Project,
+        "projects.Project",
         related_name="environments",
         help_text=_(
             "Changing the project selected will remove all previous Feature States for the "
@@ -200,10 +199,15 @@ class Environment(
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
-    def write_environments_to_dynamodb(cls, environments_filter: Q) -> None:
+    def write_environments_to_dynamodb(
+        cls, environment_id: int = None, project_id: int = None
+    ) -> None:
         # use a list to make sure the entire qs is evaluated up front
+        environments_filter = (
+            Q(id=environment_id) if environment_id else Q(project_id=project_id)
+        )
         environments = list(
-            Environment.objects.filter_for_document_builder(environments_filter)
+            cls.objects.filter_for_document_builder(environments_filter)
         )
 
         if not environments:
