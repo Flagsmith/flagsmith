@@ -17,7 +17,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        environment_id=dynamo_enabled_project_environment_one.id
+        environment_id=dynamo_enabled_project_environment_one.id, project_id=None
     )
 
 
@@ -54,7 +54,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_project(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        project_id=dynamo_enabled_project.id
+        project_id=dynamo_enabled_project.id, environment_id=None
     )
 
 
@@ -94,7 +94,8 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment_and_project(
 
     # Then
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
-        environment_id=dynamo_enabled_project_environment_one.id
+        environment_id=dynamo_enabled_project_environment_one.id,
+        project_id=dynamo_enabled_project.id,
     )
 
 
