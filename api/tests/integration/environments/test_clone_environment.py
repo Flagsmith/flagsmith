@@ -16,7 +16,6 @@ from tests.integration.helpers import (
 def test_clone_environment_clones_feature_states_with_value(
     client, project, environment, environment_api_key, feature
 ):
-
     # Firstly, let's update feature state value of the source enviroment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
