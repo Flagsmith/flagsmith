@@ -55,7 +55,7 @@ def test_audit_log_can_be_filtered_by_project(
     )
     AuditLog.objects.create(project=project)
     AuditLog.objects.create(project=project, environment=environment)
-    AuditLog.objects.create(project=another_project, environment=environment)
+    AuditLog.objects.create(project=another_project)
 
     url = reverse("api-v1:audit-list")
 

@@ -7,6 +7,7 @@ from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
+from audit.constants import FEATURE_DELETED_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -15,6 +16,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
+from segments.models import Segment
 from users.models import FFAdminUser
 
 
@@ -464,11 +466,13 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
     assert AuditLog.objects.get(
         related_object_type=RelatedObjectType.FEATURE.name,
         related_object_id=feature.id,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     )
     # and audit logs exists for all feature states for that feature
     assert AuditLog.objects.filter(
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         related_object_id__in=feature_states_ids,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     ).count() == len(feature_states_ids)
 
 
@@ -612,3 +616,84 @@ def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, proj
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_feature_state_value_triggers_dynamo_rebuild(
+    client, project, environment, feature, feature_state, settings, mocker
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    mock_environment_class = mocker.patch("audit.signals.Environment")
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps({"feature_state_value": "new value"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    mock_environment_class.write_environments_to_dynamodb.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_segment_overrides_creates_correct_audit_log_messages(
+    client, feature, segment, environment
+):
+    # Given
+    another_segment = Segment.objects.create(
+        name="Another segment", project=segment.project
+    )
+
+    feature_segments_url = reverse("api-v1:features:feature-segment-list")
+    feature_states_url = reverse("api-v1:features:featurestates-list")
+
+    # When
+    # we create 2 segment overrides for the feature
+    for _segment in (segment, another_segment):
+        feature_segment_response = client.post(
+            feature_segments_url,
+            data={
+                "feature": feature.id,
+                "segment": _segment.id,
+                "environment": environment.id,
+            },
+        )
+        assert feature_segment_response.status_code == status.HTTP_201_CREATED
+        feature_segment_id = feature_segment_response.json()["id"]
+        feature_state_response = client.post(
+            feature_states_url,
+            data={
+                "feature": feature.id,
+                "feature_segment": feature_segment_id,
+                "environment": environment.id,
+                "enabled": True,
+            },
+        )
+        assert feature_state_response.status_code == status.HTTP_201_CREATED
+
+    # Then
+    assert AuditLog.objects.count() == 2
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{segment.name}'"
+        ).count()
+        == 1
+    )
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{another_segment.name}'"
+        ).count()
+        == 1
+    )

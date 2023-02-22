@@ -1,10 +1,10 @@
 import React from 'react';
-
 import LegalAside from '../LegalAside';
 import PrivacyPolicy from './PrivacyPolicyPage';
 import ServiceLevelAgreement from './ServiceLevelAgreementPage';
 import Footer from '../Footer';
 import TermsOfService from './TermsOfServicePage';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const TermsPoliciesPage = class extends React.Component {
     static contextTypes = {

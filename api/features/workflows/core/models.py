@@ -3,7 +3,7 @@ import typing
 
 from core.helpers import get_current_site_url
 from core.models import (
-    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.conf import settings
@@ -36,6 +36,7 @@ from .exceptions import (
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
+    from projects.models import Project
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 class ChangeRequest(
     LifecycleModelMixin,
-    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     related_object_type = RelatedObjectType.CHANGE_REQUEST
@@ -137,6 +138,9 @@ class ChangeRequest(
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.environment
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.environment.project
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (

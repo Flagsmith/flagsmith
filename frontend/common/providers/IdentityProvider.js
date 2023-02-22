@@ -44,7 +44,7 @@ const IdentityProvider = class extends React.Component {
         AppActions.toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });
     };
 
-    editFlagValue = ({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) => {
+    editFeatureValue = ({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) => {
         AppActions.editUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });
     };
 
@@ -65,9 +65,9 @@ const IdentityProvider = class extends React.Component {
     };
 
     render() {
-        const { toggleFlag, editFlagValue, removeFlag, editTrait, changeUserFlag, createTrait } = this;
+        const { toggleFlag, editFeatureValue, removeFlag, editTrait, changeUserFlag, createTrait } = this;
         return (
-            this.props.children({ ...this.state }, { toggleFlag, editFlagValue, createTrait, removeFlag, editTrait, changeUserFlag })
+            this.props.children({ ...this.state }, { toggleFlag, editFeatureValue, createTrait, removeFlag, editTrait, changeUserFlag })
         );
     }
 };

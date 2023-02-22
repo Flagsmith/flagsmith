@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.models import AbstractBaseExportableModel
+from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -13,7 +13,6 @@ from django_lifecycle import (
     LifecycleModelMixin,
     hook,
 )
-from softdelete.models import SoftDeleteObject
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
@@ -54,7 +53,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject):
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)

@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from core.models import (
     AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import (
@@ -31,15 +32,18 @@ from simple_history.models import HistoricalRecords
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
-    FEATURE_SEGMENT_UPDATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
+    FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from audit.tasks import create_segment_priorities_changed_audit_log
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -48,7 +52,12 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
-from features.managers import FeatureSegmentManager
+from features.managers import (
+    FeatureManager,
+    FeatureSegmentManager,
+    FeatureStateManager,
+    FeatureStateValueManager,
+)
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -64,6 +73,8 @@ from features.value_types import (
 from projects.models import Project
 from projects.tags.models import Tag
 
+from . import audit_helpers
+
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
@@ -72,8 +83,8 @@ if typing.TYPE_CHECKING:
 
 
 class Feature(
+    SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     name = models.CharField(max_length=2000)
@@ -104,9 +115,11 @@ class Feature(
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
 
+    objects = FeatureManager()
+
     class Meta:
-        # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
-        unique_together = ("name", "project")
+        # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
+        # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
@@ -175,8 +188,8 @@ def get_next_segment_priority(feature):
 
 class FeatureSegment(
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
     OrderedModelBase,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "features.models.HistoricalFeatureSegment"
     related_object_type = RelatedObjectType.FEATURE
@@ -252,14 +265,85 @@ class FeatureSegment(
     def get_value(self):
         return get_correctly_typed_value(self.value_type, self.value)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return FEATURE_SEGMENT_UPDATED_MESSAGE % (
-            self.feature.name,
-            self.environment.name,
+    @classmethod
+    def update_priorities(
+        cls,
+        new_feature_segment_id_priorities: typing.List[typing.Tuple[int, int]],
+    ) -> QuerySet["FeatureSegment"]:
+        """
+        Method to update the priorities of multiple feature segments at once.
+
+        :param new_feature_segment_id_priorities: a list of 2-tuples containing the id, new priority value of
+            the feature segments
+        :return: a 3-tuple consisting of:
+            - a boolean detailing whether any changes were made
+            - a list of 2-tuples containing the id, old priority value of the feature segments
+            - a queryset containing the updated feature segment model objects
+        """
+        feature_segments = cls.objects.filter(
+            id__in=[pair[0] for pair in new_feature_segment_id_priorities]
         )
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        return self.get_create_log_message(history_instance)
+        existing_feature_segment_id_priority_pairs = cls.to_id_priority_tuple_pairs(
+            feature_segments
+        )
+
+        def sort_function(id_priority_pair):
+            priority = id_priority_pair[1]
+            return priority
+
+        if sorted(
+            existing_feature_segment_id_priority_pairs, key=sort_function
+        ) == sorted(new_feature_segment_id_priorities, key=sort_function):
+            # no changes needed - do nothing (but return existing feature segments)
+            return feature_segments
+
+        id_priority_dict = dict(new_feature_segment_id_priorities)
+
+        for fs in feature_segments:
+            new_priority = id_priority_dict[fs.id]
+            fs.to(new_priority)
+
+        request = getattr(HistoricalRecords.thread, "request", None)
+        if request:
+            create_segment_priorities_changed_audit_log.delay(
+                kwargs={
+                    "previous_id_priority_pairs": existing_feature_segment_id_priority_pairs,
+                    "feature_segment_ids": [
+                        pair[0] for pair in new_feature_segment_id_priorities
+                    ],
+                    "user_id": getattr(request.user, "id", None),
+                    "master_api_key_id": request.master_api_key.id
+                    if hasattr(request, "master_api_key")
+                    else None,
+                }
+            )
+
+        # since the `to` method updates the priority in place, we don't need to refresh
+        # the objects from the database.
+        return feature_segments
+
+    @staticmethod
+    def to_id_priority_tuple_pairs(
+        feature_segments: typing.Union[
+            typing.Iterable["FeatureSegment"], typing.Iterable[dict]
+        ]
+    ) -> typing.List[typing.Tuple[int, int]]:
+        """
+        Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples
+        consisting of the id, priority of the feature segments.
+        """
+        id_priority_pairs = []
+        for fs in feature_segments:
+            if isinstance(fs, dict):
+                id_priority_pairs.append((fs["id"], fs["priority"]))
+            else:
+                id_priority_pairs.append((fs.id, fs.priority))
+
+        return id_priority_pairs
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.feature_id
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
@@ -267,31 +351,13 @@ class FeatureSegment(
             self.segment.name,
         )
 
-    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
-        # TODO: this is here to maintain current behaviour but should probably be fixed
-        if history_instance.history_type == "-":
-            feature_state = (
-                self.feature_states.first()
-            )  # due to incorrect foreign key rather than 1-1
-            return getattr(feature_state, "id", None)
-        return self.feature_id
-
-    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
-        # TODO: this is here to maintain current behaviour but should probably be fixed
-        if history_instance.history_type == "-":
-            return RelatedObjectType.FEATURE_STATE
-        return RelatedObjectType.FEATURE
-
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def _get_environment(self) -> "Environment":
         return self.environment
-
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.feature.project
 
 
 class FeatureState(
+    SoftDeleteExportableModel,
     LifecycleModelMixin,
-    AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
@@ -337,6 +403,8 @@ class FeatureState(
         null=True,
         related_name="feature_states",
     )
+
+    objects = FeatureStateManager()
 
     class Meta:
         ordering = ["id"]
@@ -426,6 +494,10 @@ class FeatureState(
             and self.live_from is not None
             and self.live_from <= timezone.now()
         )
+
+    @property
+    def is_scheduled(self) -> bool:
+        return self.live_from > timezone.now()
 
     def clone(
         self,
@@ -696,9 +768,29 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return self.get_update_log_message(history_instance)
+        if self.change_request_id and not self.change_request.committed_at:
+            # change requests create feature states that may not ever go live,
+            # since we already include the change requests in the audit log
+            # we don't want to create separate audit logs for the associated
+            # feature states
+            return
+
+        if self.environment.created_date > self.feature.created_date:
+            # Don't create an audit log record for feature states created when
+            # creating an environment
+            return
+
+        if self.identity_id:
+            return audit_helpers.get_identity_override_created_audit_message(self)
+        elif self.feature_segment_id:
+            return audit_helpers.get_segment_override_created_audit_message(self)
+
+        return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.change_request_id and not self.change_request.committed_at:
+            return
+
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -713,16 +805,13 @@ class FeatureState(
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         try:
-            if self.identity:
+            if self.identity_id:
                 return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
                     self.feature.name,
                     self.identity.identifier,
                 )
-            elif self.feature_segment:
-                return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-                    self.feature.name,
-                    self.feature_segment.segment.name,
-                )
+            elif self.feature_segment_id:
+                return None  # handled by FeatureSegment
 
             # TODO: this is here to maintain current functionality, however, I'm not
             #  sure that we want to create an audit log record in this case
@@ -750,12 +839,19 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
+class FeatureStateValue(
+    AbstractBaseFeatureValueModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    related_object_type = RelatedObjectType.FEATURE_STATE
+    history_record_class_path = "features.models.HistoricalFeatureStateValue"
+
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
-    history = HistoricalRecords(excluded_fields=["uuid"])
+    objects = FeatureStateValueManager()
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
@@ -764,3 +860,41 @@ class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableMod
         clone.feature_state = feature_state
         clone.save()
         return clone
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        fs = self.feature_state
+
+        changes = history_instance.diff_against(history_instance.prev_record).changes
+        if (
+            len(changes) == 1
+            and changes[0].field == "string_value"
+            and changes[0].old in (None, "")
+            and changes[0].new in (None, "")
+        ):
+            # When we create a new segment override, for some reason, there are changes made to the
+            # existing segment overrides which change the string value between null and empty string
+            # since this change has no significant impact on the platform, we simply check for it here
+            # and ignore it.
+            return
+
+        if fs.change_request_id and not fs.change_request.committed_at:
+            return
+
+        feature = fs.feature
+
+        if fs.identity_id:
+            return IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
+                feature.name,
+                fs.identity.identifier,
+            )
+        elif fs.feature_segment_id:
+            segment = fs.feature_segment.segment
+            return SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
+                feature.name,
+                segment.name,
+            )
+
+        return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.feature_state.environment

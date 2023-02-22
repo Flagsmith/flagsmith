@@ -11,6 +11,7 @@ import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
 import _data from "../../../common/data/base/_data";
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -61,8 +62,8 @@ const CreateSegment = class extends Component {
     }
 
     validateRules = (rules) => {
-        if (!rules || !rules[0] || !rules[0].rules) {
-            return false;
+        if (!rules[0]?.rules?.find((v)=>!v.delete)) {
+            return false
         }
         const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
 
@@ -150,28 +151,33 @@ const CreateSegment = class extends Component {
             <div className="overflow-visible">
                 <div>
                     <div className="mb-2">
-                        {rules[0].rules.map((rule, i) => (
-                            <div key={i}>
-                                {i > 0 && (
-                                    <Row className="and-divider my-1">
-                                        <Flex className="and-divider__line"/>
-                                        {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
-                                        <Flex className="and-divider__line"/>
-                                    </Row>
-                                )}
-                                <Rule
-                                  showDescription={this.state.showDescriptions}
-                                  readOnly={readOnly}
-                                  data-test={`rule-${i}`}
-                                  rule={rule}
-                                  operators={
-                                        Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
-                                    }
-                                  onRemove={v => this.removeRule(0, i, v)}
-                                  onChange={v => this.updateRule(0, i, v)}
-                                />
-                            </div>
-                        ))}
+                        {rules[0].rules.map((rule, i) => {
+                            if(rule.delete) {
+                                return null
+                            }
+                            return (
+                                <div key={i}>
+                                    {i > 0 && (
+                                        <Row className="and-divider my-1">
+                                            <Flex className="and-divider__line"/>
+                                            {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
+                                            <Flex className="and-divider__line"/>
+                                        </Row>
+                                    )}
+                                    <Rule
+                                        showDescription={this.state.showDescriptions}
+                                        readOnly={readOnly}
+                                        data-test={`rule-${i}`}
+                                        rule={rule}
+                                        operators={
+                                            Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
+                                        }
+                                        onRemove={v => this.removeRule(0, i, v)}
+                                        onChange={v => this.updateRule(0, i, v)}
+                                    />
+                                </div>
+                            )
+                        })}
                     </div>
                     <Row className="justify-content-center">
                         {!readOnly && (
@@ -218,14 +224,6 @@ const CreateSegment = class extends Component {
               id="create-segment-modal"
               onSubmit={this.save}
             >
-                {!this.props.condensed && (
-                    <div className="mt-4">
-                        <InfoMessage>
-                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
-                        </InfoMessage>
-                    </div>
-                )}
-
                 {!isEdit && (
                     <Row className="mb-4">
                         <label className="mr-2 mb-0" htmlFor="segmentID">
@@ -250,7 +248,6 @@ const CreateSegment = class extends Component {
                     </Row>
                 )}
 
-
                 {!this.props.condensed && (
                     <FormGroup className="mb-4">
                         <InputGroup
@@ -268,16 +265,15 @@ const CreateSegment = class extends Component {
                     </FormGroup>
                 )}
 
-
                 <div className="form-group ">
                     <Row className="mt-2 mb-2">
                         <Flex>
                             <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
-                            <span className="text-small text-muted">Note: Trait names are case sensitive</span>
+                            <span className="text-small text-muted">
+                                Trait names are case sensitive. Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                            </span>
                         </Flex>
-                        <span>
-                            {this.state.showDescriptions? "Hide condition descriptions" : "Show condition descriptions"}
-                        </span>
+                        <span className="text-small">{this.state.showDescriptions? "Hide descriptions" : "Show descriptions"}</span>
                         <Switch checked={!!this.state.showDescriptions} onChange={()=>{this.setState({showDescriptions:!this.state.showDescriptions})}}/>
                     </Row>
                     {
@@ -332,7 +328,6 @@ const CreateSegment = class extends Component {
 
                     </div>
                 )}
-
             </form>
         );
 

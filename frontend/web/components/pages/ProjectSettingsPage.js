@@ -7,6 +7,8 @@ import _data from '../../../common/data/base/_data';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import RegexTester from "../RegexTester";
+import ConfigProvider from 'common/providers/ConfigProvider';
+
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
 
@@ -354,7 +356,6 @@ const ProjectSettingsPage = class extends Component {
                                             />
                                         </TabItem>
                                     </Tabs>
-
                                 )}
                             </div>
                         )
