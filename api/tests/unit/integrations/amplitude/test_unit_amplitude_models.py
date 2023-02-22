@@ -48,3 +48,18 @@ def test_amplitude_configuration_delete_writes_environment_to_dynamodb(
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
         Q(id=environment.id)
     )
+
+
+def test_amplitude_configuration_update_clears_environment_cache(environment, mocker):
+    # Given
+    mock_environment_cache = mocker.patch("environments.models.environment_cache")
+    amplitude_config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="api-key", base_url="https://base.url.com"
+    )
+
+    # When
+    amplitude_config.api_key += "update"
+    amplitude_config.save()
+
+    # Then
+    mock_environment_cache.delete.assert_called_once_with(environment.api_key)

@@ -125,6 +125,11 @@ def segment(project):
 
 
 @pytest.fixture()
+def segment_rule(segment):
+    return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+
+@pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
 
@@ -246,8 +251,10 @@ def environment_api_key(environment):
 
 @pytest.fixture()
 def master_api_key(organisation):
-    _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
-    return key
+    master_api_key, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation
+    )
+    return master_api_key, key
 
 
 @pytest.fixture()
@@ -255,7 +262,7 @@ def master_api_key_client(master_api_key):
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
     return api_client
 
 

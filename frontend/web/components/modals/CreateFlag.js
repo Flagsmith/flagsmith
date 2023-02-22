@@ -471,7 +471,7 @@ const CreateFlag = class extends Component {
                         AppActions.refreshFeatures(this.props.projectId, this.props.environmentId);
                     }}
                     >
-                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
+                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFeatureSettings, editFeatureValue, editFeatureSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 this.setState({ valueChanged: false });
                                 if ((is4Eyes || schedule) && !identity) {
@@ -506,22 +506,22 @@ const CreateFlag = class extends Component {
                                     />);
                                 } else if (document.getElementById('language-validation-error')) {
                                     openConfirm('Validation error', 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?', () => {
-                                        this.save(editFlagValue, isSaving);
+                                        this.save(editFeatureValue, isSaving);
                                     }, null, 'Save', 'Cancel');
                                 } else {
-                                    this.save(editFlagValue, isSaving);
+                                    this.save(editFeatureValue, isSaving);
                                 }
                             };
 
                             const saveSettings = () => {
                                 this.setState({ settingsChanged: false });
-                                this.save(editFlagSettings, isSaving);
+                                this.save(editFeatureSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
                                 this.setState({ segmentsChanged: false });
 
-                                this.save(editFlagSegments, isSaving);
+                                this.save(editFeatureSegments, isSaving);
                             };
 
                             const onCreateFeature = () => {

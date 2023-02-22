@@ -42,7 +42,6 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     user_environment_permission,
     user_project_permission,
 ):
-
     # Given
     dynamo_wrapper_mock = mocker.patch(
         "environments.identities.models.Identity.dynamo_wrapper",

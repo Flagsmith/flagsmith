@@ -85,7 +85,6 @@ class CompareEnvironments extends Component {
                             {({ }, {
                                 environmentHasFlag,
                                 toggleFlag,
-                                editFlag,
                                 removeFlag,
                             }) => {
                                 const renderRow = (data, i) => {
@@ -142,7 +141,6 @@ class CompareEnvironments extends Component {
                                                               index={i}
                                                               canDelete={permission}
                                                               toggleFlag={toggleFlag}
-                                                              editFlag={editFlag}
                                                               removeFlag={removeFlag}
                                                               projectFlag={this.state.flag}
                                                             />

@@ -14,7 +14,13 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    AFTER_UPDATE,
+    LifecycleModel,
+    hook,
+)
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
     build_environment_document,
@@ -42,7 +48,7 @@ from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
-environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
@@ -117,6 +123,11 @@ class Environment(
                 else feature.default_enabled,
             )
 
+    @hook(AFTER_UPDATE)
+    def clear_environment_cache(self):
+        # TODO: this could rebuild the cache itself (using an async task)
+        environment_cache.delete(self.initial_value("api_key"))
+
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
@@ -181,7 +192,9 @@ class Environment(
                     .defer("description")
                     .get()
                 )
-                environment_cache.set(api_key, environment, timeout=60)
+                environment_cache.set(
+                    api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
+                )
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)

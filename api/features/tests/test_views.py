@@ -152,6 +152,7 @@ class ProjectFeatureTestCase(TestCase):
             "email": user_3.email,
             "first_name": user_3.first_name,
             "last_name": user_3.last_name,
+            "last_login": None,
         }
 
     def test_audit_log_created_when_feature_state_created_for_identity(self):
@@ -249,20 +250,14 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
+                log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+                % (
+                    feature.name,
+                    identity.identifier,
+                )
             ).count()
             == 1
         )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
 
     def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
         # Given - set up data
@@ -667,3 +662,19 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
 
     response_json = response.json()
     assert response_json["uuid"] == str(feature_state.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_deleted_features_are_not_listed(client, project, environment, feature):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    feature.delete()
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0

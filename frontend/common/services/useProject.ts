@@ -9,7 +9,7 @@ export const projectService = service
 
     getProjects: builder.query<Res['projects'], Req['getProjects']>({
       query: (data) => ({
-        url: `projects/?organistation=${data.organisationId}`,
+        url: `projects/?organisation=${data.organisationId}`,
       }),
       providesTags:[{ type: 'Project', id: 'LIST' },],
     }),
