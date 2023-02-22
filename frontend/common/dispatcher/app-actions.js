@@ -19,7 +19,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             environmentId,
         });
     },
-    getFeatures(projectId, environmentId, force, search, sort, page, filter) {
+    getFeatures(projectId, environmentId, force, search, sort, page, filter, pageSize) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_FLAGS,
             projectId,
@@ -29,9 +29,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             sort,
             page,
             filter,
+            pageSize,
         });
     },
-    searchFeatures(projectId, environmentId, force, search, sort, page, filter) {
+    searchFeatures(projectId, environmentId, force, search, sort, page, filter, pageSize) {
         Dispatcher.handleViewAction({
             actionType: Actions.SEARCH_FLAGS,
             projectId,
@@ -41,6 +42,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             sort,
             page,
             filter,
+            pageSize,
         });
     },
     createProject(name) {
@@ -228,14 +230,24 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    editFlag(projectId, flag, onComplete) {
+    editFeature(projectId, flag, onComplete) {
         Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_FLAG,
+            actionType: Actions.EDIT_FEATURE,
             projectId,
             flag,
             onComplete,
         });
     },
+
+    editFeatureMv(projectId, flag, onComplete) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.EDIT_FEATURE_MV,
+            projectId,
+            flag,
+            onComplete,
+        });
+    },
+
     editProject(id, project) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_PROJECT,
@@ -538,12 +550,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.UPDATE_SUBSCRIPTION,
             hostedPageId,
-        });
-    },
-    getInfluxData(organisationId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_INFLUX_DATA,
-            id: organisationId,
         });
     },
     getChangeRequests(environment, data, page) {

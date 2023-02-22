@@ -1,17 +1,13 @@
 import django.core.exceptions
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from audit.models import (
-    FEATURE_STATE_UPDATED_MESSAGE,
-    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
-    SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from environments.identities.models import Identity
 from users.serializers import UserIdsSerializer, UserListSerializer
-from util.drf_writable_nested.serializers import WritableNestedModelSerializer
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+)
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
@@ -67,7 +63,7 @@ class FeatureQuerySerializer(serializers.Serializer):
             raise serializers.ValidationError("Tag IDs must be integers.")
 
 
-class ListCreateFeatureSerializer(WritableNestedModelSerializer):
+class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
@@ -100,9 +96,9 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     def create(self, validated_data):
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
-        user = validated_data.pop("user")
+        user = validated_data.pop("user", None)
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-        if not user.is_anonymous:
+        if user and not user.is_anonymous:
             instance.owners.add(user)
         return instance
 
@@ -127,6 +123,15 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
 
     def validate_name(self, name: str):
         view = self.context["view"]
+
+        project = self.context["project"]
+        feature_name_regex = project.feature_name_regex
+
+        if not project.is_feature_name_valid(name):
+            raise serializers.ValidationError(
+                f"Feature name must match regex: {feature_name_regex}"
+            )
+
         unique_filters = {
             "project__id": view.kwargs.get("project_pk"),
             "name__iexact": name,
@@ -231,21 +236,6 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(e.message)
 
-    def create(self, validated_data):
-        instance = super(FeatureStateSerializerBasic, self).create(validated_data)
-        self._create_audit_log(instance=instance)
-        return instance
-
-    def update(self, instance, validated_data):
-        updated_instance = super(FeatureStateSerializerBasic, self).update(
-            instance, validated_data
-        )
-        self._create_audit_log(updated_instance)
-        return updated_instance
-
-    def _create_audit_log(self, instance):
-        create_feature_state_audit_log(instance, self.context.get("request"))
-
     def validate(self, attrs):
         environment = attrs.get("environment")
         identity = attrs.get("identity")
@@ -290,42 +280,6 @@ class FeatureStateSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
         fields = ("feature", "enabled")
-
-    def save(self, **kwargs):
-        instance = super(FeatureStateSerializerCreate, self).save(**kwargs)
-        self._create_audit_log(instance=instance)
-        return instance
-
-    def _create_audit_log(self, instance):
-        create_feature_state_audit_log(instance, self.context.get("request"))
-
-    def validate(self, attrs):
-        return super(FeatureStateSerializerCreate, self).validate(attrs)
-
-
-def create_feature_state_audit_log(feature_state, request):
-    if feature_state.identity:
-        message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
-            feature_state.feature.name,
-            feature_state.identity.identifier,
-        )
-    elif feature_state.feature_segment:
-        message = SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
-            feature_state.feature.name,
-            feature_state.feature_segment.segment.name,
-        )
-    else:
-        message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
-
-    AuditLog.objects.create(
-        author=None if request.user.is_anonymous else request.user,
-        related_object_id=feature_state.id,
-        related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=feature_state.environment,
-        project=feature_state.environment.project,
-        log=message,
-        master_api_key=request.master_api_key if request.user.is_anonymous else None,
-    )
 
 
 class FeatureStateValueSerializer(serializers.ModelSerializer):

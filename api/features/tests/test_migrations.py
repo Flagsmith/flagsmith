@@ -1,8 +1,14 @@
 from datetime import timedelta
 
+import pytest
+from django.conf import settings
 from django.utils import timezone
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migrate_feature_segments_forward(migrator):
     # Given - the migration state is at 0017 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
@@ -79,6 +85,10 @@ def test_migrate_feature_segments_forward(migrator):
     assert NewFeatureState.objects.values("feature_segment").distinct().count() == 4
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migrate_feature_segments_reverse(migrator):
     # Given - migration state is at 0018, after the migration we want to test in reverse
     old_state = migrator.apply_initial_migration(
@@ -133,6 +143,10 @@ def test_migrate_feature_segments_reverse(migrator):
     assert NewFeatureSegment.objects.first().segment.pk == segment.pk
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_revert_feature_state_versioning_migrations(migrator):
     # Given
     old_state = migrator.apply_initial_migration(

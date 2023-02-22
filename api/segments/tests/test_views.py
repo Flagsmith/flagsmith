@@ -8,7 +8,8 @@ from flag_engine.api.document_builders import build_identity_document
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule
@@ -356,3 +357,164 @@ def test_create_segments_with_description_condition(project, client):
         "description"
     ]
     assert segment_condition_description_value == "test-description"
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_segment_add_new_condition(project, client, segment, segment_rule):
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert nested_rule.conditions.count() == 2
+    assert (
+        nested_rule.conditions.order_by("-id").first().property
+        == new_condition_property
+    )
+    assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_segment_delete_existing_condition(
+    project, client, segment, segment_rule
+):
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                                "delete": True,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert nested_rule.conditions.count() == 0
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_segment_delete_existing_rule(project, client, segment, segment_rule):
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [],
+                    }
+                ],
+                "conditions": [],
+                "delete": True,
+            }
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert segment_rule.conditions.count() == 0

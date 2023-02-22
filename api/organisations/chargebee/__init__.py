@@ -1,4 +1,5 @@
 from .chargebee import (  # noqa
+    add_single_seat,
     get_customer_id_from_subscription_id,
     get_hosted_page_url_for_subscription_upgrade,
     get_max_api_calls_for_plan,

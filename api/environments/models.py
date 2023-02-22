@@ -6,6 +6,7 @@ import typing
 from copy import deepcopy
 
 import boto3
+from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
@@ -13,14 +14,26 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    AFTER_UPDATE,
+    LifecycleModel,
+    hook,
+)
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
     build_environment_document,
 )
 from rest_framework.request import Request
+from softdelete.models import SoftDeleteObject
 
 from app.utils import create_hash
+from audit.constants import (
+    ENVIRONMENT_CREATED_MESSAGE,
+    ENVIRONMENT_UPDATED_MESSAGE,
+)
+from audit.related_object_type import RelatedObjectType
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -35,7 +48,7 @@ from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
-environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
@@ -43,7 +56,12 @@ environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 environment_wrapper = DynamoEnvironmentWrapper()
 
 
-class Environment(LifecycleModel):
+class Environment(
+    LifecycleModel, abstract_base_auditable_model_factory(), SoftDeleteObject
+):
+    history_record_class_path = "environments.models.HistoricalEnvironment"
+    related_object_type = RelatedObjectType.ENVIRONMENT
+
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)
@@ -80,6 +98,13 @@ class Environment(LifecycleModel):
         null=True, blank=True, max_length=7, help_text="hex code for the banner colour"
     )
 
+    hide_disabled_flags = models.BooleanField(
+        null=True,
+        blank=True,
+        help_text="If true will exclude flags from SDK which are "
+        "disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
+    )
+
     objects = EnvironmentManager()
 
     class Meta:
@@ -97,6 +122,11 @@ class Environment(LifecycleModel):
                 if self.project.prevent_flag_defaults
                 else feature.default_enabled,
             )
+
+    @hook(AFTER_UPDATE)
+    def clear_environment_cache(self):
+        # TODO: this could rebuild the cache itself (using an async task)
+        environment_cache.delete(self.initial_value("api_key"))
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -162,7 +192,9 @@ class Environment(LifecycleModel):
                     .defer("description")
                     .get()
                 )
-                environment_cache.set(api_key, environment, timeout=60)
+                environment_cache.set(
+                    api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
+                )
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
@@ -242,6 +274,18 @@ class Environment(LifecycleModel):
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return ENVIRONMENT_CREATED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return ENVIRONMENT_UPDATED_MESSAGE % self.name
+
+    def get_hide_disabled_flags(self) -> bool:
+        if self.hide_disabled_flags is not None:
+            return self.hide_disabled_flags
+
+        return self.project.hide_disabled_flags
+
     @classmethod
     def _get_environment_document_from_cache(cls, api_key: str) -> dict:
         environment_document = environment_document_cache.get(api_key)
@@ -254,6 +298,12 @@ class Environment(LifecycleModel):
     def _get_environment_document_from_db(cls, api_key: str) -> dict:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
         return build_environment_document(environment)
+
+    def _get_environment(self):
+        return self
+
+    def _get_project(self):
+        return self.project
 
 
 class Webhook(AbstractBaseWebhookModel):

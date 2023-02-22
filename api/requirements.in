@@ -50,3 +50,4 @@ djangorestframework-api-key
 backoff
 pymemcache
 google-re2
+django-softdelete

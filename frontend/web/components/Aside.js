@@ -21,6 +21,8 @@ import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
 import ProjectStore from '../../common/stores/project-store';
 import ChangeRequestStore from '../../common/stores/change-requests-store';
 import getBuildVersion from '../project/getBuildVersion'
+import ConfigProvider from 'common/providers/ConfigProvider';
+
 const Aside = class extends Component {
     static displayName = 'Aside';
 
@@ -339,7 +341,7 @@ const Aside = class extends Component {
                                                                     onClick={onClick}
                                                                     active={environment.api_key === environmentId} title={environment.name}
                                                                   >
-                                                                      <Permission level="environment" permission="MANAGE_IDENTITIES" id={environment.api_key}>
+                                                                      <Permission level="environment" permission={Utils.getViewIdentitiesPermission()} id={environment.api_key}>
                                                                           {({ permission: manageIdentityPermission, isLoading: manageIdentityLoading }) => (
                                                                               <Permission level="environment" permission="ADMIN" id={environment.api_key}>
                                                                                   {({ permission: environmentAdmin, isLoading }) => (isLoading || manageIdentityLoading
@@ -434,7 +436,7 @@ const Aside = class extends Component {
                                                                             <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.tag}
                                                                         </span>
                                                                         )}>
-                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
+                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend SHA: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
                                                                     </Tooltip>
                                                                 )}
 

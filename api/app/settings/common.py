@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "custom_auth",
     "admin_sso",
     "api",
+    "core",
     "corsheaders",
     "users",
     "organisations",
@@ -153,6 +154,7 @@ INSTALLED_APPS = [
     "django_filters",
     "import_export",
     "task_processor",
+    "softdelete",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -490,8 +492,17 @@ if ENABLE_DB_LOGGING:
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
-ENVIRONMENT_CACHE_LOCATION = "environment-objects"
 CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
+
+ENVIRONMENT_CACHE_SECONDS = env.int("ENVIRONMENT_CACHE_SECONDS", default=60)
+ENVIRONMENT_CACHE_BACKEND = env.str(
+    "ENVIRONMENT_CACHE_BACKEND",
+    default="django.core.cache.backends.locmem.LocMemCache",
+)
+ENVIRONMENT_CACHE_NAME = "environment-objects"
+ENVIRONMENT_CACHE_LOCATION = env.str(
+    "ENVIRONMENT_CACHE_LOCATION", default=ENVIRONMENT_CACHE_NAME
+)
 
 GET_FLAGS_ENDPOINT_CACHE_SECONDS = env.int(
     "GET_FLAGS_ENDPOINT_CACHE_SECONDS", default=0
@@ -540,9 +551,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "unique-snowflake",
     },
-    ENVIRONMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    ENVIRONMENT_CACHE_NAME: {
+        "BACKEND": ENVIRONMENT_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_CACHE_LOCATION,
+        "TIMEOUT": ENVIRONMENT_CACHE_SECONDS,
     },
     FLAGS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -697,11 +709,13 @@ FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
+HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
 LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -813,3 +827,9 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
     "PIPEDRIVE_IGNORE_DOMAINS",
     ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
 )
+
+# List of plan ids that support seat upgrades
+AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
+
+
+SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)

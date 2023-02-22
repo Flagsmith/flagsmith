@@ -15,7 +15,6 @@ const OrganisationProvider = class extends Component {
             invites: OrganisationStore.getInvites(),
             name: AccountStore.getOrganisation() && AccountStore.getOrganisation().name,
             subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
-            usage: OrganisationStore.getUsage(),
         };
         ES6Component(this);
         this.listenTo(OrganisationStore, 'change', () => {
@@ -28,8 +27,6 @@ const OrganisationProvider = class extends Component {
                 invites: OrganisationStore.getInvites(),
                 inviteLinks: OrganisationStore.getInviteLinks(),
                 subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
-                usage: OrganisationStore.getUsage(),
-                influx_data: OrganisationStore.getInflux(),
             });
         });
         this.listenTo(OrganisationStore, 'saved', () => {
@@ -58,8 +55,6 @@ const OrganisationProvider = class extends Component {
                         users: OrganisationStore.getUsers(),
                         invites: OrganisationStore.getInvites(),
                         inviteLinks: OrganisationStore.getInviteLinks(),
-                        usage: OrganisationStore.getUsage(),
-                        influx_data: OrganisationStore.getInflux(),
                     },
                     invalidateInviteLink: AppActions.invalidateInviteLink,
                     createProject: this.createProject,

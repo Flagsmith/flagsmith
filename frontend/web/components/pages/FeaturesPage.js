@@ -7,6 +7,8 @@ import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
+import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -109,7 +111,7 @@ const FeaturesPage = class extends Component {
         return (
             <div data-test="features-page" id="features-page" className="app-container container">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
+                    {({ projectFlags, environmentFlags }, { toggleFlag, removeFlag }) => {
                         const isLoading = FeatureListStore.isLoading;
                         return (
                             <div className="features-page">
@@ -210,7 +212,7 @@ const FeaturesPage = class extends Component {
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
-                                                                          <div className="mr-2 mb-2">
+                                                                          <div className="mr-2">
                                                                               <Tag
                                                                                 selected={this.state.showArchived}
                                                                                 onClick={() => {
@@ -224,6 +226,12 @@ const FeaturesPage = class extends Component {
                                                                       </TagSelect>
                                                                   </Row>
                                                                 )}
+                                                              renderFooter={()=>(
+                                                                  <>
+                                                                      <JSONReference className="mx-2 mt-4" showNamesButton title={"Features"} json={projectFlags}/>
+                                                                      <JSONReference className="mx-2" title={"Feature States"} json={environmentFlags && Object.values(environmentFlags)}/>
+                                                                  </>
+                                                              )}
                                                               renderRow={(projectFlag, i) => (
                                                                   <FeatureRow
                                                                     environmentFlags={environmentFlags}
@@ -233,7 +241,6 @@ const FeaturesPage = class extends Component {
                                                                     projectId={projectId}
                                                                     index={i} canDelete={permission}
                                                                     toggleFlag={toggleFlag}
-                                                                    editFlag={editFlag}
                                                                     removeFlag={removeFlag}
                                                                     projectFlag={projectFlag}
                                                                   />
@@ -381,4 +388,4 @@ const FeaturesPage = class extends Component {
 
 FeaturesPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(FeaturesPage));
+module.exports = ConfigProvider(FeaturesPage);

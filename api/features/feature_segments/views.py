@@ -9,11 +9,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from audit.models import (
-    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -72,50 +67,18 @@ class FeatureSegmentViewSet(
 
         return FeatureSegmentListSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "update_priorities":
-            # update the serializer kwargs to ensure docs here are correct
-            kwargs = {**kwargs, "many": True, "partial": True}
-        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
-    def perform_destroy(self, instance):
-        # feature state <-> feature segment relationship is incorrectly modelled as a
-        # foreign key instead of one to one, so we need to grab the first feature state
-        feature_state = instance.feature_states.first()
-        message = SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-            instance.feature.name,
-            instance.segment.name,
-        )
-        author = None if self.request.user.is_anonymous else self.request.user
-        master_api_key = (
-            self.request.master_api_key if self.request.user.is_anonymous else None
-        )
-        if feature_state:
-            audit_log_record = AuditLog(
-                related_object_id=feature_state.id,
-                related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                log=message,
-                author=author,
-                project=instance.feature.project,
-                environment=instance.environment,
-                master_api_key=master_api_key,
-            )
-            instance.delete()
-            audit_log_record.save()
-        else:
-            logger.warning(
-                "FeatureSegment %d has no feature state. Deleting without AuditLog.",
-                instance.id,
-            )
-            instance.delete()
-
+    @swagger_auto_schema(
+        methods=["POST"],
+        request_body=FeatureSegmentChangePrioritiesSerializer(many=True),
+        responses={200: FeatureSegmentListSerializer(many=True)},
+    )
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        updated_instances = serializer.save()
+        feature_segments = serializer.save()
         return Response(
-            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
+            FeatureSegmentListSerializer(instance=feature_segments, many=True).data
         )
 
     @action(

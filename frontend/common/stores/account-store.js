@@ -260,7 +260,7 @@ const controller = {
                 }
             }
 
-            if (projectOverrides.delighted) {
+            if (Project.delighted) {
                 delighted.survey({
                     email: store.model.email, // customer email (optional)
                     name: `${store.model.first_name} ${store.model.last_name}`, // customer name (optional)
@@ -356,7 +356,7 @@ const store = Object.assign({}, BaseStore, {
         const organisations = store.getOrganisations();
         const organisation = organisations && organisations.find(v => v.id === id);
         if (organisation) {
-            return !!organisation.subscription;
+            return !!organisation.subscription?.subscription_id;
         }
         return null;
     },

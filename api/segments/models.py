@@ -1,13 +1,20 @@
 import logging
 import typing
+from copy import deepcopy
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
-from core.models import AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
 
+from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
+from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -46,7 +53,13 @@ IS_NOT_SET = "IS_NOT_SET"
 IN = "IN"
 
 
-class Segment(AbstractBaseExportableModel):
+class Segment(
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    history_record_class_path = "segments.models.HistoricalSegment"
+    related_object_type = RelatedObjectType.SEGMENT
+
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
@@ -62,6 +75,37 @@ class Segment(AbstractBaseExportableModel):
     def __str__(self):
         return "Segment - %s" % self.name
 
+    @staticmethod
+    def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:
+        """
+        Given a list of segment rules, return whether any of the rules or conditions contain an id.
+
+        :param rules_data: list of segment rules (in the form {"id": 1, "rules": [], "conditions": [], "typing": ""})
+        :return: boolean value detailing whether any id attributes were found
+        """
+
+        _rules_data = deepcopy(rules_data)
+        for rule_data in _rules_data:
+            if rule_data.get("id"):
+                return True
+
+            conditions_to_check = rule_data.get("conditions", [])
+            rules_to_check = rule_data.get("rules", [])
+
+            while rules_to_check:
+                rule = rules_to_check.pop()
+                if rule.get("id"):
+                    return True
+                rules_to_check.extend(rule.get("rules", []))
+                conditions_to_check.extend(rule.get("conditions", []))
+
+            while conditions_to_check:
+                condition = conditions_to_check.pop()
+                if condition.get("id"):
+                    return True
+
+        return False
+
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
@@ -69,6 +113,15 @@ class Segment(AbstractBaseExportableModel):
         return rules.count() > 0 and all(
             rule.does_identity_match(identity, traits) for rule in rules
         )
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_CREATED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_UPDATED_MESSAGE % self.name
+
+    def _get_project(self):
+        return self.project
 
 
 class SegmentRule(AbstractBaseExportableModel):
@@ -143,7 +196,12 @@ class SegmentRule(AbstractBaseExportableModel):
         return rule.segment
 
 
-class Condition(AbstractBaseExportableModel):
+class Condition(
+    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+):
+    history_record_class_path = "segments.models.HistoricalCondition"
+    related_object_type = RelatedObjectType.SEGMENT
+
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),
         (GREATER_THAN, "Greater than"),
@@ -165,6 +223,11 @@ class Condition(AbstractBaseExportableModel):
     property = models.CharField(blank=True, null=True, max_length=1000)
     value = models.CharField(max_length=1000, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+
+    created_with_segment = models.BooleanField(
+        default=False,
+        help_text="Field to denote whether a condition was created along with segment or added after creation.",
+    )
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
@@ -331,3 +394,28 @@ class Condition(AbstractBaseExportableModel):
             return re.compile(str(self.value)).match(value) is not None
 
         return False
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return f"Condition updated on segment '{self._get_segment().name}'."
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        if not self.created_with_segment:
+            return f"Condition added to segment '{self._get_segment().name}'."
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        if not self._get_segment().deleted_at:
+            return f"Condition removed from segment '{self._get_segment().name}'."
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self._get_segment().id
+
+    def _get_segment(self) -> Segment:
+        """
+        Temporarily cache the segment on the condition object to reduce number of queries.
+        """
+        if not hasattr(self, "segment"):
+            setattr(self, "segment", self.rule.get_segment())
+        return self.segment
+
+    def _get_project(self) -> typing.Optional[Project]:
+        return self.rule.get_segment().project

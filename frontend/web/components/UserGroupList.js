@@ -39,7 +39,7 @@ export default class TheComponent extends PureComponent {
 
 
     render() {
-        // const { props } = this;
+        const isAdmin = AccountStore.isAdmin();
         return (
             <UserGroupsProvider>
                 {({ isLoading, userGroups, userGroupsPaging }) => (
@@ -50,7 +50,7 @@ export default class TheComponent extends PureComponent {
                           className="no-pad"
                           itemHeight={64}
                           icon="ion-md-people"
-                          items={userGroups}
+                          items={_.sortBy(userGroups, 'name')}
                           paging={userGroupsPaging}
                           nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
                           prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}
@@ -82,19 +82,21 @@ export default class TheComponent extends PureComponent {
                                           </div>
                                       </Flex>
 
-                                      {this.props.onEditPermissions && (
+                                      {this.props.onEditPermissions && isAdmin && (
                                       <Button onClick={() => this.props.onEditPermissions(group)} className="btn--link">Edit Permissions</Button>
                                       )}
                                       {this.props.showRemove ? (
                                           <Column>
-                                              <button
-                                                id="remove-group"
-                                                className="btn btn--with-icon"
-                                                type="button"
-                                                onClick={() => this.removeGroup(id, name)}
-                                              >
-                                                  <RemoveIcon />
-                                              </button>
+                                              {isAdmin && (
+                                                  <button
+                                                      id="remove-group"
+                                                      className="btn btn--with-icon"
+                                                      type="button"
+                                                      onClick={() => this.removeGroup(id, name)}
+                                                  >
+                                                      <RemoveIcon />
+                                                  </button>
+                                              )}
                                           </Column>
                                       ) : (
                                           <span onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />

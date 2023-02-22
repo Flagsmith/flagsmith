@@ -156,6 +156,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and invite.organisation.num_seats >= subscription_metadata.seats
+        ):
+            organisation.subscription.add_single_seat()
+
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
     def is_organisation_admin(self, organisation):
@@ -356,7 +364,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if self.is_organisation_admin(organisation):
             return True
 
-        return (
+        return permission_key is not None and (
             UserOrganisationPermission.objects.filter(
                 user=self, organisation=organisation, permissions__key=permission_key
             ).exists()
@@ -419,18 +427,14 @@ class UserPermissionGroup(models.Model):
         unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
-        users_to_add = []
-        for user_id in user_ids:
-            try:
-                user = FFAdminUser.objects.get(
-                    id=user_id, organisations=self.organisation
-                )
-            except FFAdminUser.DoesNotExist:
-                # re-raise exception with useful error message
-                raise FFAdminUser.DoesNotExist(
-                    "User %d does not exist in this organisation" % user_id
-                )
-            users_to_add.append(user)
+        users_to_add = list(
+            FFAdminUser.objects.filter(id__in=user_ids, organisations=self.organisation)
+        )
+        if len(user_ids) != len(users_to_add):
+            missing_ids = set(users_to_add).difference({u.id for u in users_to_add})
+            raise FFAdminUser.DoesNotExist(
+                "Users %s do not exist in this organisation" % ", ".join(missing_ids)
+            )
         self.users.add(*users_to_add)
 
     def remove_users_by_id(self, user_ids: list):

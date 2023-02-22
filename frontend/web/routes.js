@@ -16,6 +16,7 @@ import IntegrationsPage from './components/pages/IntegrationsPage';
 import FlagsPage from './components/pages/FeaturesPage';
 import SegmentsPage from './components/pages/SegmentsPage';
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage';
+import OrganisationGroupsPage from './components/pages/OrganisationGroupsPage';
 import AccountSettingsPage from './components/pages/AccountSettingsPage';
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage';
 import ProjectSettingsPage from './components/pages/ProjectSettingsPage';
@@ -29,6 +30,7 @@ import ChangeRequestPage from './components/pages/ChangeRequestPage';
 import TermsPoliciesPage from './components/pages/TermsPoliciesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
+import WidgetPage from './components/pages/WidgetPage';
 
 export default (
     <App>
@@ -49,6 +51,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/features" exact component={FlagsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
+            <Route path="/widget" exact component={WidgetPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
             <Route path="/invite-link/:id" exact component={InvitePage}/>
             <Route path="/oauth/:type" exact component={HomePage}/>
@@ -65,6 +68,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/segments" exact component={SegmentsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/organisation-settings" exact component={OrganisationSettingsPage}/>
             <Route path="/organisation-settings" exact component={OrganisationSettingsPage}/>
+            <Route path="/organisation-groups" exact component={OrganisationGroupsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/account" exact component={AccountSettingsPage}/>
             <Route path="/account" exact component={AccountSettingsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/audit-log" exact component={AuditLogPage}/>

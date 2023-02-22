@@ -4,7 +4,7 @@ import TabItem from '../base/forms/TabItem';
 import Tabs from '../base/forms/Tabs';
 import CompareEnvironments from '../CompareEnvironments';
 import CompareFeatures from '../CompareFeatures';
-
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class TheComponent extends Component {
     static displayName = 'TheComponent';
@@ -48,4 +48,4 @@ class TheComponent extends Component {
     }
 }
 
-module.exports = hot(module)(ConfigProvider(TheComponent));
+module.exports = ConfigProvider(TheComponent);

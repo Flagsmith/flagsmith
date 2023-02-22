@@ -22,6 +22,8 @@ import ProjectStore from '../../common/stores/project-store';
 import getBuildVersion from '../project/getBuildVersion'
 import { Provider } from "react-redux";
 import { getStore } from "../../common/store";
+import { resolveAuthFlow } from "@datadog/ui-extensions-sdk";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const App = class extends Component {
     static propTypes = {
@@ -78,6 +80,10 @@ const App = class extends Component {
     };
 
     onLogin = () => {
+        resolveAuthFlow({
+            isAuthenticated: true,
+        });
+
         let redirect = API.getRedirect();
         const invite = API.getInvite();
         if (invite) {
@@ -101,7 +107,7 @@ const App = class extends Component {
         }
 
         // Redirect on login
-        if (this.props.location.pathname == '/' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
+        if (this.props.location.pathname == '/' || this.props.location.pathname == '/widget' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
             if (redirect) {
                 API.setRedirect('');
                 this.context.router.history.replace(redirect);
@@ -150,6 +156,9 @@ const App = class extends Component {
     };
 
     onLogout = () => {
+        resolveAuthFlow({
+            isAuthenticated: false,
+        });
         if (document.location.href.includes('saml?')) {
             return;
         }
@@ -211,6 +220,13 @@ const App = class extends Component {
             return <AccountSettingsPage/>;
         }
         const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
+        if (document.location.href.includes("widget")) {
+            return (
+                <div>
+                    {this.props.children}
+                </div>
+            )
+        }
         return (
             <Provider store={getStore()}>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
@@ -313,7 +329,7 @@ const App = class extends Component {
                                                                 <UserSettingsIcon />
                                                                 Account
                                                             </NavLink>
-                                                            {AccountStore.getOrganisationRole() === 'ADMIN' && (
+                                                            {AccountStore.getOrganisationRole() === 'ADMIN' ? (
                                                             <NavLink
                                                               id="org-settings-link"
                                                               activeClassName="active"
@@ -323,6 +339,24 @@ const App = class extends Component {
                                                                 <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
+                                                            ): !!AccountStore.getOrganisation() && (
+                                                                <Permission level="organisation" permission="MANAGE_USER_GROUPS" id={AccountStore.getOrganisation().id}>
+                                                                    {({permission})=>(
+                                                                        <>
+                                                                            {!!permission && (
+                                                                                <NavLink
+                                                                                    id="org-settings-link"
+                                                                                    activeClassName="active"
+                                                                                    className="nav-link"
+                                                                                    to="/organisation-groups"
+                                                                                >
+                                                                                    <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                                                                    {'Manage'}
+                                                                                </NavLink>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </Permission>
                                                             )}
                                                         </nav>
                                                         <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
@@ -368,7 +402,7 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
-                                                                        {!Utils.getFlagsmithHasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
+                                                                        {!Utils.getFlagsmithHasFeature('disable_create_org') && (!Project.superUserCreateOnly || (Project.superUserCreateOnly && AccountStore.model.is_superuser)) && (
                                                                             <div className="pl-3 pr-3 mt-2 mb-2">
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}
@@ -424,7 +458,6 @@ const App = class extends Component {
                         </div>
                     ))}
                 </AccountProvider>
-
             </Provider>
         );
     }

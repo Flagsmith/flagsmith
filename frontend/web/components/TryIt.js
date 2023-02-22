@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Highlight from './Highlight';
 import PlayIcon from './svg/PlayIcon';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const TryIt = class extends Component {
     static displayName = 'TryIt'
@@ -15,7 +16,7 @@ const TryIt = class extends Component {
         this.setState({ isLoading: true });
         API.trackEvent(Constants.events.TRY_IT);
 
-        const url = userId ? `${Utils.getSDKEndpoint()}identities/?identifier=${userId}` : `${Utils.getSDKEndpoint()}flags/`;
+        const url = userId ? `${Utils.getSDKEndpoint()}identities/?identifier=${encodeURIComponent(userId)}` : `${Utils.getSDKEndpoint()}flags/`;
         const options = {
             headers: { 'X-Environment-Key': environmentId },
         };

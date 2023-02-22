@@ -63,10 +63,7 @@ class OrganisationList(ListView):
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
-            if filter_plan == "free":
-                queryset = queryset.filter(subscription__isnull=True)
-            else:
-                queryset = queryset.filter(subscription__plan__icontains=filter_plan)
+            queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         sort_field = self.request.GET.get("sort_field") or DEFAULT_ORGANISATION_SORT
         sort_direction = (
@@ -84,7 +81,7 @@ class OrganisationList(ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        data["search"] = self.request.GET.get("search")
+        data["search"] = self.request.GET.get("search", "")
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
@@ -137,7 +134,12 @@ def organisation_info(request, organisation_id):
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
-        event_list, labels = get_event_list_for_organisation(organisation_id)
+        date_range = request.GET.get("date_range", "30d")
+        context["date_range"] = date_range
+
+        event_list, labels = get_event_list_for_organisation(
+            organisation_id, date_range
+        )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
         context["identities"] = mark_safe(json.dumps(event_list["identities"]))

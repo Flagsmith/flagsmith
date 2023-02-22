@@ -3,10 +3,32 @@ const semver = require('semver');
 const ProjectStore = require('../../common/stores/project-store');
 
 let flagsmithBetaFeatures = null;
+const planNames = {
+    free: 'Free',
+    scaleUp: 'Scale-Up',
+    sideProject: 'Side Project',
+    startup:  'Startup',
+    enterprise:  'Enterprise'
+}
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    },
+
+    loadScriptPromise(url) {
+        return new Promise((resolve, reject) => {
+            const cb = function () {
+                this.removeEventListener('load', cb);
+                resolve(null);
+            };
+            const head = document.getElementsByTagName('head')[0];
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.addEventListener('load', cb);
+            script.src = url;
+            head.appendChild(script);
+        });
     },
 
     changeRequestsEnabled(value) {
@@ -25,7 +47,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'VIEW_ENVIRONMENT';
     },
-    getManageFeaturePermission(isChangeRequest) {
+    getViewIdentitiesPermission() {
+        if (Utils.getFlagsmithHasFeature('view_identities_permission')) {
+            return 'VIEW_IDENTITIES';
+        }
+        return 'MANAGE_IDENTITIES';
+    },
+    getManageFeaturePermission(isChangeRequest, isUser) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'CREATE_CHANGE_REQUEST';
         }
@@ -34,7 +62,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'ADMIN';
     },
-    getManageFeaturePermissionDescription(isChangeRequest) {
+    getManageFeaturePermissionDescription(isChangeRequest, user) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Create Change Request';
         }
@@ -43,11 +71,17 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'Admin';
     },
-    getTraitEndpointMethod() {
+    getManageUserPermission() {
+        return 'MANAGE_IDENTITIES';
+    },
+    getManageUserPermissionDescription() {
+        return 'Manage Identities';
+    },
+    getTraitEndpointMethod(id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
-        return 'post';
+        return id ? 'put' : 'post';
     },
     getIsEdge() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -69,11 +103,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
-    getUpdateTraitEndpoint(environmentId, userId) {
+    getUpdateTraitEndpoint(environmentId, userId, id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
-        return `${Project.api}traits/`;
+        return `${Project.api}environments/${environmentId}/identities/${userId}/traits/${id ? `${id}/` : ''}`;
     },
     getTraitEndpoint(environmentId, userId) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -259,8 +293,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
+        if (typeof featureState.integer_value === 'number') {
+            return Utils.getTypedValue(featureState.integer_value);
+        } if (typeof featureState.float_value === 'number') {
+            return Utils.getTypedValue(featureState.float_value);
+        }
 
-        return Utils.getTypedValue(typeof featureState.integer_value === 'number' ? featureState.integer_value : featureState.string_value || featureState.boolean_value);
+        return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -285,6 +324,34 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         return {
             type: 'unicode',
+            boolean_value: null,
+            integer_value: null,
+            string_value: value === null ? null : val || '',
+        };
+    },
+    valueToTrait(value) {
+        const val = Utils.getTypedValue(value);
+
+        if (typeof val === 'boolean') {
+            return {
+                value_type: 'bool',
+                boolean_value: val,
+                integer_value: null,
+                string_value: null,
+            };
+        }
+
+        if (typeof val === 'number') {
+            return {
+                value_type: 'int',
+                boolean_value: null,
+                integer_value: val,
+                string_value: null,
+            };
+        }
+
+        return {
+            value_type: 'unicode',
             boolean_value: null,
             integer_value: null,
             string_value: value === null ? null : val || '',
@@ -344,6 +411,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
         const isNum = /^\d+$/.test(str);
+
         if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
             return `${str}`;
         }
@@ -408,20 +476,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
     getPlanPermission: (plan, permission) => {
         let valid = true;
+        const planName = Utils.getPlanName(plan)
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
-        if (!plan) {
+        if (!plan || planName === planNames.free) {
             return false;
         }
         const date = AccountStore.getDate();
         const cutOff = moment('03-11-20', 'DD-MM-YY');
-        if (date && moment(date)
-            .valueOf() < cutOff.valueOf()) {
-            return true;
-        }
-        const isSideProjectOrGreater = !plan.includes('side-project');
-        const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
+        // if (date && moment(date)
+        //     .valueOf() < cutOff.valueOf()) {
+        //     return true;
+        // }
+        const isSideProjectOrGreater = planName !== planNames.sideProject;
+        const isScaleupOrGreater = isSideProjectOrGreater && planName!== planNames.startup;
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = isScaleupOrGreater;
@@ -441,6 +510,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             }
             case 'AUDIT': {
                 valid = isScaleupOrGreater;
+                break;
+            }
+            case 'AUTO_SEATS': {
+                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats');
                 break;
             }
             case 'FORCE_2FA': {
@@ -463,26 +536,18 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getPlanName: (plan) => {
-        switch (plan) {
-            case 'side-project':
-            case 'side-project-annual':
-                return 'Side Project';
-            case 'startup':
-            case 'startup-annual':
-            case 'startup-v2':
-            case 'startup-annual-v2':
-                return 'Startup';
-            case 'scale-up':
-            case 'scale-up-annual':
-            case 'scale-up-v2':
-            case 'scale-up-annual-v2':
-            case 'scale-up-12-months-v2':
-                return 'Scale-Up';
-            case 'enterprise':
-            case 'enterprise-annual':
-                return 'Enterprise';
-            default:
-                return 'Free';
+        if (plan && plan.includes("scale-up")) {
+            return planNames.scaleUp;
         }
+        if (plan && plan.includes("side-project")) {
+            return planNames.sideProject;
+        }
+        if (plan && plan.includes("startup")) {
+            return planNames.startup;
+        }
+        if (plan && plan.includes("enterprise")) {
+            return planNames.enterprise;
+        }
+        return planNames.free
     },
 });

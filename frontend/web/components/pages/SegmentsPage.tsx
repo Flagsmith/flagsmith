@@ -9,8 +9,9 @@ import {find, sortBy} from 'lodash'
 import useThrottle from "../../../common/useThrottle";
 import Button, {ButtonLink} from "../base/forms/Button";
 import {RouterChildContext} from "react-router";
-
-const Utils = require('common/utils/utils')
+import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Utils from 'common/utils/utils'
 const Permission = require('common/providers/Permission')
 const PanelSearch = require("../../components/PanelSearch")
 const Panel = require("../../components/base/grid/Panel")
@@ -195,6 +196,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                             id="segment-list"
                                                             icon="ion-ios-globe"
                                                             title="Segments"
+                                                            renderFooter={()=><JSONReference className="mx-2 mt-4" title={"Segments"} json={segments}/>}
                                                             items={sortBy(segments, (v)=> {
                                                                 return `${v.feature?'z':'a'}${v.name}`
                                                             })}

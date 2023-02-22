@@ -362,15 +362,19 @@ class OrganisationTestCase(TestCase):
 
         influx_org = settings.INFLUXDB_ORG
         read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
-        query = (
-            f'from(bucket:"{read_bucket}") '
-            f"|> range(start: -30d, stop: now()) "
-            f'|> filter(fn:(r) => r._measurement == "api_call")         '
-            f'|> filter(fn: (r) => r["_field"] == "request_count")         '
-            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id", '
-            f'"environment", "environment_id"])'
-            f"|> sum()"
+        expected_query = (
+            (
+                f'from(bucket:"{read_bucket}") '
+                f"|> range(start: -30d, stop: now()) "
+                f'|> filter(fn:(r) => r._measurement == "api_call")         '
+                f'|> filter(fn: (r) => r["_field"] == "request_count")         '
+                f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
+                f'|> drop(columns: ["organisation", "project", "project_id", '
+                f'"environment", "environment_id"])'
+                f"|> sum()"
+            )
+            .replace(" ", "")
+            .replace("\n", "")
         )
 
         # When
@@ -378,9 +382,11 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(
-            org=influx_org, query=query
-        )
+        mock_influxdb_client.query_api.return_value.query.assert_called_once()
+
+        call = mock_influxdb_client.query_api.return_value.query.mock_calls[0]
+        assert call[2]["org"] == influx_org
+        assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
     @override_settings(ENABLE_CHARGEBEE=True)
     @mock.patch("organisations.serializers.get_subscription_data_from_hosted_page")
@@ -464,9 +470,9 @@ class OrganisationTestCase(TestCase):
         organisation = Organisation.objects.create(name="Test organisation")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
-        subscription = Subscription.objects.create(
-            subscription_id="sub-id", organisation=organisation
-        )
+        subscription = Subscription.objects.get(organisation=organisation)
+        subscription.subscription_id = "sub-id"
+        subscription.save()
 
         url = reverse(
             "api-v1:organisations:organisation-get-hosted-page-url-for-subscription-upgrade",
@@ -499,7 +505,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 1
+        assert len(response.json()) == 2
 
     def test_get_my_permissions_for_non_admin(self):
         # Given
@@ -561,12 +567,14 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription_id = "subscription-id"
         self.old_plan_id = "old-plan-id"
         self.old_max_seats = 1
-        self.subscription = Subscription.objects.create(
+
+        Subscription.objects.filter(organisation=self.organisation).update(
             organisation=self.organisation,
             subscription_id=self.subscription_id,
             plan=self.old_plan_id,
             max_seats=self.old_max_seats,
         )
+        self.subscription = Subscription.objects.get(organisation=self.organisation)
 
     @mock.patch("organisations.models.get_plan_meta_data")
     def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
@@ -901,3 +909,36 @@ def test_can_invite_user_with_permission_groups(
     # and
     invite = Invite.objects.get(email=invited_email)
     assert user_permission_group in invite.permission_groups.all()
+
+
+@pytest.mark.parametrize(
+    "query_string, expected_filter_args",
+    (
+        ("", {}),
+        ("project_id=1", {"project_id": 1}),
+        ("project_id=1&environment_id=1", {"project_id": 1, "environment_id": 1}),
+        ("environment_id=1", {"environment_id": 1}),
+    ),
+)
+def test_organisation_get_influx_data(
+    mocker, admin_client, organisation, query_string, expected_filter_args
+):
+    # Given
+    base_url = reverse(
+        "api-v1:organisations:organisation-get-influx-data", args=[organisation.id]
+    )
+    url = f"{base_url}?{query_string}"
+    mock_get_multiple_event_list_for_organisation = mocker.patch(
+        "organisations.views.get_multiple_event_list_for_organisation"
+    )
+    mock_get_multiple_event_list_for_organisation.return_value = []
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_multiple_event_list_for_organisation.assert_called_once_with(
+        str(organisation.id), **expected_filter_args
+    )
+    assert response.json() == {"events_list": []}

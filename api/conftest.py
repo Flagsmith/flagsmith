@@ -10,6 +10,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
@@ -23,6 +24,7 @@ from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -77,27 +79,34 @@ def user_permission_group(organisation, admin_user):
 
 @pytest.fixture()
 def subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation, subscription_id="subscription_id", plan="test-plan"
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def xero_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="subscription_id",
-        payment_method=XERO,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = XERO
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def chargebee_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="cb-subscription",
-        payment_method=CHARGEBEE,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = CHARGEBEE
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
@@ -113,6 +122,11 @@ def tag(project):
 @pytest.fixture()
 def segment(project):
     return Segment.objects.create(name="segment", project=project)
+
+
+@pytest.fixture()
+def segment_rule(segment):
+    return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
 
 
 @pytest.fixture()
@@ -237,8 +251,10 @@ def environment_api_key(environment):
 
 @pytest.fixture()
 def master_api_key(organisation):
-    _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
-    return key
+    master_api_key, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation
+    )
+    return master_api_key, key
 
 
 @pytest.fixture()
@@ -246,7 +262,7 @@ def master_api_key_client(master_api_key):
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
     return api_client
 
 
@@ -258,6 +274,11 @@ def view_environment_permission():
 @pytest.fixture()
 def manage_identities_permission():
     return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
+
+
+@pytest.fixture()
+def view_identities_permission():
+    return PermissionModel.objects.get(key=VIEW_IDENTITIES)
 
 
 @pytest.fixture()
@@ -275,3 +296,8 @@ def user_environment_permission(test_user, environment):
 @pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
+
+
+@pytest.fixture(autouse=True)
+def task_processor_synchronously(settings):
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY

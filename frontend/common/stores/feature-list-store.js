@@ -1,6 +1,7 @@
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
+const { getIsWidget } = require('../../web/components/pages/WidgetPage');
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -23,8 +24,8 @@ function recursivePageGet(url, parentRes) {
 }
 const controller = {
 
-    getFeatures: (projectId, environmentId, force, page, filter) => {
-        if (!store.model || store.envId !== environmentId || force) { // todo: change logic a bit
+    getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
+        if (!store.model || store.envId !== environmentId || force) {
             store.loading();
             store.envId = environmentId;
             store.projectId = projectId;
@@ -37,7 +38,7 @@ const controller = {
                 filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
-            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}${filterUrl}`;
+            let featuresEndpoint = typeof page === 'string' ? page : `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`;
             if (store.search) {
                 featuresEndpoint += `&search=${store.search}`;
             }
@@ -74,7 +75,9 @@ const controller = {
                 };
                 store.loaded();
             }).catch((e) => {
-                document.location.href = '/404?entity=environment';
+                if (!getIsWidget()) {
+                    document.location.href = '/404?entity=environment';
+                }
                 API.ajaxHandler(store, e);
             });
         }
@@ -120,7 +123,38 @@ const controller = {
             })),
         };
     },
-    editFlag(projectId, flag, onComplete) {
+    editFeature(projectId, flag, onComplete) {
+        if (flag.skipSaveProjectFeature) { // users without CREATE_FEATURE permissions automatically hit this action, if that's the case we skip the following API calls
+            onComplete({
+                ...flag,
+                skipSaveProjectFeature: undefined,
+            });
+            return;
+        }
+
+        data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, flag)
+            .then((res) => {
+                // onComplete calls back preserving the order of multivariate_options with their updated ids
+                if (onComplete) {
+                    onComplete(res);
+                }
+                if (store.model) {
+                    const index = _.findIndex(store.model.features, { id: flag.id });
+                    store.model.features[index] = controller.parseFlag(flag);
+                    store.model.lastSaved = new Date().valueOf();
+                    store.changed();
+                }
+            })
+            .catch((e) => {
+                // onComplete calls back preserving the order of multivariate_options with their updated ids
+                if (onComplete) {
+                    onComplete(flag);
+                } else {
+                    API.ajaxHandler(store, e);
+                }
+            });
+    },
+    editFeatureMv(projectId, flag, onComplete) {
         if (flag.skipSaveProjectFeature) { // users without CREATE_FEATURE permissions automatically hit this action, if that's the case we skip the following API calls
             onComplete({
                 ...flag,
@@ -132,15 +166,13 @@ const controller = {
 
         Promise.all((flag.multivariate_options || []).map((v, i) => {
             const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
-            return (originalMV ? data.put(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${originalMV.id}/`, {
+            const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`;
+            const mvData = {
                 ...v,
                 feature: flag.id,
                 default_percentage_allocation: 0,
-            }) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
-                ...v,
-                feature: flag.id,
-                default_percentage_allocation: 0,
-            })).then((res) => {
+            };
+            return (originalMV ? data.put(`${url}${originalMV.id}/`, mvData) : data.post(url, mvData)).then((res) => {
                 // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
                 flag.multivariate_options[i] = res;
                 return {
@@ -151,41 +183,11 @@ const controller = {
         })).then(() => {
             const deletedMv = originalFlag.multivariate_options.filter(v => !flag.multivariate_options.find(x => v.id === x.id));
             return Promise.all(deletedMv.map(v => data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`)));
-        })
-            .then(() => data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
-                ...flag,
-                multivariate_options: undefined,
-                type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
-                project: projectId,
-            })
-                .then((res) => {
-                    // onComplete calls back preserving the order of multivariate_options with their updated ids
-                    if (onComplete) {
-                        onComplete({
-                            ...res,
-                            // return multivariate_options in the same order they were originally in the action
-                            multivariate_options: flag.multivariate_options,
-                        });
-                    }
-                    if (store.model) {
-                        const index = _.findIndex(store.model.features, { id: flag.id });
-                        store.model.features[index] = controller.parseFlag(flag);
-                        store.model.lastSaved = new Date().valueOf();
-                        store.changed();
-                    }
-                })
-                .catch((e) => {
-                    // onComplete calls back preserving the order of multivariate_options with their updated ids
-                    if (onComplete) {
-                        onComplete({
-                            ...flag,
-                            type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
-                            project: projectId,
-                        });
-                    } else {
-                        API.ajaxHandler(store, e);
-                    }
-                }));
+        }).then(() => {
+            if (onComplete) {
+                onComplete(flag);
+            }
+        });
     },
     getInfluxDate(projectId, environmentId, flag, period) {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
@@ -308,10 +310,13 @@ const controller = {
             }
 
             const segmentOverridesRequest = mode === 'SEGMENT' && segmentOverrides
-                ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
-                    id: override.id,
-                    priority: index,
-                }))).then(() => Promise.all(segmentOverrides.map(override => data.put(`${Project.api}features/featurestates/${override.feature_segment_value.id}/`, {
+                ? (
+                    segmentOverrides.length
+                        ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
+                            id: override.id,
+                            priority: index,
+                        }))) : Promise.resolve([])
+                ).then(() => Promise.all(segmentOverrides.map(override => data.put(`${Project.api}features/featurestates/${override.feature_segment_value.id}/`, {
                     ...override.feature_segment_value,
                     multivariate_feature_state_values: override.multivariate_options && override.multivariate_options.map((o) => {
                         if (o.multivariate_feature_option) return o;
@@ -423,9 +428,9 @@ const controller = {
                 store.saved();
             });
     },
-    searchFeatures: _.throttle((search, environmentId, projectId, filter) => {
+    searchFeatures: _.throttle((search, environmentId, projectId, filter, pageSize) => {
         store.search = search;
-        controller.getFeatures(projectId, environmentId, true, 0, filter);
+        controller.getFeatures(projectId, environmentId, true, 0, filter, pageSize);
     }, 1000),
 };
 
@@ -460,14 +465,14 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
     switch (action.actionType) {
         case Actions.SEARCH_FLAGS:
-            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter);
+            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter, action.pageSize);
             break;
         case Actions.GET_FLAGS:
             store.search = action.search || '';
             if (action.sort) {
                 store.sort = action.sort;
             }
-            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter);
+            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter, action.pageSize);
             break;
         case Actions.REFRESH_FEATURES:
             if (action.projectId === store.projectId && action.environmentId === store.environmentId) {
@@ -489,8 +494,11 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
             controller.editFeatureStateChangeRequest(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.changeRequest, action.commit);
             break;
-        case Actions.EDIT_FLAG:
-            controller.editFlag(action.projectId, action.flag, action.onComplete);
+        case Actions.EDIT_FEATURE:
+            controller.editFeature(action.projectId, action.flag, action.onComplete);
+            break;
+        case Actions.EDIT_FEATURE_MV:
+            controller.editFeatureMv(action.projectId, action.flag, action.onComplete);
             break;
         case Actions.REMOVE_FLAG:
             controller.removeFlag(action.projectId, action.flag);
@@ -499,4 +507,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     }
 });
 controller.store = store;
-module.exports = controller.store;
+export default controller.store;

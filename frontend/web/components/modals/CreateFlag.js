@@ -1,22 +1,24 @@
 import React, { Component } from 'react';
+import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import _data from 'common/data/base/_data';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import FeatureListStore from 'common/stores/feature-list-store';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
-import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
-import data from '../../../common/data/base/_data';
-import ProjectStore from '../../../common/stores/project-store';
-import _data from '../../../common/data/base/_data';
 import SegmentOverrides from '../SegmentOverrides';
 import AddEditTags from '../AddEditTags';
-import Constants from '../../../common/constants';
+import Constants from 'common/constants';
 import FlagOwners from '../FlagOwners';
-import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
-import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
+import InfoMessage from "../InfoMessage";
+import JSONReference from "../JSONReference";
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -65,7 +67,7 @@ const CreateFlag = class extends Component {
                         const matchingVariation = (this.props.multivariate_options || this.props.environmentVariations).find(e => e.multivariate_feature_option === v.id);
                         return {
                             ...v,
-                            default_percentage_allocation: matchingVariation && matchingVariation.percentage_allocation || 0,
+                            default_percentage_allocation: v.default_percentage_allocation || (matchingVariation && matchingVariation.percentage_allocation) || 0,
                         };
                     }),
                 });
@@ -96,7 +98,7 @@ const CreateFlag = class extends Component {
             }, 500);
         }
         AppActions.getIdentities(this.props.environmentId, 3);
-        if (!projectOverrides.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
+        if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
             this.getInfluxData();
         }
     };
@@ -355,11 +357,22 @@ const CreateFlag = class extends Component {
         const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
         const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
+        const project = ProjectStore.model;
+        const caseSensitive = Utils.getFlagsmithHasFeature("case_sensitive_flags") && project?.only_allow_lower_case_feature_names;
+        const regex = project?.feature_name_regex;
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
         const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
         const noPermissions = this.props.noPermissions;
+        let regexValid = true;
+        try {
+            if(!isEdit && name && regex) {
+                regexValid = name.match(new RegExp(regex))
+            }
+        } catch (e) {
+            regexValid = false;
+        }
         const Settings = (projectAdmin, createFeature) => (
             <>
                 {!identity && this.state.tags && (
@@ -395,7 +408,6 @@ const CreateFlag = class extends Component {
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e), settingsChanged: true })}
-                      isValid={name && name.length}
                       ds
                       type="text" title={identity ? 'Description' : 'Description (optional)'}
                       placeholder="e.g. 'This determines what size the header is' "
@@ -409,7 +421,6 @@ const CreateFlag = class extends Component {
                               <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived, settingsChanged: true })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                          isValid={name && name.length}
                           type="text"
                           title="Archived"
                           tooltip="Archiving a flag allows you to filter out flags from the Flagsmith dashboard that are no longer relevant.<br/>An archived flag will still return as normal in all SDK endpoints."
@@ -439,6 +450,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
+
         const Value = (projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
@@ -453,9 +465,15 @@ const CreateFlag = class extends Component {
                               maxLength: FEATURE_ID_MAXLENGTH,
                           }}
                           value={name}
-                          onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                          isValid={name && name.length}
-                          type="text" title={isEdit ? 'ID' : 'ID*'}
+                          onChange={e => {
+                              const newName = Utils.safeParseEventValue(e).replace(/ /g, '_');
+                              this.setState({ name: caseSensitive?newName.toLowerCase() : newName })
+                          }}
+                          isValid={!!name && regexValid}
+                          type="text" title={<>
+                            {isEdit ? 'ID' : 'ID*'}
+                            {!!regex && !isEdit && <div className="mt-2"> <InfoMessage> This must conform to the regular expression <code>{regex}</code></InfoMessage></div>}
+                        </>}
                           placeholder="E.g. header_size"
                         />
                     </FormGroup>
@@ -473,7 +491,6 @@ const CreateFlag = class extends Component {
                               valueChanged: true,
                           }}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                          isValid={name && name.length}
                           type="text" title={identity ? 'Description' : 'Description (optional)'}
                           placeholder="No description"
                         />
@@ -523,7 +540,7 @@ const CreateFlag = class extends Component {
                         AppActions.refreshFeatures(this.props.projectId, this.props.environmentId);
                     }}
                     >
-                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
+                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFeatureSettings, editFeatureValue, editFeatureSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 this.setState({ valueChanged: false });
                                 if ((is4Eyes || schedule) && !identity) {
@@ -558,22 +575,22 @@ const CreateFlag = class extends Component {
                                     />);
                                 } else if (document.getElementById('language-validation-error')) {
                                     openConfirm('Validation error', 'Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?', () => {
-                                        this.save(editFlagValue, isSaving);
+                                        this.save(editFeatureValue, isSaving);
                                     }, null, 'Save', 'Cancel');
                                 } else {
-                                    this.save(editFlagValue, isSaving);
+                                    this.save(editFeatureValue, isSaving);
                                 }
                             };
 
                             const saveSettings = () => {
                                 this.setState({ settingsChanged: false });
-                                this.save(editFlagSettings, isSaving);
+                                this.save(editFeatureSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
                                 this.setState({ segmentsChanged: false });
 
-                                this.save(editFlagSegments, isSaving);
+                                this.save(editFeatureSegments, isSaving);
                             };
 
                             const onCreateFeature = () => {
@@ -614,6 +631,14 @@ const CreateFlag = class extends Component {
                                                                         )}
                                                                         >
                                                                             {Value(projectAdmin, createFeature)}
+
+                                                                            {isEdit && (
+                                                                                <>
+                                                                                    <JSONReference showNamesButton title={"Feature"} json={projectFlag}/>
+                                                                                    <JSONReference title={"Feature state"} json={this.props.environmentFlag}/>
+                                                                                </>
+                                                                            )}
+
                                                                         </Panel>
                                                                         <p className="text-right mt-4">
                                                                             {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
@@ -626,9 +651,9 @@ const CreateFlag = class extends Component {
                                                                         </p>
 
 
-                                                                        <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+                                                                        <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
-                                                                                Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes, identity)), (
                                                                                     <div className="text-right">
                                                                                         {!is4Eyes && (
                                                                                                 <>
@@ -658,6 +683,7 @@ const CreateFlag = class extends Component {
                                                                                                 </>
 
                                                                                         )}
+
                                                                                         {is4Eyes ? (
                                                                                             <Button
                                                                                               onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
@@ -692,7 +718,7 @@ const CreateFlag = class extends Component {
                                                                     >
                                                                         {!identity && isEdit && (
                                                                             <FormGroup className="mb-4 mr-3 ml-3">
-                                                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                                                <Permission level="environment" permission={Utils.getManageFeaturePermission(false, identity)} id={this.props.environmentId}>
                                                                                     {({ permission: environmentAdmin }) => ((
                                                                                         <div>
                                                                                             <Panel
@@ -747,9 +773,9 @@ const CreateFlag = class extends Component {
                                                                                                             }
                                                                                                         </strong>
                                                                                                     </p>
-                                                                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+                                                                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                                                         {({ permission: savePermission }) => (
-                                                                                                            Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                                            Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes, identity)), (
                                                                                                                 <div className="text-right">
                                                                                                                     <Button
                                                                                                                       onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
@@ -906,7 +932,7 @@ const CreateFlag = class extends Component {
                                                                         </TabItem>
                                                                     )
                                                                 }
-                                                                { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                { !existingChangeRequest && !Project.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel
@@ -931,6 +957,8 @@ const CreateFlag = class extends Component {
                                                                     )}
                                                                     >
                                                                         {Settings(projectAdmin, createFeature)}
+                                                                        <JSONReference className="mx-4" showNamesButton title={"Feature"} json={projectFlag}/>
+
                                                                         {isEdit && (
                                                                             <div className="text-right mr-3">
                                                                                 {createFeature ? (
@@ -974,7 +1002,7 @@ const CreateFlag = class extends Component {
 
                                                                         <Button
                                                                           onClick={onCreateFeature} data-test="create-feature-btn" id="create-feature-btn"
-                                                                          disabled={isSaving || !name || invalid}
+                                                                          disabled={isSaving || !name || invalid || !regexValid}
                                                                         >
                                                                             {isSaving ? 'Creating' : 'Create Feature'}
                                                                         </Button>
@@ -1028,7 +1056,6 @@ const CreateFlag = class extends Component {
                                 </Permission>
                             );
                         }}
-
                     </Provider>
                 )}
             </ProjectProvider>

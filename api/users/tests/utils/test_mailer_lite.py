@@ -2,7 +2,6 @@ import json
 
 import pytest
 
-from organisations.models import Organisation, Subscription
 from users.models import FFAdminUser
 from users.utils.mailer_lite import (
     BatchSubscribe,
@@ -93,14 +92,14 @@ def test_batch_subscribe__subscribe_populates_batch_correctly(mocker):
 
 
 @pytest.mark.django_db
-def test_get_request_body_from_user_with_paid_organisations(mocker):
+def test_get_request_body_from_user_with_paid_organisations(
+    organisation, chargebee_subscription
+):
     # Given
     user = FFAdminUser.objects.create(
         email="test_user1", first_name="test", last_name="test"
     )
 
-    organisation = Organisation.objects.create(name="Test org")
-    Subscription.objects.create(organisation=organisation)
     user.add_organisation(organisation)
 
     # When
@@ -115,7 +114,6 @@ def test_get_request_body_from_user_with_paid_organisations(mocker):
 
 
 def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings):
-
     # Given
     mock_session = mocker.MagicMock()
     mocked_headers = mocker.patch(

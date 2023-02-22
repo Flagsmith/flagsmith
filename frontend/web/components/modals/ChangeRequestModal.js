@@ -40,7 +40,7 @@ const ChangeRequestModal = class extends Component {
         const { title, description } = this.state;
         return (
             <OrganisationProvider>
-                {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => {
+                {({ users }) => {
                     const ownerUsers = this.getApprovals(users, this.state.approvals || []);
                     return (
                         <div>

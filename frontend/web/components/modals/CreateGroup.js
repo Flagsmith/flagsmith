@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
+import UserGroupsProvider from 'common/providers/UserGroupsProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import Switch from '../Switch';
-import UserGroupsProvider from '../../../common/providers/UserGroupsProvider';
-
 const CreateGroup = class extends Component {
     static displayName = 'CreateGroup'
 
@@ -72,6 +72,8 @@ const CreateGroup = class extends Component {
     render() {
         const { name, external_id } = this.state;
         const isEdit = !!this.props.group;
+        const isAdmin = AccountStore.isAdmin();
+        const yourEmail = AccountStore.model.email;
         return (
 
             <OrganisationProvider>
@@ -116,7 +118,7 @@ const CreateGroup = class extends Component {
                                     />
 
                                     <InputGroup
-                                      title="Add users by default"
+                                      title="Add new users by default"
                                       tooltipPlace="top"
                                       tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
                                       ref={e => this.input = e}
@@ -135,7 +137,7 @@ const CreateGroup = class extends Component {
                                       id="org-members-list"
                                       title="Members"
                                       className="mt-5 no-pad"
-                                      items={users}
+                                      items={_.sortBy(users, "first_name")}
                                       filterRow={(item, search) => {
                                           const strToSearch = `${item.first_name} ${item.last_name} ${item.id}`;
                                           return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
@@ -150,7 +152,7 @@ const CreateGroup = class extends Component {
                                                       {email}
                                                   </div>
                                               </div>
-                                              <Switch onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
+                                                  <Switch disabled={!(isAdmin || email !== yourEmail)} onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
                                           </Row>
                                       )}
                                     />

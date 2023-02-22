@@ -32,14 +32,7 @@ const controller = {
                     // projects = projects.results;
                     store.model = { ...store.model, subscriptionMeta, users, invites: invites && invites.results };
 
-                    if (AccountStore.getOrganisationRole(id) === 'ADMIN' && !E2E && Utils.getFlagsmithHasFeature('usage_chart')) {
-                        data.get(`${Project.api}organisations/${id}/usage/`).then((usage) => {
-                            store.model.usage = usage && usage.events;
-                            store.loaded();
-                        }).catch(() => {
-                        });
-                    }
-                    if (projectOverrides.hideInviteLinks) {
+                    if (Project.hideInviteLinks) {
                         store.loaded();
                     } else {
                         data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
@@ -208,22 +201,6 @@ const controller = {
                 toast(`Failed to update this user's role. ${e && e.error ? e.error : 'Please try again later'}`);
             });
     },
-    getInfluxData: (id) => {
-        data.get(`${Project.api}organisations/${id}/influx-data/`)
-            .then((resp) => {
-                API.trackEvent(Constants.events.GET_INFLUX_DATA);
-                if (!store.model) {
-                    store.model = {};
-                }
-                store.model.influx_data = resp;
-                store.saved();
-            })
-            .catch((e) => {
-                // eslint-disable-next-line
-                console.error('Failed to get influx data', e);
-            });
-    },
-
 
 };
 
@@ -232,9 +209,6 @@ const store = Object.assign({}, BaseStore, {
     id: 'account',
     getProject(id) {
         return store.model && store.model.keyedProjects && store.model.keyedProjects[id];
-    },
-    getUsage() {
-        return store.model && store.model.usage;
     },
     getSubscriptionMeta() {
         return store.model && store.model.subscriptionMeta;
@@ -245,9 +219,6 @@ const store = Object.assign({}, BaseStore, {
 
     getUsers: () => store.model && store.model.users,
     getInvites: () => store.model && store.model.invites,
-    getInflux() {
-        return store.model && store.model.influx_data;
-    },
     getInviteLinks() {
         return store.model && store.model.inviteLinks;
     },
@@ -281,9 +252,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             break;
         case Actions.UPDATE_USER_ROLE:
             controller.updateUserRole(action.id, action.role);
-            break;
-        case Actions.GET_INFLUX_DATA:
-            controller.getInfluxData(action.id);
             break;
         case Actions.INVALIDATE_INVITE_LINK:
             controller.invalidateInviteLink(action.link);

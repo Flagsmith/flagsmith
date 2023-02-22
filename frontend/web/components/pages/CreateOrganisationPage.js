@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router';
-import ConfigProvider from '../../../common/providers/ConfigProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class CreateOrganisationPage extends Component {
     static displayName = 'CreateOrganisastionPage'
@@ -35,7 +34,7 @@ class CreateOrganisationPage extends Component {
     };
 
     render() {
-        if (projectOverrides.superUserCreateOnly && !AccountStore.model.is_superuser) {
+        if (Project.superUserCreateOnly && !AccountStore.model.is_superuser) {
             return (
                 <div className="text-center alert">
                     Your Flagsmith instance is setup to only allow super users to create an organisation, please contact your administrator.
@@ -63,8 +62,8 @@ class CreateOrganisationPage extends Component {
                     {({ isSaving }, { selectOrganisation, createOrganisation }) => (
                         <form onSubmit={(e) => {
                             e.preventDefault();
-                            if (projectOverrides.capterraKey) {
-                                const parts = projectOverrides.capterraKey.split(',');
+                            if (Project.capterraKey) {
+                                const parts = Project.capterraKey.split(',');
                                 Utils.appendImage(`https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`);
                             }
                             createOrganisation(this.state.name);

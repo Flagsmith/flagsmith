@@ -1,6 +1,7 @@
 from core.models import AbstractBaseExportableModelManager
+from softdelete.models import SoftDeleteManager
 
 
-class ProjectManager(AbstractBaseExportableModelManager):
-    def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs).select_related("organisation")
+class ProjectManager(SoftDeleteManager, AbstractBaseExportableModelManager):
+    def get_queryset(self):
+        return super().get_queryset().select_related("organisation")

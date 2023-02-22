@@ -1,9 +1,8 @@
 require('dotenv').config();
-
+const fs = require('fs');
 const exphbs = require('express-handlebars');
 const express = require('express');
 const bodyParser = require('body-parser');
-const xFrameOptions = require('x-frame-options');
 const spm = require('./middleware/single-page-middleware');
 
 const app = express();
@@ -15,9 +14,6 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
-const fs = require('fs');
-
-app.use(xFrameOptions());
 
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
@@ -59,6 +55,7 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
         { name: 'heap', value: process.env.HEAP_API_KEY },
+        { name: 'headway', value: process.env.HEADWAY_API_KEY },
         { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
         { name: 'sha', value: sha },
         { name: 'mixpanel', value: process.env.MIXPANEL_API_KEY },
@@ -70,6 +67,7 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_URL },
         { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) },
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
+        { name: 'flagsmithRealtime', value: envToBool('ENABLE_FLAGSMITH_REALTIME', false) },
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
         { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
         { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
