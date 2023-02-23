@@ -182,11 +182,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                                     editSegment(preselect.current, !permission)
                                                                     preselect.current = null;
                                                                 }
-                                                                return (
-                                                                    <Row className="list-item clickable" key={id} space>
+                                                                return renderWithPermission(permission, "Manage segments", (
+                                                                        <Row className="list-item clickable" key={id} space>
                                                                         <div
                                                                             className="flex flex-1"
-                                                                            onClick={() => editSegment(id, !permission)}
+                                                                            onClick={permission?() => editSegment(id, !permission):undefined}
                                                                         >
                                                                             <Row>
                                                                                 <ButtonLink>
@@ -218,7 +218,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                                             </Column>
                                                                         </Row>
                                                                     </Row>
-                                                                );
+                                                                ))
                                                             }}
                                                             paging={data}
                                                             nextPage={() => setPage(page+1)}
