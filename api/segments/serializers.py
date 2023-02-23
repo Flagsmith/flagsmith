@@ -59,7 +59,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         """
         rules_data = validated_data.pop("rules", [])
         segment = Segment.objects.create(**validated_data)
-        self._create_segment_rules(rules_data, segment=segment)
+        self._create_segment_rules(rules_data, segment=segment, is_create=True)
         return segment
 
     def update(self, instance, validated_data):
@@ -75,7 +75,9 @@ class SegmentSerializer(serializers.ModelSerializer):
         segment.rules.set([])
         self._create_segment_rules(rules_data, segment=segment)
 
-    def _create_segment_rules(self, rules_data, segment=None, rule=None):
+    def _create_segment_rules(
+        self, rules_data, segment=None, rule=None, is_create: bool = False
+    ):
         if all(x is None for x in {segment, rule}):
             raise RuntimeError("Can't create rule without parent segment or rule")
 
@@ -85,7 +87,7 @@ class SegmentSerializer(serializers.ModelSerializer):
 
             child_rule = self._create_segment_rule(rule_data, segment, rule)
 
-            self._create_conditions(conditions, child_rule)
+            self._create_conditions(conditions, child_rule, is_create=is_create)
 
             self._create_segment_rules(child_rules, rule=child_rule)
 
@@ -99,9 +101,11 @@ class SegmentSerializer(serializers.ModelSerializer):
         return segment_rule
 
     @staticmethod
-    def _create_conditions(conditions_data, rule):
+    def _create_conditions(conditions_data, rule, is_create: bool = False):
         for condition in conditions_data:
-            Condition.objects.create(rule=rule, **condition)
+            Condition.objects.create(
+                rule=rule, created_with_segment=is_create, **condition
+            )
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
+import UserGroupsProvider from 'common/providers/UserGroupsProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import Switch from '../Switch';
-import UserGroupsProvider from '../../../common/providers/UserGroupsProvider';
-
 const CreateGroup = class extends Component {
     static displayName = 'CreateGroup'
 
@@ -137,7 +137,7 @@ const CreateGroup = class extends Component {
                                       id="org-members-list"
                                       title="Members"
                                       className="mt-5 no-pad"
-                                      items={users}
+                                      items={_.sortBy(users, "first_name")}
                                       filterRow={(item, search) => {
                                           const strToSearch = `${item.first_name} ${item.last_name} ${item.id}`;
                                           return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;

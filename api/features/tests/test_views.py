@@ -249,20 +249,14 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
+                log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+                % (
+                    feature.name,
+                    identity.identifier,
+                )
             ).count()
             == 1
         )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
 
     def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
         # Given - set up data
@@ -609,43 +603,45 @@ class SDKFeatureStatesTestCase(APITestCase):
             self.environment.updated_at.timestamp()
         )
 
-    def test_get_flags_exclude_disabled(self):
 
-        # Given
-        # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
+@pytest.mark.parametrize(
+    "environment_value, project_value, disabled_flag_returned",
+    (
+        (True, True, False),
+        (True, False, False),
+        (False, True, True),
+        (False, False, True),
+        (None, True, False),
+        (None, False, True),
+    ),
+)
+def test_get_flags_hide_disabled_flags(
+    environment_value,
+    project_value,
+    disabled_flag_returned,
+    project,
+    environment,
+    api_client,
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
 
-        # and a set of features and environments for that project
-        other_environment = Environment.objects.create(
-            name="Test Environment 2", project=project_flag_disabled
-        )
-        disabled_flag = Feature.objects.create(
-            name="Flag 1", project=project_flag_disabled
-        )
-        enabled_flag = Feature.objects.create(
-            name="Flag 2", project=project_flag_disabled, default_enabled=True
-        )
+    environment.hide_disabled_flags = environment_value
+    environment.save()
 
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
+    Feature.objects.create(name="disabled_flag", project=project, default_enabled=False)
+    Feature.objects.create(name="enabled_flag", project=project, default_enabled=True)
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
+    url = reverse("api-v1:flags")
 
-        # disabled flags are not returned
-        for flag in response_json:
-            assert flag["feature"]["id"] != disabled_flag.id
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
 
-        # but enabled ones are
-        assert response_json[0]["feature"]["id"] == enabled_flag.id
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
 @pytest.mark.parametrize(
@@ -665,3 +661,19 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
 
     response_json = response.json()
     assert response_json["uuid"] == str(feature_state.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_deleted_features_are_not_listed(client, project, environment, feature):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    feature.delete()
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0

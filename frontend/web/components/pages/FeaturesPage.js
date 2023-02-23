@@ -8,6 +8,7 @@ import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -110,7 +111,7 @@ const FeaturesPage = class extends Component {
         return (
             <div data-test="features-page" id="features-page" className="app-container container">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
+                    {({ projectFlags, environmentFlags }, { toggleFlag, removeFlag }) => {
                         const isLoading = FeatureListStore.isLoading;
                         return (
                             <div className="features-page">
@@ -240,7 +241,6 @@ const FeaturesPage = class extends Component {
                                                                     projectId={projectId}
                                                                     index={i} canDelete={permission}
                                                                     toggleFlag={toggleFlag}
-                                                                    editFlag={editFlag}
                                                                     removeFlag={removeFlag}
                                                                     projectFlag={projectFlag}
                                                                   />

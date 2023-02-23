@@ -1,14 +1,13 @@
 import React from 'react';
 import { Component } from 'react';
 import { groupBy } from 'lodash';
-import _data from '../../../common/data/base/_data';
-import ProjectStore from '../../../common/stores/project-store';
-import TagValues from '../TagValues';
+import _data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import FeatureListStore from 'common/stores/feature-list-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import SegmentOverrides from '../SegmentOverrides';
-import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
-import FeatureListStore from '../../../common/stores/feature-list-store';
 import FlagSelect from '../FlagSelect';
-import { ButtonLink } from '../base/forms/Button';
 import InfoMessage from '../InfoMessage';
 import EnvironmentSelect from '../EnvironmentSelect';
 
@@ -232,11 +231,11 @@ class SegmentOverridesInner extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();
@@ -342,11 +341,11 @@ class SegmentOverridesInnerAdd extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();
@@ -364,8 +363,6 @@ class SegmentOverridesInnerAdd extends Component {
                     );
                 }}
             </FeatureListProvider>
-
-
         );
     }
 }

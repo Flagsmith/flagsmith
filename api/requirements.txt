@@ -59,7 +59,7 @@ cryptography==38.0.3
     #   pyjwt
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.16
+django==3.2.18
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -130,7 +130,7 @@ environs==9.2.0
     # via -r requirements.in
 flagsmith-flag-engine==3.0.0
     # via -r requirements.in
-future==0.18.2
+future==0.18.3
     # via django-ses
 google-api-core==1.23.0
     # via

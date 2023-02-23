@@ -5,6 +5,7 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from simple_history.models import HistoricalRecords
+from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.related_object_type import RelatedObjectType
 
@@ -37,6 +38,17 @@ class AbstractBaseExportableModel(models.Model):
 
     def natural_key(self):
         return (str(self.uuid),)
+
+
+class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+    pass
+
+
+class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
+    objects = SoftDeleteExportableManager()
+
+    class Meta:
+        abstract = True
 
 
 class BaseHistoricalModel(models.Model):
@@ -100,7 +112,7 @@ class _AbstractBaseAuditableModel(models.Model):
         """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+    def get_audit_log_related_object_id(self, history_instance) -> int:
         """Override the related object ID in cases where it shouldn't be self.id"""
         return self.id
 
