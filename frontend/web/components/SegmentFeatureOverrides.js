@@ -358,7 +358,7 @@ class TheComponent extends Component {
                                 </Column>
                             </Row>
                             <div className="mb-4 text-left faint">
-                                Prioritise a segment override by dragging it to the top of the list.
+                                Prioritise a segment override by dragging it to the top of the list. Segment overrides will only apply when you identify via the SDK. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-segments">Check the Docs for more details.</a>
                             </div>
                             {value && (
                             <SegmentOverrideList
