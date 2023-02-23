@@ -68,10 +68,10 @@ class Environment(
         "projects.Project",
         related_name="environments",
         help_text=_(
-            "Changing the project selected will remove all previous Feature States for the "
-            "previously associated projects Features that are related to this Environment. New "
-            "default Feature States will be created for the new selected projects Features for "
-            "this Environment."
+            "Changing the project selected will remove all previous Feature States for"
+            " the previously associated projects Features that are related to this"
+            " Environment. New default Feature States will be created for the new"
+            " selected projects Features for this Environment."
         ),
         on_delete=models.CASCADE,
     )
@@ -100,8 +100,17 @@ class Environment(
     hide_disabled_flags = models.BooleanField(
         null=True,
         blank=True,
-        help_text="If true will exclude flags from SDK which are "
-        "disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
+        help_text=(
+            "If true will exclude flags from SDK which are disabled. NOTE: If set, this"
+            " will override the project `hide_disabled_flags`"
+        ),
+    )
+    use_mv_v2_evaluation = models.BooleanField(
+        default=True,
+        help_text=(
+            "Enable this to have consistent multivariate evaluations across all SDKs(in"
+            " local and server side mode)"
+        ),
     )
 
     objects = EnvironmentManager()
