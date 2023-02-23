@@ -699,3 +699,34 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
         ).count()
         == 1
     )
+
+
+# @pytest.mark.parametrize(
+#     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+# )
+def test_list_features_provides_information_on_number_of_overrides(
+    feature,
+    segment,
+    segment_featurestate,
+    identity,
+    identity_featurestate,
+    project,
+    environment,
+    admin_client,
+):
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:projects:project-features-list", args=[project.id]),
+        environment.id,
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["num_segment_overrides"] == 1
+    assert response_json["results"][0]["num_identity_overrides"] == 1
