@@ -242,3 +242,14 @@ $switch-width: 55px;
     transform: scale(1);
   }
 }
+
+.widget-mode {
+  .rc-switch {
+    cursor: default;
+    opacity: 1;
+    @extend .rc-switch;
+    &.rc-switch-checked {
+      @extend .rc-switch-checked;
+    }
+  }
+}
