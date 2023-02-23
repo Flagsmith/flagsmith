@@ -20,7 +20,7 @@ export default function VariationOptions({ multivariateOptions, disabled, select
             {!preventRemove && (
                 <p>
                     <InfoMessage>
-                        Variation values are shared amongst environments. Variation weights are specific to this Environment. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags">Check the Docs for more</a>
+                        Variation values are shared amongst environments, their weights are specific to this Environment.<br/>These values will only apply when you identify via the SDK. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags">Check the Docs for more details</a>.
                     </InfoMessage>
                 </p>
             )}
