@@ -75,15 +75,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             cb={cb}
         />);
     }
-    const createSegmentPermission = (el: (permission:boolean)=>ReactNode) => {
-        return (
-            <Permission level="environment" permission="CREATE_SEGMENT" id={props.match.params.environmentId}>
-                {({ permission, isLoading }:PermissionType) => (permission ? (
-                    el(permission)
-                ) : renderWithPermission(permission, "environment", el(permission)))}
-            </Permission>
-        );
-    }
     const editSegment = (id:number, readOnly?:boolean) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
         history.replaceState(
@@ -140,7 +131,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     const segments = data?.results
     return (
         <div data-test="segments-page" id="segments-page" className="app-container container">
-            <Permission level="project" permission="ADMIN" id={projectId}>
+            <Permission level="project" permission="MANAGE_SEGMENTS" id={projectId}>
                 {({ permission }:PermissionType) => (
                     <div className="segments-page">
                                     {isLoading && !hasHadResults.current && (!segments&&!search) && <div className="centered-container"><Loader/></div>}
@@ -159,9 +150,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                         </Flex>
                                                         <FormGroup className="float-right">
                                                             <div className="text-right">
-                                                                {permission ? (
+                                                                {renderWithPermission(permission,"Manage segments",(
                                                                     <Button
-                                                                        disabled={hasNoOperators}
+                                                                        disabled={hasNoOperators||!permission}
                                                                         className="btn-lg btn-primary"
                                                                         id="show-create-segment-btn"
                                                                         data-test="show-create-segment-btn"
@@ -169,21 +160,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                                     >
                                                                         Create Segment
                                                                     </Button>
-                                                                ) : (
-                                                                    <Tooltip
-                                                                        html
-                                                                        title={(
-                                                                            <Button
-                                                                                disabled data-test="show-create-feature-btn" id="show-create-feature-btn"
-                                                                            >
-                                                                                Create Segment
-                                                                            </Button>
-                                                                        )}
-                                                                        place="right"
-                                                                    >
-                                                                        {Constants.projectPermissions('Manage segments')}
-                                                                    </Tooltip>
-                                                                )}
+                                                                ))}
                                                             </div>
                                                         </FormGroup>
                                                     </Row>
@@ -287,10 +264,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                             </p>
                                                         </Panel>
                                                     </FormGroup>
-                                                    {createSegmentPermission(perm => (
-                                                        <FormGroup className="text-center">
+                                                    <FormGroup className="text-center">
+                                                        {renderWithPermission(permission, "Manage segments", (
                                                             <Button
-                                                                disabled={!perm || hasNoOperators}
+                                                                disabled={!permission || hasNoOperators}
                                                                 className="btn-lg btn-primary" id="show-create-segment-btn" data-test="show-create-segment-btn"
                                                                 onClick={newSegment}
                                                             >
@@ -298,8 +275,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                                 {' '}
                                                                 Create your first Segment
                                                             </Button>
-                                                        </FormGroup>
-                                                    ))}
+                                                         )
+                                                        )}
+                                                    </FormGroup>
                                                     {hasNoOperators && <HowToUseSegmentsMessage />}
                                                 </div>
                                             )}

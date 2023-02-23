@@ -98,10 +98,8 @@ const Constants = {
         'PAYMENT': 'Payment Modal',
     },
 
-    adminPermissions: () => 'To use this feature you need the to be admin of the organisation.<br/>Please contact a member of this organisation who has administrator privileges.',
     projectPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
     environmentPermissions: perm => `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
-    organisationPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`,
     pages: {
         'ACCOUNT': 'Account Page',
         'AUDIT_LOG': 'Audit Log Page',
