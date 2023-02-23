@@ -474,7 +474,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
             many=True,
-            context={"request": request, "identity": identity},
+            context={
+                "request": request,
+                "identity": identity,
+                "environment_api_key": identity.environment.api_key,
+            },
         )
 
         return Response(serializer.data)

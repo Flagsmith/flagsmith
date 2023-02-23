@@ -49,3 +49,25 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
         filter(lambda fs: fs.feature == feature, identity_feature_states)
     )
     assert identity_feature_state.get_feature_state_value() == "v2"
+
+
+def test_get_hash_key_with_use_mv_v2_evaluation_enabled(identity):
+    # Given
+    use_mv_v2_evaluation = True
+
+    # When
+    hash_key = identity.get_hash_key(use_mv_v2_evaluation)
+
+    # Then
+    assert hash_key == f"{identity.environment.api_key}_{identity.identifier}"
+
+
+def test_get_hash_key_with_use_mv_v2_evaluation_disabled(identity):
+    # Given
+    use_mv_v2_evaluation = False
+
+    # When
+    hash_key = identity.get_hash_key(use_mv_v2_evaluation)
+
+    # Then
+    assert hash_key == str(identity.id)

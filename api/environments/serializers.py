@@ -43,6 +43,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "banner_text",
             "banner_colour",
             "hide_disabled_flags",
+            "use_mv_v2_evaluation",
         )
 
 
