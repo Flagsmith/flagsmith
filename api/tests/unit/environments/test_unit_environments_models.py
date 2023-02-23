@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from core.request_origin import RequestOrigin
-from django.db.models import Q
 from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
@@ -42,7 +41,7 @@ def test_write_environments_to_dynamodb_with_environment(
 
     # When
     Environment.write_environments_to_dynamodb(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
     # Then
@@ -65,7 +64,7 @@ def test_write_environments_to_dynamodb_project(
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(Q(project=dynamo_enabled_project))
+    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
@@ -86,7 +85,7 @@ def test_write_environments_to_dynamodb_with_environment_and_project(
 
     # When
     Environment.write_environments_to_dynamodb(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
     # Then
