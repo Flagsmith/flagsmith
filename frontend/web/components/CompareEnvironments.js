@@ -205,7 +205,7 @@ class CompareEnvironments extends Component {
                                             </div>
                                         )}
                                         {!this.state.isLoading && (!this.state.changes || !this.state.changes.length) && (
-                                            <div className="text-center">
+                                            <div className="text-center mt-2">
                                                 These environments have no flag differences
                                             </div>
                                         )}
