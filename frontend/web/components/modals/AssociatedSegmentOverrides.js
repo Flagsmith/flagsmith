@@ -89,6 +89,7 @@ class TheComponent extends Component {
             <div className="mt-4">
                 <InfoMessage>
                     This shows the list of segment overrides associated with this segment.
+                    <br/>Segment overrides will only apply when you identify via the SDK. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-segments">Check the Docs for more details</a>.
                 </InfoMessage>
                 <div >
                     <InputGroup

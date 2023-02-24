@@ -1,6 +1,5 @@
 import logging
 
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -123,12 +122,9 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
 @receiver(post_save, sender=AuditLog)
 @handle_skipped_signals
 def send_environments_to_dynamodb(sender, instance, **kwargs):
-    environments_filter = (
-        Q(id=instance.environment_id)
-        if instance.environment_id
-        else Q(project=instance.project)
+    Environment.write_environments_to_dynamodb(
+        environment_id=instance.environment_id, project_id=instance.project_id
     )
-    Environment.write_environments_to_dynamodb(environments_filter)
 
 
 @receiver(post_save, sender=AuditLog)
