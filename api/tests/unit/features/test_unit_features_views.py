@@ -12,7 +12,7 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
@@ -701,9 +701,9 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
     )
 
 
-# @pytest.mark.parametrize(
-#     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
-# )
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_list_features_provides_information_on_number_of_overrides(
     feature,
     segment,
@@ -712,12 +712,51 @@ def test_list_features_provides_information_on_number_of_overrides(
     identity_featurestate,
     project,
     environment,
-    admin_client,
+    client,
 ):
     # Given
     url = "%s?environment=%d" % (
         reverse("api-v1:projects:project-features-list", args=[project.id]),
         environment.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["num_segment_overrides"] == 1
+    assert response_json["results"][0]["num_identity_overrides"] == 1
+
+
+def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
+    dynamo_enabled_project, dynamo_enabled_project_environment_one, admin_client
+):
+    # Given
+    feature = Feature.objects.create(
+        name="test_feature", project=dynamo_enabled_project
+    )
+    segment = Segment.objects.create(
+        name="test_segment", project=dynamo_enabled_project
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=dynamo_enabled_project_environment_one,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=dynamo_enabled_project_environment_one,
+        feature_segment=feature_segment,
+    )
+    url = "%s?environment=%d" % (
+        reverse(
+            "api-v1:projects:project-features-list", args=[dynamo_enabled_project.id]
+        ),
+        dynamo_enabled_project_environment_one.id,
     )
 
     # When
@@ -729,4 +768,4 @@ def test_list_features_provides_information_on_number_of_overrides(
     response_json = response.json()
     assert response_json["count"] == 1
     assert response_json["results"][0]["num_segment_overrides"] == 1
-    assert response_json["results"][0]["num_identity_overrides"] == 1
+    assert response_json["results"][0]["num_identity_overrides"] is None
