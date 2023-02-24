@@ -36,7 +36,7 @@ export default class Paging extends PureComponent {
         return (
             <Row className="list-item paging py-0" style={isLoading ? { opacity: 0.5 } : {}}>
                 <Button
-                  disabled={!paging.previous} className="icon btn-paging ion-ios-arrow-back"
+                  disabled={isLoading || !paging.previous} className="icon btn-paging ion-ios-arrow-back"
                   onClick={() => prevPage()}
                 />
                 <Row className="list-item">
@@ -98,7 +98,7 @@ export default class Paging extends PureComponent {
                     )}
                 </Row>
                 <Button
-                  className="icon btn-paging ion-ios-arrow-forward" disabled={!paging.next}
+                  className="icon btn-paging ion-ios-arrow-forward" disabled={isLoading || !paging.next}
                   onClick={() => nextPage()}
                 />
             </Row>

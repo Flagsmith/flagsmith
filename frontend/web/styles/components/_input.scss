@@ -200,3 +200,35 @@ textarea {
 		background-color: $panel-bg-dark;
 	}
 }
+
+.dark {
+
+	.MuiFormControl-root > div{
+		&:hover:before {
+			border-color: $bt-input-border-dark !important;
+		}
+		&:before {
+			border-color: $bt-input-border-dark;
+		}
+		&:before {
+			border-color: $bt-input-border-dark;
+		}
+	}
+	.MuiInputBase-input {
+		color: $body-text-dark;
+	}
+	.MuiChip-root {
+		color: $dark-highlight-color;
+		background: $panel-bg-dark;
+
+		&:hover {
+			background: $panel-bg-dark;
+			svg {
+				color: $dark-color;
+			}
+		}
+		svg {
+			color: $panel-bg-darker;
+		}
+	}
+}

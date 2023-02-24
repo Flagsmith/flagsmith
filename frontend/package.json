@@ -131,6 +131,7 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/react-router": "^5.1.19",
+    "@types/react-router-dom": "^4.3.1",
     "@types/react-select": "^2.0.3",
     "chromedriver": "96.0.0",
     "eslint": "7.6.0",
