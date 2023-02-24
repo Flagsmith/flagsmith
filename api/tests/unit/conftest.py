@@ -117,10 +117,10 @@ def master_api_key_client(master_api_key):
 
 
 @pytest.fixture()
-def dynamo_enabled_project(organisation_one):
+def dynamo_enabled_project(organisation):
     return Project.objects.create(
         name="Dynamo enabled project",
-        organisation=organisation_one,
+        organisation=organisation,
         enable_dynamo_db=True,
     )
 
