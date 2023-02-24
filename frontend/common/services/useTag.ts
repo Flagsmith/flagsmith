@@ -8,7 +8,7 @@ export const tagService = service
   endpoints: (builder) => ({
     updateTag: builder.mutation<Res['tag'], Req['updateTag']>({
       query: (query: Req['updateTag']) => ({
-        url: `projects/${query.projectId}/tags/${query.tag.id}`,
+        url: `projects/${query.projectId}/tags/${query.tag.id}/`,
         method: 'PUT',
         body: query.tag,
       }),
