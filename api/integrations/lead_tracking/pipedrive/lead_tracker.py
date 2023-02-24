@@ -23,9 +23,7 @@ except ImportError:
 class PipedriveLeadTracker(LeadTracker):
     @staticmethod
     def should_track(user: FFAdminUser):
-        if not (
-            settings.PIPEDRIVE_API_TOKEN and settings.ENABLE_PIPEDRIVE_LEAD_TRACKING
-        ):
+        if not settings.ENABLE_PIPEDRIVE_LEAD_TRACKING:
             return False
 
         domain = user.email_domain

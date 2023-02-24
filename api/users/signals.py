@@ -1,6 +1,5 @@
 import warnings
 
-from django.conf import settings
 from django.db.models.signals import post_migrate, post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -27,10 +26,7 @@ def warn_insecure(sender, **kwargs):
 def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
     user: FFAdminUser = instance
 
-    if not (
-        created
-        and (settings.PIPEDRIVE_API_TOKEN or settings.ENABLE_PIPEDRIVE_LEAD_TRACKING)
-    ) or not PipedriveLeadTracker.should_track(user):
+    if not PipedriveLeadTracker.should_track(user):
         return
 
     create_pipedrive_lead.delay(args=(user.id,))
