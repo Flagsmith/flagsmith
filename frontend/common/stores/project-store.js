@@ -1,3 +1,5 @@
+import { getIsWidget } from '../../web/components/pages/WidgetPage';
+
 import Constants from 'common/constants';
 
 const Dispatcher = require('../dispatcher/dispatcher');
@@ -5,7 +7,7 @@ const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 
 const data = require('../data/base/_data');
-const { getIsWidget } = require("../../web/components/pages/WidgetPage");
+
 const controller = {
 
     migrateProject: (id) => {
@@ -34,7 +36,7 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                if(!getIsWidget()) {
+                if (!getIsWidget()) {
                     document.location.href = '/404?entity=project';
                 }
             });
@@ -56,7 +58,7 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                if(!getIsWidget()) {
+                if (!getIsWidget()) {
                     document.location.href = '/404?entity=project';
                 }
             });

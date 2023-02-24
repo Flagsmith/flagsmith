@@ -66,13 +66,15 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):
 class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
     def validate(self, attrs):
         validated_attrs = super().validate(attrs)
+        if len(validated_attrs) == 0:
+            return validated_attrs
+
         feature_segments = list(
             FeatureSegment.objects.filter(
                 id__in=[item["id"] for item in validated_attrs]
             )
         )
 
-        # TODO: what if length == 0?
         if not len(feature_segments) == len(attrs):
             raise serializers.ValidationError(
                 "Some of the provided ids were not found."

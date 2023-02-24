@@ -79,21 +79,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         />);
     }
 
-    const {permission} = useHasPermission({
-        level: "project",
-        permission: "ADMIN",
-        id: projectId
-    })
-    const {permission: projectAdmin} = useHasPermission({
+    const {permission: manageSegmentsPermission} = useHasPermission({
         level: "environment",
-        permission: "CREATE_SEGMENT",
+        permission: "MANAGE_SEGMENTS",
         id: environmentId
     })
 
-    const createSegmentPermission = (el: (permission: boolean) => ReactNode) => {
-        return permission ? el(permission) :
-            renderWithPermission(permission, "environment", el(permission))
-    }
     const editSegment = (id: number, readOnly?: boolean) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
         history.replaceState(
@@ -166,9 +157,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                     </Flex>
                                     <FormGroup className="float-right">
                                         <div className="text-right">
-                                            {projectAdmin ? (
+                                          {renderWithPermission(manageSegmentsPermission, "Manage segments",(
                                                 <Button
-                                                    disabled={hasNoOperators}
+                                                                        disabled={hasNoOperators||!manageSegmentsPermission}
                                                     className="btn-lg btn-primary"
                                                     id="show-create-segment-btn"
                                                     data-test="show-create-segment-btn"
@@ -176,22 +167,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                 >
                                                     Create Segment
                                                 </Button>
-                                            ) : (
-                                                <Tooltip
-                                                    html
-                                                    title={(
-                                                        <Button
-                                                            disabled data-test="show-create-feature-btn"
-                                                            id="show-create-feature-btn"
-                                                        >
-                                                            Create Segment
-                                                        </Button>
-                                                    )}
-                                                    place="right"
-                                                >
-                                                    {Constants.projectPermissions('Manage segments')}
-                                                </Tooltip>
-                                            )}
+                                            ))}
                                         </div>
                                     </FormGroup>
                                 </Row>
@@ -210,14 +186,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                         })}
                                         renderRow={({name, id, feature, description}: Segment, i: number) => {
                                             if (preselect.current === `${id}`) {
-                                                editSegment(preselect.current, !projectAdmin)
+                                                editSegment(preselect.current, !manageSegmentsPermission)
                                                 preselect.current = null;
                                             }
-                                            return (
+                                            return renderWithPermission(manageSegmentsPermission, "Manage segments", (
                                                 <Row className="list-item clickable" key={id} space>
                                                     <div
                                                         className="flex flex-1"
-                                                        onClick={() => editSegment(id, !projectAdmin)}
+                                                       onClick={manageSegmentsPermission?() => editSegment(id, !manageSegmentsPermission):undefined}
                                                     >
                                                         <Row>
                                                             <ButtonLink>
@@ -237,7 +213,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                     <Row>
                                                         <Column>
                                                             <button
-                                                                disabled={!projectAdmin}
+                                                                disabled={!manageSegmentsPermission}
                                                                 data-test={`remove-segment-btn-${i}`}
                                                                 onClick={() => confirmRemove(find(segments, {id})!, () => {
                                                                     removeSegment({projectId, id});
@@ -249,7 +225,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                                         </Column>
                                                     </Row>
                                                 </Row>
-                                            );
+                                                                ))
                                         }}
                                         paging={data}
                                         nextPage={() => setPage(page + 1)}
@@ -298,20 +274,19 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                         </p>
                                     </Panel>
                                 </FormGroup>
-                                {createSegmentPermission(perm => (
                                     <FormGroup className="text-center">
+                                      {renderWithPermission(manageSegmentsPermission, "Manage segments", (
                                         <Button
-                                            disabled={!perm || hasNoOperators}
-                                            className="btn-lg btn-primary" id="show-create-segment-btn"
-                                            data-test="show-create-segment-btn"
+                                            disabled={!manageSegmentsPermission || hasNoOperators}
+                                            className="btn-lg btn-primary" id="show-create-segment-btn" data-test="show-create-segment-btn"
                                             onClick={newSegment}
                                         >
                                             <span className="icon ion-ios-globe"/>
                                             {' '}
                                             Create your first Segment
                                         </Button>
+                                     ))}
                                     </FormGroup>
-                                ))}
                                 {hasNoOperators && <HowToUseSegmentsMessage/>}
                             </div>
                         )}

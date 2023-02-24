@@ -29,6 +29,13 @@ type FeatureListType = {
     hideTags: boolean
 }
 
+
+const PermissionError = ()=> {
+    return <InfoMessage>
+        Please check you have access to the project and environment within the widget settings.
+    </InfoMessage>
+}
+
 const FeatureList = class extends Component<FeatureListType> {
     state =  {
         tags: [],
@@ -56,9 +63,6 @@ const FeatureList = class extends Component<FeatureListType> {
         }
     }
 
-    componentWillUnmount() {
-        document.body.classList.remove("widget-mode")
-    }
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
     };
@@ -74,7 +78,7 @@ const FeatureList = class extends Component<FeatureListType> {
 
     onError = (error) => {
         // Kick user back out to projects
-        this.setState({ error });
+        this.setState({ error: true });
         if (typeof closeModal !== 'undefined') {
             closeModal();
             toast('We could not create this feature, please check the name is not in use.');
@@ -98,14 +102,15 @@ const FeatureList = class extends Component<FeatureListType> {
         const { projectId, environmentId } = this.props;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         const environment = ProjectStore.getEnvironment(environmentId);
-
+        if(this.state.error){
+            return <PermissionError/>
+        }
         return (
+            <Provider store={getStore()}>
             <Provider store={getStore()}>
                 <div className="widget-container" data-test="features-page" id="features-page">
                     <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { toggleFlag, removeFlag }) => {
-                            const isLoading = FeatureListStore.isLoading;
-                            return (
+                    {({ projectFlags, environmentFlags, isLoading }, { toggleFlag, removeFlag }) => {                         return (
                                 <div>
                                     {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
                                     {(!isLoading || (projectFlags && !!projectFlags.length)) && (
@@ -218,6 +223,9 @@ const FeatureList = class extends Component<FeatureListType> {
 
 
 export default function Widget() {
+    useEffect(()=>{
+        document.body.classList.add("widget-mode")
+    },[])
     const projectId = useCustomWidgetOptionString(client, 'Project');
     const environmentId = useCustomWidgetOptionString(client, 'Environment');
     const pageSize = useCustomWidgetOptionString(client, 'PageSize') || "5";
@@ -225,6 +233,9 @@ export default function Widget() {
     const isAudit = id === "flagsmith_audit_widget";
     const hideTags = useCustomWidgetOptionString(client, 'HideTags') === "Yes";
     if (!API.getCookie("t")) {
+        resolveAuthFlow({
+            isAuthenticated: false,
+        });
         return null
     }
     const [error, setError] = useState<boolean>(false);

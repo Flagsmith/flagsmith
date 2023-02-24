@@ -114,7 +114,7 @@ class TheComponent extends Component {
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}
-              className={`list-item clickable ${this.props.widget?"py-1":"py-2"}`} key={id} space
+              className={`list-item ${readOnly?"":"clickable"} ${this.props.widget?"py-1":"py-2"}`} key={id} space
               data-test={`feature-item-${this.props.index}`}
             >
                 <div
@@ -123,7 +123,7 @@ class TheComponent extends Component {
                 >
                     <div>
                         <Row>
-                            <ButtonLink className="mr-2">
+                            <ButtonLink className={`mr-2 ${readOnly?"cursor-default":""}`}>
                                 {name}
                             </ButtonLink>
                             {projectFlag.owners && !!projectFlag.owners.length ? (
