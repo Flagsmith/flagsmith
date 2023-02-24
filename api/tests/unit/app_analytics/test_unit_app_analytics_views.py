@@ -53,6 +53,7 @@ def test_get_usage_data(mocker, admin_client, organisation):
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
     mocked_get_usage_data = mocker.patch(
         "app_analytics.views.get_usage_data",
+        autospec=True,
         return_value=[
             UsageData(flags=10, day=date.today()),
             UsageData(flags=10, day=date.today() - timedelta(days=1)),
@@ -104,6 +105,7 @@ def test_get_total_usage_count(mocker, admin_client, organisation):
     )
     mocked_get_total_events_count = mocker.patch(
         "app_analytics.views.get_total_events_count",
+        autospec=True,
         return_value=100,
     )
 

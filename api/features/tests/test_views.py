@@ -692,7 +692,7 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
     )
     url = f"{base_url}?environment_id={environment.id}"
     mocked_get_feature_evaluation_data = mocker.patch(
-        "features.views.get_feature_evaluation_data"
+        "features.views.get_feature_evaluation_data", autospec=True
     )
     mocked_get_feature_evaluation_data.return_value = [
         FeatureEvaluationData(count=10, day=date.today()),

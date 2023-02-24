@@ -227,6 +227,7 @@ def test_get_usage_data(mocker):
     ]
     mocked_get_multiple_event_list_for_organisation = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_organisation",
+        autospec=True,
         return_value=influx_data,
     )
 
@@ -261,6 +262,7 @@ def test_get_feature_evaluation_data(mocker):
     ]
     mocked_get_multiple_event_list_for_feature = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_feature",
+        autospec=True,
         return_value=influx_data,
     )
 

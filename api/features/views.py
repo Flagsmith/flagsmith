@@ -222,7 +222,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_serializer.is_valid(raise_exception=True)
 
         usage_data = get_feature_evaluation_data(
-            feature_name=feature.name, **query_serializer.data
+            feature=feature, **query_serializer.data
         )
         serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
 
