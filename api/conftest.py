@@ -140,6 +140,13 @@ def identity(environment):
 
 
 @pytest.fixture()
+def identity_featurestate(identity, feature):
+    return FeatureState.objects.create(
+        identity=identity, feature=feature, environment=identity.environment
+    )
+
+
+@pytest.fixture()
 def trait(identity):
     return Trait.objects.create(
         identity=identity, trait_key=trait_key, string_value=trait_value
