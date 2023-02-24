@@ -148,9 +148,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         case Actions.GET_IDENTITY:
             controller.getIdentity(action.envId, action.id);
             break;
-        case Actions.SAVE_IDENTITY:
-            controller.saveIdentity(action.id, action.identity);
-            break;
         case Actions.TOGGLE_USER_FLAG:
             controller.toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });
             break;
