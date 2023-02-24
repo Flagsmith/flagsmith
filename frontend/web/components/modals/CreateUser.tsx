@@ -26,6 +26,9 @@ const CreateUser: FC<CreateUserType> = ({environmentId}) => {
                 <label>
                     User IDs
                 </label>
+                <p className="text-muted text-small">
+                    Enter a comma or space separate list of user IDs.
+                </p>
             </FormGroup>
             <FormGroup className="text-right">
                 <ChipInput
