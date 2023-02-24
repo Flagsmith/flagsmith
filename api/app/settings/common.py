@@ -803,7 +803,6 @@ TASK_RUN_METHOD = env.enum(
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
-DISABLE_TASK_PROCESSOR = False  # used to disable task processor in tests
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)

@@ -104,21 +104,22 @@ def test_create_lead_throws_exception_if_multiple_organisations_found(
 @pytest.mark.parametrize(
     "user_domain, regex, expected_result",
     (
-        ("gmail.com", None, True),
-        ("gmail.com", r"gmail.com", False),
-        ("gmail.io", r"gmail\..*", False),
+        ("example.com", None, True),
+        ("example.com", r"example.com", False),
+        ("example.io", r"example\..*", False),
     ),
 )
 def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(
-    user_domain, regex, expected_result, settings, django_user_model
+    user_domain, regex, expected_result, settings, django_user_model, mocker
 ):
     # Given
-    # disable the task processor to prevent it from trying to create the
-    # lead in pipedrive with the dummy data provided
-    settings.DISABLE_TASK_PROCESSOR = True
+    mock_pipedrive_client = mocker.MagicMock()
+    mocker.patch(
+        "integrations.lead_tracking.pipedrive.lead_tracker.PipedriveAPIClient",
+        return_value=mock_pipedrive_client,
+    )
+
     settings.PIPEDRIVE_IGNORE_DOMAINS_REGEX = regex
-    settings.PIPEDRIVE_IGNORE_DOMAINS = []
-    settings.PIPEDRIVE_API_TOKEN = "dummy"
     settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
 
     user = django_user_model.objects.create(email=f"test@{user_domain}")
@@ -135,12 +136,16 @@ def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(
     (("gmail.com", [], True), ("gmail.com", ["gmail.com"], False)),
 )
 def test_pipedrive_lead_tracker_should_track_ignore_domains(
-    user_domain, ignore_domains, expected_result, settings, django_user_model
+    user_domain, ignore_domains, expected_result, settings, django_user_model, mocker
 ):
     # Given
-    settings.DISABLE_TASK_PROCESSOR = True
+    mock_pipedrive_client = mocker.MagicMock()
+    mocker.patch(
+        "integrations.lead_tracking.pipedrive.lead_tracker.PipedriveAPIClient",
+        return_value=mock_pipedrive_client,
+    )
+
     settings.PIPEDRIVE_IGNORE_DOMAINS = ignore_domains
-    settings.PIPEDRIVE_API_TOKEN = "dummy"
     settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
 
     user = django_user_model.objects.create(email=f"test@{user_domain}")
@@ -153,11 +158,15 @@ def test_pipedrive_lead_tracker_should_track_ignore_domains(
 
 
 def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organisation(
-    settings, django_user_model, organisation, chargebee_subscription
+    settings, django_user_model, organisation, chargebee_subscription, mocker
 ):
     # Given
-    settings.DISABLE_TASK_PROCESSOR = True
-    settings.PIPEDRIVE_API_TOKEN = "dummy"
+    mock_pipedrive_client = mocker.MagicMock()
+    mocker.patch(
+        "integrations.lead_tracking.pipedrive.lead_tracker.PipedriveAPIClient",
+        return_value=mock_pipedrive_client,
+    )
+
     settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
 
     user = django_user_model.objects.create(email="test@example.com")
