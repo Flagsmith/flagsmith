@@ -11,7 +11,7 @@ class LeadTracker(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def should_track(user: FFAdminUser) -> bool:
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def create_lead(self, user: FFAdminUser):
