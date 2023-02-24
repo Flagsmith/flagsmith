@@ -732,8 +732,11 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
-    dynamo_enabled_project, dynamo_enabled_project_environment_one, admin_client
+    dynamo_enabled_project, dynamo_enabled_project_environment_one, client
 ):
     # Given
     feature = Feature.objects.create(
@@ -760,7 +763,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     )
 
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
