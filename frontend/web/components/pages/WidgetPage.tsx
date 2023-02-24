@@ -15,7 +15,7 @@ import PanelSearch from '../PanelSearch';
 // @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native';
 import { FeatureListProviderActions, FeatureListProviderData } from '../../../global';
-import { ProjectFlag } from 'common/types/responses';
+import { Environment, ProjectFlag } from 'common/types/responses';
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
 import client from '../datadog-client';
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk';
@@ -87,32 +87,26 @@ const FeatureList = class extends Component<FeatureListType> {
         toast('Saved');
     };
 
-    onError = (error:any) => {
-        // Kick user back out to projects
-        this.setState({ error: true });
-        if (typeof closeModal !== 'undefined') {
-            closeModal();
-            toast('We could not create this feature, please check the name is not in use.');
-        }
-    }
-
     filter = () => {
         AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
 
     render() {
         const { projectId, environmentId } = this.props;
-        const environment = ProjectStore.getEnvironment(environmentId);
-        if(this.state.error){
-            return <PermissionError/>
-        }
+        const environment = ProjectStore.getEnvironment(environmentId) as Environment|null;
         return (
             <Provider store={getStore()}>
                 <div className="widget-container" data-test="features-page" id="features-page">
-                    <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags, isLoading }: FeatureListProviderData, { toggleFlag, removeFlag }: FeatureListProviderActions) => {
+                    <FeatureListProvider onSave={this.onSave}>
+                    {({ projectFlags, environmentFlags, isLoading, error }: FeatureListProviderData, { toggleFlag, removeFlag }: FeatureListProviderActions) => {
+                        if(error) {
+                            return <PermissionError/>
+                        }
                         return (
                                 <div>
+                                    {projectFlags?.length===0 && <div>
+                                        This project has no feature flags to display
+                                    </div>}
                                     {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
                                     {(!isLoading || (projectFlags && !!projectFlags.length)) && (
                                         <div>

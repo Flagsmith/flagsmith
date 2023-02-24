@@ -20,7 +20,7 @@ declare global {
     var Tooltip: typeof FC<{title:ReactNode, place?:string, html?:boolean}>
 }
 
-export type FeatureListProviderData = {projectFlags:ProjectFlag[]|null, environmentFlags:FeatureState[]|null, isLoading: boolean}
+export type FeatureListProviderData = {projectFlags:ProjectFlag[]|null, environmentFlags:FeatureState[]|null, error:boolean, isLoading: boolean}
 export type FeatureListProviderActions = {
     toggleFlag: (index:number, environments: Environment[], comment:string|null, environmentFlags: FeatureState[], projectFlags:ProjectFlag[]) => void
     removeFlag: (projectId:string, projectFlag:ProjectFlag) => void
