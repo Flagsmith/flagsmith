@@ -803,6 +803,7 @@ TASK_RUN_METHOD = env.enum(
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
+DISABLE_TASK_PROCESSOR = False  # used to disable task processor in tests
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
@@ -827,6 +828,7 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
     "PIPEDRIVE_IGNORE_DOMAINS",
     ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
 )
+PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", None)
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])

@@ -99,3 +99,72 @@ def test_create_lead_throws_exception_if_multiple_organisations_found(
 
     # Then
     mock_pipedrive_client.create_lead.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "user_domain, regex, expected_result",
+    (
+        ("gmail.com", None, True),
+        ("gmail.com", r"gmail.com", False),
+        ("gmail.io", r"gmail\..*", False),
+    ),
+)
+def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(
+    user_domain, regex, expected_result, settings, django_user_model
+):
+    # Given
+    # disable the task processor to prevent it from trying to create the
+    # lead in pipedrive with the dummy data provided
+    settings.DISABLE_TASK_PROCESSOR = True
+    settings.PIPEDRIVE_IGNORE_DOMAINS_REGEX = regex
+    settings.PIPEDRIVE_IGNORE_DOMAINS = []
+    settings.PIPEDRIVE_API_TOKEN = "dummy"
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+
+    user = django_user_model.objects.create(email=f"test@{user_domain}")
+
+    # When
+    result = PipedriveLeadTracker.should_track(user)
+
+    # Then
+    assert result is expected_result
+
+
+@pytest.mark.parametrize(
+    "user_domain, ignore_domains, expected_result",
+    (("gmail.com", [], True), ("gmail.com", ["gmail.com"], False)),
+)
+def test_pipedrive_lead_tracker_should_track_ignore_domains(
+    user_domain, ignore_domains, expected_result, settings, django_user_model
+):
+    # Given
+    settings.DISABLE_TASK_PROCESSOR = True
+    settings.PIPEDRIVE_IGNORE_DOMAINS = ignore_domains
+    settings.PIPEDRIVE_API_TOKEN = "dummy"
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+
+    user = django_user_model.objects.create(email=f"test@{user_domain}")
+
+    # When
+    result = PipedriveLeadTracker.should_track(user)
+
+    # Then
+    assert result is expected_result
+
+
+def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organisation(
+    settings, django_user_model, organisation, chargebee_subscription
+):
+    # Given
+    settings.DISABLE_TASK_PROCESSOR = True
+    settings.PIPEDRIVE_API_TOKEN = "dummy"
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+
+    user = django_user_model.objects.create(email="test@example.com")
+    user.organisations.add(organisation)
+
+    # When
+    result = PipedriveLeadTracker.should_track(user)
+
+    # Then
+    assert result is False

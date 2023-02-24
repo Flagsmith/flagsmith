@@ -30,6 +30,9 @@ def register_task_handler(task_name: str = None):
             args: typing.Tuple = (),
             kwargs: typing.Dict = None,
         ) -> typing.Optional[Task]:
+            if settings.DISABLE_TASK_PROCESSOR:
+                return
+
             logger.debug("Request to run task '%s' asynchronously.", task_identifier)
 
             kwargs = kwargs or dict()
