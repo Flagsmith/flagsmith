@@ -30,7 +30,7 @@ class TheComponent extends Component {
         const { feature, tab } = Utils.fromParam();
         const { id } = projectFlag;
         if (`${id}` === feature) {
-            this.editFlag(projectFlag, environmentFlags[id], tab);
+            this.editFeature(projectFlag, environmentFlags[id], tab);
         }
     }
 
@@ -42,7 +42,7 @@ class TheComponent extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag, tab) => {
+    editFeature = (projectFlag, environmentFlag, tab) => {
         API.trackEvent(Constants.events.VIEW_FEATURE);
 
         history.replaceState(
@@ -72,7 +72,7 @@ class TheComponent extends Component {
 
     render() {
         const { projectId, projectFlag, permission, environmentFlags, environmentId, projectFlags, removeFlag, toggleFlag } = this.props;
-        const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
+        const { name, id, created_date, description } = this.props.projectFlag;
         const readOnly = this.props.readOnly || Utils.getFlagsmithHasFeature('read_only_mode');
         const isProtected = hasProtectedTag(projectFlag, projectId);
         const environment = ProjectStore.getEnvironment(environmentId);
@@ -81,7 +81,7 @@ class TheComponent extends Component {
         if (this.props.condensed) {
             return (
                 <Row
-                  onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                  onClick={() => !readOnly && this.editFeature(projectFlag, environmentFlags[id])}
                   style={{ overflow: 'hidden', ...(this.props.style || {}) }}
                 >
                     <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
@@ -91,7 +91,7 @@ class TheComponent extends Component {
                           checked={environmentFlags[id] && environmentFlags[id].enabled}
                           onChange={() => {
                               if (changeRequestsEnabled) {
-                                  this.editFlag(projectFlag, environmentFlags[id]);
+                                  this.editFeature(projectFlag, environmentFlags[id]);
                                   return;
                               }
                               this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
@@ -102,7 +102,7 @@ class TheComponent extends Component {
                     </div>
                     <div className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}>
                         <FeatureValue
-                          onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                          onClick={() => permission && !readOnly && this.editFeature(projectFlag, environmentFlags[id])}
                           value={environmentFlags[id] && environmentFlags[id].feature_state_value}
                           data-test={`feature-value-${this.props.index}`}
                         />
@@ -119,7 +119,7 @@ class TheComponent extends Component {
             >
                 <div
                   className="flex flex-1"
-                  onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                  onClick={() => !readOnly && this.editFeature(projectFlag, environmentFlags[id])}
                 >
                     <div>
                         <Row>
@@ -162,7 +162,7 @@ class TheComponent extends Component {
                     >
                         <Column>
                             <FeatureValue
-                              onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                              onClick={() => !readOnly && this.editFeature(projectFlag, environmentFlags[id])}
                               value={environmentFlags[id] && environmentFlags[id].feature_state_value}
                               data-test={`feature-value-${this.props.index}`}
                             />
@@ -174,7 +174,7 @@ class TheComponent extends Component {
                               checked={environmentFlags[id] && environmentFlags[id].enabled}
                               onChange={() => {
                                   if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
-                                      this.editFlag(projectFlag, environmentFlags[id]);
+                                      this.editFeature(projectFlag, environmentFlags[id]);
                                       return;
                                   }
                                   this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {

@@ -229,11 +229,11 @@ class SegmentOverridesInner extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();
@@ -339,11 +339,11 @@ class SegmentOverridesInnerAdd extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();

@@ -178,14 +178,24 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    editFlag(projectId, flag, onComplete) {
+    editFeature(projectId, flag, onComplete) {
         Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_FLAG,
+            actionType: Actions.EDIT_FEATURE,
             projectId,
             flag,
             onComplete,
         });
     },
+
+    editFeatureMv(projectId, flag, onComplete) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.EDIT_FEATURE_MV,
+            projectId,
+            flag,
+            onComplete,
+        });
+    },
+
     editProject(id, project) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_PROJECT,

@@ -150,11 +150,19 @@ export default class Rule extends PureComponent {
 
 
         const formattedValue = value === null ? null : `${value}`;
-        // split operator by append
-        rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
+        const invalidPercentageSplit = prop === "value" && rules[i].operator === "PERCENTAGE_SPLIT" && (`${value}`?.match(/\D/) || value > 100);
+        if (!invalidPercentageSplit) {
+            // split operator by append
+            rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
+        }
 
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';
+            rules[i].value = '';
+        }
+
+        if(!this.props.rule.conditions.filter((condition)=>!condition.delete).length) {
+            this.props.rule.delete = true
         }
 
         if(!this.props.rule.conditions.filter((condition)=>!condition.delete).length) {

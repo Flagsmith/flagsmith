@@ -246,10 +246,10 @@ const ChangeRequestsPage = class extends Component {
                                     <div className="col-md-12">
 
                                         {
-                                            isScheduled && !!changeRequest.committed_at && (
+                                            isScheduled && (
                                                 <Row>
                                                     <InfoMessage icon="ion-md-calendar" title="Scheduled Change">
-                                                        This feature change is scheduled to go live at {scheduledDate.format('Do MMM YYYY hh:mma')}. You can still edit / remove the change request before this date.
+                                                        This feature change {changeRequest?.committedAt?"is scheduled to" : "will"} go live at {scheduledDate.format('Do MMM YYYY hh:mma')}{changeRequest?.committedAt?"":" if it is approved and published"}.{!!changeRequest?.committedAt && "You can still edit / remove the change request before this date."}
                                                     </InfoMessage>
                                                 </Row>
 
@@ -450,7 +450,7 @@ const ChangeRequestsPage = class extends Component {
                                                             {Utils.renderWithPermission(publishPermission, Constants.environmentPermissions('Update Feature States'), (
                                                                 <Button disabled={(approvedBy.length<minApprovals) || !publishPermission} onClick={this.publishChangeRequest} className="btn ml-2">
                                                                     <span className="ion icon ion-ios-git-merge text-light mr-2"/>
-                                                                    {isScheduled ? 'Schedule' : 'Publish'} Change
+                                                                    {isScheduled ? 'Publish Scheduled' : 'Publish'} Change
                                                                 </Button>
                                                             ))}
 

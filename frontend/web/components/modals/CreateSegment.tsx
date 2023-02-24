@@ -165,8 +165,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
     };
 
     const isValid = useMemo(()=>{
-        if (!rules || !rules[0] || !rules[0].rules) {
-            return false;
+        if (!rules[0]?.rules?.find((v)=>!v.delete)) {
+            return false
         }
         const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
         return !res;
