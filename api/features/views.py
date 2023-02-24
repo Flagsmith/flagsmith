@@ -177,7 +177,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 ),
                 user=self.request.user,
             )
-        context["environment_id"] = self.request.query_params.get("environment")
         return context
 
     @swagger_auto_schema(
