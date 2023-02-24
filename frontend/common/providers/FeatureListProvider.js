@@ -46,10 +46,6 @@ const FeatureListProvider = class extends React.Component {
         AppActions.toggleFlag(i, environments, comment, environmentFlags, projectFlags);
     };
 
-    setFlag = (i, flag, environments) => {
-        AppActions.setFlag(i, flag, environments);
-    };
-
     createFlag = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
         AppActions.createFlag(projectId, environmentId, flag, segmentOverrides);
     };
@@ -124,7 +120,6 @@ const FeatureListProvider = class extends React.Component {
                 {
                     environmentHasFlag: FeatureListStore.hasFlagInEnvironment,
                     toggleFlag: this.toggleFlag,
-                    setFlag: this.setFlag,
                     createFlag: this.createFlag,
                     createChangeRequest: this.createChangeRequest,
                     editFeatureValue: this.editFeatureValue,

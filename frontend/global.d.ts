@@ -1,5 +1,6 @@
 import {Component, FC, ReactNode} from "react";
 import _Select from './web/components/Select';
+import { Environment, FeatureState, ProjectFlag } from 'common/types/responses';
 export declare const openModal: (name?: string) => Promise<void>;
 declare global {
     var openModal: (title:ReactNode, body?:ReactNode, footer?:ReactNode, other?: {className:string, onClose?:()=>void})=>void
@@ -17,4 +18,10 @@ declare global {
     var closeModal: ()=>void
     var toast: (message:string)=>void
     var Tooltip: typeof FC<{title:ReactNode, place?:string, html?:boolean}>
+}
+
+export type FeatureListProviderData = {projectFlags:ProjectFlag[]|null, environmentFlags:FeatureState[]|null, isLoading: boolean}
+export type FeatureListProviderActions = {
+    toggleFlag: (index:number, environments: Environment[], comment:string|null, environmentFlags: FeatureState[], projectFlags:ProjectFlag[]) => void
+    removeFlag: (projectId:string, projectFlag:ProjectFlag) => void
 }

@@ -1,22 +1,30 @@
-import React, {Component, useEffect, useState} from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import TagFilter from '../tags/TagFilter';
-import Tag from "../tags/Tag";
+import Tag from '../tags/Tag';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from 'common/stores/feature-list-store';
 import ProjectStore from 'common/stores/project-store';
-import {useCustomWidgetOptionString} from '@datadog/ui-extensions-react';
-import client from "../datadog-client";
+import API from '../../project/api';
+import { getStore } from 'common/store';
+import Permission from 'common/providers/Permission';
+import Constants from 'common/constants';
+import Utils from 'common/utils/utils';
+import { Provider } from 'react-redux';
+import InfoMessage from '../InfoMessage';
+import PanelSearch from '../PanelSearch';
+// @ts-ignore
+import { AsyncStorage } from 'polyfill-react-native';
+import { FeatureListProviderActions, FeatureListProviderData } from '../../../global';
+import { ProjectFlag } from 'common/types/responses';
+import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
+import client from '../datadog-client';
+import { resolveAuthFlow } from '@datadog/ui-extensions-sdk';
+import AuditLog from '../AuditLog';
+import OrgEnvironmentSelect from '../OrgEnvironmentSelect';
+
 const FeatureListProvider = require('common/providers/FeatureListProvider')
 const AppActions = require("common/dispatcher/app-actions")
 const ES6Component = require("common/ES6Component")
-import AuditLog from "../AuditLog";
-import API from "../../project/api"
-import {getStore} from "common/store";
-import Permission from "common/providers/Permission";
-import Constants from 'common/constants';
-import Utils from 'common/utils/utils';
-import {Provider} from 'react-redux';
-import OrgEnvironmentSelect from "../OrgEnvironmentSelect";
 let isWidget = false;
 export const getIsWidget = ()=> {
     return isWidget;
@@ -31,14 +39,17 @@ type FeatureListType = {
 
 
 const PermissionError = ()=> {
-    return <InfoMessage>
-        Please check you have access to the project and environment within the widget settings.
-    </InfoMessage>
+    return (
+        <InfoMessage>
+            Please check you have access to the project and environment within the widget settings.
+        </InfoMessage>
+    )
 }
 
 const FeatureList = class extends Component<FeatureListType> {
     state =  {
-        tags: [],
+        tags: [] as string[],
+        error:null,
         showArchived: false,
         search: null,
         sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
@@ -76,7 +87,7 @@ const FeatureList = class extends Component<FeatureListType> {
         toast('Saved');
     };
 
-    onError = (error) => {
+    onError = (error:any) => {
         // Kick user back out to projects
         this.setState({ error: true });
         if (typeof closeModal !== 'undefined') {
@@ -89,28 +100,18 @@ const FeatureList = class extends Component<FeatureListType> {
         AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
 
-    createFeaturePermission(el) {
-        return (
-            <Permission level="project" permission="CREATE_FEATURE" id={this.props.projectId}>
-                {({ permission, isLoading }) => (permission ? (
-                    el(permission)
-                ) : Utils.renderWithPermission(permission, Constants.projectPermissions('Create Feature'), el(permission)))}
-            </Permission>
-        );
-    }
     render() {
         const { projectId, environmentId } = this.props;
-        const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         const environment = ProjectStore.getEnvironment(environmentId);
         if(this.state.error){
             return <PermissionError/>
         }
         return (
             <Provider store={getStore()}>
-            <Provider store={getStore()}>
                 <div className="widget-container" data-test="features-page" id="features-page">
                     <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags, isLoading }, { toggleFlag, removeFlag }) => {                         return (
+                    {({ projectFlags, environmentFlags, isLoading }: FeatureListProviderData, { toggleFlag, removeFlag }: FeatureListProviderActions) => {
+                        return (
                                 <div>
                                     {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
                                     {(!isLoading || (projectFlags && !!projectFlags.length)) && (
@@ -130,15 +131,15 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                     isLoading={FeatureListStore.isLoading}
                                                                     paging={FeatureListStore.paging}
                                                                     search={this.state.search}
-                                                                    onChange={(e) => {
+                                                                    onChange={(e:InputEvent) => {
                                                                         this.setState({ search: Utils.safeParseEventValue(e) }, () => {
-                                                                            AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),pageSize);
+                                                                            AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),this.props.pageSize);
                                                                         });
                                                                     }}
                                                                     nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next||1, this.getFilter(), this.props.pageSize)}
                                                                     prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter(), this.props.pageSize)}
-                                                                    goToPage={page => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
-                                                                    onSortChange={(sort) => {
+                                                                    goToPage={(page:number) => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
+                                                                    onSortChange={(sort:string) => {
                                                                         this.setState({ sort }, () => {
                                                                             AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
                                                                         });
@@ -182,7 +183,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                           </TagFilter>
                                                                       </Row>
                                                                     )}
-                                                                    renderRow={(projectFlag, i) => (
+                                                                    renderRow={(projectFlag:ProjectFlag, i:number) => (
                                                                         <FeatureRow
                                                                             hideRemove
                                                                             hideAudit
@@ -195,12 +196,11 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                             projectId={projectId}
                                                                             index={i}
                                                                             toggleFlag={toggleFlag}
-                                                                            editFlag={editFlag}
                                                                             removeFlag={removeFlag}
                                                                             projectFlag={projectFlag}
                                                                         />
                                                                     )}
-                                                                    filterRow={({ name }, search) => true}
+                                                                    filterRow={() => true}
                                                                 />
                                                             </div>
                                                         )}
@@ -229,15 +229,10 @@ export default function Widget() {
     const projectId = useCustomWidgetOptionString(client, 'Project');
     const environmentId = useCustomWidgetOptionString(client, 'Environment');
     const pageSize = useCustomWidgetOptionString(client, 'PageSize') || "5";
-  const id = client.context?.widget?.definition?.custom_widget_key;
+  // @ts-ignore context is marked as private but is accessible and needed
+    const id = client.context?.widget?.definition?.custom_widget_key;
     const isAudit = id === "flagsmith_audit_widget";
     const hideTags = useCustomWidgetOptionString(client, 'HideTags') === "Yes";
-    if (!API.getCookie("t")) {
-        resolveAuthFlow({
-            isAuthenticated: false,
-        });
-        return null
-    }
     const [error, setError] = useState<boolean>(false);
     const [_projectId, setProjectId] = useState<string|null>(projectId||null);
     const [_environmentId, setEnvironmentId] = useState<string|null>(environmentId||null);
@@ -253,7 +248,14 @@ export default function Widget() {
     },[projectId])
 
     if (!API.getCookie("t")) {
+        resolveAuthFlow({
+            isAuthenticated: false,
+        });
         return null
+    }
+
+    if(error) {
+        return <PermissionError/>
     }
     if (projectId && environmentId && !error) {
         if (isAudit) {

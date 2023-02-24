@@ -6,7 +6,7 @@ import Tag from "./Tag";
 import Button from "../base/forms/Button";
 
 type TagFilterType = {
-    value?: number[]
+    value?: (number|string)[]
     onClearAll?: () => void
     showClearAll?: boolean
     showUntagged?: boolean

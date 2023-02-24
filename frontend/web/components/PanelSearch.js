@@ -250,5 +250,4 @@ const PanelSearch = class extends Component {
         );
     }
 };
-
 export default PanelSearch
