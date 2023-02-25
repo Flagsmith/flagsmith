@@ -4,7 +4,7 @@ import flagsmith from '${LIB_NAME}';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 export default function HomePage() {
-  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']]); // only causes re-render if specified flag values / traits change
+  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change
   const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   
