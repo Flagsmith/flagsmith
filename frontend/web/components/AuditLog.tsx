@@ -5,9 +5,10 @@ import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
+import {Link} from "react-router-dom";
 
 const PanelSearch = require('../components/PanelSearch');
-const Format = require('common/format')
+const Format = require('common/utils/format')
 type AuditLogType = {
     environmentId: string
     projectId: string
@@ -16,6 +17,7 @@ type AuditLogType = {
     onSearchChange?:(search:string)=>void
 }
 
+const widths = [200,200, 200]
 const AuditLog: FC<AuditLogType> = (props) => {
     const [page, setPage] = useState(1);
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
@@ -48,16 +50,28 @@ const AuditLog: FC<AuditLogType> = (props) => {
 
     const renderRow = ({created_date, log, author, environment, related_object_type}: AuditLogItem) => {
         return (
-            <Row space className='list-item py-2 audit__item' key={created_date}>
-                <span>
+            <Row className='list-item py-2 audit__item' key={created_date}>
+                <span style={{width:widths[0]}}>
                     {moment(created_date).format('Do MMM YYYY HH:mma')}
                 </span>
-                <span>
-                    {Format.enumeration.get(related_object_type)}
-                </span>
-                <span>
-                    {environment?.name || "Project"}
-                </span>
+                <div style={{width:widths[1]}}>
+                    {author?.first_name} {author?.last_name}
+                </div>
+                {environment?.name ? (
+                    <Link style={{width:widths[2]}} to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}>
+                        <Row>
+                            <span className="flex-row chip">
+                                {environment?.name}
+                            </span>
+                        </Row>
+
+                    </Link>
+                ):(
+                   <div style={{width:widths[2]}}/>
+                )}
+                <Flex>
+                    {log}
+                </Flex>
             </Row>
         );
     };
@@ -98,6 +112,20 @@ const AuditLog: FC<AuditLogType> = (props) => {
             }}
             filterRow={() => true}
             renderRow={renderRow}
+            header={<Row className="table-header">
+                <span style={{width:widths[0]}}>
+                    Date
+                </span>
+                <div style={{width:widths[1]}}>
+                    User
+                </div>
+                <div style={{width:widths[2]}}>
+                    Environment
+                </div>
+                <Flex>
+                    Content
+                </Flex>
+            </Row>}
             renderFooter={()=><JSONReference className="mt-4 ml-2" title={"Audit"} json={auditLog?.results}/>}
             renderNoResults={(
                 <FormGroup className='text-center'>
