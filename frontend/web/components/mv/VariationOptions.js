@@ -43,7 +43,7 @@ export default function VariationOptions({
                     <div className="panel-content">
                         <Row>
                             <Flex>
-                                <ValueEditor disabled={disabled} value={Utils.getTypedValue(controlValue)}/>
+                                <ValueEditor disabled value={Utils.getTypedValue(controlValue)}/>
                             </Flex>
                             <div
                               onMouseDown={(e) => {

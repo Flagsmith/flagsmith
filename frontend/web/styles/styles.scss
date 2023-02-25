@@ -36,8 +36,28 @@ bold, strong {
 }
 
 .value-editor {
-
+  &.disabled {
+    code {
+      background: $input-placeholder-color !important;
+    }
+    .select-language {
+      display: none;
+    }
+  }
 }
+.dark {
+  .value-editor {
+    &.disabled {
+      code {
+        cursor: not-allowed;
+        opacity: 0.8;
+        background: $bt-brand-faint-alt-dark !important;
+      }
+    }
+  }
+}
+
+
 
 .faint-lg {
   color: $text-muted;

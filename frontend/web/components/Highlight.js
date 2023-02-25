@@ -15,6 +15,7 @@ function escapeHtml(unsafe) {
     };
 }
 const defaultValue = { __html: 'Enter a value...' };
+const defaultDisabledValue = { __html: ' ' };
 const collapsedHeight = 110;
 class Highlight extends React.Component {
   state = {
@@ -111,7 +112,7 @@ class Highlight extends React.Component {
     }
 
     render() {
-        const { children, className, element: Element, innerHTML } = this.props;
+        const { children, className, element: Element, innerHTML, disabled } = this.props;
         const props = { ref: this.setEl, className };
 
         if (innerHTML) {
@@ -126,8 +127,9 @@ class Highlight extends React.Component {
             return <Element {...props}>{children}</Element>;
         }
 
-        const html = this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue
-            : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue);
+        debugger
+        const html = this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : disabled? defaultDisabledValue : defaultValue
+            : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : disabled? defaultDisabledValue : defaultValue);
         return (
             <div className={this.state.expandable ? 'expandable' : ''}>
                 <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean' || this.props.forceExpanded ? 1 : 0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
