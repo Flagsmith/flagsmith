@@ -74,7 +74,8 @@ window.Loader = class extends PureComponent {
   }
 };
 
-window.Tooltip = require('../components/Toolip');
+import Tooltip from '../components/Toolip';
+window.Tooltip = Tooltip;
 
 global.ToggleChip = ToggleChip;
 global.RemoveIcon = RemoveIcon;

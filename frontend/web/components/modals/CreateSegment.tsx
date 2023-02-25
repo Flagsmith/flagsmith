@@ -27,6 +27,7 @@ import TabItem from '../base/forms/TabItem';
 import Tabs from '../base/forms/Tabs';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import JSONReference from "../JSONReference";
+import { cloneDeep } from 'lodash';
 
 
 
@@ -108,7 +109,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     const isError = createError || updateError;
 
     const addRule = (type = 'ANY') => {
-        const newRules = rules.concat([]);
+        const newRules = cloneDeep(rules);
         newRules[0].rules = newRules[0].rules.concat({
             type,
             rules: [],
@@ -120,13 +121,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
 
     const updateRule = (rulesIndex: number, elementNumber: number, newValue: SegmentRule) => {
-        const newRules = rules.concat([])
+        const newRules = cloneDeep(rules)
         newRules[0].rules[elementNumber] = newValue;
         setRules(newRules);
     }
 
     const removeRule = (rulesIndex: number, elementNumber: number) => {
-        const newRules = rules.concat([])
+        const newRules = cloneDeep(rules)
         newRules[0].rules.splice(elementNumber, 1);
         setRules(newRules);
     }

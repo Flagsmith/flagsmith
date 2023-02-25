@@ -1,4 +1,4 @@
-import {Segment, Tag} from "./responses";
+import { Segment, Tag } from "./responses";
 
 export type PagedRequest<T> =  T & {
   page?:number

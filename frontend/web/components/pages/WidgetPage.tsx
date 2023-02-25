@@ -15,7 +15,7 @@ import PanelSearch from '../PanelSearch';
 // @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native';
 import { FeatureListProviderActions, FeatureListProviderData } from '../../../global';
-import { Environment, ProjectFlag } from 'common/types/responses';
+import { Environment, PagedResponse, ProjectFlag } from 'common/types/responses';
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
 import client from '../datadog-client';
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk';
@@ -130,8 +130,8 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                             AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),this.props.pageSize);
                                                                         });
                                                                     }}
-                                                                    nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next||1, this.getFilter(), this.props.pageSize)}
-                                                                    prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter(), this.props.pageSize)}
+                                                                    nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, (FeatureListStore.paging as PagedResponse<ProjectFlag>).next||1, this.getFilter(), this.props.pageSize)}
+                                                                    prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, (FeatureListStore.paging as PagedResponse<ProjectFlag>).previous, this.getFilter(), this.props.pageSize)}
                                                                     goToPage={(page:number) => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
                                                                     onSortChange={(sort:string) => {
                                                                         this.setState({ sort }, () => {

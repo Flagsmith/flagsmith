@@ -1,4 +1,5 @@
-import { OAuthType } from 'common/types/requests';
+import { OAuthType } from './types/requests';
+import { SegmentCondition } from './types/responses';
 
 const keywords = {
     URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
@@ -52,7 +53,7 @@ export default {
         property: '',
         operator: 'EQUAL',
         value: '',
-    },
+    } as SegmentCondition,
     events: {
         'CREATE_ENVIRONMENT': { 'event': 'Environment created', 'category': 'Environment' },
         'CREATE_FEATURE': { 'event': 'Feature created', 'category': 'Features' },
@@ -146,7 +147,7 @@ export default {
             'Node JS': 'javascript',
         },
 
-        'CREATE_USER': (envId:string, userId:string) => ({
+        'CREATE_USER': (envId:string, userId:string = keywords.USER_ID) => ({
             '.NET': require('./code-help/create-user/create-user-dotnet')(envId, keywords),
             'curl': require('./code-help/create-user/create-user-curl')(envId, keywords, userId),
             'Flutter': require('./code-help/create-user/create-user-flutter')(envId, keywords),

@@ -1,5 +1,5 @@
 import React from 'react';
-import IdentitySegmentsStore from '../stores/identity-segments-store';
+import IdentitySegmentsStore from 'common/stores/identity-segments-store';
 
 const IdentitySegmentsProvider = class extends React.Component {
     static displayName = 'IdentitySegmentsProvider'

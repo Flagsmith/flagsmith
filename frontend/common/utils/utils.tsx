@@ -8,7 +8,7 @@ import {
     MultivariateOption, FeatureStateValue, FlagsmithValue, ProjectFlag, FeatureState
 } from 'common/types/responses';
 import flagsmith from "flagsmith";
-import {ReactNode} from "react";
+import { ReactNode } from "react";
 import _ from "lodash";
 
 const semver = require('semver');
@@ -91,7 +91,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return 'Manage Identities';
     },
     getTraitEndpointMethod(id?:number) {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && (ProjectStore.model as ProjectType|null)?.use_edge_identities) {
             return 'put';
         }
         return id ? 'put' : 'post';
@@ -124,7 +124,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return false;
     },
     getUpdateTraitEndpoint(environmentId:string, userId:string, id?:string) {
-        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && (ProjectStore.model as ProjectType|null)?.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/${id ? `${id}/` : ''}`;
@@ -152,6 +152,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     },
     validateRule(rule:SegmentCondition) {
         if (!rule) return false;
+
+        if(rule.delete) {
+            return true
+        }
 
         const operators = Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : [];
         const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
@@ -300,7 +304,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         let total = 0;
         multivariateOptions.map((v) => {
             const variation = variations && variations.find(env => env.multivariate_feature_option === v.id);
-            total += variation ? variation.percentage_allocation : typeof v.default_percentage_allocation === 'number' ? v.default_percentage_allocation : v.percentage_allocation;
+            total += variation ? variation.percentage_allocation : typeof v.default_percentage_allocation === 'number' ? v.default_percentage_allocation : (v as any).percentage_allocation;
             return null;
         });
         return 100 - total;

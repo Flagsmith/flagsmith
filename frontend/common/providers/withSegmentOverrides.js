@@ -1,6 +1,6 @@
-import data from '../data/base/_data';
-import ProjectStore from '../stores/project-store';
-import FeatureListStore from '../stores/feature-list-store';
+import data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import FeatureListStore from 'common/stores/feature-list-store';
 
 export default (WrappedComponent) => {
     class HOC extends React.Component {

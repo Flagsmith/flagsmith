@@ -1,5 +1,5 @@
 import React from 'react';
-import FeatureListStore from '../stores/feature-list-store';
+import FeatureListStore from 'common/stores/feature-list-store';
 
 const FeatureListProvider = class extends React.Component {
     static displayName = 'FeatureListProvider'

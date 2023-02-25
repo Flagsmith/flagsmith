@@ -4,7 +4,8 @@ const Dispatcher = require('common/dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
-import {getIsWidget} from '../../web/components/pages/WidgetPage'
+// eslint-disable-next-line @dword-design/import-alias/prefer-alias
+import { getIsWidget } from '../../web/components/pages/WidgetPage'
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -453,6 +454,7 @@ const store = Object.assign({}, BaseStore, {
     hasFlagInEnvironment(id, environmentFlags) {
         const flags = environmentFlags || (store.model && store.model.keyedEnvironmentFeatures);
 
+        // eslint-disable-next-line no-prototype-builtins
         return flags && flags.hasOwnProperty(id);
     },
     getLastSaved() {

@@ -10,6 +10,8 @@ export type FlagsmithValue = string | number | boolean | null
 export type SegmentCondition = {
   operator: string;
   property: string;
+
+  delete?: boolean;
   value: string;
 }
 export type SegmentRule = {
@@ -17,7 +19,7 @@ export type SegmentRule = {
   rules: SegmentRule[];
 
   delete?: boolean
-  conditions: [];
+  conditions: SegmentCondition[];
 }
 export type Segment = {
   id: number;
@@ -25,7 +27,7 @@ export type Segment = {
   uuid: string;
   name: string;
   description: string;
-  project: number;
+  project: string | number;
   feature?: number;
 }
 export type Environment = {

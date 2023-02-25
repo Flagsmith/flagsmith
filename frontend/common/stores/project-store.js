@@ -1,3 +1,4 @@
+// eslint-disable-next-line @dword-design/import-alias/prefer-alias
 import { getIsWidget } from '../../web/components/pages/WidgetPage';
 
 import Constants from 'common/constants';

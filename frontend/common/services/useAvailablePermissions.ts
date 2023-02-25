@@ -3,28 +3,28 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const availablePermissionService = service
-  .enhanceEndpoints({ addTagTypes: ['AvailablePermission'] })
+    .enhanceEndpoints({ addTagTypes: ['AvailablePermission'] })
     .injectEndpoints({
-  endpoints: (builder) => ({
-    getAvailablePermissions: builder.query<Res['availablePermissions'], Req['getAvailablePermissions']>({
-      query: (query: Req['getAvailablePermissions']) => ({
-        url: `${query.level}s/permissions/`,
-      }),
-      providesTags:(res,e, query)=>[{ type: 'AvailablePermission', id: query.level },],
-    }),
-    // END OF ENDPOINTS
-  }),
- })
+        endpoints: (builder) => ({
+            getAvailablePermissions: builder.query<Res['availablePermissions'], Req['getAvailablePermissions']>({
+                query: (query: Req['getAvailablePermissions']) => ({
+                    url: `${query.level}s/permissions/`,
+                }),
+                providesTags:(res,e, query)=>[{ type: 'AvailablePermission', id: query.level },],
+            }),
+            // END OF ENDPOINTS
+        }),
+    })
 
 export async function getAvailablePermissions(store: any, data: Req['getAvailablePermissions'], options?: Parameters<typeof availablePermissionService.endpoints.getAvailablePermissions.initiate>[1]) {
-  store.dispatch(availablePermissionService.endpoints.getAvailablePermissions.initiate(data,options))
-  return Promise.all(store.dispatch(availablePermissionService.util.getRunningQueriesThunk()))
+    store.dispatch(availablePermissionService.endpoints.getAvailablePermissions.initiate(data,options))
+    return Promise.all(store.dispatch(availablePermissionService.util.getRunningQueriesThunk()))
 }
-  // END OF FUNCTION_EXPORTS
+// END OF FUNCTION_EXPORTS
 
 export const {
-  useGetAvailablePermissionsQuery,
-  // END OF EXPORTS
+    useGetAvailablePermissionsQuery,
+    // END OF EXPORTS
 } = availablePermissionService
 
 /* Usage examples:

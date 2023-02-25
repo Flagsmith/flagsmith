@@ -409,4 +409,4 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     )
 }
 
-export default ConfigProvider(EditPermissions) as FC<Omit<EditPermissionsType, "router">>;
+export default (ConfigProvider(EditPermissions) as unknown) as FC<Omit<EditPermissionsType, "router">>;
