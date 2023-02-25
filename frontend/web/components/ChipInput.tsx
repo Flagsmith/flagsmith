@@ -1,6 +1,5 @@
 import React, {FC, FormEventHandler, useState} from 'react';
 import TheInput from 'material-ui-chip-input';
-const Utils = require('../../common/utils/utils')
 import Utils from "common/utils/utils";
 import {filter} from 'lodash'
 type ChipInputType = {
