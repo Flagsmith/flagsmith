@@ -10,8 +10,6 @@ type ChipInputType = {
 
 const ChipInput: FC<ChipInputType> = ({value, onChange,placeholder}) => {
     const [inputValue, setInputValue] = useState("");
-
-    console.log(inputValue)
     const onChangeText:FormEventHandler = (e) => {
         const v = Utils.safeParseEventValue(e);
         const currentValue = value || [];

@@ -150,7 +150,7 @@ export type FeatureStateValue = {
   type: string;
 }
 
-export type MultiVartiateOption =  {
+export type MultivariateOption =  {
   id: number;
   uuid: string;
   type: string;
@@ -187,7 +187,7 @@ export type ProjectFlag = {
   created_date: Date;
   description?: string;
   tags: number[];
-  multivariate_options: MultiVartiateOption[];
+  multivariate_options: MultivariateOption[];
   is_archived: boolean;
   owners: User[];
   uuid: string;

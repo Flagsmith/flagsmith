@@ -62,7 +62,7 @@ export default (WrappedComponent) => {
         }
 
 
-        removeMultiVariateOption = (id) => {
+        removeMultivariateOption = (id) => {
             this.setState({
                 segmentOverrides: this.state.segmentOverrides && this.state.segmentOverrides.map(v => ({
                     ...v,
@@ -79,7 +79,7 @@ export default (WrappedComponent) => {
                   ref="wrappedComponent"
                   updateSegments={this.updateSegments}
                   onEnvironmentVariationsChange={this.onEnvironmentVariationsChange}
-                  removeMultiVariateOption={this.removeMultiVariateOption}
+                  removeMultivariateOption={this.removeMultivariateOption}
                   {...this.props}
                   {...this.state}
                 />

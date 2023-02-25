@@ -5,7 +5,7 @@ import {
     SegmentCondition,
     Project as ProjectType,
     MultivariateFeatureStateValue,
-    MultiVartiateOption, FeatureStateValue, FlagsmithValue, ProjectFlag, FeatureState
+    MultivariateOption, FeatureStateValue, FlagsmithValue, ProjectFlag, FeatureState
 } from 'common/types/responses';
 import flagsmith from "flagsmith";
 import {ReactNode} from "react";
@@ -293,7 +293,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     },
 
 
-    calculateControl(multivariateOptions: MultiVartiateOption[], variations?: MultivariateFeatureStateValue[]) {
+    calculateControl(multivariateOptions: MultivariateOption[], variations?: MultivariateFeatureStateValue[]) {
         if (!multivariateOptions || !multivariateOptions.length) {
             return 100;
         }

@@ -253,7 +253,7 @@ const CreateFlag = class extends Component {
         if (this.state.multivariate_options[i].id) {
             const idToRemove = this.state.multivariate_options[i].id;
             if (idToRemove) {
-                this.props.removeMultiVariateOption(idToRemove);
+                this.props.removeMultivariateOption(idToRemove);
             }
             this.state.multivariate_options.splice(i, 1);
             this.forceUpdate();
