@@ -61,9 +61,10 @@ export type AuditLogItem = {
   environment?: Environment;
   project: ProjectSummary;
   related_object_id: number;
-  related_object_type: string;
+  related_object_type: "FEATURE" | "FEATURE_STATE" | "ENVIRONMENT" | "CHANGE_REQUEST";
   is_system_event: boolean;
 }
+
 export type Subscription = {
   id: number;
   uuid: string;

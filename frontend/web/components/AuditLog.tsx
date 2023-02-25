@@ -5,17 +5,14 @@ import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
-import ConfigProvider from 'common/providers/ConfigProvider';
 
 const PanelSearch = require('../components/PanelSearch');
-const ProjectProvider = require('common/providers/ProjectProvider');
-
+const Format = require('common/format')
 type AuditLogType = {
     environmentId: string
     projectId: string
     onErrorChange?:(error:boolean) => void
     pageSize:number
-    onErrorChange?:(error:boolean) => void
     onSearchChange?:(search:string)=>void
 }
 
@@ -49,25 +46,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
         hasHadResults.current = true;
     }
 
-    const renderRow = ({created_date, log, author}: AuditLogItem) => {
+    const renderRow = ({created_date, log, author, environment, related_object_type}: AuditLogItem) => {
         return (
             <Row space className='list-item py-2 audit__item' key={created_date}>
-                <Flex>
-                    <div
-                        className='audit__log mb-1'
-                    >
-                        {log}
-                    </div>
-                    {!!author && (
-                        <div
-                            className='text-small text-muted'
-                        >
-                            {`${author.first_name} ${author.last_name}`}{" "}
-                            {moment(created_date).format('Do MMM YYYY HH:mma')}
-                        </div>
-                    )}
-
-                </Flex>
+                <span>
+                    {moment(created_date).format('Do MMM YYYY HH:mma')}
+                </span>
+                <span>
+                    {Format.enumeration.get(related_object_type)}
+                </span>
+                <span>
+                    {environment?.name || "Project"}
+                </span>
             </Row>
         );
     };
