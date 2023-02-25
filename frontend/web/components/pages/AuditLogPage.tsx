@@ -3,7 +3,7 @@ import ConfigProvider from 'common/providers/ConfigProvider';
 import ToggleChip from '../ToggleChip';
 import Utils from 'common/utils/utils';
 import { Project } from 'common/types/responses';
-import { RoutPanelSearcherChildContext } from 'react-router';
+import { RouterChildContext } from 'react-router';
 import AuditLog from '../AuditLog';
 
 const ProjectProvider = require('common/providers/ProjectProvider');

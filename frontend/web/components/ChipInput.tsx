@@ -1,5 +1,6 @@
 import React, {FC, FormEventHandler, useState} from 'react';
 import TheInput from 'material-ui-chip-input';
+const Utils = require('../../common/utils/utils')
 import Utils from "common/utils/utils";
 import {filter} from 'lodash'
 type ChipInputType = {
@@ -11,14 +12,15 @@ type ChipInputType = {
 const ChipInput: FC<ChipInputType> = ({value, onChange,placeholder}) => {
     const [inputValue, setInputValue] = useState("");
 
+    console.log(inputValue)
     const onChangeText:FormEventHandler = (e) => {
         const v = Utils.safeParseEventValue(e);
         const currentValue = value || [];
         if (v.search(/[ ,]/) !== -1) {
             //delimit when detecting one of the following characters
             const split = filter(v.split(/[ ,;]/), v => v !== ' ' && v !== ',' && v !== ';' && v !== '');
-            onChange(currentValue.concat(split));
             setInputValue("")
+            onChange(currentValue.concat(split));
         } else {
             setInputValue(v);
         }
@@ -33,6 +35,7 @@ const ChipInput: FC<ChipInputType> = ({value, onChange,placeholder}) => {
         if (chip) {
             onChange((value||[]).concat([chip]));
         }
+        setInputValue("")
         return true
     }
 
