@@ -5,6 +5,7 @@ import ValueEditor from './ValueEditor';
 import Constants from '../../common/constants';
 import VariationOptions from './mv/VariationOptions';
 import AddVariationButton from './mv/AddVariationButton';
+import ErrorMessage from './ErrorMessage';
 
 export default class Feature extends PureComponent {
     static displayName = 'Feature';
@@ -35,6 +36,7 @@ export default class Feature extends PureComponent {
             value,
             environmentVariations,
             onValueChange,
+            error,
         } = this.props;
 
         const enabledString = isEdit ? 'Enabled' : 'Enabled by default';
@@ -75,8 +77,13 @@ export default class Feature extends PureComponent {
                           title={`${valueString}`}
                         />
                     </FormGroup>
-                ) }
+                )}
 
+                {!!error && (
+                     <div className="mx-2 mt-2">
+                       <ErrorMessage error={error}/>
+                     </div>
+                )}
                 {!!identity && (
                     <div>
                         <FormGroup className="mb-4 mx-3">

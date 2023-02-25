@@ -84,10 +84,7 @@ const FeatureList = class extends Component<FeatureListType> {
     onError = (error) => {
         // Kick user back out to projects
         this.setState({ error: true });
-        if (typeof closeModal !== 'undefined') {
-            closeModal();
-            toast('We could not create this feature, please check the name is not in use.');
-        }
+        toast('We could not create this feature, please check the name is not in use.');
     }
 
     filter = () => {
