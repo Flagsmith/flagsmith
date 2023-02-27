@@ -7,7 +7,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg2 import openapi
@@ -122,6 +122,28 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_data = query_serializer.validated_data
 
         queryset = self._filter_queryset(queryset)
+
+        if self.action == "list" and "environment" in self.request.query_params:
+            environment_id = self.request.query_params["environment"]
+            queryset = queryset.annotate(
+                num_segment_overrides=Count(
+                    "feature_states",
+                    Q(
+                        feature_states__feature_segment__isnull=False,
+                        feature_states__environment_id=environment_id,
+                    ),
+                ),
+            )
+            if not project.enable_dynamo_db:
+                queryset = queryset.annotate(
+                    num_identity_overrides=Count(
+                        "feature_states",
+                        Q(
+                            feature_states__identity__isnull=False,
+                            feature_states__environment_id=environment_id,
+                        ),
+                    ),
+                )
 
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
@@ -474,7 +496,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
             many=True,
-            context={"request": request, "identity": identity},
+            context={
+                "request": request,
+                "identity": identity,
+                "environment_api_key": identity.environment.api_key,
+            },
         )
 
         return Response(serializer.data)
@@ -557,7 +583,6 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-
             feature_states = FeatureState.get_environment_flags_list(
                 environment_id=request.environment.id,
                 feature_name=request.GET["feature"],

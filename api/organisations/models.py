@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.models import AbstractBaseExportableModel
+from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
 from django.conf import settings
+from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
 from django_lifecycle import (
@@ -12,7 +13,6 @@ from django_lifecycle import (
     LifecycleModelMixin,
     hook,
 )
-from softdelete.models import SoftDeleteObject
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
@@ -45,13 +45,15 @@ from webhooks.models import AbstractBaseWebhookModel
 
 TRIAL_SUBSCRIPTION_ID = "trial"
 
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
+
 
 class OrganisationRole(models.TextChoices):
     ADMIN = ("ADMIN", "Admin")
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject):
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -116,6 +118,18 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteO
     @hook(AFTER_CREATE)
     def create_subscription(self):
         Subscription.objects.create(organisation=self)
+
+    @hook(AFTER_SAVE)
+    def clear_environment_caches(self):
+        from environments.models import Environment
+
+        environment_cache.delete_many(
+            list(
+                Environment.objects.filter(project__organisation=self).values_list(
+                    "api_key", flat=True
+                )
+            )
+        )
 
 
 class UserOrganisation(models.Model):

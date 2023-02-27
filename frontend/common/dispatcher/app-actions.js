@@ -230,14 +230,24 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    editFlag(projectId, flag, onComplete) {
+    editFeature(projectId, flag, onComplete) {
         Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_FLAG,
+            actionType: Actions.EDIT_FEATURE,
             projectId,
             flag,
             onComplete,
         });
     },
+
+    editFeatureMv(projectId, flag, onComplete) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.EDIT_FEATURE_MV,
+            projectId,
+            flag,
+            onComplete,
+        });
+    },
+
     editProject(id, project) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_PROJECT,
@@ -335,21 +345,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             onError,
         });
     },
-    getIdentities(envId, pageSize) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_IDENTITIES,
-            envId,
-            pageSize,
-        });
-    },
-    getIdentitiesPage(envId, page, pageType) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_IDENTITIES_PAGE,
-            envId,
-            page,
-            pageType,
-        });
-    },
     getIdentity(envId, id) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_IDENTITY,
@@ -362,19 +357,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.GET_IDENTITY_SEGMENTS,
             projectId,
             id,
-        });
-    },
-    getIdentitySegmentsPage(page) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_IDENTITY_SEGMENTS_PAGE,
-            page,
-        });
-    },
-    saveIdentity(id, identity) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SAVE_IDENTITY,
-            id,
-            identity,
         });
     },
     createOrganisation(name) {
@@ -431,26 +413,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id,
         });
     },
-    // Segments
-    selectEnvironment(data) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SELECT_ENVIRONMENT,
-            data,
-        });
-    },
     getSegments(projectId, environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_SEGMENTS,
             projectId,
             environmentId,
-        });
-    },
-    getSegmentsPage(projectId, environmentId, page) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_SEGMENTS_PAGE,
-            projectId,
-            environmentId,
-            page,
         });
     },
     searchSegments(projectId, environmentId, search) {
@@ -479,45 +446,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.REMOVE_SEGMENT,
             projectId,
-            id,
-        });
-    },
-    searchIdentities(envId, search, pageSize) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_IDENTITIES,
-            envId,
-            search,
-            pageSize,
-        });
-    },
-    getAuditLog(projectId, search, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_AUDIT_LOG,
-            projectId,
-            environmentId,
-            search,
-        });
-    },
-    getAuditLogPage(projectId, page, environmentId) {
-        Dispatcher.handleViewAction({
-            projectId,
-            actionType: Actions.GET_AUDIT_LOG_PAGE,
-            page,
-            environmentId,
-        });
-    },
-    searchAuditLog(search, projectId, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_AUDIT_LOG,
-            projectId,
-            search,
-            environmentId,
-        });
-    },
-    deleteIdentity(envId, id) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.DELETE_IDENTITY,
-            envId,
             id,
         });
     },

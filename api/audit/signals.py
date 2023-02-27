@@ -1,6 +1,5 @@
 import logging
 
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -92,7 +91,6 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
 @track_only_feature_related_events
 @handle_skipped_signals
 def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
-
     new_relic_config = _get_integration_config(instance, "new_relic_config")
     if not new_relic_config:
         return
@@ -109,7 +107,6 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
 @track_only_feature_related_events
 @handle_skipped_signals
 def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
-
     dynatrace_config = _get_integration_config(instance, "dynatrace_config")
     if not dynatrace_config:
         return
@@ -125,12 +122,9 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
 @receiver(post_save, sender=AuditLog)
 @handle_skipped_signals
 def send_environments_to_dynamodb(sender, instance, **kwargs):
-    environments_filter = (
-        Q(id=instance.environment_id)
-        if instance.environment_id
-        else Q(project=instance.project)
+    Environment.write_environments_to_dynamodb(
+        environment_id=instance.environment_id, project_id=instance.project_id
     )
-    Environment.write_environments_to_dynamodb(environments_filter)
 
 
 @receiver(post_save, sender=AuditLog)

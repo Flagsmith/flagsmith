@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import Q
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
@@ -19,4 +18,4 @@ class WebhookConfiguration(AbstractBaseWebhookModel, LifecycleModelMixin):
     @hook(AFTER_SAVE)
     @hook(AFTER_DELETE)
     def write_environment_to_dynamodb(self):
-        Environment.write_environments_to_dynamodb(Q(id=self.environment_id))
+        Environment.write_environments_to_dynamodb(environment_id=self.environment_id)

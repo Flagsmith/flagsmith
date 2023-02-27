@@ -3,7 +3,7 @@ import typing
 
 
 def get_hashed_percentage_for_object_ids(
-    object_ids: typing.Iterable[int], iterations: int = 1
+    object_ids: typing.Iterable[typing.Union[str, int]], iterations: int = 1
 ) -> float:
     """
     Given a list of object ids, get a floating point number between 0 and 1 based on

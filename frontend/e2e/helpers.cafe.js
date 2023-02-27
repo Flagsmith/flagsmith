@@ -57,7 +57,7 @@ export const createTrait = async (index, id, value) => {
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
-    await t.wait(500);
+    await t.wait(2000);
     await t.eval(() => location.reload(true));
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;

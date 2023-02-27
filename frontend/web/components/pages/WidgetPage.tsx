@@ -3,15 +3,16 @@ import TagSelect from '../TagSelect';
 import TagStore from '../../../common/stores/tags-store';
 import {Tag} from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
-import FeatureListStore from '../../../common/stores/feature-list-store';
-import ProjectStore from '../../../common/stores/project-store';
+import FeatureListStore from 'common/stores/feature-list-store';
+import ProjectStore from 'common/stores/project-store';
 import {useCustomWidgetOptionString} from '@datadog/ui-extensions-react';
 import client from "../datadog-client";
-import NavIconSmall from '../svg/NavIconSmall';
 import AuditLog from "../AuditLog";
 import {getStore} from "../../../common/store";
 import {Provider} from 'react-redux';
 import OrgEnvironmentSelect from "../OrgEnvironmentSelect";
+import { resolveAuthFlow } from '@datadog/ui-extensions-sdk';
+import InfoMessage from '../InfoMessage';
 let isWidget = false;
 export const getIsWidget = ()=> {
     return isWidget;
@@ -22,6 +23,13 @@ type FeatureListType = {
     environmentId: string
     pageSize: number
     hideTags: boolean
+}
+
+
+const PermissionError = ()=> {
+    return <InfoMessage>
+        Please check you have access to the project and environment within the widget settings.
+    </InfoMessage>
 }
 
 const FeatureList = class extends Component<FeatureListType> {
@@ -55,13 +63,6 @@ const FeatureList = class extends Component<FeatureListType> {
         }
     }
 
-    componentWillUnmount() {
-        document.body.classList.remove("widget-mode")
-    }
-    componentWillUnmount() {
-        document.body.classList.add("widget-mode")
-    }
-
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
         this.getTags(this.props.projectId);
@@ -82,7 +83,7 @@ const FeatureList = class extends Component<FeatureListType> {
 
     onError = (error) => {
         // Kick user back out to projects
-        this.setState({ error });
+        this.setState({ error: true });
         if (typeof closeModal !== 'undefined') {
             closeModal();
             toast('We could not create this feature, please check the name is not in use.');
@@ -106,12 +107,14 @@ const FeatureList = class extends Component<FeatureListType> {
         const { projectId, environmentId } = this.props;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         const environment = ProjectStore.getEnvironment(environmentId);
-
+        const error = this.state.error
         return (
             <div className="widget-container" data-test="features-page" id="features-page">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
-                        const isLoading = FeatureListStore.isLoading;
+                    {({ projectFlags, environmentFlags, isLoading }, { toggleFlag, editFlag, removeFlag }) => {
+                        if(error){
+                            return <PermissionError/>
+                        }
                         return (
                             <div>
                                 {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
@@ -224,6 +227,9 @@ const FeatureList = class extends Component<FeatureListType> {
 
 
 export default function Widget() {
+    useEffect(()=>{
+        document.body.classList.add("widget-mode")
+    },[])
     const projectId = useCustomWidgetOptionString(client, 'Project');
     const environmentId = useCustomWidgetOptionString(client, 'Environment');
     const pageSize = useCustomWidgetOptionString(client, 'PageSize') || "5";
@@ -231,6 +237,9 @@ export default function Widget() {
     const isAudit = id === "flagsmith_audit_widget";
     const hideTags = useCustomWidgetOptionString(client, 'HideTags') === "Yes";
     if (!API.getCookie("t")) {
+        resolveAuthFlow({
+            isAuthenticated: false,
+        });
         return null
     }
     const [error, setError] = useState<string|null>(null);

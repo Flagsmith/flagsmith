@@ -519,11 +519,12 @@ def test_should_create_environments(
     }
 
     # When
-    response = client.post(url, data=data)
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["description"] == description
+    assert response.json()["use_mv_v2_evaluation"] is True
 
     # and user is admin
     if not is_master_api_key_client:
@@ -649,6 +650,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     banner_text = "production environment be careful"
     banner_colour = "#FF0000"
     hide_disabled_flags = True
+    use_mv_v2_evaluation = True
 
     data = {
         "project": project.id,
@@ -656,6 +658,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
         "banner_text": banner_text,
         "banner_colour": banner_colour,
         "hide_disabled_flags": hide_disabled_flags,
+        "use_mv_v2_evaluation": use_mv_v2_evaluation,
     }
 
     # When
@@ -672,6 +675,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     assert response.json()["banner_text"] == banner_text
     assert response.json()["banner_colour"] == banner_colour
     assert response.json()["hide_disabled_flags"] == hide_disabled_flags
+    assert response.json()["use_mv_v2_evaluation"] == use_mv_v2_evaluation
 
 
 @pytest.mark.parametrize(

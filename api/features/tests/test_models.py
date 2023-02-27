@@ -169,7 +169,6 @@ class FeatureTestCase(TestCase):
         feature.full_clean()  # should not raise error as the same Object
 
     def test_when_create_feature_with_tags_then_success(self):
-
         # Given
         tag1 = Tag.objects.create(
             label="Test Tag",
@@ -572,7 +571,7 @@ def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(
 
     # When
     multivariate_value = feature_state.get_multivariate_feature_state_value(
-        identity_id=identity.id
+        identity_hash_key=identity.get_hash_key()
     )
 
     # Then
@@ -607,4 +606,4 @@ def test_get_feature_state_value_for_multivariate_features(
     # the correct value is returned
     assert feature_state_value == value
     # and the correct call is made to get the multivariate feature state value
-    mock_get_mv_feature_state_value.assert_called_once_with(identity.id)
+    mock_get_mv_feature_state_value.assert_called_once_with(str(identity.id))

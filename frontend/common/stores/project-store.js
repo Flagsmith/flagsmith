@@ -1,8 +1,9 @@
+import { getIsWidget } from '../../web/components/pages/WidgetPage';
+
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 
 const data = require('../data/base/_data');
-const { getIsWidget } = require("../../web/components/pages/WidgetPage");
 
 const controller = {
 
@@ -32,7 +33,7 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                if(!getIsWidget()) {
+                if (!getIsWidget()) {
                     document.location.href = '/404?entity=project';
                 }
             });
@@ -54,7 +55,7 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                if(!getIsWidget()) {
+                if (!getIsWidget()) {
                     document.location.href = '/404?entity=project';
                 }
             });

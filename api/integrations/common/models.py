@@ -2,10 +2,10 @@ import logging
 
 from core.models import AbstractBaseExportableModel
 from django.db import models
-from django.db.models import Q
 from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
+    AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
 )
@@ -37,4 +37,8 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):
                 self.__class__.__name__,
             )
             return
-        Environment.write_environments_to_dynamodb(Q(id=self.environment_id))
+        Environment.write_environments_to_dynamodb(environment_id=self.environment_id)
+
+    @hook(AFTER_UPDATE)
+    def clear_environment_cache(self):
+        self.environment.clear_environment_cache()

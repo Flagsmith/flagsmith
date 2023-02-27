@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+export type EdgePagedResponse<T> = PagedResponse<T> & {last_evaluated_key?:string, pages?:(string|undefined)[]}
 export type PagedResponse<T> = {
   count?: number;
   next?: string;
@@ -89,7 +90,11 @@ export type Organisation = {
   block_access_to_admin: boolean;
   restrict_project_create_to_admin: boolean;
 }
-
+export type Identity = {
+  id?: string
+  identifier: string
+  identity_uuid?: string
+}
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
@@ -113,5 +118,7 @@ export type Res = {
       name: string;
     }[]
   }
+  identity: {id:string} //todo: we don't consider this until we migrate identity-store
+  identities: EdgePagedResponse<Identity>
   // END OF TYPES
 }

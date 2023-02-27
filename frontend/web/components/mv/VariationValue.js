@@ -31,7 +31,7 @@ const VariationValue = ({
                           />
 )}
                       tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-                      title="Value"
+                      title="Variation Value"
                     />
                 </div>
                 <div className="ml-2" style={{ width: 210 }}>

@@ -58,14 +58,15 @@ const controller = {
             store.saved();
         });
     },
-    editTrait({ identity, environmentId, trait: { trait_key, trait_value } }) {
+    editTrait({ identity, environmentId, trait }) {
+        const { trait_key, trait_value, id } = trait;
         store.saving();
-        data[Utils.getTraitEndpointMethod()](Utils.getUpdateTraitEndpoint(environmentId, identity),
+        data[Utils.getTraitEndpointMethod(id)](Utils.getUpdateTraitEndpoint(environmentId, identity, id),
             {
                 identity: Utils.getShouldSendIdentityToTraits() ? { identifier: store.model && store.model.identity.identifier } : undefined,
                 trait_key,
-                trait_value,
-            }, { 'x-environment-key': environmentId })
+                ...(Utils.getIsEdge() ? { trait_value } : Utils.valueToTrait(trait_value)),
+            })
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()))
             .catch(e => API.ajaxHandler(store, e));
@@ -146,9 +147,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     switch (action.actionType) {
         case Actions.GET_IDENTITY:
             controller.getIdentity(action.envId, action.id);
-            break;
-        case Actions.SAVE_IDENTITY:
-            controller.saveIdentity(action.id, action.identity);
             break;
         case Actions.TOGGLE_USER_FLAG:
             controller.toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });

@@ -15,6 +15,8 @@ type AuditLogType = {
     projectId: string
     onErrorChange?:(error:boolean) => void
     pageSize:number
+    onErrorChange?:(error:boolean) => void
+    onSearchChange?:(search:string)=>void
 }
 
 const AuditLog: FC<AuditLogType> = (props) => {
@@ -22,6 +24,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage(1);
     });
+
+    useEffect(()=>{
+        if(props.onSearchChange) {
+            props.onSearchChange(search)
+        }
+    },[search])
 
     const hasHadResults = useRef(false);
 

@@ -11,9 +11,8 @@ ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Flag state / Remote Config value update scheduled for %s for feature: %s"
 )
-FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote Config value updated for feature: %s"
-)
+FEATURE_STATE_UPDATED_MESSAGE = "Flag state updated for feature: %s"
+FEATURE_STATE_VALUE_UPDATED_MESSAGE = "Remote config value updated for feature: %s"
 FEATURE_STATE_WENT_LIVE_MESSAGE = (
     "Scheduled change to Flag state / Remote config value went live for feature: %s by"
     " Change Request: %s"
@@ -27,6 +26,11 @@ IDENTITY_FEATURE_STATE_CREATED_MESSAGE = (
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and identity '%s'"
 )
+# fmt: off
+IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE = (
+    "Remote config value updated for identity override on feature '%s' and identity '%s'."
+)
+# fmt: on
 SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Segment override scheduled for %s for feature '%s' and segment '%s'"
 )
@@ -35,6 +39,9 @@ SEGMENT_FEATURE_STATE_CREATED_MESSAGE = (
 )
 SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and segment '%s'"
+)
+SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE = (
+    "Remote config updated for segment override on feature '%s' and segment '%s'."
 )
 IDENTITY_FEATURE_STATE_DELETED_MESSAGE = (
     "Flag state / Remote config value deleted for feature '%s' and identity '%s'"

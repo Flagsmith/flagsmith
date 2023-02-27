@@ -89,6 +89,7 @@ class TheComponent extends Component {
             <div className="mt-4">
                 <InfoMessage>
                     This shows the list of segment overrides associated with this segment.
+                    <br/>Segment overrides will only apply when you identify via the SDK. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-segments">Check the Docs for more details</a>.
                 </InfoMessage>
                 <div >
                     <InputGroup
@@ -231,11 +232,11 @@ class SegmentOverridesInner extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();
@@ -341,11 +342,11 @@ class SegmentOverridesInnerAdd extends Component {
 
         return (
             <FeatureListProvider>
-                {({}, { editFlagSegments, isSaving }) => {
+                {({}, { editFeatureSegments, isSaving }) => {
                     const save = () => {
                         FeatureListStore.isSaving = true;
                         FeatureListStore.trigger('change');
-                        !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
+                        !isSaving && editFeatureSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, () => {
                             toast('Segment override saved');
                             this.setState({ isSaving: false });
                             this.props.onSave();

@@ -2,7 +2,6 @@ import React, { Component, useEffect, useState } from 'react';
 import engine from 'bullet-train-rules-engine';
 import Rule from './Rule';
 import SegmentStore from '../../../common/stores/segment-list-store';
-import IdentityListProvider from '../../../common/providers/IdentityListProvider';
 import Constants from '../../../common/constants';
 import EnvironmentSelect from '../EnvironmentSelect';
 import Tabs from '../base/forms/Tabs';
@@ -10,6 +9,9 @@ import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
 import _data from "../../../common/data/base/_data";
+import { useGetIdentitiesQuery } from "../../../common/services/useIdentity";
+import { Req } from "../../../common/types/requests";
+import useSearchThrottle from "../../../common/useSearchThrottle";
 import JSONReference from "../JSONReference";
 import ConfigProvider from 'common/providers/ConfigProvider';
 
@@ -41,13 +43,11 @@ const CreateSegment = class extends Component {
             description,
             name,
             rules,
-            environmentId: props.environmentId,
             id,
             isValid: this.validateRules(rules),
             data: '{\n}',
         };
 
-        AppActions.getIdentities(props.environmentId);
 
         this.listenTo(SegmentStore, 'saved', (segment) => {
             if (this.props.onComplete) {
@@ -62,8 +62,8 @@ const CreateSegment = class extends Component {
     }
 
     validateRules = (rules) => {
-        if (!rules || !rules[0] || !rules[0].rules) {
-            return false;
+        if (!rules[0]?.rules?.find((v)=>!v.delete)) {
+            return false
         }
         const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
 
@@ -142,37 +142,39 @@ const CreateSegment = class extends Component {
 
     render() {
         const { name, description, rules, isSaving, error } = this.state;
-        const { isEdit, identity, readOnly } = this.props;
-
-
-
+        const { isEdit, identity, readOnly, identities, searchInput, environmentId, setEnvironmentId, setSearchInput, setPage, page, identitiesLoading } = this.props;
 
         const rulesEl = (
             <div className="overflow-visible">
                 <div>
                     <div className="mb-2">
-                        {rules[0].rules.map((rule, i) => (
-                            <div key={i}>
-                                {i > 0 && (
-                                    <Row className="and-divider my-1">
-                                        <Flex className="and-divider__line"/>
-                                        {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
-                                        <Flex className="and-divider__line"/>
-                                    </Row>
-                                )}
-                                <Rule
-                                  showDescription={this.state.showDescriptions}
-                                  readOnly={readOnly}
-                                  data-test={`rule-${i}`}
-                                  rule={rule}
-                                  operators={
-                                        Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
-                                    }
-                                  onRemove={v => this.removeRule(0, i, v)}
-                                  onChange={v => this.updateRule(0, i, v)}
-                                />
-                            </div>
-                        ))}
+                        {rules[0].rules.map((rule, i) => {
+                            if(rule.delete) {
+                                return null
+                            }
+                            return (
+                                <div key={i}>
+                                    {i > 0 && (
+                                        <Row className="and-divider my-1">
+                                            <Flex className="and-divider__line"/>
+                                            {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
+                                            <Flex className="and-divider__line"/>
+                                        </Row>
+                                    )}
+                                    <Rule
+                                        showDescription={this.state.showDescriptions}
+                                        readOnly={readOnly}
+                                        data-test={`rule-${i}`}
+                                        rule={rule}
+                                        operators={
+                                            Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
+                                        }
+                                        onRemove={v => this.removeRule(0, i, v)}
+                                        onChange={v => this.updateRule(0, i, v)}
+                                    />
+                                </div>
+                            )
+                        })}
                     </div>
                     <Row className="justify-content-center">
                         {!readOnly && (
@@ -326,7 +328,6 @@ const CreateSegment = class extends Component {
             </form>
         );
 
-        const { environmentId } = this.state;
 
         return (
             <div>
@@ -347,8 +348,6 @@ const CreateSegment = class extends Component {
                                 <InfoMessage>
                                     This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
                                 </InfoMessage>
-                                <IdentityListProvider>
-                                    {({ isLoading, identities, identitiesPaging }) => (
                                         <div className="mt-2">
                                             <FormGroup>
 
@@ -356,11 +355,8 @@ const CreateSegment = class extends Component {
                                                   title="Environment"
                                                   component={(
                                                       <EnvironmentSelect
-                                                        value={this.state.environmentId}
-                                                        onChange={(environmentId) => {
-                                                            this.setState({ environmentId });
-                                                            AppActions.getIdentities(environmentId);
-                                                        }}
+                                                        value={environmentId}
+                                                        onChange={setEnvironmentId}
                                                       />
 )}
                                                 />
@@ -369,14 +365,32 @@ const CreateSegment = class extends Component {
                                                   id="users-list"
                                                   title="Segment Users"
                                                   className="no-pad"
-                                                  isLoading={isLoading}
+                                                  isLoading={identitiesLoading}
                                                   icon="ion-md-person"
-                                                  items={identities}
-                                                  paging={identitiesPaging}
+                                                  items={identities?.results}
+                                                  paging={identities}
                                                   showExactFilter
-                                                  nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
-                                                  prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
-                                                  goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
+                                                  nextPage={() => {
+                                                      setPage({
+                                                          number:page.number+1,
+                                                          pageType: 'NEXT',
+                                                          pages: identities?.last_evaluated_key? (page.pages||[]).concat([identities?.last_evaluated_key]) : undefined
+                                                      })
+                                                  }}
+                                                  prevPage={() => {
+                                                      setPage({
+                                                          number:page.number-1,
+                                                          pageType: 'PREVIOUS',
+                                                          pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
+                                                      })
+                                                  }}
+                                                  goToPage={(newPage: number) => {
+                                                      setPage({
+                                                          number:newPage,
+                                                          pageType: undefined,
+                                                          pages: undefined
+                                                      })
+                                                  }}
                                                   renderRow={({
                                                       id,
                                                       identifier,
@@ -405,17 +419,14 @@ const CreateSegment = class extends Component {
                                                           </IdentitySegmentsProvider>
                                                       </div>
                                                   )}
-                                                  filterRow={(flag, search) => flag.identifier && flag.identifier.toLowerCase().indexOf(search) !== -1}
-                                                  search={this.state.search}
+                                                  filterRow={(flag, search) => true}
+                                                  search={searchInput}
                                                   onChange={(e) => {
-                                                      this.setState({ search: Utils.safeParseEventValue(e) });
-                                                      AppActions.searchIdentities(this.state.environmentId, Utils.safeParseEventValue(e));
+                                                      setSearchInput(Utils.safeParseEventValue(e))
                                                   }}
                                                 />
                                             </FormGroup>
                                         </div>
-                                    )}
-                                </IdentityListProvider>
                             </div>
                         </TabItem>
                     </Tabs>
@@ -431,6 +442,7 @@ CreateSegment.propTypes = {};
 const LoadingCreateSegment  = (props) => {
     const [loading, setLoading] = useState(!!props.segment);
     const [segmentData, setSegmentData] = useState(null);
+    const [environmentId, setEnvironmentId] = useState(props.environmentId);
 
     useEffect(()=>{
         if(props.segment) {
@@ -441,8 +453,44 @@ const LoadingCreateSegment  = (props) => {
         }
     },[props.segment])
 
+    const [page, setPage] = useState<{
+        number:number,
+        pageType: Req['getIdentities']['pageType'],
+        pages:Req['getIdentities']['pages']
+    }>({number:1, pageType:undefined, pages:undefined});
+
+    const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
+        setPage({
+            number: 1,
+            pageType: undefined,
+            pages: undefined
+        });
+    });
+
+    const isEdge = Utils.getIsEdge();
+
+    const { data:identities, isLoading } = useGetIdentitiesQuery({
+        pages: page.pages,
+        page: page.number,
+        search,
+        pageType: page.pageType,
+        page_size: 10,
+        environmentId,
+        isEdge
+    })
+
     return loading?<div className="text-center"><Loader/></div> : (
-        <CreateSegment {...props} segment={segmentData}/>
+        <CreateSegment {...props}
+                       segment={segmentData}
+                       identities={identities}
+                       setPage={setPage}
+                       searchInput={searchInput}
+                       setSearchInput={setSearchInput}
+                       identitiesLoading={isLoading}
+                       page={page}
+                       environmentId={environmentId}
+                       setEnvironmentId={setEnvironmentId}
+        />
     )
 }
 

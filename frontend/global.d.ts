@@ -2,8 +2,10 @@ import {Component, FC, ReactNode} from "react";
 import _Select from './web/components/Select';
 export declare const openModal: (name?: string) => Promise<void>;
 declare global {
-    var openModal: (title:string, body:ReactNode, footer?:ReactNode, other?: {className:string, onClose?:()=>void})=>void
+    var openModal: (title:ReactNode, body?:ReactNode, footer?:ReactNode, other?: {className:string, onClose?:()=>void})=>void
+    var openConfirm: (header:ReactNode, body:ReactNode, onYes:()=>void, onNo?:()=>void, yesText?:string, noText?:string)=>void
     var Row: typeof Component
+    var toast: (value:string)=>void
     var Flex: typeof Component
     var isMobile: boolean
     var FormGroup: typeof Component
