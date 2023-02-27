@@ -17,7 +17,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
-      "common/*": [
+      "common/": [
         "./common/*"
       ]
     }

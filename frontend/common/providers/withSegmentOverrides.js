@@ -1,6 +1,6 @@
-import data from '../data/base/_data';
-import ProjectStore from '../stores/project-store';
-import FeatureListStore from '../stores/feature-list-store';
+import data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import FeatureListStore from 'common/stores/feature-list-store';
 
 export default (WrappedComponent) => {
     class HOC extends React.Component {
@@ -62,7 +62,7 @@ export default (WrappedComponent) => {
         }
 
 
-        removeMultiVariateOption = (id) => {
+        removeMultivariateOption = (id) => {
             this.setState({
                 segmentOverrides: this.state.segmentOverrides && this.state.segmentOverrides.map(v => ({
                     ...v,
@@ -79,7 +79,7 @@ export default (WrappedComponent) => {
                   ref="wrappedComponent"
                   updateSegments={this.updateSegments}
                   onEnvironmentVariationsChange={this.onEnvironmentVariationsChange}
-                  removeMultiVariateOption={this.removeMultiVariateOption}
+                  removeMultivariateOption={this.removeMultivariateOption}
                   {...this.props}
                   {...this.state}
                 />

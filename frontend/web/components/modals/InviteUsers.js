@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Button from '../base/forms/Button';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 
 const InviteUsers = class extends Component {
     static displayName = 'InviteUsers'
@@ -13,13 +14,6 @@ const InviteUsers = class extends Component {
             tab: 0,
         };
     }
-
-    // close() {
-    //     debugger
-    //     if (this.state.tab == 1) {
-    //         closeModal();
-    //     }
-    // }
 
     close(invites) {
         AppActions.inviteUsers(invites);

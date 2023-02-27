@@ -1,6 +1,6 @@
-import React, { FunctionComponent } from 'react';
+import React from 'react';
 import ValueEditor from '../ValueEditor'; // we need this to make JSX compile
-
+import Constants from 'common/constants';
 
 const VariationValue = ({
     value,

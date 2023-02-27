@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Constants from 'common/constants';
 
 const ComingSoon = class extends Component {
     static displayName = 'ComingSoon'

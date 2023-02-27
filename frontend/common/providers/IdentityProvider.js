@@ -1,6 +1,6 @@
 import React from 'react';
-import FeatureListStore from '../stores/feature-list-store';
-import IdentityStore from '../stores/identity-store';
+import FeatureListStore from 'common/stores/feature-list-store';
+import IdentityStore from 'common/stores/identity-store';
 
 const IdentityProvider = class extends React.Component {
     static displayName = 'IdentityProvider'

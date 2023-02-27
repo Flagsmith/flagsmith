@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Format from "../../../common/utils/format";
 
 const ConfirmToggleFeature = class extends Component {
     static displayName = 'ConfirmToggleFeature'

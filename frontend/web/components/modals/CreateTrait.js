@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import Highlight from '../Highlight';
-import Constants from '../../../common/constants';
+import Constants from 'common/constants';
+import Format from "common/utils/format";
 
-const TRAITS_ID_MAXLENGTH = Constants.forms.maxLength.TRAITS_ID;
 
 const CreateTrait = class extends Component {
     static displayName = 'CreateTrait'
@@ -40,8 +40,9 @@ const CreateTrait = class extends Component {
     }
 
     render() {
-        const { props: { isEdit, identity, environmentId, projectId } } = this;
-        const { state: { trait_key, trait_value, error, isSaving } } = this;
+        const { props: { isEdit, identity, projectId } } = this;
+        const { state: { trait_key, trait_value } } = this;
+        const TRAITS_ID_MAXLENGTH = Constants.forms.maxLength.TRAITS_ID;
 
         return (
             <ProjectProvider

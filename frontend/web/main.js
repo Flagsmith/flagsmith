@@ -8,13 +8,11 @@ import { createBrowserHistory } from 'history';
 import ToastMessages from './project/toast';
 import routes from './routes';
 import Utils from 'common/utils/utils'
-import AccountStore from '../common/stores/account-store';
-import data from '../common/data/base/_data';
+import AccountStore from 'common/stores/account-store';
+import data from 'common/data/base/_data';
 
 
 window.Utils = Utils;
-window.Constants = require('../common/constants');
-
 window.openModal = require('./project/modals').openModal;
 window.openModal2 = require('./project/modals').openModal2;
 window.openConfirm = require('./project/modals').openConfirm;

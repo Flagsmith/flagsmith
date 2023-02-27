@@ -1,7 +1,10 @@
+import Constants from 'common/constants';
+
+const Dispatcher = require('common/dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
-const { getIsWidget } = require('../../web/components/pages/WidgetPage');
+import { getIsWidget } from '../../web/components/pages/WidgetPage'
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -437,7 +440,9 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
     id: 'features',
-    paging: {},
+    paging: {
+
+    },
     sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc', default: true },
     getEnvironmentFlags() {
         return store.model && store.model.keyedEnvironmentFeatures;
@@ -448,6 +453,7 @@ const store = Object.assign({}, BaseStore, {
     hasFlagInEnvironment(id, environmentFlags) {
         const flags = environmentFlags || (store.model && store.model.keyedEnvironmentFeatures);
 
+        // eslint-disable-next-line no-prototype-builtins
         return flags && flags.hasOwnProperty(id);
     },
     getLastSaved() {

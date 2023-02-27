@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import Constants from 'common/constants';
 import data from 'common/data/base/_data';
 import ProjectStore from 'common/stores/project-store';
 import ConfigProvider from 'common/providers/ConfigProvider';
@@ -8,8 +9,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsT
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import SegmentOverrides from '../SegmentOverrides';
-import AddEditTags from '../AddEditTags';
-import Constants from 'common/constants';
+import AddEditTags from '../tags/AddEditTags';
 import FlagOwners from '../FlagOwners';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
@@ -18,7 +18,7 @@ import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
-const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+import Permission from "common/providers/Permission";
 
 const CreateFlag = class extends Component {
     static displayName = 'CreateFlag'
@@ -253,7 +253,7 @@ const CreateFlag = class extends Component {
         if (this.state.multivariate_options[i].id) {
             const idToRemove = this.state.multivariate_options[i].id;
             if (idToRemove) {
-                this.props.removeMultiVariateOption(idToRemove);
+                this.props.removeMultivariateOption(idToRemove);
             }
             this.state.multivariate_options.splice(i, 1);
             this.forceUpdate();
@@ -281,6 +281,8 @@ const CreateFlag = class extends Component {
             description,
             enabledSegment,
         } = this.state;
+        const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+
         const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
@@ -313,7 +315,9 @@ const CreateFlag = class extends Component {
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
-                                readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
+                                readOnly={!!identity || !createFeature}
+                                projectId={`${this.props.projectId}`}
+                                value={this.state.tags}
                                 onChange={tags => this.setState({ tags, settingsChanged: true })}
                               />
                             )}
@@ -580,7 +584,6 @@ const CreateFlag = class extends Component {
                                                                             </strong>
                                                                         </p>
 
-
                                                                         <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
                                                                                 Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes, identity)), (
@@ -714,7 +717,6 @@ const CreateFlag = class extends Component {
                                                                                                                         {isSaving ? 'Updating' : 'Update Segment Overrides'}
                                                                                                                     </Button>
                                                                                                                 </div>
-
                                                                                                             )))}
                                                                                                     </Permission>
                                                                                                 </div>

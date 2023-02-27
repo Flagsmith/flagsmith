@@ -10,8 +10,9 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
-import { ColourSelect } from '../AddEditTags';
 import JSONReference from "../JSONReference";
+import ColourSelect from '../tags/ColourSelect';
+import Constants from 'common/constants';
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
 
@@ -382,6 +383,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                     parentLevel="project"
                                                     parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                                                     id={this.props.match.params.environmentId}
+                                                    router={this.context.router}
                                                     level="environment"
                                                 />
                                             </FormGroup>

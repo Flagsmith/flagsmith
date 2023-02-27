@@ -4,8 +4,6 @@ import Constants from 'common/constants';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import ValueEditor from '../ValueEditor';
 
-const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
-
 const CreateFlag = class extends Component {
     static displayName = 'CreateFlag'
 
@@ -19,7 +17,6 @@ const CreateFlag = class extends Component {
 
     render() {
         const {
-            enabled,
             value,
         } = this.state;
 

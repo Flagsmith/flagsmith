@@ -81,7 +81,7 @@ Tabs.propTypes = {
     uncontrolled: OptionalBool,
 };
 
-module.exports = Tabs;
+export default Tabs;
 
 // Example Usage
 //   <Tabs value={this.state.tab} onChange={this.selectTab}>

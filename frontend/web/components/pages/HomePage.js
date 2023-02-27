@@ -8,6 +8,7 @@ import SamlForm from '../SamlForm';
 import data from '../../../common/data/base/_data';
 import GoogleButton from '../GoogleButton';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 
 const HomePage = class extends React.Component {
     static contextTypes = {

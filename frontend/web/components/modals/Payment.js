@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import makeAsyncScriptLoader from 'react-async-script';
 import _data from 'common/data/base/_data';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 const PaymentButton = (props) => {
     const activeSubscription = AccountStore.getOrganisationPlan(AccountStore.getOrganisation().id);
     if (Utils.getFlagsmithHasFeature('upgrade_subscription') && activeSubscription) {

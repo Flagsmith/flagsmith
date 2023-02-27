@@ -1,5 +1,9 @@
+// eslint-disable-next-line @dword-design/import-alias/prefer-alias
 import { getIsWidget } from '../../web/components/pages/WidgetPage';
 
+import Constants from 'common/constants';
+
+const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 
@@ -113,6 +117,7 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
     id: 'project',
+    model: null,
     getId: () => store.model && store.model.id,
     getEnvs: () => store.model && store.model.environments,
     getEnvironment: api_key => store.model && _.find(store.model.environments, { api_key }),
@@ -150,4 +155,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     }
 });
 controller.store = store;
-module.exports = controller.store;
+export default controller.store;

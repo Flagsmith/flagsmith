@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
+import Constants from 'common/constants';
 
 export default class NotFoundView extends Component {
     static displayName = 'NotFoundPage'

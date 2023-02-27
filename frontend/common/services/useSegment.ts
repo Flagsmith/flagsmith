@@ -1,7 +1,7 @@
 import { Res } from 'common/types/responses';
 import { Req } from 'common/types/requests';
 import { service } from 'common/service';
-import Utils from '../utils/utils';
+import Utils from 'common/utils/utils';
 
 export const segmentService = service
     .enhanceEndpoints({ addTagTypes: ['Segment'] })
@@ -23,7 +23,7 @@ export const segmentService = service
             }),
             updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
                 query: (query: Req['updateSegment']) => ({
-                    url: `projects/${query.projectId}/segments/${query.id}/`,
+                    url: `projects/${query.projectId}/segments/${query.segment.id}/`,
                     method: 'PUT',
                     body: query.segment,
                 }),
@@ -33,9 +33,15 @@ export const segmentService = service
                 query: (query: Req['createSegment']) => ({
                     url: `projects/${query.projectId}/segments/`,
                     method: 'POST',
-                    body: query,
+                    body: query.segment,
                 }),
                 invalidatesTags: (q, e, arg) => [{ type: 'Segment', id: `LIST${arg.projectId}` }],
+            }),
+            getSegment: builder.query<Res['segment'], Req['getSegment']>({
+                query: (query: Req['getSegment']) => ({
+                    url: `projects/${query.projectId}/segments/${query.id}/`,
+                }),
+                providesTags: res => [{ type: 'Segment', id: res?.id }],
             }),
             // END OF ENDPOINTS
         }),
@@ -57,6 +63,10 @@ export async function createSegment(store: any, data: Req['createSegment'], opti
     store.dispatch(segmentService.endpoints.createSegment.initiate(data, options));
     return Promise.all(store.dispatch(segmentService.util.getRunningQueriesThunk()));
 }
+export async function getSegment(store: any, data: Req['getSegment'], options?: Parameters<typeof segmentService.endpoints.getSegment.initiate>[1]) {
+    store.dispatch(segmentService.endpoints.getSegment.initiate(data, options));
+    return Promise.all(store.dispatch(segmentService.util.getRunningQueriesThunk()));
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
@@ -64,6 +74,7 @@ export const {
     useDeleteSegmentMutation,
     useUpdateSegmentMutation,
     useCreateSegmentMutation,
+    useGetSegmentQuery,
     // END OF EXPORTS
 } = segmentService;
 

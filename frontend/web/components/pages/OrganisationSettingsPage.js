@@ -19,6 +19,7 @@ import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
 import ConfigProvider from 'common/providers/ConfigProvider';
 import OrganisationUsage from '../OrganisationUsage';
+import Constants from 'common/constants';
 
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {

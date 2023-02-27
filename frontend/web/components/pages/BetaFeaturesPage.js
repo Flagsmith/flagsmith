@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import TagValues from '../TagValues';
 import Switch from '../Switch';
 import EditBetaFeatureModal from '../modals/EditBetaFeature';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Format from "common/utils/format";
 
 const BetaFeaturesPage = class extends Component {
     static displayName = 'BetaFeaturesPage';

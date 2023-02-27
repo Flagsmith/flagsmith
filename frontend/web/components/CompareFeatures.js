@@ -1,10 +1,11 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react';
 import FlagSelect from './FlagSelect';
-import ProjectStore from '../../common/stores/project-store';
-import data from '../../common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import data from 'common/data/base/_data';
 import FeatureRow from './FeatureRow';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
 
 const featureNameWidth = 300;
 
@@ -131,7 +132,6 @@ class CompareEnvironments extends Component {
                                                           }}
                                                               fadeEnabled={fadeEnabled}
                                                               fadeValue={fadeValue}
-
                                                               condensed
                                                               environmentFlags={flagValues}
                                                               projectFlags={[this.state.flag]}

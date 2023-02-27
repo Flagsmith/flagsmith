@@ -29,4 +29,4 @@ Tooltip.propTypes = {
     place: OptionalString,
 };
 
-module.exports = Tooltip;
+export default Tooltip;

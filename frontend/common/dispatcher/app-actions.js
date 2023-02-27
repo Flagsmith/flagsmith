@@ -1,3 +1,5 @@
+const Dispatcher = require('../dispatcher/dispatcher');
+
 const AppActions = Object.assign({}, require('./base/_app-actions'), {
     getOrganisation(organisationId) {
         Dispatcher.handleViewAction({
@@ -51,7 +53,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-
     getGroupsPage(orgId, page) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_GROUPS_PAGE,
@@ -59,45 +60,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             page,
         });
     },
-
-    getTags(projectId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_TAGS,
-            projectId,
-        });
-    },
-
-    updateTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.UPDATE_TAG,
-            projectId,
-            data,
-            onComplete,
-        });
-    },
-
-    createTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.CREATE_TAG,
-            projectId,
-            data,
-            onComplete,
-        });
-    },
-
     migrateProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.MIGRATE_PROJECT,
             projectId,
-        });
-    },
-
-    deleteTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.DELETE_TAG,
-            projectId,
-            data,
-            onComplete,
         });
     },
 
@@ -128,27 +94,9 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             orgId,
         });
     },
-    getPermissions(id, level) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_PERMISSIONS,
-            id,
-            level,
-        });
-    },
-    getAvailablePermissions() {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_AVAILABLE_PERMISSIONS,
-        });
-    },
     getProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_PROJECT,
-            projectId,
-        });
-    },
-    getConfig(projectId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_CONFIG,
             projectId,
         });
     },
@@ -413,42 +361,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id,
         });
     },
-    getSegments(projectId, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_SEGMENTS,
-            projectId,
-            environmentId,
-        });
-    },
-    searchSegments(projectId, environmentId, search) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_SEGMENTS,
-            projectId,
-            environmentId,
-            search,
-        });
-    },
-    createSegment(projectId, segment) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.CREATE_SEGMENT,
-            projectId,
-            data: segment,
-        });
-    },
-    editSegment(projectId, segment) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_SEGMENT,
-            projectId,
-            data: segment,
-        });
-    },
-    removeSegment(projectId, id) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.REMOVE_SEGMENT,
-            projectId,
-            id,
-        });
-    },
     deleteIdentityTrait(envId, identity, id) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_IDENTITY_TRAIT,
@@ -493,7 +405,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             changeRequest,
         });
     },
-
     deleteChangeRequest(id, cb) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_CHANGE_REQUEST,

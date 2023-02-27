@@ -1,8 +1,7 @@
-import Project from '../project';
-
+import Project from 'common/project';
+const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
-
-window.Project = Project;
+window.Project = require('../project');
 
 const controller = {
     get() {
@@ -35,9 +34,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
-        case Actions.GET_CONFIG:
-            controller.get();
-            break;
         default:
             break;
     }

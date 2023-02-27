@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import flagsmith from 'flagsmith';
 import propTypes from 'prop-types';
-import ConfigStore from '../stores/config-store';
+import ConfigStore from 'common/stores/config-store';
 
 export default (WrappedComponent) => {
     class HOC extends Component {

@@ -1,4 +1,4 @@
-import Utils from '../../utils/utils';
+import Utils from 'common/utils/utils';
 
 module.exports = () => `// Maven
 ${Utils.escapeHtml('<dependency>')}

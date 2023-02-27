@@ -38,8 +38,6 @@ class TheComponent extends Component {
             });
             const newItems = this.state.newItems || {};
             const selectedEnv = this.state.selectedEnv || ProjectStore.getEnvs()[0].name;
-            AppActions.getSegments(this.props.projectId, ProjectStore.getEnvs()[0].api_key);
-
             newItems[selectedEnv] = (newItems[selectedEnv] || []).filter((newItem) => {
                 const existingSegmentOverride = !!v[selectedEnv] && v[selectedEnv].find(s => newItem.feature.id === s.feature.id);
                 return !existingSegmentOverride;
@@ -252,12 +250,12 @@ class SegmentOverridesInner extends Component {
                                 <Tooltip title={(
                                     <div className="chip mt-2">
                                             Priority: {segmentOverride && segmentOverride[0].priority + 1} of {originalSegmentOverrides.length}
-
                                         <a
-                                          href="#" className="font-weight-bold" className="ml-2"
+                                          href="#"
+                                          className="ml-2"
                                           onClick={this.openPriorities}
                                         >
-                                                    Edit
+                                            Edit
                                         </a>
                                     </div>
 

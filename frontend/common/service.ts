@@ -1,6 +1,5 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react'
 
-import {AnyAction} from '@reduxjs/toolkit'
 import {FetchBaseQueryArgs} from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
 import {CreateApiOptions} from '@reduxjs/toolkit/dist/query/createApi'
 import {StoreStateType} from './store'

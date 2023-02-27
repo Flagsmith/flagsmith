@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import AccountStore from '../stores/account-store';
+import AccountStore from 'common/stores/account-store';
 import AppLoader from '../../web/components/AppLoader';
 
 const AccountProvider = class extends Component {

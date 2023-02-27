@@ -1,4 +1,4 @@
-import data from '../data/base/_data';
+import data from 'common/data/base/_data';
 
 export default (WrappedComponent) => {
     class HOC extends React.Component {

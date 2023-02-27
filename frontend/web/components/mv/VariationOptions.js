@@ -1,5 +1,5 @@
 import React from 'react';
-import Constants from '../../../common/constants';
+import Constants from 'common/constants';
 import VariationValue from './VariationValue';
 import ValueEditor from '../ValueEditor';
 import InfoMessage from '../InfoMessage';

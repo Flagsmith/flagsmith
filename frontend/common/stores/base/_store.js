@@ -44,6 +44,7 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
 
     loaded() {
         this.hasLoaded = true;
+        this.error = null;
         this.isLoading = false;
         this.trigger(DEFAULT_LOADED_EVENT);
         this.trigger(DEFAULT_CHANGE_EVENT);

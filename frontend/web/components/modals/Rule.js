@@ -1,5 +1,6 @@
-// import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import Constants from 'common/constants';
+import cloneDeep from 'lodash/cloneDeep';
 
 const splitIfValue = (v, append) => (append ? v.split(append) : [v === null ? '' : v]);
 
@@ -129,13 +130,14 @@ export default class Rule extends PureComponent {
             </div>
         );
     }
-
     removeRule = (i) => {
         this.setRuleProperty(i, "delete", {value:true})
     }
 
     setRuleProperty = (i, prop, { value }) => {
-        const { props: { rule: { conditions: rules } } } = this;
+        const rule = cloneDeep(this.props.rule);
+
+        const { conditions: rules   } = rule;
 
         const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators);
         const newOperator = prop !== 'operator' ? prevOperator : this.props.operators.find(v => v.value === value);
@@ -162,16 +164,23 @@ export default class Rule extends PureComponent {
             rules[i].value = '';
         }
 
-        if(!this.props.rule.conditions.filter((condition)=>!condition.delete).length) {
-            this.props.rule.delete = true
+        if(!rule.conditions.filter((condition)=>!condition.delete).length) {
+            rule.delete = true
         }
-        this.props.onChange(this.props.rule);
+
+        if(!rule.conditions.filter((condition)=>!condition.delete).length) {
+            rule.delete = true
+        }
+
+        this.props.onChange(rule);
     }
 
     addRule = () => {
         const { props: { rule: { conditions: rules } } } = this;
-        this.props.rule.conditions = rules.concat([{ ...Constants.defaultRule }]);
-        this.props.onChange(this.props.rule);
+        this.props.onChange({
+            ...this.props.rule,
+            conditions: rules.concat([{ ...Constants.defaultRule }])
+        });
     };
 
 
