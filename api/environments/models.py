@@ -43,10 +43,7 @@ from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
-
 from metadata.models import Metadata
-from projects.models import Project
-
 from segments.models import Segment
 from webhooks.models import AbstractBaseWebhookModel
 
