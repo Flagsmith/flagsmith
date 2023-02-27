@@ -337,25 +337,27 @@ const OrganisationSettingsPage = class extends Component {
 
                                                     </FormGroup>
                                                 )}
-                                                <FormGroup className="mt-4">
-                                                    <Row className="mt-4" space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3>Delete Organisation</h3>
-                                                            <p>
-                                                                This organisation will be permanently deleted, along with all projects and features.
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            id="delete-org-btn"
-                                                            onClick={() => this.confirmRemove(organisation, () => {
-                                                                deleteOrganisation();
-                                                            })}
-                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                        >
-                                                            <RemoveIcon />
-                                                        </Button>
-                                                    </Row>
-                                                </FormGroup>
+                                                {Utils.getFlagsmithHasFeature("delete_organisation")&&(
+                                                    <FormGroup className="mt-4">
+                                                        <Row className="mt-4" space>
+                                                            <div className="col-md-8 pl-0">
+                                                                <h3>Delete Organisation</h3>
+                                                                <p>
+                                                                    This organisation will be permanently deleted, along with all projects and features.
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                id="delete-org-btn"
+                                                                onClick={() => this.confirmRemove(organisation, () => {
+                                                                    deleteOrganisation();
+                                                                })}
+                                                                className="btn btn--with-icon ml-auto btn--remove"
+                                                            >
+                                                                <RemoveIcon />
+                                                            </Button>
+                                                        </Row>
+                                                    </FormGroup>
+                                                )}
 
                                             </TabItem>
 
