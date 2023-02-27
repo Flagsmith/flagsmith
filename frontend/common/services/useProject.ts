@@ -3,29 +3,29 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const projectService = service
-    .enhanceEndpoints({ addTagTypes: ['Project'] })
+  .enhanceEndpoints({ addTagTypes: ['Project'] })
     .injectEndpoints({
-        endpoints: (builder) => ({
+  endpoints: (builder) => ({
 
-            getProjects: builder.query<Res['projects'], Req['getProjects']>({
-                query: (data) => ({
-                    url: `projects/?organisation=${data.organisationId}`,
-                }),
-                providesTags:[{ type: 'Project', id: 'LIST' },],
-            }),
-            // END OF ENDPOINTS
-        }),
-    })
+    getProjects: builder.query<Res['projects'], Req['getProjects']>({
+      query: (data) => ({
+        url: `projects/?organisation=${data.organisationId}`,
+      }),
+      providesTags:[{ type: 'Project', id: 'LIST' },],
+    }),
+    // END OF ENDPOINTS
+  }),
+ })
 
 export async function getProjects(store: any, data: Req['getProjects'], options?: Parameters<typeof projectService.endpoints.getProjects.initiate>[1]) {
-    store.dispatch(projectService.endpoints.getProjects.initiate(data,options))
-    return Promise.all(store.dispatch(projectService.util.getRunningQueriesThunk()))
+  store.dispatch(projectService.endpoints.getProjects.initiate(data,options))
+  return Promise.all(store.dispatch(projectService.util.getRunningQueriesThunk()))
 }
-// END OF FUNCTION_EXPORTS
+  // END OF FUNCTION_EXPORTS
 
 export const {
-    useGetProjectsQuery,
-    // END OF EXPORTS
+  useGetProjectsQuery,
+  // END OF EXPORTS
 } = projectService
 
 /* Usage examples:

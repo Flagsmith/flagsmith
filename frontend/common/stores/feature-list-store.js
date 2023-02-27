@@ -4,7 +4,6 @@ const Dispatcher = require('common/dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
-// eslint-disable-next-line @dword-design/import-alias/prefer-alias
 import { getIsWidget } from '../../web/components/pages/WidgetPage'
 
 let createdFirstFeature = false;
