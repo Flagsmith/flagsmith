@@ -1,6 +1,6 @@
 import logging
 
-from core.models import AbstractBaseExportableModel
+from core.models import SoftDeleteExportableModel
 from django.db import models
 from django_lifecycle import (
     AFTER_DELETE,
@@ -15,7 +15,7 @@ from environments.models import Environment
 logger = logging.getLogger(__name__)
 
 
-class IntegrationsModel(AbstractBaseExportableModel):
+class IntegrationsModel(SoftDeleteExportableModel):
     base_url = models.URLField(blank=False, null=True)
     api_key = models.CharField(max_length=100, blank=False, null=False)
 
