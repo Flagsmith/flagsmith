@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import AccountStore from 'common/stores/account-store';
-//eslint-disable-next-line
 import AppLoader from '../../web/components/AppLoader';
 
 const AccountProvider = class extends Component {

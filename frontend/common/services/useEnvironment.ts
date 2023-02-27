@@ -3,29 +3,29 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const environmentService = service
-    .enhanceEndpoints({ addTagTypes: ['Environment'] })
+  .enhanceEndpoints({ addTagTypes: ['Environment'] })
     .injectEndpoints({
-        endpoints: (builder) => ({
+  endpoints: (builder) => ({
 
-            getEnvironments: builder.query<Res['environments'], Req['getEnvironments']>({
-                query: (data) => ({
-                    url: `environments/?project=${data.projectId}`,
-                }),
-                providesTags:[{ type: 'Environment', id: 'LIST' },],
-            }),
-            // END OF ENDPOINTS
-        }),
-    })
+    getEnvironments: builder.query<Res['environments'], Req['getEnvironments']>({
+      query: (data) => ({
+        url: `environments/?project=${data.projectId}`,
+      }),
+      providesTags:[{ type: 'Environment', id: 'LIST' },],
+    }),
+    // END OF ENDPOINTS
+  }),
+ })
 
 export async function getEnvironments(store: any, data: Req['getEnvironments'], options?: Parameters<typeof environmentService.endpoints.getEnvironments.initiate>[1]) {
-    store.dispatch(environmentService.endpoints.getEnvironments.initiate(data,options))
-    return Promise.all(store.dispatch(environmentService.util.getRunningQueriesThunk()))
+  store.dispatch(environmentService.endpoints.getEnvironments.initiate(data,options))
+  return Promise.all(store.dispatch(environmentService.util.getRunningQueriesThunk()))
 }
-// END OF FUNCTION_EXPORTS
+  // END OF FUNCTION_EXPORTS
 
 export const {
-    useGetEnvironmentsQuery,
-    // END OF EXPORTS
+  useGetEnvironmentsQuery,
+  // END OF EXPORTS
 } = environmentService
 
 /* Usage examples:

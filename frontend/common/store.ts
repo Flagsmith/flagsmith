@@ -28,7 +28,7 @@ const createStore = () => {
                 },
             })
                 .concat(service.middleware),
-        // END OF MIDDLEWARE
+                // END OF MIDDLEWARE
         // @ts-ignore typescript is confused by the turnary
         reducer:
             persistReducer(
