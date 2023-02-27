@@ -7,6 +7,7 @@ import FeatureRow from './FeatureRow';
 import FeatureListStore from '../../common/stores/feature-list-store';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import Permission from "common/providers/Permission";
+import Tag from './tags/Tag';
 
 const featureNameWidth = 300;
 

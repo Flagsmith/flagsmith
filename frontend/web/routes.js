@@ -26,7 +26,6 @@ import InvitePage from './components/pages/InvitePage';
 import NotFoundPage from './components/pages/NotFoundPage';
 import ChangeRequestsPage from './components/pages/ChangeRequestsPage';
 import ChangeRequestPage from './components/pages/ChangeRequestPage';
-import TermsPoliciesPage from './components/pages/TermsPoliciesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
 import WidgetPage from './components/pages/WidgetPage';
@@ -41,8 +40,6 @@ export default (
             <Route path="/demo" exact component={DemoPage}/>
             <Route path="/signup" exact component={HomePage}/>
             <Route path="/home" exact component={HomePage}/>
-            <Route path="/legal/:section" exact component={TermsPoliciesPage}/>
-            <Route path="/legal" exact component={TermsPoliciesPage}/>
             <Route path="/projects" exact component={ProjectSelectPage}/>
             <Route path="/maintenance" exact component={Maintenance}/>
             <Route path="/password-reset/confirm/:uid/:token/" exact component={PasswordResetPage}/>

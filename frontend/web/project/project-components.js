@@ -33,7 +33,6 @@ window.Button = Button;
 window.ButtonOutline = ButtonOutline;
 window.ButtonLink = ButtonLink;
 window.ButtonProject = ButtonProject;
-window.Panel = require('../components/base/grid/Panel');
 window.FormGroup = require('../components/base/grid/FormGroup');
 window.Panel = require('../components/base/grid/Panel');
 window.FormGroup = require('../components/base/grid/FormGroup');
