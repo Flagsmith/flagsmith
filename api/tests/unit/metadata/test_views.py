@@ -217,7 +217,6 @@ def test_update_model_metadata_field(
     organisation,
     environment_content_type,
 ):
-
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-detail",
@@ -305,7 +304,6 @@ def test_create_model_metadata_field(
 def test_can_not_create_model_metadata_field_using_field_from_other_organisation(
     admin_client, environment_metadata_field_different_org, organisation, project
 ):
-
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-list", args=[organisation.id]
@@ -325,7 +323,6 @@ def test_can_not_create_model_metadata_field_using_field_from_other_organisation
 
 
 def test_get_supported_content_type(admin_client, organisation):
-
     # Given
     url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-content-types",

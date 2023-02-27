@@ -56,7 +56,6 @@ class EnvironmentSerializerWithMetadata(
     DeleteBeforeUpdateWritableNestedModelSerializer,
     EnvironmentSerializerLight,
 ):
-
     metadata = MetadataSerializer(required=False, many=True)
 
     class Meta(EnvironmentSerializerLight.Meta):
