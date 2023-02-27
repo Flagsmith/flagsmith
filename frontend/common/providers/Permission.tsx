@@ -1,7 +1,7 @@
 import React, { FC, ReactNode } from 'react';
 import { useGetPermissionQuery } from "common/services/usePermission";
 import { PermissionLevel } from "common/types/requests";
-import AccountStore from '../stores/account-store'; // we need this to make JSX compile
+import AccountStore from 'common/stores/account-store'; // we need this to make JSX compile
 
 type PermissionType = {
     id: string
