@@ -7,14 +7,19 @@ export type PagedResponse<T> = {
   results: T[];
 }
 export type FlagsmithValue = string | number | boolean | null
+export type SegmentCondition = {
+  operator: string;
+  property: string;
+
+  delete?: boolean;
+  value: string;
+}
 export type SegmentRule = {
   type: string;
   rules: SegmentRule[];
-  conditions: {
-    operator: string;
-    property: string;
-    value: FlagsmithValue;
-  }[];
+
+  delete?: boolean
+  conditions: SegmentCondition[];
 }
 export type Segment = {
   id: number;
@@ -22,7 +27,7 @@ export type Segment = {
   uuid: string;
   name: string;
   description: string;
-  project: number;
+  project: string | number;
   feature?: number;
 }
 export type Environment = {
@@ -47,17 +52,40 @@ export type Project =  {
   enable_realtime_updates: boolean;
   environments: Environment[];
 }
+
+export type User = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "ADMIN" | "USER"
+}
+
 export type ProjectSummary = Omit<Project, 'environments'>
+
+export type UserGroup = {
+  external_id: string|null
+  id: number
+  is_default: boolean
+  name:string
+  users: User[]
+}
+
+export type UserPermission = {
+  user: User
+  permissions: string[]
+  admin: boolean
+  id:number
+}
+export type GroupPermission = Omit<UserPermission,"user"> & {
+  group: UserGroup
+}
+
 export type AuditLogItem = {
   id: number;
   created_date: string;
   log: string;
-  author?: {
-    id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-  };
+  author?: User;
   environment?: Environment;
   project: ProjectSummary;
   related_object_id: number;
@@ -95,9 +123,82 @@ export type Identity = {
   identifier: string
   identity_uuid?: string
 }
+
+export type AvailablePermission = {
+  key: string,
+  description: string
+}
+
+export type Tag = {
+  id: number
+  color: string
+  description: string
+  project: number
+  label: string
+}
+
+export type MultivariateFeatureStateValue = {
+  id: number;
+  multivariate_feature_option: number;
+  percentage_allocation: number;
+}
+
+
+export type FeatureStateValue = {
+  boolean_value?: boolean;
+  float_value?: number
+  integer_value?: boolean;
+  string_value: string;
+  type: string;
+}
+
+export type MultivariateOption =  {
+  id: number;
+  uuid: string;
+  type: string;
+  integer_value?: number;
+  string_value: string;
+  boolean_value?: boolean;
+  default_percentage_allocation: number;
+}
+
+export type FeatureState = {
+  id: number;
+  feature_state_value: string;
+  multivariate_feature_state_values: MultivariateFeatureStateValue[];
+  identity?: string;
+  uuid: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  version?: number;
+  live_from?: string;
+  hide_from_client?: string;
+  feature: number;
+  environment: number;
+  feature_segment?: number;
+  change_request?: number;
+}
+
+export type ProjectFlag = {
+  id: number;
+  name: string;
+  type: string;
+  default_enabled: boolean;
+  initial_value: string;
+  created_date: Date;
+  description?: string;
+  tags: number[];
+  multivariate_options: MultivariateOption[];
+  is_archived: boolean;
+  owners: User[];
+  uuid: string;
+  project: number;
+}
+
 export type Res = {
   segments: PagedResponse<Segment>;
-  segment: {id:string};
+  segment: Segment;
   auditLogs: PagedResponse<AuditLogItem>;
   organisations: PagedResponse<Organisation>;
   projects: ProjectSummary[];
@@ -120,5 +221,9 @@ export type Res = {
   }
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
+  permission: Record<string, boolean>
+  availablePermissions: AvailablePermission[]
+  tag: Tag
+  tags: Tag[]
   // END OF TYPES
 }

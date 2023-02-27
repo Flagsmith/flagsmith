@@ -1,5 +1,5 @@
 import React from 'react';
-import FeatureListStore from '../stores/feature-list-store';
+import FeatureListStore from 'common/stores/feature-list-store';
 
 const FeatureListProvider = class extends React.Component {
     static displayName = 'FeatureListProvider'
@@ -20,6 +20,7 @@ const FeatureListProvider = class extends React.Component {
                 isSaving: FeatureListStore.isSaving,
                 isLoading: FeatureListStore.isLoading,
                 environmentFlags: FeatureListStore.getEnvironmentFlags(),
+                error: !!FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
                 projectFlags: FeatureListStore.getProjectFlags(),
                 influxData: FeatureListStore.getFlagInfluxData(),
@@ -34,7 +35,7 @@ const FeatureListProvider = class extends React.Component {
             this.setState({
                 isSaving: FeatureListStore.isSaving,
                 isLoading: FeatureListStore.isLoading,
-                error: FeatureListStore.error,
+                error: !!FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
                 influxData: FeatureListStore.getFlagInfluxData(),
             });
@@ -44,10 +45,6 @@ const FeatureListProvider = class extends React.Component {
 
     toggleFlag = (i, environments, comment, environmentFlags, projectFlags) => {
         AppActions.toggleFlag(i, environments, comment, environmentFlags, projectFlags);
-    };
-
-    setFlag = (i, flag, environments) => {
-        AppActions.setFlag(i, flag, environments);
     };
 
     createFlag = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
@@ -124,7 +121,6 @@ const FeatureListProvider = class extends React.Component {
                 {
                     environmentHasFlag: FeatureListStore.hasFlagInEnvironment,
                     toggleFlag: this.toggleFlag,
-                    setFlag: this.setFlag,
                     createFlag: this.createFlag,
                     createChangeRequest: this.createChangeRequest,
                     editFeatureValue: this.editFeatureValue,

@@ -2,10 +2,8 @@
  * Created by kylejohnson on 25/07/2016.
  */
 import React, { Component } from 'react';
-import Constants from '../../../../common/constants';
-
-const FormGroup = class extends Component {
-    static displayName = 'FormGroup'
+const InputGroup = class extends Component {
+    static displayName = 'InputGroup'
 
     constructor(props, context) {
         super(props, context);
@@ -92,7 +90,7 @@ const FormGroup = class extends Component {
     }
 };
 
-FormGroup.propTypes = {
+InputGroup.propTypes = {
     disabled: OptionalBool,
     title: propTypes.any,
     isValid: propTypes.any,
@@ -103,4 +101,4 @@ FormGroup.propTypes = {
     placeholder: OptionalString,
 };
 
-module.exports = FormGroup;
+export default InputGroup

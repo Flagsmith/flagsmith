@@ -8,6 +8,7 @@ import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import RegexTester from "../RegexTester";
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Constants from 'common/constants';
 
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
@@ -351,8 +352,11 @@ const ProjectSettingsPage = class extends Component {
                                             <EditPermissions
                                                 onSaveUser={() => {
                                                     this.getPermissions();
-                                                }} permissions={this.state.permissions} tabClassName="flat-panel"
-                                                id={this.props.match.params.projectId} level="project"
+                                                }}
+                                                permissions={this.state.permissions}
+                                                tabClassName="flat-panel"
+                                                id={this.props.match.params.projectId}
+                                                level="project"
                                             />
                                         </TabItem>
                                     </Tabs>
