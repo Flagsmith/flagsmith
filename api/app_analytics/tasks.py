@@ -94,7 +94,6 @@ def populate_api_usage_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
-
         data = _get_api_usage_source_data(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
