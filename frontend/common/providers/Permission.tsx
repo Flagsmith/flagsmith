@@ -13,7 +13,7 @@ type PermissionType = {
 export const useHasPermission = ({ id, level, permission }:Omit<PermissionType,"children">) => {
     const { data, isLoading } = useGetPermissionQuery({ level,id });
     const hasPermission = !!data?.[permission] || !!data?.ADMIN
-    return { permission:hasPermission, isLoading };
+    return { permission:hasPermission||AccountStore.isAdmin(), isLoading };
 }
 
 const Permission: FC<PermissionType> = ({ children, id, level, permission }) => {
