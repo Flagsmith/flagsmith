@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react';
 import { useGetPermissionQuery } from "common/services/usePermission";
-import { PermissionLevel } from "common/types/requests"; // we need this to make JSX compile
+import { PermissionLevel } from "common/types/requests";
+import AccountStore from '../stores/account-store'; // we need this to make JSX compile
 
 type PermissionType = {
     id: string
@@ -17,7 +18,7 @@ export const useHasPermission = ({ id, level, permission }:Omit<PermissionType,"
 
 const Permission: FC<PermissionType> = ({ children, id, level, permission }) => {
     const { permission:hasPermission, isLoading } = useHasPermission({ id,level,permission })
-    return <>{children({ permission:hasPermission, isLoading }) || <div/>}</>
+    return <>{children({ permission:hasPermission||AccountStore.isAdmin(), isLoading }) || <div/>}</>
 }
 
 export default Permission
