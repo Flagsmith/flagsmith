@@ -710,5 +710,5 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
         "count": 10,
     }
     mocked_get_feature_evaluation_data.assert_called_with(
-        feature_name=feature.name, period=30, environment_id=environment.id
+        feature=feature, period=30, environment_id=environment.id
     )
