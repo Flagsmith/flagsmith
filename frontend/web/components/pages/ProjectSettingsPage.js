@@ -326,27 +326,28 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                 </FormGroup>
                                             )}
-
-                                            <FormGroup className="mt-4">
-                                                <h3>Delete Project</h3>
-                                                <div className="row">
-                                                    <div className="col-md-10">
-                                                        <p>
-                                                            This project will be permanently deleted.
-                                                        </p>
+                                            {Utils.getFlagsmithHasFeature("delete_project")&&(
+                                                <FormGroup className="mt-4">
+                                                    <h3>Delete Project</h3>
+                                                    <div className="row">
+                                                        <div className="col-md-10">
+                                                            <p>
+                                                                This project will be permanently deleted.
+                                                            </p>
+                                                        </div>
+                                                        <div className="col-md-2 text-right">
+                                                            <Button
+                                                                onClick={() => this.confirmRemove(project, () => {
+                                                                    deleteProject(this.props.match.params.projectId);
+                                                                })}
+                                                                className="btn btn--with-icon ml-auto btn--remove"
+                                                            >
+                                                                <RemoveIcon/>
+                                                            </Button>
+                                                        </div>
                                                     </div>
-                                                    <div className="col-md-2 text-right">
-                                                        <Button
-                                                            onClick={() => this.confirmRemove(project, () => {
-                                                                deleteProject(this.props.match.params.projectId);
-                                                            })}
-                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                        >
-                                                            <RemoveIcon/>
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </FormGroup>
+                                                </FormGroup>
+                                            )}
                                         </TabItem>
                                         <TabItem tabLabel="Members" tabIcon="ion-md-people">
                                             <EditPermissions
