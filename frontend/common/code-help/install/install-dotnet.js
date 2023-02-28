@@ -1,4 +1,4 @@
-import Utils from '../../utils/utils';
+import Utils from 'common/utils/utils';
 
 module.exports = () => `// Package Manager
 PM> Install-Package Flagsmith -Version 4.0.0

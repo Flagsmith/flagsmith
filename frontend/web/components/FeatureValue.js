@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Format from "../../common/utils/format";
 
 const FeatureValue = class extends Component {
     static displayName = 'FeatureValue'
@@ -12,7 +13,7 @@ const FeatureValue = class extends Component {
         if (this.props.value === null || this.props.value === undefined) {
             return null;
         }
-        const type = typeof Utils.getTypedValue(`${this.props.value}`);
+        const type = typeof this.props.value;
         if (type === 'string' && this.props.value === '' && !this.props.includeEmpty) {
             return null;
         }

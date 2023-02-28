@@ -22,6 +22,7 @@ import ProjectStore from '../../common/stores/project-store';
 import ChangeRequestStore from '../../common/stores/change-requests-store';
 import getBuildVersion from '../project/getBuildVersion'
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
 
 const Aside = class extends Component {
     static displayName = 'Aside';

@@ -1,6 +1,6 @@
 import React from 'react';
-import ProjectStore from '../stores/project-store';
-import OrganisationStore from '../stores/organisation-store';
+import ProjectStore from 'common/stores/project-store';
+import OrganisationStore from 'common/stores/organisation-store';
 
 const ProjectProvider = class extends React.Component {
     static displayName = 'ProjectProvider'

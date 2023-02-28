@@ -1,5 +1,5 @@
 import React from 'react';
-import UserGroupsStore from '../stores/user-group-store';
+import UserGroupsStore from 'common/stores/user-group-store';
 
 const UserGroupProvider = class extends React.Component {
     static displayName = 'UserGroupProvider'

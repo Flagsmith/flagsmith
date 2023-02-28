@@ -1,5 +1,5 @@
 import React from 'react';
-import Constants from '../../../common/constants';
+import Constants from 'common/constants';
 
 export default function AddVariationButton({ onClick, disabled }) {
     return (

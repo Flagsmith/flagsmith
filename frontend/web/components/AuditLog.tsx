@@ -12,7 +12,6 @@ const Format = require('common/utils/format')
 type AuditLogType = {
     environmentId: string
     projectId: string
-    onErrorChange?:(error:boolean) => void
     pageSize:number
     onSearchChange?:(search:string)=>void
 }

@@ -1,9 +1,4 @@
 module.exports = {
-    getConfig() { // get upcoming routes
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_CONFIG,
-        });
-    },
     refresh() { // refresh the entire app
         Dispatcher.handleViewAction({
             actionType: Actions.REFRESH,
