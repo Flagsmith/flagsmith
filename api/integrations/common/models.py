@@ -3,7 +3,6 @@ import logging
 from core.models import SoftDeleteExportableModel
 from django.db import models
 from django_lifecycle import (
-    AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
     LifecycleModelMixin,
@@ -28,7 +27,6 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):
         abstract = True
 
     @hook(AFTER_SAVE)
-    @hook(AFTER_DELETE)
     def write_environment_to_dynamodb(self):
         if not hasattr(self, "environment_id"):
             logger.warning(
