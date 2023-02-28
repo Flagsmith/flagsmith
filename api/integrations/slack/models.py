@@ -1,13 +1,13 @@
-from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
+from core.models import AbstractBaseExportableModel
 from django.db import models
 
 from projects.models import Project
 
 
-class SlackConfiguration(SoftDeleteExportableModel):
+class SlackConfiguration(AbstractBaseExportableModel):
     api_token = models.CharField(max_length=100, blank=False, null=False)
     project = models.OneToOneField(
-        Project, on_delete=models.CASCADE, related_name="slack_config"
+        Project, on_delete=models.DO_NOTHING, related_name="slack_config"
     )
     created_date = models.DateTimeField(auto_now_add=True)
 

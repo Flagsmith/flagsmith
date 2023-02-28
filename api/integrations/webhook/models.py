@@ -12,7 +12,7 @@ from webhooks.models import AbstractBaseWebhookModel
 
 class WebhookConfiguration(AbstractBaseWebhookModel, LifecycleModelMixin):
     environment = models.OneToOneField(
-        Environment, related_name="webhook_config", on_delete=models.CASCADE
+        Environment, related_name="webhook_config", on_delete=models.DO_NOTHING
     )
 
     @hook(AFTER_SAVE)

@@ -6,5 +6,5 @@ from integrations.common.models import EnvironmentIntegrationModel
 
 class AmplitudeConfiguration(EnvironmentIntegrationModel):
     environment = models.OneToOneField(
-        Environment, related_name="amplitude_config", on_delete=models.CASCADE
+        Environment, related_name="amplitude_config", on_delete=models.DO_NOTHING
     )

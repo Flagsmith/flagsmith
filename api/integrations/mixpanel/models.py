@@ -6,5 +6,5 @@ from integrations.common.models import EnvironmentIntegrationModel
 
 class MixpanelConfiguration(EnvironmentIntegrationModel):
     environment = models.OneToOneField(
-        Environment, related_name="mixpanel_config", on_delete=models.CASCADE
+        Environment, related_name="mixpanel_config", on_delete=models.DO_NOTHING
     )
