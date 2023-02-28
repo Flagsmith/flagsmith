@@ -7,7 +7,9 @@ import CreateFlagModal from './modals/CreateFlag';
 import ProjectStore from 'common/stores/project-store';
 import Permission from "common/providers/Permission";
 import Constants from "common/constants";
-import { hasProtectedTag } from "../../common/utils/hasProtectedTag"; // we need this to make JSX compile
+import { hasProtectedTag } from "../../common/utils/hasProtectedTag";
+import SegmentsIcon from './svg/SegmentsIcon';
+import UsersIcon from './svg/UsersIcon'; // we need this to make JSX compile
 
 
 class TheComponent extends Component {
@@ -140,6 +142,36 @@ class TheComponent extends Component {
 
                             ) : (
                                 <span/>
+                            )}
+                            {projectFlag.num_segment_overrides && (
+                                <Tooltip
+                                    title={(
+                                        <span className="chip ml-1 chip--sm bg-primary text-white">
+                                           <SegmentsIcon className="chip-svg-icon"/>
+                                            <span>
+                                                {projectFlag.num_segment_overrides}
+                                            </span>
+                                        </span>
+                                    )}
+                                    place="top"
+                                >
+                                    {`${projectFlag.num_segment_overrides} Segment Override${projectFlag.num_segment_overrides!==1?'s':''}`}
+                                </Tooltip>
+                            )}
+                            {projectFlag.num_identity_overrides && (
+                                <Tooltip
+                                    title={(
+                                        <span className="chip ml-1 chip--sm bg-primary text-white">
+                                           <UsersIcon className="chip-svg-icon"/>
+                                            <span>
+                                                {projectFlag.num_identity_overrides}
+                                            </span>
+                                        </span>
+                                    )}
+                                    place="top"
+                                >
+                                    {`${projectFlag.num_identity_overrides} Identity Override${projectFlag.num_identity_overrides!==1?'s':''}`}
+                                </Tooltip>
                             )}
                             <TagValues
                                 projectId={`${projectId}`}
