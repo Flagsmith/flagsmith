@@ -82,7 +82,6 @@ const FeaturesPage = class extends Component {
 
     onError = (error) => {
         // Kick user back out to projects
-        debugger
         this.setState({ error });
         if(!error?.name && !error?.initial_value) {
             // Could not determine field level error, show generic toast.
