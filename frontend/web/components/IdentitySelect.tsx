@@ -9,15 +9,13 @@ import {ButtonOutline} from "./base/forms/Button";
 import Utils from "common/utils/utils";
 type IdentitySelectType = {
     value: Identity['id'] | null | undefined
-    overrides?: (Omit<FeatureState,"identity">&{
-        identity: {id:number, identifier:string}
-    })[]
+    ignoreIds?: Identity['id'][]
     isEdge: boolean
     onChange: (v:Identity)=> void
     environmentId: string
 }
 
-const IdentitySelect: FC<IdentitySelectType> = ({value, isEdge, environmentId, overrides,onChange}) => {
+const IdentitySelect: FC<IdentitySelectType> = ({value, isEdge, environmentId, ignoreIds,onChange}) => {
 
     const {data, searchItems, loadMore, isLoading} = useInfiniteScroll<Req['getIdentities'], Res['identities']>(
         useGetIdentitiesQuery, {
@@ -27,10 +25,10 @@ const IdentitySelect: FC<IdentitySelectType> = ({value, isEdge, environmentId, o
     })
     const identityOptions = useMemo(() => {
         return filter(
-            data?.results, identity => !overrides?.length || !find(overrides, v => v.identity?.identifier === identity.identifier),
+            data?.results, identity => !ignoreIds?.length || !find(ignoreIds, v => v === identity.id),
         ).map(({ identifier: label, id: value }) => ({ value, label })).slice(0, 10);
     },[
-        overrides,
+        ignoreIds,
         data
     ])
     return (

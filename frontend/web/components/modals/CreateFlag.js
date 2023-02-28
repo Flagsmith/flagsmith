@@ -826,7 +826,7 @@ const CreateFlag = class extends Component {
                                                                                                 <Flex className="text-left">
                                                                                                     <IdentitySelect
                                                                                                       isEdge={false}
-                                                                                                      overrides={this.state.userOverrides}
+                                                                                                      ignoreIds={this.state.userOverrides?.map((v)=>v.identity?.id)}
                                                                                                       environmentId={this.props.environmentId}
                                                                                                       data-test="select-identity"
                                                                                                       placeholder="Create an Identity Override..."
