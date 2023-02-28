@@ -6,9 +6,7 @@ import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
 import {Link} from "react-router-dom";
-
 const PanelSearch = require('../components/PanelSearch');
-const Format = require('common/utils/format')
 type AuditLogType = {
     environmentId: string
     projectId: string
@@ -47,7 +45,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         hasHadResults.current = true;
     }
 
-    const renderRow = ({created_date, log, author, environment, related_object_type}: AuditLogItem) => {
+    const renderRow = ({created_date, log, author, environment}: AuditLogItem) => {
         return (
             <Row className='list-item py-2 audit__item' key={created_date}>
                 <span style={{width:widths[0]}}>
