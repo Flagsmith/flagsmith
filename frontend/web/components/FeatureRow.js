@@ -143,7 +143,7 @@ class TheComponent extends Component {
                             ) : (
                                 <span/>
                             )}
-                            {projectFlag.num_segment_overrides && (
+                            {!!projectFlag.num_segment_overrides && (
                                 <Tooltip
                                     title={(
                                         <span className="chip ml-1 chip--sm bg-primary text-white">
@@ -158,7 +158,7 @@ class TheComponent extends Component {
                                     {`${projectFlag.num_segment_overrides} Segment Override${projectFlag.num_segment_overrides!==1?'s':''}`}
                                 </Tooltip>
                             )}
-                            {projectFlag.num_identity_overrides && (
+                            {!!projectFlag.num_identity_overrides && (
                                 <Tooltip
                                     title={(
                                         <span className="chip ml-1 chip--sm bg-primary text-white">
