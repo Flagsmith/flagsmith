@@ -87,12 +87,6 @@ const FeatureList = class extends Component<FeatureListType> {
         toast('Saved');
     };
 
-    onError = (error) => {
-        // Kick user back out to projects
-        this.setState({ error: true });
-        toast('We could not create this feature, please check the name is not in use.');
-    }
-
     filter = () => {
         AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
