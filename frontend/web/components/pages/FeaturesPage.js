@@ -82,8 +82,12 @@ const FeaturesPage = class extends Component {
 
     onError = (error) => {
         // Kick user back out to projects
+        debugger
         this.setState({ error });
-        toast('We could not create this feature, please check the name is not in use.');
+        if(!error?.name && !error?.initial_value) {
+            // Could not determine field level error, show generic toast.
+            toast('We could not create this feature, please check the name is not in use.');
+        }
     }
 
     filter = () => {
