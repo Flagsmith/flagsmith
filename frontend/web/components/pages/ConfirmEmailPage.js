@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import Constants from 'common/constants';
 
 const InvitePage = class extends Component {
     static contextTypes = {

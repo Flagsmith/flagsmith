@@ -5,13 +5,18 @@ import CreateFlagModal from '../modals/CreateFlag';
 import CreateTraitModal from '../modals/CreateTrait';
 import TryIt from '../TryIt';
 import CreateSegmentModal from '../modals/CreateSegment';
-import FeatureListStore from '../../../common/stores/feature-list-store';
-import TagSelect from '../TagSelect';
-import { Tag } from '../AddEditTags';
-import _data from '../../../common/data/base/_data';
+import FeatureListStore from 'common/stores/feature-list-store';
+import TagFilter from '../tags/TagFilter';
+import Tag from "../tags/Tag";
+import { getTags } from "common/services/useTag";
+import { getStore } from "common/store";
+import TagValues from "../tags/TagValues";
+import _data from 'common/data/base/_data';
 import JSONReference from "../JSONReference";
-import Constants from "../../../common/constants";
+import Constants from "common/constants";
+import IdentitySegmentsProvider from "common/providers/IdentitySegmentsProvider";
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from 'common/providers/Permission';
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -49,14 +54,11 @@ const UserPage = class extends Component {
         AppActions.getIdentity(this.props.match.params.environmentId, this.props.match.params.id);
         AppActions.getIdentitySegments(this.props.match.params.projectId, this.props.match.params.id);
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
-        this.getTags(params.projectId);
-
+        getTags(getStore(),{
+            projectId: `${params.projectId}`
+        })
         this.getActualFlags();
         API.trackPage(Constants.pages.USER);
-    }
-
-    getTags = (projectId) => {
-        AppActions.getTags(projectId);
     }
 
     onSave = () => {
@@ -235,34 +237,34 @@ const UserPage = class extends Component {
                                                               }
                                                               header={(
                                                                   <div className="pb-2">
-                                                                      <TagSelect
-                                                                        showUntagged
-                                                                        showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
-                                                                        onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                                        projectId={projectId} value={this.state.tags} onChange={(tags) => {
-                                                                            FeatureListStore.isLoading = true;
-                                                                            if (tags.includes('') && tags.length>1) {
-                                                                                if (!this.state.tags.includes('')) {
-                                                                                    this.setState({ tags: [''] }, this.filter);
-                                                                                } else {
-                                                                                    this.setState({ tags: tags.filter(v => !!v) }, this.filter);
-                                                                                }
-                                                                            } else {
-                                                                                this.setState({ tags }, this.filter);
-                                                                            }
-                                                                            AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
-                                                                        }}
+                                                                      <TagFilter
+                                                                          showUntagged
+                                                                          showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                                          onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
+                                                                          projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
+                                                                          FeatureListStore.isLoading = true;
+                                                                          if (tags?.includes('') && tags?.length>1) {
+                                                                              if (!this.state.tags.includes('')) {
+                                                                                  this.setState({ tags: [''] }, this.filter);
+                                                                              } else {
+                                                                                  this.setState({ tags: tags?.filter(v => !!v) }, this.filter);
+                                                                              }
+                                                                          } else {
+                                                                              this.setState({ tags }, this.filter);
+                                                                          }
+                                                                          AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
+                                                                      }}
                                                                       >
                                                                           <Tag
-                                                                            selected={this.state.showArchived}
-                                                                            onClick={() => {
-                                                                                FeatureListStore.isLoading = true;
-                                                                                this.setState({ showArchived: !this.state.showArchived }, this.filter);
-                                                                            }}
-                                                                            className="px-2 py-2 ml-2 mr-2"
-                                                                            tag={{ label: 'Archived' }}
+                                                                              selected={this.state.showArchived}
+                                                                              onClick={() => {
+                                                                                  FeatureListStore.isLoading = true;
+                                                                                  this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                              }}
+                                                                              className="px-2 py-2 ml-2 mr-2"
+                                                                              tag={{ label: 'Archived' }}
                                                                           />
-                                                                      </TagSelect>
+                                                                      </TagFilter>
                                                                   </div>
                                                               )}
                                                               isLoading={FeatureListStore.isLoading}
@@ -303,33 +305,37 @@ const UserPage = class extends Component {
                                                                       }
                                                                   }
 
-                                                                  if (name === this.state.preselect) {
-                                                                      this.state.preselect = null;
-                                                                      onClick();
-                                                                  }
-                                                                  return (
-                                                                      <Row
-                                                                        className={`list-item clickable py-1 ${flagDifferent && 'flag-different'}`} key={id} space
-                                                                        data-test={`user-feature-${i}`}
-                                                                      >
-                                                                          <div
-                                                                            onClick={onClick}
-                                                                            className="flex flex-1"
-                                                                          >
-                                                                              <Row>
-                                                                                  <ButtonLink>
-                                                                                      {name}
-                                                                                  </ButtonLink>
-                                                                              </Row>
-                                                                              {hasUserOverride ? (
-                                                                                  <Row className="chip">
-                                                                                      <span>
-                                                                                            Overriding defaults
-                                                                                      </span>
-                                                                                      <span
-                                                                                        className="chip-icon icon ion-md-information"
-                                                                                      />
-                                                                                  </Row>
+                                                      if (name === this.state.preselect) {
+                                                          this.state.preselect = null;
+                                                          onClick();
+                                                      }
+                                                      return (
+                                                          <Row
+                                                            className={`list-item clickable py-1 ${flagDifferent && 'flag-different'}`} key={id} space
+                                                            data-test={`user-feature-${i}`}
+                                                          >
+                                                              <div
+                                                                onClick={onClick}
+                                                                className="flex flex-1"
+                                                              >
+                                                                  <Row>
+                                                                      <ButtonLink className="mr-2">
+                                                                          {name}
+                                                                      </ButtonLink>
+                                                                      <TagValues
+                                                                          projectId={`${projectId}`}
+                                                                          value={projectFlag.tags}
+                                                                      />
+                                                                  </Row>
+                                                                  {hasUserOverride ? (
+                                                                      <Row className="chip">
+                                                                          <span>
+                                                                                Overriding defaults
+                                                                          </span>
+                                                                          <span
+                                                                            className="chip-icon icon ion-md-information"
+                                                                          />
+                                                                      </Row>
 
                                                                               ) : (
                                                                                   flagEnabledDifferent ? (

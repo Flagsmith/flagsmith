@@ -2,7 +2,7 @@
 import React, { PureComponent } from 'react';
 import TheInput from 'material-ui-chip-input';
 import ValueEditor from './ValueEditor';
-import Constants from '../../common/constants';
+import Constants from 'common/constants';
 import VariationOptions from './mv/VariationOptions';
 import AddVariationButton from './mv/AddVariationButton';
 import ErrorMessage from './ErrorMessage';

@@ -4,9 +4,10 @@ import EnvironmentSelect from './EnvironmentSelect';
 import data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import FeatureRow from './FeatureRow';
-import { Tag } from './AddEditTags';
 import FeatureListStore from '../../common/stores/feature-list-store';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
+import Tag from './tags/Tag';
 
 const featureNameWidth = 300;
 

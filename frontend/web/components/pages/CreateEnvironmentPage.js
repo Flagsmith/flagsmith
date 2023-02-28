@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
 import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
+import Constants from 'common/constants';
 
 const CreateEnvironmentPage = class extends Component {
     static displayName = 'CreateEnvironmentPage'
@@ -37,7 +39,6 @@ const CreateEnvironmentPage = class extends Component {
         const { name } = this.state;
         return (
             <div className="app-container container">
-
                 <Permission
                   level="project"
                   permission="CREATE_ENVIRONMENT"

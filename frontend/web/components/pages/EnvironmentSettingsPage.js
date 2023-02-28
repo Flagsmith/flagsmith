@@ -10,8 +10,9 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
-import { ColourSelect } from '../AddEditTags';
 import JSONReference from "../JSONReference";
+import ColourSelect from '../tags/ColourSelect';
+import Constants from 'common/constants';
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
 
@@ -322,27 +323,29 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </div>
                                                             </Row>
                                                     </FormGroup>
-                                                <FormGroup className="mt-4">
-                                                    <Row className="mt-4" space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3>
-                                                                Delete Environment
-                                                            </h3>
-                                                            <p>
-                                                                This environment will be permanently deleted.
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            id="delete-env-btn"
-                                                            onClick={() => this.confirmRemove(_.find(project.environments, { api_key: this.props.match.params.environmentId }), () => {
-                                                                deleteEnv(_.find(project.environments, { api_key: this.props.match.params.environmentId }));
-                                                            })}
-                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                        >
-                                                            <RemoveIcon/>
-                                                        </Button>
-                                                    </Row>
-                                                </FormGroup>
+                                                {Utils.getFlagsmithHasFeature("delete_environment") && (
+                                                    <FormGroup className="mt-4">
+                                                        <Row className="mt-4" space>
+                                                            <div className="col-md-8 pl-0">
+                                                                <h3>
+                                                                    Delete Environment
+                                                                </h3>
+                                                                <p>
+                                                                    This environment will be permanently deleted.
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                id="delete-env-btn"
+                                                                onClick={() => this.confirmRemove(_.find(project.environments, { api_key: this.props.match.params.environmentId }), () => {
+                                                                    deleteEnv(_.find(project.environments, { api_key: this.props.match.params.environmentId }));
+                                                                })}
+                                                                className="btn btn--with-icon ml-auto btn--remove"
+                                                            >
+                                                                <RemoveIcon/>
+                                                            </Button>
+                                                        </Row>
+                                                    </FormGroup>
+                                                )}
                                             </div>
 
                                         </TabItem>
@@ -382,6 +385,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                     parentLevel="project"
                                                     parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                                                     id={this.props.match.params.environmentId}
+                                                    router={this.context.router}
                                                     level="environment"
                                                 />
                                             </FormGroup>
