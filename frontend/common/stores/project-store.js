@@ -36,7 +36,8 @@ const controller = {
                 if (cb) {
                     cb();
                 }
-            }).catch(() => {
+            }).catch((e) => {
+                debugger
                 if (!getIsWidget()) {
                     document.location.href = '/404?entity=project';
                 }
@@ -123,12 +124,12 @@ const store = Object.assign({}, BaseStore, {
     getEnvironment: api_key => store.model && _.find(store.model.environments, { api_key }),
     getFlags: () => store.model && store.model.flags,
     getEnvironmentIdFromKeyAsync: async (projectId, apiKey) => {
-        if(store.model) {
-            return Promise.resolve(store.getEnvironmentIdFromKey(apiKey))
+        if(store.model && `${store.model.id}` === `${projectId}`) {
+            return await Promise.resolve(store.getEnvironmentIdFromKey(apiKey))
         }
-        return controller.getProject(projectId, apiKey).then(()=>{
+        return await (controller.getProject(projectId, null, true).then(()=>{
             return Promise.resolve(store.getEnvironmentIdFromKey(apiKey))
-        })
+        }))
     },
     getEnvironmentIdFromKey: (api_key) => {
         const env = _.find(store.model.environments, { api_key });
