@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
+from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -145,9 +145,9 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
+class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     organisation = models.OneToOneField(
-        Organisation, on_delete=models.DO_NOTHING, related_name="subscription"
+        Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
     subscription_date = models.DateTimeField(blank=True, null=True)

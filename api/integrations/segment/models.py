@@ -6,5 +6,5 @@ from integrations.common.models import EnvironmentIntegrationModel
 
 class SegmentConfiguration(EnvironmentIntegrationModel):
     environment = models.OneToOneField(
-        Environment, related_name="segment_config", on_delete=models.DO_NOTHING
+        Environment, related_name="segment_config", on_delete=models.CASCADE
     )

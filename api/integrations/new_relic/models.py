@@ -10,6 +10,6 @@ logger = logging.getLogger(__name__)
 
 class NewRelicConfiguration(IntegrationsModel):
     project = models.OneToOneField(
-        Project, on_delete=models.DO_NOTHING, related_name="new_relic_config"
+        Project, on_delete=models.CASCADE, related_name="new_relic_config"
     )
     app_id = models.CharField(max_length=100, blank=False, null=False)
