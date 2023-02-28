@@ -942,3 +942,27 @@ def test_organisation_get_influx_data(
         str(organisation.id), **expected_filter_args
     )
     assert response.json() == {"events_list": []}
+
+
+def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database(
+    admin_client, admin_user, organisation, subscription
+):
+    """
+    Test to verify workaround for bug in django-softdelete as per issue here:
+    https://github.com/scoursen/django-softdelete/issues/99
+    """
+
+    # Given
+    # another organisation
+    another_organisation = Organisation.objects.create(name="another org")
+    admin_user.add_organisation(another_organisation)
+
+    url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert Subscription.objects.filter(organisation=another_organisation).exists()
