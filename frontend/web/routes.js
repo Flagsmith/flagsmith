@@ -26,6 +26,7 @@ import InvitePage from './components/pages/InvitePage';
 import NotFoundPage from './components/pages/NotFoundPage';
 import ChangeRequestsPage from './components/pages/ChangeRequestsPage';
 import ChangeRequestPage from './components/pages/ChangeRequestPage';
+import ScheduledChangesPage from './components/pages/ScheduledChangesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
 import WidgetPage from './components/pages/WidgetPage';
@@ -45,6 +46,7 @@ export default (
             <Route path="/password-reset/confirm/:uid/:token/" exact component={PasswordResetPage}/>
             <Route path="/project/:projectId/environment/:environmentId/features" exact component={FlagsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
+            <Route path="/project/:projectId/environment/:environmentId/scheduled-changes" exact component={ScheduledChangesPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
             <Route path="/widget" exact component={WidgetPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
