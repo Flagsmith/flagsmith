@@ -7,10 +7,12 @@ from django_lifecycle import (
 )
 
 from environments.models import Environment
-from webhooks.models import AbstractBaseWebhookModel
+from webhooks.models import AbstractBaseSoftDeleteExportableWebhookModel
 
 
-class WebhookConfiguration(AbstractBaseWebhookModel, LifecycleModelMixin):
+class WebhookConfiguration(
+    AbstractBaseSoftDeleteExportableWebhookModel, LifecycleModelMixin
+):
     environment = models.OneToOneField(
         Environment, related_name="webhook_config", on_delete=models.CASCADE
     )
