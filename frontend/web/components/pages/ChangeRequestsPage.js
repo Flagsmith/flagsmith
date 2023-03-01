@@ -83,19 +83,7 @@ const ChangeRequestsPage = class extends Component {
                                         <InfoMessage>
                                           To enable this feature set a minimum number of approvals in <Link to={`/project/${projectId}/environment/${environmentId}/settings`}>Environment Settings</Link>
                                         </InfoMessage>
-                                    ) : (
-                                        <div>
-                                            View and manage requests to change feature flags with <ButtonLink
-                                            href="https://docs.flagsmith.com/advanced-use/change-requests"
-                                            target="_blank"
-                                        >Change Requests
-                                        </ButtonLink> and <ButtonLink
-                                            href="https://docs.flagsmith.com/advanced-use/scheduled-flags"
-                                            target="_blank"
-                                        >Scheduled Flags
-                                        </ButtonLink>.
-                                        </div>
-                                    )}
+                                    ) : null}
                                 </p>
                                 <Tabs
                                     value={this.state.tab}
