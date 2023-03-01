@@ -145,40 +145,6 @@ const ChangeRequestsPage = class extends Component {
                                             />
                                         </TabItem>
                                     )}
-                                    <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
-                                        <PanelSearch
-                                            renderSearchWithNoResults
-                                            id="users-list"
-                                            title="Change Requests"
-                                            className="mt-4 mx-2"
-                                            isLoading={ChangeRequestStore.isLoading || !dataScheduled || !OrganisationStore.model}
-                                            icon="ion-md-git-pull-request"
-                                            items={dataScheduled}
-                                            renderFooter={()=><JSONReference className="mt-4" title={"Change Requests"} json={dataScheduled}/>}
-                                            paging={dataScheduledPaging}
-                                            nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.next)}
-                                            prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.previous)}
-                                            goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-                                            renderRow={({ title, user: _user, created_at, id }, index) => {
-                                                const user = OrganisationStore.model && OrganisationStore.model.users.find(v => v.id === _user);
-                                                return (
-                                                    <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
-                                                        <Row className="list-item clickable">
-                                                            <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
-                                                            <div>
-                                                                <ButtonLink>
-                                                                    {title}
-                                                                </ButtonLink>
-                                                                <div className="list-item-footer faint">
-                                                                    Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
-                                                                </div>
-                                                            </div>
-                                                        </Row>
-                                                    </Link>
-                                                );
-                                            }}
-                                        />
-                                    </TabItem>
                                     <TabItem tabLabel={`Closed${dataClosedPaging ? ` (${dataClosedPaging.count})` : ''}`}>
                                         <PanelSearch
                                             renderSearchWithNoResults
