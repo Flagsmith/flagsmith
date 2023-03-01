@@ -103,8 +103,7 @@ const ChangeRequestsPage = class extends Component {
                                         this.setState({ tab });
                                     }}
                                 >
-                                    {typeof environment.minimum_change_request_approvals === 'number' && (
-                                        <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
+                                    <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
                                             <PanelSearch
                                                 renderSearchWithNoResults
                                                 id="users-list"
@@ -144,7 +143,6 @@ const ChangeRequestsPage = class extends Component {
                                                 }}
                                             />
                                         </TabItem>
-                                    )}
                                     <TabItem tabLabel={`Closed${dataClosedPaging ? ` (${dataClosedPaging.count})` : ''}`}>
                                         <PanelSearch
                                             renderSearchWithNoResults
