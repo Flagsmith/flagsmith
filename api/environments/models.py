@@ -43,7 +43,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from segments.models import Segment
-from webhooks.models import AbstractBaseWebhookModel
+from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +319,7 @@ class Environment(
         return self.project
 
 
-class Webhook(AbstractBaseWebhookModel):
+class Webhook(AbstractBaseExportableWebhookModel):
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_name="webhooks"
     )

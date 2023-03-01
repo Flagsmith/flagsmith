@@ -41,7 +41,7 @@ from organisations.subscriptions.exceptions import (
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
-from webhooks.models import AbstractBaseWebhookModel
+from webhooks.models import AbstractBaseExportableWebhookModel
 
 TRIAL_SUBSCRIPTION_ID = "trial"
 
@@ -232,7 +232,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         add_single_seat(self.subscription_id)
 
 
-class OrganisationWebhook(AbstractBaseWebhookModel):
+class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     name = models.CharField(max_length=100)
     enabled = models.BooleanField(default=True)
     organisation = models.ForeignKey(

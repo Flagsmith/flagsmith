@@ -17,7 +17,7 @@ from webhooks.sample_webhook_data import (
     organisation_webhook_data,
 )
 
-from .models import AbstractBaseWebhookModel
+from .models import AbstractBaseExportableWebhookModel
 from .serializers import WebhookSerializer
 
 if typing.TYPE_CHECKING:
@@ -79,7 +79,7 @@ def call_integration_webhook(config, data):
 
 
 def trigger_sample_webhook(
-    webhook: typing.Type[AbstractBaseWebhookModel], webhook_type: WebhookType
+    webhook: typing.Type[AbstractBaseExportableWebhookModel], webhook_type: WebhookType
 ) -> requests.models.Response:
     data = WEBHOOK_SAMPLE_DATA.get(webhook_type)
     serializer = WebhookSerializer(data=data)
@@ -89,7 +89,7 @@ def trigger_sample_webhook(
 
 
 def _call_webhook(
-    webhook: typing.Type[AbstractBaseWebhookModel],
+    webhook: typing.Type[AbstractBaseExportableWebhookModel],
     data: typing.Mapping,
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
