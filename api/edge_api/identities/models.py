@@ -1,5 +1,6 @@
 import copy
 import typing
+from contextlib import suppress
 
 from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
@@ -26,7 +27,7 @@ class EdgeIdentity:
 
     def __init__(self, engine_identity_model: IdentityModel):
         self._engine_identity_model = engine_identity_model
-        self._initial_state = copy.deepcopy(self)
+        self._reset_initial_state()
 
     @classmethod
     def from_identity_document(cls, identity_document: dict) -> "EdgeIdentity":
@@ -150,12 +151,13 @@ class EdgeIdentity:
         )
 
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
-        self._engine_identity_model.identity_features.remove(feature_state)
+        with suppress(ValueError):  # ignore if feature state didn't exist
+            self._engine_identity_model.identity_features.remove(feature_state)
 
     def save(self, user: FFAdminUser = None, master_api_key: MasterAPIKey = None):
         self.dynamo_wrapper.put_item(self.to_document())
         changes = self._get_changes(self._initial_state)
-        if changes:
+        if changes["feature_overrides"]:
             # TODO: would this be simpler if we put a wrapper around FeatureStateModel instead?
             generate_audit_log_records.delay(
                 kwargs={
@@ -167,6 +169,7 @@ class EdgeIdentity:
                     "master_api_key_id": getattr(master_api_key, "id", None),
                 }
             )
+        self._reset_initial_state()
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {
@@ -174,9 +177,7 @@ class EdgeIdentity:
         }
         if not identity_feature_names.issubset(valid_feature_names):
             self._engine_identity_model.prune_features(list(valid_feature_names))
-            sync_identity_document_features.delay(
-                args=(str(self._engine_identity_model.identity_uuid),)
-            )
+            sync_identity_document_features.delay(args=(str(self.identity_uuid),))
 
     def to_document(self) -> dict:
         return build_identity_dict(self._engine_identity_model)
@@ -216,3 +217,6 @@ class EdgeIdentity:
                 )
 
         return changes
+
+    def _reset_initial_state(self):
+        self._initial_state = copy.deepcopy(self)
