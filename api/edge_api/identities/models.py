@@ -150,6 +150,9 @@ class EdgeIdentity:
             None,
         )
 
+    def get_hash_key(self, use_mv_v2_evaluation: bool) -> str:
+        return self._engine_identity_model.get_hash_key(use_mv_v2_evaluation)
+
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
         with suppress(ValueError):  # ignore if feature state didn't exist
             self._engine_identity_model.identity_features.remove(feature_state)
