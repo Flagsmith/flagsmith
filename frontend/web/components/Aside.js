@@ -225,7 +225,7 @@ const Aside = class extends Component {
                                                             <NavLink
                                                               id="project-settings-link"
                                                               activeClassName="active"
-                                                              className="aside__nav-item"
+                                                              className="aside__nav-item mt-4"
                                                               to={`/project/${this.props.projectId}/settings`}
                                                             >
                                                                 <ProjectSettingsIcon className="aside__nav-item--icon"/>
@@ -375,7 +375,7 @@ const Aside = class extends Component {
                                                                                                       to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                                                                     >
                                                                                                         <span className="ion icon ion-ios-timer aside__environment-list-item--icon"/>
-                                                                                                        Scheduled {scheduled ? <span className="unread">{scheduled}</span> : null}
+                                                                                                        Scheduled Changes{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
                                                                                                     </NavLink>
                                                                                               {manageIdentityPermission && (
                                                                                               <NavLink
@@ -384,7 +384,7 @@ const Aside = class extends Component {
                                                                                                       exact
                                                                                                       to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                                                                     >
-                                                                                                        <UsersIcon
+                                                                                                                                                                <UsersIcon
                                                                                                           className="aside__environment-list-item--icon"
                                                                                                         />
                                                                                                         Users
