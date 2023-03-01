@@ -2,11 +2,12 @@ import React, {FC, useMemo, useState} from 'react'
 import {useGetOrganisationsQuery} from "common/services/useOrganisation";
 import {useGetProjectsQuery} from "common/services/useProject";
 import {useGetEnvironmentsQuery} from "common/services/useEnvironment";
-import {Segment} from "common/types/responses";
+import { Environment, Segment } from 'common/types/responses';
 import Format from "common/utils/format"
 import {sortBy} from "lodash";
 import PanelSearch from './PanelSearch';
 import {ButtonOutline} from "./base/forms/Button";
+import Input from './base/forms/Input';
 
 type OrgProjectSelectType = {
     organisationId?: string | null
@@ -138,10 +139,10 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
                     items={sortBy(items, (v)=> {
                         return v.name
                     })}
-                    filterRow={(row, search) => row.feature.name.toLowerCase().includes(search.toLowerCase())}
+                    filterRow={(row:Environment, search:string) => row.name.toLowerCase().includes(search.toLowerCase())}
                     onChange={setSearch}
-
-                    renderRow={({ name, id, api_key }:Segment, i:number) => (
+                    search={search}
+                    renderRow={({ name, id, api_key }:Environment, i:number) => (
                         <a className="list-item clickable" onClick={()=>{
                             onClick(`${useApiKey? api_key||id: id}`)
                         }}>

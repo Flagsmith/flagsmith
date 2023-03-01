@@ -1,6 +1,6 @@
 import { Component } from 'react';
-import OrganisationStore from '../stores/organisation-store';
-import AccountStore from '../stores/account-store';
+import OrganisationStore from 'common/stores/organisation-store';
+import AccountStore from 'common/stores/account-store';
 
 const OrganisationProvider = class extends Component {
     static displayName = 'OrganisationProvider'

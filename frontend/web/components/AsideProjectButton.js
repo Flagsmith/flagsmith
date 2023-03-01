@@ -1,4 +1,5 @@
 import { PureComponent } from 'react';
+import Format from "../../common/utils/format";
 
 const AsideProjectButton = class extends PureComponent {
     static displayName = 'AsideProjectButton'

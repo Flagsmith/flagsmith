@@ -1,18 +1,18 @@
 import { UseQuery } from '@reduxjs/toolkit/dist/query/react/buildHooks'
 import { useCallback, useEffect, useState } from 'react'
-import { PagedRequest } from 'common/types/requests'
-import { PagedResponse } from 'common/types/responses'
+import { PagedRequest } from './types/requests'
+import { PagedResponse } from './types/responses'
 import { QueryDefinition } from '@reduxjs/toolkit/query'
 import useThrottle from './useThrottle'
 
 const useInfiniteScroll = <
     REQ extends PagedRequest<{}>,
     RES extends PagedResponse<{}>,
-    >(
-    useGetDataListQuery: UseQuery<QueryDefinition<REQ, any, any, RES>>,
-    queryParameters: REQ,
-    throttle = 100,
-) => {
+>(
+        useGetDataListQuery: UseQuery<QueryDefinition<REQ, any, any, RES>>,
+        queryParameters: REQ,
+        throttle = 100,
+    ) => {
     const [localPage, setLocalPage] = useState(1)
     const [combinedData, setCombinedData] = useState<RES | null>(null)
     const [q, setQ] = useState('')
@@ -40,7 +40,9 @@ const useInfiniteScroll = <
                 )
             }
         }
-    }, [queryResponse?.data])
+    }, //eslint-disable-next-line
+        [queryResponse?.data]
+    )
 
     const searchItems = useThrottle((search: string) => {
         setQ(search)
