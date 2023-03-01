@@ -1,3 +1,5 @@
+import shortuuid
+
 from edge_api.identities.models import EdgeIdentity
 from features.models import FeatureSegment, FeatureState, FeatureStateValue
 from segments.models import Segment
@@ -53,3 +55,19 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
         identity_model=identity_model
     )
+
+
+def test_edge_identity_from_identity_document():
+    # Given
+    identifier = "identifier"
+    environment_api_key = shortuuid.uuid()
+
+    # When
+    edge_identity = EdgeIdentity.from_identity_document(
+        {"identifier": identifier, "environment_api_key": environment_api_key}
+    )
+
+    # Then
+    assert edge_identity.identifier == identifier
+    assert edge_identity.identity_uuid
+    assert edge_identity.environment_api_key == environment_api_key
