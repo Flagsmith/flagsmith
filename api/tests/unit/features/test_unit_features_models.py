@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.workflows.core.models import ChangeRequest
@@ -323,6 +324,15 @@ def test_feature_get_overrides_data(
         environment=environment,
         feature_segment=feature_segment_for_feature_3,
     )
+
+    # and an override for another identity that has been deleted
+    another_identity = Identity.objects.create(
+        identifier="another-identity", environment=environment
+    )
+    fs_to_delete = FeatureState.objects.create(
+        feature=feature, environment=environment, identity=another_identity
+    )
+    fs_to_delete.delete()
 
     # When
     overrides_data = Feature.get_overrides_data(environment.id)
