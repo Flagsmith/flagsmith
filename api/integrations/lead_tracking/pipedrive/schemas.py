@@ -36,3 +36,8 @@ class BasePipedriveCustomFieldSchema(BaseSchema):
     name = fields.Str()
     field_type = fields.Str()
     add_visible_flag = fields.Bool()
+
+
+class PipedrivePersonSchema(BaseSchema):
+    name = fields.Str()
+    id = fields.Int()

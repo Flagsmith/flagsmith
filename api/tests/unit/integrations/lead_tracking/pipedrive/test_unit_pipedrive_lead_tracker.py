@@ -6,7 +6,10 @@ from integrations.lead_tracking.pipedrive.exceptions import (
 from integrations.lead_tracking.pipedrive.lead_tracker import (
     PipedriveLeadTracker,
 )
-from integrations.lead_tracking.pipedrive.models import PipedriveOrganization
+from integrations.lead_tracking.pipedrive.models import (
+    PipedriveOrganization,
+    PipedrivePerson,
+)
 from users.models import FFAdminUser, SignUpType
 
 
@@ -21,6 +24,9 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     mock_pipedrive_client = mocker.MagicMock()
     mock_pipedrive_client.search_organizations.return_value = [organization]
 
+    person = PipedrivePerson(id=1, name="Elmer Fudd")
+    mock_pipedrive_client.create_person.return_value = person
+
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
@@ -33,6 +39,7 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
         "custom_fields": {
             settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
         },
+        "person_id": person.id,
     }
     mock_pipedrive_client.create_lead.assert_called_once_with(
         **expected_create_lead_kwargs
@@ -55,6 +62,9 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     mock_pipedrive_client.search_organizations.return_value = []
     mock_pipedrive_client.create_organization.return_value = organization
 
+    person = PipedrivePerson(id=1, name="Elmer Fudd")
+    mock_pipedrive_client.create_person.return_value = person
+
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
@@ -67,6 +77,7 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
         "custom_fields": {
             settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
         },
+        "person_id": person.id,
     }
     mock_pipedrive_client.create_lead.assert_called_once_with(
         **expected_create_lead_kwargs

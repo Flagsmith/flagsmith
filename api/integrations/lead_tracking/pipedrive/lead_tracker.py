@@ -60,9 +60,12 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
+        person = self.client.create_person(name=user.full_name, email=user.email)
+
         create_lead_kwargs = {
             "title": user.email,
             "organization_id": organization.id,
+            "person_id": person.id,
             "custom_fields": {},
         }
         if user.sign_up_type:
