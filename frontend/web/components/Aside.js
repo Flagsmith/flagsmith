@@ -358,25 +358,23 @@ const Aside = class extends Component {
                                                                                                     Features
                                                                                               </NavLink>
                                                                                               <NavLink
-                                                                                                      activeClassName="active"
-
-                                                                                                      className="aside__environment-list-item"
-                                                                                                      id="change-requests-link"
-                                                                                                      to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
-                                                                                                    >
-                                                                                                        <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
-                                                                                                        Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
-                                                                                                    </NavLink>
+                                                                                                  activeClassName="active"
+                                                                                                  className="aside__environment-list-item"
+                                                                                                  id="change-requests-link"
+                                                                                                  to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
+                                                                                              >
+                                                                                                  <span className="ion icon ion-ios-timer aside__environment-list-item--icon"/>
+                                                                                                  Scheduled Changes{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
+                                                                                              </NavLink>
                                                                                               <NavLink
-                                                                                                      activeClassName="active"
-
-                                                                                                      className="aside__environment-list-item"
-                                                                                                      id="change-requests-link"
-                                                                                                      to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
-                                                                                                    >
-                                                                                                        <span className="ion icon ion-ios-timer aside__environment-list-item--icon"/>
-                                                                                                        Scheduled Changes{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
-                                                                                                    </NavLink>
+                                                                                                  activeClassName="active"
+                                                                                                  className="aside__environment-list-item"
+                                                                                                  id="change-requests-link"
+                                                                                                  to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
+                                                                                                >
+                                                                                                    <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
+                                                                                                    Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
+                                                                                                </NavLink>
                                                                                               {manageIdentityPermission && (
                                                                                               <NavLink
                                                                                                       id="users-link"

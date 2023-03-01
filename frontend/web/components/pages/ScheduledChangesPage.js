@@ -80,9 +80,9 @@ const ChangeRequestsPage = class extends Component {
                                     renderSearchWithNoResults
                                     id='users-list'
                                     title='Scheduled Changes'
-                                    className='mt-4 mx-2'
+                                    className='mt-4'
                                     isLoading={ChangeRequestStore.isLoading || !dataScheduled || !OrganisationStore.model}
-                                    icon='ion-md-git-pull-request'
+                                    icon='ion-ios-timer'
                                     items={dataScheduled}
                                     renderFooter={() => <JSONReference className='mt-4'
                                                                        title={'Change Requests'}
@@ -98,7 +98,7 @@ const ChangeRequestsPage = class extends Component {
                                                 to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                                 <Row className='list-item clickable'>
                                                             <span
-                                                                className='ion text-primary mr-4 icon ion-md-git-pull-request' />
+                                                                className='ion text-primary mr-4 icon ion-ios-timer' />
                                                     <div>
                                                         <ButtonLink>
                                                             {title}
