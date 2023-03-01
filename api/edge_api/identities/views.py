@@ -275,6 +275,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             context={
                 "request": request,
                 "identity": self.identity,
+                "environment_api_key": self.identity.environment_api_key,
                 "identity_feature_names": identity_feature_names,
             },
         )

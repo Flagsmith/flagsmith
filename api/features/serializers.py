@@ -1,3 +1,5 @@
+import typing
+
 import django.core.exceptions
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
@@ -55,6 +57,10 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False, help_text="Comma separated list of tag ids to filter on (AND)"
     )
     is_archived = serializers.BooleanField(required=False)
+    environment = serializers.IntegerField(
+        required=False,
+        help_text="Integer ID of the environment to view features in the context of.",
+    )
 
     def validate_tags(self, tags):
         try:
@@ -68,6 +74,16 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
+
+    num_segment_overrides = serializers.SerializerMethodField(
+        help_text="Number of segment overrides that exist for the given feature "
+        "in the environment provided by the `environment` query parameter."
+    )
+    num_identity_overrides = serializers.SerializerMethodField(
+        help_text="Number of identity overrides that exist for the given feature "
+        "in the environment provided by the `environment` query parameter. "
+        "Note: will return null for Edge enabled projects."
+    )
 
     class Meta:
         model = Feature
@@ -85,6 +101,8 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "owners",
             "uuid",
             "project",
+            "num_segment_overrides",
+            "num_identity_overrides",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -164,6 +182,12 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             )
 
         return attrs
+
+    def get_num_segment_overrides(self, instance) -> int:
+        return getattr(instance, "num_segment_overrides", 0)
+
+    def get_num_identity_overrides(self, instance) -> typing.Optional[int]:
+        return getattr(instance, "num_identity_overrides", None)
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):

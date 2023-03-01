@@ -1,11 +1,13 @@
 import React, { FunctionComponent, Component } from 'react';
-import TagValues from './TagValues';
+import TagValues from './tags/TagValues';
 import HistoryIcon from './HistoryIcon';
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
 import CreateFlagModal from './modals/CreateFlag';
-import TagStore from '../../common/stores/tags-store'; // we need this to make JSX compile
-import ProjectStore from '../../common/stores/project-store'; // we need this to make JSX compile
+import ProjectStore from 'common/stores/project-store';
+import Permission from "common/providers/Permission";
+import Constants from "common/constants";
+import { hasProtectedTag } from "../../common/utils/hasProtectedTag"; // we need this to make JSX compile
 
 
 class TheComponent extends Component {
@@ -72,7 +74,7 @@ class TheComponent extends Component {
         const { projectId, projectFlag, permission, environmentFlags, environmentId, projectFlags, removeFlag, toggleFlag } = this.props;
         const { name, id, created_date, description } = this.props.projectFlag;
         const readOnly = this.props.readOnly || Utils.getFlagsmithHasFeature('read_only_mode');
-        const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
+        const isProtected = hasProtectedTag(projectFlag, projectId);
         const environment = ProjectStore.getEnvironment(environmentId);
         const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals);
 
@@ -112,7 +114,7 @@ class TheComponent extends Component {
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}
-              className={`list-item clickable ${this.props.widget?"py-1":"py-2"}`} key={id} space
+              className={`list-item ${readOnly?"":"clickable"} ${this.props.widget?"py-1":"py-2"}`} key={id} space
               data-test={`feature-item-${this.props.index}`}
             >
                 <div
@@ -121,7 +123,7 @@ class TheComponent extends Component {
                 >
                     <div>
                         <Row>
-                            <ButtonLink className="mr-2">
+                            <ButtonLink className={`mr-2 ${readOnly?"cursor-default":""}`}>
                                 {name}
                             </ButtonLink>
                             {projectFlag.owners && !!projectFlag.owners.length ? (
@@ -139,8 +141,10 @@ class TheComponent extends Component {
                             ) : (
                                 <span/>
                             )}
-                            <TagValues projectId={projectId} value={projectFlag.tags}/>
-
+                            <TagValues
+                                projectId={`${projectId}`}
+                                value={projectFlag.tags}
+                            />
                         </Row>
                         <span className="text-small text-muted">
                             Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}

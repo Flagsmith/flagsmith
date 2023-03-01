@@ -5,16 +5,14 @@ import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
-import ConfigProvider from 'common/providers/ConfigProvider';
-
-const PanelSearch = require('../components/PanelSearch');
-const ProjectProvider = require('common/providers/ProjectProvider');
+import PanelSearch from './PanelSearch'
 
 type AuditLogType = {
     environmentId: string
     projectId: string
-    onErrorChange?:(error:boolean) => void
     pageSize:number
+    onErrorChange?:(error:boolean) => void
+    onSearchChange?:(search:string)=>void
 }
 
 const AuditLog: FC<AuditLogType> = (props) => {
@@ -22,6 +20,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage(1);
     });
+
+    useEffect(()=>{
+        if(props.onSearchChange) {
+            props.onSearchChange(search)
+        }
+    },[search])
 
     const hasHadResults = useRef(false);
 

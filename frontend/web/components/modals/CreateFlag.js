@@ -1,16 +1,15 @@
 import React, { Component } from 'react';
 import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import Constants from 'common/constants';
 import data from 'common/data/base/_data';
 import ProjectStore from 'common/stores/project-store';
-import _data from 'common/data/base/_data';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import FeatureListStore from 'common/stores/feature-list-store';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import SegmentOverrides from '../SegmentOverrides';
-import AddEditTags from '../AddEditTags';
-import Constants from 'common/constants';
+import AddEditTags from '../tags/AddEditTags';
 import FlagOwners from '../FlagOwners';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
@@ -19,7 +18,8 @@ import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
-const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+import Permission from "common/providers/Permission";
+import IdentitySelect from '../IdentitySelect';
 
 const CreateFlag = class extends Component {
     static displayName = 'CreateFlag'
@@ -97,7 +97,6 @@ const CreateFlag = class extends Component {
                 this.focusTimeout = null;
             }, 500);
         }
-        AppActions.getIdentities(this.props.environmentId, 3);
         if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
             this.getInfluxData();
         }
@@ -268,7 +267,7 @@ const CreateFlag = class extends Component {
         const identities = identity ? identity.identifier : [];
 
         if (!_.find(identities, v => v.identifier === selectedIdentity)) {
-            _data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`, {
+            data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag.enabled,
                 feature_state_value: environmentFlag.value || null,
@@ -290,14 +289,7 @@ const CreateFlag = class extends Component {
         }
     }
 
-    identityOptions = (identities, value, isLoading) => {
-        if (!value) {
-            return [];
-        }
-        return _.filter(
-            identities, identity => !value || !_.find(value, v => v.identity.identifier === identity.identifier),
-        ).map(({ identifier: label, id: value }) => ({ value, label })).slice(0, 10);
-    }
+
 
     onSearchIdentityChange = (e) => {
         AppActions.searchIdentities(this.props.environmentId, Utils.safeParseEventValue(e), 3);
@@ -320,7 +312,7 @@ const CreateFlag = class extends Component {
         if (this.state.multivariate_options[i].id) {
             const idToRemove = this.state.multivariate_options[i].id;
             if (idToRemove) {
-                this.props.removeMultiVariateOption(idToRemove);
+                this.props.removeMultivariateOption(idToRemove);
             }
             this.state.multivariate_options.splice(i, 1);
             this.forceUpdate();
@@ -346,10 +338,11 @@ const CreateFlag = class extends Component {
             default_enabled,
             multivariate_options,
             description,
-            is_archived,
             enabledSegment,
             enabledIndentity,
         } = this.state;
+        const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
+
         const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
@@ -382,7 +375,9 @@ const CreateFlag = class extends Component {
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
-                                readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
+                                readOnly={!!identity || !createFeature}
+                                projectId={`${this.props.projectId}`}
+                                value={this.state.tags}
                                 onChange={tags => this.setState({ tags, settingsChanged: true })}
                               />
                             )}
@@ -598,7 +593,6 @@ const CreateFlag = class extends Component {
                             };
 
                             return (
-
                                 <Permission level="project" permission="CREATE_FEATURE" id={this.props.projectId}>
                                     {({ permission: createFeature }) => (
                                         <Permission level="project" permission="ADMIN" id={this.props.projectId}>
@@ -649,7 +643,6 @@ const CreateFlag = class extends Component {
                                                                                 }
                                                                             </strong>
                                                                         </p>
-
 
                                                                         <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
@@ -784,7 +777,6 @@ const CreateFlag = class extends Component {
                                                                                                                         {isSaving ? 'Updating' : 'Update Segment Overrides'}
                                                                                                                     </Button>
                                                                                                                 </div>
-
                                                                                                             )))}
                                                                                                     </Permission>
                                                                                                 </div>
@@ -823,33 +815,25 @@ const CreateFlag = class extends Component {
                                                                                   icon="ion-md-person"
                                                                                   items={this.state.userOverrides}
                                                                                   paging={this.state.userOverridesPaging}
+                                                                                  renderSearchWithNoResults
                                                                                   nextPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage + 1)}
                                                                                   prevPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage - 1)}
                                                                                   goToPage={page => this.userOverridesPage(page)}
                                                                                   searchPanel={
                                                                                         (
+
                                                                                             <div className="text-center mt-2 mb-2">
-                                                                                                <IdentityListProvider>
-                                                                                                    {({ isLoading, identities }) => (
-                                                                                                        <Flex className="text-left">
-                                                                                                            <Select
-                                                                                                              onInputChange={this.onSearchIdentityChange}
-                                                                                                              data-test="select-identity"
-                                                                                                              placeholder="Create an Identity Override..."
-                                                                                                              value={this.state.selectedIdentity}
-                                                                                                              onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
-                                                                                                              options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
-                                                                                                              styles={{
-                                                                                                                  control: base => ({
-                                                                                                                      ...base,
-                                                                                                                      '&:hover': { borderColor: '$bt-brand-secondary' },
-                                                                                                                      border: '1px solid $bt-brand-secondary',
-                                                                                                                  }),
-                                                                                                              }}
-                                                                                                            />
-                                                                                                        </Flex>
-                                                                                                    )}
-                                                                                                </IdentityListProvider>
+                                                                                                <Flex className="text-left">
+                                                                                                    <IdentitySelect
+                                                                                                      isEdge={false}
+                                                                                                      ignoreIds={this.state.userOverrides?.map((v)=>v.identity?.id)}
+                                                                                                      environmentId={this.props.environmentId}
+                                                                                                      data-test="select-identity"
+                                                                                                      placeholder="Create an Identity Override..."
+                                                                                                      value={this.state.selectedIdentity}
+                                                                                                      onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
+                                                                                                    />
+                                                                                                </Flex>
                                                                                             </div>
                                                                                         )
                                                                                     }
@@ -896,43 +880,17 @@ const CreateFlag = class extends Component {
                                                                                             </Tooltip>
                                                                                             )}
                                                                                       >
-                                                                                          { (
-                                                                                              <IdentityListProvider>
-                                                                                                  {({ isLoading, identities }) => (
-                                                                                                      <div>
-                                                                                                          <Flex className="text-left">
-                                                                                                              <Select
-                                                                                                                data-test="select-identity"
-                                                                                                                placeholder="Search"
-                                                                                                                onInputChange={this.onSearchIdentityChange}
-                                                                                                                value={this.state.selectedIdentity}
-                                                                                                                onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
-                                                                                                                options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
-                                                                                                                styles={{
-                                                                                                                    control: base => ({
-                                                                                                                        ...base,
-                                                                                                                        '&:hover': { borderColor: '$bt-brand-secondary' },
-                                                                                                                        border: '1px solid $bt-brand-secondary',
-                                                                                                                    }),
-                                                                                                                }}
-                                                                                                              />
-                                                                                                          </Flex>
-                                                                                                          <div className="mt-2">
-                                                                                                                No identities are overriding this feature.
-                                                                                                          </div>
-                                                                                                      </div>
-                                                                                                  )}
-                                                                                              </IdentityListProvider>
-                                                                                            )}
+                                                                                          <div className="mt-2">
+                                                                                              No identities are overriding this feature.
+                                                                                          </div>
                                                                                       </Panel>
                                                                                     )}
                                                                                   isLoading={!this.state.userOverrides}
                                                                                 />
                                                                             </FormGroup>
-                                                                        </TabItem>
-                                                                    )
-                                                                }
-                                                                { !existingChangeRequest && !Project.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                    </TabItem>
+                                                                )}
+                                                                { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel

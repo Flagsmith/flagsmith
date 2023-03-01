@@ -42,7 +42,6 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     user_environment_permission,
     user_project_permission,
 ):
-
     # Given
     user_environment_permission.permissions.add(
         view_environment_permission, view_identities_permission

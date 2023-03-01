@@ -1,6 +1,6 @@
-import React, { FunctionComponent } from 'react';
+import React from 'react';
 import ValueEditor from '../ValueEditor'; // we need this to make JSX compile
-
+import Constants from 'common/constants';
 
 const VariationValue = ({
     value,
@@ -31,7 +31,7 @@ const VariationValue = ({
                           />
 )}
                       tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-                      title="Value"
+                      title="Variation Value"
                     />
                 </div>
                 <div className="ml-2" style={{ width: 210 }}>

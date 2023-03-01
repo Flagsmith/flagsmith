@@ -1,3 +1,5 @@
+import Constants from 'common/constants';
+const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
 
@@ -147,9 +149,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     switch (action.actionType) {
         case Actions.GET_IDENTITY:
             controller.getIdentity(action.envId, action.id);
-            break;
-        case Actions.SAVE_IDENTITY:
-            controller.saveIdentity(action.id, action.identity);
             break;
         case Actions.TOGGLE_USER_FLAG:
             controller.toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });

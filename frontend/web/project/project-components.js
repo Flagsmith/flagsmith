@@ -4,24 +4,20 @@ import Button, { ButtonLink, ButtonOutline, ButtonProject } from '../components/
 import RemoveIcon from '../components/RemoveIcon';
 import Paging from '../components/Paging';
 import ToggleChip from '../components/ToggleChip';
-
-
-window.Dispatcher = require('../../common/dispatcher/dispatcher');
+import Input from '../components/base/forms/Input'
+import InputGroup from '../components/base/forms/InputGroup'
+import PanelSearch from '../components/PanelSearch'
+import AccountStore from 'common/stores/account-store'
 window.AppActions = require('../../common/dispatcher/app-actions');
 window.Actions = require('../../common/dispatcher/action-constants');
-window.Format = require('../../common/utils/format');
 window.ES6Component = require('../../common/ES6Component');
 
-window.Permission = require('../../common/providers/Permission');
 window.IdentityProvider = require('../../common/providers/IdentityProvider');
-window.IdentitySegmentsProvider = require('../../common/providers/IdentitySegmentsProvider');
 window.AccountProvider = require('../../common/providers/AccountProvider');
-window.AccountStore = require('../../common/stores/account-store');
+window.AccountStore = AccountStore;
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider');
 window.OrganisationProvider = require('../../common/providers/OrganisationProvider');
 window.ProjectProvider = require('../../common/providers/ProjectProvider');
-window.EnvironmentProvider = require('../../common/providers/EnvironmentProvider');
-window.IdentityListProvider = require('../../common/providers/IdentityListProvider');
 window.OrganisationSelect = require('../components/OrganisationSelect');
 
 window.Paging = Paging;
@@ -31,21 +27,17 @@ window.Gif = require('../components/base/Gif');
 window.Row = require('../components/base/grid/Row');
 window.Flex = require('../components/base/grid/Flex');
 window.Column = require('../components/base/grid/Column');
-window.Input = require('../components/base/forms/Input');
-
+window.InputGroup = InputGroup;
+window.Input = Input;
 window.Button = Button;
 window.ButtonOutline = ButtonOutline;
 window.ButtonLink = ButtonLink;
 window.ButtonProject = ButtonProject;
+window.FormGroup = require('../components/base/grid/FormGroup');
 window.Panel = require('../components/base/grid/Panel');
 window.FormGroup = require('../components/base/grid/FormGroup');
-window.InputGroup = require('../components/base/forms/InputGroup');
-window.Panel = require('../components/base/grid/Panel');
-window.FormGroup = require('../components/base/grid/FormGroup');
-window.InputGroup = require('../components/base/forms/InputGroup');
 
-
-window.PanelSearch = require('../components/PanelSearch');
+window.PanelSearch = PanelSearch;
 window.FeatureValue = require('../components/FeatureValue');
 window.CodeHelp = require('../components/CodeHelp');
 
@@ -81,7 +73,8 @@ window.Loader = class extends PureComponent {
   }
 };
 
-window.Tooltip = require('../components/Toolip');
+import Tooltip from '../components/Toolip';
+window.Tooltip = Tooltip;
 
 global.ToggleChip = ToggleChip;
 global.RemoveIcon = RemoveIcon;

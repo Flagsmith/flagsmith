@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import IntegrationList from '../IntegrationList';
-
+import Permission from "common/providers/Permission";
+import Constants from 'common/constants';
 
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'

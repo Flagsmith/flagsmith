@@ -16,18 +16,18 @@ azure-core==1.23.1
     # via
     #   azure-identity
     #   opencensus-ext-azure
-azure-identity==1.10.0
+azure-identity==1.12.0
     # via opencensus-ext-azure
 backoff==1.10.0
     # via
     #   -r requirements.in
     #   analytics-python
     #   rudder-sdk-python
-boto3==1.24.16
+boto3==1.26.75
     # via
     #   -r requirements.in
     #   django-ses
-botocore==1.27.16
+botocore==1.29.75
     # via
     #   boto3
     #   s3transfer
@@ -38,11 +38,11 @@ certifi==2022.12.7
     #   influxdb-client
     #   requests
     #   sentry-sdk
-cffi==1.15.0
+cffi==1.15.1
     # via cryptography
 chargebee==2.7.7
     # via -r requirements.in
-charset-normalizer==2.0.12
+charset-normalizer==3.0.1
     # via requests
 coreapi==2.3.3
     # via
@@ -52,7 +52,7 @@ coreschema==0.0.4
     # via
     #   coreapi
     #   drf-yasg2
-cryptography==38.0.3
+cryptography==39.0.1
     # via
     #   azure-identity
     #   msal
@@ -100,7 +100,7 @@ django-ses==1.0.3
     # via -r requirements.in
 django-simple-history==2.12.0
     # via -r requirements.in
-django-softdelete==0.9.4
+django-softdelete==0.10.5
     # via -r requirements.in
 django-storages==1.10.1
     # via -r requirements.in
@@ -128,7 +128,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==3.0.0
+flagsmith-flag-engine==3.2.0
     # via -r requirements.in
 future==0.18.3
     # via django-ses
@@ -154,7 +154,7 @@ httplib2==0.19.0
     #   google-api-python-client
     #   google-auth-httplib2
     #   oauth2client
-idna==2.10
+idna==3.4
     # via requests
 inflection==0.5.1
     # via drf-yasg2
@@ -162,13 +162,13 @@ influxdb-client==1.28.0
     # via -r requirements.in
 itypes==1.2.0
     # via coreapi
-jinja2==2.11.3
+jinja2==3.1.2
     # via coreschema
-jmespath==0.10.0
+jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-markupsafe==1.1.1
+markupsafe==2.1.2
     # via jinja2
 marshmallow==3.14.1
     # via
@@ -178,7 +178,7 @@ monotonic==1.6
     # via
     #   analytics-python
     #   rudder-sdk-python
-msal==1.17.0
+msal==1.21.0
     # via
     #   azure-identity
     #   msal-extensions
@@ -198,7 +198,7 @@ opencensus-ext-azure==1.1.4
     # via -r requirements.in
 opencensus-ext-django==0.7.6
     # via -r requirements.in
-packaging==20.4
+packaging==23.0
     # via
     #   -r requirements.in
     #   drf-yasg2
@@ -223,7 +223,7 @@ pyasn1-modules==0.2.8
     #   oauth2client
 pycparser==2.21
     # via cffi
-pyjwt[crypto]==2.4.0
+pyjwt[crypto]==2.6.0
     # via
     #   msal
     #   twilio
@@ -235,8 +235,7 @@ pyparsing==2.4.7
     # via
     #   -r requirements.in
     #   httplib2
-    #   packaging
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via
     #   analytics-python
     #   botocore
@@ -255,7 +254,7 @@ pytz==2020.4
     #   google-api-core
     #   influxdb-client
     #   twilio
-requests==2.27.1
+requests==2.28.2
     # via
     #   -r requirements.in
     #   analytics-python
@@ -274,6 +273,8 @@ rsa==4.7
     #   oauth2client
 ruamel-yaml==0.17.20
     # via drf-yasg2
+ruamel-yaml-clib==0.2.7
+    # via ruamel-yaml
 rudder-sdk-python==1.0.5
     # via -r requirements.in
 rx==3.1.1
@@ -292,7 +293,7 @@ sentry-sdk==1.5.11
     # via -r requirements.in
 shortuuid==1.0.1
     # via -r requirements.in
-six==1.15.0
+six==1.16.0
     # via
     #   -r requirements.in
     #   analytics-python
@@ -307,7 +308,6 @@ six==1.15.0
     #   google-auth-httplib2
     #   influxdb-client
     #   oauth2client
-    #   packaging
     #   python-dateutil
     #   rudder-sdk-python
 slack-sdk==3.9.0
@@ -320,14 +320,14 @@ sqlparse==0.4.2
     #   django-debug-toolbar
 twilio==7.9.1
     # via django-trench
-typing-extensions==4.2.0
+typing-extensions==4.5.0
     # via azure-core
 uritemplate==3.0.1
     # via
     #   coreapi
     #   drf-yasg2
     #   google-api-python-client
-urllib3==1.26.9
+urllib3==1.26.14
     # via
     #   botocore
     #   influxdb-client

@@ -125,11 +125,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0005"
+                    "value": "0.0001"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.1"
+                    "value": "0.02"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",

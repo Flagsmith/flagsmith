@@ -175,7 +175,7 @@ def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_fo
     )
 
     serializer = IdentityAllFeatureStatesSerializer(
-        context={"identity": identity_model}
+        context={"identity": identity_model, "environment_api_key": environment.api_key}
     )
 
     # When

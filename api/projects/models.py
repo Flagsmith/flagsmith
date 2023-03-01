@@ -8,7 +8,13 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_SAVE,
+    AFTER_UPDATE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -17,8 +23,10 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
+from projects.tasks import write_environments_to_dynamodb
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -87,6 +95,16 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             settings.EDGE_RELEASE_DATETIME is not None
             and settings.EDGE_RELEASE_DATETIME < timezone.now()
         )
+
+    @hook(AFTER_SAVE)
+    def clear_environments_cache(self):
+        environment_cache.delete_many(
+            list(self.environments.values_list("api_key", flat=True))
+        )
+
+    @hook(AFTER_UPDATE)
+    def write_to_dynamo(self):
+        write_environments_to_dynamodb.delay(kwargs={"project_id": self.id})
 
     @property
     def is_edge_project_by_default(self) -> bool:

@@ -102,7 +102,7 @@ const PanelSearch = class extends Component {
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
-        return (!search && (!filteredItems || !filteredItems.length)) && !this.props.isLoading && !this.props.renderSearchWithNoResults ? renderNoResults : (
+        return (!search && (!filteredItems || !filteredItems.length)) && !this.props.isLoading && !this.props.renderSearchWithNoResults ? renderNoResults || null : (
             <Panel
               className={this.props.className}
               title={this.props.title}
@@ -250,5 +250,4 @@ const PanelSearch = class extends Component {
         );
     }
 };
-
-module.exports = PanelSearch;
+export default PanelSearch

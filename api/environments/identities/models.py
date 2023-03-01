@@ -36,6 +36,13 @@ class Identity(models.Model):
     def natural_key(self):
         return self.identifier, self.environment.api_key
 
+    @property
+    def composite_key(self):
+        return f"{self.environment.api_key}_{self.identifier}"
+
+    def get_hash_key(self, use_mv_v2_evaluation: bool = False) -> str:
+        return self.composite_key if use_mv_v2_evaluation else str(self.id)
+
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
         Get all feature states for an identity. This method returns a single flag for
