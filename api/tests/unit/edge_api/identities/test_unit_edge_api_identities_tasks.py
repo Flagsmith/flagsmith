@@ -1,9 +1,13 @@
 from copy import deepcopy
 
+import pytest
 from django.utils import timezone
 
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from edge_api.identities.tasks import (
     call_environment_webhook_for_feature_state_change,
+    generate_audit_log_records,
     sync_identity_document_features,
 )
 from environments.models import Webhook
@@ -254,3 +258,69 @@ def test_sync_identity_document_features_removes_deleted_features(
     edge_identity_dynamo_wrapper_mock.put_item.assert_called_with(
         identity_document_without_fs
     )
+
+
+@pytest.mark.parametrize(
+    "changes, identifier, expected_log_message",
+    (
+        (
+            {
+                "feature_overrides": {
+                    "test_feature": {
+                        "change_type": "~",
+                        "old": {"enabled": False, "value": None},
+                        "new": {"enabled": True, "value": None},
+                    }
+                }
+            },
+            "identifier",
+            "Feature override updated for feature 'test_feature' and identity 'identifier'",
+        ),
+        (
+            {
+                "feature_overrides": {
+                    "test_feature": {
+                        "change_type": "+",
+                        "new": {"enabled": True, "value": None},
+                    }
+                }
+            },
+            "identifier",
+            "Feature override created for feature 'test_feature' and identity 'identifier'",
+        ),
+        (
+            {
+                "feature_overrides": {
+                    "test_feature": {
+                        "change_type": "-",
+                        "old": {"enabled": True, "value": None},
+                    }
+                }
+            },
+            "identifier",
+            "Feature override deleted for feature 'test_feature' and identity 'identifier'",
+        ),
+    ),
+)
+def test_generate_audit_log_records(
+    changes, identifier, expected_log_message, db, environment, admin_user
+):
+    # Given
+    identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
+
+    # When
+    generate_audit_log_records(
+        environment_api_key=environment.api_key,
+        identifier=identifier,
+        identity_uuid=identity_uuid,
+        user_id=admin_user.id,
+        changes=changes,
+    )
+
+    # Then
+    assert AuditLog.objects.filter(
+        log=expected_log_message,
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+        related_object_uuid=identity_uuid,
+        environment=environment,
+    ).exists()

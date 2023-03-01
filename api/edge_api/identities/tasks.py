@@ -109,7 +109,7 @@ def generate_audit_log_records(
     ).get(api_key=environment_api_key)
 
     for feature_name, change_details in feature_override_changes.items():
-        action = {"+": "created", "-": "removed", "~": "deleted"}.get(
+        action = {"+": "created", "-": "deleted", "~": "updated"}.get(
             change_details.get("change_type")
         )
         log = f"Feature override {action} for feature '{feature_name}' and identity '{identifier}'"
