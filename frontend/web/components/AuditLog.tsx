@@ -6,7 +6,7 @@ import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
 import {Link} from "react-router-dom";
-const PanelSearch = require('../components/PanelSearch');
+import PanelSearch from './PanelSearch';
 type AuditLogType = {
     environmentId: string
     projectId: string
@@ -55,7 +55,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                     {author?.first_name} {author?.last_name}
                 </div>
                 {environment?.name ? (
-                    <Link style={{width:widths[2]}} to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}>
+                    <Link className="link-unstyled" style={{width:widths[2]}} to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}>
                         <Row>
                             <span className="flex-row chip">
                                 {environment?.name}
@@ -84,11 +84,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
             </div>
         );
     }
+
     return (
         <PanelSearch
             id='messages-list'
             title='Log entries'
-            isLoading={isLoading || (!auditLog)}
+            isLoading={isLoading || (!auditLog?.results)}
             className='no-pad'
             icon='ion-md-browsers'
             items={auditLog?.results}
