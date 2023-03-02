@@ -67,7 +67,6 @@ jobs:
               run: |
                   pytest -p no:warnings
 
-    # dummy commit
     run-tests:
         runs-on: ubuntu-latest
         name: Run E2E Tests
