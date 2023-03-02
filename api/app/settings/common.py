@@ -155,6 +155,7 @@ INSTALLED_APPS = [
     "import_export",
     "task_processor",
     "softdelete",
+    "metadata",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -845,3 +846,6 @@ SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
 
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
+
+# Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
+SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
