@@ -191,3 +191,41 @@ def test_pipedrive_api_client_create_deal_field(
 
     assert organization_field.key == deal_field_key
     assert organization_field.name == deal_field_name
+
+
+@responses.activate
+def test_pipedrive_api_client_create_person(
+    pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
+):
+    # Given
+    example_response_file_name = join(
+        dirname(abspath(__file__)), "example_api_responses/create_person.json"
+    )
+
+    # obtained from file above, duplicated here to simplfiy test
+    person_name = "Yogi Bear"
+    person_email = "yogi.bear@testing.com"
+    person_id = 1
+
+    with open(example_response_file_name) as f:
+        responses.add(
+            method=responses.POST,
+            url=f"{pipedrive_base_url}/persons",
+            json=json.load(f),
+            status=201,
+        )
+
+    # When
+    person = pipedrive_api_client.create_person(name=person_name, email=person_email)
+
+    # Then
+    assert len(responses.calls) == 1
+    call = responses.calls[0]
+    assert call.request.params["api_token"] == pipedrive_api_token
+
+    json_request_body = json.loads(call.request.body)
+    assert json_request_body["name"] == person_name
+    assert json_request_body["email"] == person_email
+
+    assert person.name == person_name
+    assert person.id == person_id

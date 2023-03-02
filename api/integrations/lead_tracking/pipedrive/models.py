@@ -7,6 +7,7 @@ from integrations.lead_tracking.pipedrive.schemas import (
     BasePipedriveCustomFieldSchema,
     PipedriveLeadSchema,
     PipedriveOrganizationSchema,
+    PipedrivePersonSchema,
     PipedriveValueSchema,
 )
 
@@ -111,3 +112,11 @@ class PipedriveOrganizationField(BasePipedriveCustomField):
 
 class PipedriveDealField(BasePipedriveCustomField):
     pass
+
+
+class PipedrivePerson(BasePipedriveModel):
+    schema = PipedrivePersonSchema()
+
+    def __init__(self, name: str, id: int = None):
+        self.name = name
+        self.id = id

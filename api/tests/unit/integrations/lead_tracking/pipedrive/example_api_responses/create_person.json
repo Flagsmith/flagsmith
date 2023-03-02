@@ -1,0 +1,98 @@
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "company_id": 1,
+    "owner_id": {
+      "id": 1,
+      "name": "Johnny Bravo",
+      "email": "johnny.bravo@testing.com",
+      "has_pic": 0,
+      "pic_hash": null,
+      "active_flag": true,
+      "value": 1
+    },
+    "org_id": null,
+    "name": "Yogi Bear",
+    "first_name": "Yogi",
+    "last_name": "Bear",
+    "open_deals_count": 0,
+    "related_open_deals_count": 0,
+    "closed_deals_count": 0,
+    "related_closed_deals_count": 0,
+    "participant_open_deals_count": 0,
+    "participant_closed_deals_count": 0,
+    "email_messages_count": 0,
+    "activities_count": 0,
+    "done_activities_count": 0,
+    "undone_activities_count": 0,
+    "files_count": 0,
+    "notes_count": 0,
+    "followers_count": 0,
+    "won_deals_count": 0,
+    "related_won_deals_count": 0,
+    "lost_deals_count": 0,
+    "related_lost_deals_count": 0,
+    "active_flag": true,
+    "phone": [
+      {
+        "value": "",
+        "primary": true
+      }
+    ],
+    "email": [
+      {
+        "label": "",
+        "value": "yogi.bear@testing.com",
+        "primary": true
+      }
+    ],
+    "first_char": "y",
+    "update_time": "2023-03-01 17:01:28",
+    "delete_time": null,
+    "add_time": "2023-03-01 17:01:28",
+    "visible_to": "3",
+    "picture_id": null,
+    "next_activity_date": null,
+    "next_activity_time": null,
+    "next_activity_id": null,
+    "last_activity_id": null,
+    "last_activity_date": null,
+    "last_incoming_mail_time": null,
+    "last_outgoing_mail_time": null,
+    "label": null,
+    "org_name": null,
+    "cc_email": "johnnybravo@pipedrivemail.com",
+    "primary_email": "yogi.bear@testing.com",
+    "owner_name": "Johnny Bravo",
+    "48ce4c9eda91f7dd0686311da7d9de760f36412c": null,
+    "c969dcba47bfbf0d1ebdc7725585fa5923d86289": null,
+    "139c0597b60ff87b43fbf8a161c711fe271d840b": null,
+    "59b8dfd809153b4c8d907a43d4267382af527b0d": null,
+    "42ed554baed97917838f615a89d0bb1b95f92664": null,
+    "719adb6116ae3940aabb2cc27c856b36c7ea20f7": null,
+    "3b8ae6152f631d9097f20bfccf84ace0c0aa30dd": null,
+    "adb724817541a261deb317be9713a27cd05c731f": null,
+    "5f8b3dab1eb64632d5f53f6dd6722603133854b9": null,
+    "7480d49272ba86fe23623761907fb61a493ff55d": null,
+    "04acbb84aca70fcf3197d34872347dbd261971bd": null,
+    "44093b7190dc9fab58420b2aae010d968f87669d": null,
+    "2f9d60ffac95d6416cfac3481ec6319fe36a7413": null,
+    "7b273efc901d979329db2529438a5ab11d28c3df": null,
+    "aada9a1b320aae2a0c3acfec9b76f4903a81233a": null,
+    "54f35043438c589847bef00866adcb6a427b2fc2": null,
+    "76289b0ef12853c348615ce1fc2c5c06db23d842": null
+  },
+  "related_objects": {
+    "user": {
+      "13603501": {
+        "id": 13603501,
+        "name": "Johnny Bravo",
+        "email": "johnny.bravo@testing.com",
+        "has_pic": 0,
+        "pic_hash": null,
+        "active_flag": true
+      }
+    }
+  }
+}

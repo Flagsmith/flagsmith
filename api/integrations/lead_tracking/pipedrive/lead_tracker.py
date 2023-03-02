@@ -11,8 +11,42 @@ from .models import PipedriveLead, PipedriveOrganization
 
 logger = logging.getLogger(__name__)
 
+try:
+    import re2 as re
+
+    logger.info("Using re2 library for regex.")
+except ImportError:
+    logger.warning("Unable to import re2. Falling back to re.")
+    import re
+
 
 class PipedriveLeadTracker(LeadTracker):
+    @staticmethod
+    def should_track(user: FFAdminUser):
+        if not settings.ENABLE_PIPEDRIVE_LEAD_TRACKING:
+            return False
+
+        domain = user.email_domain
+
+        if settings.PIPEDRIVE_IGNORE_DOMAINS_REGEX and re.match(
+            settings.PIPEDRIVE_IGNORE_DOMAINS_REGEX, domain
+        ):
+            return False
+
+        if (
+            settings.PIPEDRIVE_IGNORE_DOMAINS
+            and domain in settings.PIPEDRIVE_IGNORE_DOMAINS
+        ):
+            return False
+
+        if any(
+            org.is_paid
+            for org in user.organisations.select_related("subscription").all()
+        ):
+            return False
+
+        return True
+
     def create_lead(self, user: FFAdminUser) -> PipedriveLead:
         email_domain = user.email.split("@")[-1]
 
@@ -26,9 +60,12 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
+        person = self.client.create_person(name=user.full_name, email=user.email)
+
         create_lead_kwargs = {
             "title": user.email,
             "organization_id": organization.id,
+            "person_id": person.id,
             "custom_fields": {},
         }
         if user.sign_up_type:
