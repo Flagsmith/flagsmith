@@ -304,13 +304,24 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
     )
 
 
+@pytest.mark.parametrize(
+    "initial_enabled, initial_value, new_enabled, new_value",
+    (
+        (True, "initial", True, "updated"),
+        (False, "initial", True, "initial"),
+        (False, "initial", True, "updated"),
+    ),
+)
 def test_edge_identity_save_called_generate_audit_records_if_feature_override_updated(
-    mocker, edge_identity_model, edge_identity_dynamo_wrapper_mock
+    initial_enabled,
+    initial_value,
+    new_enabled,
+    new_value,
+    mocker,
+    edge_identity_model,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    initial_enabled = False
-    initial_value = "initial"
-
     mocked_generate_audit_log_records = mocker.patch(
         "edge_api.identities.models.generate_audit_log_records"
     )
@@ -327,9 +338,6 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     edge_identity_model.save(user=user)
     edge_identity_dynamo_wrapper_mock.reset_mock()
     mocked_generate_audit_log_records.reset_mock()
-
-    new_enabled = True
-    new_value = "updated"
 
     feature_override = edge_identity_model.get_feature_state_by_featurestate_uuid(
         feature_state_model.featurestate_uuid
