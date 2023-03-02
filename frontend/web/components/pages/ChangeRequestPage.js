@@ -249,7 +249,7 @@ const ChangeRequestsPage = class extends Component {
                                             isScheduled && (
                                                 <Row>
                                                     <InfoMessage icon="ion-md-calendar" title="Scheduled Change">
-                                                        This feature change {changeRequest?.committedAt?"is scheduled to" : "will"} go live at {scheduledDate.format('Do MMM YYYY hh:mma')}{changeRequest?.committedAt?"":" if it is approved and published"}.{!!changeRequest?.committedAt && "You can still edit / remove the change request before this date."}
+                                                        This feature change {changeRequest?.committedAt?"is scheduled to" : "will"} go live at {scheduledDate.format('Do MMM YYYY hh:mma')}{changeRequest?.committed_at?" unless it is edited or deleted":" if it is approved and published"}.{!!changeRequest?.committedAt && "You can still edit / remove the change request before this date."}
                                                     </InfoMessage>
                                                 </Row>
 
@@ -289,7 +289,7 @@ const ChangeRequestsPage = class extends Component {
                                         )}
                                         />
                                         <Panel
-                                          title="Change Request"
+                                          title={isScheduled?"Scheduled Change":"Change Request"}
                                         >
 
                                             <Row
@@ -323,7 +323,7 @@ const ChangeRequestsPage = class extends Component {
                                                 </Flex>
                                                 <Flex>
                                                     <strong>
-                                                        Change Request
+                                                        {isScheduled?"Scheduled Change" :"Change Request"}
                                                     </strong>
                                                 </Flex>
                                             </Row>
