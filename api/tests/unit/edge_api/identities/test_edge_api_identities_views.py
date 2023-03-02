@@ -34,7 +34,7 @@ def test_edge_identity_view_set_get_permissions():
 def test_user_with_manage_identity_permission_can_delete_identity(
     dynamo_enabled_project_environment_one,
     identity_document_without_fs,
-    mocker,
+    edge_identity_dynamo_wrapper_mock,
     test_user_client,
     view_environment_permission,
     view_identities_permission,
@@ -43,9 +43,6 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     user_project_permission,
 ):
     # Given
-    dynamo_wrapper_mock = mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
-    )
     user_environment_permission.permissions.add(
         view_environment_permission, view_identities_permission
     )
@@ -58,7 +55,7 @@ def test_user_with_manage_identity_permission_can_delete_identity(
         args=[dynamo_enabled_project_environment_one.api_key, identity_uuid],
     )
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
 
@@ -68,7 +65,9 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    dynamo_wrapper_mock.delete_item.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
         identity_document_without_fs["composite_key"]
     )

@@ -1,5 +1,7 @@
 import pytest
 
+from edge_api.identities.models import EdgeIdentity
+
 
 @pytest.fixture()
 def forwarder_mocked_migrator(mocker):
@@ -38,3 +40,8 @@ def identity_document_without_fs(environment):
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
         "django_id": None,
     }
+
+
+@pytest.fixture()
+def edge_identity_model(identity_document_without_fs):
+    return EdgeIdentity.from_identity_document(identity_document_without_fs)

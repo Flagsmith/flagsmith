@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 
-from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -20,7 +19,6 @@ class Identity(models.Model):
         Environment, related_name="identities", on_delete=models.CASCADE
     )
 
-    dynamo_wrapper = DynamoIdentityWrapper()
     objects = IdentityManager()
 
     class Meta:

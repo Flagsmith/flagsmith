@@ -1,12 +1,8 @@
 import logging
 import typing
 
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
-
-from environments.identities.models import Identity
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
@@ -77,8 +73,10 @@ def call_environment_webhook_for_feature_state_change(
 
 @register_task_handler()
 def sync_identity_document_features(identity_uuid: str):
-    identity = build_identity_model(
-        Identity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
+    from .models import EdgeIdentity
+
+    identity = EdgeIdentity.from_identity_document(
+        EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
     )
 
     valid_feature_names = set(
@@ -87,5 +85,44 @@ def sync_identity_document_features(identity_uuid: str):
         ).values_list("feature__name", flat=True)
     )
 
-    identity.prune_features(valid_feature_names)
-    Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+    identity.synchronise_features(valid_feature_names)
+    EdgeIdentity.dynamo_wrapper.put_item(identity.to_document())
+
+
+@register_task_handler()
+def generate_audit_log_records(
+    environment_api_key: str,
+    identifier: str,
+    identity_uuid: str,
+    changes: dict,
+    user_id: int = None,
+    master_api_key_id: int = None,
+):
+    audit_records = []
+
+    feature_override_changes = changes.get("feature_overrides")
+    if not feature_override_changes:
+        return
+
+    environment = Environment.objects.select_related(
+        "project", "project__organisation"
+    ).get(api_key=environment_api_key)
+
+    for feature_name, change_details in feature_override_changes.items():
+        action = {"+": "created", "-": "deleted", "~": "updated"}.get(
+            change_details.get("change_type")
+        )
+        log = f"Feature override {action} for feature '{feature_name}' and identity '{identifier}'"
+        audit_records.append(
+            AuditLog(
+                project=environment.project,
+                environment=environment,
+                log=log,
+                author_id=user_id,
+                related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+                related_object_uuid=identity_uuid,
+                master_api_key_id=master_api_key_id,
+            )
+        )
+
+    AuditLog.objects.bulk_create(audit_records)
