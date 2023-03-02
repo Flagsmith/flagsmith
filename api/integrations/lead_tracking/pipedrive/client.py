@@ -8,6 +8,7 @@ from integrations.lead_tracking.pipedrive.models import (
     PipedriveLead,
     PipedriveOrganization,
     PipedriveOrganizationField,
+    PipedrivePerson,
 )
 
 
@@ -72,19 +73,33 @@ class PipedriveAPIClient:
         self,
         title: str,
         organization_id: int,
+        person_id: int = None,
         custom_fields: typing.Dict[str, typing.Any] = None,
     ) -> PipedriveLead:
+        data = {
+            "title": title,
+            "organization_id": organization_id,
+            **(custom_fields or {}),
+        }
+        if person_id:
+            data["person_id"] = person_id
+
         api_response_data = self._make_request(
-            resource="leads",
+            resource="leads", http_method="post", data=data, expected_status_code=201
+        )
+        return PipedriveLead.from_response_data(api_response_data)
+
+    def create_person(self, name: str, email: str) -> PipedrivePerson:
+        api_response_data = self._make_request(
+            resource="persons",
             http_method="post",
             data={
-                "title": title,
-                "organization_id": organization_id,
-                **(custom_fields or {}),
+                "name": name,
+                "email": email,
             },
             expected_status_code=201,
         )
-        return PipedriveLead.from_response_data(api_response_data)
+        return PipedrivePerson.from_response_data(api_response_data)
 
     def _make_request(
         self,
