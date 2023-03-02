@@ -48,6 +48,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/scheduled-changes" exact component={ScheduledChangesPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
+            <Route path="/project/:projectId/environment/:environmentId/scheduled-changes/:id" exact component={ChangeRequestPage}/>
             <Route path="/widget" exact component={WidgetPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
             <Route path="/invite-link/:id" exact component={InvitePage}/>
