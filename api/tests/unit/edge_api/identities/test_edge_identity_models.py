@@ -253,7 +253,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_ad
                     }
                 }
             },
-            "identity_uuid": edge_identity_model.identity_uuid,
+            "identity_uuid": str(edge_identity_model.identity_uuid),
             "master_api_key_id": None,
         }
     )
@@ -298,7 +298,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
                     }
                 }
             },
-            "identity_uuid": edge_identity_model.identity_uuid,
+            "identity_uuid": str(edge_identity_model.identity_uuid),
             "master_api_key_id": None,
         }
     )
@@ -356,7 +356,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
                     }
                 }
             },
-            "identity_uuid": edge_identity_model.identity_uuid,
+            "identity_uuid": str(edge_identity_model.identity_uuid),
             "master_api_key_id": None,
         }
     )

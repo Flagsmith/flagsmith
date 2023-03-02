@@ -168,7 +168,7 @@ class EdgeIdentity:
                     "identifier": self.identifier,
                     "user_id": getattr(user, "id", None),
                     "changes": changes,
-                    "identity_uuid": self.identity_uuid,
+                    "identity_uuid": str(self.identity_uuid),
                     "master_api_key_id": getattr(master_api_key, "id", None),
                 }
             )
