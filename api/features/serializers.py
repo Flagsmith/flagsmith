@@ -184,10 +184,16 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         return attrs
 
     def get_num_segment_overrides(self, instance) -> int:
-        return getattr(instance, "num_segment_overrides", 0)
+        try:
+            return self.context["overrides_data"][instance.id].num_segment_overrides
+        except (KeyError, AttributeError):
+            return 0
 
     def get_num_identity_overrides(self, instance) -> typing.Optional[int]:
-        return getattr(instance, "num_identity_overrides", None)
+        try:
+            return self.context["overrides_data"][instance.id].num_identity_overrides
+        except (KeyError, AttributeError):
+            return None
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):
