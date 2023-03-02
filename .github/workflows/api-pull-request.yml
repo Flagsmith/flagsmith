@@ -66,3 +66,25 @@ jobs:
                   LOG_LEVEL: "INFO"
               run: |
                   pytest -p no:warnings
+
+    run-tests:
+        runs-on: ubuntu-latest
+        name: Run E2E Tests
+        environment: staging
+        needs: deploy-staging-ecs
+        concurrency:
+          group: e2e-tests-staging
+          cancel-in-progress: true
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
+
+            - name: Run E2E tests against staging
+              uses: ./.github/actions/e2e-tests
+              with:
+                e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+                slack_token: ${{ secrets.SLACK_TOKEN }}
+                environment: staging
