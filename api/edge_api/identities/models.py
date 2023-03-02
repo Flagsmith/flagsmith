@@ -203,7 +203,7 @@ class EdgeIdentity:
                 )
             elif (
                 current_matching_fs.enabled != previous_fs.enabled
-                and current_matching_fs.get_value(self.id)
+                or current_matching_fs.get_value(self.id)
                 != previous_fs.get_value(self.id)
             ):
                 feature_changes[previous_fs.feature.name] = generate_change_dict(
