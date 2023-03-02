@@ -5,6 +5,7 @@ const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 import { getIsWidget } from '../../web/components/pages/WidgetPage'
+import ProjectStore from './project-store';
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -41,48 +42,53 @@ const controller = {
                 filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
-            let featuresEndpoint = typeof page === 'string' ? page : `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`;
-            if (store.search) {
-                featuresEndpoint += `&search=${store.search}`;
-            }
-            if (store.sort) {
-                featuresEndpoint += `&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`;
-            }
-            return Promise.all([
-                data.get(featuresEndpoint),
-                recursivePageGet(
-                    `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`,
-                ),
-                feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
-            ]).then(([features, environmentFeatures, feature]) => {
-                store.paging.next = features.next;
-                store.paging.pageSize = PAGE_SIZE;
-                store.paging.count = features.count;
-                store.paging.previous = features.previous;
-                store.paging.currentPage = featuresEndpoint.indexOf('?page=') !== -1 ? parseInt(featuresEndpoint.substr(featuresEndpoint.indexOf('?page=') + 6)) : 1;
+
+            ProjectStore.getEnvironmentIdFromKeyAsync(projectId, environmentId).then((environment)=>{
+                let featuresEndpoint = typeof page === 'string' ? page : `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`;
+                if (store.search) {
+                    featuresEndpoint += `&search=${store.search}`;
+                }
+                if (store.sort) {
+                    featuresEndpoint += `&environment=${environment}&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`;
+                }
+
+                return Promise.all([
+                    data.get(featuresEndpoint),
+                    recursivePageGet(
+                        `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`,
+                    ),
+                    feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
+                ]).then(([features, environmentFeatures, feature]) => {
+                    store.paging.next = features.next;
+                    store.paging.pageSize = PAGE_SIZE;
+                    store.paging.count = features.count;
+                    store.paging.previous = features.previous;
+                    store.paging.currentPage = featuresEndpoint.indexOf('?page=') !== -1 ? parseInt(featuresEndpoint.substr(featuresEndpoint.indexOf('?page=') + 6)) : 1;
 
 
-                if (feature) {
-                    const index = features.results.findIndex(v => v.id === feature.id);
-                    if (index === -1) {
-                        features.results.push({ ...feature, ignore: true });
+                    if (feature) {
+                        const index = features.results.findIndex(v => v.id === feature.id);
+                        if (index === -1) {
+                            features.results.push({ ...feature, ignore: true });
+                        }
                     }
-                }
-                if (features.results.length) {
-                    createdFirstFeature = true;
-                }
+                    if (features.results.length) {
+                        createdFirstFeature = true;
+                    }
 
-                store.model = {
-                    features: features.results.map((controller.parseFlag)),
-                    keyedEnvironmentFeatures: environmentFeatures.results && _.keyBy(environmentFeatures.results, 'feature'),
-                };
-                store.loaded();
-            }).catch((e) => {
-                if (!getIsWidget()) {
-                    document.location.href = '/404?entity=environment';
-                }
-                API.ajaxHandler(store, e);
-            });
+                    store.model = {
+                        features: features.results.map((controller.parseFlag)),
+                        keyedEnvironmentFeatures: environmentFeatures.results && _.keyBy(environmentFeatures.results, 'feature'),
+                    };
+                    store.loaded();
+                }).catch((e) => {
+                    if (!getIsWidget()) {
+                        document.location.href = '/404?entity=environment';
+                    }
+                    API.ajaxHandler(store, e);
+                });
+            })
+
         }
     },
     createFlag(projectId, environmentId, flag) {

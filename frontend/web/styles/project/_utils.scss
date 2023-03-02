@@ -151,3 +151,14 @@
 .widget-container {
     padding: 10px;
 }
+
+.bg-primary {
+    background: $bt-brand-primary !important;
+}
+.dark {
+
+    .bg-primary {
+        background: $bt-brand-primary-dark !important;
+    }
+
+}
