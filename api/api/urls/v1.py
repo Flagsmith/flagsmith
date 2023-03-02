@@ -40,6 +40,7 @@ urlpatterns = [
     url(r"^e2etests/", include("e2etests.urls")),
     url(r"^audit/", include("audit.urls")),
     url(r"^auth/", include("custom_auth.urls")),
+    url(r"^metadata/", include("metadata.urls")),
     # Chargebee webhooks
     url(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # Client SDK urls

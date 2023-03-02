@@ -1,8 +1,11 @@
 import json
 import re
+import uuid
 
 import boto3
 from core.constants import STRING
+from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE
 from moto import mock_s3
@@ -16,6 +19,7 @@ from import_export.export import (
     S3OrganisationExporter,
     export_environments,
     export_features,
+    export_metadata,
     export_organisation,
     export_projects,
 )
@@ -28,6 +32,12 @@ from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.webhook.models import WebhookConfiguration
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.invites.models import InviteLink
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
@@ -123,6 +133,69 @@ def test_export_environments(project):
     assert export
 
     # TODO: test whether the export is importable
+
+
+def test_export_metadata(environment, organisation, settings):
+    # Given
+    environment_type = ContentType.objects.get_for_model(environment)
+
+    metadata_field = MetadataField.objects.create(
+        name="test_field", type="int", organisation=organisation
+    )
+
+    environment_metadata_field = MetadataModelField.objects.create(
+        field=metadata_field, content_type=environment_type
+    )
+    required_for_project = MetadataModelFieldRequirement.objects.create(
+        model_field=environment_metadata_field, content_object=environment.project
+    )
+
+    environment_metadata = Metadata.objects.create(
+        object_id=environment.id,
+        content_type=environment_type,
+        model_field=environment_metadata_field,
+        field_value="some_data",
+    )
+    # When
+    exported_environment = export_environments(environment.project.organisation_id)
+    exported_metadata = export_metadata(organisation.id)
+
+    data = exported_environment + exported_metadata
+
+    # Now,to mimic a somewhat clean import, let's remove the metadata field
+    # Which in turn will remove the metadata object
+    metadata_field.delete()
+
+    # and the environment(use hard_delete instead of (soft)delete to avoid api_key collision)
+    environment.hard_delete()
+
+    # Next, let's load the data
+    file_path = f"/tmp/{uuid.uuid4()}.json"
+    with open(file_path, "a+") as f:
+        f.write(json.dumps(data, cls=DjangoJSONEncoder))
+        f.seek(0)
+
+        call_command("loaddata", f.name, format="json")
+
+    # Finally
+    # Metadata field exists
+    assert MetadataField.objects.filter(uuid=metadata_field.uuid)
+
+    # metadata model field requirements are correctly wired up
+    metadata_model_field = MetadataModelField.objects.get(
+        uuid=environment_metadata_field.uuid
+    )
+    requrired_for_project = MetadataModelFieldRequirement.objects.get(
+        uuid=required_for_project.uuid
+    )
+    assert metadata_model_field == requrired_for_project.model_field
+    assert requrired_for_project.content_type.model == "project"
+
+    # and metadata correctly points to the loaded environment
+    metadata = Metadata.objects.get(uuid=environment_metadata.uuid)
+    loaded_environment = Environment.objects.get(api_key=environment.api_key)
+
+    assert metadata.content_object == loaded_environment
 
 
 def test_export_features(project, environment, segment, admin_user):

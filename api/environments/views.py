@@ -42,7 +42,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
-    EnvironmentSerializerLight,
+    EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
 
@@ -76,7 +76,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return CloneEnvironmentSerializer
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
-        return EnvironmentSerializerLight
+        return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):
         context = super(EnvironmentViewSet, self).get_serializer_context()
