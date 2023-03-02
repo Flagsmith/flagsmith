@@ -181,19 +181,22 @@ export type FeatureState = {
 }
 
 export type ProjectFlag = {
-  id: number;
-  name: string;
-  type: string;
-  default_enabled: boolean;
-  initial_value: string;
+
   created_date: Date;
+  default_enabled: boolean;
   description?: string;
-  tags: number[];
-  multivariate_options: MultivariateOption[];
+  id: number;
+  initial_value: string;
   is_archived: boolean;
+  multivariate_options: MultivariateOption[];
+  name: string;
+  num_identity_overrides: number | null
+  num_segment_overrides: number | null
   owners: User[];
-  uuid: string;
   project: number;
+  tags: number[];
+  type: string;
+  uuid: string;
 }
 
 export type Res = {
