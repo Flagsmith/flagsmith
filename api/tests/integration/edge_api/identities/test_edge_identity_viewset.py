@@ -29,7 +29,7 @@ def test_get_identity(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     identity_uuid = identity_document["identity_uuid"]
@@ -38,27 +38,31 @@ def test_get_identity(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identity_uuid],
     )
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     # When
     response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["identity_uuid"] == identity_uuid
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
 
 
 def test_get_identity_returns_404_if_identity_does_not_exists(
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, "identity_uuid_that_does_not_exists"],
     )
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
 
     # When
     response = admin_client.get(url)
@@ -71,7 +75,7 @@ def test_create_identity(
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     identity_document,
 ):
     # Given
@@ -81,16 +85,16 @@ def test_create_identity(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
-    dynamo_wrapper_mock.get_item.return_value = None
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = None
 
     # When
     response = admin_client.post(url, data={"identifier": identifier})
 
     # Then, test that get_item was called to verify that identity does not exists already
-    dynamo_wrapper_mock.get_item.assert_called_with(composite_key)
+    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(composite_key)
 
     # Next, let verify that put item was called with correct args
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert args[0]["identifier"] == identifier
     assert args[0]["composite_key"] == composite_key
@@ -106,7 +110,7 @@ def test_create_identity_returns_400_if_identity_already_exists(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -115,7 +119,7 @@ def test_create_identity_returns_400_if_identity_already_exists(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
-    dynamo_wrapper_mock.get_item.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = identity_document
     response = admin_client.post(url, data={"identifier": identifier})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -125,7 +129,7 @@ def test_delete_identity(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     identity_uuid = identity_document["identity_uuid"]
@@ -134,15 +138,19 @@ def test_delete_identity(
         args=[environment_api_key, identity_uuid],
     )
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     # When
     response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    dynamo_wrapper_mock.delete_item.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
         identity_document["composite_key"]
     )
 
@@ -152,7 +160,7 @@ def test_identity_list_pagination(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Firstly, let's setup the data
     identity_item_key = {
@@ -166,7 +174,7 @@ def test_identity_list_pagination(
         args=[environment_api_key],
     )
     url = f"{base_url}?page_size=1"
-    dynamo_wrapper_mock.get_all_items.side_effect = [
+    edge_identity_dynamo_wrapper_mock.get_all_items.side_effect = [
         {
             "Items": [identity_document],
             "Count": 1,
@@ -188,7 +196,7 @@ def test_identity_list_pagination(
     response = admin_client.get(url)
 
     # And verify that get_all_items was called with correct arguments
-    dynamo_wrapper_mock.get_all_items.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_all_items.assert_called_with(
         environment_api_key, 1, identity_item_key
     )
     # And `last_evaluated_key` is now None
@@ -201,7 +209,7 @@ def test_get_identities_list(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     url = reverse(
@@ -209,7 +217,7 @@ def test_get_identities_list(
         args=[environment_api_key],
     )
 
-    dynamo_wrapper_mock.get_all_items.return_value = {
+    edge_identity_dynamo_wrapper_mock.get_all_items.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -223,7 +231,9 @@ def test_get_identities_list(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    dynamo_wrapper_mock.get_all_items.assert_called_with(environment_api_key, 999, None)
+    edge_identity_dynamo_wrapper_mock.get_all_items.assert_called_with(
+        environment_api_key, 999, None
+    )
 
 
 def test_search_identities_without_exact_match(
@@ -231,7 +241,7 @@ def test_search_identities_without_exact_match(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -242,7 +252,7 @@ def test_search_identities_without_exact_match(
     )
 
     url = "%s?q=%s" % (base_url, identifier)
-    dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -254,7 +264,7 @@ def test_search_identities_without_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
         environment_api_key,
         identifier,
         EdgeIdentityViewSet.dynamo_identifier_search_functions["BEGINS_WITH"],
@@ -268,7 +278,7 @@ def test_search_for_identities_with_exact_match(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -281,7 +291,7 @@ def test_search_for_identities_with_exact_match(
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
-    dynamo_wrapper_mock.search_items_with_identifier.return_value = {
+    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
@@ -293,7 +303,7 @@ def test_search_for_identities_with_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
     assert len(response.json()["results"]) == 1
 
-    dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.search_items_with_identifier.assert_called_with(
         environment_api_key,
         identifier,
         EdgeIdentityViewSet.dynamo_identifier_search_functions["EQUAL"],
@@ -308,10 +318,12 @@ def test_edge_identities_traits_list(
     identity_document,
     identity_traits,
     dynamo_enabled_environment,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -325,7 +337,9 @@ def test_edge_identities_traits_list(
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == identity_traits
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
 
 
 def test_edge_identities_trait_delete(
@@ -334,10 +348,12 @@ def test_edge_identities_trait_delete(
     dynamo_enabled_environment,
     identity_document,
     identity_traits,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
@@ -354,10 +370,12 @@ def test_edge_identities_trait_delete(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     # Next, let's verify that deleted trait
     # is not part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert not list(
         filter(
@@ -372,10 +390,12 @@ def test_edge_identities_create_trait(
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
         "api-v1:environments:environment-edge-identities-update-traits",
@@ -392,10 +412,12 @@ def test_edge_identities_create_trait(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["trait_key"] == trait_key
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     # Next, let's verify that new trait
     # is part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert list(
         filter(
@@ -411,11 +433,13 @@ def test_edge_identities_update_trait(
     environment_api_key,
     identity_document,
     identity_traits,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     mocker,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     send_identity_update_message_mock = mocker.patch(
         "edge_api.identities.views.send_identity_update_message", autospec=True
     )
@@ -437,10 +461,12 @@ def test_edge_identities_update_trait(
     assert response.json()["trait_key"] == trait_key
     assert response.json()["trait_value"] == updated_trait_value
     # and
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     # Next, let's verify that updated trait value
     # is part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert list(
         filter(
@@ -460,11 +486,13 @@ def test_edge_identities_update_trait_with_same_value(
     environment_api_key,
     identity_document,
     identity_traits,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     mocker,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     send_identity_update_message_mock = mocker.patch(
         "edge_api.identities.views.send_identity_update_message", autospec=True
     )
@@ -484,8 +512,10 @@ def test_edge_identities_update_trait_with_same_value(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    dynamo_wrapper_mock.put_item.assert_not_called()
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    edge_identity_dynamo_wrapper_mock.put_item.assert_not_called()
     send_identity_update_message_mock.assert_not_called()
 
 
@@ -495,11 +525,13 @@ def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_fals
     environment_api_key,
     identity_document,
     identity_traits,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     organisation_with_persist_trait_data_disabled,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
 
