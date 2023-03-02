@@ -57,6 +57,9 @@ jobs:
         name: Run E2E Tests
         environment: staging
         needs: deploy-staging-ecs
+        concurrency:
+          group: e2e-tests-staging
+          cancel-in-progress: true
 
         steps:
             - name: Cloning repo

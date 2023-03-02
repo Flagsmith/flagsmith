@@ -17,6 +17,9 @@ jobs:
         runs-on: ubuntu-latest
         name: Run E2E Tests
         environment: production
+        concurrency:
+          group: e2e-tests-prod
+          cancel-in-progress: true
 
         steps:
             - name: Cloning repo
