@@ -191,7 +191,8 @@ class SDKIdentities(SDKAPIView):
             )
 
         # Note that we send the environment updated_at value here since it covers most use cases
-        # in which an identity will need updated flags. It will not cover identity overrides.
+        # in which an identity will need updated flags. It will not cover identity overrides or
+        # adding traits to the identity (which adds / removes them to / from segments).
         # TODO: handle identity overrides.
         headers = {
             FLAGSMITH_UPDATED_AT_HEADER: request.environment.updated_at.timestamp()
