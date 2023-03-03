@@ -31,6 +31,11 @@ function migrate_identities(){
     python manage.py migrate_to_edge "$1"
 }
 function migrate_analytics_db(){
+    # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
+    # run the migration command
+    if [[ -z "$ANALYTICS_DATABASE_URL" && -z "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        return 0
+    fi
     python manage.py migrate --database analytics
 }
 function import_organisation_from_s3(){
