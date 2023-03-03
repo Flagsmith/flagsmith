@@ -77,7 +77,19 @@ jobs:
               id: docker_build
               uses: docker/build-push-action@v3
               with:
-                  platforms: linux/amd64,linux/arm64
+                  platforms: linux/amd64
+                  file: Dockerfile
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  context: .
+                  build-args: |
+                      SAML_INSTALLED=1
+
+            - name: Build and push arm64 images
+              id: docker_build
+              uses: docker/build-push-action@v3
+              with:
+                  platforms: linux/arm64
                   file: Dockerfile
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
