@@ -205,6 +205,24 @@ def test_feature_state_get_create_log_message_returns_null_if_environment_create
     assert log is None
 
 
+def test_feature_state_get_create_log_message_returns_value_if_environment_created_after_feature_for_override(
+    feature, mocker, identity
+):
+    # Given
+    environment = Environment.objects.create(
+        name="Test environment", project=feature.project
+    )
+    feature_state = FeatureState.objects.create(
+        environment=environment, feature=feature, identity=identity
+    )
+
+    # When
+    log = feature_state.get_create_log_message(mocker.MagicMock())
+
+    # Then
+    assert log is not None
+
+
 def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(
     environment, mocker
 ):
