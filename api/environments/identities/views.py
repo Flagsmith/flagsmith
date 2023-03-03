@@ -1,5 +1,7 @@
+import typing
 from collections import namedtuple
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -188,11 +190,21 @@ class SDKIdentities(SDKAPIView):
                 kwargs={"query_params": request.GET.dict()},
             )
 
+        headers = {
+            FLAGSMITH_UPDATED_AT_HEADER: request.environment.updated_at.timestamp()
+        }
+
         feature_name = request.query_params.get("feature")
         if feature_name:
-            return self._get_single_feature_state_response(identity, feature_name)
+            response = self._get_single_feature_state_response(
+                identity, feature_name, headers=headers
+            )
         else:
-            return self._get_all_feature_states_for_user_response(identity)
+            response = self._get_all_feature_states_for_user_response(
+                identity, headers=headers
+            )
+
+        return response
 
     def get_serializer_context(self):
         context = super(SDKIdentities, self).get_serializer_context()
@@ -233,26 +245,36 @@ class SDKIdentities(SDKAPIView):
             instance=instance,
             context={"identity": instance.get("identity")},  # todo: improve this
         )
-        return Response(response_serializer.data)
+        return Response(
+            response_serializer.data,
+            headers={
+                FLAGSMITH_UPDATED_AT_HEADER: request.environment.updated_at.timestamp()
+            },
+        )
 
-    def _get_single_feature_state_response(self, identity, feature_name):
+    def _get_single_feature_state_response(
+        self, identity, feature_name, headers: typing.Dict[str, typing.Any]
+    ):
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
                 serializer = FeatureStateSerializerFull(
                     feature_state, context={"identity": identity}
                 )
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
+                return Response(
+                    data=serializer.data, status=status.HTTP_200_OK, headers=headers
+                )
 
         return Response(
-            {"detail": "Given feature not found"}, status=status.HTTP_404_NOT_FOUND
+            {"detail": "Given feature not found"},
+            status=status.HTTP_404_NOT_FOUND,
+            headers=headers,
         )
 
-    def _get_all_feature_states_for_user_response(self, identity, trait_models=None):
+    def _get_all_feature_states_for_user_response(self, identity, headers):
         """
         Get all feature states for an identity
 
         :param identity: Identity model to return feature states for
-        :param trait_models: optional list of trait_models to pass in for organisations that don't persist them
         :return: Response containing lists of both serialized flags and traits
         """
         all_feature_states = identity.get_all_feature_states()
@@ -267,4 +289,4 @@ class SDKIdentities(SDKAPIView):
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 
-        return Response(data=response, status=status.HTTP_200_OK)
+        return Response(data=response, status=status.HTTP_200_OK, headers=headers)
