@@ -121,7 +121,7 @@ a, .btn, button{
         color: $bt-brand-secondary-faint;
         line-height: 37px;
         &:hover {
-            background-color: white !important;
+            background-color: white;
         }
 
         &-danger {

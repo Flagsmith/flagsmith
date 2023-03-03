@@ -208,7 +208,6 @@ const PanelSearch = class extends Component {
 
                 {this.props.searchPanel}
                 <div id={this.props.id} className="search-list" style={isLoading ? { opacity: 0.5 } : {}}>
-                    {this.props.header}
                     {!!paging && (
                         <Paging
                           paging={paging}
@@ -218,6 +217,8 @@ const PanelSearch = class extends Component {
                           goToPage={goToPage}
                         />
                     )}
+                    {this.props.header}
+
                     {this.props.isLoading && (!filteredItems || !items) ? <div className="text-center"><Loader/></div>
                         : filteredItems && filteredItems.length
                             ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (

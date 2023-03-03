@@ -25,3 +25,18 @@
 .search-list, .List {
     overflow-x: hidden !important;
 }
+
+.table-header {
+    line-height: 44px;
+    border-bottom: 1px solid $bt-input-border;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-weight: bold;
+}
+
+.dark {
+    .table-header {
+        border-bottom: 1px solid $bt-input-border-dark;
+
+    }
+}

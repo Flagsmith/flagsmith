@@ -53,8 +53,10 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                                     {({ project }: { project: Project }) => (
                                         <Row>
                                             {project && project.environments && project.environments.map(env => (
-                                                <ToggleChip active={envFilter === `${env.id}`}
-                                                            onClick={() => setEnvironment(env.id)}
+                                                <ToggleChip active={`${environment}` === `${env.id}`}
+                                                            onClick={() => {
+                                                                setEnvironment(`${environment}` === `${env.id}`? undefined: env.id)
+                                                            }}
                                                             className='mr-2 mb-4'>
                                                     {env.name}
                                                 </ToggleChip>

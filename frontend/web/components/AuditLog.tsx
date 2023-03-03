@@ -5,16 +5,16 @@ import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
 import JSONReference from "./JSONReference";
-import PanelSearch from './PanelSearch'
-
+import {Link} from "react-router-dom";
+import PanelSearch from './PanelSearch';
 type AuditLogType = {
     environmentId: string
     projectId: string
     pageSize:number
-    onErrorChange?:(error:boolean) => void
     onSearchChange?:(search:string)=>void
 }
 
+const widths = [200,200, 200]
 const AuditLog: FC<AuditLogType> = (props) => {
     const [page, setPage] = useState(1);
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
@@ -45,24 +45,29 @@ const AuditLog: FC<AuditLogType> = (props) => {
         hasHadResults.current = true;
     }
 
-    const renderRow = ({created_date, log, author}: AuditLogItem) => {
+    const renderRow = ({created_date, log, author, environment}: AuditLogItem) => {
         return (
-            <Row space className='list-item py-2 audit__item' key={created_date}>
-                <Flex>
-                    <div
-                        className='audit__log mb-1'
-                    >
-                        {log}
-                    </div>
-                    {!!author && (
-                        <div
-                            className='text-small text-muted'
-                        >
-                            {`${author.first_name} ${author.last_name}`}{" "}
-                            {moment(created_date).format('Do MMM YYYY HH:mma')}
-                        </div>
-                    )}
+            <Row className='list-item py-2 audit__item' key={created_date}>
+                <span style={{width:widths[0]}}>
+                    {moment(created_date).format('Do MMM YYYY HH:mma')}
+                </span>
+                <div style={{width:widths[1]}}>
+                    {author?.first_name} {author?.last_name}
+                </div>
+                {environment?.name ? (
+                    <Link className="link-unstyled" style={{width:widths[2]}} to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}>
+                        <Row>
+                            <span className="flex-row chip">
+                                {environment?.name}
+                            </span>
+                        </Row>
 
+                    </Link>
+                ):(
+                   <div style={{width:widths[2]}}/>
+                )}
+                <Flex>
+                    {log}
                 </Flex>
             </Row>
         );
@@ -79,11 +84,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
             </div>
         );
     }
+
     return (
         <PanelSearch
             id='messages-list'
             title='Log entries'
-            isLoading={isLoading || (!auditLog)}
+            isLoading={isLoading || (!auditLog?.results)}
             className='no-pad'
             icon='ion-md-browsers'
             items={auditLog?.results}
@@ -104,6 +110,20 @@ const AuditLog: FC<AuditLogType> = (props) => {
             }}
             filterRow={() => true}
             renderRow={renderRow}
+            header={<Row className="table-header">
+                <span style={{width:widths[0]}}>
+                    Date
+                </span>
+                <div style={{width:widths[1]}}>
+                    User
+                </div>
+                <div style={{width:widths[2]}}>
+                    Environment
+                </div>
+                <Flex>
+                    Content
+                </Flex>
+            </Row>}
             renderFooter={()=><JSONReference className="mt-4 ml-2" title={"Audit"} json={auditLog?.results}/>}
             renderNoResults={(
                 <FormGroup className='text-center'>
