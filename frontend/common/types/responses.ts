@@ -89,7 +89,7 @@ export type AuditLogItem = {
   environment?: Environment;
   project: ProjectSummary;
   related_object_id: number;
-  related_object_type: "FEATURE" | "FEATURE_STATE" | "ENVIRONMENT" | "CHANGE_REQUEST" | "SEGMENT";
+  related_object_type: "FEATURE" | "FEATURE_STATE" | "ENVIRONMENT" | "CHANGE_REQUEST" | "SEGMENT" | "EDGE_IDENTITY";
   is_system_event: boolean;
 }
 
