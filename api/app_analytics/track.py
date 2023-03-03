@@ -134,8 +134,8 @@ def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
     """
     influxdb = InfluxDBWrapper("feature_evaluation")
 
-    for feature_id, evaluation_count in feature_evaluations.items():
-        tags = {"feature_id": feature_id, "environment_id": environment_id}
+    for feature_name, evaluation_count in feature_evaluations.items():
+        tags = {"feature_id": feature_name, "environment_id": environment_id}
         influxdb.add_data_point("request_count", evaluation_count, tags=tags)
 
     influxdb.write()

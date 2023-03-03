@@ -7,7 +7,10 @@
         {
             "name": "flagsmith-api-migration",
             "command": [
-                "migrate"
+                "migrate",
+                "&&",
+                "migrate-analytics-db"
+
             ],
             "environment": [
                 {
@@ -35,6 +38,10 @@
                 {
                     "name": "DATABASE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
+                },
+                {
+                    "name": "ANALYTICS_DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
                 }
             ],
             "logConfiguration": {
