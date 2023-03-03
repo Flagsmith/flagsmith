@@ -190,6 +190,9 @@ class SDKIdentities(SDKAPIView):
                 kwargs={"query_params": request.GET.dict()},
             )
 
+        # Note that we send the environment updated_at value here since it covers most use cases
+        # in which an identity will need updated flags. It will not cover identity overrides.
+        # TODO: handle identity overrides.
         headers = {
             FLAGSMITH_UPDATED_AT_HEADER: request.environment.updated_at.timestamp()
         }
