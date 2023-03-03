@@ -4,6 +4,7 @@ from unittest import mock
 from unittest.case import TestCase
 
 import pytest
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
@@ -806,3 +807,35 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
+
+    def test_post_identities_request_includes_updated_at_header(self):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+        }
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+            self.environment.updated_at.timestamp()
+        )
+
+    def test_get_identities_request_includes_updated_at_header(self):
+        # Given
+        url = "%s?identifier=identifier" % reverse("api-v1:sdk-identities")
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+            self.environment.updated_at.timestamp()
+        )
