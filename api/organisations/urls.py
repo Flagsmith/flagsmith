@@ -61,12 +61,12 @@ urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(organisations_router.urls)),
     path(
-        "org/<int:organisation_pk>/usage-data/",
+        "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
         name="usage-data",
     ),
     path(
-        "org/<int:organisation_pk>/usage-data/total-count",
+        "<int:organisation_pk>/usage-data/total-count",
         get_usage_data_total_count_view,
         name="usage-data-total-count",
     ),
