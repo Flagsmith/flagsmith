@@ -30,6 +30,14 @@ function serve() {
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
 }
+function migrate_analytics_db(){
+    # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
+    # run the migration command
+    if [[ -z "$ANALYTICS_DATABASE_URL" && -z "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        return 0
+    fi
+    python manage.py migrate --database analytics
+}
 function import_organisation_from_s3(){
     python manage.py importorganisationfroms3 "$1" "$2"
 }
@@ -54,7 +62,7 @@ elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
     serve
-elif [ "$1" == "migrate_identities" ]; then
+elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"
 elif [ "$1" == "import-organisation-from-s3" ]; then
     import_organisation_from_s3 "$2" "$3"
@@ -62,6 +70,8 @@ elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
 elif [ "$1" == "dump-organisation-to-local-fs" ]; then
     dump_organisation_to_local_fs "$2" "$3"
+elif [ "$1" == "migrate-analytics-db" ]; then
+    migrate_analytics_db
 else
    echo "ERROR: unrecognised command '$1'"
 fi

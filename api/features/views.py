@@ -2,6 +2,7 @@ import logging
 import typing
 from functools import reduce
 
+from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
@@ -45,6 +46,7 @@ from .permissions import (
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
+    FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -54,6 +56,7 @@ from .serializers import (
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
+    GetUsageDataQuerySerializer,
     ListCreateFeatureSerializer,
     ProjectFeatureSerializer,
     SDKFeatureStatesQuerySerializer,
@@ -191,6 +194,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
         responses={200: FeatureInfluxDataSerializer()},
+        deprecated=True,
+        operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):
@@ -203,6 +208,24 @@ class FeatureViewSet(viewsets.ModelViewSet):
             feature_name=feature.name, **query_serializer.data
         )
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        query_serializer=GetUsageDataQuerySerializer(),
+        responses={200: FeatureEvaluationDataSerializer()},
+    )
+    @action(detail=True, methods=["GET"], url_path="evaluation-data")
+    def get_evaluation_data(self, request, pk, project_pk):
+        feature = get_object_or_404(Feature, pk=pk)
+
+        query_serializer = GetUsageDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        usage_data = get_feature_evaluation_data(
+            feature=feature, **query_serializer.data
+        )
+        serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
+
         return Response(serializer.data)
 
     def _trigger_feature_state_change_webhooks(
