@@ -2,14 +2,15 @@ from users.models import FFAdminUser
 from users.signals import create_pipedrive_lead_signal
 
 
-def test_create_pipedrive_lead_signal_calls_task_if_user_created(mocker, settings):
+def test_create_pipedrive_lead_signal_calls_task_if_user_created(
+    mocker, settings, django_user_model
+):
     # Given
     mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
-    user = mocker.MagicMock()
-    settings.PIPEDRIVE_API_TOKEN = "some-token"
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
 
     # When
-    create_pipedrive_lead_signal(FFAdminUser, instance=user, created=True)
+    user = django_user_model.objects.create(email="test@example.com")
 
     # Then
     mocked_create_pipedrive_lead.delay.assert_called_once_with(args=(user.id,))

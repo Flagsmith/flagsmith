@@ -155,6 +155,7 @@ INSTALLED_APPS = [
     "import_export",
     "task_processor",
     "softdelete",
+    "metadata",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -825,11 +826,26 @@ PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
 )
 PIPEDRIVE_IGNORE_DOMAINS = env.list(
     "PIPEDRIVE_IGNORE_DOMAINS",
-    ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
+    [
+        "gmail.com",
+        "googlemail.com",
+        "outlook.com",
+        "hotmail.com",
+        "icloud.com",
+        "me.com",
+        "aol.com",
+    ],
 )
+PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", r"^yahoo\..*$")
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
+
+# prevent django-softdelete from performing whole table deletes!
+SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
+
+# Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
+SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}

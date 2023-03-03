@@ -4,12 +4,16 @@ from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
-from organisations.models import Subscription
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
+from organisations.models import Organisation, Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
 from projects.serializers import ProjectSerializer
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+)
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -47,8 +51,25 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         )
 
 
+class EnvironmentSerializerWithMetadata(
+    SerializerWithMetadata,
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+    EnvironmentSerializerLight,
+):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(EnvironmentSerializerLight.Meta):
+        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
+
+    def get_organisation_from_validated_data(self, validated_data) -> Organisation:
+        return validated_data.get("project").organisation
+
+    def get_project_from_validated_data(self, validated_data) -> Project:
+        return validated_data.get("project")
+
+
 class CreateUpdateEnvironmentSerializer(
-    ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerLight
+    ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerWithMetadata
 ):
     invalid_plans = ("free",)
     field_names = ("minimum_change_request_approvals",)

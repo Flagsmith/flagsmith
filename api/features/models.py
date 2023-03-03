@@ -74,6 +74,7 @@ from projects.models import Project
 from projects.tags.models import Tag
 
 from . import audit_helpers
+from .dataclasses import EnvironmentFeatureOverridesData
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,34 @@ class Feature(
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+    @staticmethod
+    def get_overrides_data(
+        environment_id: int,
+    ) -> typing.Dict[int, EnvironmentFeatureOverridesData]:
+        """
+        Get the number of identity / segment overrides in a given environment for each feature in the
+        project.
+
+        :param environment_id: the id of the environment to get the overrides data for
+        :return: dictionary of {feature_id: EnvironmentFeatureOverridesData}
+        """
+        environment_feature_states_list = FeatureState.get_environment_flags_list(
+            environment_id
+        )
+        all_overrides_data = {}
+
+        for feature_state in environment_feature_states_list:
+            env_feature_overrides_data = all_overrides_data.setdefault(
+                feature_state.feature_id, EnvironmentFeatureOverridesData()
+            )
+            if feature_state.feature_segment_id:
+                env_feature_overrides_data.num_segment_overrides += 1
+            elif feature_state.identity_id:
+                env_feature_overrides_data.add_identity_override()
+            all_overrides_data[feature_state.feature_id] = env_feature_overrides_data
+
+        return all_overrides_data  # noqa
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -695,7 +724,8 @@ class FeatureState(
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
-        associated with the given environment only (i.e. not identity or segment).
+        associated with the given environment. Can be filtered to remove segment /
+        identity overrides using additional_filters argument.
 
         Note: uses a single query to get all valid versions of a given environment's
         feature states. The logic to grab the latest version is then handled in python
@@ -711,6 +741,7 @@ class FeatureState(
             live_from__isnull=False,
             live_from__lte=timezone.now(),
             version__isnull=False,
+            deleted_at__isnull=True,
         )
         if feature_name:
             feature_states = feature_states.filter(feature__name__iexact=feature_name)

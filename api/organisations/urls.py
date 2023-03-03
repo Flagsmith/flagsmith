@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
+from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
 from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
 
@@ -18,6 +19,11 @@ router.register(r"", views.OrganisationViewSet, basename="organisation")
 organisations_router = routers.NestedSimpleRouter(router, r"", lookup="organisation")
 organisations_router.register(
     r"invites", InviteViewSet, basename="organisation-invites"
+)
+organisations_router.register(
+    r"metadata-model-fields",
+    MetaDataModelFieldViewSet,
+    basename="metadata-model-fields",
 )
 organisations_router.register(
     r"invite-links", InviteLinkViewSet, basename="organisation-invite-links"

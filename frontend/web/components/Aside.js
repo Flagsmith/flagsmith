@@ -96,8 +96,9 @@ const Aside = class extends Component {
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0] && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
-        const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
-        const changeRequests = (changeRequest && changeRequest.count) || 0;
+        const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : null;
+        const changeRequests = changeRequest?.count || 0;
+        const scheduled = environment && ChangeRequestStore.scheduled[this.props.environmentId]?.count || 0
         return (
             <OrganisationProvider>
                 {({ isLoading: isLoadingOrg, projects }) => (
@@ -224,7 +225,7 @@ const Aside = class extends Component {
                                                             <NavLink
                                                               id="project-settings-link"
                                                               activeClassName="active"
-                                                              className="aside__nav-item"
+                                                              className="aside__nav-item mt-4"
                                                               to={`/project/${this.props.projectId}/settings`}
                                                             >
                                                                 <ProjectSettingsIcon className="aside__nav-item--icon"/>
@@ -357,15 +358,23 @@ const Aside = class extends Component {
                                                                                                     Features
                                                                                               </NavLink>
                                                                                               <NavLink
-                                                                                                      activeClassName="active"
-
-                                                                                                      className="aside__environment-list-item"
-                                                                                                      id="change-requests-link"
-                                                                                                      to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
-                                                                                                    >
-                                                                                                        <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
-                                                                                                        Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
-                                                                                                    </NavLink>
+                                                                                                  activeClassName="active"
+                                                                                                  className="aside__environment-list-item"
+                                                                                                  id="change-requests-link"
+                                                                                                  to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
+                                                                                              >
+                                                                                                  <span className="ion icon ion-ios-timer aside__environment-list-item--icon"/>
+                                                                                                  Scheduled Changes{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
+                                                                                              </NavLink>
+                                                                                              <NavLink
+                                                                                                  activeClassName="active"
+                                                                                                  className="aside__environment-list-item"
+                                                                                                  id="change-requests-link"
+                                                                                                  to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
+                                                                                                >
+                                                                                                    <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
+                                                                                                    Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
+                                                                                                </NavLink>
                                                                                               {manageIdentityPermission && (
                                                                                               <NavLink
                                                                                                       id="users-link"
@@ -373,7 +382,7 @@ const Aside = class extends Component {
                                                                                                       exact
                                                                                                       to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                                                                     >
-                                                                                                        <UsersIcon
+                                                                                                                                                                <UsersIcon
                                                                                                           className="aside__environment-list-item--icon"
                                                                                                         />
                                                                                                         Users

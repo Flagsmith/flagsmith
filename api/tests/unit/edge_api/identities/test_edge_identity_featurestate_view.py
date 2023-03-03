@@ -9,13 +9,10 @@ def test_user_with_view_environment_permission_can_retrieve_all_feature_states_f
     view_environment_permission,
     user_environment_permission,
     identity_document_without_fs,
-    mocker,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock = mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
-    )
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
     user_environment_permission.permissions.add(view_environment_permission)

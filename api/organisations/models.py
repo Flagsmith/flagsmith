@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
+from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -41,7 +41,7 @@ from organisations.subscriptions.exceptions import (
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
-from webhooks.models import AbstractBaseWebhookModel
+from webhooks.models import AbstractBaseExportableWebhookModel
 
 TRIAL_SUBSCRIPTION_ID = "trial"
 
@@ -145,7 +145,7 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
+class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
@@ -232,7 +232,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
         add_single_seat(self.subscription_id)
 
 
-class OrganisationWebhook(AbstractBaseWebhookModel):
+class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     name = models.CharField(max_length=100)
     enabled = models.BooleanField(default=True)
     organisation = models.ForeignKey(

@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
@@ -76,7 +77,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 identity = Identity.objects.get(pk=identity_pk)
                 segment_ids = [segment.id for segment in identity.get_segments()]
             else:
-                segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity_pk)
+                segment_ids = EdgeIdentity.dynamo_wrapper.get_segment_ids(identity_pk)
             queryset = queryset.filter(id__in=segment_ids)
 
         search_term = self.request.query_params.get("q")

@@ -57,6 +57,9 @@ jobs:
         name: Run E2E Tests
         environment: production
         needs: deploy-production-ecs
+        concurrency:
+          group: e2e-tests-prod
+          cancel-in-progress: true
 
         steps:
             - name: Cloning repo
@@ -64,9 +67,9 @@ jobs:
               with:
                 fetch-depth: 0
 
-#            - name: Run E2E tests against production
-#              uses: ./.github/actions/e2e-tests
-#              with:
-#                e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-#                slack_token: ${{ secrets.SLACK_TOKEN }}
-#                environment: prod
+            - name: Run E2E tests against production
+              uses: ./.github/actions/e2e-tests
+              with:
+                e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+                slack_token: ${{ secrets.SLACK_TOKEN }}
+                environment: prod
