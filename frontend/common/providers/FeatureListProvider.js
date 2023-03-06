@@ -20,7 +20,7 @@ const FeatureListProvider = class extends React.Component {
                 isSaving: FeatureListStore.isSaving,
                 isLoading: FeatureListStore.isLoading,
                 environmentFlags: FeatureListStore.getEnvironmentFlags(),
-                error: !!FeatureListStore.error,
+                error: FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
                 projectFlags: FeatureListStore.getProjectFlags(),
                 influxData: FeatureListStore.getFlagInfluxData(),
@@ -35,7 +35,7 @@ const FeatureListProvider = class extends React.Component {
             this.setState({
                 isSaving: FeatureListStore.isSaving,
                 isLoading: FeatureListStore.isLoading,
-                error: !!FeatureListStore.error,
+                error: FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
                 influxData: FeatureListStore.getFlagInfluxData(),
             });
