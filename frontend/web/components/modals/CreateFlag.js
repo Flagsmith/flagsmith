@@ -18,6 +18,7 @@ import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
+import ErrorMessage from '../ErrorMessage';
 import Permission from "common/providers/Permission";
 import IdentitySelect from '../IdentitySelect';
 
@@ -446,7 +447,7 @@ const CreateFlag = class extends Component {
             </>
         );
 
-        const Value = (projectAdmin, createFeature, hideValue) => (
+        const Value = (error, projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
                     <FormGroup className="mb-4 mr-3 mt-2 ml-3">
@@ -471,6 +472,7 @@ const CreateFlag = class extends Component {
                         </>}
                           placeholder="E.g. header_size"
                         />
+                        <ErrorMessage error={error?.name?.[0]}/>
                     </FormGroup>
                 )}
 
@@ -499,6 +501,7 @@ const CreateFlag = class extends Component {
                           multivariate_options={multivariate_options}
                           environmentVariations={environmentVariations}
                           isEdit={isEdit}
+                          error={error?.initial_value?.[0]}
                           canCreateFeature={createFeature}
                           identity={identity}
                           removeVariation={this.removeVariation}
@@ -518,6 +521,7 @@ const CreateFlag = class extends Component {
                           }}
                           onCheckedChange={default_enabled => this.setState({ default_enabled })}
                         />
+
                     </div>
                 )}
                 {!isEdit && !identity && Settings(projectAdmin, createFeature)}
@@ -624,7 +628,7 @@ const CreateFlag = class extends Component {
                                                                             </Tooltip>
                                                                         )}
                                                                         >
-                                                                            {Value(projectAdmin, createFeature)}
+                                                                            {Value(error, projectAdmin, createFeature)}
 
                                                                             {isEdit && (
                                                                                 <>
@@ -945,7 +949,7 @@ const CreateFlag = class extends Component {
                                                             </Tabs>
                                                         ) : (
                                                             <div className={classNames(!isEdit?"create-feature-tab":"")}>
-                                                                {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
+                                                                {Value(error, projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                                 {!identity && (
                                                                     <div className="text-right mr-3">
                                                                         {project.prevent_flag_defaults ? (
@@ -970,7 +974,6 @@ const CreateFlag = class extends Component {
                                                             </div>
                                                         )}
 
-                                                        {error && <Error error={error}/>}
                                                         {identity && (
                                                             <div className="pr-3">
                                                                 {identity ? (
