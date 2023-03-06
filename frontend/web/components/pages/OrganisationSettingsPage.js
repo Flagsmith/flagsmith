@@ -21,6 +21,7 @@ import ConfigProvider from 'common/providers/ConfigProvider';
 import OrganisationUsage from '../OrganisationUsage';
 import Constants from 'common/constants';
 
+const widths = [450,150, 100]
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {
         router: propTypes.object.isRequired,
@@ -202,6 +203,20 @@ const OrganisationSettingsPage = class extends Component {
             group={group}
             push={this.context.router.history.push}
         />);
+    }
+
+    formatLastLoggedIn = (last_login)=> {
+        if(!last_login) return "Never"
+
+        const diff = moment().diff(moment(last_login), "days")
+        if (diff>=30) {
+            return <>
+            {`${diff} days ago`}
+                <br/>
+                <span className="text-small text-muted">{moment(last_login).format("Do MMM YYYY")}</span>
+            </>
+        }
+        return "Within 30 days"
     }
 
     render() {
@@ -516,10 +531,26 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 id="org-members-list"
                                                                                 title="Members"
                                                                                 className="no-pad"
+                                                                                header={
+                                                                                <Row className="table-header">
+                                                                                    <Flex>
+                                                                                        <strong>User</strong>
+                                                                                    </Flex>
+                                                                                    <div style={{width:widths[0]}}>
+                                                                                        Role
+                                                                                    </div>
+                                                                                    <div style={{width:widths[1]}}>
+                                                                                        Last logged in
+                                                                                    </div>
+                                                                                    <div style={{width:widths[2]}}>
+                                                                                        Remove
+                                                                                    </div>
+                                                                                </Row>
+                                                                                }
                                                                                 items={ _.sortBy(users,"first_name")}
                                                                                 itemHeight={65}
                                                                                 renderRow={(user, i) => {
-                                                                                    const { id, first_name, last_name, email, role } = user;
+                                                                                    const { id, first_name, last_name, last_login, email, role } = user;
                                                                                     const onEditClick = () => {
                                                                                         if (role !== 'ADMIN') {
                                                                                             this.editUserPermissions(user);
@@ -531,18 +562,16 @@ const OrganisationSettingsPage = class extends Component {
                                                                                             space className="list-item clickable" key={id}
                                                                                         >
                                                                                             <Flex onClick={onEditClick}>
-
-                                                                                                {`${first_name} ${last_name}`}
-
-
-                                                                                                {' '}
-                                                                                                {id == AccountStore.getUserId() && '(You)'}
-                                                                                                <div className="list-item-footer faint">
-                                                                                                    {email}
-                                                                                                </div>
+                                                                                                        {`${first_name} ${last_name}`}
+                                                                                                        {' '}
+                                                                                                        {id == AccountStore.getUserId() && '(You)'}
+                                                                                                        <div className="list-item-footer faint">
+                                                                                                            {email}
+                                                                                                        </div>
                                                                                             </Flex>
-                                                                                            <Row>
-                                                                                                <Column>
+
+                                                                                            <Row style={{width:widths[0]}}>
+                                                                                                <div>
                                                                                                     {organisation.role === 'ADMIN' && id !== AccountStore.getUserId() ? (
                                                                                                         <div style={{ width: 250 }}>
                                                                                                             <Select
@@ -551,7 +580,6 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                                 styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                                                                                 value={role && { value: role, label: Constants.roles[role] }}
                                                                                                                 onChange={e => this.roleChanged(id, Utils.safeParseEventValue(e))}
-                                                                                                                className="pl-2"
                                                                                                                 options={_.map(Constants.roles, (label, value) => (
                                                                                                                     {
                                                                                                                         value,
@@ -566,26 +594,32 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                             />
                                                                                                         </div>
                                                                                                     ) : (
-                                                                                                        <div className="pl-3 mr-2">{Constants.roles[role] || ''}</div>
+                                                                                                        <div className="mr-2">{Constants.roles[role] || ''}</div>
                                                                                                     )}
-                                                                                                </Column>
+                                                                                                </div>
 
                                                                                                 {role !== 'ADMIN' && (
-                                                                                                    <Column onClick={onEditClick}>
+                                                                                                    <div className="ml-2" style={{width:widths[2]}} onClick={onEditClick}>
                                                                                                         <Button className="btn--link">Edit Permissions</Button>
-                                                                                                    </Column>
+                                                                                                    </div>
                                                                                                 )}
-                                                                                                <Column>
-                                                                                                    <button
-                                                                                                        id="delete-invite"
-                                                                                                        type="button"
-                                                                                                        onClick={() => this.deleteUser(id)}
-                                                                                                        className="btn btn--with-icon ml-auto btn--remove"
-                                                                                                    >
-                                                                                                        <RemoveIcon />
-                                                                                                    </button>
-                                                                                                </Column>
                                                                                             </Row>
+
+                                                                                            <div style={{width:widths[1]}}>
+                                                                                                    <div>
+                                                                                                        {this.formatLastLoggedIn(last_login)}
+                                                                                                    </div>
+                                                                                            </div>
+                                                                                            <div style={{width:widths[2]}}>
+                                                                                                <button
+                                                                                                    id="delete-invite"
+                                                                                                    type="button"
+                                                                                                    onClick={() => this.deleteUser(id)}
+                                                                                                    className="btn btn--with-icon ml-auto btn--remove"
+                                                                                                >
+                                                                                                    <RemoveIcon />
+                                                                                                </button>
+                                                                                            </div>
                                                                                         </Row>
                                                                                     );
                                                                                 }}
