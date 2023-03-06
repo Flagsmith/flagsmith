@@ -160,8 +160,12 @@ const SegmentOverrideInner = class Override extends React.Component {
                                 <ValueEditor
                                   value={v.value}
                                   data-test={`segment-override-value-${index}`}
-                                  disabled={true}
                                   placeholder="Value e.g. 'big' "
+                                  disabled={readOnly}
+                                  onChange={readOnly ? null : (e) => {
+                                      this.setState({ changed: true });
+                                      setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)));
+                                  }}
                                 />
                             </>
                     )}

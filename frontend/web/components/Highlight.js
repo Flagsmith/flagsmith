@@ -127,7 +127,6 @@ class Highlight extends React.Component {
             return <Element {...props}>{children}</Element>;
         }
 
-        debugger
         const html = this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : disabled? defaultDisabledValue : defaultValue
             : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : disabled? defaultDisabledValue : defaultValue);
         return (
