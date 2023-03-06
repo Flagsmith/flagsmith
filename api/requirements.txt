@@ -145,6 +145,8 @@ google-auth==1.23.0
     #   google-auth-httplib2
 google-auth-httplib2==0.0.4
     # via google-api-python-client
+google-re2==1.0
+    # via -r requirements.in
 googleapis-common-protos==1.52.0
     # via google-api-core
 gunicorn==20.1.0
@@ -210,7 +212,7 @@ protobuf==3.18.3
     #   googleapis-common-protos
 psutil==5.9.0
     # via opencensus-ext-azure
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.5
     # via -r requirements.in
 pyasn1==0.4.8
     # via
