@@ -160,3 +160,16 @@
 		font-size: 1.4em;
 		display: block;
 	}
+
+	.btn-tab {
+		position: relative;
+		.unread {
+			position: absolute;
+			right:0;
+			top:13px;
+			padding-left: 0 !important;
+			padding-right: 0 !important;
+			width: 16px;
+			height: 16px;
+		}
+	}

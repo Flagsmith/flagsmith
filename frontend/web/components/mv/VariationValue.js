@@ -7,6 +7,7 @@ const VariationValue = ({
     onChange,
     weightTitle,
     onRemove,
+    readOnlyValue,
     index,
     disabled,
 }) => (
@@ -20,7 +21,7 @@ const VariationValue = ({
                             data-test={`featureVariationValue${index}`}
                             name="featureValue" className="full-width"
                             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
-                            disabled={disabled}
+                            disabled={disabled||readOnlyValue}
                             onChange={(e) => {
                                 onChange({
                                     ...value,
