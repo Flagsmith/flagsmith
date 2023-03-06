@@ -107,7 +107,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             onChange={(e: InputEvent) => {
                 setSearchInput(Utils.safeParseEventValue(e));
             }}
-            paging={auditLog}
+            paging={{...(auditLog||{}), page}}
             nextPage={() => {
                 setPage(page + 1);
             }}
