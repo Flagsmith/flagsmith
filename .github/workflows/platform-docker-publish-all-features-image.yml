@@ -74,7 +74,7 @@ jobs:
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: Build and push amd64 images
-              id: docker_build
+              id: docker_build_amd64
               uses: docker/build-push-action@v3
               with:
                   platforms: linux/amd64
@@ -86,7 +86,7 @@ jobs:
                       SAML_INSTALLED=1
 
             - name: Build and push arm64 images
-              id: docker_build
+              id: docker_build_arm64
               uses: docker/build-push-action@v3
               with:
                   platforms: linux/arm64
@@ -96,6 +96,3 @@ jobs:
                   context: .
                   build-args: |
                       SAML_INSTALLED=1
-
-            - name: Image digest
-              run: echo ${{ steps.docker_build.outputs.digest }}
