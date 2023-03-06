@@ -204,6 +204,20 @@ const OrganisationSettingsPage = class extends Component {
         />);
     }
 
+    formatLastLoggedIn = (last_login)=> {
+        if(!last_login) return "Never"
+
+        const diff = moment().diff(moment(last_login), "days")
+        if (diff>=30) {
+            return <>
+            {`${diff} days ago`}
+                <br/>
+                <span className="text-small text-muted">{moment(last_login).format("Do MMM YYYY")}</span>
+            </>
+        }
+        return "Within 30 days"
+    }
+
     render() {
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
@@ -523,7 +537,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                         Role
                                                                                     </div>
                                                                                     <div style={{width:widths[1]}}>
-                                                                                        Last Active
+                                                                                        Last logged in
                                                                                     </div>
                                                                                     <div style={{width:widths[2]}}>
                                                                                         Remove
@@ -589,8 +603,8 @@ const OrganisationSettingsPage = class extends Component {
                                                                                             </Row>
 
                                                                                             <div style={{width:widths[1]}}>
-                                                                                                    <div className="text-small text-muted">
-                                                                                                        {last_login?moment(last_login).format("Do MMM YYYY HH:mma"):"Never"}
+                                                                                                    <div>
+                                                                                                        {this.formatLastLoggedIn(last_login)}
                                                                                                     </div>
                                                                                             </div>
                                                                                             <div style={{width:widths[2]}}>
