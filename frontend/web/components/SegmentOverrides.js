@@ -155,7 +155,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                     ) : (
                             <>
                                 <label>
-                                    Control Value - {controlPercent}%
+                                    Segment Control Value - {controlPercent}%
                                 </label>
                                 <ValueEditor
                                   value={v.value}
