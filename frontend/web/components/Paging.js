@@ -98,7 +98,9 @@ export default class Paging extends PureComponent {
                             </>
                         )}
                     </Row>
-                ): !!paging.page && <span>Page {paging.page}</span>}
+                ): !!paging.page && <span>Page {paging.page}{paging.pageSize&&paging.count ? (
+                    ` of ${Math.ceil(paging.count/paging.pageSize)}`
+                ):""}</span>}
                 <Button
                   className="icon btn-paging ion-ios-arrow-forward" disabled={isLoading || !paging.next}
                   onClick={() => nextPage()}
