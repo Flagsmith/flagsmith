@@ -20,7 +20,14 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage(1);
     });
+    const [environments, setEnvironments] = useState(props.environmentId);
 
+    useEffect(()=>{
+        if(environments!==props.environmentId) {
+            setEnvironments(props.environmentId)
+            setPage(1)
+        }
+    },[props.environmentId])
     useEffect(()=>{
         if(props.onSearchChange) {
             props.onSearchChange(search)
@@ -29,13 +36,14 @@ const AuditLog: FC<AuditLogType> = (props) => {
 
     const hasHadResults = useRef(false);
 
-    const {data: auditLog, isLoading, isError} = useGetAuditLogsQuery({
+    const {data: auditLog, isFetching, isError} = useGetAuditLogsQuery({
         search,
         project: props.projectId,
         page,
         page_size: props.pageSize,
-        environments: props.environmentId,
+        environments,
     });
+
 
     useEffect(()=>{
        props.onErrorChange?.(isError)
@@ -85,11 +93,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
         );
     }
 
+
     return (
         <PanelSearch
             id='messages-list'
             title='Log entries'
-            isLoading={isLoading || (!auditLog?.results)}
+            isLoading={isFetching}
             className='no-pad'
             icon='ion-md-browsers'
             items={auditLog?.results}
@@ -98,7 +107,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             onChange={(e: InputEvent) => {
                 setSearchInput(Utils.safeParseEventValue(e));
             }}
-            paging={auditLog}
+            paging={{...(auditLog||{}), page, pageSize: props.pageSize}}
             nextPage={() => {
                 setPage(page + 1);
             }}
