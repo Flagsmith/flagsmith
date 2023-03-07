@@ -43,7 +43,6 @@ runs:
 
         - name: Deploy to Vercel
           working-directory: frontend
-          id: vercel
           env:
               VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
               VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
@@ -58,7 +57,6 @@ runs:
           shell: bash
 
         - name: Add comment to Github PR
-          id: comment_to_pr
           uses: marocchino/sticky-pull-request-comment@v2
           with:
               GITHUB_TOKEN: ${{ inputs.github_token }}
