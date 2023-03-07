@@ -18,7 +18,7 @@ inputs:
         description: "Determines the comment text of the preview deployment url."
         required: true
     github_token:
-        description: "Used for creating a PR commebt."
+        description: "Used for creating a PR comment."
         required: true
 
 runs:
@@ -56,7 +56,8 @@ runs:
               url=$(vercel --token ${{ inputs.vercel_token }})
               echo "url=$url" >> $GITHUB_OUTPUT
           shell: bash
-        - name: Add comment to PR
+
+        - name: Add comment to Github PR
           id: comment_to_pr
           uses: marocchino/sticky-pull-request-comment@v2
           with:
