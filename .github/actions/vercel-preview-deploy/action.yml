@@ -64,4 +64,4 @@ runs:
           number: ${{ github.event.issue.number }}
           header: ${{ inputs.env }}
           message: |
-            "${{inputs.deployment_description}}: ${{ steps.vercel.outputs.url }}"
+            ${{inputs.deployment_description}}: ${{ steps.vercel.outputs.url }}
