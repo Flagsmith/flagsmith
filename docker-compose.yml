@@ -4,28 +4,28 @@
 
 version: '3'
 services:
-    postgres:
-        image: postgres:11.12-alpine
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: flagsmith
-        container_name: flagsmith_postgres
+  postgres:
+    image: postgres:11.12-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    container_name: flagsmith_postgres
 
-    flagsmith:
-        build:
-            dockerfile: ./Dockerfile
-            context: .
-        environment:
+  flagsmith:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    environment:
             # All environments variables are available here:
             # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
             # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
 
-            DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-            DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
-            PREVENT_SIGNUP: 'true'
+      DJANGO_ALLOWED_HOSTS: '*'       # Change this in production
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      DISABLE_INFLUXDB_FEATURES: 'true'       # set to false to enable InfluxDB
+      PREVENT_SIGNUP: 'true'
 
-            ENV: prod # set to "prod" in production.
+      ENV: prod       # set to "prod" in production.
 
             # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
             # INFLUXDB_URL: http://influxdb:8086
@@ -52,13 +52,13 @@ services:
             # container below
             # TASK_RUN_METHOD: TASK_PROCESSOR  # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
 
-        ports:
-            - '8000:8000'
-        depends_on:
-            - postgres
+    ports:
+    - 8000:8000
+    depends_on:
+    - postgres
             # - influxdb
-        links:
-            - postgres
+    links:
+    - postgres
             # - influxdb:influxdb
 
 #    Run the asynchronous task processor as a separate container alongside the API.

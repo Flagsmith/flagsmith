@@ -1,17 +1,26 @@
 repos:
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.9.3
-    hooks:
-      - id: isort
-        name: isort (python)
-  - repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-      - id: black
-        language_version: python3
-        exclude: migrations
-  - repo: https://github.com/pycqa/flake8
-    rev: '4.0.1'
-    hooks:
-    -   id: flake8
-        name: flake8
+- repo: https://github.com/PyCQA/isort
+  rev: 5.9.3
+  hooks:
+  - id: isort
+    name: isort (python)
+- repo: https://github.com/psf/black
+  rev: 22.3.0
+  hooks:
+  - id: black
+    language_version: python3
+    exclude: migrations
+- repo: https://github.com/pycqa/flake8
+  rev: 4.0.1
+  hooks:
+  - id: flake8
+    name: flake8
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.3.0
+  hooks:
+  - id: check-yaml
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.7.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']

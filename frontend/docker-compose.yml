@@ -1,19 +1,19 @@
 version: '3.7'
 
 services:
-    bullettrain:
-        build:
-            context: .
-            target: development
-            dockerfile: Dockerfile
-        command: npm run dev
-        environment:
-            - FLAGSMITH_API_URL=http://localhost:8000/api/v1/
-        ports:
-            - '8080:8080'
-        volumes:
-            - .:/srv/bt
-            - frontend_node_modules:/srv/bt/node_modules
+  bullettrain:
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+    command: npm run dev
+    environment:
+    - FLAGSMITH_API_URL=http://localhost:8000/api/v1/
+    ports:
+    - 8080:8080
+    volumes:
+    - .:/srv/bt
+    - frontend_node_modules:/srv/bt/node_modules
 
 volumes:
-    frontend_node_modules:
+  frontend_node_modules:

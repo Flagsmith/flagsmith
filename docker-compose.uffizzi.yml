@@ -12,39 +12,39 @@ x-uffizzi:
 
 services:
 
-    nginx:
-      image: nginx:alpine
-      volumes:
-        - ./nginx-uffizzi:/etc/nginx
+  nginx:
+    image: nginx:alpine
+    volumes:
+    - ./nginx-uffizzi:/etc/nginx
 
-    postgres:
-        image: postgres
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: flagsmith
-            POSTGRES_USER: postgres
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+      POSTGRES_USER: postgres
 
-    flagsmith:
-        image: "${FLAGSMITH_IMAGE}"
-        ports:
-            - '8000:8000'
-        deploy:
-          resources:
-            limits:
-              memory: 2000M
-        environment:
+  flagsmith:
+    image: ${FLAGSMITH_IMAGE}
+    ports:
+    - 8000:8000
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+    environment:
             # All environments variables are available here:
             # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
             # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
 
-            DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-            DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
-            DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
-            PREVENT_SIGNUP: 'false'
-            ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
-            DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
+      DJANGO_ALLOWED_HOSTS: '*'       # Change this in production
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
+      DISABLE_INFLUXDB_FEATURES: 'true'       # set to false to enable InfluxDB
+      PREVENT_SIGNUP: 'false'
+      ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
+      DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
 
-            ENV: dev # set to "prod" in production.
+      ENV: dev       # set to "prod" in production.
 
             # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
             # INFLUXDB_URL: http://localhost:8086/influx

@@ -11,11 +11,11 @@ spec:
       branch: main
       repo_clone_url: https://github.com/flagsmith/flagsmith.git
     envs:
-      - key: DATABASE_URL
-        scope: RUN_TIME
-        value: ${flagsmith-db.DATABASE_URL}
-      - key: DJANGO_ALLOWED_HOSTS
-        scope: RUN_TIME
-        value: '*'
+    - key: DATABASE_URL
+      scope: RUN_TIME
+      value: ${flagsmith-db.DATABASE_URL}
+    - key: DJANGO_ALLOWED_HOSTS
+      scope: RUN_TIME
+      value: '*'
   databases:
   - name: flagsmith-db
