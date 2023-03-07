@@ -133,7 +133,7 @@ jobs:
 
   web-deploy-branch-production:
     concurrency:
-      group: deploy-frontend-staging-${{github.ref}}
+      group: deploy-frontend-production-${{github.ref}}
       cancel-in-progress: true
     name: Deploy Feature Branch to Production Vercel
     runs-on: ubuntu-latest
