@@ -364,7 +364,7 @@ const Aside = class extends Component {
                                                                                                   to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                                                               >
                                                                                                   <span className="ion icon ion-ios-timer aside__environment-list-item--icon"/>
-                                                                                                  Scheduled Changes{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
+                                                                                                  Scheduling{scheduled ? <span className="ml-1 unread">{scheduled}</span> : null}
                                                                                               </NavLink>
                                                                                               <NavLink
                                                                                                   activeClassName="active"
@@ -385,7 +385,7 @@ const Aside = class extends Component {
                                                                                                                                                                 <UsersIcon
                                                                                                           className="aside__environment-list-item--icon"
                                                                                                         />
-                                                                                                        Users
+                                                                                                        Identities
                                                                                                     </NavLink>
                                                                                               )}
 
