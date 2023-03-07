@@ -2,66 +2,66 @@ name: Vercel Preview Deploy
 description: "Creates a Vercel preview deployment"
 
 inputs:
-  vercel_project_id:
-    description: "The project ID you wish to deploy to"
-    required: true
-  vercel_org_id:
-    description: "The organisation ID you wish to deploy to"
-    required: true
-  vercel_token:
-    description: "The organisation ID you wish to deploy to"
-    required: true
-  env:
-    description: "Determines the project.js file to use for config."
-    required: true
-  deployment_description:
-    description: "Determines the comment text of the preview deployment url."
-    required: true
-  github_token:
-    description: "Used for creating a PR commebt."
-    required: true
+    vercel_project_id:
+        description: "The project ID you wish to deploy to"
+        required: true
+    vercel_org_id:
+        description: "The organisation ID you wish to deploy to"
+        required: true
+    vercel_token:
+        description: "The organisation ID you wish to deploy to"
+        required: true
+    env:
+        description: "Determines the project.js file to use for config."
+        required: true
+    deployment_description:
+        description: "Determines the comment text of the preview deployment url."
+        required: true
+    github_token:
+        description: "Used for creating a PR commebt."
+        required: true
 
 runs:
     using: composite
     steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        - name: Cloning repo
+          uses: actions/checkout@v3
+          with:
+              fetch-depth: 0
 
-      - name: Setup Node.js 16.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
+        - name: Setup Node.js 16.x
+          uses: actions/setup-node@v3
+          with:
+              node-version: 16.x
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/frontend/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+        - name: Cache dependencies
+          uses: actions/cache@v3
+          with:
+              path: ~/frontend/.npm
+              key: npm-${{ hashFiles('package-lock.json') }}
+              restore-keys: npm-
 
-      - name: Deploy to Vercel
-        working-directory: frontend
-        id: vercel
-        env:
-          VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
-          VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
-          ENV: ${{ inputs.env }}
-        run: |
-          npm ci --only=prod
-          npm run env
-          npm run bundle
-          echo ${{ github.sha }} > CI_COMMIT_SHA
-          url=$(vercel --token ${{ inputs.vercel_token }})
-          echo "url=$url" >> $GITHUB_OUTPUT
-        shell: bash
-      - name: Add comment to PR
-        id: comment_to_pr
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          GITHUB_TOKEN: ${{ inputs.github_token }}
-          number: ${{ github.event.issue.number }}
-          header: ${{ inputs.env }}
-          message: |
-            ${{inputs.deployment_description}}: ${{ steps.vercel.outputs.url }}
+        - name: Deploy to Vercel
+          working-directory: frontend
+          id: vercel
+          env:
+              VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
+              VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
+              ENV: ${{ inputs.env }}
+          run: |
+              npm ci --only=prod
+              npm run env
+              npm run bundle
+              echo ${{ github.sha }} > CI_COMMIT_SHA
+              url=$(vercel --token ${{ inputs.vercel_token }})
+              echo "url=$url" >> $GITHUB_OUTPUT
+          shell: bash
+        - name: Add comment to PR
+          id: comment_to_pr
+          uses: marocchino/sticky-pull-request-comment@v2
+          with:
+              GITHUB_TOKEN: ${{ inputs.github_token }}
+              number: ${{ github.event.issue.number }}
+              header: ${{ inputs.env }}
+              message: |
+                  ${{inputs.deployment_description}}: ${{ steps.vercel.outputs.url }}
