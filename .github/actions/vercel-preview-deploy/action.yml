@@ -9,16 +9,16 @@ inputs:
         description: "The organisation ID you wish to deploy to"
         required: true
     vercel_token:
-        description: "The organisation ID you wish to deploy to"
+        description: "The Vercel token for API requests"
         required: true
     env:
-        description: "Determines the project.js file to use for config."
+        description: "Determines the project.js file to use for config"
         required: true
     deployment_description:
-        description: "Determines the comment text of the preview deployment url."
+        description: "Determines the comment text of the preview deployment url"
         required: true
     github_token:
-        description: "Used for creating a PR comment."
+        description: "Used for creating a PR comment"
         required: true
 
 runs:
