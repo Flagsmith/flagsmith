@@ -149,7 +149,7 @@ jobs:
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          env: production
+          env: prod
 
   web-deploy-branch-staging:
     concurrency:
