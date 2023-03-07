@@ -51,7 +51,7 @@ runs:
           npm run bundle
           echo ${{ github.sha }} > CI_COMMIT_SHA
           url=$(vercel --token ${{ inputs.vercel_token }})
-          core.setOutput("url", url);
+          core.setOutput("url", $url);
         shell: bash
       - name: Add comment to PR
         id: comment_to_pr
