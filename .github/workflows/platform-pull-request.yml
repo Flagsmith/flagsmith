@@ -139,6 +139,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
       - name: Deploy
         uses: ./.github/actions/vercel-preview-deploy
         with:
@@ -156,6 +159,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
       - name: Deploy
         uses: ./.github/actions/vercel-preview-deploy
         with:
