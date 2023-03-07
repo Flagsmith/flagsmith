@@ -144,6 +144,8 @@ jobs:
         with:
           vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           env: production
 
   web-deploy-branch-staging:
@@ -159,4 +161,6 @@ jobs:
         with:
           vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           env: staging
