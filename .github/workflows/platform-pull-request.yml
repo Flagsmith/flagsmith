@@ -133,39 +133,26 @@ jobs:
 
     web-deploy-branch-production:
         concurrency:
-            group: deploy-frontend-${{github.ref}}
+            group: deploy-frontend-production-${{github.ref}}
             cancel-in-progress: true
         runs-on: ubuntu-latest
-        name: Deploy Feature Branch to Vercel
+        name: Deploy Feature Branch to Staging Vercel
+        environment: production
+        uses: ./.github/actions/vercel-preview-deploy
+        with:
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          env: prod
+
+    web-deploy-branch-staging:
+        concurrency:
+            group: deploy-frontend-staging-${{github.ref}}
+            cancel-in-progress: true
+        runs-on: ubuntu-latest
+        name: Deploy Feature Branch to Staging Vercel
         environment: staging
-
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
-
-            - name: Setup Node.js 16.x
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16.x
-
-            - name: Cache dependencies
-              uses: actions/cache@v3
-              with:
-                  path: ~/frontend/.npm
-                  key: npm-${{ hashFiles('package-lock.json') }}
-                  restore-keys: npm-
-
-            - name: Deploy to Vercel
-              working-directory: frontend
-              env:
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  ENV: prod
-              run: |
-                  npm ci --only=prod
-                  npm run env
-                  npm run bundle
-                  echo ${{ github.sha }} > CI_COMMIT_SHA
-                  vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+        uses: ./.github/actions/vercel-preview-deploy
+        with:
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          env: staging
