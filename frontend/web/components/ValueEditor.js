@@ -113,7 +113,7 @@ class ValueEditor extends Component {
     render() {
         const { ...rest } = this.props;
         return (
-            <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
+            <div className={cx('value-editor', { disabled: this.props.disabled, light: this.state.language === 'txt' })}>
                 <Row className="select-language">
                     <span
                       onMouseDown={(e) => {
@@ -183,7 +183,7 @@ class ValueEditor extends Component {
                       {...rest}
                     />
                 ) : (
-                    <Highlight data-test={rest['data-test']} onChange={rest.disabled ? null : rest.onChange} className={this.state.language}>
+                    <Highlight data-test={rest['data-test']} disabled={rest.disabled} onChange={rest.disabled ? null : rest.onChange} className={this.state.language}>
                         {(typeof rest.value !== 'undefined' && rest.value != null) ? `${rest.value}` : ''}
                     </Highlight>
                 )}

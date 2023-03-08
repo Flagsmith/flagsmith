@@ -156,17 +156,17 @@ const SegmentOverrideInner = class Override extends React.Component {
                     ) : (
                             <>
                                 <label>
-                                    Control Value - {controlPercent}%
+                                    Segment Control Value - {controlPercent}%
                                 </label>
                                 <ValueEditor
                                   value={v.value}
                                   data-test={`segment-override-value-${index}`}
+                                  placeholder="Value e.g. 'big' "
                                   disabled={readOnly}
                                   onChange={readOnly ? null : (e) => {
                                       this.setState({ changed: true });
                                       setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)));
                                   }}
-                                  placeholder="Value e.g. 'big' "
                                 />
                             </>
                     )}
@@ -191,6 +191,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             <FormGroup className="mb-4">
                                 <VariationOptions
                                   preventRemove
+                                  readOnlyValue
                                   disabled={readOnly}
                                   controlValue={controlValue}
                                   variationOverrides={mvOptions}
