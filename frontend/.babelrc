@@ -7,21 +7,22 @@
       {
         "targets": {
           "esmodules": true,
-          "browsers": [
-            "last 2 versions"
-          ]
+          "browsers": ["last 2 versions"]
         },
         "modules": false
       }
     ]
   ],
   "plugins": [
-    ["module-resolver", {
-      "root": ["."],
-      "alias": {
-        "common": "./common"
+    [
+      "module-resolver",
+      {
+        "root": ["."],
+        "alias": {
+          "common": "./common"
+        }
       }
-    }],
+    ],
     "@babel/plugin-proposal-class-properties",
     "babel-plugin-transform-object-rest-spread",
     "@babel/plugin-transform-modules-commonjs"

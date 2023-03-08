@@ -18,7 +18,7 @@ services:
       DJANGO_SETTINGS_MODULE: app.settings.local
       STATSD_HOST: datadog
     ports:
-      - "8000:8000"
+      - 8000:8000
     depends_on:
       - postgres
     links:

@@ -6,10 +6,10 @@ Thanks for submitting a PR! Please check the boxes below:
 
 ## Changes
 
-*Please describe.*
+_Please describe._
 
 ## How did you test this code?
 
 <!-- If the answer is manually, please include a quick step-by-step on how to test this PR. -->
 
-*Please describe.*
+_Please describe._

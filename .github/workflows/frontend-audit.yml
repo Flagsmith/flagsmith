@@ -2,7 +2,7 @@ name: Frontend Audit
 
 on:
   schedule:
-    - cron: "0 8 * * *"
+    - cron: 0 8 * * *
 
 jobs:
   execute:

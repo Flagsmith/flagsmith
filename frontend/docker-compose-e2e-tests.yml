@@ -5,45 +5,45 @@
 
 version: '3'
 services:
-    db:
-        image: postgres:11.12-alpine
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: flagsmith
-        container_name: flagsmith_postgres
+  db:
+    image: postgres:11.12-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    container_name: flagsmith_postgres
 
-    flagsmith-api:
-        build:
-            context: ../
-            dockerfile: Dockerfile
-        environment:
-            E2E_TEST_AUTH_TOKEN: some-token
-            FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
-            DJANGO_ALLOWED_HOSTS: '*'
-            DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
-            ENABLE_INFLUXDB_FEATURES: 'false'
-            EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-        ports:
-            - '8000:8000'
-        depends_on:
-            - db
-        links:
-            - db:db
+  flagsmith-api:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    environment:
+      E2E_TEST_AUTH_TOKEN: some-token
+      FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+      DJANGO_ALLOWED_HOSTS: '*'
+      DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
+      ENABLE_INFLUXDB_FEATURES: 'false'
+      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+    ports:
+    - 8000:8000
+    depends_on:
+    - db
+    links:
+    - db:db
 
-    frontend:
-        build:
-            context: .
-            dockerfile: Dockerfile.e2e
-        platform: linux/amd64
-        environment:
-            E2E_TEST_TOKEN_DEV: some-token
-            ENABLE_INFLUXDB_FEATURES: 'false'
-            FLAGSMITH_API: flagsmith-api:8000/api/v1/
-            SLACK_TOKEN: ${SLACK_TOKEN}
-        ports:
-            - '8080:8080'
-        depends_on:
-            - flagsmith-api
-        links:
-            - flagsmith-api:flagsmith-api
-        command: ["npm", "run", "test"]
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    platform: linux/amd64
+    environment:
+      E2E_TEST_TOKEN_DEV: some-token
+      ENABLE_INFLUXDB_FEATURES: 'false'
+      FLAGSMITH_API: flagsmith-api:8000/api/v1/
+      SLACK_TOKEN: ${SLACK_TOKEN}
+    ports:
+    - 8080:8080
+    depends_on:
+    - flagsmith-api
+    links:
+    - flagsmith-api:flagsmith-api
+    command: [npm, run, test]
