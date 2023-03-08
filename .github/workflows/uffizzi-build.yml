@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.action == 'closed' }}
     steps:
-      # If this PR is closing, we will not render a compose file nor pass it to the next workflow.
+    # If this PR is closing, we will not render a compose file nor pass it to the next workflow.
     - name: Serialize PR Event to File
       run: |
         cat << EOF > event.json

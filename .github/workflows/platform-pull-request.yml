@@ -28,7 +28,7 @@ jobs:
       uses: ./.github/actions/run-local-api
       with:
         e2e_test_token: some-token
-                  # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
+        # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
         database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
         sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
         sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}

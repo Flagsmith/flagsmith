@@ -21,10 +21,10 @@ jobs:
         python-version: '3.11'
 
     - name: Run Audit
-            # todo:
-            #  - remove the hack to upgrade `packaging` as drf-yasg2 has an old version dependency
-            #  - remove the setuptools upgrade (caused by the fact that actions/setup-python seems
-            #    to come packaged with setuptools 65.5.0)
+      # todo:
+      #  - remove the hack to upgrade `packaging` as drf-yasg2 has an old version dependency
+      #  - remove the setuptools upgrade (caused by the fact that actions/setup-python seems
+      #    to come packaged with setuptools 65.5.0)
       run: |
         cd api
         python -m pip install --upgrade pip

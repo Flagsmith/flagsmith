@@ -18,7 +18,7 @@ jobs:
       pr-number: ${{ env.PR_NUMBER }}
     steps:
     - name: Download artifacts
-        # Fetch output (zip archive) from the workflow run that triggered this workflow.
+      # Fetch output (zip archive) from the workflow run that triggered this workflow.
       uses: actions/github-script@v6
       with:
         script: |
@@ -49,7 +49,7 @@ jobs:
 
     - name: Hash Rendered Compose File
       id: hash
-        # If the previous workflow was triggered by a PR close event, we will not have a compose file artifact.
+      # If the previous workflow was triggered by a PR close event, we will not have a compose file artifact.
       if: ${{ fromJSON(env.EVENT_JSON).action != 'closed' }}
       run: echo "HASH=$(md5sum docker-compose.rendered.yml | awk '{ print $1 }')" >> $GITHUB_ENV
     - name: Cache Rendered Compose File

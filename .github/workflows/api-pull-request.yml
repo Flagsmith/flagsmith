@@ -53,7 +53,7 @@ jobs:
       run: black --check .
 
     - name: Check flake8 linting
-      working-directory: .         # working dir should be root due to conflicts with pre-commit
+      working-directory: .  # working dir should be root due to conflicts with pre-commit
       run: flake8 .
 
     - name: Check isort imports
