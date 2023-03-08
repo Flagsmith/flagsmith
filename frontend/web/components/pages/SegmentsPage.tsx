@@ -80,9 +80,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     }
 
     const {permission: manageSegmentsPermission} = useHasPermission({
-        level: "environment",
+        level: "project",
         permission: "MANAGE_SEGMENTS",
-        id: environmentId
+        id: projectId
     })
 
     const editSegment = (id: number, readOnly?: boolean) => {
