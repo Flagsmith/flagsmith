@@ -53,3 +53,4 @@ flagsmith.init({
 
 controller.store = store;
 module.exports = controller.store;
+
