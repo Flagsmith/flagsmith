@@ -130,3 +130,45 @@ jobs:
           context: frontend/
           push: false
           tags: flagsmith/flagsmith-frontend:testing
+
+  web-deploy-branch-production:
+    concurrency:
+      group: deploy-frontend-production-${{github.ref}}
+      cancel-in-progress: true
+    name: Vercel Production Deployment
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        uses: ./.github/actions/vercel-preview-deploy
+        with:
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deployment_description: 'Production preview deployment'
+          env: prod
+
+  web-deploy-branch-staging:
+    concurrency:
+      group: deploy-frontend-staging-${{github.ref}}
+      cancel-in-progress: true
+    name: Vercel Staging Deployment
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        uses: ./.github/actions/vercel-preview-deploy
+        with:
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deployment_description: 'Staging preview deployment'
+          env: staging
