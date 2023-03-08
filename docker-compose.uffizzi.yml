@@ -11,66 +11,66 @@ x-uffizzi:
     port: 8081
 
 services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx-uffizzi:/etc/nginx
 
-    nginx:
-      image: nginx:alpine
-      volumes:
-        - ./nginx-uffizzi:/etc/nginx
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+      POSTGRES_USER: postgres
 
-    postgres:
-        image: postgres
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: flagsmith
-            POSTGRES_USER: postgres
+  flagsmith:
+    image: ${FLAGSMITH_IMAGE}
+    ports:
+      - 8000:8000
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+    environment:
+      # All environments variables are available here:
+      # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
+      # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
 
-    flagsmith:
-        image: "${FLAGSMITH_IMAGE}"
-        ports:
-            - '8000:8000'
-        deploy:
-          resources:
-            limits:
-              memory: 2000M
-        environment:
-            # All environments variables are available here:
-            # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
-            # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
+      DJANGO_ALLOWED_HOSTS: '*' # Change this in production
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
+      DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
+      PREVENT_SIGNUP: 'false'
+      ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
+      DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
 
-            DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-            DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
-            DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
-            PREVENT_SIGNUP: 'false'
-            ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
-            DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
+      ENV:
+        dev # set to "prod" in production.
 
-            ENV: dev # set to "prod" in production.
 
-            # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
-            # INFLUXDB_URL: http://localhost:8086/influx
-            # INFLUXDB_BUCKET: flagsmith_api
-            # INFLUXDB_ORG: # Add your influx org id here
-            # INFLUXDB_TOKEN: # Add your influx token here
+        # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
+        # INFLUXDB_URL: http://localhost:8086/influx
+        # INFLUXDB_BUCKET: flagsmith_api
+        # INFLUXDB_ORG: # Add your influx org id here
+        # INFLUXDB_TOKEN: # Add your influx token here
 
-            # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
-            #
-            # Example SMTP:
-            # EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-            # EMAIL_HOST: mail.example.com
-            # SENDER_EMAIL: flagsmith@example.com
-            # EMAIL_HOST_USER: flagsmith@example.com
-            # EMAIL_HOST_PASSWORD: smtp_account_password
-            # EMAIL_PORT: 587 # optional
-            # EMAIL_USE_TLS: True # optional
+        # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
+        #
+        # Example SMTP:
+        # EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+        # EMAIL_HOST: mail.example.com
+        # SENDER_EMAIL: flagsmith@example.com
+        # EMAIL_HOST_USER: flagsmith@example.com
+        # EMAIL_HOST_PASSWORD: smtp_account_password
+        # EMAIL_PORT: 587 # optional
+        # EMAIL_USE_TLS: True # optional
 
-            # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
-            # ALLOW_REGISTRATION_WITHOUT_INVITE: True
+        # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
+        # ALLOW_REGISTRATION_WITHOUT_INVITE: True
 
-            # Enable Task Processor
-            # To use task processor service, uncomment line below and additional 'flagsmith_processor'
-            # container below
-            # TASK_RUN_METHOD: TASK_PROCESSOR  # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
-
+        # Enable Task Processor
+        # To use task processor service, uncomment line below and additional 'flagsmith_processor'
+        # container below
+        # TASK_RUN_METHOD: TASK_PROCESSOR  # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
 #    Run the asynchronous task processor as a separate container alongside the API.
 #    When enabled, the API will write tasks to a queue (in the PostgreSQL database) for
 #    the processor to consume asynchronously.
@@ -92,10 +92,10 @@ services:
 #            - flagsmith
 #            - postgres
 
-    # InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
-    # Note that InfluxDB is optional, but enabling it will provide additional functionality to the Flagsmith platform
-    # influxdb:
-    #   image: quay.io/influxdb/influxdb:v2.0.3
-    #   container_name: flagsmith_influxdb
-    #   ports:
-    #     - "8086:8086"
+# InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
+# Note that InfluxDB is optional, but enabling it will provide additional functionality to the Flagsmith platform
+# influxdb:
+#   image: quay.io/influxdb/influxdb:v2.0.3
+#   container_name: flagsmith_influxdb
+#   ports:
+#     - "8086:8086"
