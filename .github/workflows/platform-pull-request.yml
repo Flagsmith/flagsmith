@@ -1,135 +1,135 @@
 name: Platform Pull Requests
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened, ready_for_review]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-    run-e2e-tests:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-latest
-        name: Full E2E tests
+  run-e2e-tests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    name: Full E2E tests
 
-        services:
-            postgres:
-                image: postgres:11.12-alpine
-                env:
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: flagsmith
-                ports: ["5432:5432"]
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: [5432:5432]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v3
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
 
-            - name: Run Local API
-              uses: ./.github/actions/run-local-api
-              with:
-                  e2e_test_token: some-token
-                  # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
-                  database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
-                  sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
-                  sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
+      - name: Run Local API
+        uses: ./.github/actions/run-local-api
+        with:
+          e2e_test_token: some-token
+          # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
+          database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
+          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
+          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
 
-            - name: Run E2E tests against local
-              uses: ./.github/actions/e2e-tests
-              with:
-                  e2e_test_token: some-token
-                  slack_token: ${{ secrets.SLACK_TOKEN }}
-                  environment: local
-                  enable_influxdb_features: false
+      - name: Run E2E tests against local
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: some-token
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: local
+          enable_influxdb_features: false
 
-    run-e2e-tests-docker-unified:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-latest
-        name: Full E2E tests with unified image in Docker
+  run-e2e-tests-docker-unified:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    name: Full E2E tests with unified image in Docker
 
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v3
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
 
-            - name: Run docker-compose with unified-image
-              working-directory: frontend
-              env:
-                  E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-                  ENV: staging
-                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-                  STATIC_ASSET_CDN_URL: /
-              run: |
-                  docker-compose -f docker-compose-e2e-tests.yml build
-                  docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
+      - name: Run docker-compose with unified-image
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+          ENV: staging
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          STATIC_ASSET_CDN_URL: /
+        run: |
+          docker-compose -f docker-compose-e2e-tests.yml build
+          docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-    docker-build-unified:
-        if: github.event.pull_request.draft == false
-        name: Test unified docker image build
-        runs-on: ubuntu-latest
+  docker-build-unified:
+    if: github.event.pull_request.draft == false
+    name: Test unified docker image build
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout PR branch
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Build
-              id: docker_build
-              uses: docker/build-push-action@v3
-              with:
-                  push: false
-                  tags: flagsmith/flagsmith:testing
+      - name: Build
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          tags: flagsmith/flagsmith:testing
 
-    docker-build-api:
-        if: github.event.pull_request.draft == false
-        name: Test api docker image build
-        runs-on: ubuntu-latest
+  docker-build-api:
+    if: github.event.pull_request.draft == false
+    name: Test api docker image build
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout PR branch
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Build
-              id: docker_build
-              uses: docker/build-push-action@v3
-              with:
-                  file: api/Dockerfile
-                  context: api/
-                  push: false
-                  tags: flagsmith/flagsmith-api:testing
+      - name: Build
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          file: api/Dockerfile
+          context: api/
+          push: false
+          tags: flagsmith/flagsmith-api:testing
 
-    docker-build-frontend:
-        if: github.event.pull_request.draft == false
-        name: Test frontend docker image build
-        runs-on: ubuntu-latest
+  docker-build-frontend:
+    if: github.event.pull_request.draft == false
+    name: Test frontend docker image build
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout PR branch
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Build
-              id: docker_build
-              uses: docker/build-push-action@v3
-              with:
-                  file: frontend/Dockerfile
-                  context: frontend/
-                  push: false
-                  tags: flagsmith/flagsmith-frontend:testing
+      - name: Build
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          file: frontend/Dockerfile
+          context: frontend/
+          push: false
+          tags: flagsmith/flagsmith-frontend:testing
 
     web-deploy-branch-production:
         concurrency:
