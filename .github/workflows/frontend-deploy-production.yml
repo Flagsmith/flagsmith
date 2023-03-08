@@ -3,10 +3,10 @@ name: Frontend Deploy to Production
 on:
   push:
     branches:
-    - main
+      - main
     paths:
-    - frontend/**
-    - .github/**
+      - frontend/**
+      - .github/**
 
 defaults:
   run:
@@ -22,17 +22,17 @@ jobs:
       cancel-in-progress: true
 
     steps:
-    - name: Cloning repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Cloning repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Run E2E tests against production
-      uses: ./.github/actions/e2e-tests
-      with:
-        e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-        slack_token: ${{ secrets.SLACK_TOKEN }}
-        environment: prod
+      - name: Run E2E tests against production
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: prod
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -41,31 +41,31 @@ jobs:
     needs: run-tests
 
     steps:
-    - name: Cloning repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Cloning repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js 16.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16.x
+      - name: Setup Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
 
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: npm-${{ hashFiles('package-lock.json') }}
-        restore-keys: npm-
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
 
-    - name: Deploy to Vercel
-      env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        ENV: prod
-      run: |
-        npm ci --only=prod
-        npm run env
-        npm run bundle
-        echo ${{ github.sha }} > CI_COMMIT_SHA
-        vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to Vercel
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          ENV: prod
+        run: |
+          npm ci --only=prod
+          npm run env
+          npm run bundle
+          echo ${{ github.sha }} > CI_COMMIT_SHA
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}

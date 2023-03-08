@@ -3,8 +3,8 @@ name: API Pull Request
 on:
   pull_request:
     paths:
-    - api/**
-    - .github/**
+      - api/**
+      - .github/**
     types: [opened, synchronize, reopened, ready_for_review]
 
 defaults:
@@ -33,42 +33,43 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - name: Cloning repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Cloning repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: pip
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-all.txt
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-all.txt
 
-    - name: Check black formatting
-      run: black --check .
+      - name: Check black formatting
+        run: black --check .
 
-    - name: Check flake8 linting
-      working-directory: .  # working dir should be root due to conflicts with pre-commit
-      run: flake8 .
+      - name: Check flake8 linting
+        working-directory: . # working dir should be root due to conflicts with pre-commit
+        run: flake8 .
 
-    - name: Check isort imports
-      run: isort --check .
+      - name: Check isort imports
+        run: isort --check .
 
-    - name: Create analytics database
-      env:
-        PGPASSWORD: postgres
-      run: createdb -h localhost -U postgres -p 5432 analytics
+      - name: Create analytics database
+        env:
+          PGPASSWORD: postgres
+        run: createdb -h localhost -U postgres -p 5432 analytics
 
-    - name: Run Tests
-      env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
-        ANALYTICS_DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/analytics
-        DJANGO_SETTINGS_MODULE: app.settings.test
-        LOG_LEVEL: INFO
-      run: |
-        pytest -p no:warnings
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
+          ANALYTICS_DATABASE_URL:
+            postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/analytics
+          DJANGO_SETTINGS_MODULE: app.settings.test
+          LOG_LEVEL: INFO
+        run: |
+          pytest -p no:warnings

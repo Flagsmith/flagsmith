@@ -20,27 +20,27 @@ runs:
   using: composite
 
   steps:
-  - name: Build temporary Docker image for running the API
-    working-directory: api
-    run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} .
-    shell: bash
+    - name: Build temporary Docker image for running the API
+      working-directory: api
+      run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} .
+      shell: bash
 
-  - name: Run the API
-    working-directory: api
-    env:
-      E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
-      DATABASE_URL: ${{ inputs.database_url }}
-      SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
-      SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
-    run: |
-      docker run \
-      -p 8000:8000 \
-      -e DATABASE_URL=$DATABASE_URL \
-      -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
-      -e SENDGRID_API_KEY=$SENDGRID_API_KEY \
-      -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
-      -e DJANGO_ALLOWED_HOSTS="*" \
-      -e DJANGO_SETTINGS_MODULE=app.settings.test \
-      -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
-      -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
-    shell: bash
+    - name: Run the API
+      working-directory: api
+      env:
+        E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
+        DATABASE_URL: ${{ inputs.database_url }}
+        SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
+        SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
+      run: |
+        docker run \
+        -p 8000:8000 \
+        -e DATABASE_URL=$DATABASE_URL \
+        -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
+        -e SENDGRID_API_KEY=$SENDGRID_API_KEY \
+        -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
+        -e DJANGO_ALLOWED_HOSTS="*" \
+        -e DJANGO_SETTINGS_MODULE=app.settings.test \
+        -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
+        -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
+      shell: bash

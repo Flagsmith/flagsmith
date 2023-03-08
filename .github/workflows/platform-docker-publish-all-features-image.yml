@@ -3,7 +3,7 @@ name: Publish Flagsmith Private Cloud Image
 on:
   push:
     tags:
-    - '*'
+      - '*'
 
 env:
   FLAGSMITH_SAML_REVISION: v1.0.1
@@ -15,72 +15,72 @@ jobs:
     name: Platform Publish Docker Image
 
     steps:
-    - name: Cloning repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Cloning repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Checkout SAML package
-      uses: actions/checkout@v3
-      with:
-        repository: flagsmith/flagsmith-saml
-        token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-        ref: ${{ env.flagsmith_saml_revision }}
-        path: ./flagsmith-saml
+      - name: Checkout SAML package
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-saml
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          ref: ${{ env.flagsmith_saml_revision }}
+          path: ./flagsmith-saml
 
-    - name: Integrate SAML module
-      run: |
-        mv ./flagsmith-saml/saml ./api
-        cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
+      - name: Integrate SAML module
+        run: |
+          mv ./flagsmith-saml/saml ./api
+          cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
 
-    - name: Checkout Workflows Logic package
-      uses: actions/checkout@v3
-      with:
-        repository: flagsmith/flagsmith-workflows
-        token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-        ref: ${{ env.flagsmith_saml_revision }}
-        path: ./flagsmith-workflows
+      - name: Checkout Workflows Logic package
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-workflows
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          ref: ${{ env.flagsmith_saml_revision }}
+          path: ./flagsmith-workflows
 
-    - name: Integrate Workflows Logic module
-      run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
+      - name: Integrate Workflows Logic module
+        run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
 
-    - name: Write git info to Docker image
-      run: |
-        cd api
-        echo ${{ github.sha }} > CI_COMMIT_SHA
-        echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
+      - name: Write git info to Docker image
+        run: |
+          cd api
+          echo ${{ github.sha }} > CI_COMMIT_SHA
+          echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
 
-    - name: Docker metadata
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          flagsmith/flagsmith-private-cloud
-        tags: |
-          type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            flagsmith/flagsmith-private-cloud
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push images
-      id: docker_build
-      uses: docker/build-push-action@v3
-      with:
-        platforms: linux/amd64,linux/arm64
-        file: Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        context: .
-        build-args: |
-          SAML_INSTALLED=1
+      - name: Build and push images
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          context: .
+          build-args: |
+            SAML_INSTALLED=1
