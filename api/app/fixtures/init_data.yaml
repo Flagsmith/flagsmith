@@ -8,7 +8,7 @@
   fields:
     name: Test Org
     has_requested_features: false
-    webhook_notification_email: null
+    webhook_notification_email:
     created_date: 2021-08-02 12:23:25.410055+00:00
     alerted_over_plan_limit: false
     stop_serving_flags: false
@@ -30,7 +30,7 @@
     project: 1
     api_key: e3jwq93LdN62FyMpoWpLsG
     webhooks_enabled: false
-    webhook_url: null
+    webhook_url:
 - model: environments.environment
   pk: 2
   fields:
@@ -39,7 +39,7 @@
     project: 1
     api_key: T4JZKgozvyhqbUS2pMXZpR
     webhooks_enabled: false
-    webhook_url: null
+    webhook_url:
 - model: identities.identity
   pk: 1
   fields:
@@ -58,8 +58,8 @@
     name: test_feature
     created_date: 2021-08-02 12:24:03.315647+00:00
     project: 1
-    initial_value: null
-    description: null
+    initial_value:
+    description:
     default_enabled: true
     type: STANDARD
     tags: []
@@ -68,33 +68,33 @@
   fields:
     feature: 1
     environment: 1
-    identity: null
-    feature_segment: null
+    identity:
+    feature_segment:
     enabled: true
 - model: features.featurestate
   pk: 2
   fields:
     feature: 1
     environment: 2
-    identity: null
-    feature_segment: null
+    identity:
+    feature_segment:
     enabled: true
 - model: features.featurestatevalue
   pk: 1
   fields:
     type: unicode
-    boolean_value: null
-    integer_value: null
+    boolean_value:
+    integer_value:
     feature_state: 1
-    string_value: null
+    string_value:
 - model: features.featurestatevalue
   pk: 2
   fields:
     type: unicode
-    boolean_value: null
-    integer_value: null
+    boolean_value:
+    integer_value:
     feature_state: 2
-    string_value: null
+    string_value:
 - model: permissions.permissionmodel
   pk: CREATE_ENVIRONMENT
   fields:
