@@ -304,7 +304,7 @@ const FeaturesPage = class extends Component {
                                                     >
                                                         <p>
                                                             We've created 2 environments for
-                                                            you
+                                                            you:
                                                             {' '}
                                                             <strong>Development</strong>
                                                             {' '}
