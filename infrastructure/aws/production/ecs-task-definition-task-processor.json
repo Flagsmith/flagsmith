@@ -112,6 +112,10 @@
                 {
                     "name": "PIPEDRIVE_BASE_API_URL",
                     "value": "https://bullettrain2.pipedrive.com/api/v1"
+                },
+                {
+                    "name": "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY",
+                    "value": "ab20826fa9dce795b0f078fed778b8dbdf89fe01"
                 }
             ],
             "secrets": [
