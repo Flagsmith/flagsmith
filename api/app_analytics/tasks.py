@@ -25,7 +25,7 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
         run_every=timedelta(minutes=60),
         kwargs={
             "bucket_size": ANALYTICS_READ_BUCKET_SIZE,
-            "run_every": ANALYTICS_READ_BUCKET_SIZE,
+            "run_every": 60,
         },
     )
     def populate_bucket(
