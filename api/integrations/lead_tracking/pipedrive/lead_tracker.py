@@ -66,7 +66,9 @@ class PipedriveLeadTracker(LeadTracker):
             "title": user.email,
             "organization_id": organization.id,
             "person_id": person.id,
-            "custom_fields": {},
+            "custom_fields": {
+                settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
+            },
         }
         if user.sign_up_type:
             create_lead_kwargs["custom_fields"][

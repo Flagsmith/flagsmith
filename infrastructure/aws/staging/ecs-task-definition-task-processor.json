@@ -96,6 +96,10 @@
                     "value": "3f142ca82a69c31c2f592b372bd1bb41dfe3407e"
                 },
                 {
+                    "name": "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY",
+                    "value": "0f23057d26ce75557ac093e9abd96d7744d0d0da"
+                },
+                {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
                 }

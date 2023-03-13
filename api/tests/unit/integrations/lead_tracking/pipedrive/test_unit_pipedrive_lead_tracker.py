@@ -18,7 +18,8 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     user = FFAdminUser(
         email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
     )
-    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key"
+    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key1"
+    settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = "key2"
 
     organization = PipedriveOrganization(name="some-org", id=1)
     mock_pipedrive_client = mocker.MagicMock()
@@ -37,7 +38,8 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
         "title": user.email,
         "organization_id": organization.id,
         "custom_fields": {
-            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
+            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+            settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
         },
         "person_id": person.id,
     }
@@ -51,7 +53,8 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     # Given
     domain_organization_field_key = "domain-organization-field-key"
     settings.PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = domain_organization_field_key
-    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key"
+    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key1"
+    settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = "key2"
 
     user = FFAdminUser(
         email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
@@ -75,7 +78,8 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
         "title": user.email,
         "organization_id": organization.id,
         "custom_fields": {
-            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
+            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+            settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
         },
         "person_id": person.id,
     }
