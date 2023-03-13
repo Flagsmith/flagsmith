@@ -88,7 +88,7 @@ def register_recurring_task(
 
         register_task(task_identifier, f)
 
-        task, _ = RecurringTask.objects.get_or_create(
+        task, _ = RecurringTask.objects.update_or_create(
             task_identifier=task_identifier,
             run_every=run_every,
             defaults={
