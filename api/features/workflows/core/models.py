@@ -31,6 +31,7 @@ from features.models import FeatureState
 
 from .exceptions import (
     CannotApproveOwnChangeRequest,
+    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 
@@ -114,6 +115,16 @@ class ChangeRequest(
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+    def delete(self, *args, **kwargs):
+        now = timezone.now()
+        if self.committed_at and all(
+            fs.live_from <= now for fs in self.feature_states.all()
+        ):
+            raise ChangeRequestDeletionError(
+                "Cannot delete change request that has been committed."
+            )
+        super().delete(*args, **kwargs)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
