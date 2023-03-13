@@ -7,6 +7,7 @@ set -e
 
 function migrate () {
     python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
+    migrate_analytics_db
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -70,8 +71,6 @@ elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
 elif [ "$1" == "dump-organisation-to-local-fs" ]; then
     dump_organisation_to_local_fs "$2" "$3"
-elif [ "$1" == "migrate-analytics-db" ]; then
-    migrate_analytics_db
 else
    echo "ERROR: unrecognised command '$1'"
 fi

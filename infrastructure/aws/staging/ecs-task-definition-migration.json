@@ -7,9 +7,7 @@
         {
             "name": "flagsmith-api-migration",
             "command": [
-                "migrate",
-                "&&",
-                "migrate-analytics-db"
+                "migrate"
 
             ],
             "environment": [
