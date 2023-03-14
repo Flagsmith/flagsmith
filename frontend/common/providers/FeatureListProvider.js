@@ -12,7 +12,7 @@ const FeatureListProvider = class extends React.Component {
             environmentFlags: FeatureListStore.getEnvironmentFlags(),
             projectFlags: FeatureListStore.getProjectFlags(),
             lastSaved: FeatureListStore.getLastSaved(),
-            influxData: FeatureListStore.getFlagInfluxData(),
+            influxData: FeatureListStore.getFeatureUsage(),
         };
         ES6Component(this);
         this.listenTo(FeatureListStore, 'change', () => {
@@ -23,7 +23,7 @@ const FeatureListProvider = class extends React.Component {
                 error: FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
                 projectFlags: FeatureListStore.getProjectFlags(),
-                influxData: FeatureListStore.getFlagInfluxData(),
+                influxData: FeatureListStore.getFeatureUsage(),
             });
         });
 
@@ -37,7 +37,7 @@ const FeatureListProvider = class extends React.Component {
                 isLoading: FeatureListStore.isLoading,
                 error: FeatureListStore.error,
                 lastSaved: FeatureListStore.getLastSaved(),
-                influxData: FeatureListStore.getFlagInfluxData(),
+                influxData: FeatureListStore.getFeatureUsage(),
             });
             this.props.onError && this.props.onError(FeatureListStore.error);
         });

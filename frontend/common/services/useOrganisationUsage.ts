@@ -10,7 +10,7 @@ export const organisationUsageService = service
 
             getOrganisationUsage: builder.query<Res['organisationUsage'], Req['getOrganisationUsage']>({
                 query: (query: Req['getOrganisationUsage']) => ({
-                    url: `organisations/${query.organisationId}/influx-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
+                    url: `organisations/${query.organisationId}/usage-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
                 }),
                 transformResponse: (data: Res['organisationUsage']) => {
                     let flags = 0;

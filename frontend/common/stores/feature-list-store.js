@@ -198,8 +198,8 @@ const controller = {
             }
         });
     },
-    getInfluxDate(projectId, environmentId, flag, period) {
-        data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
+    getFeatureUsage(projectId, environmentId, flag, period) {
+        data.get(`${Project.api}projects/${projectId}/features/${flag}/usage-data/?period=${period}&environment_id=${environmentId}`)
             .then((result) => {
                 const firstResult = result.events_list[0];
                 const lastResult = firstResult && result.events_list[result.events_list.length - 1];
@@ -465,7 +465,7 @@ const store = Object.assign({}, BaseStore, {
     getLastSaved() {
         return store.model && store.model.lastSaved;
     },
-    getFlagInfluxData() {
+    getFeatureUsage() {
         return store.model && store.model.influxData;
     },
 
@@ -494,8 +494,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         case Actions.TOGGLE_FLAG:
             controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags, action.projectFlags);
             break;
-        case Actions.GET_FLAG_INFLUX_DATA:
-            controller.getInfluxDate(action.projectId, action.environmentId, action.flag, action.period);
+        case Actions.GET_FEATURE_USAGE:
+            controller.getFeatureUsage(action.projectId, action.environmentId, action.flag, action.period);
             break;
         case Actions.CREATE_FLAG:
             controller.createFlag(action.projectId, action.environmentId, action.flag, action.segmentOverrides);
