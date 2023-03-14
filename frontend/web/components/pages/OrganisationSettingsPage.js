@@ -814,7 +814,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                 </FormGroup>
                                             </TabItem>
-                                                {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
+                                                {Utils.getFlagsmithHasFeature('usage_chart') && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 4 && (
                                                         <OrganisationUsage organisationId={AccountStore.getOrganisation().id}/>

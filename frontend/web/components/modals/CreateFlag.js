@@ -98,8 +98,8 @@ const CreateFlag = class extends Component {
                 this.focusTimeout = null;
             }, 500);
         }
-        if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
-            this.getInfluxData();
+        if (this.props.projectFlag && this.props.environmentFlag) {
+            this.getFeatureUsage();
         }
     };
 
@@ -126,9 +126,9 @@ const CreateFlag = class extends Component {
             });
     }
 
-    getInfluxData = () => {
+    getFeatureUsage = () => {
         if (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.environmentFlag) {
-            AppActions.getFlagInfluxData(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
+            AppActions.getFeatureUsage(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
         }
     }
 
@@ -146,7 +146,7 @@ const CreateFlag = class extends Component {
             ...this.state,
             period: changePeriod,
         };
-        this.getInfluxData();
+        this.getFeatureUsage();
     }
 
     save = (func, isSaving) => {
@@ -894,7 +894,7 @@ const CreateFlag = class extends Component {
                                                                             </FormGroup>
                                                                     </TabItem>
                                                                 )}
-                                                                { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                { !existingChangeRequest && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel
