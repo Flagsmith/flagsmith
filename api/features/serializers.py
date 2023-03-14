@@ -232,7 +232,7 @@ class SDKFeatureSerializer(FeatureSerializer):
 
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
-    feature = SDKFeatureSerializer()
+    feature = FeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
