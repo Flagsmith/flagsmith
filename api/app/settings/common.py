@@ -855,19 +855,8 @@ PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
 PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
     "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
 )
-PIPEDRIVE_IGNORE_DOMAINS = env.list(
-    "PIPEDRIVE_IGNORE_DOMAINS",
-    [
-        "gmail.com",
-        "googlemail.com",
-        "outlook.com",
-        "hotmail.com",
-        "icloud.com",
-        "me.com",
-        "aol.com",
-    ],
-)
-PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", r"^yahoo\..*$")
+PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
+PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
