@@ -222,8 +222,17 @@ class FeatureSerializer(serializers.ModelSerializer):
         writeonly_fields = ("initial_value", "default_enabled")
 
 
+class SDKFeatureSerializer(FeatureSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        environment = self.context["request"].environment
+        if environment.hide_sensitive_data:
+            data.pop("description")
+        return data
+
+
 class FeatureStateSerializerFull(serializers.ModelSerializer):
-    feature = FeatureSerializer()
+    feature = SDKFeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
@@ -240,6 +249,10 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
 
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
+
+
+class SDKFeatureStateSerializer(FeatureStateSerializerFull):
+    feature = SDKFeatureSerializer()
 
 
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):

@@ -839,3 +839,62 @@ class SDKIdentitiesTestCase(APITestCase):
         assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
             self.environment.updated_at.timestamp()
         )
+
+
+def test_get_identities_with_hide_sensitive_data_with_feature_name(
+    environment, feature, identity, api_client
+):
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    environment.hide_sensitive_data = True
+    environment.save()
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}&feature={feature.name}"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert "description" not in response.json()["feature"]
+
+
+def test_get_identities_with_hide_sensitive_data(
+    environment, feature, identity, api_client
+):
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    environment.hide_sensitive_data = True
+    environment.save()
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert "description" not in response.json()["flags"][0]["feature"]
+
+
+def test_post_identities_with_hide_sensitive_data(
+    environment, feature, identity, api_client
+):
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    environment.hide_sensitive_data = True
+    environment.save()
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert "description" not in response.json()["flags"][0]["feature"]

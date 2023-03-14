@@ -29,7 +29,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
-from features.serializers import FeatureStateSerializerFull
+from features.serializers import SDKFeatureStateSerializer
 from integrations.integration import (
     IDENTITY_INTEGRATIONS,
     identify_integrations,
@@ -218,6 +218,9 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
         return context
 
+    def _get_serializer_context(self, identity):
+        return {"identity": identity, **self.get_serializer_context()}
+
     @method_decorator(
         generate_identity_update_message(
             lambda req: (req.environment, req.data["identifier"])
@@ -247,7 +250,7 @@ class SDKIdentities(SDKAPIView):
         # trait values are serialized correctly
         response_serializer = IdentifyWithTraitsSerializer(
             instance=instance,
-            context={"identity": instance.get("identity")},  # todo: improve this
+            context=self._get_serializer_context(instance.get("identity")),
         )
         return Response(
             response_serializer.data,
@@ -259,11 +262,11 @@ class SDKIdentities(SDKAPIView):
     def _get_single_feature_state_response(
         self, identity, feature_name, headers: typing.Dict[str, typing.Any]
     ):
+        context = self._get_serializer_context(identity)
+
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
-                serializer = FeatureStateSerializerFull(
-                    feature_state, context={"identity": identity}
-                )
+                serializer = SDKFeatureStateSerializer(feature_state, context=context)
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
                 )
@@ -282,9 +285,12 @@ class SDKIdentities(SDKAPIView):
         :return: Response containing lists of both serialized flags and traits
         """
         all_feature_states = identity.get_all_feature_states()
-        serialized_flags = FeatureStateSerializerFull(
-            all_feature_states, many=True, context={"identity": identity}
+        context = self._get_serializer_context(identity)
+
+        serialized_flags = SDKFeatureStateSerializer(
+            all_feature_states, many=True, context=context
         )
+
         serialized_traits = TraitSerializerBasic(
             identity.identity_traits.all(), many=True
         )
