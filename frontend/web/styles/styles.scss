@@ -13,6 +13,10 @@
   position: sticky;
   top: 0;
   z-index: 1;
+  >* { // since the markdown can be <p we need to reset any styling
+    display: inline-block;
+    margin: 0;
+  }
 }
 .display-none {
   display: none !important;

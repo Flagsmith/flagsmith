@@ -2,6 +2,8 @@ import React from 'react';
 import { Component } from 'react';
 import ConfigProvider from 'common/providers/ConfigProvider';
 import ProjectStore from 'common/stores/project-store'
+import ReactMarkdown from 'react-markdown'
+
 class ButterBar extends Component {
     static contextTypes = {
         router: propTypes.object.isRequired,
@@ -31,10 +33,7 @@ class ButterBar extends Component {
         }
         return <>
             {Utils.getFlagsmithValue('butter_bar') && !Utils.getFlagsmithHasFeature('read_only_mode') && (
-                <div
-                  dangerouslySetInnerHTML={{ __html: Utils.getFlagsmithValue('butter_bar') }}
-                  className="butter-bar"
-                />
+               <ReactMarkdown className="butter-bar">{Utils.getFlagsmithValue('butter_bar')}</ReactMarkdown>
             )}
             {Utils.getFlagsmithHasFeature('read_only_mode') && (
                 <div
