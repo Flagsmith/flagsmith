@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from django.contrib.auth import get_user_model
@@ -6,12 +7,20 @@ from audit.constants import FEATURE_STATE_WENT_LIVE_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from task_processor.decorators import register_task_handler
 
+logger = logging.getLogger(__name__)
+
 
 @register_task_handler()
 def create_feature_state_went_live_audit_log(feature_state_id: int):
     from features.models import FeatureState
 
-    feature_state = FeatureState.objects.get(id=feature_state_id)
+    feature_state = FeatureState.objects.filter(id=feature_state_id).first()
+
+    if not feature_state:
+        logger.info(
+            "FeatureState not found. Likely means the change request was deleted before scheduled_for."
+        )
+        return
 
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
