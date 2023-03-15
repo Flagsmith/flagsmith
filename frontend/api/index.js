@@ -69,7 +69,6 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) ||
                 envToBool('DISABLE_INFLUXDB_FEATURES', false)
         },
-        { name: 'disableAnalytics', value: !envToBool('DISABLE_ANALYTICS_FEATURES', false) },
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
         { name: 'flagsmithRealtime', value: envToBool('ENABLE_FLAGSMITH_REALTIME', false) },
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
