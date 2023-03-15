@@ -659,7 +659,12 @@ def test_get_flags_hide_sensitive_data(api_client, environment, feature):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "description" not in response.json()[0]["feature"]
+    assert set(response.json()[0].keys()) == {
+        "feature",
+        "feature_state_value",
+        "enabled",
+    }
+    assert set(response.json()[0]["feature"].keys()) == {"id", "name", "type"}
 
 
 @pytest.mark.parametrize(

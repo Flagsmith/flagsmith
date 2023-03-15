@@ -856,8 +856,8 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "description" not in response.json()["feature"]
-    assert "traits" not in response.json()
+    assert set(response.json().keys()) == {"feature", "feature_state_value", "enabled"}
+    assert set(response.json()["feature"].keys()) == {"id", "name", "type"}
 
 
 def test_get_identities_with_hide_sensitive_data(
@@ -875,8 +875,14 @@ def test_get_identities_with_hide_sensitive_data(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "description" not in response.json()["flags"][0]["feature"]
-    assert "traits" not in response.json()
+    assert set(response.json().keys()) == {"flags"}
+    assert set(response.json()["flags"][0].keys()) == {
+        "feature",
+        "feature_state_value",
+        "enabled",
+    }
+
+    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
 
 
 def test_post_identities_with_hide_sensitive_data(
@@ -899,5 +905,11 @@ def test_post_identities_with_hide_sensitive_data(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "description" not in response.json()["flags"][0]["feature"]
-    assert "traits" not in response.json()
+    assert set(response.json().keys()) == {"flags"}
+    assert set(response.json()["flags"][0].keys()) == {
+        "feature",
+        "feature_state_value",
+        "enabled",
+    }
+
+    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
