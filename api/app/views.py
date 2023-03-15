@@ -40,6 +40,7 @@ def project_overrides(request):
         "api": "API_URL",
         "assetURL": "ASSET_URL",
         "crispChat": "CRISP_CHAT_API_KEY",
+        "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
         "disableInflux": "DISABLE_INFLUXDB_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
