@@ -18,7 +18,6 @@ from environments.identities.serializers import (
     SDKIdentitiesQuerySerializer,
     SDKIdentitiesResponseSerializer,
 )
-from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
@@ -285,18 +284,17 @@ class SDKIdentities(SDKAPIView):
         :return: Response containing lists of both serialized flags and traits
         """
         all_feature_states = identity.get_all_feature_states()
-        context = self._get_serializer_context(identity)
-
-        serialized_flags = SDKFeatureStateSerializer(
-            all_feature_states, many=True, context=context
-        )
-
-        serialized_traits = TraitSerializerBasic(
-            identity.identity_traits.all(), many=True
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(
+            {
+                "flags": all_feature_states,
+                "traits": identity.identity_traits.all(),
+            },
+            context=self._get_serializer_context(identity),
         )
 
         identify_integrations(identity, all_feature_states)
 
-        response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
-
-        return Response(data=response, status=status.HTTP_200_OK, headers=headers)
+        return Response(
+            data=serializer.data, status=status.HTTP_200_OK, headers=headers
+        )

@@ -18,6 +18,8 @@ from features.serializers import (
 from integrations.integration import identify_integrations
 from segments.serializers import SegmentSerializerBasic
 
+from .serializers_mixins import HideSensitiveFieldsSerializerMixin
+
 
 class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
     identity = IdentifierOnlyIdentitySerializer()
@@ -117,10 +119,14 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     segments = SegmentSerializerBasic(many=True)
 
 
-class IdentifyWithTraitsSerializer(serializers.Serializer):
+class IdentifyWithTraitsSerializer(
+    HideSensitiveFieldsSerializerMixin, serializers.Serializer
+):
     identifier = serializers.CharField(write_only=True, required=True)
     traits = TraitSerializerBasic(required=False, many=True)
     flags = SDKFeatureStateSerializer(read_only=True, many=True)
+
+    sensitive_fields = ("traits",)
 
     def save(self, **kwargs):
         """
