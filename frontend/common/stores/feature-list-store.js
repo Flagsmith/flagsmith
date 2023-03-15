@@ -199,7 +199,7 @@ const controller = {
         });
     },
     getFeatureUsage(projectId, environmentId, flag, period) {
-        data.get(`${Project.api}projects/${projectId}/features/${flag}/usage-data/?period=${period}&environment_id=${environmentId}`)
+        data.get(`${Project.api}projects/${projectId}/features/${flag}/${Project.disableInflux? "usage" : "influx"}-data/?period=${period}&environment_id=${environmentId}`)
             .then((result) => {
                 const firstResult = result.events_list[0];
                 const lastResult = firstResult && result.events_list[result.events_list.length - 1];

@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses';
 import { Req } from 'common/types/requests';
 import { service } from 'common/service';
 import Utils from 'common/utils/utils';
+import Project from 'common/project';
 
 export const organisationUsageService = service
     .enhanceEndpoints({ addTagTypes: ['OrganisationUsage'] })
@@ -9,9 +10,11 @@ export const organisationUsageService = service
         endpoints: builder => ({
 
             getOrganisationUsage: builder.query<Res['organisationUsage'], Req['getOrganisationUsage']>({
-                query: (query: Req['getOrganisationUsage']) => ({
-                    url: `organisations/${query.organisationId}/usage-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
-                }),
+                query: (query: Req['getOrganisationUsage']) => {
+                    return ({
+                        url: `organisations/${query.organisationId}/${Project.disableInflux? "usage" : "influx"}-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
+                    })
+                },
                 transformResponse: (data: Res['organisationUsage']) => {
                     let flags = 0;
                     let traits = 0;

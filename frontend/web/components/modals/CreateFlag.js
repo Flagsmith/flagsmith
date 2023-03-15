@@ -98,8 +98,8 @@ const CreateFlag = class extends Component {
                 this.focusTimeout = null;
             }, 500);
         }
-        if (this.props.projectFlag && this.props.environmentFlag) {
-            this.getFeatureUsage();
+        if ((!Project.disableInflux || !Project.disableAnalytics) && this.props.projectFlag && this.props.environmentFlag) {
+            this.getInfluxData();
         }
     };
 
@@ -894,7 +894,7 @@ const CreateFlag = class extends Component {
                                                                             </FormGroup>
                                                                     </TabItem>
                                                                 )}
-                                                                { !existingChangeRequest && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                { !existingChangeRequest && (!Project.disableInflux || !Project.disableAnalytics) && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel
