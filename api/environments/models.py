@@ -117,7 +117,7 @@ class Environment(
     )
     hide_sensitive_data = models.BooleanField(
         default=False,
-        help_text="If true, will hide sensitive data(i.e: description) from the SDK endpoints",
+        help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
     objects = EnvironmentManager()
