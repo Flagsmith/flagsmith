@@ -79,16 +79,16 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
             <XAxis
               padding={{ left: 30, right: 30 }}
               allowDataOverflow={false}
-              dataKey="name" interval={5}
+              dataKey="day" interval={5}
               tickFormatter={(v)=>moment(v).format("Do MMM YYYY")}
             />
             <YAxis allowDataOverflow={false} />
             <_Tooltip labelFormatter={(v)=>moment(v).format("Do MMM YYYY")} />
-            <Bar dataKey="Flags" stackId="a" fill={colours[0]} />
-            <Bar dataKey="Identities" stackId="a" fill={colours[1]} />
-            <Bar dataKey="Traits" stackId="a" fill={colours[2]} />
+            <Bar dataKey="flags" stackId="a" fill={colours[0]} />
+            <Bar dataKey="identities" stackId="a" fill={colours[1]} />
+            <Bar dataKey="traits" stackId="a" fill={colours[2]} />
             <Bar
-              name="Environment Document" dataKey="Environment-document" stackId="a"
+              name="Environment Document" dataKey="environment_document" stackId="a"
               fill={colours[3]}
             />
           </BarChart>
