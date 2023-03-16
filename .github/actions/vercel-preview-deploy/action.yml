@@ -58,7 +58,7 @@ runs:
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
         branch=$(echo ${{ inputs.alias }} |  sed -r 's/_/-/g')
-        alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url $branch-${{ inputs.vercel_project_id }})
+        alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url $branch
 
         echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
