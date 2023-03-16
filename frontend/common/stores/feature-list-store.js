@@ -199,29 +199,26 @@ const controller = {
         });
     },
     getFeatureUsage(projectId, environmentId, flag, period) {
-        data.get(`${Project.api}projects/${projectId}/features/${flag}/${Project.disableInflux? "usage" : "influx"}-data/?period=${period}&environment_id=${environmentId}`)
+        data.get(`${Project.api}projects/${projectId}/features/${flag}/evaluation-data/?period=${period}&environment_id=${environmentId}`)
             .then((result) => {
-                const firstResult = result.events_list[0];
-                const lastResult = firstResult && result.events_list[result.events_list.length - 1];
-                const diff = firstResult ? moment(lastResult.datetime, 'YYYY-MM-DD').diff(moment(firstResult.datetime, 'YYYY-MM-DD'), 'days') : 0;
+                const firstResult = result[0];
+                const lastResult = firstResult && result[result.length - 1];
+                const diff = firstResult ? moment(lastResult.day, 'YYYY-MM-DD').diff(moment(firstResult.day, 'YYYY-MM-DD'), 'days') : 0;
                 if (firstResult && diff) {
-                    const key = Object.keys(firstResult).find(v => v !== 'datetime');
                     _.range(0, diff).map((v) => {
-                        const datetime = moment(firstResult.datetime).add(v, 'days').format('YYYY-MM-DD');
-                        if (!result.events_list.find(v => v.datetime === datetime)) {
-                            result.events_list.push({
-                                [key]: 0,
-                                datetime,
+                        const day = moment(firstResult.day).add(v, 'days').format('YYYY-MM-DD');
+                        if (!result.find(v => v.day === day)) {
+                            result.push({
+                                "count": 0,
+                                day,
                             });
                         }
                     });
                 }
-                result.events_list = _.sortBy(result.events_list, v => moment(v.datetime, 'YYYY-MM-DD').valueOf()).map(v => ({
+                store.model.usageData = _.sortBy(result, v => moment(v.day, 'YYYY-MM-DD').valueOf()).map(v => ({
                     ...v,
-                    datetime: moment(v.datetime, 'YYYY-MM-DD').format('Do MMM'),
+                    day: moment(v.day, 'YYYY-MM-DD').format('Do MMM'),
                 }));
-                result.timespan = diff;
-                store.model.influxData = result;
                 store.changed();
             });
     },
@@ -466,7 +463,7 @@ const store = Object.assign({}, BaseStore, {
         return store.model && store.model.lastSaved;
     },
     getFeatureUsage() {
-        return store.model && store.model.influxData;
+        return store.model && store.model.usageData;
     },
 
 });
