@@ -149,6 +149,7 @@ jobs:
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          alias: ${{ github.ref_name }}
           deployment_description: 'Production preview deployment'
           env: prod
 
@@ -170,5 +171,6 @@ jobs:
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          alias: ${{ github.ref_name }}
           deployment_description: 'Staging preview deployment'
           env: staging

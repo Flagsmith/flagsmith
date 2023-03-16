@@ -20,6 +20,9 @@ inputs:
   github_token:
     description: 'Used for creating a PR comment'
     required: true
+  alias:
+    description: 'Used for creating an aliased url'
+    required: true
 
 runs:
   using: composite
@@ -54,7 +57,7 @@ runs:
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
-        alias=$(vercel alias --token ${{ inputs.vercel_token }} --scope ${{ inputs.vercel_org_id }} $url ${{ inputs.vercel_project_id }}-${{ inputs.env }}
+        alias=$(vercel alias --token ${{ inputs.vercel_token }} --scope ${{ inputs.vercel_org_id }} $url ${{ inputs.vercel_project_id }}-${{ inputs.alias }}
 
         echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
