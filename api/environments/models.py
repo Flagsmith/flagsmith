@@ -415,7 +415,6 @@ class EnvironmentAPIKey(LifecycleModel):
 
     @hook(AFTER_SAVE)
     def send_to_dynamo(self):
-        if not dynamo_api_key_table:
-            return
-        env_key_dict = build_environment_api_key_document(self)
-        dynamo_api_key_table.put_item(Item=env_key_dict)
+        if dynamo_api_key_table and self.environment.project.enable_dynamo_db:
+            env_key_dict = build_environment_api_key_document(self)
+            dynamo_api_key_table.put_item(Item=env_key_dict)
