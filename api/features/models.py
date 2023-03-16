@@ -762,7 +762,11 @@ class FeatureState(
             current_feature_state = feature_states_dict.get(key)
             if (
                 not current_feature_state
-                or feature_state.version > current_feature_state.version
+                or feature_state.live_from > current_feature_state.live_from
+                or (
+                    feature_state.live_from == current_feature_state.live_from
+                    and feature_state.version > current_feature_state.version
+                )
             ):
                 feature_states_dict[key] = feature_state
 
