@@ -66,7 +66,7 @@ urlpatterns = [
         name="usage-data",
     ),
     path(
-        "<int:organisation_pk>/usage-data/total-count",
+        "<int:organisation_pk>/usage-data/total-count/",
         get_usage_data_total_count_view,
         name="usage-data-total-count",
     ),

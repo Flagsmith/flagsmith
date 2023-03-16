@@ -32,7 +32,7 @@ def get_usage_data(
             organisation, environment_id=environment_id, project_id=project_id
         )
     return get_usage_data_from_influxdb(
-        organisation, environment_id=environment_id, project_id=project_id
+        organisation.id, environment_id=environment_id, project_id=project_id
     )
 
 
