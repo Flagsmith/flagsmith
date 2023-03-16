@@ -57,7 +57,7 @@ runs:
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
-        branch= ${{ inputs.alias }} |  sed -r 's/_/-/g'     
+        branch =$("${{ inputs.alias }}" |  sed -r 's/_/-/g')
         alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url $branch-${{ inputs.vercel_project_id }})
 
         echo "url=$alias" >> $GITHUB_OUTPUT
