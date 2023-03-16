@@ -2,8 +2,10 @@ from datetime import date, timedelta
 
 import pytest
 from app_analytics.analytics_db_service import (
+    get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
     get_total_events_count,
+    get_usage_data,
     get_usage_data_from_local_db,
 )
 from app_analytics.models import (
@@ -160,3 +162,106 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
     for i, data in enumerate(usage_data_list):
         assert data.count == 10
         assert data.day == today - timedelta(days=29 - i)
+
+
+def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+    mocker, settings, organisation
+):
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    mocked_get_usage_data_from_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb", autospec=True
+    )
+
+    # When
+    usage_data = get_usage_data(organisation)
+
+    # Then
+    assert usage_data == mocked_get_usage_data_from_influxdb.return_value
+    mocked_get_usage_data_from_influxdb.assert_called_once_with(
+        organisation_id=organisation.id, environment_id=None, project_id=None
+    )
+
+
+def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+    mocker, settings, organisation
+):
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    mocked_get_usage_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
+    )
+
+    # When
+    usage_data = get_usage_data(organisation)
+
+    # Then
+    assert usage_data == mocked_get_usage_data_from_local_db.return_value
+    mocked_get_usage_data_from_local_db.assert_called_once_with(
+        organisation=organisation, environment_id=None, project_id=None
+    )
+
+
+def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(
+    mocker, settings, organisation
+):
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    mocked_get_events_for_organisation = mocker.patch(
+        "app_analytics.analytics_db_service.get_events_for_organisation", autospec=True
+    )
+
+    # When
+    total_events_count = get_total_events_count(organisation)
+
+    # Then
+    assert total_events_count == mocked_get_events_for_organisation.return_value
+    mocked_get_events_for_organisation.assert_called_once_with(
+        organisation_id=organisation.id
+    )
+
+
+def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+    mocker, settings, organisation, feature, environment
+):
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    mocked_get_feature_evaluation_data_from_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_feature_evaluation_data_from_influxdb",
+        autospec=True,
+    )
+
+    # When
+    feature_evaluation_data = get_feature_evaluation_data(feature, environment.id)
+
+    # Then
+    assert (
+        feature_evaluation_data
+        == mocked_get_feature_evaluation_data_from_influxdb.return_value
+    )
+    mocked_get_feature_evaluation_data_from_influxdb.assert_called_once_with(
+        feature_name=feature.name, environment_id=environment.id, period="30d"
+    )
+
+
+def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+    mocker, settings, organisation, feature, environment
+):
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    mocked_get_feature_evaluation_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_feature_evaluation_data_from_local_db",
+        autospec=True,
+    )
+
+    # When
+    feature_evaluation_data = get_feature_evaluation_data(feature, environment.id)
+
+    # Then
+    assert (
+        feature_evaluation_data
+        == mocked_get_feature_evaluation_data_from_local_db.return_value
+    )
+    mocked_get_feature_evaluation_data_from_local_db.assert_called_once_with(
+        feature=feature, environment_id=environment.id, period=30
+    )
