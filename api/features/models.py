@@ -471,11 +471,15 @@ class FeatureState(
             )
 
         if self.type == other.type:
-            return (
-                self.version is not None
-                and other.version is not None
-                and self.version > other.version
-            ) or (self.version is not None and other.version is None)
+            # we use live_from here as a priority over the version since
+            # the version is given when change requests are committed,
+            # hence the version for a feature state that is scheduled
+            # further in the future can be lower than a feature state
+            # whose live_from value is earlier.
+            # See: https://github.com/Flagsmith/flagsmith/issues/2030
+            is_more_recent_live_from = self.is_more_recent_live_from(other)
+            is_more_recent_version = self._is_more_recent_version(other)
+            return is_more_recent_live_from or is_more_recent_version
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -766,13 +770,8 @@ class FeatureState(
             # further in the future can be lower than a feature state
             # whose live_from value is earlier.
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            if (
-                not current_feature_state
-                or feature_state.live_from > current_feature_state.live_from
-                or (
-                    feature_state.live_from == current_feature_state.live_from
-                    and feature_state.version > current_feature_state.version
-                )
+            if not current_feature_state or feature_state.is_more_recent_live_from(
+                current_feature_state
             ):
                 feature_states_dict[key] = feature_state
 
@@ -809,6 +808,17 @@ class FeatureState(
             .aggregate(max_version=Max("version"))
             .get("max_version", 0)
             + 1
+        )
+
+    def is_more_recent_live_from(self, other: "FeatureState") -> bool:
+        return (
+            (
+                self.live_from is not None
+                and other.live_from is not None
+                and (self.live_from > other.live_from)
+            )
+            or self.live_from is not None
+            and other.live_from is None
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
@@ -881,6 +891,13 @@ class FeatureState(
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.feature.project
+
+    def _is_more_recent_version(self, other: "FeatureState") -> bool:
+        return (
+            self.version is not None
+            and other.version is not None
+            and self.version > other.version
+        ) or (self.version is not None and other.version is None)
 
 
 class FeatureStateValue(
