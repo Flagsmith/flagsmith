@@ -54,7 +54,9 @@ runs:
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
-        echo "url=$url" >> $GITHUB_OUTPUT
+        alias=$(vercel alias --token ${{ inputs.vercel_token }} --scope ${{ inputs.vercel_org_id }} $url ${{ inputs.vercel_project_id }}-${{ inputs.env }}
+
+        echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Add comment to Github PR
