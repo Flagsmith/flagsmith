@@ -7,7 +7,7 @@ from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
 from .exceptions import EntityNotFoundError, MultipleMatchingOrganizationsError
-from .models import PipedriveLead, PipedriveOrganization
+from .models import PipedriveLead, PipedriveOrganization, PipedrivePerson
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
-        person = self.client.create_person(name=user.full_name, email=user.email)
+        person = self._get_or_create_person(name=user.full_name, email=user.email)
 
         create_lead_kwargs = {
             "title": user.email,
@@ -94,6 +94,16 @@ class PipedriveLeadTracker(LeadTracker):
         elif len(matching_organizations) > 1:
             raise MultipleMatchingOrganizationsError()
         return matching_organizations[0]
+
+    def _get_or_create_person(self, name: str, email: str) -> PipedrivePerson:
+        existing_persons = self.client.search_persons(email)
+        if existing_persons:
+            if len(existing_persons) > 1:
+                logger.warning("Multiple persons found for email '%s'", email)
+            # if there are multiple persons, just return the first one in the list
+            return existing_persons[0]
+        else:
+            return self.client.create_person(name, email)
 
     def _get_client(self) -> PipedriveAPIClient:
         return PipedriveAPIClient(

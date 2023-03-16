@@ -26,7 +26,7 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     mock_pipedrive_client.search_organizations.return_value = [organization]
 
     person = PipedrivePerson(id=1, name="Elmer Fudd")
-    mock_pipedrive_client.create_person.return_value = person
+    mock_pipedrive_client.search_persons.return_value = [person]
 
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
@@ -66,7 +66,7 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     mock_pipedrive_client.create_organization.return_value = organization
 
     person = PipedrivePerson(id=1, name="Elmer Fudd")
-    mock_pipedrive_client.create_person.return_value = person
+    mock_pipedrive_client.search_persons.return_value = [person]
 
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
@@ -192,3 +192,43 @@ def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organ
 
     # Then
     assert result is False
+
+
+def test_create_lead_creates_person_if_none_found(db, mocker, settings):
+    # Given
+    user = FFAdminUser(
+        email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
+    )
+    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key1"
+    settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = "key2"
+
+    organization = PipedriveOrganization(name="some-org", id=1)
+    mock_pipedrive_client = mocker.MagicMock()
+    mock_pipedrive_client.search_organizations.return_value = [organization]
+
+    person = PipedrivePerson(id=1, name="Elmer Fudd")
+    mock_pipedrive_client.search_persons.return_value = []
+    mock_pipedrive_client.create_person.return_value = person
+
+    lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
+
+    # When
+    lead_tracker.create_lead(user)
+
+    # Then
+    expected_create_lead_kwargs = {
+        "title": user.email,
+        "organization_id": organization.id,
+        "custom_fields": {
+            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+            settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
+        },
+        "person_id": person.id,
+    }
+    mock_pipedrive_client.create_lead.assert_called_once_with(
+        **expected_create_lead_kwargs
+    )
+    mock_pipedrive_client.create_organization.assert_not_called()
+    mock_pipedrive_client.create_person.assert_called_once_with(
+        user.full_name, user.email
+    )
