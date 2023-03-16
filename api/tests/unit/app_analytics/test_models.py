@@ -4,8 +4,14 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
+if "analytics" not in settings.DATABASES:
+    pytest.skip(
+        "Skip test if analytics database is configured", allow_module_level=True
+    )
 
 
 @pytest.mark.django_db(databases=["analytics"])
