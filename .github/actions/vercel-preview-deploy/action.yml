@@ -56,8 +56,8 @@ runs:
         npm run env
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
-        vercel --token ${{ inputs.vercel_token }} > domain.txt
-        alias=$(vercel alias --token=${{ inputs.vercel_token }} set `cat domain.txt` https://${{ inputs.alias }}-${{ inputs.vercel_project_id }}.vercel.app)
+        url=$(vercel --token ${{ inputs.vercel_token }})
+        alias=$(vercel alias --scope${{ inputs.vercel_org_id }} --token=${{ inputs.vercel_token }} $url ${{ inputs.alias }}-${{ inputs.vercel_project_id }})
 
         echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
