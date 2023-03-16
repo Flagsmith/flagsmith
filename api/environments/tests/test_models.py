@@ -225,12 +225,15 @@ class EnvironmentTestCase(TestCase):
         assert environment is None
 
 
-def test_saving_environment_api_key_calls_put_item_with_correct_arguments(
+def test_saving_environment_api_key_calls_put_item_with_correct_arguments_if_enabled(
     environment, mocker
 ):
     # Given
+    environment.project.enable_dynamo_db = True
+    environment.project.save()
+
     mocked_dynamo_api_key_table = mocker.patch(
-        "environments.models.dynamo_api_key_table"
+        "environments.models.dynamo_api_key_table", autospec=True
     )
     # When
     api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
@@ -239,6 +242,23 @@ def test_saving_environment_api_key_calls_put_item_with_correct_arguments(
     mocked_dynamo_api_key_table.put_item.assert_called_with(
         Item=build_environment_api_key_document(api_key)
     )
+
+
+def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(
+    environment, mocker
+):
+    # Given
+    environment.project.enable_dynamo_db = False
+    environment.project.save()
+
+    mocked_dynamo_api_key_table = mocker.patch(
+        "environments.models.dynamo_api_key_table"
+    )
+    # When
+    _ = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+
+    # Then
+    mocked_dynamo_api_key_table.put_item.assert_not_called()
 
 
 def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(
