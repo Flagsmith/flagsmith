@@ -12,24 +12,22 @@ export const organisationUsageService = service
             getOrganisationUsage: builder.query<Res['organisationUsage'], Req['getOrganisationUsage']>({
                 query: (query: Req['getOrganisationUsage']) => {
                     return ({
-                        url: `organisations/${query.organisationId}/${Project.disableInflux? "usage" : "influx"}-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
+                        url: `organisations/${query.organisationId}/usage-data/?${Utils.toParam({ project_id: query.projectId, environment_id: query.environmentId })}`,
                     })
                 },
-                transformResponse: (data: Res['organisationUsage']) => {
+                transformResponse: (data: Res['organisationUsage']['events_list']) => {
                     let flags = 0;
                     let traits = 0;
                     let environmentDocument = 0;
                     let identities = 0;
-                    if (data?.events_list) { // protect against influx setup incorrectly
-                        data.events_list.map((v) => {
-                            environmentDocument += v['Environment-document'] || 0;
-                            flags += v.Flags || 0;
-                            traits += v.Traits || 0;
-                            identities += v.Identities || 0;
-                        });
-                    }
+                    data?.map((v) => {
+                        environmentDocument += v.environment_document || 0;
+                        flags += v.flags || 0;
+                        traits += v.traits || 0;
+                        identities += v.environment_document || 0;
+                    });
                     return {
-                        ...data,
+                        events_list: data,
                         totals: {
                             flags,
                             environmentDocument,
