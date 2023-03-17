@@ -124,6 +124,42 @@ def test_pipedrive_api_client_search_organizations(
 
 
 @responses.activate
+def test_pipedrive_api_client_search_persons(
+    pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
+):
+    # Given
+    example_response_file_name = join(
+        dirname(abspath(__file__)), "example_api_responses/search_persons.json"
+    )
+
+    # obtained from file above, duplicated here to simplify test
+    search_term = "johnnybravo@mailinator.com"
+    result_person_name = "Johnny Bravo"
+    result_person_id = 1
+
+    with open(example_response_file_name) as f:
+        responses.add(
+            method=responses.GET,
+            url=f"{pipedrive_base_url}/persons/search",
+            json=json.load(f),
+            status=200,
+        )
+
+    # When
+    persons = pipedrive_api_client.search_persons(search_term=search_term)
+
+    # Then
+    assert len(responses.calls) == 1
+    call = responses.calls[0]
+    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["term"] == search_term
+
+    assert len(persons) == 1
+    assert persons[0].name == result_person_name
+    assert persons[0].id == result_person_id
+
+
+@responses.activate
 def test_pipedrive_api_client_create_organization_field(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
