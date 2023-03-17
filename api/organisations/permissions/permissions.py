@@ -157,7 +157,6 @@ class NestedIsOrganisationAdminPermission(BasePermission):
 
     def has_permission(self, request, view):
         organisation_pk = view.kwargs.get("organisation_pk")
-
         with suppress(ObjectDoesNotExist):
             return request.user.is_organisation_admin(
                 Organisation.objects.get(pk=organisation_pk)

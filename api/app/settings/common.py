@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     "organisations",
     "organisations.invites",
     "organisations.permissions",
+    "organisations.roles",
     "projects",
     "sales_dashboard",
     "environments",

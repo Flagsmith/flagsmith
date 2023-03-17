@@ -22,6 +22,7 @@ from .permissions.views import (
     UserOrganisationPermissionViewSet,
     UserPermissionGroupOrganisationPermissionViewSet,
 )
+from .roles.views import RoleViewSet
 
 router = routers.DefaultRouter()
 router.register(r"", views.OrganisationViewSet, basename="organisation")
@@ -60,6 +61,8 @@ organisations_router.register(
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
 )
+organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
+
 app_name = "organisations"
 
 urlpatterns = [
