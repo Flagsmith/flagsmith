@@ -47,6 +47,17 @@ class PipedriveAPIClient:
             for org in api_response_data["items"]
         ]
 
+    def search_persons(self, search_term: str) -> typing.List[PipedrivePerson]:
+        api_response_data = self._make_request(
+            resource="persons/search",
+            http_method="get",
+            query_params={"term": search_term},
+        )
+        return [
+            PipedrivePerson.from_response_data(person["item"])
+            for person in api_response_data["items"]
+        ]
+
     def create_organization_field(
         self, name: str, field_type: str = "varchar"
     ) -> PipedriveOrganizationField:
