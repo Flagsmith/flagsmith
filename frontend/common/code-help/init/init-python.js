@@ -1,8 +1,6 @@
-module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `from flagsmith import Flagsmith;
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(
-    environment_key = os.environ.get("${envId}")
-)
+flagsmith = Flagsmith(environment_key="${envId}")
 
 # The method below triggers a network request
 flags = flagsmith.get_environment_flags()
