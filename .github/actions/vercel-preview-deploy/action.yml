@@ -20,6 +20,9 @@ inputs:
   github_token:
     description: 'Used for creating a PR comment'
     required: true
+  alias:
+    description: 'Used for creating an aliased url'
+    required: true
 
 runs:
   using: composite
@@ -54,7 +57,10 @@ runs:
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
-        echo "url=$url" >> $GITHUB_OUTPUT
+        branch=$(echo ${{ inputs.alias }} |  sed -r 's/_/-/g')
+        alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url $branch)
+
+        echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Add comment to Github PR
