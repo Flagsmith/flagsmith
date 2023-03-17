@@ -344,7 +344,7 @@ const EnvironmentSettingsPage = class extends Component {
                                             </div>
 
                                         </TabItem>
-                                        <TabItem tabLabel="SDK Settings" tabIcon="ion-md-code" >
+                                        <TabItem data-test="js-sdk-settings" tabLabel="SDK Settings" tabIcon="ion-md-code" >
                                                 <div className="mt-4">
                                                     <JSONReference title={"Environment"} json={env}/>
                                                     <div>

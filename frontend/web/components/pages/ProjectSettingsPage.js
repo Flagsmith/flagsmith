@@ -186,7 +186,7 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                     <div className="col-md-2 text-right">
                                                         <Switch
-                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                            data-test="js-prevent-flag-defaults" disabled={isSaving}
                                                             onChange={() => this.togglePreventDefaults(project, editProject)}
                                                             checked={project.prevent_flag_defaults}
                                                         />
@@ -331,7 +331,7 @@ const ProjectSettingsPage = class extends Component {
                                                 </FormGroup>
                                             )}
                                         </TabItem>
-                                        <TabItem tabLabel="SDK Settings" tabIcon="ion-md-code">
+                                        <TabItem data-test="js-sdk-settings" tabLabel="SDK Settings" tabIcon="ion-md-code">
                                             <div className="mt-4">
                                                 <form onSubmit={saveProject}>
                                                     <FormGroup className="mt-4">
