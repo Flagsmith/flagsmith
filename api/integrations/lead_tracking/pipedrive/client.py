@@ -138,6 +138,4 @@ class PipedriveAPIClient:
                 f"Response code was {response.status_code}. Expected {expected_status_code}"
             )
 
-        print(response.json())
-
         return response.json()["data"]
