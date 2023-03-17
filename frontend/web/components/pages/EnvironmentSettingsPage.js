@@ -72,7 +72,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     saveEnv = (e) => {
         e && e.preventDefault();
-        const { name, allow_client_traits, description } = this.state;
+        const { name, description } = this.state;
         if (ProjectStore.isSaving || (!name)) {
             return;
         }
@@ -84,6 +84,7 @@ const EnvironmentSettingsPage = class extends Component {
             description: description || env.description,
             hide_disabled_flags:  this.state.hide_disabled_flags,
             allow_client_traits: !!this.state.allow_client_traits,
+            use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
             banner_text: this.state.banner_text,
             banner_colour: this.state.banner_colour,
             minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
@@ -137,7 +138,7 @@ const EnvironmentSettingsPage = class extends Component {
     };
 
     render() {
-        const { props: { webhooks, webhooksLoading }, state: { name, allow_client_traits } } = this;
+        const { props: { webhooks, webhooksLoading }, state: { name, allow_client_traits, use_mv_v2_evaluation } } = this;
         const has4EyesPermission = Utils.getPlansPermission('4_EYES');
 
         return (
@@ -155,6 +156,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     banner_colour: env.banner_colour || Constants.tagColors[0],
                                     banner_text: env.banner_text,
                                     allow_client_traits: !!env.allow_client_traits,
+                                    use_mv_v2_evaluation: !!env.use_mv_v2_evaluation,
                                     hide_disabled_flags: env.hide_disabled_flags,
                                     minimum_change_request_approvals: Utils.changeRequestsEnabled(env.minimum_change_request_approvals) ? env.minimum_change_request_approvals : null,
                                 });
@@ -212,31 +214,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                     </form>
                                                 </div>
                                                 <div>
-                                                {Utils.getFlagsmithHasFeature("hide_disabled_flags_environment") && (
-                                                    <Row className="mb-4" space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3 className="m-b-0">Hide disabled flags from SDKs</h3>
-                                                            <p className="mb-0">
-                                                                To prevent letting your users know about your upcoming features
-                                                                and to cut down on payload, enabling this will prevent the API
-                                                                from returning features that are disabled. You can also manage this in <Link to={`/project/${this.props.match.params.projectId}/settings`}>Project settings</Link>.
-                                                            </p>
-                                                        </div>
-                                                        <div className="col-md-3 text-right">
-                                                            <Select
-                                                                className={"text-left"}
-                                                                value={(showDisabledFlagOptions.find((v)=>v.value===this.state.hide_disabled_flags)||showDisabledFlagOptions[0])}
-                                                                onChange={(v) => {
-                                                                    this.setState({hide_disabled_flags:v.value}, this.saveEnv)
-                                                                }}
-                                                                options={
-                                                                    showDisabledFlagOptions
-                                                                }
-                                                                data-test="js-hide-disabled-flags" disabled={isSaving}
-                                                            />
-                                                        </div>
-                                                    </Row>
-                                                )}
                                                 <Row space>
                                                     <div className="col-md-8 pl-0">
                                                         <h3 className="m-b-0">Environment Banner</h3>
@@ -340,23 +317,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </Row>
                                                             </div>
                                                         )}
-                                                            <Row className="mt-4" space>
-                                                                <div className="col-md-8 pl-0">
-                                                                    <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
-                                                                    <p>
-                                                                        Disabling this option will prevent client SDKs from using the client key from setting traits.
-                                                                    </p>
-                                                                </div>
-                                                                <div className="col-md-4 pr-0 text-right">
-                                                                    <div>
-                                                                        <Switch
-                                                                            className="float-right" checked={allow_client_traits} onChange={(v) => {
-                                                                            this.setState({ allow_client_traits: v }, this.saveEnv);
-                                                                        }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </Row>
                                                     </FormGroup>
                                                 {Utils.getFlagsmithHasFeature("delete_environment") && (
                                                     <FormGroup className="mt-4">
@@ -383,6 +343,83 @@ const EnvironmentSettingsPage = class extends Component {
                                                 )}
                                             </div>
 
+                                        </TabItem>
+                                        <TabItem tabLabel="SDK Settings" tabIcon="ion-md-code" >
+                                                <div className="mt-4">
+                                                    <JSONReference title={"Environment"} json={env}/>
+                                                    <div>
+                                                        <form onSubmit={this.saveEnv}>
+                                                            {Utils.getFlagsmithHasFeature("hide_disabled_flags_environment") && (
+                                                                <Row className="mb-4" space>
+                                                                    <div className="col-md-8 pl-0">
+                                                                        <h3 className="m-b-0">Hide disabled flags from SDKs</h3>
+                                                                        <p className="mb-0">
+                                                                            To prevent letting your users know about your upcoming features
+                                                                            and to cut down on payload, enabling this will prevent the API
+                                                                            from returning features that are disabled. You can also manage this in <Link to={`/project/${this.props.match.params.projectId}/settings`}>Project settings</Link>.
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="col-md-3 text-right">
+                                                                        <Select
+                                                                            className={"text-left"}
+                                                                            value={(showDisabledFlagOptions.find((v)=>v.value===this.state.hide_disabled_flags)||showDisabledFlagOptions[0])}
+                                                                            onChange={(v) => {
+                                                                                this.setState({hide_disabled_flags:v.value}, this.saveEnv)
+                                                                            }}
+                                                                            options={
+                                                                                showDisabledFlagOptions
+                                                                            }
+                                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                                        />
+                                                                    </div>
+                                                                </Row>
+                                                            )}
+                                                            <Row className="mt-4" space>
+                                                                <div className="col-md-8 pl-0">
+                                                                    <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
+                                                                    <p>
+                                                                        Disabling this option will prevent client SDKs from using the client key from setting traits.
+                                                                    </p>
+                                                                </div>
+                                                                <div className="col-md-4 pr-0 text-right">
+                                                                    <div>
+                                                                        <Switch
+                                                                            className="float-right" checked={allow_client_traits} onChange={(v) => {
+                                                                            this.setState({ allow_client_traits: v }, this.saveEnv);
+                                                                        }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                {Utils.getFlagsmithHasFeature("mv_v2_setting") && (
+                                                                    <>
+                                                                        <Row className="mt-4" space>
+                                                                            <div className="col-md-8 pl-0">
+                                                                                <h3 className="m-b-0">Use V2 Multivariate Evaluations</h3>
+                                                                                <p>
+                                                                                    Enabling this setting will ensure that multivariate evaluations made by the API are consistent with those made by local evaluation mode in our server side SDKs.
+                                                                                </p>
+
+                                                                            </div>
+                                                                            <div className="col-md-4 pr-0 text-right">
+                                                                                <div>
+                                                                                    <Switch
+                                                                                        className="float-right" checked={use_mv_v2_evaluation} onChange={(v) => {
+                                                                                        this.setState({ use_mv_v2_evaluation: v }, this.saveEnv);
+                                                                                    }}
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        </Row>
+                                                                        <span className="text-danger">
+                                                                            Warning: Toggling V2 Multivariate Evaluations will mean that some users will start receiving different multivariate values via the API / remote evaluation for any existing multivariate features that you have. Values received in local evaluation mode will not change.
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </Row>
+                                                        </form>
+
+                                                    </div>
+                                                </div>
                                         </TabItem>
                                         <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
                                             <FormGroup className="mt-4">
