@@ -242,7 +242,8 @@ const CreateFlag = class extends Component {
                     <CartesianGrid strokeDasharray="3 5"/>
                     <XAxis
                       interval={0}
-                      height={100} angle={-90}
+                      height={100}
+                      angle={-90}
                       textAnchor="end" allowDataOverflow={false} dataKey="day"
                     />
                     <YAxis allowDataOverflow={false}/>

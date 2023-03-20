@@ -80,8 +80,13 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
             <XAxis
               padding={{ left: 30, right: 30 }}
               allowDataOverflow={false}
-              dataKey="day" interval={5}
-              tickFormatter={(v)=>moment(v).format("Do MMM YYYY")}
+              dataKey="day"
+              interval={0}
+
+              height={120}
+              angle={-90}
+              textAnchor="end"
+              tickFormatter={(v)=>moment(v).format("Do MMM")}
             />
             <YAxis allowDataOverflow={false} />
             <_Tooltip labelFormatter={(v)=>moment(v).format("Do MMM YYYY")} />
