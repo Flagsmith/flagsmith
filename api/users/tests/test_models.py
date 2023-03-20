@@ -4,6 +4,7 @@ import pytest
 from django.db.utils import IntegrityError
 
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     UserOrganisationPermission,
@@ -318,3 +319,37 @@ def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
 
 def test_user_email_domain_property():
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+
+
+def test_get_permitted_environments_returns_environment_added_by_user_role(
+    test_user, user_role, role_view_environment_permission, environment, project
+):
+    # Given
+
+    # When
+    permitted_environments = test_user.get_permitted_environments(
+        VIEW_ENVIRONMENT, project
+    )
+
+    # Then
+    assert environment in permitted_environments
+
+
+def test_get_permitted_environments_returns_environment_added_by_group_role(
+    test_user,
+    group_role,
+    role_view_environment_permission,
+    environment,
+    project,
+    user_permission_group,
+):
+    # Given
+    user_permission_group.users.add(test_user)
+
+    # When
+    permitted_environments = test_user.get_permitted_environments(
+        VIEW_ENVIRONMENT, project
+    )
+
+    # Then
+    assert environment in permitted_environments

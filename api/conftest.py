@@ -26,6 +26,12 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.roles.models import (
+    GroupRole,
+    Role,
+    RoleEnvironmentPermission,
+    UserRole,
+)
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -387,3 +393,27 @@ def environment_content_type():
 @pytest.fixture()
 def project_content_type():
     return ContentType.objects.get_for_model(Project)
+
+
+@pytest.fixture
+def role(organisation):
+    return Role.objects.create(name="A test role", organisation=organisation)
+
+
+@pytest.fixture
+def role_view_environment_permission(role, environment, view_environment_permission):
+    role_environment_permission = RoleEnvironmentPermission.objects.create(
+        role=role, environment=environment
+    )
+    role_environment_permission.permissions.add(view_environment_permission)
+    return role
+
+
+@pytest.fixture
+def user_role(role, test_user):
+    return UserRole.objects.create(user=test_user, role=role)
+
+
+@pytest.fixture
+def group_role(role, user_permission_group):
+    return GroupRole.objects.create(role=role, group=user_permission_group)

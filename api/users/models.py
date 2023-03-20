@@ -334,9 +334,18 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             Q(grouppermission__permissions__key=permission_key)
             | Q(grouppermission__admin=True)
         )
+        role_permission = Q(
+            Q(rolepermission__role__userrole__user=self)
+            | Q(rolepermission__role__grouprole__group__in=permission_groups)
+        ) & (
+            Q(rolepermission__permissions__key=permission_key)
+            | Q(rolepermission__admin=True)
+        )
 
         return (
-            Environment.objects.filter(Q(project=project) & Q(user_query | group_query))
+            Environment.objects.filter(
+                Q(project=project) & Q(user_query | group_query | role_permission)
+            )
             .distinct()
             .defer("description")
         )

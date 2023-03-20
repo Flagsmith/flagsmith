@@ -22,7 +22,13 @@ from .permissions.views import (
     UserOrganisationPermissionViewSet,
     UserPermissionGroupOrganisationPermissionViewSet,
 )
-from .roles.views import RoleViewSet
+from .roles.views import (
+    GroupRoleViewSet,
+    RoleEnvironmentPermissionViewSet,
+    RoleProjectPermissionViewSet,
+    RoleViewSet,
+    UserRoleViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", views.OrganisationViewSet, basename="organisation")
@@ -62,6 +68,21 @@ organisations_router.register(
     basename="organisation-user-group-permission",
 )
 organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
+nested_roles_router = routers.NestedSimpleRouter(
+    organisations_router, r"roles", lookup="role"
+)
+nested_roles_router.register(
+    "environments-permissions",
+    RoleEnvironmentPermissionViewSet,
+    basename="roles-environments-permissions",
+)
+nested_roles_router.register(
+    "projects-permissions",
+    RoleProjectPermissionViewSet,
+    basename="roles-projects-permissions",
+)
+nested_roles_router.register("groups", GroupRoleViewSet, basename="group-roles")
+nested_roles_router.register("users", UserRoleViewSet, basename="user-roles")
 
 app_name = "organisations"
 
@@ -88,4 +109,5 @@ urlpatterns = [
         remove_user_as_group_admin,
         name="remove-user-group-admin",
     ),
+    url(r"^", include(nested_roles_router.urls)),
 ]

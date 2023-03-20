@@ -1,9 +1,39 @@
 from rest_framework import serializers
 
-from .models import Role
+from .models import (
+    GroupRole,
+    Role,
+    RoleEnvironmentPermission,
+    RoleProjectPermission,
+    UserRole,
+)
 
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ("name", "organisation", "permissions")
+        fields = ("name", "organisation", "permissions", "admin")
+
+
+class RoleEnvironmentPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleEnvironmentPermission
+        fields = ("role", "environment", "permissions", "admin")
+
+
+class RoleProjectPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleProjectPermission
+        fields = ("role", "project", "permissions", "admin")
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserRole
+        fields = ("user", "role")
+
+
+class GroupRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupRole
+        fields = ("group", "role")
