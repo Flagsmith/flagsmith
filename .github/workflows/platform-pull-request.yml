@@ -142,6 +142,10 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
+      - name: Determine Branch
+        id: branches
+        uses: transferwise/sanitize-branch-name@v1
+
       - name: Deploy
         uses: ./.github/actions/vercel-preview-deploy
         with:
@@ -149,6 +153,7 @@ jobs:
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          alias: flagsmith-${{ steps.branches.outputs.sanitized-branch-name }}
           deployment_description: 'Production preview deployment'
           env: prod
 
@@ -163,6 +168,10 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
+      - name: Determine Branch
+        id: branches
+        uses: transferwise/sanitize-branch-name@v1
+
       - name: Deploy
         uses: ./.github/actions/vercel-preview-deploy
         with:
@@ -170,5 +179,6 @@ jobs:
           vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          alias: flagsmith-staging-${{ steps.branches.outputs.sanitized-branch-name }}
           deployment_description: 'Staging preview deployment'
           env: staging

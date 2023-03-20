@@ -6,9 +6,6 @@ import pytest
 from core.constants import STRING
 from django.test import TestCase
 from django.utils import timezone
-from flag_engine.api.document_builders import (
-    build_environment_api_key_document,
-)
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -223,22 +220,6 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert environment is None
-
-
-def test_saving_environment_api_key_calls_put_item_with_correct_arguments(
-    environment, mocker
-):
-    # Given
-    mocked_dynamo_api_key_table = mocker.patch(
-        "environments.models.dynamo_api_key_table"
-    )
-    # When
-    api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
-
-    # Then
-    mocked_dynamo_api_key_table.put_item.assert_called_with(
-        Item=build_environment_api_key_document(api_key)
-    )
 
 
 def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(

@@ -90,6 +90,22 @@ def test_feature_state_gt_operator_for_versions(feature_state_version_generator)
 
 
 @pytest.mark.parametrize(
+    "feature_state_live_from_generator",
+    (
+        (None, None, False),
+        (now, None, True),
+        (None, now, False),
+        (now, tomorrow, False),
+        (tomorrow, now, True),
+    ),
+    indirect=True,
+)
+def test_feature_state_gt_operator_for_live_from(feature_state_live_from_generator):
+    first, second, expected_result = feature_state_live_from_generator
+    assert (first > second) == expected_result
+
+
+@pytest.mark.parametrize(
     "version, live_from, expected_is_live",
     (
         (1, yesterday, True),

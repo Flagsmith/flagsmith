@@ -6,21 +6,24 @@ from environments.dynamodb.types import (
     ProjectIdentityMigrationStatus,
 )
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 
 
 def test_migrate_calls_internal_methods_with_correct_arguments(
-    mocker, project, identity, settings
+    mocker, project, identity, settings, environment_api_key
 ):
     # Given
     settings.EDGE_RELEASE_DATETIME = None
 
     assert project.enable_dynamo_db is False
     mocked_project_metadata = mocker.patch(
-        "environments.dynamodb.migrator.DynamoProjectMetadata"
+        "environments.dynamodb.migrator.DynamoProjectMetadata", autospec=True
     )
     mocked_environment_wrapper = mocker.patch(
-        "environments.dynamodb.migrator.DynamoEnvironmentWrapper"
+        "environments.dynamodb.migrator.DynamoEnvironmentWrapper", autospec=True
+    )
+    mocked_api_key_wrapper = mocker.patch(
+        "environments.dynamodb.migrator.DynamoEnvironmentAPIKeyWrapper", autospec=True
     )
     mocked_project_metadata_instance = mocker.MagicMock(
         spec=DynamoProjectMetadata, id=project.id
@@ -28,7 +31,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
     mocked_identity_wrapper = mocker.patch(
-        "environments.dynamodb.migrator.DynamoIdentityWrapper"
+        "environments.dynamodb.migrator.DynamoIdentityWrapper", autospec=True
     )
 
     identity_migrator = IdentityMigrator(project.id)
@@ -50,6 +53,14 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     assert kwargs == {}
 
     assert_queryset_equal(args[0], Environment.objects.filter(project_id=project.id))
+
+    # and
+    args, kwargs = mocked_api_key_wrapper.return_value.write_api_keys.call_args
+    assert kwargs == {}
+
+    assert_queryset_equal(
+        args[0], EnvironmentAPIKey.objects.filter(environment__project_id=project.id)
+    )
 
     # and, Make sure that Project Metadata Wrapper was called correctly
     mocked_project_metadata.get_or_new.assert_called_with(project.id)

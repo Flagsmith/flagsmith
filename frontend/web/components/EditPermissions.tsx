@@ -306,6 +306,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
 
     return (
         <div className="mt-4">
+            <h3>Manage Users and Permissions</h3>
             <p>
                 Flagsmith lets you manage fine-grained permissions for your projects and environments.
                 {' '}

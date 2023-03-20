@@ -8,6 +8,7 @@ from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.api.document_builders import (
+    build_environment_api_key_document,
     build_environment_document,
     build_identity_document,
 )
@@ -19,7 +20,7 @@ from rest_framework.exceptions import NotFound
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
-    from environments.models import Environment
+    from environments.models import Environment, EnvironmentAPIKey
 
 logger = logging.getLogger()
 
@@ -152,3 +153,15 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
             return self._table.get_item(Key={"api_key": api_key})["Item"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
+
+
+class DynamoEnvironmentAPIKeyWrapper(DynamoWrapper):
+    table_name = settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
+
+    def write_api_key(self, api_key: "EnvironmentAPIKey"):
+        self.write_api_keys([api_key])
+
+    def write_api_keys(self, api_keys: Iterable["EnvironmentAPIKey"]):
+        with self._table.batch_writer() as writer:
+            for api_key in api_keys:
+                writer.put_item(Item=build_environment_api_key_document(api_key))

@@ -5,7 +5,6 @@ import logging
 import typing
 from copy import deepcopy
 
-import boto3
 from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
 from django.conf import settings
@@ -22,10 +21,7 @@ from django_lifecycle import (
     LifecycleModel,
     hook,
 )
-from flag_engine.api.document_builders import (
-    build_environment_api_key_document,
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject
 
@@ -39,7 +35,10 @@ from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
 )
-from environments.dynamodb import DynamoEnvironmentWrapper
+from environments.dynamodb import (
+    DynamoEnvironmentAPIKeyWrapper,
+    DynamoEnvironmentWrapper,
+)
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
@@ -53,8 +52,9 @@ environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
-# Intialize the dynamo environment wrapper globaly
+# Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
+environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
 class Environment(
@@ -385,13 +385,6 @@ class Webhook(AbstractBaseExportableWebhookModel):
         return data
 
 
-dynamo_api_key_table = None
-if settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO:
-    dynamo_api_key_table = boto3.resource("dynamodb").Table(
-        settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
-    )
-
-
 class EnvironmentAPIKey(LifecycleModel):
     """
     These API keys are only currently used for server side integrations.
@@ -415,7 +408,8 @@ class EnvironmentAPIKey(LifecycleModel):
 
     @hook(AFTER_SAVE)
     def send_to_dynamo(self):
-        if not dynamo_api_key_table:
-            return
-        env_key_dict = build_environment_api_key_document(self)
-        dynamo_api_key_table.put_item(Item=env_key_dict)
+        if (
+            self.environment.project.enable_dynamo_db
+            and environment_api_key_wrapper.is_enabled
+        ):
+            environment_api_key_wrapper.write_api_key(self)

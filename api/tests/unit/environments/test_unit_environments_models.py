@@ -5,7 +5,7 @@ from core.request_origin import RequestOrigin
 from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
-from environments.models import Environment, Webhook
+from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
 from segments.models import Segment
 
@@ -338,3 +338,33 @@ def test_get_hide_disabled_flags(
 
     # Then
     assert environment.get_hide_disabled_flags() is expected_result
+
+
+def test_saving_environment_api_key_calls_put_item_with_correct_arguments_if_enabled(
+    dynamo_enabled_project_environment_one, mocker
+):
+    # Given
+    mocked_environment_api_key_wrapper = mocker.patch(
+        "environments.models.environment_api_key_wrapper", autospec=True
+    )
+    # When
+    api_key = EnvironmentAPIKey.objects.create(
+        name="Some key", environment=dynamo_enabled_project_environment_one
+    )
+
+    # Then
+    mocked_environment_api_key_wrapper.write_api_key.assert_called_with(api_key)
+
+
+def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(
+    environment, mocker
+):
+    # Given
+    mocked_environment_api_key_wrapper = mocker.patch(
+        "environments.models.environment_api_key_wrapper", autospec=True
+    )
+    # When
+    EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+
+    # Then
+    mocked_environment_api_key_wrapper.write_api_key.assert_not_called()
