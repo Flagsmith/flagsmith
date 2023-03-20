@@ -50,6 +50,7 @@ def create_audit_log_from_historical_record(
 
     if (
         history_instance.history_type == "~"
+        and history_instance.prev_record
         and not history_instance.diff_against(history_instance.prev_record).changes
     ):
         return
