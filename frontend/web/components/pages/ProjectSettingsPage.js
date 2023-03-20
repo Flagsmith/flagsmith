@@ -136,6 +136,11 @@ const ProjectSettingsPage = class extends Component {
                         } catch(e) {
                             regexValid = false;
                         }
+                        const saveProject = (e) => {
+                            e.preventDefault();
+                            !isSaving && name && editProject(Object.assign({}, project, { name }));
+                        }
+
                         const featureRegexEnabled = typeof this.state.feature_name_regex === 'string';
                         return (
                             <div>
@@ -145,11 +150,7 @@ const ProjectSettingsPage = class extends Component {
                                             <div className="mt-4">
                                                 <h3>Project Name</h3>
                                                 <FormGroup>
-                                                    <form onSubmit={(e) => {
-                                                        e.preventDefault();
-                                                        !isSaving && name && editProject(Object.assign({}, project, { name }));
-                                                    }}
-                                                    >
+                                                    <form onSubmit={saveProject}>
                                                         <Row>
                                                             <Column className="m-l-0">
                                                                 <Input
@@ -173,25 +174,6 @@ const ProjectSettingsPage = class extends Component {
                                             </div>
 
                                             <FormGroup className="mt-4">
-                                                <h3>Hide disabled flags from SDKs</h3>
-                                                <div className="row">
-                                                    <div className="col-md-10">
-                                                        <p>
-                                                            To prevent letting your users know about your upcoming features
-                                                            and to cut down on payload, enabling this will prevent the API
-                                                            from returning features that are disabled.
-                                                        </p>
-                                                    </div>
-                                                    <div className="col-md-2 text-right">
-                                                        <Switch
-                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
-                                                            onChange={() => this.toggleHideDisabledFlags(project, editProject)}
-                                                            checked={project.hide_disabled_flags}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </FormGroup>
-                                            <FormGroup className="mt-4">
                                                 <h3>Prevent flag defaults</h3>
                                                 <div className="row">
                                                     <div className="col-md-10">
@@ -204,7 +186,7 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                     <div className="col-md-2 text-right">
                                                         <Switch
-                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                            data-test="js-prevent-flag-defaults" disabled={isSaving}
                                                             onChange={() => this.togglePreventDefaults(project, editProject)}
                                                             checked={project.prevent_flag_defaults}
                                                         />
@@ -348,6 +330,32 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                 </FormGroup>
                                             )}
+                                        </TabItem>
+                                        <TabItem data-test="js-sdk-settings" tabLabel="SDK Settings" tabIcon="ion-md-code">
+                                            <div className="mt-4">
+                                                <form onSubmit={saveProject}>
+                                                    <FormGroup className="mt-4">
+                                                        <h3>Hide disabled flags from SDKs</h3>
+                                                        <div className="row">
+                                                            <div className="col-md-10">
+                                                                <p>
+                                                                    To prevent letting your users know about your upcoming features
+                                                                    and to cut down on payload, enabling this will prevent the API
+                                                                    from returning features that are disabled.
+                                                                </p>
+                                                            </div>
+                                                            <div className="col-md-2 text-right">
+                                                                <Switch
+                                                                    data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                                    onChange={() => this.toggleHideDisabledFlags(project, editProject)}
+                                                                    checked={project.hide_disabled_flags}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </FormGroup>
+                                                </form>
+
+                                            </div>
                                         </TabItem>
                                         <TabItem tabLabel="Members" tabIcon="ion-md-people">
                                             <EditPermissions
