@@ -493,3 +493,52 @@ def test_cannot_delete_committed_change_request_with_live_feature_states(
 
     # Then
     assert change_request.deleted_at is None
+
+
+@pytest.mark.freeze_time()
+def test_committing_scheduled_change_requests_results_in_correct_versions(
+    environment, feature, admin_user, freezer
+):
+    # Given
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+    three_hours_from_now = now + timedelta(hours=3)
+
+    scheduled_cr_1 = ChangeRequest.objects.create(
+        title="scheduled_cr_1", environment=environment, user=admin_user
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        live_from=one_hour_from_now,
+        version=None,
+        change_request=scheduled_cr_1,
+    )
+
+    scheduled_cr_2 = ChangeRequest.objects.create(
+        title="scheduled_cr_2", environment=environment, user=admin_user
+    )
+    cr_2_fs = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        live_from=two_hours_from_now,
+        version=None,
+        change_request=scheduled_cr_2,
+    )
+
+    # When
+    # we commit the change requests in the 'wrong' order
+    scheduled_cr_2.commit(admin_user)
+    scheduled_cr_1.commit(admin_user)
+
+    # and move time on to after the feature states from both CRs should have gone live
+    freezer.move_to(three_hours_from_now)
+
+    # Then
+    # the feature state in the latest scheduled cr should be the one that is returned
+    feature_states = FeatureState.get_environment_flags_list(
+        environment_id=environment.id
+    )
+    assert len(feature_states) == 1
+    assert feature_states[0] == cr_2_fs
