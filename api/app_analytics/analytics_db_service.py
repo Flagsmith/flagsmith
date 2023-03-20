@@ -53,7 +53,7 @@ def get_usage_data_from_local_db(
             created_at__date__lte=timezone.now(),
             created_at__date__gt=timezone.now() - timedelta(days=30),
         )
-        .order_by("created_at")
+        .order_by("created_at__date")
         .values("created_at__date", "resource")
         .annotate(count=Sum("total_count"))
     )
@@ -109,7 +109,7 @@ def get_feature_evaluation_data_from_local_db(
             created_at__date__lte=timezone.now(),
             created_at__date__gt=timezone.now() - timedelta(days=period),
         )
-        .order_by("created_at")
+        .order_by("created_at__date")
         .values("created_at__date", "feature_name", "environment_id")
         .annotate(count=Sum("total_count"))
     )

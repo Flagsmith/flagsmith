@@ -30,13 +30,22 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
 
     # Given - some initial data
     for i in range(31):
+        bucket_created_at = now - timedelta(days=i)
         for resource in Resource:
             APIUsageBucket.objects.create(
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
                 bucket_size=read_bucket_size,
-                created_at=now - timedelta(days=i),
+                created_at=bucket_created_at,
+            )
+            # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
+            APIUsageBucket.objects.create(
+                environment_id=environment_id,
+                resource=resource,
+                total_count=10,
+                bucket_size=read_bucket_size,
+                created_at=bucket_created_at - timedelta(minutes=read_bucket_size),
             )
             # some data in different bucket
             APIUsageBucket.objects.create(
@@ -44,7 +53,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
                 resource=resource,
                 total_count=10,
                 bucket_size=read_bucket_size - 1,
-                created_at=now - timedelta(days=i),
+                created_at=bucket_created_at,
             )
             # some data in different environment
             APIUsageBucket.objects.create(
@@ -52,7 +61,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
                 resource=resource,
                 total_count=10,
                 bucket_size=read_bucket_size,
-                created_at=now - timedelta(days=i),
+                created_at=bucket_created_at,
             )
 
     # When
@@ -62,10 +71,10 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
     assert len(usage_data_list) == 30
     today = date.today()
     for count, data in enumerate(usage_data_list):
-        assert data.flags == 10
-        assert data.environment_document == 10
-        assert data.identities == 10
-        assert data.traits == 10
+        assert data.flags == 20
+        assert data.environment_document == 20
+        assert data.identities == 20
+        assert data.traits == 20
         assert data.day == today - timedelta(days=29 - count)
 
 
@@ -83,13 +92,23 @@ def test_get_total_events_count(organisation, environment, settings):
 
     # Given - some initial data
     for i in range(31):
+        bucket_created_at = now - timedelta(days=i)
         for resource in Resource:
             APIUsageBucket.objects.create(
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
                 bucket_size=read_bucket_size,
-                created_at=now - timedelta(days=i),
+                created_at=bucket_created_at,
+            )
+
+            # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
+            APIUsageBucket.objects.create(
+                environment_id=environment_id,
+                resource=resource,
+                total_count=10,
+                bucket_size=read_bucket_size,
+                created_at=bucket_created_at - timedelta(minutes=read_bucket_size),
             )
             # some data in different bucket
             APIUsageBucket.objects.create(
@@ -111,7 +130,7 @@ def test_get_total_events_count(organisation, environment, settings):
     total_events_count = get_total_events_count(organisation)
 
     # Then
-    assert total_events_count == 10 * len(Resource) * 30
+    assert total_events_count == 20 * len(Resource) * 30
 
 
 @pytest.mark.skipif(
@@ -128,12 +147,21 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
 
     # Given - some initial data
     for i in range(31):
+        bucket_created_at = now - timedelta(days=i)
         FeatureEvaluationBucket.objects.create(
             environment_id=environment_id,
             feature_name=feature_name,
             total_count=10,
             bucket_size=read_bucket_size,
-            created_at=now - timedelta(days=i),
+            created_at=bucket_created_at,
+        )
+        # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
+        FeatureEvaluationBucket.objects.create(
+            environment_id=environment_id,
+            feature_name=feature_name,
+            total_count=10,
+            bucket_size=read_bucket_size,
+            created_at=bucket_created_at - timedelta(minutes=read_bucket_size),
         )
         # some data in different bucket
         FeatureEvaluationBucket.objects.create(
@@ -141,7 +169,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
             feature_name=feature_name,
             total_count=10,
             bucket_size=read_bucket_size - 1,
-            created_at=now - timedelta(days=i),
+            created_at=bucket_created_at,
         )
 
         # some data in different environment
@@ -160,7 +188,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
     assert len(usage_data_list) == 30
     today = date.today()
     for i, data in enumerate(usage_data_list):
-        assert data.count == 10
+        assert data.count == 20
         assert data.day == today - timedelta(days=29 - i)
 
 
