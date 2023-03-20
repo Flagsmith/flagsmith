@@ -209,7 +209,7 @@ class TheComponent extends Component {
                                         </div>
                                     </div>
                                 </TabItem>
-                                <TabItem tabLabel="Security" tabIcon="ion-md-shield" >
+                                <TabItem tabLabel="Security" tabIcon="ion-md-lock" >
                                     <div className="mt-4">
                                         {AccountStore.model.auth_type === 'EMAIL' && (
                                             <div className="row">
