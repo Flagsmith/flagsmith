@@ -24,7 +24,8 @@ export const organisationUsageService = service
                         environmentDocument += v.environment_document || 0;
                         flags += v.flags || 0;
                         traits += v.traits || 0;
-                        identities += v.environment_document || 0;
+                        environmentDocument += v.environment_document || 0;
+                        identities += v.identities || 0;
                     });
                     return {
                         events_list: data,

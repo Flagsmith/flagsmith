@@ -70,8 +70,9 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
 
         <div className="row">
           <LegendItem colour={colours[0]} value={data.totals.flags} title="Flags"/>
-          <LegendItem colour={colours[1]} value={data.totals.traits} title="Traits"/>
-          <LegendItem colour={colours[2]} value={data.totals.environmentDocument} title="Environment Document"/>
+          <LegendItem colour={colours[1]} value={data.totals.identities} title="Identities"/>
+          <LegendItem colour={colours[2]} value={data.totals.traits} title="Traits"/>
+          <LegendItem colour={colours[3]} value={data.totals.environmentDocument} title="Environment Document"/>
           <LegendItem value={data.totals.total} title="Total API Calls"/>
         </div>
         <ResponsiveContainer height={400} width="100%">
