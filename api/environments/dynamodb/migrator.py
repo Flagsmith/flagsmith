@@ -2,13 +2,17 @@ from django.db.models import Prefetch
 
 from edge_api.identities.events import send_migration_event
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from util.queryset import iterator_with_prefetch
 
-from .dynamodb_wrapper import DynamoEnvironmentWrapper, DynamoIdentityWrapper
+from .dynamodb_wrapper import (
+    DynamoEnvironmentAPIKeyWrapper,
+    DynamoEnvironmentWrapper,
+    DynamoIdentityWrapper,
+)
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 
 
@@ -51,6 +55,10 @@ class IdentityMigrator:
             project_id=project_id
         )
         environment_wrapper.write_environments(environments)
+
+        api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
+        api_keys = EnvironmentAPIKey.objects.filter(environment__project_id=project_id)
+        api_key_wrapper.write_api_keys(api_keys)
 
         identity_wrapper = DynamoIdentityWrapper()
         identities = (
