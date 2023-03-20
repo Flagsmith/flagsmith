@@ -1,13 +1,7 @@
 name: API Deploy to Production ECS
 
 on:
-  push:
-    tags:
-      - '*'
-    paths:
-      - api/**
-      - .github/**
-      - infrastructure/aws/production/**
+  workflow_dispatch:
 
 jobs:
   deploy-production-ecs:
