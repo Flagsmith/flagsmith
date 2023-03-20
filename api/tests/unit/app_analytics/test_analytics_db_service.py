@@ -39,7 +39,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
                 bucket_size=read_bucket_size,
                 created_at=bucket_created_at,
             )
-            # after read_bucket_size minutes(to make sure we group by correctly)
+            # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
             APIUsageBucket.objects.create(
                 environment_id=environment_id,
                 resource=resource,
@@ -102,7 +102,7 @@ def test_get_total_events_count(organisation, environment, settings):
                 created_at=bucket_created_at,
             )
 
-            # after read_bucket_size minutes(to make sure we group by correctly)
+            # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
             APIUsageBucket.objects.create(
                 environment_id=environment_id,
                 resource=resource,
@@ -155,7 +155,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
             bucket_size=read_bucket_size,
             created_at=bucket_created_at,
         )
-        # after read_bucket_size minutes(to make sure we group by correctly)
+        # create another bucket after `read_bucket_size` minutes to make sure we have more than one bucket in day
         FeatureEvaluationBucket.objects.create(
             environment_id=environment_id,
             feature_name=feature_name,
