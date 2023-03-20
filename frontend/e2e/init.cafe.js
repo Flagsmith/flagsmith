@@ -71,6 +71,7 @@ test('[Initialise]', async () => {
 
     log('Hide disabled flags');
     await click('#project-settings-link');
+    await click(byId('js-sdk-settings'));
     await click(byId('js-hide-disabled-flags'));
     await setText(byId('js-project-name'), 'My Test Project');
     await click(byId('js-confirm'));
