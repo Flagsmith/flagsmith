@@ -307,6 +307,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             or UserPermissionGroupProjectPermission.objects.filter(
                 group__users=self, admin=True, project=project
             ).exists()
+            or Project.objects.filter(
+                rolepermission__role__userrole__user=self, rolepermission__admin=True
+            ).exists()
+            or Project.objects.filter(
+                rolepermission__role__grouprole__group__users=self,
+                rolepermission__admin=True,
+            ).exists()
         )
 
     def get_permitted_environments(
@@ -320,6 +327,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
             - User is an admin for the project the environment belongs to
             - User is an admin for the organisation the environment belongs to
+            - User has a role attached that has the required permissions
+            - User is in a UserPermissionGroup that has a role attached that has the required permissions
         """
 
         if self.is_project_admin(project):

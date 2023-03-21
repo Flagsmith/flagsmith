@@ -30,6 +30,7 @@ from organisations.roles.models import (
     GroupRole,
     Role,
     RoleEnvironmentPermission,
+    RoleProjectPermission,
     UserRole,
 )
 from organisations.subscriptions.constants import CHARGEBEE, XERO
@@ -401,6 +402,11 @@ def role(organisation):
 
 
 @pytest.fixture
+def org_admin_role(organisation):
+    return Role.objects.create(name="Org Admin", organisation=organisation, admin=True)
+
+
+@pytest.fixture
 def role_view_environment_permission(role, environment, view_environment_permission):
     role_environment_permission = RoleEnvironmentPermission.objects.create(
         role=role, environment=environment
@@ -410,10 +416,25 @@ def role_view_environment_permission(role, environment, view_environment_permiss
 
 
 @pytest.fixture
+def role_project_admin_permission(role, project):
+    return RoleProjectPermission.objects.create(role=role, project=project, admin=True)
+
+
+@pytest.fixture
 def user_role(role, test_user):
     return UserRole.objects.create(user=test_user, role=role)
 
 
 @pytest.fixture
+def org_admin_user_role(org_admin_role, test_user):
+    return UserRole.objects.create(user=test_user, role=org_admin_role)
+
+
+@pytest.fixture
 def group_role(role, user_permission_group):
     return GroupRole.objects.create(role=role, group=user_permission_group)
+
+
+@pytest.fixture
+def org_admin_group_role(org_admin_role, user_permission_group):
+    return GroupRole.objects.create(role=org_admin_role, group=user_permission_group)
