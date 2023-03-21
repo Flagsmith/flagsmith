@@ -133,9 +133,9 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             force: true,
         });
     },
-    getFlagInfluxData(projectId, environmentId, flag, period) {
+    getFeatureUsage(projectId, environmentId, flag, period) {
         Dispatcher.handleViewAction({
-            actionType: Actions.GET_FLAG_INFLUX_DATA,
+            actionType: Actions.GET_FEATURE_USAGE,
             projectId,
             environmentId,
             flag,

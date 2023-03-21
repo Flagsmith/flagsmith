@@ -216,10 +216,10 @@ export type Res = {
       total: number;
     };
     events_list: {
-      "Environment-document": number|null;
-      Flags: number|null;
-      Identities: number|null;
-      Traits: number|null;
+      environment_document: number|null;
+      flags: number|null;
+      identities: number|null;
+      traits: number|null;
       name: string;
     }[]
   }
