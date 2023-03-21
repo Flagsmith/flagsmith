@@ -137,6 +137,8 @@ jobs:
       cancel-in-progress: true
     name: Vercel Production Deployment
     runs-on: ubuntu-latest
+    # don't run this on PRs from forks (as the secrets are not available)
+    if: github.repository == 'Flagsmith/flagsmith'
     environment: production
     steps:
       - name: Cloning repo
@@ -163,6 +165,8 @@ jobs:
       cancel-in-progress: true
     name: Vercel Staging Deployment
     runs-on: ubuntu-latest
+    # don't run this on PRs from forks (as the secrets are not available)
+    if: github.repository == 'Flagsmith/flagsmith'
     environment: staging
     steps:
       - name: Cloning repo
