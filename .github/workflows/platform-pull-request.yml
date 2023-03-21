@@ -132,7 +132,7 @@ jobs:
           tags: flagsmith/flagsmith-frontend:testing
 
   web-deploy-branch-production:
-    if: github.repository == 'Flagsmith/flagsmith'
+    if: github.repository_owner == 'Flagsmith'
     concurrency:
       group: deploy-frontend-production-${{github.ref}}
       cancel-in-progress: true
@@ -159,7 +159,7 @@ jobs:
           env: prod
 
   web-deploy-branch-staging:
-    if: github.repository == 'Flagsmith/flagsmith'
+    if: github.repository_owner == 'Flagsmith'
     concurrency:
       group: deploy-frontend-staging-${{github.ref}}
       cancel-in-progress: true
