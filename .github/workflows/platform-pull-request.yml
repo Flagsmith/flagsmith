@@ -132,7 +132,6 @@ jobs:
           tags: flagsmith/flagsmith-frontend:testing
 
   web-deploy-branch-production:
-    # don't run this on PRs from forks (as the secrets are not available)
     if: github.repository == 'Flagsmith/flagsmith'
     concurrency:
       group: deploy-frontend-production-${{github.ref}}
@@ -160,7 +159,6 @@ jobs:
           env: prod
 
   web-deploy-branch-staging:
-    # don't run this on PRs from forks (as the secrets are not available)
     if: github.repository == 'Flagsmith/flagsmith'
     concurrency:
       group: deploy-frontend-staging-${{github.ref}}
