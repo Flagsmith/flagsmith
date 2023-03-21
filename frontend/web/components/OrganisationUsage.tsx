@@ -70,8 +70,9 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
 
         <div className="row">
           <LegendItem colour={colours[0]} value={data.totals.flags} title="Flags"/>
-          <LegendItem colour={colours[1]} value={data.totals.traits} title="Traits"/>
-          <LegendItem colour={colours[2]} value={data.totals.environmentDocument} title="Environment Document"/>
+          <LegendItem colour={colours[1]} value={data.totals.identities} title="Identities"/>
+          <LegendItem colour={colours[2]} value={data.totals.traits} title="Traits"/>
+          <LegendItem colour={colours[3]} value={data.totals.environmentDocument} title="Environment Document"/>
           <LegendItem value={data.totals.total} title="Total API Calls"/>
         </div>
         <ResponsiveContainer height={400} width="100%">
@@ -79,16 +80,21 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
             <XAxis
               padding={{ left: 30, right: 30 }}
               allowDataOverflow={false}
-              dataKey="name" interval={5}
-              tickFormatter={(v)=>moment(v).format("Do MMM YYYY")}
+              dataKey="day"
+              interval={0}
+
+              height={120}
+              angle={-90}
+              textAnchor="end"
+              tickFormatter={(v)=>moment(v).format("Do MMM")}
             />
             <YAxis allowDataOverflow={false} />
             <_Tooltip labelFormatter={(v)=>moment(v).format("Do MMM YYYY")} />
-            <Bar dataKey="Flags" stackId="a" fill={colours[0]} />
-            <Bar dataKey="Identities" stackId="a" fill={colours[1]} />
-            <Bar dataKey="Traits" stackId="a" fill={colours[2]} />
+            <Bar dataKey="flags" stackId="a" fill={colours[0]} />
+            <Bar dataKey="identities" stackId="a" fill={colours[1]} />
+            <Bar dataKey="traits" stackId="a" fill={colours[2]} />
             <Bar
-              name="Environment Document" dataKey="Environment-document" stackId="a"
+              name="Environment Document" dataKey="environment_document" stackId="a"
               fill={colours[3]}
             />
           </BarChart>

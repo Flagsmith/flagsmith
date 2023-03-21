@@ -21,7 +21,7 @@ import JSONReference from "../JSONReference";
 import ErrorMessage from '../ErrorMessage';
 import Permission from "common/providers/Permission";
 import IdentitySelect from '../IdentitySelect';
-
+import moment from 'moment';
 const CreateFlag = class extends Component {
     static displayName = 'CreateFlag'
 
@@ -50,7 +50,7 @@ const CreateFlag = class extends Component {
             tab: Utils.fromParam().tab || 0,
             enabledSegment: false,
             is_archived,
-            period: '28d',
+            period: 30,
         };
     }
 
@@ -98,8 +98,8 @@ const CreateFlag = class extends Component {
                 this.focusTimeout = null;
             }, 500);
         }
-        if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
-            this.getInfluxData();
+        if ((!Project.disableInflux || !Project.disableAnalytics) && this.props.projectFlag && this.props.environmentFlag) {
+            this.getFeatureUsage();
         }
     };
 
@@ -126,9 +126,9 @@ const CreateFlag = class extends Component {
             });
     }
 
-    getInfluxData = () => {
+    getFeatureUsage = () => {
         if (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.environmentFlag) {
-            AppActions.getFlagInfluxData(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
+            AppActions.getFeatureUsage(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
         }
     }
 
@@ -146,7 +146,7 @@ const CreateFlag = class extends Component {
             ...this.state,
             period: changePeriod,
         };
-        this.getInfluxData();
+        this.getFeatureUsage();
     }
 
     save = (func, isSaving) => {
@@ -236,29 +236,26 @@ const CreateFlag = class extends Component {
     }
 
     drawChart = (data) => {
-        const { name } = this.state;
-        if (data && data.events_list) { // protect against influx setup incorrectly
-            return data.events_list.length ? (
-                <ResponsiveContainer height={400} width="100%">
-                    <BarChart data={data.events_list}>
-                        <CartesianGrid strokeDasharray="3 5"/>
-                        <XAxis
-                          interval={0}
-                          height={100} angle={-90}
-                          textAnchor="end" allowDataOverflow={false} dataKey="datetime"
-                        />
-                        <YAxis allowDataOverflow={false}/>
-                        <RechartsTooltip/>
-                        <Bar dataKey={name} stackId="a" fill="#6633ff" />
-                    </BarChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="text-center">
+        return data?.length ? (
+            <ResponsiveContainer height={400} width="100%">
+                <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 5"/>
+                    <XAxis
+                      interval={0}
+                      height={100}
+                      angle={-90}
+                      textAnchor="end" allowDataOverflow={false} dataKey="day"
+                    />
+                    <YAxis allowDataOverflow={false}/>
+                    <RechartsTooltip/>
+                    <Bar dataKey={"count"} stackId="a" fill="#6633ff" />
+                </BarChart>
+            </ResponsiveContainer>
+        ) : (
+            <div className="text-center">
                 There has been no activity for this flag within the past month. Find out about Flag Analytics <a target="_blank" href="https://docs.flagsmith.com/advanced-use/flag-analytics">here</a>.
-                </div>
-            );
-        }
-        return null;
+            </div>
+        );
     }
 
     addItem = () => {
@@ -539,7 +536,7 @@ const CreateFlag = class extends Component {
                         AppActions.refreshFeatures(this.props.projectId, this.props.environmentId);
                     }}
                     >
-                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFeatureSettings, editFeatureValue, editFeatureSegments, createChangeRequest }) => {
+                        {({ isLoading, isSaving, error, usageData }, { createFlag, editFeatureSettings, editFeatureValue, editFeatureSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 this.setState({ valueChanged: false });
                                 if ((is4Eyes || schedule) && !identity) {
@@ -894,15 +891,15 @@ const CreateFlag = class extends Component {
                                                                             </FormGroup>
                                                                     </TabItem>
                                                                 )}
-                                                                { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                { !existingChangeRequest && (!Project.disableInflux || !Project.disableAnalytics) && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel
-                                                                              title={!!influxData && <h6 className="mb-0">Flag events for last {influxData.timespan} days</h6>}
+                                                                              title={!!usageData && <h6 className="mb-0">Flag events for last 30 days</h6>}
                                                                             >
-                                                                                {!influxData && <div className="text-center"><Loader/></div> }
+                                                                                {!usageData && <div className="text-center"><Loader/></div> }
 
-                                                                                {this.drawChart(influxData)}
+                                                                                {this.drawChart(usageData)}
                                                                             </Panel>
                                                                         </FormGroup>
                                                                     </TabItem>
