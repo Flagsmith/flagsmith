@@ -132,7 +132,7 @@ jobs:
           tags: flagsmith/flagsmith-frontend:testing
 
   web-deploy-branch-production:
-    if: github.repository_owner == 'Flagsmith'
+    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
     concurrency:
       group: deploy-frontend-production-${{github.ref}}
       cancel-in-progress: true
@@ -140,8 +140,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - run: echo ${{ github.event.pull_request.head.repo.full_name }}
-
       - name: Cloning repo
         uses: actions/checkout@v3
 
@@ -161,7 +159,7 @@ jobs:
           env: prod
 
   web-deploy-branch-staging:
-    if: github.repository_owner == 'Flagsmith'
+    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
     concurrency:
       group: deploy-frontend-staging-${{github.ref}}
       cancel-in-progress: true
