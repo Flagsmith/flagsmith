@@ -1,4 +1,7 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, NPM_RN_CLIENT, FEATURE_NAME_ALT }) => `// App root
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_RN_CLIENT },
+) => `// App root
 import ${LIB_NAME} from "${NPM_RN_CLIENT}";
 import { FlagsmithProvider } from 'flagsmith/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,4 +31,4 @@ export default function HomePage() {
   return (
     &lt;>{...}&lt;/>
   );
-}`;
+}`

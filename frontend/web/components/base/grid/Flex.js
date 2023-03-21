@@ -1,27 +1,30 @@
 // propTypes: value: OptionalNumber
-const cn = require('classnames');
+const cn = require('classnames')
 
 const Flex = class extends React.Component {
-    static displayName = 'Flex';
+  static displayName = 'Flex'
 
-    render() {
-        return (
-            <div {...this.props} className={`${this.props.className || ''} flex flex-1`}>
-                {this.props.children}
-            </div>
-        );
-    }
-};
+  render() {
+    return (
+      <div
+        {...this.props}
+        className={`${this.props.className || ''} flex flex-1`}
+      >
+        {this.props.children}
+      </div>
+    )
+  }
+}
 
 Flex.defaultProps = {
-    value: 1,
-};
+  value: 1,
+}
 
 Flex.propTypes = {
-    className: OptionalString,
-    value: OptionalNumber,
-    children: OptionalNode,
-    style: propTypes.any,
-};
+  children: OptionalNode,
+  className: OptionalString,
+  style: propTypes.any,
+  value: OptionalNumber,
+}
 
-module.exports = Flex;
+module.exports = Flex

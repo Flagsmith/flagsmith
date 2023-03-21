@@ -4,5 +4,5 @@ node_modules
 reports
 public
 tests_output
-web
-e2e
+web/static
+web/project/libs.js

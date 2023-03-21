@@ -1,4 +1,8 @@
-module.exports = (envId, { LIB_NAME, NPM_CLIENT, USER_ID, USER_FEATURE_FUNCTION, USER_FEATURE_NAME }, userId) => `import ${LIB_NAME} from '${NPM_CLIENT}';
+module.exports = (
+  envId,
+  { LIB_NAME, NPM_CLIENT, USER_FEATURE_FUNCTION, USER_FEATURE_NAME, USER_ID },
+  userId,
+) => `import ${LIB_NAME} from '${NPM_CLIENT}';
 
 // Standard project initialisation
 ${LIB_NAME}.init({
@@ -25,4 +29,4 @@ ${LIB_NAME}.init({
 });
 // This will create a user in the dashboard if they don't already exist
 ${LIB_NAME}.identify("${userId || USER_ID}");
-`;
+`

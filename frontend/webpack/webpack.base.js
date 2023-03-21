@@ -1,13 +1,15 @@
-const path = require('path');
+const path = require('path')
 
 module.exports = {
-    resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
-        alias: {
-            'common': path.resolve(__dirname, 'common'),
-        },
+  externals: {
+    'jquery': 'jQuery',
+  },
+  resolve: {
+    alias: {
+      'common': path.resolve(__dirname, 'common'),
+      'components': path.resolve(__dirname, 'web/components'),
+      'project': path.resolve(__dirname, 'web/project'),
     },
-    externals: {
-        'jquery': 'jQuery',
-    },
-};
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+}
