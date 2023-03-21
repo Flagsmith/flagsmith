@@ -179,6 +179,8 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
+        self.identity = identity
+
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
                 args=(
@@ -215,10 +217,12 @@ class SDKIdentities(SDKAPIView):
             # only set it if the request has the attribute to ensure that the
             # documentation works correctly still
             context["environment"] = self.request.environment
+            if getattr(self, "identity", None):
+                context["identity"] = self.identity
         return context
 
-    def _get_serializer_context(self, identity):
-        return {"identity": identity, **self.get_serializer_context()}
+    # def _get_serializer_context(self, identity):
+    #     return {"identity": identity, **self.get_serializer_context()}
 
     @method_decorator(
         generate_identity_update_message(
@@ -234,6 +238,7 @@ class SDKIdentities(SDKAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        self.identity = instance.get("identity")
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
@@ -249,7 +254,7 @@ class SDKIdentities(SDKAPIView):
         # trait values are serialized correctly
         response_serializer = IdentifyWithTraitsSerializer(
             instance=instance,
-            context=self._get_serializer_context(instance.get("identity")),
+            context=self.get_serializer_context(),
         )
         return Response(
             response_serializer.data,
@@ -261,7 +266,7 @@ class SDKIdentities(SDKAPIView):
     def _get_single_feature_state_response(
         self, identity, feature_name, headers: typing.Dict[str, typing.Any]
     ):
-        context = self._get_serializer_context(identity)
+        context = self.get_serializer_context()
 
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
@@ -290,7 +295,7 @@ class SDKIdentities(SDKAPIView):
                 "flags": all_feature_states,
                 "traits": identity.identity_traits.all(),
             },
-            context=self._get_serializer_context(identity),
+            context=self.get_serializer_context(),
         )
 
         identify_integrations(identity, all_feature_states)
