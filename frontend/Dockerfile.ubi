@@ -3,7 +3,7 @@ FROM registry.redhat.io/ubi8/nodejs-12 AS build
 
 COPY . .
 RUN pwd
-RUN npm install --production
+RUN npm ci --production
 ENV ENV=prod
 RUN npm run bundle
 
