@@ -1,7 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-
+import { sortBy } from 'lodash'
 export const projectService = service
   .enhanceEndpoints({ addTagTypes: ['Project'] })
     .injectEndpoints({
@@ -12,6 +12,7 @@ export const projectService = service
         url: `projects/?organisation=${data.organisationId}`,
       }),
       providesTags:[{ type: 'Project', id: 'LIST' },],
+      transformResponse: (res)=>sortBy(res, 'name')
     }),
     // END OF ENDPOINTS
   }),

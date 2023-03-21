@@ -3,7 +3,7 @@ import Constants from 'common/constants';
 const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
-
+const _ = require('lodash');
 
 const controller = {
 
@@ -32,7 +32,7 @@ const controller = {
                 if (id === store.id) {
                     // eslint-disable-next-line prefer-const
                     let [projects, users, invites, subscriptionMeta] = res;
-                    // projects = projects.results;
+
                     store.model = { ...store.model, subscriptionMeta, users, invites: invites && invites.results };
 
                     if (Project.hideInviteLinks) {
@@ -61,7 +61,7 @@ const controller = {
                         });
                     }
 
-                    return Promise.all(projects.map((project, i) => data.get(`${Project.api}environments/?project=${project.id}`)
+                    return Promise.all(_.sortBy(projects,'name').map((project, i) => data.get(`${Project.api}environments/?project=${project.id}`)
                         .then((res) => {
                             projects[i].environments = _.sortBy(res.results, 'name');
                         })
