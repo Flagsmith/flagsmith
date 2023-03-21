@@ -140,6 +140,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - run: echo ${{ github.event.pull_request.head.repo.full_name }}
+
       - name: Cloning repo
         uses: actions/checkout@v3
 
