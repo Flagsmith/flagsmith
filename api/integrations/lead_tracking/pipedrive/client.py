@@ -40,7 +40,7 @@ class PipedriveAPIClient:
         api_response_data = self._make_request(
             resource="organizations/search",
             http_method="get",
-            query_params={"term": search_term},
+            query_params={"term": search_term, "fields": "custom_fields"},
         )
         return [
             PipedriveOrganization.from_response_data(org["item"])

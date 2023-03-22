@@ -117,6 +117,7 @@ def test_pipedrive_api_client_search_organizations(
     call = responses.calls[0]
     assert call.request.params["api_token"] == pipedrive_api_token
     assert call.request.params["term"] == search_term
+    assert call.request.params["fields"] == "custom_fields"
 
     assert len(organizations) == 1
     assert organizations[0].name == result_organization_name
