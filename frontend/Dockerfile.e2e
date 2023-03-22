@@ -16,7 +16,7 @@ USER node
 
 RUN npm cache clean --force
 
-RUN npm i
+RUN npm ci
 
 ENV ENV=e2e
 RUN npm run env

@@ -30,7 +30,7 @@ runs:
     - name: NPM Install
       working-directory: frontend
       run: |
-        npm i
+        npm ci
       shell: bash
 
     - name: Test with Chromedriver
