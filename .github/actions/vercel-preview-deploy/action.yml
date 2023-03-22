@@ -58,8 +58,13 @@ runs:
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
+        echo "---\nSanitising branch name for vercel alias..."
+        echo "1. Truncating branch name and replacing '_' with '-'"
         branch=$(echo ${BRANCH_NAME:0:50} | sed -r 's/_/-/g')
-        alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url ${branch%-})
+        echo "2. Removing trailing slash from end if truncation caused it"
+        branch=${branch%-}
+        echo "Done sanitising...\n---"
+        alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url $branch)
 
         echo "url=$alias" >> $GITHUB_OUTPUT
       shell: bash
