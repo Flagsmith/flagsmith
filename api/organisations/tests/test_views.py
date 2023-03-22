@@ -32,7 +32,11 @@ from organisations.subscriptions.constants import (
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 from util.tests import Helper
 
 User = get_user_model()
@@ -966,3 +970,92 @@ def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     assert Subscription.objects.filter(organisation=another_organisation).exists()
+
+
+def test_make_user_group_admin_user_does_not_belong_to_group(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_make_user_group_admin_success(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        UserPermissionGroupMembership.objects.get(
+            ffadminuser=another_user,
+            userpermissiongroup=user_permission_group,
+        ).group_admin
+        is True
+    )
+
+
+def test_remove_user_as_group_admin_user_does_not_belong_to_group(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_remove_user_as_group_admin_success(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    another_user.make_group_admin(user_permission_group.id)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        UserPermissionGroupMembership.objects.get(
+            ffadminuser=another_user,
+            userpermissiongroup=user_permission_group,
+        ).group_admin
+        is False
+    )

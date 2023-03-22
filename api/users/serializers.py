@@ -95,9 +95,20 @@ class UserPermissionGroupSerializerList(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
+class UserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    group_admin = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FFAdminUser
+        fields = ("id", "email", "first_name", "last_name", "last_login", "group_admin")
+
+    def get_group_admin(self, instance: FFAdminUser) -> bool:
+        return instance.id in self.context.get("group_admins", [])
+
+
 class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
     # TODO: remove users from here and just add a summary of number of users
-    users = UserListSerializer(many=True, read_only=True)
+    users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):
