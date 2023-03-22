@@ -81,9 +81,13 @@ class EdgeIdentity:
         )
         django_environment = Environment.objects.get(api_key=self.environment_api_key)
 
-        q = Q(identity__isnull=True) & (
-            Q(feature_segment__segment__id__in=segment_ids)
-            | Q(feature_segment__isnull=True)
+        q = (
+            Q(version__isnull=False)
+            & Q(identity__isnull=True)
+            & (
+                Q(feature_segment__segment__id__in=segment_ids)
+                | Q(feature_segment__isnull=True)
+            )
         )
         environment_and_segment_feature_states = (
             django_environment.feature_states.select_related(
