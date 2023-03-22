@@ -51,13 +51,14 @@ runs:
         VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
         VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
         ENV: ${{ inputs.env }}
+        BRANCH_NAME: ${{ inputs.alias }}
       run: |
         npm ci --only=prod
         npm run env
         npm run bundle
         echo ${{ github.sha }} > CI_COMMIT_SHA
         url=$(vercel --token ${{ inputs.vercel_token }})
-        branch=$(echo ${{ inputs.alias }} | sed -r 's/_/-/g')
+        branch=$(echo ${BRANCH_NAME:0:30} | sed -r 's/_/-/g')
         alias=$(vercel --scope flagsmith --token=${{ inputs.vercel_token }} alias $url ${branch%-})
 
         echo "url=$alias" >> $GITHUB_OUTPUT
