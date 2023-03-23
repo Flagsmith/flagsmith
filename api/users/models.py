@@ -24,12 +24,11 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
-from permissions.permission_service import is_user_organisation_admin
-from projects.models import (
-    Project,
-    UserPermissionGroupProjectPermission,
-    UserProjectPermission,
+from permissions.permission_service import (
+    is_user_organisation_admin,
+    is_user_project_admin,
 )
+from projects.models import Project, UserProjectPermission
 from users.auth_type import AuthType
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
@@ -303,22 +302,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         )
 
     def is_project_admin(self, project: Project, allow_org_admin: bool = True):
-        return (
-            (allow_org_admin and self.is_organisation_admin(project.organisation))
-            or UserProjectPermission.objects.filter(
-                admin=True, user=self, project=project
-            ).exists()
-            or UserPermissionGroupProjectPermission.objects.filter(
-                group__users=self, admin=True, project=project
-            ).exists()
-            or Project.objects.filter(
-                rolepermission__role__userrole__user=self, rolepermission__admin=True
-            ).exists()
-            or Project.objects.filter(
-                rolepermission__role__grouprole__group__users=self,
-                rolepermission__admin=True,
-            ).exists()
-        )
+        return is_user_project_admin(self, project, allow_org_admin)
 
     def get_permitted_environments(
         self, permission_key: str, project: Project
