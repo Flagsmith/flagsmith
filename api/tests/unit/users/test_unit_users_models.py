@@ -33,6 +33,33 @@ def test_get_permitted_environments_returns_environment_added_by_group_role(
     assert environment in permitted_environments
 
 
+def test_get_permitted_projects_returns_projects_added_by_user_role(
+    test_user, user_role, role_view_project_permission, project
+):
+    # When
+    permitted_projects = test_user.get_permitted_projects(["VIEW_PROJECT"])
+
+    # Then
+    assert project in permitted_projects
+
+
+def test_get_permitted_projects_returns_projects_added_by_group_role(
+    test_user,
+    group_role,
+    role_view_project_permission,
+    project,
+    user_permission_group,
+):
+    # Given
+    user_permission_group.users.add(test_user)
+
+    # When
+    permitted_projects = test_user.get_permitted_projects(["VIEW_PROJECT"])
+
+    # Then
+    assert project in permitted_projects
+
+
 def test_is_organisation_admin_returns_true_if_user_role_is_org_admin(
     test_user, org_admin_user_role, organisation
 ):

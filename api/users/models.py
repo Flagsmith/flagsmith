@@ -268,8 +268,22 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             organisation__userorganisation__user=self,
             organisation__userorganisation__role=OrganisationRole.ADMIN.name,
         )
+        user_role_query = Q(rolepermission__role__userrole__user=self) & (
+            Q(rolepermission__admin=True)
+            | Q(rolepermission__permissions__key__in=permissions)
+        )
+        group_role_query = Q(rolepermission__role__grouprole__group__users=self) & (
+            Q(rolepermission__admin=True)
+            | Q(rolepermission__permissions__key__in=permissions)
+        )
 
-        query = user_query | group_query | organisation_query
+        query = (
+            user_query
+            | group_query
+            | organisation_query
+            | user_role_query
+            | group_role_query
+        )
 
         return Project.objects.filter(query).distinct()
 
