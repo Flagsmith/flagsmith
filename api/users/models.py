@@ -24,6 +24,7 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
+from permissions.permission_service import is_user_organisation_admin
 from projects.models import (
     Project,
     UserPermissionGroupProjectPermission,
@@ -166,20 +167,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
-    def is_organisation_admin(
-        self, organisation: Organisation = None, organisation_id: int = None
-    ):
-        if not (organisation or organisation_id) or (organisation and organisation_id):
-            raise ValueError(
-                "Must provide exactly one of organisation or organisation_id"
-            )
-
-        role = (
-            self.get_organisation_role(organisation)
-            if organisation
-            else self.get_user_organisation_by_id(organisation_id)
-        )
-        return role and role == OrganisationRole.ADMIN.name
+    def is_organisation_admin(self, organisation):
+        return is_user_organisation_admin(self, organisation)
 
     def get_admin_organisations(self):
         return Organisation.objects.filter(
@@ -268,6 +257,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             organisation__userorganisation__user=self,
             organisation__userorganisation__role=OrganisationRole.ADMIN.name,
         )
+        # TODO: this is incorrect
         user_role_query = Q(rolepermission__role__userrole__user=self) & (
             Q(rolepermission__admin=True)
             | Q(rolepermission__permissions__key__in=permissions)
