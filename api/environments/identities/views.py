@@ -221,9 +221,6 @@ class SDKIdentities(SDKAPIView):
                 context["identity"] = self.identity
         return context
 
-    # def _get_serializer_context(self, identity):
-    #     return {"identity": identity, **self.get_serializer_context()}
-
     @method_decorator(
         generate_identity_update_message(
             lambda req: (req.environment, req.data["identifier"])
