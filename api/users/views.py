@@ -152,10 +152,11 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        with suppress(ValueError):
-            context["group_admins"] = UserPermissionGroupMembership.objects.filter(
-                userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True
-            ).values_list("ffadminuser__id", flat=True)
+        if self.detail is True:
+            with suppress(ValueError):
+                context["group_admins"] = UserPermissionGroupMembership.objects.filter(
+                    userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True
+                ).values_list("ffadminuser__id", flat=True)
         return context
 
     def perform_create(self, serializer):
