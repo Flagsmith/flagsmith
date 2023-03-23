@@ -712,3 +712,34 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
     mocked_get_feature_evaluation_data.assert_called_with(
         feature=feature, period=30, environment_id=environment.id
     )
+
+
+def test_create_segment_override(admin_client, feature, segment, environment):
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    created_override = FeatureState.objects.filter(
+        feature=feature, environment=environment, feature_segment__segment=segment
+    ).first()
+    assert created_override is not None
+    assert created_override.enabled is enabled
+    assert created_override.get_feature_state_value() == string_value

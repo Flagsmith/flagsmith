@@ -1,6 +1,7 @@
 from contextlib import suppress
 
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from environments.models import Environment
@@ -196,3 +197,19 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
 
 class IdentityFeatureStatePermissions(EnvironmentFeatureStatePermissions):
     pass
+
+
+class CreateSegmentOverridePermissions(IsAuthenticated):
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
+        environment = get_object_or_404(
+            Environment, api_key=view.kwargs["environment_api_key"]
+        )
+
+        # TODO: create dedicated permission for creating segment overrides
+        return request.user.has_environment_permission(
+            permission=UPDATE_FEATURE_STATE,
+            environment=environment,
+        )

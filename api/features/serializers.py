@@ -11,6 +11,9 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
+from .feature_segments.serializers import (
+    CreateSegmentOverrideFeatureSegmentSerializer,
+)
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
@@ -357,3 +360,23 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
     )
+
+
+class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
+    feature_state_value = FeatureStateValueSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer()
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "enabled",
+            "feature_state_value",
+            "feature_segment",
+        )
+
+    def _get_save_kwargs(self, field_name):
+        kwargs = super()._get_save_kwargs(field_name)
+        if field_name == "feature_segment":
+            kwargs["feature"] = self.context.get("feature")
+            kwargs["environment"] = self.context.get("environment")
+        return kwargs

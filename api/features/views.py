@@ -19,6 +19,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
@@ -37,6 +38,7 @@ from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
 from .permissions import (
+    CreateSegmentOverridePermissions,
     EnvironmentFeatureStatePermissions,
     FeaturePermissions,
     FeatureStatePermissions,
@@ -46,6 +48,7 @@ from .permissions import (
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
+    CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
@@ -691,3 +694,24 @@ def organisation_has_got_feature(request, organisation):
         organisation.has_requested_features = True
         organisation.save()
         return True
+
+
+@swagger_auto_schema(
+    method="POST",
+    request_body=CreateSegmentOverrideFeatureStateSerializer(),
+    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+)
+@permission_classes([CreateSegmentOverridePermissions()])
+@api_view(["POST"])
+def create_segment_override(
+    request: Request, environment_api_key: str, feature_pk: int
+):
+    environment = get_object_or_404(Environment, api_key=environment_api_key)
+    feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
+
+    serializer = CreateSegmentOverrideFeatureStateSerializer(
+        data=request.data, context={"environment": environment, "feature": feature}
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save(environment=environment, feature=feature)
+    return Response(serializer.data, status=201)
