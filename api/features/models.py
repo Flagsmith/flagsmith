@@ -479,7 +479,9 @@ class FeatureState(
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
             is_more_recent_live_from = self.is_more_recent_live_from(other)
             is_more_recent_version = self._is_more_recent_version(other)
-            return is_more_recent_live_from or is_more_recent_version
+            return self.version is not None and (
+                is_more_recent_live_from or is_more_recent_version
+            )
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity

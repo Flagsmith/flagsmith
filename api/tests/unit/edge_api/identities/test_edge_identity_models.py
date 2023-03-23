@@ -1,9 +1,14 @@
+from datetime import timedelta
+
 import pytest
 import shortuuid
+from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
+from freezegun import freeze_time
 
 from edge_api.identities.models import EdgeIdentity
 from features.models import FeatureSegment, FeatureState, FeatureStateValue
+from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
 
 
@@ -57,6 +62,39 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
         identity_model=identity_model
     )
+
+
+def test_edge_identity_get_all_feature_states_ignores_not_live_feature_states(
+    environment, project, segment, feature, feature_state, admin_user, mocker
+):
+    # Given
+    edge_identity_dynamo_wrapper_mock = mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
+    )
+    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = []
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    FeatureState.objects.create(
+        version=None,
+        live_from=feature_state.live_from + timedelta(hours=1),
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+    )
+
+    identity_model = mocker.MagicMock(
+        environment_api_key=environment.api_key, identity_features=[]
+    )
+    edge_identity = EdgeIdentity(identity_model)
+
+    # When
+    with freeze_time(timezone.now() + timedelta(hours=2)):
+        feature_states, _ = edge_identity.get_all_feature_states()
+
+    # Then
+    assert feature_states == [feature_state]
 
 
 def test_edge_identity_from_identity_document():
