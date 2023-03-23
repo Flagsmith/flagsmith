@@ -11,7 +11,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
 )
@@ -204,6 +205,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
 
 
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
 def make_user_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
@@ -218,6 +220,7 @@ def make_user_group_admin(
     return Response()
 
 
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
 def remove_user_as_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
