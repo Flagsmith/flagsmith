@@ -348,18 +348,17 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if self.is_project_admin(project):
             return project.environments.all()
 
-        permission_groups = self.permission_groups.all()
         user_query = Q(userpermission__user=self) & (
             Q(userpermission__permissions__key=permission_key)
             | Q(userpermission__admin=True)
         )
-        group_query = Q(grouppermission__group__in=permission_groups) & (
+        group_query = Q(grouppermission__group__users=self) & (
             Q(grouppermission__permissions__key=permission_key)
             | Q(grouppermission__admin=True)
         )
         role_permission = Q(
             Q(rolepermission__role__userrole__user=self)
-            | Q(rolepermission__role__grouprole__group__in=permission_groups)
+            | Q(rolepermission__role__grouprole__group__users=self)
         ) & (
             Q(rolepermission__permissions__key=permission_key)
             | Q(rolepermission__admin=True)
