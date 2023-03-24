@@ -52,6 +52,7 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             q = q & Q(log__icontains=search)
         return (
             AuditLog.objects.filter(q)
+            .defer("log", "environment__description")
             .distinct()
             .select_related("project", "environment", "author")
         )
