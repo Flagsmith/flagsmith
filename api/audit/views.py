@@ -35,23 +35,19 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filterset_fields = ["is_system_event"]
 
     def get_queryset(self):
-        q = Q(project__organisation__users=self.request.user) | Q(
-            environment__project__organisation__users=self.request.user
-        )
+        q = Q(project__organisation__users=self.request.user)
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
         project = serializer.data.get("project")
         environments = serializer.data.get("environments")
         if project:
-            q = q & (Q(project__id=project) | Q(environment__project__id=project))
+            q = q & Q(project__id=project)
         if environments:
             q = q & Q(environment__id__in=environments)
 
         search = serializer.data.get("search")
         if search:
             q = q & Q(log__icontains=search)
-        return (
-            AuditLog.objects.filter(q)
-            .distinct()
-            .select_related("project", "environment", "author")
+        return AuditLog.objects.filter(q).select_related(
+            "project", "environment", "author"
         )
