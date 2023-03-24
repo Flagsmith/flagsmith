@@ -36,5 +36,5 @@ class OrganisationAdmin(admin.ModelAdmin):
         UserOrganisationInline,
     ]
     list_display = ("__str__",)
-    list_filter = ("projects", "subscription__plan")
+    list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id")

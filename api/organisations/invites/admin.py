@@ -12,10 +12,7 @@ class InviteAdmin(admin.ModelAdmin):
         "organisation",
         "date_created",
     )
-    list_filter = (
-        "date_created",
-        "organisation",
-    )
+    list_filter = ("date_created",)
     list_select_related = (
         "organisation",
         "invited_by",
