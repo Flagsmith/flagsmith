@@ -3,132 +3,6 @@ const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
 const controller = {
-  register: ({
-    email,
-    password,
-    first_name,
-    last_name,
-    marketing_consent_given,
-  }) => {
-    store.saving()
-    data
-      .post(`${Project.api}auth/users/`, {
-        email,
-        first_name,
-            password,
-        last_name,
-        marketing_consent_given,
-        sign_up_type: API.getInviteType(),
-        referrer: API.getReferrer() || '',
-      })
-      .then((res) => {
-        data.setToken(res.key)
-        API.trackEvent(Constants.events.REGISTER)
-        if (API.getReferrer()) {
-          API.trackEvent(
-            Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
-          )
-        }
-
-        store.isSaving = false
-        return controller.onLogin()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  oauth: (type, _data) => {
-    store.loading()
-    API.trackEvent(Constants.events.OAUTH(type))
-
-    data
-      .post(
-        type === 'saml'
-          ? `${Project.api}auth/saml/login/`
-          : `${Project.api}auth/oauth/${type}/`,
-        {
-          ...(_data || {}),
-          sign_up_type: API.getInviteType(),
-        },
-      )
-      .then((res) => {
-        if (res.ephemeral_token) {
-          store.ephemeral_token = res.ephemeral_token
-          store.model = {
-            twoFactorPrompt: true,
-            twoFactorEnabled: true,
-          }
-          store.loaded()
-          return
-        }
-
-        data.setToken(res.key)
-        return controller.onLogin()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  resetPassword: (uid, token, new_password1, new_password2) => {
-    store.saving()
-    data
-      .post(`${Project.api}auth/users/reset_password_confirm/`, {
-        
-            token,
-            // data.post(`${Project.api}auth/password/reset/confirm/`, {
-uid,
-        new_password: new_password1,
-        re_new_password: new_password2,
-      })
-      .then(() => {
-        store.saved()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  setToken: (token) => {
-    store.loading()
-    store.user = {}
-    AsyncStorage.getItem('isDemo', (err, res) => {
-      if (res) {
-        store.isDemo = true
-      }
-      data.setToken(token)
-      return controller.onLogin()
-    })
-  },
-  login: ({ email, password }) => {
-    store.loading()
-    data
-      .post(`${Project.api}auth/login/`, {
-        email,
-        password,
-      })
-      .then((res) => {
-        const isDemo = email === Project.demoAccount.email
-        store.isDemo = isDemo
-        if (isDemo) {
-          AsyncStorage.setItem('isDemo', `${isDemo}`)
-          API.trackEvent(Constants.events.LOGIN_DEMO)
-        } else {
-          API.trackEvent(Constants.events.LOGIN)
-        }
-        if (res.ephemeral_token) {
-          store.ephemeral_token = res.ephemeral_token
-          store.model = {
-            twoFactorPrompt: true,
-            twoFactorEnabled: true,
-          }
-          store.loaded()
-          return
-        }
-
-        data.setToken(res.key)
-        return controller.onLogin()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  onLogin: (skipCaching) => {
-    if (!skipCaching) {
-      API.setCookie('t', data.token)
-    }
-    return controller.getOrganisations()
-  },
   acceptInvite: (id) => {
     store.saving()
     API.setInvite('')
@@ -154,6 +28,92 @@ uid,
         API.ajaxHandler(store, e)
       })
   },
+  confirmTwoFactor: (pin, onError) => {
+    store.saving()
+
+    return data
+      .post(`${Project.api}auth/app/activate/confirm/`, { code: pin })
+      .then((res) => {
+        store.model.backupCodes = res.backup_codes
+        store.model.twoFactorEnabled = true
+        store.model.twoFactorConfirmed = true
+
+        store.saved()
+      })
+      .catch((e) => {
+        if (onError) {
+          onError()
+        }
+        API.ajaxHandler(store, e)
+      })
+  },
+  createOrganisation: (name) => {
+    store.saving()
+    if (
+      !AccountStore.model.organisations ||
+      !AccountStore.model.organisations.length
+    ) {
+      API.trackEvent(Constants.events.CREATE_FIRST_ORGANISATION)
+    }
+    API.trackEvent(Constants.events.CREATE_ORGANISATION)
+    if (API.getReferrer()) {
+      // eslint-disable-next-line camelcase
+      API.postEvent(`${name} from ${`${API.getReferrer().utm_source}`}`)
+      API.trackEvent(
+        Constants.events.REFERRER_CONVERSION(API.getReferrer().utm_source),
+      )
+    } else {
+      // eslint-disable-next-line camelcase
+      API.postEvent(`${name}`)
+    }
+    data.post(`${Project.api}organisations/`, { name }).then((res) => {
+      store.model.organisations = store.model.organisations.concat([
+        { ...res, role: 'ADMIN' },
+      ])
+      AsyncStorage.setItem('user', JSON.stringify(store.model))
+      store.savedId = res.id
+      store.saved()
+    })
+  },
+  deleteOrganisation: () => {
+    API.trackEvent(Constants.events.DELETE_ORGANISATION)
+    data
+      .delete(`${Project.api}organisations/${store.organisation.id}/`)
+      .then(() => {
+        store.model.organisations = _.filter(
+          store.model.organisations,
+          (org) => org.id !== store.organisation.id,
+        )
+        store.organisation = store.model.organisations.length
+          ? store.model.organisations[0]
+          : null
+        store.trigger('removed')
+        AsyncStorage.setItem('user', JSON.stringify(store.model))
+      })
+  },
+  disableTwoFactor: () => {
+    store.saving()
+    return data.post(`${Project.api}auth/app/deactivate/`).then(() => {
+      store.model.twoFactorEnabled = false
+      store.model.twoFactorConfirmed = false
+      store.saved()
+    })
+  },
+  editOrganisation: (org) => {
+    API.trackEvent(Constants.events.EDIT_ORGANISATION)
+    data
+      .put(`${Project.api}organisations/${store.organisation.id}/`, org)
+      .then((res) => {
+        const idx = _.findIndex(store.model.organisations, {
+          id: store.organisation.id,
+        })
+        if (idx !== -1) {
+          store.model.organisations[idx] = res
+          store.organisation = res
+        }
+        store.saved()
+      })
+  },
   enableTwoFactor: () => {
     store.saving()
     return data.post(`${Project.api}auth/app/activate/`).then((res) => {
@@ -162,6 +122,207 @@ uid,
       store.saved()
     })
   },
+  getOrganisations: () =>
+    Promise.all([
+      data.get(`${Project.api}organisations/`),
+      data.get(`${Project.api}auth/users/me/`),
+      data.get(`${Project.api}auth/mfa/user-active-methods/`),
+    ])
+      .then(([res, userRes, methods]) => {
+        controller.setUser({
+          ...userRes,
+          organisations: res.results,
+          twoFactorConfirmed: !!methods.length,
+          twoFactorEnabled: !!methods.length,
+          twoFactorPrompt: store.ephemeral_token && !!methods.length,
+        })
+      })
+      .catch((e) => API.ajaxHandler(store, e)),
+  login: ({ email, password }) => {
+    store.loading()
+    data
+      .post(`${Project.api}auth/login/`, {
+        email,
+        password,
+      })
+      .then((res) => {
+        const isDemo = email === Project.demoAccount.email
+        store.isDemo = isDemo
+        if (isDemo) {
+          AsyncStorage.setItem('isDemo', `${isDemo}`)
+          API.trackEvent(Constants.events.LOGIN_DEMO)
+        } else {
+          API.trackEvent(Constants.events.LOGIN)
+        }
+        if (res.ephemeral_token) {
+          store.ephemeral_token = res.ephemeral_token
+          store.model = {
+            twoFactorEnabled: true,
+            twoFactorPrompt: true,
+          }
+          store.loaded()
+          return
+        }
+
+        data.setToken(res.key)
+        return controller.onLogin()
+      })
+      .catch((e) => API.ajaxHandler(store, e))
+  },
+  oauth: (type, _data) => {
+    store.loading()
+    API.trackEvent(Constants.events.OAUTH(type))
+
+    data
+      .post(
+        type === 'saml'
+          ? `${Project.api}auth/saml/login/`
+          : `${Project.api}auth/oauth/${type}/`,
+        {
+          ...(_data || {}),
+          sign_up_type: API.getInviteType(),
+        },
+      )
+      .then((res) => {
+        if (res.ephemeral_token) {
+          store.ephemeral_token = res.ephemeral_token
+          store.model = {
+            twoFactorEnabled: true,
+            twoFactorPrompt: true,
+          }
+          store.loaded()
+          return
+        }
+
+        data.setToken(res.key)
+        return controller.onLogin()
+      })
+      .catch((e) => API.ajaxHandler(store, e))
+  },
+  onLogin: (skipCaching) => {
+    if (!skipCaching) {
+      API.setCookie('t', data.token)
+    }
+    return controller.getOrganisations()
+  },
+  register: ({
+    email,
+    first_name,
+    last_name,
+    marketing_consent_given,
+    password,
+  }) => {
+    store.saving()
+    data
+      .post(`${Project.api}auth/users/`, {
+        email,
+        first_name,
+        last_name,
+        marketing_consent_given,
+        password,
+        referrer: API.getReferrer() || '',
+        sign_up_type: API.getInviteType(),
+      })
+      .then((res) => {
+        data.setToken(res.key)
+        API.trackEvent(Constants.events.REGISTER)
+        if (API.getReferrer()) {
+          API.trackEvent(
+            Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
+          )
+        }
+
+        store.isSaving = false
+        return controller.onLogin()
+      })
+      .catch((e) => API.ajaxHandler(store, e))
+  },
+
+  resetPassword: (uid, token, new_password1, new_password2) => {
+    store.saving()
+    data
+      .post(`${Project.api}auth/users/reset_password_confirm/`, {
+        new_password: new_password1,
+
+        re_new_password: new_password2,
+
+        token,
+        // data.post(`${Project.api}auth/password/reset/confirm/`, {
+        uid,
+      })
+      .then(() => {
+        store.saved()
+      })
+      .catch((e) => API.ajaxHandler(store, e))
+  },
+
+  selectOrganisation: (id) => {
+    store.organisation = _.find(store.model.organisations, { id })
+    store.changed()
+  },
+
+  setToken: (token) => {
+    store.loading()
+    store.user = {}
+    AsyncStorage.getItem('isDemo', (err, res) => {
+      if (res) {
+        store.isDemo = true
+      }
+      data.setToken(token)
+      return controller.onLogin()
+    })
+  },
+
+  setUser(user) {
+    if (user) {
+      store.model = user
+      if (user && user.organisations) {
+        store.organisation = user.organisations[0]
+        const cookiedID = API.getCookie('organisation')
+        if (cookiedID) {
+          const foundOrganisation = user.organisations.find(
+            (v) => `${v.id}` === cookiedID,
+          )
+          if (foundOrganisation) {
+            store.organisation = foundOrganisation
+          }
+        }
+      }
+
+      if (Project.delighted) {
+        delighted.survey({
+          // customer name (optional)
+          createdAt: store.organisation && store.organisation.created_date,
+
+          email: store.model.email,
+          // customer email (optional)
+          name: `${store.model.first_name} ${store.model.last_name}`, // time subscribed (optional)
+          properties: {
+            // extra context (optional)
+            company: store.organisation && store.organisation.name,
+          },
+        })
+      }
+
+      AsyncStorage.setItem('user', JSON.stringify(store.model))
+      if (!store.isDemo) {
+        API.alias(user.email)
+        API.identify(user && user.email, user)
+      }
+      store.loaded()
+    } else if (!user) {
+      store.ephemeral_token = null
+      AsyncStorage.clear()
+      API.setCookie('t', '')
+      data.setToken(null)
+      store.isDemo = false
+      store.model = user
+      store.organisation = null
+      store.trigger('logout')
+      API.reset()
+    }
+  },
+
   twoFactorLogin: (pin, onError) => {
     store.saving()
     return data
@@ -183,144 +344,6 @@ uid,
         API.ajaxHandler(store, e)
       })
   },
-  confirmTwoFactor: (pin, onError) => {
-        store.saving();
-
-        return data.post(`${Project.api}auth/app/activate/confirm/`, { code: pin })
-            .then((res) => {
-                store.model.backupCodes = res.backup_codes;
-                store.model.twoFactorEnabled = true;
-                store.model.twoFactorConfirmed = true;
-
-                store.saved();
-            }).catch((e) => {
-                if (onError) {
-                    onError();
-                }
-                API.ajaxHandler(store, e);
-            });
-    },
-    disableTwoFactor: () => {
-        store.saving();
-        return data.post(`${Project.api}auth/app/deactivate/`)
-            .then(() => {
-                store.model.twoFactorEnabled = false;
-                store.model.twoFactorConfirmed = false;
-                store.saved();
-            });
-    },
-  getOrganisations: () =>
-    Promise.all([
-      data.get(`${Project.api}organisations/`),
-      data.get(`${Project.api}auth/users/me/`),
-      data.get(`${Project.api}auth/mfa/user-active-methods/`),
-    ])
-      .then(([res, userRes, methods]) => {
-        controller.setUser({
-          ...userRes,
-          twoFactorConfirmed: !!methods.length,
-                twoFactorEnabled: !!methods.length,
-          organisations: res.results,
-                twoFactorPrompt: store.ephemeral_token && !!methods.length,
-        })
-      })
-      .catch((e) => API.ajaxHandler(store, e)),
-
-  selectOrganisation: (id) => {
-    store.organisation = _.find(store.model.organisations, { id })
-    store.changed()
-  },
-
-  createOrganisation: (name) => {
-        store.saving();
-        if (!AccountStore.model.organisations || !AccountStore.model.organisations.length) {
-            API.trackEvent(Constants.events.CREATE_FIRST_ORGANISATION);
-        }
-        API.trackEvent(Constants.events.CREATE_ORGANISATION);
-        if (API.getReferrer()) {
-            // eslint-disable-next-line camelcase
-            API.postEvent(`${name} from ${`${API.getReferrer().utm_source}`}`);
-            API.trackEvent(Constants.events.REFERRER_CONVERSION(API.getReferrer().utm_source));
-        } else {
-            // eslint-disable-next-line camelcase
-            API.postEvent(`${name}`);
-        }
-        data.post(`${Project.api}organisations/`, { name })
-            .then((res) => {
-                store.model.organisations = store.model.organisations.concat([{ ...res, role: 'ADMIN' }]);
-                AsyncStorage.setItem('user', JSON.stringify(store.model));
-                store.savedId = res.id;
-                store.saved();
-            });
-    },
-
-    editOrganisation: (org) => {
-        API.trackEvent(Constants.events.EDIT_ORGANISATION);
-        data.put(`${Project.api}organisations/${store.organisation.id}/`, org)
-            .then((res) => {
-                const idx = _.findIndex(store.model.organisations, { id: store.organisation.id });
-                if (idx !== -1) {
-                    store.model.organisations[idx] = res;
-                    store.organisation = res;
-                }
-                store.saved();
-            });
-    },
-
-  deleteOrganisation: () => {
-        API.trackEvent(Constants.events.DELETE_ORGANISATION);
-        data.delete(`${Project.api}organisations/${store.organisation.id}/`)
-            .then(() => {
-                store.model.organisations = _.filter(store.model.organisations, org => org.id !== store.organisation.id);
-                store.organisation = store.model.organisations.length ? store.model.organisations[0] : null;
-                store.trigger('removed');
-                AsyncStorage.setItem('user', JSON.stringify(store.model));
-            });
-    },
-
-    setUser(user) {
-        if (user) {
-            store.model = user;
-            if (user && user.organisations) {
-                store.organisation = user.organisations[0];
-                const cookiedID = API.getCookie('organisation');
-                if (cookiedID) {
-                    const foundOrganisation = user.organisations.find(v => `${v.id}` === cookiedID);
-                    if (foundOrganisation) {
-                        store.organisation = foundOrganisation;
-                    }
-                }
-            }
-
-            if (Project.delighted) {
-                delighted.survey({
-                    email: store.model.email, // customer email (optional)
-                    name: `${store.model.first_name} ${store.model.last_name}`, // customer name (optional)
-                    createdAt: store.organisation && store.organisation.created_date, // time subscribed (optional)
-                    properties: { // extra context (optional)
-                        company: store.organisation && store.organisation.name,
-                    },
-                });
-            }
-
-            AsyncStorage.setItem('user', JSON.stringify(store.model));
-            if (!store.isDemo) {
-                API.alias(user.email);
-                API.identify(user && user.email, user);
-            }
-            store.loaded();
-        } else if (!user) {
-            store.ephemeral_token = null;
-            AsyncStorage.clear();
-            API.setCookie('t', '');
-            data.setToken(null);
-            store.isDemo = false;
-            store.model = user;
-            store.organisation = null;
-            store.trigger('logout');
-            API.reset();
-        }
-    },
 
   updateSubscription: (hostedPageId) => {
     data
@@ -348,32 +371,32 @@ uid,
 }
 
 const store = Object.assign({}, BaseStore, {
-  id: 'account',
-  getUser() {
-    return store.model
-  },
-  setToken(token) {
-    data.token = token
-  },
   forced2Factor() {
-        if (!store.model || !store.model.organisations) return false;
+    if (!store.model || !store.model.organisations) return false
 
-        if (store.model.twoFactorConfirmed) {
-            return false;
-        }
+    if (store.model.twoFactorConfirmed) {
+      return false
+    }
 
-        return Utils.getFlagsmithHasFeature('forced_2fa') && store.getOrganisations() && store.getOrganisations().find(o => o.force_2fa);
-    },
-    getUserId() {
-        return store.model && store.model.id;
-    },
+    return (
+      Utils.getFlagsmithHasFeature('forced_2fa') &&
+      store.getOrganisations() &&
+      store.getOrganisations().find((o) => o.force_2fa)
+    )
+  },
+  getActiveOrgPlan() {
+    return (
+      store.organisation &&
+      store.organisation.subscription &&
+      store.organisation.subscription.plan
+    )
+  },
+  getDate() {
+    return store.getOrganisation() && store.getOrganisation().created_date
   },
   getOrganisation() {
-        return store.organisation;
-    },
-    setUser(user) {
-        controller.setUser(user);
-    },
+    return store.organisation
+  },
   getOrganisationPlan(id) {
     const organisations = store.getOrganisations()
     const organisation = organisations && organisations.find((v) => v.id === id)
@@ -381,23 +404,6 @@ const store = Object.assign({}, BaseStore, {
       return !!organisation.subscription?.subscription_id
     }
     return null
-  },
-  isAdmin() {
-    const id = store.organisation && store.organisation.id
-    return id && store.getOrganisationRole(id) === 'ADMIN'
-  },
-  getActiveOrgPlan() {
-        return store.organisation && store.organisation.subscription && store.organisation.subscription.plan;
-    },
-    getPlans() {
-        if (!store.model) return [];
-        return _.filter(store.model.organisations.map(org => org.subscription && org.subscription.plan), plan => !!plan);
-    },
-  getDate() {
-    return store.getOrganisation() && store.getOrganisation().created_date
-  },
-  getOrganisations() {
-    return store.model && store.model.organisations
   },
   getOrganisationRole(id) {
     return (
@@ -412,6 +418,35 @@ const store = Object.assign({}, BaseStore, {
         'role',
       )
     )
+  },
+  getOrganisations() {
+    return store.model && store.model.organisations
+  },
+  getPlans() {
+    if (!store.model) return []
+    return _.filter(
+      store.model.organisations.map(
+        (org) => org.subscription && org.subscription.plan,
+      ),
+      (plan) => !!plan,
+    )
+  },
+  getUser() {
+    return store.model
+  },
+  getUserId() {
+    return store.model && store.model.id
+  },
+  id: 'account',
+  isAdmin() {
+    const id = store.organisation && store.organisation.id
+    return id && store.getOrganisationRole(id) === 'ADMIN'
+  },
+  setToken(token) {
+    data.token = token
+  },
+  setUser(user) {
+    controller.setUser(user)
   },
 })
 

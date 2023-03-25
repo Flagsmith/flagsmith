@@ -9,25 +9,25 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import CreateProjectModal from '../modals/CreateProject'
-import InviteUsersModal from '../modals/InviteUsers'
-import UserGroupList from '../UserGroupList'
-import ConfirmRemoveOrganisation from '../modals/ConfirmRemoveOrganisation'
-import PaymentModal from '../modals/Payment'
-import CreateGroupModal from '../modals/CreateGroup'
-import CancelPaymentPlanModal from '../modals/CancelPaymentPlan'
+import CreateProjectModal from 'components/modals/CreateProject'
+import InviteUsersModal from 'components/modals/InviteUsers'
+import UserGroupList from 'components/UserGroupList'
+import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
+import PaymentModal from 'components/modals/Payment'
+import CreateGroupModal from 'components/modals/CreateGroup'
+import CancelPaymentPlanModal from 'components/modals/CancelPaymentPlan'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
-import CreateAuditWebhookModal from '../modals/CreateAuditWebhook'
-import ConfirmRemoveAuditWebhook from '../modals/ConfirmRemoveAuditWebhook'
-import Button from '../base/forms/Button'
-import { EditPermissionsModal } from '../EditPermissions'
-import AdminAPIKeys from '../AdminAPIKeys'
-import Tabs from '../base/forms/Tabs'
-import TabItem from '../base/forms/TabItem'
-import InfoMessage from '../InfoMessage'
-import JSONReference from '../JSONReference'
+import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
+import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
+import Button from 'components/base/forms/Button'
+import { EditPermissionsModal } from 'components/EditPermissions'
+import AdminAPIKeys from 'components/AdminAPIKeys'
+import Tabs from 'components/base/forms/Tabs'
+import TabItem from 'components/base/forms/TabItem'
+import InfoMessage from 'components/InfoMessage'
+import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import OrganisationUsage from '../OrganisationUsage'
+import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 
 const widths = [450, 150, 100]
@@ -408,7 +408,8 @@ const OrganisationSettingsPage = class extends Component {
                                         <a
                                           className='btn btn-primary mr-2'
                                           href='https://flagsmith.chargebeeportal.com/'
-                                          target='_blank' rel="noreferrer"
+                                          target='_blank'
+                                          rel='noreferrer'
                                         >
                                           Manage Invoices
                                         </a>
@@ -722,12 +723,12 @@ const OrganisationSettingsPage = class extends Component {
                                                             value: 'ADMIN',
                                                           },
                                                           {
-                                                            isDisabled: !hasRbacPermission,
+                                                            isDisabled:
+                                                              !hasRbacPermission,
                                                             label:
                                                               hasRbacPermission
                                                                 ? 'User'
                                                                 : 'User - Please upgrade for role based access',
-                                                              !hasRbacPermission,
                                                             value: 'USER',
                                                           },
                                                         ]}
@@ -956,6 +957,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                   label,
                                                                   value,
                                                                 ) => ({
+                                                                  isDisabled:
+                                                                    value !==
+                                                                      'ADMIN' &&
+                                                                    !hasRbacPermission,
                                                                   label:
                                                                     value !==
                                                                       'ADMIN' &&
@@ -963,10 +968,6 @@ const OrganisationSettingsPage = class extends Component {
                                                                       ? `${label} - Please upgrade for role based access`
                                                                       : label,
                                                                   value,
-                                                                  isDisabled:
-                                                                    value !==
-                                                                      'ADMIN' &&
-                                                                    !hasRbacPermission,
                                                                 }),
                                                               )}
                                                               menuPortalTarget={

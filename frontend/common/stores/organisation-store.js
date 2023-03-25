@@ -134,8 +134,8 @@ const controller = {
       ).then((res) => {
         if (id === store.id) {
           // eslint-disable-next-line prefer-const
-          let [_projects, users, invites, subscriptionMeta] = res;
-          let projects = _.sortBy(_projects,'name')
+          let [_projects, users, invites, subscriptionMeta] = res
+          let projects = _.sortBy(_projects, 'name')
 
           store.model = {
             ...store.model,
@@ -180,7 +180,10 @@ const controller = {
               })
           }
 
-                    return Promise.all(projects.map((project, i) => data.get(`${Project.api}environments/?project=${project.id}`)
+          return Promise.all(
+            projects.map((project, i) =>
+              data
+                .get(`${Project.api}environments/?project=${project.id}`)
                 .then((res) => {
                   projects[i].environments = _.sortBy(res.results, 'name')
                 })

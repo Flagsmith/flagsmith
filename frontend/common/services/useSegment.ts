@@ -7,46 +7,49 @@ export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      getSegments: builder.query<Res['segments'], Req['getSegments']>({
-        query: ({ projectId, ...rest }) => ({
-          url: `projects/${projectId}/segments/?${Utils.toParam(rest)}`,
-        }),
-        providesTags: (q, e, arg) => [
-          { type: 'Segment', id: `LIST${arg.projectId}` },
+      createSegment: builder.mutation<Res['segment'], Req['createSegment']>({
+        invalidatesTags: (q, e, arg) => [
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
         ],
+        query: (query: Req['createSegment']) => ({
+          body: query.segment,
+          method: 'POST',
+          url: `projects/${query.projectId}/segments/`,
+        }),
       }),
       deleteSegment: builder.mutation<Res['segment'], Req['deleteSegment']>({
-        query: (query: Req['deleteSegment']) => ({
-          method: 'DELETE',
-                    url: `projects/${query.projectId}/segments/${query.id}/`,
-          body: query,
-        }),
         invalidatesTags: (q, e, arg) => [
-          { type: 'Segment', id: `LIST${arg.projectId}` },
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
         ],
-      }),
-      createSegment: builder.mutation<Res['segment'], Req['createSegment']>({
-                query: (query: Req['createSegment']) => ({
-                    url: `projects/${query.projectId}/segments/`,
-                    method: 'POST',
-                    body: query.segment,
-                }),
-                invalidatesTags: (q, e, arg) => [{ type: 'Segment', id: `LIST${arg.projectId}` }],
-            }),
-            updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
-                query: (query: Req['updateSegment']) => ({
-                    url: `projects/${query.projectId}/segments/${query.segment.id}/`,
-                    method: 'PUT',
-                    body: query.segment,
-                }),
-                invalidatesTags: (q, e, arg) => [{ type: 'Segment', id: `LIST${arg.projectId}` }],
-            }),
+        query: (query: Req['deleteSegment']) => ({
+          body: query,
+          method: 'DELETE',
+          url: `projects/${query.projectId}/segments/${query.id}/`,
+        }),
       }),
       getSegment: builder.query<Res['segment'], Req['getSegment']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Segment' }],
         query: (query: Req['getSegment']) => ({
           url: `projects/${query.projectId}/segments/${query.id}/`,
         }),
-        providesTags: (res) => [{ id: res?.id, type: 'Segment' }],
+      }),
+      getSegments: builder.query<Res['segments'], Req['getSegments']>({
+        providesTags: (q, e, arg) => [
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
+        ],
+        query: ({ projectId, ...rest }) => ({
+          url: `projects/${projectId}/segments/?${Utils.toParam(rest)}`,
+        }),
+      }),
+      updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
+        invalidatesTags: (q, e, arg) => [
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
+        ],
+        query: (query: Req['updateSegment']) => ({
+          body: query.segment,
+          method: 'PUT',
+          url: `projects/${query.projectId}/segments/${query.segment.id}/`,
+        }),
       }),
       // END OF ENDPOINTS
     }),
@@ -111,11 +114,11 @@ export async function getSegment(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useGetSegmentsQuery,
-  useDeleteSegmentMutation,
-  useUpdateSegmentMutation,
   useCreateSegmentMutation,
+  useDeleteSegmentMutation,
   useGetSegmentQuery,
+  useGetSegmentsQuery,
+  useUpdateSegmentMutation,
   // END OF EXPORTS
 } = segmentService
 

@@ -14,21 +14,21 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import Tabs from '../base/forms/Tabs'
-import TabItem from '../base/forms/TabItem'
-import SegmentOverrides from '../SegmentOverrides'
-import AddEditTags from '../tags/AddEditTags'
-import FlagOwners from '../FlagOwners'
+import Tabs from 'components/base/forms/Tabs'
+import TabItem from 'components/base/forms/TabItem'
+import SegmentOverrides from 'components/SegmentOverrides'
+import AddEditTags from 'components/tags/AddEditTags'
+import FlagOwners from 'components/FlagOwners'
 import ChangeRequestModal from './ChangeRequestModal'
-import Feature from '../Feature'
-import { ButtonOutline } from '../base/forms/Button'
-import { setInterceptClose } from '../../project/modals'
+import Feature from 'components/Feature'
+import { ButtonOutline } from 'components/base/forms/Button'
+import { setInterceptClose } from 'project/modals'
 import classNames from 'classnames'
-import InfoMessage from '../InfoMessage'
-import JSONReference from '../JSONReference'
-import ErrorMessage from '../ErrorMessage'
+import InfoMessage from 'components/InfoMessage'
+import JSONReference from 'components/JSONReference'
+import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
-import IdentitySelect from '../IdentitySelect'
+import IdentitySelect from 'components/IdentitySelect'
 import moment from 'moment'
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -36,14 +36,14 @@ const CreateFlag = class extends Component {
   constructor(props, context) {
     super(props, context)
     const {
-      name,
-      feature_state_value,
       description,
-      is_archived,
-      tags,
       enabled,
+      feature_state_value,
       hide_from_client,
+      is_archived,
       multivariate_options,
+      name,
+      tags,
     } = this.props.isEdit
       ? Utils.getFlagValue(
           this.props.projectFlag,
@@ -58,25 +58,30 @@ const CreateFlag = class extends Component {
       this.userOverridesPage(1)
     }
     this.state = {
+      allowEditDescription,
       default_enabled: enabled,
+      description,
+      enabledIndentity: false,
+      enabledSegment: false,
       hide_from_client,
-      name,
-      tags: tags || [],
+      identityVariations:
+        this.props.identityFlag &&
+        this.props.identityFlag.multivariate_feature_state_values
+          ? _.cloneDeep(
+              this.props.identityFlag.multivariate_feature_state_values,
+            )
+          : [],
       initial_value:
         typeof feature_state_value === 'undefined'
           ? undefined
           : Utils.getTypedValue(feature_state_value),
-      description,
-      identityVariations: this.props.identityFlag && this.props.identityFlag.multivariate_feature_state_values ? _.cloneDeep(this.props.identityFlag.multivariate_feature_state_values) : [],
-            multivariate_options: _.cloneDeep(multivariate_options),
-          : [],
-      selectedIdentity: null,
-      allowEditDescription,
-      enabledIndentity: false,
-      enabledSegment: false,
-            tab: Utils.fromParam().tab || 0,
       is_archived,
+      multivariate_options: _.cloneDeep(multivariate_options),
+      name,
       period: 30,
+      selectedIdentity: null,
+      tab: Utils.fromParam().tab || 0,
+      tags: tags || [],
     }
   }
 
@@ -178,9 +183,9 @@ const CreateFlag = class extends Component {
         this.setState({
           userOverrides: userOverrides.results,
           userOverridesPaging: {
-            next: userOverrides.next,
             count: userOverrides.count,
             currentPage: page,
+            next: userOverrides.next,
           },
         })
       })
@@ -219,20 +224,20 @@ const CreateFlag = class extends Component {
 
   save = (func, isSaving) => {
     const {
-      projectFlag: _projectFlag,
-      segmentOverrides,
       environmentFlag,
+      environmentId,
       identity,
       identityFlag,
-      environmentId,
+      projectFlag: _projectFlag,
+      segmentOverrides,
     } = this.props
     const {
-      name,
-      initial_value,
-      description,
-      is_archived,
       default_enabled,
+      description,
       hide_from_client,
+      initial_value,
+      is_archived,
+      name,
     } = this.state
     const projectFlag = {
       skipSaveProjectFeature: this.state.skipSaveProjectFeature,
@@ -246,15 +251,17 @@ const CreateFlag = class extends Component {
       !isSaving &&
         name &&
         func({
-          identity,
           environmentFlag,
-                projectFlag,
           environmentId,
-                identityFlag: Object.assign({}, identityFlag || {}, {
-                    multivariate_options: this.state.identityVariations,
-                    feature_state_value: hasMultivariate ? this.props.environmentFlag.feature_state_value : initial_value,
-                    enabled: default_enabled,
-                }),
+          identity,
+          identityFlag: Object.assign({}, identityFlag || {}, {
+            enabled: default_enabled,
+            feature_state_value: hasMultivariate
+              ? this.props.environmentFlag.feature_state_value
+              : initial_value,
+            multivariate_options: this.state.identityVariations,
+          }),
+          projectFlag,
         })
     } else {
       FeatureListStore.isSaving = true
@@ -265,14 +272,14 @@ const CreateFlag = class extends Component {
           this.props.projectId,
           this.props.environmentId,
           {
-            name,
             default_enabled,
-                initial_value,
-            tags: this.state.tags,
             description,
-                hide_from_client,
+            hide_from_client,
+            initial_value,
             is_archived,
             multivariate_options: this.state.multivariate_options,
+            name,
+            tags: this.state.tags,
           },
           projectFlag,
           environmentFlag,
@@ -299,13 +306,13 @@ const CreateFlag = class extends Component {
         (item) =>
           new Promise((resolve) => {
             AppActions.changeUserFlag({
-              identityFlag: item.id,
-              identity: item.identity.id,
               environmentId,
+              identity: item.identity.id,
+              identityFlag: item.id,
               onSuccess: resolve,
               payload: {
                 enabled: enabledIndentity,
-                    id: item.identity.id,
+                id: item.identity.id,
                 value: item.identity.identifier,
               },
             })
@@ -322,15 +329,15 @@ const CreateFlag = class extends Component {
     const { environmentId } = this.props
 
     AppActions.changeUserFlag({
-      identityFlag: id,
-      identity: identity.id,
       environmentId,
+      identity: identity.id,
+      identityFlag: id,
       onSuccess: () => {
         this.userOverridesPage(1)
       },
       payload: {
-        id: identity.id,
         enabled: !enabled,
+        id: identity.id,
         value: identity.identifier,
       },
     })
@@ -361,6 +368,7 @@ const CreateFlag = class extends Component {
         <a
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/flag-analytics'
+          rel='noreferrer'
         >
           here
         </a>
@@ -370,7 +378,7 @@ const CreateFlag = class extends Component {
   }
 
   addItem = () => {
-    const { projectFlag, environmentFlag, environmentId, identity } = this.props
+    const { environmentFlag, environmentId, identity, projectFlag } = this.props
     this.setState({ isLoading: true })
     const selectedIdentity = this.state.selectedIdentity.value
     const identities = identity ? identity.identifier : []
@@ -383,7 +391,7 @@ const CreateFlag = class extends Component {
           }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`,
           {
             enabled: !environmentFlag.enabled,
-                feature: projectFlag.id,
+            feature: projectFlag.id,
             feature_state_value: environmentFlag.value || null,
           },
         )
@@ -415,13 +423,13 @@ const CreateFlag = class extends Component {
 
   addVariation = () => {
     this.setState({
-      valueChanged: true,
       multivariate_options: this.state.multivariate_options.concat([
         {
           ...Utils.valueToFeatureState(''),
           default_percentage_allocation: 0,
         },
       ]),
+      valueChanged: true,
     })
   }
 
@@ -449,18 +457,18 @@ const CreateFlag = class extends Component {
 
   render() {
     const {
-      name,
-      initial_value,
-      hide_from_client,
       default_enabled,
-      multivariate_options,
       description,
-      enabledSegment,
       enabledIndentity,
+      enabledSegment,
+      hide_from_client,
+      initial_value,
+      multivariate_options,
+      name,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
 
-    const { isEdit, projectFlag, identity, identityName } = this.props
+    const { identity, identityName, isEdit, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
     const environmentVariations = this.props.environmentVariations
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
@@ -502,7 +510,7 @@ const CreateFlag = class extends Component {
                   projectId={`${this.props.projectId}`}
                   value={this.state.tags}
                   onChange={(tags) =>
-                    this.setState({ tags, settingsChanged: true })
+                    this.setState({ settingsChanged: true, tags })
                   }
                 />
               }
@@ -606,10 +614,10 @@ const CreateFlag = class extends Component {
               ref={(e) => (this.input = e)}
               data-test='featureID'
               inputProps={{
-                readOnly: isEdit,
                 className: 'full-width',
-                name: 'featureID',
                 maxLength: FEATURE_ID_MAXLENGTH,
+                name: 'featureID',
+                readOnly: isEdit,
               }}
               value={name}
               onChange={(e) => {
@@ -649,7 +657,7 @@ const CreateFlag = class extends Component {
               inputProps={{
                 className: 'full-width',
                 name: 'featureDesc',
-                              readOnly: !!identity || noPermissions,
+                readOnly: !!identity || noPermissions,
                 valueChanged: true,
               }}
               onChange={(e) =>
@@ -687,7 +695,7 @@ const CreateFlag = class extends Component {
                 const initial_value = Utils.getTypedValue(
                   Utils.safeParseEventValue(e),
                 )
-                this.setState({ valueChanged: true, initial_value })
+                this.setState({ initial_value, valueChanged: true })
               }}
               onCheckedChange={(default_enabled) =>
                 this.setState({ default_enabled })
@@ -713,13 +721,13 @@ const CreateFlag = class extends Component {
             }}
           >
             {(
-              { isLoading, isSaving, error, usageData },
+              { error, isLoading, isSaving, usageData },
               {
+                createChangeRequest,
                 createFlag,
+                editFeatureSegments,
                 editFeatureSettings,
                 editFeatureValue,
-                editFeatureSegments,
-                createChangeRequest,
               },
             ) => {
               const saveFeatureValue = (schedule) => {
@@ -735,10 +743,10 @@ const CreateFlag = class extends Component {
                       showAssignees={is4Eyes}
                       changeRequest={this.props.changeRequest}
                       onSave={({
-                        title,
-                        description,
                         approvals,
+                        description,
                         live_from,
+                        title,
                       }) => {
                         closeModal2()
                         this.save(
@@ -758,15 +766,14 @@ const CreateFlag = class extends Component {
                               environmentFlag,
                               segmentOverrides,
                               {
-                                id:
-                                  this.props.changeRequest &&
-                                  this.props.changeRequest.id,
+                                approvals,
+                                description,
                                 featureStateId:
                                   this.props.changeRequest &&
                                   this.props.changeRequest.feature_states[0].id,
-                                title,
-                                description,
-                                approvals,
+                                id:
+                                  this.props.changeRequest &&
+                                  this.props.changeRequest.id,
                                 live_from,
                                 multivariate_options: this.props
                                   .multivariate_options
@@ -784,6 +791,7 @@ const CreateFlag = class extends Component {
                                       }
                                     })
                                   : this.state.multivariate_options,
+                                title,
                               },
                               !is4Eyes,
                             )
@@ -1319,9 +1327,9 @@ const CreateFlag = class extends Component {
                                             </div>
                                           }
                                           renderRow={({
-                                            id,
-                                            feature_state_value,
                                             enabled,
+                                            feature_state_value,
+                                            id,
                                             identity,
                                           }) => (
                                             <Row
@@ -1343,9 +1351,9 @@ const CreateFlag = class extends Component {
                                                 checked={enabled}
                                                 onChange={() =>
                                                   this.toggleUserFlag({
+                                                    enabled,
                                                     id,
                                                     identity,
-                                                    enabled,
                                                   })
                                                 }
                                               />
@@ -1361,7 +1369,8 @@ const CreateFlag = class extends Component {
                                                 target='_blank'
                                                 href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
                                                 className='ml-2 btn btn-link btn--link'
-                                                onClick={() => {}} rel="noreferrer"
+                                                onClick={() => {}}
+                                                rel='noreferrer'
                                               >
                                                 Edit
                                               </a>

@@ -10,11 +10,12 @@ export const availablePermissionService = service
         Res['availablePermissions'],
         Req['getAvailablePermissions']
       >({
-        providesTags:(res,e, query)=>[{ type: 'AvailablePermission', id: query.level },],
-                query: (query: Req['getAvailablePermissions']) => ({
-                    url: `${query.level}s/permissions/`,
-                }),
+        providesTags: (res, e, query) => [
+          { id: query.level, type: 'AvailablePermission' },
         ],
+        query: (query: Req['getAvailablePermissions']) => ({
+          url: `${query.level}s/permissions/`,
+        }),
       }),
       // END OF ENDPOINTS
     }),
