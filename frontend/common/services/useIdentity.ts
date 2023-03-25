@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+
 const getIdentityEndpoint = (environmentId: string, isEdge: boolean) => {
   const identityPart = isEdge ? 'edge-identities' : 'identities'
   return `environments/${environmentId}/${identityPart}`
@@ -69,8 +70,7 @@ export const identityService = service
           if (pageType === 'NEXT') {
             last_evaluated_key = pages?.[pages.length - 1]
           } else if (pageType === 'PREVIOUS') {
-            last_evaluated_key =
-              (pages?.length || 0) >= 1 ? pages![pages!.length - 1] : null
+            last_evaluated_key = pages?.length ? pages[pages.length - 1] : null
           }
           if (last_evaluated_key) {
             url += `&last_evaluated_key=${encodeURIComponent(

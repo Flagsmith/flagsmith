@@ -70,9 +70,6 @@ const ChangeRequestsPage = class extends Component {
       title: changeRequest.title,
     })
   }
-
-  componentWillUpdate() {}
-
   componentDidMount = () => {}
 
   deleteChangeRequest = () => {
@@ -227,20 +224,6 @@ const ChangeRequestsPage = class extends Component {
       projectFlag &&
       projectFlag.multivariate_options &&
       !!projectFlag.multivariate_options.length
-    const {
-      description,
-      enabled,
-      feature_state_value,
-      hide_from_client,
-      is_archived,
-      multivariate_options,
-      name,
-      tags,
-    } = projectFlag
-      ? Utils.getFlagValue(projectFlag, environmentFlag, null)
-      : {
-          multivariate_options: [],
-        }
 
     const approval =
       changeRequest &&
@@ -301,13 +284,13 @@ const ChangeRequestsPage = class extends Component {
         permission={Utils.getApproveChangeRequestPermission(true)}
         id={this.props.match.params.environmentId}
       >
-        {({ isLoading, permission: approvePermission }) => (
+        {({ permission: approvePermission }) => (
           <Permission
             level='environment'
             permission='UPDATE_FEATURE_STATE'
             id={this.props.match.params.environmentId}
           >
-            {({ isLoading, permission: publishPermission }) => (
+            {({ permission: publishPermission }) => (
               <div
                 style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
                 data-test='change-requests-page'
@@ -391,6 +374,7 @@ const ChangeRequestsPage = class extends Component {
                             {ownerUsers &&
                               ownerUsers.map((u) => (
                                 <Row
+                                  key={u.id}
                                   onClick={() => this.removeOwner(u.id)}
                                   className='chip chip--active'
                                 >
@@ -529,6 +513,7 @@ const ChangeRequestsPage = class extends Component {
                           <Flex className='mr-2'>
                             {mvData.map((v, i) => (
                               <div
+                                key={i}
                                 className='mb-4'
                                 style={{
                                   opacity: mvChanged && !v.changed ? 0.25 : 1,
@@ -581,7 +566,7 @@ const ChangeRequestsPage = class extends Component {
                               <div className='text-right mb-2 mr-2'>
                                 <span className='ion icon-primary text-primary icon ion-ios-information-circle mr-2' />
                                 You need at least {minApprovals} approval
-                                {minApprovals != 1 ? 's' : ''} to{' '}
+                                {minApprovals !== 1 ? 's' : ''} to{' '}
                                 {isScheduled ? 'schedule' : 'publish'} this
                                 change
                               </div>

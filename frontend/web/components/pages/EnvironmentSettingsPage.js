@@ -43,9 +43,11 @@ const EnvironmentSettingsPage = class extends Component {
     toast('Environment Saved')
   }
 
-  componentWillReceiveProps(newProps) {
-    if (newProps.projectId !== this.props.projectId) {
-      AppActions.getProject(newProps.match.params.projectId)
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.match.params.projectId !== prevProps.match.params.projectId
+    ) {
+      AppActions.getProject(this.props.match.params.projectId)
     }
   }
 
@@ -108,16 +110,8 @@ const EnvironmentSettingsPage = class extends Component {
       return true
     }
 
-    const env = _.find(ProjectStore.getEnvs(), {
-      api_key: this.props.match.params.environmentId,
-    })
-
     // Must have name
-    if (name !== undefined && !name) {
-      return true
-    }
-
-    return false
+    return !name
   }
 
   createWebhook = () => {
@@ -177,15 +171,7 @@ const EnvironmentSettingsPage = class extends Component {
           onRemove={this.onRemove}
           onSave={this.onSave}
         >
-          {({
-            deleteEnv,
-            deleteProject,
-            editEnv,
-            editProject,
-            isLoading,
-            isSaving,
-            project,
-          }) => {
+          {({ deleteEnv, isLoading, isSaving, project }) => {
             const env = _.find(project.environments, {
               api_key: this.props.match.params.environmentId,
             })

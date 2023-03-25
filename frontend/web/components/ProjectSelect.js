@@ -16,7 +16,7 @@ const ProjectSelect = class extends Component {
   render() {
     return (
       <OrganisationProvider id={this.props.id}>
-        {({ isLoading, projects }) => (
+        {({ projects }) => (
           <>
             {
               <div className={`fade ${projects && !!projects.length && 'in'}`}>

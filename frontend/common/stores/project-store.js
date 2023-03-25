@@ -1,5 +1,4 @@
-// eslint-disable-next-line @dword-design/import-alias/prefer-alias
-import { getIsWidget } from '../../web/components/pages/WidgetPage'
+import { getIsWidget } from 'components/pages/WidgetPage'
 
 import Constants from 'common/constants'
 
@@ -106,8 +105,7 @@ const controller = {
             cb()
           }
         })
-        .catch((e) => {
-          debugger
+        .catch(() => {
           if (!getIsWidget()) {
             document.location.href = '/404?entity=project'
           }
@@ -164,8 +162,6 @@ const store = Object.assign({}, BaseStore, {
     })
   },
   getEnvs: () => store.model && store.model.environments,
-  getFlags: () => store.model && store.model.flags,
-  getId: () => store.model && store.model.id,
   id: 'project',
   model: null,
 })

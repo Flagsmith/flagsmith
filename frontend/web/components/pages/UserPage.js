@@ -18,12 +18,6 @@ import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 
-const returnIfDefined = (value, value2) => {
-  if (value === null || value === undefined) {
-    return value2
-  }
-  return value
-}
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
     actualValue == null ||
@@ -34,7 +28,7 @@ const valuesEqual = (actualValue, flagValue) => {
   if (nullFalseyA && nullFalseyB) {
     return true
   }
-  return actualValue == flagValue
+  return actualValue === flagValue
 }
 const UserPage = class extends Component {
   static displayName = 'UserPage'
@@ -105,7 +99,7 @@ const UserPage = class extends Component {
   }
 
   getActualFlags = () => {
-    const { environmentId, id, identity } = this.props.match.params
+    const { environmentId, id } = this.props.match.params
     if (Utils.getFlagsmithHasFeature('use_admin_identity_featurestates')) {
       const url = `${
         Project.api
@@ -115,7 +109,7 @@ const UserPage = class extends Component {
         .then((res) => {
           this.setState({ actualFlags: _.keyBy(res, (v) => v.feature.name) })
         })
-        .catch((err) => {})
+        .catch(() => {})
     } else {
       const url = `${Utils.getSDKEndpoint()}identities/?identifier=${
         this.props.match.params.identity
@@ -129,7 +123,7 @@ const UserPage = class extends Component {
             actualFlags: _.keyBy(res.flags, (v) => v.feature.name),
           })
         })
-        .catch((err) => {})
+        .catch(() => {})
     }
   }
 
@@ -289,11 +283,9 @@ const UserPage = class extends Component {
                   {(
                     {
                       environmentFlags,
-                      error,
                       identity,
                       identityFlags,
                       isLoading,
-                      isSaving,
                       projectFlags,
                       traits,
                     },
@@ -453,17 +445,7 @@ const UserPage = class extends Component {
                                       value: 'created_date',
                                     },
                                   ]}
-                                  renderRow={(
-                                    {
-                                      created_date,
-                                      enabled,
-                                      feature,
-                                      id,
-                                      name,
-                                      type,
-                                    },
-                                    i,
-                                  ) => {
+                                  renderRow={({ id, name }, i) => {
                                     const identityFlag = identityFlags[id] || {}
                                     const environmentFlag =
                                       (environmentFlags &&
@@ -680,7 +662,7 @@ const UserPage = class extends Component {
                                                         id,
                                                       }),
                                                       actualFlags[name],
-                                                      (environments) => {
+                                                      () => {
                                                         toggleFlag({
                                                           environmentFlag:
                                                             actualFlags[name],
@@ -815,7 +797,7 @@ const UserPage = class extends Component {
                                       },
                                     )
                                   }}
-                                  filterRow={({ name }, search) => true}
+                                  filterRow={() => true}
                                 />
                               </FormGroup>
                               {!preventAddTrait && (
@@ -944,7 +926,7 @@ const UserPage = class extends Component {
                               <IdentitySegmentsProvider
                                 id={this.props.match.params.id}
                               >
-                                {({ isLoading: segmentsLoading, segments }) =>
+                                {({ segments }) =>
                                   !segments ? (
                                     <div className='text-center'>
                                       <Loader />
@@ -959,14 +941,7 @@ const UserPage = class extends Component {
                                         itemHeight={70}
                                         items={segments || []}
                                         renderRow={(
-                                          {
-                                            created_date,
-                                            description,
-                                            enabled,
-                                            id,
-                                            name,
-                                            type,
-                                          },
+                                          { created_date, description, name },
                                           i,
                                         ) => (
                                           <Row

@@ -1,5 +1,4 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 
 class Token extends Component {
   constructor(props) {
@@ -22,7 +21,7 @@ class Token extends Component {
               ? this.props.token
               : this.props.token
                   .split('')
-                  .map((v) => '*')
+                  .map(() => '*')
                   .join('')
                   .trim()
           }

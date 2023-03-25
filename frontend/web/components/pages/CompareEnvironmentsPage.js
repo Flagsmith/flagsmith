@@ -16,7 +16,7 @@ class TheComponent extends Component {
   }
 
   constructor(props) {
-    super()
+    super(props)
     this.state = {
       tab: 0,
     }

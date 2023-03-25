@@ -1,11 +1,11 @@
 import Constants from 'common/constants'
+import { getIsWidget } from 'components/pages/WidgetPage'
+import ProjectStore from './project-store'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const OrganisationStore = require('./organisation-store')
 const data = require('../data/base/_data')
-import { getIsWidget } from 'components/pages/WidgetPage'
-import ProjectStore from './project-store'
 
 let createdFirstFeature = false
 const PAGE_SIZE = 200

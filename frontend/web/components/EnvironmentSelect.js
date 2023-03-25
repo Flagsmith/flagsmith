@@ -8,11 +8,10 @@ const EnvironmentSelect = class extends Component {
     super(props, context)
     this.state = {}
   }
-
   render() {
     return (
       <ProjectProvider id={this.props.projectId}>
-        {({ isLoading, project }) => {
+        {({ project }) => {
           const selectedEnv =
             this.props.value &&
             _.find(project.environments, { api_key: this.props.value })

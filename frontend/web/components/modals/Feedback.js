@@ -36,11 +36,7 @@ const Feedback = class extends Component {
       return false
     }
 
-    if (!this.state.comments || this.state.comments.trim().length === 0) {
-      return false
-    }
-
-    return true
+    return !(!this.state.comments || this.state.comments.trim().length === 0)
   }
 
   sendFeedback = () => {
@@ -77,7 +73,7 @@ const Feedback = class extends Component {
   }
 
   render() {
-    const { comments, email, isSending, name } = this.state
+    const { email, isSending, name } = this.state
     return (
       <div>
         <form
@@ -104,7 +100,6 @@ const Feedback = class extends Component {
             placeholder=''
           />
           <InputGroup
-            ref={(e) => (this.emailInput = e)}
             inputProps={{
               className: 'full-width',
               name: 'email',

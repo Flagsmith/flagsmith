@@ -1,5 +1,4 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
@@ -73,7 +72,7 @@ class ServerSideSDKKeys extends Component {
     this.fetch(this.props.environmentId)
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps) {
     if (prevProps.environmentId !== this.props.environmentId) {
       this.fetch(this.props.environmentId)
     }
@@ -127,7 +126,7 @@ class ServerSideSDKKeys extends Component {
       .then((keys) => {
         this.setState({ isLoading: false, keys })
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({ isLoading: false })
       })
   }
@@ -203,5 +202,4 @@ class ServerSideSDKKeys extends Component {
     )
   }
 }
-
 export default ServerSideSDKKeys

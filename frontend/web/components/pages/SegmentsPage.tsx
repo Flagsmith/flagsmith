@@ -10,9 +10,6 @@ import {
   useGetSegmentsQuery,
 } from 'common/services/useSegment'
 import { useHasPermission } from 'common/providers/Permission'
-
-const CodeHelp = require('../../components/CodeHelp')
-const Panel = require('../../components/base/grid/Panel')
 import API from 'project/api'
 import Button, { ButtonLink } from 'components/base/forms/Button'
 import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
@@ -21,6 +18,9 @@ import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
+
+const CodeHelp = require('../../components/CodeHelp')
+const Panel = require('../../components/base/grid/Panel')
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -48,8 +48,6 @@ const HowToUseSegmentsMessage = () => (
   </div>
 )
 
-type PermissionType = { permission: boolean; isLoading: boolean }
-
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { environmentId, projectId } = props.match.params
   const preselect = useRef(Utils.fromParam().id)
@@ -74,7 +72,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       // Kick user back out to projects
       props.router.history.replace('/projects')
     }
-  }, [error])
+  }, [error, props.router.history])
   const newSegment = () => {
     openModal(
       'New Segment',
@@ -268,11 +266,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                               <button
                                 disabled={!manageSegmentsPermission}
                                 data-test={`remove-segment-btn-${i}`}
-                                onClick={() =>
-                                  confirmRemove(find(segments, { id })!, () => {
-                                    removeSegment({ id, projectId })
-                                  })
-                                }
+                                onClick={() => {
+                                  const segment = find(segments, { id })
+                                  if (segment) {
+                                    confirmRemove(segment, () => {
+                                      removeSegment({ id, projectId })
+                                    })
+                                  }
+                                }}
                                 className='btn btn--with-icon'
                               >
                                 <RemoveIcon />

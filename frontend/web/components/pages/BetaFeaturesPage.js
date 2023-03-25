@@ -81,7 +81,7 @@ const BetaFeaturesPage = class extends Component {
         {Object.keys(features).map((v) => {
           const featureCategory = features[v]
           return (
-            <div className='mb-4'>
+            <div key={v} className='mb-4'>
               <h4 className='mb-4'>{Format.camelCase(v)}</h4>
               <div className='mt-2 mb-2'>
                 {!featureCategory.length && (

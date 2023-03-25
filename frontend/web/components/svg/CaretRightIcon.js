@@ -1,6 +1,6 @@
 import React from 'react'
 
-function CaretRightIcon({ className, fill, height, width }) {
+function CaretRightIcon({ className }) {
   return (
     <svg className={className} width={9} height={10} viewBox='0 0 9 10'>
       <path

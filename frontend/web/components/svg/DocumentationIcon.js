@@ -1,6 +1,6 @@
 import React from 'react'
 
-function DocumentationIcon({ className, fill, height, width }) {
+function DocumentationIcon({ className, height, width }) {
   return (
     <svg
       className={className}

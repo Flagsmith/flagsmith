@@ -12,6 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -42,16 +43,16 @@ const FeaturesPage = class extends Component {
     )
   }
 
-  componentWillUpdate(newProps) {
+  componentDidUpdate(prevProps) {
     const {
       match: { params },
-    } = newProps
+    } = this.props
     const {
       match: { params: oldParams },
-    } = this.props
+    } = prevProps
     if (
-      params.environmentId != oldParams.environmentId ||
-      params.projectId != oldParams.projectId
+      params.environmentId !== oldParams.environmentId ||
+      params.projectId !== oldParams.projectId
     ) {
       AppActions.getFeatures(
         params.projectId,
@@ -91,23 +92,6 @@ const FeaturesPage = class extends Component {
       null,
       { className: 'side-modal fade create-feature-modal' },
     )
-  }
-
-  componentWillReceiveProps(newProps) {
-    if (
-      newProps.match.params.environmentId !=
-      this.props.match.params.environmentId
-    ) {
-      AppActions.getFeatures(
-        newProps.match.params.projectId,
-        newProps.match.params.environmentId,
-        false,
-        this.state.search,
-        null,
-        0,
-        this.getFilter(),
-      )
-    }
   }
 
   getFilter = () => ({
@@ -242,7 +226,7 @@ const FeaturesPage = class extends Component {
                           )}
                           id={this.props.match.params.environmentId}
                         >
-                          {({ isLoading, permission }) => (
+                          {({ permission }) => (
                             <FormGroup className='mb-4'>
                               <PanelSearch
                                 className='no-pad'
@@ -423,7 +407,7 @@ const FeaturesPage = class extends Component {
                                     projectFlag={projectFlag}
                                   />
                                 )}
-                                filterRow={({ name }, search) => true}
+                                filterRow={() => true}
                               />
                             </FormGroup>
                           )}

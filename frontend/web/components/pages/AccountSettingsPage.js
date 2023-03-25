@@ -10,6 +10,7 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+
 class TheComponent extends Component {
   static displayName = 'TheComponent'
 
@@ -27,7 +28,7 @@ class TheComponent extends Component {
   save = (e) => {
     Utils.preventDefault(e)
     const {
-      state: { email, error, first_name, isSaving, last_name },
+      state: { email, first_name, isSaving, last_name },
     } = this
     if (isSaving || !first_name || !last_name) {
       return
@@ -43,7 +44,7 @@ class TheComponent extends Component {
       .then(() => {
         toast('Your account has been updated')
       })
-      .catch((error) =>
+      .catch(() =>
         this.setState({
           error:
             'There was an error setting your account, please check your details',
@@ -90,7 +91,7 @@ class TheComponent extends Component {
       .then(() => {
         toast('Your password has been updated')
       })
-      .catch((passwordError) =>
+      .catch(() =>
         this.setState({
           passwordError:
             'There was an error setting your password, please check your details.',
@@ -105,7 +106,6 @@ class TheComponent extends Component {
         email,
         error,
         first_name,
-        isSaving,
         last_name,
         new_password1,
         new_password2,
@@ -115,10 +115,7 @@ class TheComponent extends Component {
 
     return (
       <AccountProvider>
-        {(
-          { isSaving, user },
-          { confirmTwoFactor, disableTwoFactor, enableTwoFactor },
-        ) => {
+        {({ isSaving }) => {
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
 

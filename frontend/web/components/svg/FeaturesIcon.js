@@ -1,6 +1,6 @@
 import React from 'react'
 
-function FeaturesIcon({ className, fill, height, width }) {
+function FeaturesIcon({ className }) {
   return (
     <svg className={className} viewBox='0 0 21 21'>
       <path

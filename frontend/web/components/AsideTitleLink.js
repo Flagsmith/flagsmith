@@ -1,8 +1,4 @@
 import React, { PureComponent } from 'react'
-import NavLink from 'react-router-dom/NavLink'
-
-const cn = require('classnames')
-
 const AsideTitleLink = class extends PureComponent {
   static displayName = 'AsideTitleLink'
 

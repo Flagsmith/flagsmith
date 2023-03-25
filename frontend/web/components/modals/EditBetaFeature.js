@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import withSegmentOverrides from 'common/providers/withSegmentOverrides'
-import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ValueEditor from 'components/ValueEditor'
 

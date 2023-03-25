@@ -5,6 +5,7 @@ import {
 } from '@datadog/ui-extensions-sdk'
 import * as React from 'react'
 import API from 'project/api'
+
 /**
  * This hook performs any app-wide for the custom widget.
  * @param client The initialized {@link DDClient}

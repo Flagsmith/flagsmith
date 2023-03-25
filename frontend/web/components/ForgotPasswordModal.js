@@ -15,7 +15,6 @@ const ForgotPassword = class extends React.Component {
       )
       if (emailField) {
         emailField.focus()
-        emailField.value = emailField.value
       }
     }, 1000)
   }
@@ -27,7 +26,7 @@ const ForgotPassword = class extends React.Component {
       // data.post(`${Project.api}auth/password/reset/`, { email })
       data
         .post(`${Project.api}auth/users/reset_password/`, { email })
-        .then((res) => {
+        .then(() => {
           this.props.onComplete && this.props.onComplete()
           closeModal()
         })

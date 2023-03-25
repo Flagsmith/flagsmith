@@ -4,6 +4,7 @@ import TabItem from './base/forms/TabItem'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import { Clipboard } from 'polyfill-react-native'
 
 const getGithubLink = (key) => {
   switch (key) {
@@ -166,12 +167,7 @@ const CodeHelp = class extends Component {
                   }),
                 }}
               />
-              <Tabs
-                value={tab}
-                onChange={(tab) => {
-                  const lang = Object.keys(this.props.snippets)[tab]
-                }}
-              >
+              <Tabs value={tab}>
                 {_.map(this.props.snippets, (s, key) => {
                   const docs = getDocsLink(key)
                   const github = getGithubLink(key)

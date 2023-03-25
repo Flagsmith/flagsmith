@@ -1,6 +1,6 @@
 import React from 'react'
 
-function CaretDownIcon({ className, fill, height, width }) {
+function CaretDownIcon({ className }) {
   return (
     <div style={{ paddingRight: 2 }}>
       <svg

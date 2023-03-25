@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import DatePicker from 'react-datepicker'
 import UserSelect from 'components/UserSelect'
-import data from 'common/data/base/_data'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 
@@ -139,6 +138,7 @@ const ChangeRequestModal = class extends Component {
                         <Row>
                           {ownerUsers.map((u) => (
                             <Row
+                              key={u.id}
                               onClick={() => this.removeOwner(u.id)}
                               className='chip chip--active'
                             >

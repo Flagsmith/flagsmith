@@ -1,6 +1,6 @@
 import React from 'react'
 
-function PlusIcon({ className, fill, height, width }) {
+function PlusIcon({ className, width }) {
   return (
     <svg width={width} className={className} viewBox='0 0 15 13'>
       <path

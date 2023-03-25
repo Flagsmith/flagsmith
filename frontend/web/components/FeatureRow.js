@@ -1,4 +1,4 @@
-import React, { FunctionComponent, Component } from 'react'
+import React, { Component } from 'react'
 import TagValues from './tags/TagValues'
 import HistoryIcon from './HistoryIcon'
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature'

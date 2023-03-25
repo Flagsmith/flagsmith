@@ -27,7 +27,7 @@ const InvitePage = class extends Component {
     return (
       <div className='app-container'>
         <AccountProvider onSave={this.onSave}>
-          {({ error, isSaving }) => (
+          {({ error }) => (
             <div className='centered-container'>
               <div>
                 {error ? (

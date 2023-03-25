@@ -61,8 +61,8 @@ const App = class extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (this.props.location.pathname !== nextProps.location.pathname) {
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.pathname !== this.props.location.pathname) {
       if (isMobile) {
         this.setState({ asideIsVisible: false })
       }
@@ -110,13 +110,13 @@ const App = class extends Component {
 
     // Redirect on login
     if (
-      this.props.location.pathname == '/' ||
-      this.props.location.pathname == '/widget' ||
-      this.props.location.pathname == '/saml' ||
+      this.props.location.pathname === '/' ||
+      this.props.location.pathname === '/widget' ||
+      this.props.location.pathname === '/saml' ||
       this.props.location.pathname.includes('/oauth') ||
-      this.props.location.pathname == '/login' ||
-      this.props.location.pathname == '/demo' ||
-      this.props.location.pathname == '/signup'
+      this.props.location.pathname === '/login' ||
+      this.props.location.pathname === '/demo' ||
+      this.props.location.pathname === '/signup'
     ) {
       if (redirect) {
         API.setRedirect('')
@@ -185,10 +185,7 @@ const App = class extends Component {
     ) {
       document.body.classList.add('dark')
     }
-    const {
-      location,
-      match: { params },
-    } = this.props
+    const { location } = this.props
     const pathname = location.pathname
     const { asideIsVisible } = this.state
     const match = matchPath(pathname, {
@@ -206,9 +203,9 @@ const App = class extends Component {
     const environmentId = _.get(match, 'params.environmentId')
     const pageHasAside = environmentId || projectId
     const isHomepage =
-      pathname == '/' ||
-      pathname == '/login' ||
-      pathname == '/signup' ||
+      pathname === '/' ||
+      pathname === '/login' ||
+      pathname === '/signup' ||
       pathname.includes('/invite')
     if (Project.amplitude) {
       amplitude.getInstance().init(Project.amplitude)
@@ -252,7 +249,7 @@ const App = class extends Component {
           onLogout={this.onLogout}
           onLogin={this.onLogin}
         >
-          {({ isLoading, isSaving, organisation, user }, { twoFactorLogin }) =>
+          {({ isSaving, organisation, user }, { twoFactorLogin }) =>
             user && user.twoFactorPrompt ? (
               <div className='col-md-6 push-md-3 mt-5'>
                 <TwoFactorPrompt
@@ -334,9 +331,6 @@ const App = class extends Component {
                                     ) && (
                                       <a
                                         href='#'
-                                        disabled={
-                                          !this.state.manageSubscriptionLoaded
-                                        }
                                         className='cursor-pointer nav-link p-2'
                                         onClick={() => {
                                           openModal(

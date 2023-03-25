@@ -1,5 +1,5 @@
-import React, { FC, useMemo, useState } from 'react'
-import { FeatureState, Identity, Res } from 'common/types/responses' // we need this to make JSX compile
+import React, { FC, useMemo } from 'react'
+import { Identity, Res } from 'common/types/responses' // we need this to make JSX compile
 import { filter, find } from 'lodash'
 import { useGetIdentitiesQuery } from 'common/services/useIdentity'
 import useInfiniteScroll from 'common/useInfiniteScroll'
@@ -7,6 +7,7 @@ import { Req } from 'common/types/requests'
 import { components } from 'react-select'
 import { ButtonOutline } from './base/forms/Button'
 import Utils from 'common/utils/utils'
+
 type IdentitySelectType = {
   value: Identity['id'] | null | undefined
   ignoreIds?: Identity['id'][]

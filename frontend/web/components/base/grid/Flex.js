@@ -1,6 +1,3 @@
-// propTypes: value: OptionalNumber
-const cn = require('classnames')
-
 const Flex = class extends React.Component {
   static displayName = 'Flex'
 

@@ -68,7 +68,6 @@ const Input = class extends React.Component {
       inputClassName,
       isValid,
       mask,
-      onSearchChange,
       placeholderChar,
       showSuccess,
       ...rest

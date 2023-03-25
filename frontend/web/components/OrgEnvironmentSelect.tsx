@@ -2,7 +2,7 @@ import React, { FC, useMemo, useState } from 'react'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { Environment, Segment } from 'common/types/responses'
+import { Environment } from 'common/types/responses'
 import Format from 'common/utils/format'
 import { sortBy } from 'lodash'
 import PanelSearch from './PanelSearch'
@@ -33,11 +33,14 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
   const { data: organisations, isLoading: organisationsLoading } =
     useGetOrganisationsQuery({})
   const { data: projects, isLoading: projectsLoading } = useGetProjectsQuery(
-    { organisationId: organisationId! },
+    { organisationId: organisationId as string },
     { skip: !organisationId },
   )
   const { data: environments, isLoading: environmentsLoading } =
-    useGetEnvironmentsQuery({ projectId: projectId! }, { skip: !projectId })
+    useGetEnvironmentsQuery(
+      { projectId: projectId as string },
+      { skip: !projectId },
+    )
   const organisation = useMemo(
     () => organisations?.results?.find((v) => `${v.id}` === organisationId),
     [organisations, organisationId],
@@ -158,7 +161,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
           }
           onChange={setSearch}
           search={search}
-          renderRow={({ api_key, id, name }: Environment, i: number) => (
+          renderRow={({ api_key, id, name }: Environment) => (
             <a
               className='list-item clickable'
               onClick={() => {

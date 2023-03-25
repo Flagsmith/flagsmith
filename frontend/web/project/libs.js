@@ -19,7 +19,6 @@ import every from 'lodash/every';
 import get from 'lodash/get';
 import { isMobile } from 'react-device-detect';
 import propTypes from 'prop-types';
-import Bootstrap from '../../node_modules/bootstrap/dist/js/bootstrap';
 // Add this line if you're using flagsmith via npm
 const _Project = require('../../common/project');
 

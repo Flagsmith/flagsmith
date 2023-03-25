@@ -182,7 +182,7 @@ export default class AdminAPIKeys extends PureComponent {
               AccountStore.getOrganisation().id
             }/master-api-keys/${v.prefix}/`,
           )
-          .then((res) => {
+          .then(() => {
             this.fetch()
           })
       },

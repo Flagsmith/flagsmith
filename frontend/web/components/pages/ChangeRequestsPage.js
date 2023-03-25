@@ -27,9 +27,6 @@ const ChangeRequestsPage = class extends Component {
     this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
   }
-
-  componentWillUpdate() {}
-
   componentDidMount = () => {
     AppActions.getChangeRequests(this.props.match.params.environmentId, {})
     AppActions.getChangeRequests(this.props.match.params.environmentId, {
@@ -42,7 +39,7 @@ const ChangeRequestsPage = class extends Component {
   }
 
   render() {
-    const { envId, environmentId, projectId } = this.props.match.params
+    const { environmentId, projectId } = this.props.match.params
     const data =
       ChangeRequestStore.model &&
       ChangeRequestStore.model[environmentId] &&
@@ -62,15 +59,6 @@ const ChangeRequestsPage = class extends Component {
       ChangeRequestStore.committed &&
       ChangeRequestStore.committed[environmentId] &&
       ChangeRequestStore.committed[environmentId]
-
-    const dataScheduled =
-      ChangeRequestStore.scheduled &&
-      ChangeRequestStore.scheduled[environmentId] &&
-      ChangeRequestStore.scheduled[environmentId].results
-    const dataScheduledPaging =
-      ChangeRequestStore.scheduled &&
-      ChangeRequestStore.scheduled[environmentId] &&
-      ChangeRequestStore.scheduled[environmentId]
 
     const environment = ProjectStore.getEnvironment(environmentId)
 
@@ -181,10 +169,13 @@ const ChangeRequestsPage = class extends Component {
                         json={data}
                       />
                     )}
-                    renderRow={(
-                      { created_at, id, live_from, title, user: _user },
-                      index,
-                    ) => {
+                    renderRow={({
+                      created_at,
+                      id,
+                      live_from,
+                      title,
+                      user: _user,
+                    }) => {
                       const user =
                         (OrganisationStore.model &&
                           OrganisationStore.model.users &&
@@ -268,10 +259,7 @@ const ChangeRequestsPage = class extends Component {
                         json={dataClosed}
                       />
                     )}
-                    renderRow={(
-                      { created_at, id, title, user: _user },
-                      index,
-                    ) => {
+                    renderRow={({ created_at, id, title, user: _user }) => {
                       const user =
                         OrganisationStore.model &&
                         OrganisationStore.model.users.find(

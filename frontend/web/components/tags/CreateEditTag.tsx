@@ -1,4 +1,4 @@
-import React, { FC, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import React, { FC, KeyboardEvent, useEffect, useState } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
@@ -39,11 +39,13 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     if (createSuccess && createData) {
       onComplete(createData)
     }
+    //eslint-disable-next-line
   }, [createSuccess])
   useEffect(() => {
     if (createSuccess && editData) {
       onComplete(editData)
     }
+    //eslint-disable-next-line
   }, [editSuccess])
 
   useEffect(() => {
@@ -98,10 +100,9 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         component={
           <Row className='mb-2'>
             {Constants.tagColors.map((color) => (
-              <div className='tag--select mr-2 mb-2'>
+              <div key={color} className='tag--select mr-2 mb-2'>
                 <Tag
                   onClick={(e: TTag) => update('color', e.color)}
-                  key={color}
                   selected={tag?.color === color}
                   tag={{ color }}
                 />
@@ -112,7 +113,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       />
       <div className='text-center'>
         <Permission level='project' permission='ADMIN' id={projectId}>
-          {({ isLoading, permission }) =>
+          {({ permission }) =>
             Utils.renderWithPermission(
               permission,
               Constants.projectPermissions('Admin'),

@@ -1,6 +1,6 @@
 import React from 'react'
 
-function PlayIcon({ className, fill, height, width }) {
+function PlayIcon({ className }) {
   return (
     <svg className={className} viewBox='0 0 315 315'>
       <path

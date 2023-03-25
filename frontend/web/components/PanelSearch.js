@@ -116,9 +116,7 @@ const PanelSearch = class extends Component {
       paging,
       prevPage,
       renderNoResults,
-      renderRow,
       sorting,
-      title,
     } = this.props
     const filteredItems = this.filter(items)
     const currentSort = _.find(sorting, { value: sortBy })
@@ -153,8 +151,9 @@ const PanelSearch = class extends Component {
                   >
                     {(toggle) => (
                       <div className='popover-inner__content'>
-                        {this.props.sorting.map((sortOption) => (
+                        {this.props.sorting.map((sortOption, i) => (
                           <a
+                            key={i}
                             className='popover-bt__list-item'
                             href='#'
                             onClick={(e) => {

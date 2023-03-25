@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import PaymentModal from './Payment'
+import ErrorMessage from 'components/ErrorMessage'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -32,7 +33,7 @@ const CreateProject = class extends Component {
     const { name } = this.state
     return (
       <OrganisationProvider onSave={this.close}>
-        {({ createProject, error, isLoading, isSaving, projects }) => {
+        {({ createProject, error, isSaving, projects }) => {
           const hasProject = !!projects && !!projects.length
           const canCreate = !!Utils.getPlansPermission(
             'CREATE_ADDITIONAL_PROJECT',
@@ -85,7 +86,7 @@ const CreateProject = class extends Component {
                   title='Project Name*'
                   placeholder='My Product Name'
                 />
-                {error && <Error error={error} />}
+                {error && <ErrorMessage error={error} />}
                 <div className='text-right'>
                   <Button
                     data-test='create-project-btn'

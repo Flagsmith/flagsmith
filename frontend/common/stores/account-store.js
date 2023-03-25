@@ -2,6 +2,7 @@ const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
+
 const controller = {
   acceptInvite: (id) => {
     store.saving()

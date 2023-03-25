@@ -1,10 +1,10 @@
 import Promise from 'promise-polyfill'
 import 'whatwg-fetch'
 import {
-  AsyncStorage,
   AppState,
-  NetInfo,
+  AsyncStorage,
   Clipboard,
+  NetInfo,
 } from 'polyfill-react-native'
 import Switch from 'components/Switch'
 
@@ -21,7 +21,7 @@ if (!window.Promise) {
 
 // Object Assign
 if (typeof Object.assign !== 'function') {
-  Object.assign = function (target, varArgs) {
+  Object.assign = function (target) {
     if (target == null) {
       // TypeError if undefined or null
       throw new TypeError('Cannot convert undefined or null to object')

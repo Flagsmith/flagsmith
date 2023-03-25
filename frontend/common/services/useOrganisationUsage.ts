@@ -2,7 +2,6 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
-import Project from 'common/project'
 
 export const organisationUsageService = service
   .enhanceEndpoints({ addTagTypes: ['OrganisationUsage'] })

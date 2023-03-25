@@ -1,5 +1,4 @@
 import React from 'react'
-import Constants from 'common/constants'
 
 export default function AddVariationButton({ disabled, onClick }) {
   return (

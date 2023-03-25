@@ -3,6 +3,7 @@ import Select from 'react-select'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
+import ErrorMessage from 'components/ErrorMessage'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
@@ -59,7 +60,7 @@ const CreateEnvironmentPage = class extends Component {
                       id={this.props.match.params.projectId}
                       onSave={this.onSave}
                     >
-                      {({ createEnv, error, isLoading, isSaving, project }) => {
+                      {({ createEnv, error, isSaving, project }) => {
                         if (
                           project &&
                           project.environments &&
@@ -174,7 +175,7 @@ const CreateEnvironmentPage = class extends Component {
                               </div>
                             </div>
 
-                            {error && <Error error={error} />}
+                            {error && <ErrorMessage error={error} />}
                             <div className='text-right'>
                               {permission ? (
                                 <Button

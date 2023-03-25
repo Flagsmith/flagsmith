@@ -1,5 +1,4 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import Select from 'react-select'
 import _data from 'common/data/base/_data'
 
@@ -12,7 +11,7 @@ class FlagSelect extends Component {
     this.fetch()
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps) {
     if (prevProps.projectId !== this.props.projectId) {
       this.fetch()
     }

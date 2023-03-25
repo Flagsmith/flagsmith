@@ -1,6 +1,6 @@
 import React from 'react'
 
-function EnvironmentSettingsIcon({ className, fill, height, width }) {
+function EnvironmentSettingsIcon({ className }) {
   return (
     <svg className={className} viewBox='0 0 26 21'>
       <path

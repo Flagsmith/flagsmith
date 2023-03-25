@@ -47,7 +47,7 @@ const ProjectSelectPage = class extends Component {
         className='app-container container pt-5'
       >
         <OrganisationProvider>
-          {({ isLoading, name, projects, users }) => (
+          {({ isLoading, projects }) => (
             <div>
               {projects && projects.length ? (
                 <div className='flex-row pl-0 pr-0'>
@@ -64,13 +64,12 @@ const ProjectSelectPage = class extends Component {
                       permission='CREATE_PROJECT'
                       id={AccountStore.getOrganisation().id}
                     >
-                      {({ isLoading, permission }) => {
-                        const canCreate = permission
+                      {({ permission }) => {
                         return Utils.renderWithPermission(
                           permission,
                           Constants.environmentPermissions('Create Project'),
                           <Button
-                            disabled={!canCreate}
+                            disabled={!permission}
                             className='float-right btn__md-full mb-md-0 mb-3'
                             onClick={this.newProject}
                           >
@@ -147,15 +146,14 @@ const ProjectSelectPage = class extends Component {
                                 permission='CREATE_PROJECT'
                                 id={AccountStore.getOrganisation().id}
                               >
-                                {({ isLoading, permission }) => {
-                                  const canCreate = permission
+                                {({ permission }) => {
                                   return Utils.renderWithPermission(
                                     permission,
                                     Constants.environmentPermissions(
                                       'Create Project',
                                     ),
                                     <button
-                                      disabled={!canCreate}
+                                      disabled={!permission}
                                       onClick={this.newProject}
                                       className='btn btn-primary btn-lg'
                                       data-test='create-first-project-btn'

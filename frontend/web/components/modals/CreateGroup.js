@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import UserGroupsProvider from 'common/providers/UserGroupsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
+
 const CreateGroup = class extends Component {
   static displayName = 'CreateGroup'
 

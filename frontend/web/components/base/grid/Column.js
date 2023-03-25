@@ -1,8 +1,5 @@
 // propTypes: value: OptionalNumber
 import { PureComponent } from 'react'
-
-const cn = require('classnames')
-
 const Column = class extends PureComponent {
   static displayName = 'Column'
 

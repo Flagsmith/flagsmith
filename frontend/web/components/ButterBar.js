@@ -1,5 +1,4 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ProjectStore from 'common/stores/project-store'
 import ReactMarkdown from 'react-markdown'
@@ -9,13 +8,12 @@ class ButterBar extends Component {
     router: propTypes.object.isRequired,
   }
 
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     ES6Component(this)
   }
 
   render() {
-    let environmentBanner
     const matches = document.location.href.match(/\/environment\/([^/]*)/)
     const environment = matches && matches[1]
     if (environment) {

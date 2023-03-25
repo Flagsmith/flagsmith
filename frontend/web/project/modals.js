@@ -2,7 +2,7 @@ import { render } from 'react-dom'
 import React from 'react'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
-
+import 'bootstrap/dist/js/bootstrap'
 let interceptClose
 export const setInterceptClose = (fn) => {
   interceptClose = fn

@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
+
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal')
 
 class Integration extends Component {
@@ -22,8 +23,7 @@ class Integration extends Component {
   }
 
   render() {
-    const { description, docs, image, perEnvironment, title } =
-      this.props.integration
+    const { description, docs, image, perEnvironment } = this.props.integration
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -64,6 +64,7 @@ class Integration extends Component {
         {activeIntegrations &&
           activeIntegrations.map((integration) => (
             <div
+              key={integration.id}
               className='list-item clickable'
               onClick={() => this.edit(integration)}
             >
@@ -122,7 +123,7 @@ class IntegrationList extends Component {
                   .get(
                     `${Project.api}environments/${env.api_key}/integrations/${key}/`,
                   )
-                  .catch((e) => {}),
+                  .catch(() => {}),
               ),
             ).then((res) => {
               let allItems = []
@@ -144,7 +145,7 @@ class IntegrationList extends Component {
             .get(
               `${Project.api}projects/${this.props.projectId}/integrations/${key}/`,
             )
-            .catch((e) => {})
+            .catch(() => {})
         }
       }),
     ).then((res) => {

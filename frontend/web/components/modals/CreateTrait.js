@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Highlight from 'components/Highlight'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
+import ErrorMessage from 'components/ErrorMessage'
 
 const CreateTrait = class extends Component {
   static displayName = 'CreateTrait'
@@ -53,7 +54,7 @@ const CreateTrait = class extends Component {
       <ProjectProvider id={projectId}>
         {({ project }) => (
           <IdentityProvider onSave={this.onSave}>
-            {({ error, isLoading, isSaving }, { createTrait }) => (
+            {({ error, isSaving }, { createTrait }) => (
               <form
                 id='create-trait-modal'
                 onSubmit={(e) => {
@@ -102,7 +103,7 @@ const CreateTrait = class extends Component {
                   />
                 </FormGroup>
 
-                {error && <Error error={error} />}
+                {error && <ErrorMessage error={error} />}
 
                 <p className='text-right faint-lg'>
                   This will {isEdit ? 'update' : 'create'} a user trait{' '}
@@ -150,7 +151,7 @@ const CreateTrait = class extends Component {
     )
   }
 
-  save = (func, isSaving) => {
+  save = (func) => {
     const {
       props: { environmentId, identity },
       state: { id, trait_key, trait_value },

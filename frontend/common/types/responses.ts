@@ -207,6 +207,24 @@ export type ProjectFlag = {
   uuid: string
 }
 
+export type FeatureListProviderData = {
+  projectFlags: ProjectFlag[] | null
+  environmentFlags: FeatureState[] | null
+  error: boolean
+  isLoading: boolean
+}
+
+export type FeatureListProviderActions = {
+  toggleFlag: (
+    index: number,
+    environments: Environment[],
+    comment: string | null,
+    environmentFlags: FeatureState[],
+    projectFlags: ProjectFlag[],
+  ) => void
+  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment

@@ -68,8 +68,6 @@ const SegmentOverrideInner = class Override extends React.Component {
     const changed = !v.id || this.state.changed
     const showValue = !(multivariateOptions && multivariateOptions.length)
     const controlPercent = Utils.calculateControl(mvOptions)
-    const invalid =
-      !!multivariateOptions && multivariateOptions.length && controlPercent < 0
     if (!v || v.toRemove) {
       if (this.props.id) {
         return (

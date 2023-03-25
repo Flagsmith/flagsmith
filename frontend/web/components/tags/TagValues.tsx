@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
-import { Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import { useGetTagsQuery } from 'common/services/useTag'
 

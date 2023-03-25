@@ -37,7 +37,7 @@ const CreateAuditWebhook = class extends Component {
     this.props
       .save(webhook)
       .then(() => closeModal())
-      .catch((e) => {
+      .catch(() => {
         this.setState({ error: true, isSaving: false })
       })
   }
@@ -49,7 +49,7 @@ const CreateAuditWebhook = class extends Component {
     } = this
     return (
       <ProjectProvider id={this.props.projectId}>
-        {({ project }) => (
+        {() => (
           <form
             onSubmit={(e) => {
               e.preventDefault()

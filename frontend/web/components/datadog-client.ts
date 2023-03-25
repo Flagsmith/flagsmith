@@ -1,4 +1,4 @@
-import { init, DDClient } from '@datadog/ui-extensions-sdk'
+import { DDClient, init } from '@datadog/ui-extensions-sdk'
 import API from 'project/api'
 
 const client: DDClient = init({

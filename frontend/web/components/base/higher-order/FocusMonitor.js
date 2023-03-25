@@ -32,7 +32,7 @@ const FocusMonitor = class extends React.Component {
 
   _clickDocument = (e) => {
     const component = ReactDOM.findDOMNode(this)
-    if (e.target == component || $(component).has(e.target).length) {
+    if (e.target === component || $(component).has(e.target).length) {
       this.focusChanged(true)
     } else {
       this.focusChanged(false)
@@ -42,12 +42,8 @@ const FocusMonitor = class extends React.Component {
   componentDidMount() {
     const node = ReactDOM.findDOMNode(this)
     if (this.props.isHover) {
-      node.addEventListener('mouseover', (e) => this.focusChanged(true), false)
-      node.addEventListener(
-        'mouseleave',
-        (e) => this.focusChanged(false),
-        false,
-      )
+      node.addEventListener('mouseover', () => this.focusChanged(true), false)
+      node.addEventListener('mouseleave', () => this.focusChanged(false), false)
     } else {
       window.addEventListener('mousedown', this._clickDocument, false)
     }

@@ -24,11 +24,11 @@ const TagFilter: FC<TagFilterType> = ({
   showUntagged,
   value: _value,
 }) => {
-  const { data: projectTags, isLoading: tagsLoading } = useGetTagsQuery({
+  const { data: projectTags } = useGetTagsQuery({
     projectId,
   })
 
-  const isSelected = (tag: TTag) => _value?.includes(tag.id!)
+  const isSelected = (tag: TTag) => _value?.includes(tag?.id)
   const onSelect = (tag: TTag) => {
     const value = _value || []
     if (value.includes(tag.id)) {
@@ -80,8 +80,8 @@ const TagFilter: FC<TagFilterType> = ({
                   onChange([])
                 } else {
                   onChange(
-                    // @ts-ignore mixed array type
                     (showUntagged ? [''] : []).concat(
+                      // @ts-ignore mixed array type
                       (projectTags || [])?.map((v) => v.id),
                     ),
                   )

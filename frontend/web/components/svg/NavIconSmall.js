@@ -1,6 +1,6 @@
 import React from 'react'
 
-function NavIconSmall({ className, fill, height, width }) {
+function NavIconSmall({ className }) {
   return (
     <svg className={className} viewBox='0 0 320 320'>
       <g>

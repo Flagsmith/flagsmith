@@ -1,4 +1,4 @@
-import React, { Component, useEffect, FC, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { RouterChildContext } from 'react-router'
 import { Link } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
@@ -12,13 +12,14 @@ import {
 import useSearchThrottle from 'common/useSearchThrottle'
 import { Req } from 'common/types/requests'
 import { Identity } from 'common/types/responses'
-
-const CodeHelp = require('../CodeHelp')
 import CreateUserModal from 'components/modals/CreateUser'
 import RemoveIcon from 'components/RemoveIcon'
 import PanelSearch from 'components/PanelSearch'
 import Button, { ButtonLink } from 'components/base/forms/Button' // we need this to make JSX compile
 import JSONReference from 'components/JSONReference' // we need this to make JSX compile
+import Utils from 'common/utils/utils'
+
+const CodeHelp = require('../CodeHelp')
 
 type UsersPageType = {
   router: RouterChildContext['router']
@@ -29,7 +30,6 @@ type UsersPageType = {
     }
   }
 }
-import Utils from 'common/utils/utils'
 const UsersPage: FC<UsersPageType> = (props) => {
   const [page, setPage] = useState<{
     number: number

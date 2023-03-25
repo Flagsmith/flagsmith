@@ -2,14 +2,14 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  SegmentCondition,
-  Project as ProjectType,
-  MultivariateFeatureStateValue,
-  MultivariateOption,
+  FeatureState,
   FeatureStateValue,
   FlagsmithValue,
+  MultivariateFeatureStateValue,
+  MultivariateOption,
+  Project as ProjectType,
   ProjectFlag,
-  FeatureState,
+  SegmentCondition,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'

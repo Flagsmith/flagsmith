@@ -1,4 +1,4 @@
-import React, { FC, PureComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import color from 'color'
 import cx from 'classnames'
 

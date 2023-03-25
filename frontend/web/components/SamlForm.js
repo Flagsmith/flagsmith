@@ -57,7 +57,7 @@ const SamlForm = class extends React.Component {
         <Row className='text-right mb-4'>
           <Flex />
           <input
-            onChange={(e) => {
+            onChange={() => {
               const remember = !this.state.remember
               if (!remember) {
                 API.setCookie('saml', null)
@@ -76,9 +76,8 @@ const SamlForm = class extends React.Component {
 
         <div className='text-right'>
           <Button
-            disabled={this.state.isLoading}
             type='submit'
-            disabled={!this.state.saml}
+            disabled={!this.state.saml || this.state.isLoading}
           >
             Continue
           </Button>

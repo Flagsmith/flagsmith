@@ -5,7 +5,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 
 class TheComponent extends Component {
   state = {}
-
   componentDidMount() {
     this.getData()
   }
@@ -71,6 +70,7 @@ class TheComponent extends Component {
                 {hasPermission &&
                   ownerUsers.map((u) => (
                     <Row
+                      key={u.id}
                       onClick={() => this.removeOwner(u.id)}
                       className='chip chip--active'
                     >

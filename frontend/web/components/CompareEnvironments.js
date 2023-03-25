@@ -21,7 +21,7 @@ class CompareEnvironments extends Component {
   }
 
   constructor(props) {
-    super()
+    super(props)
     this.state = {
       environmentLeft: props.environmentId,
       environmentRight: '',
@@ -31,7 +31,7 @@ class CompareEnvironments extends Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps, prevState) {
     if (
       this.state.environmentLeft !== prevState.environmentLeft ||
       this.state.environmentRight !== prevState.environmentRight
@@ -172,7 +172,7 @@ class CompareEnvironments extends Component {
                           )}
                           id={this.props.environmentId}
                         >
-                          {({ isLoading, permission }) => (
+                          {({ permission }) => (
                             <FeatureRow
                               condensed
                               fadeEnabled={fadeEnabled}
@@ -201,7 +201,7 @@ class CompareEnvironments extends Component {
                           )}
                           id={this.props.environmentId}
                         >
-                          {({ isLoading, permission }) => (
+                          {({ permission }) => (
                             <FeatureRow
                               condensed
                               fadeEnabled={fadeEnabled}

@@ -1,6 +1,6 @@
 import React from 'react'
 
-function SegmentsIcon({ className, fill, height, width }) {
+function SegmentsIcon({ className }) {
   return (
     <svg className={className} viewBox='0 0 21 21'>
       <path

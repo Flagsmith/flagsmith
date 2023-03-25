@@ -59,7 +59,7 @@ class CreateOrganisationPage extends Component {
           Organisations allow you to manage multiple projects within a team.
         </p>
         <AccountProvider onSave={this.onSave}>
-          {({ isSaving }, { createOrganisation, selectOrganisation }) => (
+          {({ isSaving }, { createOrganisation }) => (
             <form
               onSubmit={(e) => {
                 e.preventDefault()

@@ -1,6 +1,6 @@
 import React from 'react'
 
-function UpgradeIcon({ className, fill, height, width }) {
+function UpgradeIcon({ className, height, width }) {
   return (
     <svg
       className={className}

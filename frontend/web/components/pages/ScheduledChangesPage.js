@@ -24,9 +24,6 @@ const ChangeRequestsPage = class extends Component {
     this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
   }
-
-  componentWillUpdate() {}
-
   componentDidMount = () => {
     AppActions.getChangeRequests(this.props.match.params.environmentId, {})
     AppActions.getChangeRequests(this.props.match.params.environmentId, {
@@ -39,26 +36,12 @@ const ChangeRequestsPage = class extends Component {
   }
 
   render() {
-    const { envId, environmentId, projectId } = this.props.match.params
-    const data =
-      ChangeRequestStore.model &&
-      ChangeRequestStore.model[environmentId] &&
-      ChangeRequestStore.model[environmentId] &&
-      ChangeRequestStore.model[environmentId].results
+    const { environmentId, projectId } = this.props.match.params
     const dataPaging =
       ChangeRequestStore.model &&
       ChangeRequestStore.model[environmentId] &&
       ChangeRequestStore.model[environmentId] &&
       ChangeRequestStore.model[environmentId]
-
-    const dataClosed =
-      ChangeRequestStore.committed &&
-      ChangeRequestStore.committed[environmentId] &&
-      ChangeRequestStore.committed[environmentId].results
-    const dataClosedPaging =
-      ChangeRequestStore.committed &&
-      ChangeRequestStore.committed[environmentId] &&
-      ChangeRequestStore.committed[environmentId]
 
     const dataScheduled =
       ChangeRequestStore.scheduled &&
@@ -157,10 +140,7 @@ const ChangeRequestsPage = class extends Component {
                         `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`,
                       )
                     }
-                    renderRow={(
-                      { created_at, id, title, user: _user },
-                      index,
-                    ) => {
+                    renderRow={({ created_at, id, title, user: _user }) => {
                       const user =
                         OrganisationStore.model &&
                         OrganisationStore.model.users.find(

@@ -3,6 +3,7 @@ import makeAsyncScriptLoader from 'react-async-script'
 import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
     AccountStore.getOrganisation().id,
@@ -64,24 +65,13 @@ const PaymentModal = class extends Component {
     toast('Account Updated')
     closeModal()
   }
-
-  componentWillReceiveProps(newProps) {}
-
   render() {
     const viewOnly = this.props.viewOnly
 
     return (
       <div className='app-container container'>
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
-          {(
-            { isLoading, isSaving, organisation, user },
-            {
-              createOrganisation,
-              deleteOrganisation,
-              editOrganisation,
-              selectOrganisation,
-            },
-          ) => {
+          {({ organisation }) => {
             const plan =
               (organisation &&
                 organisation.subscription &&
@@ -393,7 +383,7 @@ module.exports = (props) => (
         site: Project.chargebee.site,
       })
       Chargebee.registerAgain()
-      Chargebee.getInstance().setCheckoutCallbacks((cart) => ({
+      Chargebee.getInstance().setCheckoutCallbacks(() => ({
         success: (hostedPageId) => {
           AppActions.updateSubscription(hostedPageId)
         },

@@ -31,8 +31,22 @@ class Highlight extends React.Component {
     this.highlightCode()
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this.highlightCode()
+    if (this.props.className !== prevProps.className) {
+      setTimeout(() => {
+        this.highlightCode()
+      }, 100)
+    }
+    if (this.state.prevValue !== this.props.children) {
+      this.setState({
+        key: Date.now(),
+        value: {
+          ...this.state.value,
+          __html: this.props.children,
+        },
+      })
+    }
   }
 
   highlightCode = () => {
@@ -76,27 +90,13 @@ class Highlight extends React.Component {
     }
     this.measure()
   }
-
-  componentWillUpdate(nextProps, nextState, nextContext) {
-    if (nextProps.className !== this.props.className) {
-      setTimeout(() => {
-        this.highlightCode()
-      }, 100)
-    }
-    if (this.state.prevValue != nextProps.children) {
-      this.state.value.__html = nextProps.children
-      this.state.key = Date.now()
-    }
-  }
-
-  shouldComponentUpdate(nextProps, nextState, nextContext) {
+  shouldComponentUpdate(nextProps, nextState) {
     if (nextState.focus !== this.state.focus) return true
     if (nextProps.className !== this.props.className) return true
     if (nextState.expandable !== this.state.expandable) return true
     if (nextState.expanded !== this.state.expanded) return true
     if (nextProps['data-test'] !== this.props['data-test']) return true
-    if (this.state.value.__html === `${nextProps.children}`) return false
-    return true
+    return this.state.value.__html !== `${nextProps.children}`
   }
 
   _handleInput = (event) => {

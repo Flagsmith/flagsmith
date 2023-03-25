@@ -7,11 +7,13 @@ import useSearchThrottle from 'common/useSearchThrottle'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
 import PanelSearch from './PanelSearch'
+
 type AuditLogType = {
   environmentId: string
   projectId: string
   pageSize: number
   onSearchChange?: (search: string) => void
+  onErrorChange?: (err: boolean) => void
 }
 
 const widths = [200, 200, 200]
@@ -30,11 +32,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
       setEnvironments(props.environmentId)
       setPage(1)
     }
-  }, [props.environmentId])
+  }, [props.environmentId, environments])
   useEffect(() => {
     if (props.onSearchChange) {
       props.onSearchChange(search)
     }
+    //eslint-disable-next-line
   }, [search])
 
   const hasHadResults = useRef(false)
@@ -53,6 +56,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
 
   useEffect(() => {
     props.onErrorChange?.(isError)
+    //eslint-disable-next-line
   }, [])
 
   if (auditLog?.results) {

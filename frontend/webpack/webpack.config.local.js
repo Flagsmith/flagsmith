@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
-const base = require('./webpack.base');
+const base = require('../webpack.config');
 
 module.exports = {
     ...base,

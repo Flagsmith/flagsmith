@@ -8,12 +8,9 @@ import {
   UserGroup,
   UserPermission,
 } from 'common/types/responses'
-const OrganisationProvider = require('common/providers/OrganisationProvider')
-const AppActions = require('common/dispatcher/app-actions')
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import Format from 'common/utils/format'
-const Project = require('common/project')
 import PanelSearch from './PanelSearch'
 import Button, { ButtonLink } from './base/forms/Button'
 import InfoMessage from './InfoMessage'
@@ -25,6 +22,10 @@ import { PermissionLevel } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
+
+const OrganisationProvider = require('common/providers/OrganisationProvider')
+const AppActions = require('common/dispatcher/app-actions')
+const Project = require('common/project')
 
 type EditPermissionModalType = {
   group?: UserGroup
@@ -61,7 +62,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   )
   const [parentError, setParentError] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(false)
   const {
     group,
     id,
@@ -81,12 +81,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   useEffect(() => {
     let parentGet = Promise.resolve()
     const processResults = (results: (UserPermission & GroupPermission)[]) => {
-      let entityPermissions: Omit<EntityPermissions, 'user' | 'group'> & {
-        user?: any
-        group?: any
-      } = isGroup
-        ? find(results, (r) => r.group.id === group?.id)!
-        : find(results, (r) => r.user?.id === user?.id)!
+      let entityPermissions:
+        | (Omit<EntityPermissions, 'user' | 'group'> & {
+            user?: any
+            group?: any
+          })
+        | undefined = isGroup
+        ? find(results || [], (r) => r.group.id === group?.id)
+        : find(results || [], (r) => r.user?.id === user?.id)
 
       if (!entityPermissions) {
         entityPermissions = { admin: false, permissions: [] }
@@ -136,6 +138,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       .catch(() => {
         setParentError(true)
       })
+    //eslint-disable-next-line
   }, [])
 
   const admin = () => entityPermissions && entityPermissions.admin
@@ -162,9 +165,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
         onSave && onSave()
         close()
       })
-      .catch((e) => {
+      .catch(() => {
         setSaving(false)
-        setError(e)
       })
   }
 
@@ -274,7 +276,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           permissions in{' '}
           <a
             onClick={() => {
-              push(parentSettingsLink!)
+              if (parentSettingsLink) {
+                push(parentSettingsLink)
+              }
               closeModal()
             }}
           >

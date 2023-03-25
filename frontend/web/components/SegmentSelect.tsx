@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import { Res, Segment } from 'common/types/responses'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import { ButtonOutline } from './base/forms/Button'
@@ -6,8 +6,8 @@ import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests' // we need this to make JSX compile
 import { components } from 'react-select'
 import { SelectProps } from '@material-ui/core/Select/Select'
-type SelectType = { name: string; label: string; feature?: number }
 import Utils from 'common/utils/utils'
+
 type SegmentSelectType = {
   projectId: string
   'data-test'?: string

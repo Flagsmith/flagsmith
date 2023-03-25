@@ -12,6 +12,8 @@ import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
 import AccountStore from 'common/stores/account-store'
+import Tooltip from 'components/Toolip'
+
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
@@ -81,7 +83,6 @@ window.Loader = class extends PureComponent {
   }
 }
 
-import Tooltip from 'components/Toolip'
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
@@ -106,6 +107,7 @@ global.Select = class extends PureComponent {
         {this.props.options &&
           this.props.options.map((option, index) => (
             <a
+              key={index}
               onClick={() => props.onChange(option)}
               data-test={`${props['data-test']}-option-${index}`}
             >

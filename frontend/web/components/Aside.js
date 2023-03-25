@@ -67,15 +67,15 @@ const Aside = class extends Component {
     })
   }
 
-  componentWillReceiveProps(newProps) {
-    const environment = ProjectStore.getEnvironment(newProps.environmentId)
-    if (newProps.projectId !== this.props.projectId) {
-      AppActions.getProject(this.props.projectId)
+  componentDidUpdate(prevProps) {
+    const environment = ProjectStore.getEnvironment(this.props.environmentId)
+    if (this.props.projectId !== prevProps.projectId) {
+      AppActions.getProject(prevProps.projectId)
     }
-    if (newProps.environmentId !== this.props.environmentId) {
+    if (this.props.environmentId !== prevProps.environmentId) {
       if (environment) {
         AppActions.getChangeRequests(
-          newProps.environmentId,
+          this.props.environmentId,
           Utils.changeRequestsEnabled(
             environment.minimum_change_request_approvals,
           )
@@ -88,10 +88,6 @@ const Aside = class extends Component {
 
   onProjectSave = () => {
     AppActions.refreshOrganisation()
-  }
-
-  toggleNav = () => {
-    this.setState({ visible: !this.state.visible })
   }
 
   newProject = () => {
@@ -133,12 +129,12 @@ const Aside = class extends Component {
       0
     return (
       <OrganisationProvider>
-        {({ isLoading: isLoadingOrg, projects }) => (
+        {() => (
           <ProjectProvider
             id={this.props.projectId}
             onSave={this.onProjectSave}
           >
-            {({ isLoading, project }) => (
+            {({ project }) => (
               <React.Fragment>
                 <div
                   className={`aside ${this.props.className || ''}`}
@@ -189,11 +185,7 @@ const Aside = class extends Component {
                                       onClick={this.newProject}
                                       className='btn--transparent aside__add-btn'
                                     >
-                                      <a
-                                        id='create-project-link'
-                                        to='/projects'
-                                        state={{ create: true }}
-                                      >
+                                      <a id='create-project-link'>
                                         <PlusIcon width={18} />
                                       </a>
                                     </Button>
@@ -303,7 +295,7 @@ const Aside = class extends Component {
                             permission='ADMIN'
                             id={this.props.projectId}
                           >
-                            {({ isLoading, permission }) =>
+                            {({ permission }) =>
                               permission && (
                                 <NavLink
                                   id='project-settings-link'
@@ -347,7 +339,7 @@ const Aside = class extends Component {
                             permission='ADMIN'
                             id={this.props.projectId}
                           >
-                            {({ isLoading, permission }) =>
+                            {({ permission }) =>
                               permission &&
                               hasRbacPermission && (
                                 <NavLink
@@ -384,7 +376,7 @@ const Aside = class extends Component {
                               permission='CREATE_ENVIRONMENT'
                               id={this.props.projectId}
                             >
-                              {({ isLoading, permission }) =>
+                              {({ permission }) =>
                                 permission && (
                                   <NavLink
                                     id='integrations-link'
@@ -417,7 +409,7 @@ const Aside = class extends Component {
                             permission='CREATE_ENVIRONMENT'
                             id={this.props.projectId}
                           >
-                            {({ isLoading, permission }) =>
+                            {({ permission }) =>
                               permission && (
                                 <NavLink
                                   id='create-env-link'

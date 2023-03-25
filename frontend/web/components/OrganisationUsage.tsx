@@ -2,9 +2,9 @@ import Utils from 'common/utils/utils'
 import React, { FC, useState } from 'react'
 import {
   Bar,
-  Tooltip as _Tooltip,
   BarChart,
   ResponsiveContainer,
+  Tooltip as _Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -12,6 +12,7 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import ProjectFilter from './ProjectFilter'
 import EnvironmentFilter from './EnvironmentFilter'
 import moment from 'moment'
+
 type OrganisationUsageType = {
   organisationId: string
 }

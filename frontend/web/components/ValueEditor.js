@@ -1,8 +1,8 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import cx from 'classnames'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { Clipboard } from 'polyfill-react-native'
 
 const toml = require('toml')
 const yaml = require('yaml')
@@ -27,7 +27,7 @@ class Validation extends Component {
     this.validateLanguage(this.props.language, this.props.value)
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps) {
     if (
       prevProps.value !== this.props.value ||
       prevProps.language !== this.props.language
@@ -75,6 +75,10 @@ class Validation extends Component {
           }
           break
         }
+        default: {
+          resolve(false)
+          break
+        }
       }
     })
 
@@ -119,10 +123,6 @@ class ValueEditor extends Component {
       if (typeof v !== 'object') return
       this.setState({ language: 'json' })
     } catch (e) {}
-    // document.querySelector('[contenteditable]').addEventListener('paste', function (event) {
-    //     event.preventDefault();
-    //     document.execCommand('inserttext', false, event.clipboardData.getData('text/plain'));
-    // });
   }
 
   renderValidation = () => (
@@ -191,7 +191,7 @@ class ValueEditor extends Component {
             .yaml {this.state.language === 'yaml' && this.renderValidation()}
           </span>
           <span
-            onMouseDown={(e) => {
+            onMouseDown={() => {
               const res = Clipboard.setString(this.props.value)
               toast(res ? 'Clipboard set' : 'Could not set clipboard :(')
             }}

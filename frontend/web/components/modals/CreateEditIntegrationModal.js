@@ -139,7 +139,7 @@ const CreateEditIntegration = class extends Component {
           })
         } catch (e) {}
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({
           error: defaultError,
           isLoading: false,

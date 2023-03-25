@@ -7,6 +7,7 @@ import VariationOptions from './mv/VariationOptions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
+
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
 }
@@ -34,16 +35,16 @@ const SegmentOverride = ConfigProvider(
 
       render() {
         const {
-          controlValue,
-          multivariateOptions,
-          setVariations,
-          disabled,
-          value: v,
-          onSortEnd,
-          index,
           confirmRemove,
-          toggle,
+          controlValue,
+          disabled,
+          index,
+          multivariateOptions,
+          onSortEnd,
           setValue,
+          setVariations,
+          toggle,
+          value: v,
         } = this.props
 
         const mvOptions =
@@ -58,17 +59,13 @@ const SegmentOverride = ConfigProvider(
               return foundMv
             }
             return {
-              percentage_allocation: 0,
               multivariate_feature_option: mv.id,
+              percentage_allocation: 0,
             }
           })
         const changed = !v.id || this.state.changed
         const showValue = !(multivariateOptions && multivariateOptions.length)
         const controlPercent = Utils.calculateControl(mvOptions)
-        const invalid =
-          !!multivariateOptions &&
-          multivariateOptions.length &&
-          controlPercent < 0
         if (!v || v.toRemove) return null
         return (
           <div
@@ -106,8 +103,8 @@ const SegmentOverride = ConfigProvider(
                       onChange={(e) => {
                         this.setState({ changed: true })
                         onSortEnd({
-                          oldIndex: index,
                           newIndex: parseInt(Utils.safeParseEventValue(e)),
+                          oldIndex: index,
                         })
                       }}
                       type='text'
@@ -231,15 +228,15 @@ const SegmentOverride = ConfigProvider(
 
 const SegmentOverrideList = SortableContainer(
   ({
+    confirmRemove,
+    controlValue,
     disabled,
+    items,
     multivariateOptions,
     onSortEnd,
-    items,
-    controlValue,
-    confirmRemove,
-    toggle,
     setValue,
     setVariations,
+    toggle,
   }) => (
     <div>
       {items.map((value, index) => (
@@ -297,18 +294,21 @@ class TheComponent extends Component {
       return
     }
     const newValue = {
-      feature: this.props.feature,
-      environment: ProjectStore.getEnvironmentIdFromKey(this.props.environmentId),
-            segment: this.state.selectedSegment.value,
+      environment: ProjectStore.getEnvironmentIdFromKey(
+        this.props.environmentId,
       ),
+      feature: this.props.feature,
       feature_segment_value: {
-                enabled: false,
-                feature: this.props.feature,
-                environment: ProjectStore.getEnvironmentIdFromKey(this.props.environmentId),
-                feature_segment: null,
-                feature_state_value: Utils.valueToFeatureState(''),
-            },
-            priority: value.length,
+        enabled: false,
+        environment: ProjectStore.getEnvironmentIdFromKey(
+          this.props.environmentId,
+        ),
+        feature: this.props.feature,
+        feature_segment: null,
+        feature_state_value: Utils.valueToFeatureState(''),
+      },
+      priority: value.length,
+      segment: this.state.selectedSegment.value,
     }
     this.props.onChange([newValue].concat(value))
   }
@@ -367,13 +367,13 @@ class TheComponent extends Component {
 
   render() {
     const {
+      props: { multivariateOptions, segments, value },
       state: { isLoading },
-      props: { value, segments, multivariateOptions },
     } = this
     const segmentOptions = _.filter(segments, (segment) => {
       const foundSegment = _.find(value, (v) => v.segment === segment.id)
       return !value || !foundSegment || (foundSegment && foundSegment.toRemove)
-    }).map(({ name: label, id: value }) => ({ value, label }))
+    }).map(({ id: value, name: label }) => ({ label, value }))
     const visibleValues = value && value.filter((v) => !v.toRemove)
     return (
       <div>
@@ -419,6 +419,7 @@ class TheComponent extends Component {
                 <a
                   target='_blank'
                   href='https://docs.flagsmith.com/basic-features/managing-segments'
+                  rel='noreferrer'
                 >
                   Check the Docs for more details
                 </a>

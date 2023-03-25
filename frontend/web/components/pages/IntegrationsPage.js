@@ -49,7 +49,7 @@ const ProjectSettingsPage = class extends Component {
                   id={this.props.projectId}
                   onSave={this.onProjectSave}
                 >
-                  {({ isLoading, project }) => (
+                  {({ project }) => (
                     <div>
                       {permission ? (
                         <div>

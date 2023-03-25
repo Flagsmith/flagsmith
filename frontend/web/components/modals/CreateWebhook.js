@@ -4,6 +4,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Highlight from 'components/Highlight'
 import ErrorMessage from 'components/ErrorMessage'
 import TestWebhook from 'components/TestWebhook'
+
 const exampleJSON = Constants.exampleWebhook
 
 const CreateWebhook = class extends Component {
@@ -36,7 +37,7 @@ const CreateWebhook = class extends Component {
     this.props
       .save(webhook)
       .then(() => closeModal())
-      .catch((e) => {
+      .catch(() => {
         this.setState({ error: true, isSaving: false })
       })
   }

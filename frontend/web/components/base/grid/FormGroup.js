@@ -1,7 +1,4 @@
 import { PureComponent } from 'react'
-
-const cn = require('classnames')
-
 const FormGroup = class extends PureComponent {
   static displayName = 'FormGroup'
 

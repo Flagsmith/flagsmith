@@ -1,5 +1,4 @@
-import React from 'react'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import { groupBy } from 'lodash'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -50,7 +49,6 @@ class TheComponent extends Component {
             if (v.undefined) {
               delete v.undefined
             }
-            const keys = Object.keys(v)
             _.each(Object.keys(v), (key) => {
               v[key] = _.sortBy(v[key], (val) => val.feature.name)
             })
@@ -89,7 +87,6 @@ class TheComponent extends Component {
   render() {
     const results = this.state.results
     const newItems = this.state.newItems
-    const hasResults = results && Object.keys(results).length
     const selectedNewResults =
       (newItems && newItems[this.state.selectedEnv]) || []
 
@@ -256,13 +253,10 @@ export default class SegmentOverridesInner extends Component {
   openPriorities = () => {
     const {
       environmentId,
-      id,
-      ignoreFlags,
       originalSegmentOverrides,
       projectFlag,
       projectId,
       segmentOverrides,
-      segments,
       updateSegments,
     } = this.props
     const arrayMoveMutate = (array, from, to) => {
@@ -310,12 +304,10 @@ export default class SegmentOverridesInner extends Component {
     const {
       environmentId,
       id,
-      ignoreFlags,
       originalSegmentOverrides,
       projectFlag,
       projectId,
       segmentOverrides,
-      segments,
       updateSegments,
     } = this.props
 
@@ -406,18 +398,7 @@ class SegmentOverridesInnerAdd extends Component {
   }
 
   render() {
-    const {
-      environmentId,
-      id,
-      ignoreFlags,
-      projectFlag,
-      projectId,
-      segmentOverrides,
-    } = this.props
-
-    const value =
-      segmentOverrides && segmentOverrides.filter((v) => v.segment === id)
-
+    const { environmentId, id, ignoreFlags, projectId } = this.props
     const addValue = (featureId, feature) => {
       const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
       const item = {
@@ -448,26 +429,7 @@ class SegmentOverridesInnerAdd extends Component {
 
     return (
       <FeatureListProvider>
-        {({}, { editFeatureSegments, isSaving }) => {
-          const save = () => {
-            FeatureListStore.isSaving = true
-            FeatureListStore.trigger('change')
-            !isSaving &&
-              editFeatureSegments(
-                projectId,
-                environmentId,
-                projectFlag,
-                projectFlag,
-                {},
-                segmentOverrides,
-                () => {
-                  toast('Segment override saved')
-                  this.setState({ isSaving: false })
-                  this.props.onSave()
-                },
-              )
-            this.setState({ isSaving: true })
-          }
+        {() => {
           return (
             <div className='mt-2'>
               <FlagSelect

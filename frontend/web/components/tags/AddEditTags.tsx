@@ -7,7 +7,7 @@ import Constants from 'common/constants'
 import TagValues from './TagValues'
 import { useDeleteTagMutation, useGetTagsQuery } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
-import Button, { ButtonLink } from 'components/base/forms/Button'
+import { ButtonLink } from 'components/base/forms/Button'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
@@ -116,7 +116,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
             )}
             <div className='tag-list'>
               {filteredTags &&
-                filteredTags.map((tag, index) => (
+                filteredTags.map((tag) => (
                   <div key={tag.id}>
                     <Row className='py-2'>
                       <Flex>

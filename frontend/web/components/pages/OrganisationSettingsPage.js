@@ -1,21 +1,9 @@
 import React, { Component } from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip as _Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import CreateProjectModal from 'components/modals/CreateProject'
 import InviteUsersModal from 'components/modals/InviteUsers'
 import UserGroupList from 'components/UserGroupList'
 import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
 import PaymentModal from 'components/modals/Payment'
 import CreateGroupModal from 'components/modals/CreateGroup'
-import CancelPaymentPlanModal from 'components/modals/CancelPaymentPlan'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
@@ -29,6 +17,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
+import ErrorMessage from 'components/ErrorMessage'
 
 const widths = [450, 150, 100]
 const OrganisationSettingsPage = class extends Component {
@@ -60,19 +49,6 @@ const OrganisationSettingsPage = class extends Component {
     ) {
       this.context.router.history.replace('/projects')
     }
-  }
-
-  newProject = () => {
-    openModal(
-      'Create  Project',
-      <CreateProjectModal
-        onSave={(projectId) => {
-          this.context.router.history.push(
-            `/project/${projectId}/environment/create`,
-          )
-        }}
-      />,
-    )
   }
 
   onSave = () => {
@@ -182,20 +158,9 @@ const OrganisationSettingsPage = class extends Component {
     }
 
     // Must be valid email for webhook notification email
-    if (
+    return (
       webhook_notification_email &&
       !Utils.isValidEmail(webhook_notification_email)
-    ) {
-      return true
-    }
-
-    return false
-  }
-
-  cancelPaymentPlan = () => {
-    openModal(
-      <h2>Are you sure you want to cancel your plan?</h2>,
-      <CancelPaymentPlanModal />,
     )
   }
 
@@ -290,7 +255,6 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   render() {
-    const { name, webhook_notification_email } = this.state
     const {
       props: { webhooks, webhooksLoading },
     } = this
@@ -301,10 +265,7 @@ const OrganisationSettingsPage = class extends Component {
     return (
       <div className='app-container container'>
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
-          {(
-            { isLoading, isSaving, organisation, user },
-            { createOrganisation, deleteOrganisation, selectOrganisation },
-          ) =>
+          {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
               <OrganisationProvider>
                 {({
@@ -838,7 +799,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 </p>
                                                 <div className='text-right mt-2'>
                                                   {error && (
-                                                    <Error error={error} />
+                                                    <ErrorMessage
+                                                      error={error}
+                                                    />
                                                   )}
                                                 </div>
                                               </form>
@@ -899,7 +862,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   >
                                                     <Flex onClick={onEditClick}>
                                                       {`${first_name} ${last_name}`}{' '}
-                                                      {id ==
+                                                      {id ===
                                                         AccountStore.getUserId() &&
                                                         '(You)'}
                                                       <div className='list-item-footer faint'>

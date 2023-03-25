@@ -19,7 +19,7 @@ class CompareEnvironments extends Component {
   }
 
   constructor(props) {
-    super()
+    super(props)
     this.state = {
       flagId: '',
       selectedIndex: 0,
@@ -27,7 +27,7 @@ class CompareEnvironments extends Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.state.flagId !== prevState.flagId) {
       this.fetch()
     }
@@ -90,16 +90,16 @@ class CompareEnvironments extends Component {
         {this.state.flagId && (
           <div>
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-              {({}, { environmentHasFlag, removeFlag, toggleFlag }) => {
+              {({}, { removeFlag, toggleFlag }) => {
                 const renderRow = (data, i) => {
                   const flagValues = this.state.environmentResults[i]
                   const compare =
                     this.state.environmentResults[this.state.selectedIndex]
                   const flagA = flagValues[this.state.flagId]
                   const flagB = compare[this.state.flagId]
-                  const fadeEnabled = flagA.enabled == flagB.enabled
+                  const fadeEnabled = flagA.enabled === flagB.enabled
                   const fadeValue =
-                    flagB.feature_state_value == flagA.feature_state_value
+                    flagB.feature_state_value === flagA.feature_state_value
                   const changeRequestsEnabled = Utils.changeRequestsEnabled(
                     data.minimum_change_request_approvals,
                   )
@@ -111,7 +111,7 @@ class CompareEnvironments extends Component {
                       )}
                       id={data.api_key}
                     >
-                      {({ isLoading, permission }) => (
+                      {({ permission }) => (
                         <div className='list-item clickable mb-2'>
                           <Row className='relative'>
                             <div style={{ zIndex: 1 }}>

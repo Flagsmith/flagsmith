@@ -23,8 +23,6 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
 
-  const { env: envFilter } = Utils.fromParam()
-
   const hasRbacPermission =
     Utils.getPlansPermission('AUDIT') ||
     !Utils.getFlagsmithHasFeature('scaleup_audit')
@@ -60,6 +58,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                         project.environments &&
                         project.environments.map((env) => (
                           <ToggleChip
+                            key={env.id}
                             active={`${environment}` === `${env.id}`}
                             onClick={() => {
                               setEnvironment(

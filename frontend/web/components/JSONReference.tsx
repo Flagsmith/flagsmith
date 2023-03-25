@@ -84,7 +84,7 @@ const JSONReference: FC<JSONReferenceType> = ({
       json &&
       JSON.stringify(pickProperties(json, useIdsOnly, condenseInclude), null, 2)
     )
-  }, [json, condensed, useIdsOnly])
+  }, [json, condenseInclude, useIdsOnly])
   if (!flagsmith.getTrait('json_inspect') || !json || json?.length === 0) {
     return null
   }

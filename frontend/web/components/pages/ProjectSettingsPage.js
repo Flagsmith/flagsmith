@@ -42,9 +42,9 @@ const ProjectSettingsPage = class extends Component {
     toast('Project Saved')
   }
 
-  componentWillReceiveProps(newProps) {
-    if (newProps.projectId !== this.props.projectId) {
-      AppActions.getProject(newProps.match.params.projectId)
+  componentDidUpdate(prevProps) {
+    if (this.props.projectId !== prevProps.projectId) {
+      AppActions.getProject(this.props.match.params.projectId)
     }
   }
 

@@ -17,7 +17,7 @@ import { AsyncStorage } from 'polyfill-react-native'
 import {
   FeatureListProviderActions,
   FeatureListProviderData,
-} from '../../../global'
+} from 'common/types/responses'
 import { Environment, PagedResponse, ProjectFlag } from 'common/types/responses'
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react'
 import client from 'components/datadog-client'
@@ -51,8 +51,8 @@ const PermissionError = () => {
 
 const FeatureList = class extends Component<FeatureListType> {
   state = {
-    error: null,
-    search: null,
+    error: null as null | string,
+    search: null as null | string,
     showArchived: false,
     sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
     tags: [] as string[],
@@ -73,11 +73,7 @@ const FeatureList = class extends Component<FeatureListType> {
     )
   }
 
-  componentDidUpdate(
-    prevProps: Readonly<FeatureListType>,
-    prevState: Readonly<{}>,
-    snapshot?: any,
-  ) {
+  componentDidUpdate(prevProps: Readonly<FeatureListType>) {
     if (this.props.projectId !== prevProps.projectId) {
       AppActions.getProject(this.props.projectId)
     }
@@ -181,7 +177,7 @@ const FeatureList = class extends Component<FeatureListType> {
                             )}
                             id={this.props.environmentId}
                           >
-                            {({ isLoading, permission }) => (
+                            {({ permission }) => (
                               <div>
                                 <PanelSearch
                                   className='no-pad'
@@ -247,6 +243,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                       this.state.sort,
                                       page,
                                       this.getFilter(),
+                                      this.props.pageSize,
                                     )
                                   }
                                   onSortChange={(sort: string) => {

@@ -1,9 +1,4 @@
 import { Component, FC, ReactNode } from 'react'
-import {
-  Environment,
-  FeatureState,
-  ProjectFlag,
-} from './common/types/responses'
 import _Select from './web/components/Select'
 
 export declare const openModal: (name?: string) => Promise<void>
@@ -34,22 +29,10 @@ declare global {
   const E2E: boolean
   const closeModal: () => void
   const toast: (message: string) => void
-  const Tooltip: FC<{ title: ReactNode; place?: string; html?: boolean }>
-}
-
-export type FeatureListProviderData = {
-  projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
-  error: boolean
-  isLoading: boolean
-}
-export type FeatureListProviderActions = {
-  toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
-  ) => void
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+  const Tooltip: FC<{
+    title: ReactNode
+    children: ReactNode
+    place?: string
+    html?: boolean
+  }>
 }

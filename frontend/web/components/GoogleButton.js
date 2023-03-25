@@ -1,4 +1,4 @@
-import React, { FC } from 'react' // we need this to make JSX compile
+import React from 'react' // we need this to make JSX compile
 import { useGoogleLogin } from '@react-oauth/google'
 
 const GoogleButton = ({ onSuccess }) => {

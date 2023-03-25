@@ -1,6 +1,5 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
-import TheInput from 'material-ui-chip-input'
 import ValueEditor from './ValueEditor'
 import Constants from 'common/constants'
 import VariationOptions from './mv/VariationOptions'

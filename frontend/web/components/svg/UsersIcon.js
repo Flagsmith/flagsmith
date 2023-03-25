@@ -1,6 +1,6 @@
 import React from 'react'
 
-function UsersIcon({ className, fill, height, width }) {
+function UsersIcon({ className }) {
   return (
     <svg className={className} viewBox='0 0 26 18'>
       <path

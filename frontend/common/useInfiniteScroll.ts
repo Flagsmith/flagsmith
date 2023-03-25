@@ -30,15 +30,14 @@ const useInfiniteScroll = <
           setCombinedData(queryResponse?.data)
         } else {
           // This is a new page, combine the data
-          setCombinedData(
-            (prev) =>
-              ({
-                ...queryResponse.data,
-                results: prev?.results
-                  ? prev.results.concat(queryResponse!.data!.results)
-                  : queryResponse!.data!.results,
-              } as RES),
-          )
+          setCombinedData((prev) => {
+            return {
+              ...queryResponse.data,
+              results: prev?.results
+                ? prev.results.concat(queryResponse.data?.results || [])
+                : queryResponse.data?.results,
+            } as RES
+          })
         }
       }
     }, //eslint-disable-next-line

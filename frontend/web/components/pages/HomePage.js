@@ -25,14 +25,13 @@ const HomePage = class extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps) {
     if (this.props.location.pathname !== prevProps.location.pathname) {
       const emailField =
         document.querySelector('input[name="firstName"]') ||
         document.querySelector('input[name="email"]')
       if (emailField) {
         emailField.focus()
-        emailField.value = emailField.value
       }
     }
   }
@@ -61,7 +60,6 @@ const HomePage = class extends React.Component {
         document.querySelector('input[name="email"]')
       if (emailField) {
         emailField.focus()
-        emailField.value = emailField.value
       }
     }, 1000)
 
@@ -77,7 +75,7 @@ const HomePage = class extends React.Component {
     }
     API.trackPage(Constants.pages.HOME)
 
-    if (document.location.href.indexOf('invite') != -1) {
+    if (document.location.href.indexOf('invite') !== -1) {
       const invite = Utils.fromParam().redirect
 
       if (invite.includes('invite-link')) {
@@ -109,16 +107,15 @@ const HomePage = class extends React.Component {
   }
 
   render = () => {
-    const { email, first_name, last_name, organisation_name, password } =
-      this.state
+    const { email, first_name, last_name, password } = this.state
     const redirect = Utils.fromParam().redirect
       ? `?redirect=${Utils.fromParam().redirect}`
       : ''
-    const isInvite = document.location.href.indexOf('invite') != -1
+    const isInvite = document.location.href.indexOf('invite') !== -1
     const isSignup =
       !Project.preventSignup &&
       ((isInvite && document.location.href.indexOf('login') === -1) ||
-        document.location.href.indexOf('signup') != -1)
+        document.location.href.indexOf('signup') !== -1)
     const disableSignup = Project.preventSignup && isSignup
     const preventEmailPassword = Project.preventEmailPassword
     const disableForgotPassword = Project.preventForgotPassword
@@ -440,7 +437,7 @@ const HomePage = class extends React.Component {
                             onSubmit={(e) => {
                               Utils.preventDefault(e)
                               const isInvite =
-                                document.location.href.indexOf('invite') != -1
+                                document.location.href.indexOf('invite') !== -1
                               register(
                                 {
                                   email,

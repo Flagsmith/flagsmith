@@ -1,6 +1,6 @@
 import React from 'react'
 
-function LogoutIcon({ className, fill, height, width }) {
+function LogoutIcon({ className }) {
   return (
     <svg className={className} width={18} height={14} viewBox='0 0 18 14'>
       <path

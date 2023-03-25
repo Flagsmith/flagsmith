@@ -2,6 +2,7 @@ import React, { FC, FormEventHandler, useState } from 'react'
 import TheInput from 'material-ui-chip-input'
 import Utils from 'common/utils/utils'
 import { filter } from 'lodash'
+
 type ChipInputType = {
   placeholder?: string
   value?: string[]

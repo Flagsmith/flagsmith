@@ -18,12 +18,11 @@ export default class TheComponent extends PureComponent {
     AppActions.getGroups(this.props.orgId)
   }
 
-  componentWillUpdate(nextProps, nextState, nextContext) {
-    if (nextProps.orgId !== this.props.orgId) {
-      AppActions.getGroups(nextProps.orgId)
+  componentDidUpdate(prevProps) {
+    if (this.props.orgId !== prevProps.orgId) {
+      AppActions.getGroups(this.props.orgId)
     }
   }
-
   removeGroup = (id, name) => {
     openConfirm(
       <h3>Delete Group</h3>,
@@ -93,7 +92,7 @@ export default class TheComponent extends PureComponent {
                       </div>
                       <div className='list-item-footer faint'>
                         {users.length}
-                        {users.length == 1 ? ' Member' : ' Members'}
+                        {users.length === 1 ? ' Member' : ' Members'}
                       </div>
                     </Flex>
 

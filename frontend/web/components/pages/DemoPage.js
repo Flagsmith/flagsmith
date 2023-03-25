@@ -22,7 +22,7 @@ const DemoPage = class extends Component {
     return (
       <div className='app-container animated fadeIn'>
         <AccountProvider onSave={this.onSave}>
-          {({ error, isSaving }) => (
+          {({ error }) => (
             <div className='centered-container'>
               <div>
                 {error ? (
@@ -30,7 +30,7 @@ const DemoPage = class extends Component {
                     <h3>Oops</h3>
                     <p>
                       We could not login to the demo account please contact{' '}
-                      <a href='support@flagsmith.com'>Support</a>
+                      <a href='mailto:support@flagsmith.com'>Support</a>
                     </p>
                   </div>
                 ) : (

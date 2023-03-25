@@ -157,10 +157,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     setRules(newRules)
   }
 
-  const close = () => {
-    closeModal()
-  }
-
   const save = (e: FormEvent) => {
     Utils.preventDefault(e)
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
@@ -176,9 +172,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
           projectId,
           segment: {
             ...segmentData,
-            id: segment.id!,
-            project: segment.project!,
-            uuid: segment.uuid!,
+            id: segment.id,
+            project: segment.project as number,
+            uuid: segment.uuid as string,
           },
         })
       } else {
@@ -206,14 +202,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }, 500)
   }, [])
   useEffect(() => {
-    if (createSuccess) {
-      onComplete?.(createSegmentData!)
+    if (createSuccess && createSegmentData) {
+      onComplete?.(createSegmentData)
     }
+    //eslint-disable-next-line
   }, [createSuccess])
   useEffect(() => {
-    if (updateSuccess) {
-      onComplete?.(updateSegmentData!)
+    if (updateSuccess && updateSegmentData) {
+      onComplete?.(updateSegmentData)
     }
+    //eslint-disable-next-line
   }, [updateSuccess])
 
   const rulesEl = (
@@ -379,7 +377,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Show condition descriptions'}
           </span>
           <Switch
-            checked={!!showDescriptions}
+            checked={showDescriptions}
             onChange={() => {
               setShowDescriptions(!showDescriptions)
             }}
@@ -598,12 +596,13 @@ type LoadingCreateSegmentType = {
 
 const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const [environmentId, setEnvironmentId] = useState(props.environmentId)
-  const { data: segmentData, isLoading } = props.segment
-    ? useGetSegmentQuery({
-        id: `${props.segment}`,
-        projectId: `${props.projectId}`,
-      })
-    : { data: null, isLoading: false }
+  const { data: segmentData, isLoading } = useGetSegmentQuery(
+    {
+      id: `${props.segment}`,
+      projectId: `${props.projectId}`,
+    },
+    { skip: !props.segment },
+  )
 
   const [page, setPage] = useState<PageType>({
     number: 1,

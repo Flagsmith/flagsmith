@@ -1,6 +1,6 @@
 import React from 'react'
 
-function ArrowUpIcon({ className, fill, height, width }) {
+function ArrowUpIcon({ className, height, width }) {
   return (
     <svg
       className={className}

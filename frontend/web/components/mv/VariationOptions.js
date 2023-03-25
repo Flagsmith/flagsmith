@@ -1,5 +1,4 @@
 import React from 'react'
-import Constants from 'common/constants'
 import VariationValue from './VariationValue'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'

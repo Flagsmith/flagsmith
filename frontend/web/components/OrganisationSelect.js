@@ -1,10 +1,6 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
 import NavLink from 'react-router-dom/NavLink'
-import OrgSettingsIcon from './svg/OrgSettingsIcon'
-import OrganisationStore from 'common/stores/organisation-store'
-import UserSettingsIcon from './svg/UserSettingsIcon'
-import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon'
 
 const OrganisationSelect = class extends Component {
   static displayName = 'OrganisationSelect'
@@ -17,7 +13,7 @@ const OrganisationSelect = class extends Component {
   render() {
     return (
       <AccountProvider>
-        {({ isLoading, user }) => (
+        {({ user }) => (
           <div>
             {user &&
               user.organisations &&
