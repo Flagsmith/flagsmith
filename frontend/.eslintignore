@@ -8,3 +8,4 @@ web/static
 web/project/libs.js
 e2e
 webpack
+api
