@@ -23,6 +23,13 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
         return data
 
 
+class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureSegment
+        fields = ("segment", "priority")
+        read_only_fields = ("priority",)
+
+
 class FeatureSegmentQuerySerializer(serializers.Serializer):
     environment = serializers.IntegerField()
     feature = serializers.IntegerField()
