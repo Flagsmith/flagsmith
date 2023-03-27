@@ -29,6 +29,7 @@ from permissions.permission_service import (
     get_permitted_projects_for_user,
     is_user_organisation_admin,
     is_user_project_admin,
+    user_has_organisation_permission,
 )
 from projects.models import Project, UserProjectPermission
 from users.auth_type import AuthType
@@ -220,20 +221,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             )
 
     def get_permitted_projects(self, permission_key):
-        """
-        Get all projects that the user has the given permissions for.
-
-        Rules:
-            - User has the required permissions directly (UserProjectPermission)
-            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
-            - User is an admin for the organisation the project belongs to
-        """
         return get_permitted_projects_for_user(self, permission_key)
-        # TODO: remove this for loop
-        # projects = []
-        # for permission_key in permissions:
-        #     projects.extend()
-        # return projects
 
     def has_project_permission(self, permission, project):
         if self.is_project_admin(project):
@@ -313,19 +301,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def has_organisation_permission(
         self, organisation: Organisation, permission_key: str
     ) -> bool:
+        return user_has_organisation_permission(self, organisation, permission_key)
         if self.is_organisation_admin(organisation):
             return True
-
-        return permission_key is not None and (
-            UserOrganisationPermission.objects.filter(
-                user=self, organisation=organisation, permissions__key=permission_key
-            ).exists()
-            or UserPermissionGroupOrganisationPermission.objects.filter(
-                group__users=self,
-                organisation=organisation,
-                permissions__key=permission_key,
-            ).exists()
-        )
 
     def get_permission_keys_for_organisation(
         self, organisation: Organisation
