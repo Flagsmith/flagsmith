@@ -397,6 +397,33 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         return all_permission_keys
 
+    def is_group_admin(self, group_id) -> bool:
+        return UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id, group_admin=True
+        ).exists()
+
+    def make_group_admin(self, group_id: int):
+        UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id
+        ).update(group_admin=True)
+
+    def remove_as_group_admin(self, group_id: int):
+        UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id
+        ).update(group_admin=False)
+
+
+class UserPermissionGroupMembership(models.Model):
+    userpermissiongroup = models.ForeignKey(
+        "users.UserPermissionGroup",
+        on_delete=models.CASCADE,
+    )
+    ffadminuser = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    group_admin = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "users_userpermissiongroup_users"
+
 
 class UserPermissionGroup(models.Model):
     """
@@ -405,7 +432,11 @@ class UserPermissionGroup(models.Model):
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
-        "users.FFAdminUser", related_name="permission_groups"
+        "users.FFAdminUser",
+        blank=True,
+        related_name="permission_groups",
+        through=UserPermissionGroupMembership,
+        through_fields=["userpermissiongroup", "ffadminuser"],
     )
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
