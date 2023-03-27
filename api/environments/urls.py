@@ -10,6 +10,7 @@ from edge_api.identities.views import (
 from features.views import (
     EnvironmentFeatureStateViewSet,
     IdentityFeatureStateViewSet,
+    create_segment_override,
 )
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.dynatrace.views import DynatraceConfigurationViewSet
@@ -135,5 +136,10 @@ urlpatterns = [
         "environments/<str:environment_api_key>/edge-identities-featurestates",
         EdgeIdentityWithIdentifierFeatureStateView.as_view(),
         name="edge-identities-with-identifier-featurestates",
+    ),
+    path(
+        "<str:environment_api_key>/features/<int:feature_pk>/create-segment-override/",
+        create_segment_override,
+        name="create-segment-override",
     ),
 ]
