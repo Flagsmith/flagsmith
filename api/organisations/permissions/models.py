@@ -9,14 +9,20 @@ from permissions.models import AbstractBasePermissionModel, PermissionModel
 
 class UserOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(
-        Organisation, on_delete=models.CASCADE, related_query_name="userpermission"
+        Organisation,
+        on_delete=models.CASCADE,
+        related_query_name="userpermission",
+        related_name="userpermissions",
     )
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
 
 
 class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(
-        Organisation, on_delete=models.CASCADE, related_query_name="grouppermission"
+        Organisation,
+        on_delete=models.CASCADE,
+        related_query_name="grouppermission",
+        related_name="grouppermissions",
     )
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
 

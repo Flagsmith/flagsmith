@@ -6,27 +6,22 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.models import Environment
-from environments.permissions.models import (
-    UserEnvironmentPermission,
-    UserPermissionGroupEnvironmentPermission,
-)
+from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
     Organisation,
     OrganisationRole,
     UserOrganisation,
 )
-from organisations.permissions.models import (
-    UserOrganisationPermission,
-    UserPermissionGroupOrganisationPermission,
-)
 from permissions.permission_service import (
+    get_organisation_permission_keys_for_user,
     get_permitted_environments_for_user,
     get_permitted_projects_for_user,
+    is_user_environment_admin,
     is_user_organisation_admin,
     is_user_project_admin,
     user_has_organisation_permission,
@@ -228,23 +223,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return True
         return project in self.get_permitted_projects(permission)
 
-    def has_environment_permission(self, permission, environment):
-        if self.is_project_admin(environment.project):
-            return True
-
-        return self._is_environment_admin_or_has_permission(environment, permission)
-
-    def _is_environment_admin_or_has_permission(
-        self, environment: Environment, permission_key: str = None
-    ) -> bool:
-        permission_query = Q(permissions__key=permission_key) | Q(admin=True)
-        return (
-            UserEnvironmentPermission.objects.filter(
-                Q(environment=environment, user=self) & permission_query
-            ).exists()
-            or UserPermissionGroupEnvironmentPermission.objects.filter(
-                Q(environment=environment, group__users=self) & permission_query
-            ).exists()
+    def has_environment_permission(self, permission, environment) -> bool:
+        return environment in get_permitted_environments_for_user(
+            self, permission, environment.project
         )
 
     def is_project_admin(self, project: Project, allow_org_admin: bool = True):
@@ -281,21 +262,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         allow_project_admin: bool = True,
         allow_organisation_admin: bool = True,
     ):
-        return (
-            (
-                allow_organisation_admin
-                and self.is_organisation_admin(environment.project.organisation)
-            )
-            or (
-                allow_project_admin
-                and self.is_project_admin(environment.project, allow_org_admin=False)
-            )
-            or UserEnvironmentPermission.objects.filter(
-                admin=True, user=self, environment=environment
-            ).exists()
-            or UserPermissionGroupEnvironmentPermission.objects.filter(
-                group__users=self, admin=True, environment=environment
-            ).exists()
+        return is_user_environment_admin(
+            self, environment, allow_project_admin, allow_organisation_admin
         )
 
     def has_organisation_permission(
@@ -308,24 +276,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_permission_keys_for_organisation(
         self, organisation: Organisation
     ) -> typing.Iterable[str]:
-        user_permission = UserOrganisationPermission.objects.filter(
-            user=self, organisation=organisation
-        ).first()
-        group_permissions = UserPermissionGroupOrganisationPermission.objects.filter(
-            group__users=self, organisation=organisation
-        )
-
-        all_permission_keys = set()
-        for organisation_permission in [user_permission, *group_permissions]:
-            if organisation_permission is not None:
-                all_permission_keys.update(
-                    {
-                        permission.key
-                        for permission in organisation_permission.permissions.all()
-                    }
-                )
-
-        return all_permission_keys
+        return get_organisation_permission_keys_for_user(self, organisation)
 
     def is_group_admin(self, group_id) -> bool:
         return UserPermissionGroupMembership.objects.filter(

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 
 from django.db.models import Q
 
@@ -18,10 +18,12 @@ def is_user_organisation_admin(user, organisation: Organisation) -> bool:
 def is_user_project_admin(user, project, allow_org_admin: bool = True) -> bool:
     if allow_org_admin and is_user_organisation_admin(user, project.organisation):
         return True
+    return is_user_entity_admin(user, project)
 
+
+def is_user_entity_admin(user, entity: Union[Project | Environment]) -> bool:
     user_query = Q(userpermission__user=user, userpermission__admin=True)
     group_query = Q(grouppermission__group__users=user, grouppermission__admin=True)
-
     user_role_query = Q(
         rolepermission__role__userrole__user=user, rolepermission__admin=True
     )
@@ -32,9 +34,8 @@ def is_user_project_admin(user, project, allow_org_admin: bool = True) -> bool:
 
     query = user_role_query | groups_role_query | user_query | group_query
 
-    query = query & Q(id=project.id)
-
-    return Project.objects.filter(query).exists()
+    query = query & Q(id=entity.id)
+    return type(entity).objects.filter(query).exists()
 
 
 def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Project]:
@@ -113,14 +114,11 @@ def get_permitted_environments_for_user(
         Q(rolepermission__permissions__key=permission_key)
         | Q(rolepermission__admin=True)
     )
+    query = user_query | group_query | role_permission
+    if project:
+        query = query & Q(project=project)
 
-    return (
-        Environment.objects.filter(
-            Q(project=project) & Q(user_query | group_query | role_permission)
-        )
-        .distinct()
-        .defer("description")
-    )
+    return Environment.objects.filter(query).distinct().defer("description")
 
 
 def user_has_organisation_permission(user, organisation, permission_key: str) -> bool:
@@ -148,24 +146,41 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
 def get_organisation_permission_keys_for_user(
     user, organisation: Organisation
 ) -> Iterable[str]:
-    """
-    Get all permissions that the user has for the given organisation.
+    user_permission_keys = organisation.userpermissions.filter(user=user).values_list(
+        "permissions__key", flat=True
+    )
 
-    Rules:
-        - User has the required permissions directly (UserOrganisationPermission)
-        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupOrganisationPermissions)
-        - User is an admin for the organisation
-        - User has a role attached with the required permissions
-        - User is in a UserPermissionGroup has a role attached with the required permissions
-    """
-    if is_user_organisation_admin(user, organisation):
-        return organisation.permissions.all().values_list("key", flat=True)
+    group_permission_keys = organisation.grouppermissions.filter(
+        group__users=user
+    ).values_list("permissions__key", flat=True)
 
-    user_query = Q(userpermission__user=user)
-    group_query = Q(grouppermission__group__users=user)
-    user_role_query = Q(rolepermission__role__userrole__user=user)
-    groups_role_query = Q(rolepermission__role__grouprole__group__users=user)
+    role_permission_keys = organisation.roles.filter(
+        Q(userrole__user=user) | Q(grouprole__group__users=user)
+    ).values_list("permissions__key", flat=True)
 
-    query = user_query | group_query | user_role_query | groups_role_query
+    all_permission_keys = (
+        set(user_permission_keys)
+        | set(group_permission_keys)
+        | set(role_permission_keys)
+    )
 
-    return organisation.permissions.filter(query).values_list("key", flat=True)
+    return all_permission_keys
+
+
+def is_user_environment_admin(
+    user,
+    environment,
+    allow_project_admin: bool = True,
+    allow_organisation_admin: bool = True,
+) -> bool:
+    return (
+        (
+            allow_organisation_admin
+            and is_user_organisation_admin(user, environment.project.organisation)
+        )
+        or (
+            allow_project_admin
+            and is_user_project_admin(user, environment.project, allow_org_admin=False)
+        )
+        or is_user_entity_admin(user, environment)
+    )
