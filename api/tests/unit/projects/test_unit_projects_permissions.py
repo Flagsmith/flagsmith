@@ -38,14 +38,3 @@ def test_is_project_admin_has_permission_returns_true_if_project_admin(
 
     # Then
     assert IsProjectAdmin().has_permission(request, view)
-
-
-def test_get_permitted_environments_with_user_role(
-    mocker, admin_user, organisation, project
-):
-    # Given
-    request = mocker.MagicMock(user=admin_user)
-    view = mocker.MagicMock(kwargs={"project_pk": project.id})
-
-    # Then
-    assert IsProjectAdmin().get_permitted_environments(request, view) == []
