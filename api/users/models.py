@@ -25,6 +25,8 @@ from organisations.permissions.models import (
     UserPermissionGroupOrganisationPermission,
 )
 from permissions.permission_service import (
+    get_permitted_environments_for_user,
+    get_permitted_projects_for_user,
     is_user_organisation_admin,
     is_user_project_admin,
 )
@@ -217,17 +219,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 "User %d is not part of organisation %d" % (self.id, organisation.id)
             )
 
-    def get_user_organisation_by_id(
-        self, organisation_id: int
-    ) -> typing.Optional[UserOrganisation]:
-        try:
-            return self.userorganisation_set.get(organisation__id=organisation_id)
-        except UserOrganisation.DoesNotExist:
-            logger.warning(
-                "User %d is not part of organisation %d" % (self.id, organisation_id)
-            )
-
-    def get_permitted_projects(self, permissions):
+    def get_permitted_projects(self, permission_key):
         """
         Get all projects that the user has the given permissions for.
 
@@ -236,51 +228,17 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
             - User is an admin for the organisation the project belongs to
         """
-        user_permission_query = Q()
-        group_permission_query = Q()
-        for permission in permissions:
-            user_permission_query = user_permission_query & Q(
-                userpermission__permissions__key=permission
-            )
-            group_permission_query = group_permission_query & Q(
-                grouppermission__permissions__key=permission
-            )
-
-        user_query = Q(userpermission__user=self) & (
-            user_permission_query | Q(userpermission__admin=True)
-        )
-        group_query = Q(grouppermission__group__users=self) & (
-            group_permission_query | Q(grouppermission__admin=True)
-        )
-        organisation_query = Q(
-            organisation__userorganisation__user=self,
-            organisation__userorganisation__role=OrganisationRole.ADMIN.name,
-        )
-        # TODO: this is incorrect
-        user_role_query = Q(rolepermission__role__userrole__user=self) & (
-            Q(rolepermission__admin=True)
-            | Q(rolepermission__permissions__key__in=permissions)
-        )
-        group_role_query = Q(rolepermission__role__grouprole__group__users=self) & (
-            Q(rolepermission__admin=True)
-            | Q(rolepermission__permissions__key__in=permissions)
-        )
-
-        query = (
-            user_query
-            | group_query
-            | organisation_query
-            | user_role_query
-            | group_role_query
-        )
-
-        return Project.objects.filter(query).distinct()
+        return get_permitted_projects_for_user(self, permission_key)
+        # TODO: remove this for loop
+        # projects = []
+        # for permission_key in permissions:
+        #     projects.extend()
+        # return projects
 
     def has_project_permission(self, permission, project):
         if self.is_project_admin(project):
             return True
-
-        return project in self.get_permitted_projects([permission])
+        return project in self.get_permitted_projects(permission)
 
     def has_environment_permission(self, permission, environment):
         if self.is_project_admin(environment.project):
@@ -307,44 +265,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_permitted_environments(
         self, permission_key: str, project: Project
     ) -> QuerySet[Environment]:
-        """
-        Get all environments that the user has the given permissions for.
-
-        Rules:
-            - User has the required permissions directly (UserEnvironmentPermission)
-            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
-            - User is an admin for the project the environment belongs to
-            - User is an admin for the organisation the environment belongs to
-            - User has a role attached that has the required permissions
-            - User is in a UserPermissionGroup that has a role attached that has the required permissions
-        """
-
-        if self.is_project_admin(project):
-            return project.environments.all()
-
-        user_query = Q(userpermission__user=self) & (
-            Q(userpermission__permissions__key=permission_key)
-            | Q(userpermission__admin=True)
-        )
-        group_query = Q(grouppermission__group__users=self) & (
-            Q(grouppermission__permissions__key=permission_key)
-            | Q(grouppermission__admin=True)
-        )
-        role_permission = Q(
-            Q(rolepermission__role__userrole__user=self)
-            | Q(rolepermission__role__grouprole__group__users=self)
-        ) & (
-            Q(rolepermission__permissions__key=permission_key)
-            | Q(rolepermission__admin=True)
-        )
-
-        return (
-            Environment.objects.filter(
-                Q(project=project) & Q(user_query | group_query | role_permission)
-            )
-            .distinct()
-            .defer("description")
-        )
+        return get_permitted_environments_for_user(self, permission_key, project)
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):

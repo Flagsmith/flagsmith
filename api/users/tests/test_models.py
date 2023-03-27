@@ -53,9 +53,7 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        projects = self.user.get_permitted_projects(
-            ["VIEW_PROJECT", "CREATE_ENVIRONMENT"]
-        )
+        projects = self.user.get_permitted_projects("VIEW_PROJECT")
 
         # Then
         assert projects.count() == 2
@@ -72,7 +70,7 @@ class FFAdminUserTestCase(TestCase):
         user_project_permission.permissions.set([read_permission])
 
         # When
-        projects = self.user.get_permitted_projects(permissions=["VIEW_PROJECT"])
+        projects = self.user.get_permitted_projects(permission_key="VIEW_PROJECT")
 
         # Then
         assert projects.count() == 1

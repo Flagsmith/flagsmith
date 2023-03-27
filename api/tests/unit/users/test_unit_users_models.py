@@ -37,7 +37,7 @@ def test_get_permitted_projects_returns_projects_added_by_user_role(
     test_user, user_role, role_view_project_permission, project
 ):
     # When
-    permitted_projects = test_user.get_permitted_projects(["VIEW_PROJECT"])
+    permitted_projects = test_user.get_permitted_projects("VIEW_PROJECT")
 
     # Then
     assert project in permitted_projects
@@ -54,7 +54,7 @@ def test_get_permitted_projects_returns_projects_added_by_group_role(
     user_permission_group.users.add(test_user)
 
     # When
-    permitted_projects = test_user.get_permitted_projects(["VIEW_PROJECT"])
+    permitted_projects = test_user.get_permitted_projects("VIEW_PROJECT")
 
     # Then
     assert project in permitted_projects

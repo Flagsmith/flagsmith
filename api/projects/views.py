@@ -76,7 +76,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queryset = self.request.master_api_key.organisation.projects.all()
         else:
             queryset = self.request.user.get_permitted_projects(
-                permissions=["VIEW_PROJECT"]
+                permission_key="VIEW_PROJECT"
             )
 
         organisation_id = self.request.query_params.get("organisation")

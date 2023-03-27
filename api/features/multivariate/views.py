@@ -54,7 +54,7 @@ def get_mv_feature_option_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects("VIEW_PROJECT")
     qs = MultivariateFeatureOption.objects.filter(
         feature__project__in=accessible_projects
     )

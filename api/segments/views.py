@@ -54,7 +54,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
             permitted_projects = self.request.master_api_key.organisation.projects.all()
         else:
             permitted_projects = self.request.user.get_permitted_projects(
-                permissions=["VIEW_PROJECT"]
+                permission_key="VIEW_PROJECT"
             )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
@@ -112,7 +112,7 @@ def get_segment_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects("VIEW_PROJECT")
     qs = Segment.objects.filter(project__in=accessible_projects)
     segment = get_object_or_404(qs, uuid=uuid)
     serializer = SegmentSerializer(instance=segment)
