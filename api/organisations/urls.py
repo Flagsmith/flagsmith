@@ -9,7 +9,12 @@ from rest_framework_nested import routers
 from api_keys.views import MasterAPIKeyViewSet
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
-from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
+from users.views import (
+    FFAdminUserViewSet,
+    UserPermissionGroupViewSet,
+    make_user_group_admin,
+    remove_user_as_group_admin,
+)
 
 from . import views
 from .invites.views import InviteLinkViewSet, InviteViewSet
@@ -69,5 +74,15 @@ urlpatterns = [
         "<int:organisation_pk>/usage-data/total-count/",
         get_usage_data_total_count_view,
         name="usage-data-total-count",
+    ),
+    path(
+        "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/make-admin",
+        make_user_group_admin,
+        name="make-user-group-admin",
+    ),
+    path(
+        "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/remove-admin",
+        remove_user_as_group_admin,
+        name="remove-user-group-admin",
     ),
 ]

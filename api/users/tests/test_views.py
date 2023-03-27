@@ -455,3 +455,34 @@ def test_users_in_organisation_have_last_login(
     # Then
     assert res.json()[0]["last_login"] is not None
     assert res.status_code == status.HTTP_200_OK
+
+
+def test_retrieve_user_permission_group_includes_group_admin(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    group_admin_user = FFAdminUser.objects.create(email="groupadminuser@example.com")
+    group_admin_user.permission_groups.add(user_permission_group)
+    group_admin_user.make_group_admin(user_permission_group.id)
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, user_permission_group.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    users = response_json["users"]
+
+    assert (
+        next(filter(lambda u: u["id"] == admin_user.id, users))["group_admin"] is False
+    )
+    assert (
+        next(filter(lambda u: u["id"] == group_admin_user.id, users))["group_admin"]
+        is True
+    )

@@ -1,26 +1,34 @@
+from contextlib import suppress
+
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import QuerySet
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
 )
 from organisations.serializers import UserOrganisationSerializer
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 from users.serializers import (
     ListUsersQuerySerializer,
     UserIdsSerializer,
@@ -142,6 +150,15 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         organisation_pk = self.kwargs.get("organisation_pk")
         return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.detail is True:
+            with suppress(ValueError):
+                context["group_admins"] = UserPermissionGroupMembership.objects.filter(
+                    userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True
+                ).values_list("ffadminuser__id", flat=True)
+        return context
+
     def perform_create(self, serializer):
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
@@ -187,3 +204,33 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
+@api_view(["POST"])
+def make_user_group_admin(
+    request: Request, organisation_pk: int, group_pk: int, user_pk: int
+):
+    user = get_object_or_404(
+        FFAdminUser,
+        userorganisation__organisation_id=organisation_pk,
+        permission_groups__id=group_pk,
+        id=user_pk,
+    )
+    user.make_group_admin(group_pk)
+    return Response()
+
+
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
+@api_view(["POST"])
+def remove_user_as_group_admin(
+    request: Request, organisation_pk: int, group_pk: int, user_pk: int
+):
+    user = get_object_or_404(
+        FFAdminUser,
+        userorganisation__organisation_id=organisation_pk,
+        permission_groups__id=group_pk,
+        id=user_pk,
+    )
+    user.remove_as_group_admin(group_pk)
+    return Response()

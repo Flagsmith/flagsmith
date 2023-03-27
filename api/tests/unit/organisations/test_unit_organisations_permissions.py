@@ -91,3 +91,22 @@ def test_user_organisation_permissions_has_object_permission_permits_users_with_
 
     # Then
     assert result is True
+
+
+def test_user_permission_group_permissions_has_object_permission_permits_group_admin(
+    organisation, user_permission_group, admin_user, mocker
+):
+    # Given
+    admin_user.make_group_admin(user_permission_group.id)
+    permissions = UserPermissionGroupPermission()
+
+    mock_request = mocker.MagicMock(user=admin_user)
+    mock_view = mocker.MagicMock()
+
+    # When
+    result = permissions.has_object_permission(
+        request=mock_request, view=mock_view, obj=user_permission_group
+    )
+
+    # Then
+    assert result is True
