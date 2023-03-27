@@ -57,5 +57,8 @@ class MasterAPIKeySegmentPermissions(BasePermission):
     def has_object_permission(
         self, request: HttpRequest, view: str, obj: Segment
     ) -> bool:
-        master_api_key = request.master_api_key
-        return master_api_key.organisation_id == obj.project.organisation_id
+        master_api_key = getattr(request, "master_api_key", None)
+        return (
+            master_api_key
+            and master_api_key.organisation_id == obj.project.organisation_id
+        )
