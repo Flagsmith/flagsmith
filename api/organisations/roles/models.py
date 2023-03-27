@@ -12,7 +12,6 @@ class Role(AbstractBasePermissionModel):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="roles"
     )
-    admin = models.BooleanField(default=False)
 
 
 class RoleProjectPermission(AbstractBasePermissionModel):

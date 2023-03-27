@@ -12,7 +12,7 @@ from .models import (
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ("name", "organisation", "permissions", "admin")
+        fields = ("name", "organisation", "permissions")
 
 
 class RoleEnvironmentPermissionSerializer(serializers.ModelSerializer):
