@@ -34,7 +34,7 @@ class SegmentPermissions(IsAuthenticated):
             return False
 
         return request.user.has_project_permission("MANAGE_SEGMENTS", obj.project) or (
-            view.action == "detail"
+            view.action == "retrieve"
             and request.user.has_project_permission("VIEW_PROJECT", obj.project)
         )
 
