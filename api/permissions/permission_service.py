@@ -22,18 +22,7 @@ def is_user_project_admin(user, project, allow_org_admin: bool = True) -> bool:
 
 
 def is_user_entity_admin(user, entity: Union[Project | Environment]) -> bool:
-    user_query = Q(userpermission__user=user, userpermission__admin=True)
-    group_query = Q(grouppermission__group__users=user, grouppermission__admin=True)
-    user_role_query = Q(
-        rolepermission__role__userrole__user=user, rolepermission__admin=True
-    )
-    groups_role_query = Q(
-        rolepermission__role__grouprole__group__users=user,
-        rolepermission__admin=True,
-    )
-
-    query = user_role_query | groups_role_query | user_query | group_query
-
+    query = _get_base_query(user)
     query = query & Q(id=entity.id)
     return type(entity).objects.filter(query).exists()
 
@@ -49,35 +38,13 @@ def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Proje
         - User has a role attached with the required permissions
         - User is in a UserPermissionGroup has a role attached with the required permissions
     """
-    user_query = Q(userpermission__user=user) & (
-        Q(userpermission__permissions__key=permission_key)
-        | Q(userpermission__admin=True)
-    )
-    group_query = Q(grouppermission__group__users=user) & (
-        Q(grouppermission__permissions__key=permission_key)
-        | Q(grouppermission__admin=True)
-    )
+    base_query = _get_base_query(user, permission_key)
+
     organisation_query = Q(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
     )
-    user_role_query = Q(rolepermission__role__userrole__user=user) & (
-        Q(rolepermission__admin=True)
-        | Q(rolepermission__permissions__key=permission_key)
-    )
-    group_role_query = Q(rolepermission__role__grouprole__group__users=user) & (
-        Q(rolepermission__admin=True)
-        | Q(rolepermission__permissions__key=permission_key)
-    )
-
-    query = (
-        user_query
-        | group_query
-        | organisation_query
-        | user_role_query
-        | group_role_query
-    )
-
+    query = base_query | organisation_query
     return Project.objects.filter(query).distinct()
 
 
@@ -99,24 +66,8 @@ def get_permitted_environments_for_user(
     if is_user_project_admin(user, project):
         return project.environments.all()
 
-    user_query = Q(userpermission__user=user) & (
-        Q(userpermission__permissions__key=permission_key)
-        | Q(userpermission__admin=True)
-    )
-    group_query = Q(grouppermission__group__users=user) & (
-        Q(grouppermission__permissions__key=permission_key)
-        | Q(grouppermission__admin=True)
-    )
-    role_permission = Q(
-        Q(rolepermission__role__userrole__user=user)
-        | Q(rolepermission__role__grouprole__group__users=user)
-    ) & (
-        Q(rolepermission__permissions__key=permission_key)
-        | Q(rolepermission__admin=True)
-    )
-    query = user_query | group_query | role_permission
-    if project:
-        query = query & Q(project=project)
+    query = _get_base_query(user, permission_key)
+    query = query & Q(project=project)
 
     return Environment.objects.filter(query).distinct().defer("description")
 
@@ -184,3 +135,51 @@ def is_user_environment_admin(
         )
         or is_user_entity_admin(user, environment)
     )
+
+
+def _get_base_query(user, permission_key: str = None) -> Q:
+    """
+    Get all objects of the given model that the user has the given permissions for.
+    Rules:
+        - User has the required permissions directly (UserObjectPermission)
+        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupObjectPermissions)
+        - User is an admin for the project or organisation the object belongs to
+        - User has a role attached with the required permissions
+        - User is in a UserPermissionGroup has a role attached with the required permissions
+    """
+    user_query = _user_query(user, permission_key)
+    group_query = _group_query(user, permission_key)
+    role_query = _role_query(user, permission_key)
+    query = user_query | group_query | role_query
+    return query
+
+
+def _user_query(user, permission_key=None) -> Q:
+    user_lookup = Q(userpermission__user=user)
+    admin_lookup = Q(userpermission__admin=True)
+    permission_lookup = Q(userpermission__permissions__key=permission_key)
+    if permission_key:
+        return user_lookup & Q(admin_lookup | permission_lookup)
+    return user_lookup & admin_lookup
+
+
+def _group_query(user, permission_key: str = None) -> Q:
+    group_lookup = Q(grouppermission__group__users=user)
+    admin_lookup = Q(grouppermission__permissions__key=permission_key)
+    if permission_key:
+        return group_lookup & Q(
+            admin_lookup | Q(grouppermission__permissions__key=permission_key)
+        )
+    return group_lookup & admin_lookup
+
+
+def _role_query(user, permission_key: str = None):
+    base_query = Q(rolepermission__role__userrole__user=user) | Q(
+        rolepermission__role__grouprole__group__users=user
+    )
+    admin_query = Q(rolepermission__admin=True)
+    if permission_key:
+        return base_query & Q(
+            admin_query | Q(rolepermission__permissions__key=permission_key)
+        )
+    return base_query & admin_query
