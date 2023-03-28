@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    MANAGE_USER_GROUPS,
     NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
@@ -148,7 +149,20 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
-        return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
+        organisation = getattr(self.request, "organisation", None)
+        if not organisation:
+            organisation = Organisation.objects.get(id=organisation_pk)
+
+        qs = UserPermissionGroup.objects.filter(organisation=organisation)
+        if not self.request.user.has_organisation_permission(
+            organisation, MANAGE_USER_GROUPS
+        ):
+            qs = qs.filter(
+                userpermissiongroupmembership__ffadminuser=self.request.user,
+                userpermissiongroupmembership__group_admin=True,
+            )
+
+        return qs
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
