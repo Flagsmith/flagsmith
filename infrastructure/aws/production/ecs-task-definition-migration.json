@@ -29,7 +29,11 @@
                 {
                     "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environments"
-               }
+                },
+                {
+                    "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environment_api_key"
+                }
             ],
             "secrets": [
                 {
