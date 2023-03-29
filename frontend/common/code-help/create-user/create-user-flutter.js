@@ -1,4 +1,7 @@
-module.exports = (envId, { USER_ID, FEATURE_NAME, FEATURE_NAME_ALT }) => `final flagsmithClient = FlagsmithClient(
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
+) => `final flagsmithClient = FlagsmithClient(
         apiKey: '${envId}' 
         config: config, 
         seeds: <Flag>[
@@ -25,4 +28,4 @@ bool featureEnabled = await flagsmithClient
 final myRemoteConfig = await flagsmithClient
   .getFeatureFlagValue('${FEATURE_NAME_ALT}', user: user);
 
-`;
+`

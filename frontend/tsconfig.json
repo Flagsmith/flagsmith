@@ -17,8 +17,14 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
-      "common/": [
+      "common/*": [
         "./common/*"
+      ],
+      "components/*": [
+        "./web/components/*"
+      ],
+      "project/*": [
+        "./web/project/*"
       ]
     }
   },

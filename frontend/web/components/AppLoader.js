@@ -1,15 +1,16 @@
-import React from 'react';
+import React from 'react'
 
 export default function AppLoader() {
-    return (
-        <div style={{
-            position: 'absolute',
-            top: '35%',
-            width: '100%',
-            textAlign: 'center',
-        }}
-        >
-            <Loader />
-        </div>
-    );
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        textAlign: 'center',
+        top: '35%',
+        width: '100%',
+      }}
+    >
+      <Loader />
+    </div>
+  )
 }

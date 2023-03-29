@@ -1,25 +1,27 @@
-import { PureComponent } from 'react';
+import { PureComponent } from 'react'
 
 const Card = class extends PureComponent {
-    static displayName = 'Card'
+  static displayName = 'Card'
 
-    render() {
-        return (
-            <div className={`panel-card panel panel-default ${this.props.className || ''}`}>
-                <div className="panel-content">
-                    {this.props.children}
-                </div>
-            </div>
-        );
-    }
-};
+  render() {
+    return (
+      <div
+        className={`panel-card panel panel-default ${
+          this.props.className || ''
+        }`}
+      >
+        <div className='panel-content'>{this.props.children}</div>
+      </div>
+    )
+  }
+}
 
-Card.displayName = 'Card';
+Card.displayName = 'Card'
 
 Card.propTypes = {
-    title: oneOfType([OptionalObject, OptionalString]),
-    icon: OptionalString,
-    children: OptionalNode,
-};
+  children: OptionalNode,
+  icon: OptionalString,
+  title: oneOfType([OptionalObject, OptionalString]),
+}
 
-module.exports = Card;
+module.exports = Card

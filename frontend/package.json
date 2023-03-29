@@ -38,7 +38,6 @@
     "@babel/register": "7.0.0",
     "@datadog/ui-extensions-react": "0.32.0",
     "@datadog/ui-extensions-sdk": "0.32.0",
-    "@dword-design/eslint-plugin-import-alias": "^2.0.7",
     "@material-ui/core": "4.12.4",
     "@react-oauth/google": "^0.2.8",
     "@reduxjs/toolkit": "1.9.1",
@@ -130,6 +129,7 @@
     "yaml": "^2.0.0"
   },
   "devDependencies": {
+    "@dword-design/eslint-plugin-import-alias": "^2.0.7",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/classnames": "^2.3.1",
     "@types/color": "^3.0.3",
@@ -146,6 +146,9 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "7.28.0",
     "eslint-plugin-react-hooks": "4.3.0",
+    "eslint-plugin-sort-destructure-keys": "^1.4.0",
+    "eslint-plugin-sort-keys-fix": "^1.1.2",
+
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
     "ssgrtk": "^0.3.4",

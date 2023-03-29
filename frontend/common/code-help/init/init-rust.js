@@ -14,4 +14,4 @@ let flags = flagsmith.get_environment_flags().unwrap();
 let show_button = flags.is_feature_enabled("${FEATURE_NAME}").unwrap();
 
 let button_data = flags.get_feature_value_as_string("${FEATURE_NAME_ALT}").unwrap();
-`;
+`

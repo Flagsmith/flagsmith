@@ -1,4 +1,7 @@
-module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `import FlagsmithClient
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT },
+) => `import FlagsmithClient
 
 func application(_ application: UIApplication,
  didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -20,4 +23,4 @@ func application(_ application: UIApplication,
           print(error)
       }
   }
-}`;
+}`

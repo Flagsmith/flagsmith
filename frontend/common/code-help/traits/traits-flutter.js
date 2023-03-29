@@ -1,4 +1,4 @@
-module.exports = (envId, { USER_ID, TRAIT_NAME }, userId) => `
+module.exports = (envId, { TRAIT_NAME, USER_ID }, userId) => `
 final user = Identity(identifier: '${userId || USER_ID}');
 
 // Create a new user trait for the above identity
@@ -18,4 +18,4 @@ flagsmithClient.updateTraits(value: [
     value: '20',
     ),
 ]);
-`;
+`

@@ -2,15 +2,30 @@ import { t } from 'testcafe';
 import fetch from 'node-fetch';
 import Project from '../common/project';
 import {
+    addSegmentOverride,
     assertTextContent,
-    byId, click, closeModal,
-    getLogger,
+    byId,
+    click,
+    closeModal,
     createFeature,
-    createRemoteConfig, createSegment, createTrait,
-    deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
+    createRemoteConfig,
+    createSegment,
+    createTrait,
+    deleteFeature,
+    deleteSegment,
+    deleteTrait,
+    getLogger,
+    getText,
+    gotoFeature,
+    gotoFeatures,
+    gotoSegments,
+    gotoTraits,
+    log,
+    logResults,
     setText,
     toggleFeature,
-    waitForElementVisible, gotoFeatures, gotoFeature, addSegmentOverride, waitAndRefresh, logResults,
+    waitAndRefresh,
+    waitForElementVisible,
 } from './helpers.cafe';
 
 require('dotenv').config();

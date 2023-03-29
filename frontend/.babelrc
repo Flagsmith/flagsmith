@@ -19,7 +19,9 @@
       {
         "root": ["."],
         "alias": {
-          "common": "./common"
+          "common": "./common",
+          "components": "./web/components",
+          "project": "./web/project"
         }
       }
     ],

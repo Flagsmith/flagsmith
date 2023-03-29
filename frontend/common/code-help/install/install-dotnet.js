@@ -1,4 +1,4 @@
-import Utils from 'common/utils/utils';
+import Utils from 'common/utils/utils'
 
 module.exports = () => `// Package Manager
 PM> Install-Package Flagsmith -Version 4.0.0
@@ -11,4 +11,4 @@ ${Utils.escapeHtml('<PackageReference Include="Flagsmith" Version="4.0.0" />')}
 
 // Paket CLI
 paket add Flagsmith --version 4.0.0
-`;
+`
