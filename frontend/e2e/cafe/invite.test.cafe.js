@@ -5,13 +5,13 @@ import {
     click,
     getLogger,
     log,
-    login, logResults,
+    login,
+    logResults,
     setText,
     waitForElementVisible,
-    waitForXPathElementVisible,
 } from '../helpers.cafe';
-import fetch from "node-fetch";
-import Project from "../../common/project";
+import fetch from 'node-fetch';
+import Project from '../../common/project';
 
 const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;

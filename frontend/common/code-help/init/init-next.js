@@ -1,4 +1,7 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_NAME_ALT, NPM_CLIENT }) => `// pages/_app.js
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
+) => `// pages/_app.js
 import ${LIB_NAME} from "${NPM_CLIENT}/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
 
@@ -33,4 +36,4 @@ export default function HomePage() {
   return (
     &lt;>{...}&lt;/>
   );
-}`;
+}`

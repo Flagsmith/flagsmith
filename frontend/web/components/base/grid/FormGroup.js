@@ -1,21 +1,18 @@
-import { PureComponent } from 'react';
-
-const cn = require('classnames');
-
+import { PureComponent } from 'react'
 const FormGroup = class extends PureComponent {
-    static displayName = 'FormGroup';
+  static displayName = 'FormGroup'
 
-    render() {
-        return (
-            <div className={`form-group ${this.props.className || ''}`}>
-                {this.props.children}
-            </div>
-        );
-    }
-};
+  render() {
+    return (
+      <div className={`form-group ${this.props.className || ''}`}>
+        {this.props.children}
+      </div>
+    )
+  }
+}
 
-FormGroup.displayName = 'FormGroup';
+FormGroup.displayName = 'FormGroup'
 FormGroup.propTypes = {
-    children: OptionalNode,
-};
-module.exports = FormGroup;
+  children: OptionalNode,
+}
+module.exports = FormGroup

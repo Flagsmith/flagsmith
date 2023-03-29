@@ -1,22 +1,25 @@
-import { Segment, Tag } from "./responses";
+import { Segment, Tag } from './responses'
 
-export type PagedRequest<T> =  T & {
-  page?:number
+export type PagedRequest<T> = T & {
+  page?: number
   page_size?: number
 }
-export type OAuthType = "github" | "saml"  | 'google'
-export type PermissionLevel = "organisation" | "project" | "environment"
+export type OAuthType = 'github' | 'saml' | 'google'
+export type PermissionLevel = 'organisation' | 'project' | 'environment'
 export type Req = {
   getSegments: PagedRequest<{
-    q?:string
+    q?: string
     projectId: number | string
-    identity?:number
+    identity?: number
   }>
-  deleteSegment: {projectId:number | string, id:number}
-  updateSegment: {projectId:number | string, segment: Segment}
-  createSegment: {projectId:number | string, segment: Omit<Segment,"id"|"uuid"|"project">}
+  deleteSegment: { projectId: number | string; id: number }
+  updateSegment: { projectId: number | string; segment: Segment }
+  createSegment: {
+    projectId: number | string
+    segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
   getAuditLogs: PagedRequest<{
-    search?:string
+    search?: string
     project: string
     environments?: string
   }>
@@ -29,8 +32,8 @@ export type Req = {
   }
   getOrganisationUsage: {
     organisationId: string
-    projectId?:string
-    environmentId?:string
+    projectId?: string
+    environmentId?: string
   }
   deleteIdentity: {
     id: string
@@ -44,15 +47,15 @@ export type Req = {
   }
   getIdentities: PagedRequest<{
     environmentId: string
-    pageType?: "NEXT" | "PREVIOUS"
-    search?:string
-    pages?: (string|undefined)[] // this is needed for edge since it returns no paging info other than a key
+    pageType?: 'NEXT' | 'PREVIOUS'
+    search?: string
+    pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: {id:string, level: PermissionLevel}
-  getAvailablePermissions: {level:PermissionLevel}
-  getTag: {id:string}
-  updateTag: {projectId: string, tag:Tag}
+  getPermission: { id: string; level: PermissionLevel }
+  getAvailablePermissions: { level: PermissionLevel }
+  getTag: { id: string }
+  updateTag: { projectId: string; tag: Tag }
   deleteTag: {
     id: number
     projectId: string
@@ -60,7 +63,7 @@ export type Req = {
   getTags: {
     projectId: string
   }
-  createTag: {projectId: string, tag:Omit<Tag,"id">}
-  getSegment: {projectId: string, id:string}
+  createTag: { projectId: string; tag: Omit<Tag, 'id'> }
+  getSegment: { projectId: string; id: string }
   // END OF TYPES
 }

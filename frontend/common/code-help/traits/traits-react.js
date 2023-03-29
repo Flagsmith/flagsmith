@@ -1,4 +1,8 @@
-module.exports = (envId, { LIB_NAME, TRAIT_NAME, FEATURE_NAME, FEATURE_NAME_ALT }, USER_ID) => `
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME },
+  USER_ID,
+) => `
 // Home Page
 import flagsmith from '${LIB_NAME}';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
@@ -19,4 +23,4 @@ export default function HomePage() {
   return (
     &lt;>{...}&lt;/>
   );
-}`;
+}`

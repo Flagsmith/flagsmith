@@ -1,80 +1,124 @@
-import React from 'react';
-import FeatureListStore from 'common/stores/feature-list-store';
-import IdentityStore from 'common/stores/identity-store';
+import React from 'react'
+import FeatureListStore from 'common/stores/feature-list-store'
+import IdentityStore from 'common/stores/identity-store'
 
 const IdentityProvider = class extends React.Component {
-    static displayName = 'IdentityProvider'
+  static displayName = 'IdentityProvider'
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {
-            isLoading: true,
-            identity: IdentityStore.model,
-            environmentFlags: FeatureListStore.getEnvironmentFlags(),
-            projectFlags: FeatureListStore.getProjectFlags(),
-            identityFlags: IdentityStore.getIdentityFlags(),
-        };
-        ES6Component(this);
+  constructor(props, context) {
+    super(props, context)
+    this.state = {
+      environmentFlags: FeatureListStore.getEnvironmentFlags(),
+      identity: IdentityStore.model,
+      identityFlags: IdentityStore.getIdentityFlags(),
+      isLoading: true,
+      projectFlags: FeatureListStore.getProjectFlags(),
     }
+    ES6Component(this)
+  }
 
-    componentDidMount() {
-        this.listenTo(IdentityStore, 'change', () => {
-            this.setState({
-                isSaving: IdentityStore.isSaving,
-                isLoading: IdentityStore.isLoading || FeatureListStore.isLoading,
-                identity: IdentityStore.model,
-                identityFlags: IdentityStore.getIdentityFlags(),
-                traits: IdentityStore.getTraits(),
-            });
-        });
-        this.listenTo(FeatureListStore, 'change', () => {
-            this.setState({
-                isLoading: IdentityStore.isLoading || FeatureListStore.isLoading,
-                environmentFlags: FeatureListStore.getEnvironmentFlags(),
-                projectFlags: FeatureListStore.getProjectFlags(),
-            });
-        });
+  componentDidMount() {
+    this.listenTo(IdentityStore, 'change', () => {
+      this.setState({
+        identity: IdentityStore.model,
+        identityFlags: IdentityStore.getIdentityFlags(),
+        isLoading: IdentityStore.isLoading || FeatureListStore.isLoading,
+        isSaving: IdentityStore.isSaving,
+        traits: IdentityStore.getTraits(),
+      })
+    })
+    this.listenTo(FeatureListStore, 'change', () => {
+      this.setState({
+        environmentFlags: FeatureListStore.getEnvironmentFlags(),
+        isLoading: IdentityStore.isLoading || FeatureListStore.isLoading,
+        projectFlags: FeatureListStore.getProjectFlags(),
+      })
+    })
 
-        this.listenTo(IdentityStore, 'saved', () => {
-            this.props.onSave && this.props.onSave();
-        });
-    }
+    this.listenTo(IdentityStore, 'saved', () => {
+      this.props.onSave && this.props.onSave()
+    })
+  }
 
-    toggleFlag = ({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) => {
-        AppActions.toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });
-    };
+  toggleFlag = ({
+    environmentFlag,
+    environmentId,
+    identity,
+    identityFlag,
+    projectFlag,
+  }) => {
+    AppActions.toggleUserFlag({
+      environmentFlag,
+      environmentId,
+      identity,
+      identityFlag,
+      projectFlag,
+    })
+  }
 
-    editFeatureValue = ({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) => {
-        AppActions.editUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId });
-    };
+  editFeatureValue = ({
+    environmentFlag,
+    environmentId,
+    identity,
+    identityFlag,
+    projectFlag,
+  }) => {
+    AppActions.editUserFlag({
+      environmentFlag,
+      environmentId,
+      identity,
+      identityFlag,
+      projectFlag,
+    })
+  }
 
-    editTrait = ({ trait, identity, environmentId }) => {
-        AppActions.editTrait({ trait, identity, environmentId });
-    };
+  editTrait = ({ environmentId, identity, trait }) => {
+    AppActions.editTrait({ environmentId, identity, trait })
+  }
 
-    createTrait = ({ trait, identity, environmentId, isCreate }) => {
-        AppActions.editTrait({ trait, identity, environmentId, isCreate });
-    };
+  createTrait = ({ environmentId, identity, isCreate, trait }) => {
+    AppActions.editTrait({ environmentId, identity, isCreate, trait })
+  }
 
-    removeFlag = ({ environmentId, identity, identityFlag }) => {
-        AppActions.removeUserFlag({ environmentId, identity, identityFlag });
-    };
+  removeFlag = ({ environmentId, identity, identityFlag }) => {
+    AppActions.removeUserFlag({ environmentId, identity, identityFlag })
+  }
 
-    changeUserFlag = ({ identity, identityFlag, environmentId, payload }) => {
-        AppActions.changeUserFlag({ identity, identityFlag, environmentId, payload });
-    };
+  changeUserFlag = ({ environmentId, identity, identityFlag, payload }) => {
+    AppActions.changeUserFlag({
+      environmentId,
+      identity,
+      identityFlag,
+      payload,
+    })
+  }
 
-    render() {
-        const { toggleFlag, editFeatureValue, removeFlag, editTrait, changeUserFlag, createTrait } = this;
-        return (
-            this.props.children({ ...this.state }, { toggleFlag, editFeatureValue, createTrait, removeFlag, editTrait, changeUserFlag })
-        );
-    }
-};
+  render() {
+    const {
+      changeUserFlag,
+      createTrait,
+      editFeatureValue,
+      editTrait,
+      removeFlag,
+      toggleFlag,
+    } = this
+    return this.props.children(
+      { ...this.state },
+      {
+        changeUserFlag,
+        createTrait,
+        editFeatureValue,
+        editTrait,
+        removeFlag,
+        toggleFlag,
+      },
+    )
+  }
+}
 
 IdentityProvider.propTypes = {
-    onSave: OptionalFunc,
-    children: OptionalFunc,
-};
+  children: OptionalFunc,
+  onSave: OptionalFunc,
+}
 
-module.exports = IdentityProvider;
+module.exports = IdentityProvider

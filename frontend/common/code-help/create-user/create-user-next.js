@@ -1,4 +1,7 @@
-module.exports = (envId, { LIB_NAME, TRAIT_NAME, USER_ID, FEATURE_NAME, FEATURE_NAME_ALT }) => `
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME, USER_ID },
+) => `
 // Option 1: Identify clientside
 //Home Page
 import flagsmith from '${LIB_NAME}/isomorphic';
@@ -42,4 +45,4 @@ MyApp.getInitialProps = async () => {
   await flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // Will hydrate the app with the user's flags
   return { flagsmithState: flagsmith.getState() }
 }
-`;
+`

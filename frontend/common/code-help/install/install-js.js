@@ -1,4 +1,4 @@
-import Utils from 'common/utils/utils';
+import Utils from 'common/utils/utils'
 
 module.exports = ({ NPM_CLIENT, URL_CLIENT }) => `// npm
 npm i ${NPM_CLIENT} --save
@@ -8,4 +8,4 @@ yarn add ${NPM_CLIENT}
 
 // Or script tag
 ${Utils.escapeHtml(`<script src="${URL_CLIENT}"></script>`)}
-`;
+`
