@@ -1,8 +1,10 @@
 from core.models import _AbstractBaseAuditableModel
+from django.conf import settings
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
 from audit import tasks
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser
 
 
@@ -22,7 +24,11 @@ def create_audit_log_from_historical_record(
     # document when creating feature states
     # or delay the execution of this task
     # We prefer to delay the execution of the task because of it's low surface area
-    delay_until = timezone.now() + timezone.timedelta(seconds=1)
+    delay_until = (
+        timezone.now() + timezone.timedelta(seconds=1)
+        if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
+        else None
+    )
 
     tasks.create_audit_log_from_historical_record.delay(
         kwargs={
