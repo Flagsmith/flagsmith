@@ -1,0 +1,5 @@
+const Project = require('../env/project_staging')
+const fs = require('fs-extra')
+const path = require('path')
+const target = path.resolve(__dirname, '../flagsmith.json')
+fs.rmSync(target)

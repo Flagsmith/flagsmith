@@ -39,7 +39,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
-console.log(Project)
 let state = undefined
 try {
   // If a flagsmith.json file exists in /frontend, use it as the default flags and prevent fetching
