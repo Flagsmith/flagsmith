@@ -1,6 +1,12 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
 
+let shouldIdentify = true
+try {
+  //If a flagsmith JSON file exists we shouldn't identify
+  require('../../flagsmith.json')
+  shouldIdentify = false
+} catch (e) {}
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -77,8 +83,10 @@ global.API = {
       const identify = new amplitude.Identify().set('email', id)
       amplitude.getInstance().identify(identify)
     }
-    flagsmith.identify(id)
-    flagsmith.setTrait('email', id)
+    if (shouldIdentify) {
+      flagsmith.identify(id)
+      flagsmith.setTrait('email', id)
+    }
   },
   getCookie(key) {
     const res = require('js-cookie').get(key)
@@ -169,14 +177,16 @@ global.API = {
 
         amplitude.getInstance().identify(identify)
       }
-      flagsmith.identify(id)
-      flagsmith.setTrait(
-        'organisations',
-        user.organisations
-          ? user.organisations.map((o) => `"${o.id}"`).join(',')
-          : '',
-      )
-      flagsmith.setTrait('email', id)
+      if (shouldIdentify) {
+        flagsmith.identify(id)
+        flagsmith.setTrait(
+          'organisations',
+          user.organisations
+            ? user.organisations.map((o) => `"${o.id}"`).join(',')
+            : '',
+        )
+        flagsmith.setTrait('email', id)
+      }
     } catch (e) {
       console.error('Error identifying', e)
     }

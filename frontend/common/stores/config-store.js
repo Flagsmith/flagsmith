@@ -39,6 +39,23 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
+console.log(Project)
+let state = undefined
+try {
+  // If a flagsmith.json file
+  let state = require('../../flagsmith.json')
+} catch (e) {}
+if (
+  !(
+    state.api === Project.flagsmithClientAPI &&
+    state.environmentID === Project.flagsmith
+  )
+) {
+  console.error(
+    'Mismatch between compiled flagsmith JSON and expected environment/keys',
+  )
+  state = undefined
+}
 flagsmith
   .init({
     AsyncStorage,
@@ -47,7 +64,9 @@ flagsmith
     enableAnalytics: Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
+    preventFetch: !!state,
     realtime: true,
+    state,
   })
   .catch(() => {
     controller.onError()
