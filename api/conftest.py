@@ -35,7 +35,11 @@ from organisations.roles.models import (
 )
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
-from projects.models import Project, UserProjectPermission
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
@@ -319,6 +323,13 @@ def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
 
 
+@pytest.fixture()
+def user_project_permission_group(test_user, project, user_permission_group):
+    return UserPermissionGroupProjectPermission.objects.create(
+        group=user_permission_group, project=project
+    )
+
+
 @pytest.fixture(autouse=True)
 def task_processor_synchronously(settings):
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
@@ -425,8 +436,8 @@ def role_view_project_permission(role, project, view_project_permission):
 
 
 @pytest.fixture
-def role_project_admin_permission(role, project):
-    return RoleProjectPermission.objects.create(role=role, project=project, admin=True)
+def role_project_permission(role, project):
+    return RoleProjectPermission.objects.create(role=role, project=project)
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ from .models import (
     GroupRole,
     Role,
     RoleEnvironmentPermission,
+    RoleOrganisationPermission,
     RoleProjectPermission,
     UserRole,
 )
@@ -12,7 +13,7 @@ from .models import (
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ("name", "organisation", "permissions")
+        fields = ("name", "organisation")
 
 
 class RoleEnvironmentPermissionSerializer(serializers.ModelSerializer):
@@ -25,6 +26,17 @@ class RoleProjectPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoleProjectPermission
         fields = ("role", "project", "permissions", "admin")
+
+
+class RoleOrganisationPermisssionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleOrganisationPermission
+        fields = (
+            "role",
+            "organisation",
+            "permissions",
+        )
+        read_only_fields = ("organisation",)
 
 
 class UserRoleSerializer(serializers.ModelSerializer):
