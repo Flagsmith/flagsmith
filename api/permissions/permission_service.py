@@ -18,13 +18,13 @@ def is_user_organisation_admin(user, organisation: Organisation) -> bool:
 def is_user_project_admin(user, project, allow_org_admin: bool = True) -> bool:
     if allow_org_admin and is_user_organisation_admin(user, project.organisation):
         return True
-    return is_user_entity_admin(user, project)
+    return _is_user_object_admin(user, project)
 
 
-def is_user_entity_admin(user, entity: Union[Project | Environment]) -> bool:
+def _is_user_object_admin(user, object_: Union[Project | Environment]) -> bool:
     query = _get_base_query(user)
-    query = query & Q(id=entity.id)
-    return type(entity).objects.filter(query).exists()
+    query = query & Q(id=object_.id)
+    return type(object_).objects.filter(query).exists()
 
 
 def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Project]:
@@ -75,8 +75,12 @@ def get_permitted_environments_for_user(
 def user_has_organisation_permission(user, organisation, permission_key: str) -> bool:
     if is_user_organisation_admin(user, organisation):
         return True
-
-    query = _get_base_query(user, permission_key, allow_admin=False)
+    user_query = _user_query(user, permission_key, allow_admin=False)
+    group_query = _group_query(user, permission_key, allow_admin=False)
+    role_query = Q(
+        Q(role__userrole__user=user) | Q(role__grouprole__group__users=user)
+    ) & Q(role__rolepermission__permissions__key=permission_key)
+    query = user_query | group_query | role_query
 
     return Organisation.objects.filter(query).exists()
 
@@ -93,8 +97,9 @@ def get_organisation_permission_keys_for_user(
     ).values_list("permissions__key", flat=True)
 
     role_permission_keys = organisation.roles.filter(
-        Q(userrole__user=user) | Q(grouprole__group__users=user)
-    ).values_list("permissions__key", flat=True)
+        Q(rolepermission__role__userrole__user=user)
+        | Q(rolepermission__role__grouprole__group__users=user)
+    ).values_list("rolepermission__permissions__key", flat=True)
 
     all_permission_keys = (
         set(user_permission_keys)
@@ -120,7 +125,7 @@ def is_user_environment_admin(
             allow_project_admin
             and is_user_project_admin(user, environment.project, allow_org_admin=False)
         )
-        or is_user_entity_admin(user, environment)
+        or _is_user_object_admin(user, environment)
     )
 
 
@@ -137,6 +142,7 @@ def _get_base_query(user, permission_key: str = None, allow_admin=True) -> Q:
     user_query = _user_query(user, permission_key, allow_admin)
     group_query = _group_query(user, permission_key, allow_admin)
     role_query = _role_query(user, permission_key, allow_admin)
+
     query = user_query | group_query | role_query
     return query
 
