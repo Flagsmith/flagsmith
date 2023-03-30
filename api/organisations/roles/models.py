@@ -7,10 +7,17 @@ from projects.models import Project
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-class Role(AbstractBasePermissionModel):
+class Role(models.Model):
     name = models.CharField(max_length=2000)
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="roles"
+    )
+
+
+class RoleOrganisationPermission(AbstractBasePermissionModel):
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE, related_query_name="rolepermission"
     )
 
 
