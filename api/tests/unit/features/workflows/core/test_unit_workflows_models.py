@@ -31,6 +31,8 @@ def test_change_request_approve_by_required_approver(
     now = timezone.now()
     mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
+    mocked_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+
     # When
     change_request_no_required_approvals.approve(user=user)
 
@@ -39,6 +41,13 @@ def test_change_request_approve_by_required_approver(
     approval.refresh_from_db()
     assert approval.approved_at == now
     assert approval.user == user
+
+    # the author is notified that their change request was approved
+    assert mocked_send_mail.call_count == 1
+    assert mocked_send_mail.call_args.kwargs["recipient_list"] == [
+        change_request_no_required_approvals.user.email
+    ]
+    assert mocked_send_mail.call_args.kwargs["fail_silently"] is True
 
 
 def test_change_request_approve_by_new_approver_when_no_approvals_exist(
