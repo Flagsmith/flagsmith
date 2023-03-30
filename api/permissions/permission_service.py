@@ -15,8 +15,8 @@ def is_user_organisation_admin(user, organisation: Organisation) -> bool:
     return False
 
 
-def is_user_project_admin(user, project, allow_org_admin: bool = True) -> bool:
-    if allow_org_admin and is_user_organisation_admin(user, project.organisation):
+def is_user_project_admin(user, project) -> bool:
+    if is_user_organisation_admin(user, project.organisation):
         return True
     return _is_user_object_admin(user, project)
 
@@ -110,21 +110,10 @@ def get_organisation_permission_keys_for_user(
     return all_permission_keys
 
 
-def is_user_environment_admin(
-    user,
-    environment,
-    allow_project_admin: bool = True,
-    allow_organisation_admin: bool = True,
-) -> bool:
+def is_user_environment_admin(user, environment) -> bool:
     return (
-        (
-            allow_organisation_admin
-            and is_user_organisation_admin(user, environment.project.organisation)
-        )
-        or (
-            allow_project_admin
-            and is_user_project_admin(user, environment.project, allow_org_admin=False)
-        )
+        is_user_organisation_admin(user, environment.project.organisation)
+        or is_user_project_admin(user, environment.project)
         or _is_user_object_admin(user, environment)
     )
 

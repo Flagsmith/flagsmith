@@ -228,8 +228,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             self, permission, environment.project
         )
 
-    def is_project_admin(self, project: Project, allow_org_admin: bool = True):
-        return is_user_project_admin(self, project, allow_org_admin)
+    def is_project_admin(self, project: Project):
+        return is_user_project_admin(self, project)
 
     def get_permitted_environments(
         self, permission_key: str, project: Project
@@ -259,12 +259,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def is_environment_admin(
         self,
         environment: Environment,
-        allow_project_admin: bool = True,
-        allow_organisation_admin: bool = True,
     ):
-        return is_user_environment_admin(
-            self, environment, allow_project_admin, allow_organisation_admin
-        )
+        return is_user_environment_admin(self, environment)
 
     def has_organisation_permission(
         self, organisation: Organisation, permission_key: str
