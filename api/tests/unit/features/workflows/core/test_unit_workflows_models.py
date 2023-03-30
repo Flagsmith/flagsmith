@@ -24,14 +24,14 @@ def test_change_request_approve_by_required_approver(
     change_request_no_required_approvals, mocker
 ):
     # Given
+    mocked_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+
     user = FFAdminUser.objects.create(email="approver@example.com")
     approval = ChangeRequestApproval.objects.create(
         user=user, change_request=change_request_no_required_approvals
     )
     now = timezone.now()
     mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
-
-    mocked_send_mail = mocker.patch("features.workflows.core.models.send_mail")
 
     # When
     change_request_no_required_approvals.approve(user=user)
@@ -42,12 +42,20 @@ def test_change_request_approve_by_required_approver(
     assert approval.approved_at == now
     assert approval.user == user
 
-    # the author is notified that their change request was approved
-    assert mocked_send_mail.call_count == 1
-    assert mocked_send_mail.call_args.kwargs["recipient_list"] == [
+    # 2 emails are sent:
+    assert mocked_send_mail.call_count == 2
+    assignee_email_call_args, author_email_call_args = mocked_send_mail.call_args_list
+
+    #  1 to the assignee that they are required to approve the CR (done when the ChangeRequestApproval
+    #  model object is created above)
+    assert assignee_email_call_args.kwargs["recipient_list"] == [user.email]
+    assert author_email_call_args.kwargs["fail_silently"] is True
+
+    #  1 to the author that it has been approved
+    assert author_email_call_args.kwargs["recipient_list"] == [
         change_request_no_required_approvals.user.email
     ]
-    assert mocked_send_mail.call_args.kwargs["fail_silently"] is True
+    assert author_email_call_args.kwargs["fail_silently"] is True
 
 
 def test_change_request_approve_by_new_approver_when_no_approvals_exist(
