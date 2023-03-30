@@ -42,20 +42,10 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 console.log(Project)
 let state = undefined
 try {
-  // If a flagsmith.json file
-  let state = require('../../flagsmith.json')
+  // If a flagsmith.json file exists in /frontend, use it as the default flags and prevent fetching
+  state = require('../../flagsmith.json')
 } catch (e) {}
-if (
-  !(
-    state.api === Project.flagsmithClientAPI &&
-    state.environmentID === Project.flagsmith
-  )
-) {
-  console.error(
-    'Mismatch between compiled flagsmith JSON and expected environment/keys',
-  )
-  state = undefined
-}
+
 flagsmith
   .init({
     AsyncStorage,
