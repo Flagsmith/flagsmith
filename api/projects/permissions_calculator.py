@@ -2,6 +2,9 @@ import typing
 from dataclasses import dataclass, field
 from functools import reduce
 
+from django.db.models import Q
+
+from organisations.roles.models import RoleProjectPermission
 from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
@@ -21,8 +24,19 @@ class GroupData:
 
 
 @dataclass
+class RoleData:
+    id: int
+    name: str
+
+
+@dataclass
 class _GroupPermissionBase:
     group: GroupData
+
+
+@dataclass
+class _RolePermissionBase:
+    role: RoleData
 
 
 @dataclass
@@ -36,13 +50,23 @@ class GroupPermissionData(_PermissionDataBase, _GroupPermissionBase):
 
 
 @dataclass
+class RolePermissionData(_PermissionDataBase, _RolePermissionBase):
+    pass
+
+
+@dataclass
 class UserProjectPermissionData:
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
+    roles: typing.List[RolePermissionData]
 
     @property
     def admin(self) -> bool:
-        return self.user.admin or any(group.admin for group in self.groups)
+        return (
+            self.user.admin
+            or any(group.admin for group in self.groups)
+            or any(role.admin for role in self.roles)
+        )
 
     @property
     def permissions(self) -> typing.Set[str]:
@@ -50,6 +74,12 @@ class UserProjectPermissionData:
             reduce(
                 lambda a, b: a.union(b),
                 [group.permissions for group in self.groups],
+                set(),
+            )
+        ).union(
+            reduce(
+                lambda a, b: a.union(b),
+                [role.permissions for role in self.roles],
                 set(),
             )
         )
@@ -65,6 +95,7 @@ class ProjectPermissionsCalculator:
         return UserProjectPermissionData(
             user=self._get_user_permission_data(user_id),
             groups=self._get_groups_permission_data(user_id),
+            roles=self._get_roles_permission_data(user_id),
         )
 
     def _get_user_permission_data(self, user_id: int) -> UserPermissionData:
@@ -114,3 +145,36 @@ class ProjectPermissionsCalculator:
             group_permission_data_objects.append(group_permission_data_object)
 
         return group_permission_data_objects
+
+    def _get_roles_permission_data(
+        self, user_id: int
+    ) -> typing.List[RolePermissionData]:
+        pass
+
+        q = Q(role__userrole__user_id=user_id) | Q(
+            role__grouprole__group__user_id=user_id
+        )
+        role_permission_data_objects = []
+        for role_project_permission in (
+            RoleProjectPermission.objects.filter(q)
+            .selet_related("role")
+            .prefetch_related("permissions")
+        ):
+            role_data = RoleData(
+                id=role_project_permission.role.id,
+                name=role_project_permission.role.name,
+            )
+            role_permission_data_object = RolePermissionData(role=role_data)
+
+            if role_project_permission.admin:
+                role_permission_data_object.admin = True
+
+            role_permission_data_object.permissions.update(
+                permission.key
+                for permission in role_project_permission.permissions.all()
+                if permission.key
+            )
+
+            role_permission_data_objects.append(role_permission_data_object)
+
+        return role_permission_data_objects
