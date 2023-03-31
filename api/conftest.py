@@ -324,7 +324,7 @@ def user_project_permission(test_user, project):
 
 
 @pytest.fixture()
-def user_project_permission_group(test_user, project, user_permission_group):
+def user_project_permission_group(project, user_permission_group):
     return UserPermissionGroupProjectPermission.objects.create(
         group=user_permission_group, project=project
     )
