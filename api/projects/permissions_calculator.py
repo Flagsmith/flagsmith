@@ -151,13 +151,11 @@ class ProjectPermissionsCalculator:
     ) -> typing.List[RolePermissionData]:
         pass
 
-        q = Q(role__userrole__user_id=user_id) | Q(
-            role__grouprole__group__user_id=user_id
-        )
+        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
         role_permission_data_objects = []
         for role_project_permission in (
             RoleProjectPermission.objects.filter(q)
-            .selet_related("role")
+            .select_related("role")
             .prefetch_related("permissions")
         ):
             role_data = RoleData(
