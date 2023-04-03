@@ -194,12 +194,7 @@ const ChangeRequestModal = class extends Component {
                 <Button
                   id='confirm-cancel-plan'
                   className='btn btn-primary'
-                  disabled={
-                    !title ||
-                    (!this.state.approvals.length &&
-                      !this.props.changeRequest &&
-                      this.props.showAssignees)
-                  }
+                  disabled={!title}
                   onClick={this.save}
                 >
                   {this.props.changeRequest ? 'Update' : 'Create'}
