@@ -440,9 +440,6 @@ def test_edge_identities_update_trait(
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document
     )
-    send_identity_update_message_mock = mocker.patch(
-        "edge_api.identities.views.send_identity_update_message", autospec=True
-    )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
@@ -475,9 +472,6 @@ def test_edge_identities_update_trait(
             args[0]["identity_traits"],
         )
     )
-    args, kwargs = send_identity_update_message_mock.call_args
-    assert args[0].id == dynamo_enabled_environment
-    assert args[1] == identity_document["identifier"]
 
 
 def test_edge_identities_update_trait_with_same_value(
@@ -492,9 +486,6 @@ def test_edge_identities_update_trait_with_same_value(
     # Given
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document
-    )
-    send_identity_update_message_mock = mocker.patch(
-        "edge_api.identities.views.send_identity_update_message", autospec=True
     )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
@@ -516,7 +507,6 @@ def test_edge_identities_update_trait_with_same_value(
         identity_uuid
     )
     edge_identity_dynamo_wrapper_mock.put_item.assert_not_called()
-    send_identity_update_message_mock.assert_not_called()
 
 
 def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(
