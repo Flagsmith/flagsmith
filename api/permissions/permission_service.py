@@ -1,4 +1,4 @@
-from typing import Iterable, Union
+from typing import Iterable, Set, Union
 
 from django.db.models import Q
 
@@ -77,9 +77,11 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
         return True
     user_query = _user_query(user, permission_key, allow_admin=False)
     group_query = _group_query(user, permission_key, allow_admin=False)
+
     role_query = Q(
         Q(role__userrole__user=user) | Q(role__grouprole__group__users=user)
     ) & Q(role__rolepermission__permissions__key=permission_key)
+
     query = user_query | group_query | role_query
 
     return Organisation.objects.filter(query).exists()
@@ -87,19 +89,27 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
 
 def get_organisation_permission_keys_for_user(
     user, organisation: Organisation
-) -> Iterable[str]:
-    user_permission_keys = organisation.userpermissions.filter(user=user).values_list(
-        "permissions__key", flat=True
+) -> Set[str]:
+    user_permission_keys = (
+        organisation.userpermissions.filter(user=user)
+        .values_list("permissions__key", flat=True)
+        .exclude(permissions__key__isnull=True)
     )
 
-    group_permission_keys = organisation.grouppermissions.filter(
-        group__users=user
-    ).values_list("permissions__key", flat=True)
+    group_permission_keys = (
+        organisation.grouppermissions.filter(group__users=user)
+        .values_list("permissions__key", flat=True)
+        .exclude(permissions__key__isnull=True)
+    )
 
-    role_permission_keys = organisation.roles.filter(
-        Q(rolepermission__role__userrole__user=user)
-        | Q(rolepermission__role__grouprole__group__users=user)
-    ).values_list("rolepermission__permissions__key", flat=True)
+    role_permission_keys = (
+        organisation.roles.filter(
+            Q(rolepermission__role__userrole__user=user)
+            | Q(rolepermission__role__grouprole__group__users=user)
+        )
+        .values_list("rolepermission__permissions__key", flat=True)
+        .exclude(rolepermission__permissions__key__isnull=True)
+    )
 
     all_permission_keys = (
         set(user_permission_keys)

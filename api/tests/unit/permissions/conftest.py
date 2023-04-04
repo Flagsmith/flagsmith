@@ -1,5 +1,6 @@
 import pytest
 
+from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -14,3 +15,8 @@ def other_organisation(db):
 @pytest.fixture()
 def other_project(other_organisation):
     return Project.objects.create(name="Test Project", organisation=other_organisation)
+
+
+@pytest.fixture()
+def other_environment(other_project):
+    return Environment.objects.create(name="Test Environment", project=other_project)

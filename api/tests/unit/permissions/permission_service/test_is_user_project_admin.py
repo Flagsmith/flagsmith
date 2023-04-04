@@ -1,6 +1,5 @@
 from organisations.roles.models import RoleProjectPermission, UserRole
 from permissions.permission_service import is_user_project_admin
-from projects.models import Project
 
 
 def test_is_user_project_admin_returns_true_for_org_admin(
@@ -37,7 +36,7 @@ def test_is_user_project_admin_returns_true_for_user_with_admin_permission_throu
     assert is_user_project_admin(test_user, project) is True
 
 
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_role_attached_to_user(
+def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_user_role(
     organisation,
     test_user,
     project,
@@ -52,7 +51,7 @@ def test_is_user_project_admin_returns_true_for_user_with_admin_permission_throu
     assert is_user_project_admin(test_user, project) is True
 
 
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_role_attached_to_group(
+def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_group_role(
     organisation,
     test_user,
     project,
@@ -87,19 +86,6 @@ def test_is_user_project_admin_returns_false_for_user_with_admin_permission_of_o
     assert is_user_project_admin(admin_user, other_project) is False
 
 
-def test_is_user_project_admin_returns_false_for_user_with_admin_permission_of_other_project(
-    test_user, project, organisation, user_project_permission
-):
-    # Given - another project in the same organisation
-    project_two = Project.objects.create(organisation=organisation, name="Project two")
-
-    # and the user has admin permission on the other project
-    user_project_permission.admin = True
-    user_project_permission.save()
-
-    assert is_user_project_admin(test_user, project_two) is False
-
-
 def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(
     admin_user,
     project,
@@ -111,15 +97,15 @@ def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(
     other_project,
 ):
     # Given
-    # First, let's give the user with admin permission on the project
+    # let's give the user with admin permission on the project
     user_project_permission.admin = True
     user_project_permission.save()
 
-    # Next, let's give the user admin permission using a group as well
+    # let's give the user admin permission using a group
     user_project_permission_group.admin = True
     user_project_permission_group.save()
 
-    # Next, let's give the user admin permission using a role as well
+    # Next, let's give the user admin permission using a role
     UserRole.objects.create(user=admin_user, role=role)
     RoleProjectPermission.objects.create(role=role, project=project, admin=True)
 

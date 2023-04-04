@@ -13,7 +13,10 @@ from environments.permissions.constants import (
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from environments.permissions.models import UserEnvironmentPermission
+from environments.permissions.models import (
+    UserEnvironmentPermission,
+    UserPermissionGroupEnvironmentPermission,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -26,6 +29,11 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    MANAGE_USER_GROUPS,
+)
 from organisations.roles.models import (
     GroupRole,
     Role,
@@ -319,6 +327,13 @@ def user_environment_permission(test_user, environment):
 
 
 @pytest.fixture()
+def user_environment_permission_group(test_user, user_permission_group, environment):
+    return UserPermissionGroupEnvironmentPermission.objects.create(
+        group=user_permission_group, environment=environment
+    )
+
+
+@pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
 
@@ -458,3 +473,13 @@ def group_role(role, user_permission_group):
 @pytest.fixture
 def org_admin_group_role(org_admin_role, user_permission_group):
     return GroupRole.objects.create(role=org_admin_role, group=user_permission_group)
+
+
+@pytest.fixture
+def create_project_permission(db):
+    return OrganisationPermissionModel.objects.get(key=CREATE_PROJECT)
+
+
+@pytest.fixture
+def manage_user_group_permission(db):
+    return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)

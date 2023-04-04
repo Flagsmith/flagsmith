@@ -23,6 +23,7 @@ class RoleOrganisationPermission(AbstractBasePermissionModel):
         on_delete=models.CASCADE,
         related_query_name="rolepermission",
     )
+    # TODO: change related_query_name
 
 
 class RoleProjectPermission(AbstractBasePermissionModel):
