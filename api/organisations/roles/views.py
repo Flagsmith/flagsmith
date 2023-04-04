@@ -34,11 +34,10 @@ class RoleViewSet(viewsets.ModelViewSet):
         return Role.objects.filter(organisation_id=self.kwargs["organisation_pk"])
 
     def perform_update(self, serializer):
-        organisation_id = self.kwargs["organisation_pk"]
+        organisation_id = int(self.kwargs["organisation_pk"])
         serializer.save(organisation_id=organisation_id)
 
     def perform_create(self, serializer):
-        # TODO do we really need int?
         organisation_id = int(self.kwargs["organisation_pk"])
         serializer.save(organisation_id=organisation_id)
 
@@ -56,8 +55,12 @@ class RoleEnvironmentPermissionViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        role = Role.objects.get(id=self.kwargs["role_pk"])
-        serializer.save(role=role)
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)
+
+    def perform_update(self, serializer):
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)
 
 
 class RoleProjectPermissionViewSet(viewsets.ModelViewSet):
@@ -87,11 +90,10 @@ class UserRoleViewSet(viewsets.ModelViewSet):
         return UserRole.objects.filter(role_id=self.kwargs["role_pk"])
 
     def perform_update(self, serializer):
-        role_id = self.kwargs["role_pk"]
+        role_id = int(self.kwargs["role_pk"])
         serializer.save(role_id=role_id)
 
     def perform_create(self, serializer):
-        # TODO do we really need int?
         role_id = int(self.kwargs["role_pk"])
         serializer.save(role_id=role_id)
 
@@ -106,10 +108,9 @@ class GroupRoleViewSet(viewsets.ModelViewSet):
         return GroupRole.objects.filter(role_id=self.kwargs["role_pk"])
 
     def perform_update(self, serializer):
-        role_id = self.kwargs["role_pk"]
+        role_id = int(self.kwargs["role_pk"])
         serializer.save(role_id=role_id)
 
     def perform_create(self, serializer):
-        # TODO do we really need int?
         role_id = int(self.kwargs.get("role_pk"))
         serializer.save(role_id=role_id)
