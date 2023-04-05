@@ -1,6 +1,5 @@
-// import propTypes from 'prop-types';
 import React, { FC, useState } from 'react'
-import CreateGroup from './modals/CreateGroup'
+const CreateGroup = require('./modals/CreateGroup')
 import Button, { ButtonLink } from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import { UserGroup } from 'common/types/responses'
@@ -9,8 +8,8 @@ import {
   useGetGroupsQuery,
 } from 'common/services/useGroup'
 import PanelSearch from './PanelSearch'
-import useSearchThrottle from 'common/useSearchThrottle'
 import { sortBy } from 'lodash' // we need this to make JSX compile
+const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
   noTitle?: boolean
@@ -30,12 +29,12 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   const [page, setPage] = useState(1)
   const { data: userGroups, isLoading } = useGetGroupsQuery({
     orgId,
-    page_size: 10,
+    page,
   })
   const [deleteGroup] = useDeleteGroupMutation({})
   const isAdmin = AccountStore.isAdmin()
 
-  const removeGroup = (id: string, name: string) => {
+  const removeGroup = (id: number, name: string) => {
     openConfirm(
       <h3>Delete Group</h3>,
       <p>
@@ -55,14 +54,14 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         className='no-pad'
         itemHeight={64}
         icon='ion-md-people'
-        items={sortBy(userGroups, 'name')}
+        items={sortBy(userGroups?.results, 'name')}
         paging={userGroups}
         nextPage={() => setPage(page + 1)}
         prevPage={() => setPage(page - 1)}
         goToPage={setPage}
         renderRow={(group: UserGroup, index: number) => {
           const { id, name, users } = group
-          const _onClick = (group: UserGroup) => {
+          const _onClick = () => {
             if (onClick) {
               onClick(group)
             } else {
@@ -104,7 +103,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
                       id='remove-group'
                       className='btn btn--with-icon'
                       type='button'
-                      onClick={() => this.removeGroup(id, name)}
+                      onClick={() => removeGroup(id, name)}
                     >
                       <RemoveIcon />
                     </button>
@@ -112,7 +111,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
                 </Column>
               ) : (
                 <span
-                  onClick={onClick}
+                  onClick={_onClick}
                   style={{ fontSize: 24 }}
                   className='icon--primary ion ion-md-settings'
                 />
@@ -122,10 +121,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         }}
         isLoading={isLoading}
         renderNoResults={
-          <Panel
-            icon='ion-md-people'
-            title={this.props.noTitle ? '' : 'Groups'}
-          >
+          <Panel icon='ion-md-people' title={noTitle ? '' : 'Groups'}>
             <div className='p-2 text-center'>
               You have no groups in your organisation.
             </div>

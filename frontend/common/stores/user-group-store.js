@@ -23,15 +23,6 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  deleteGroup: (orgId, group) => {
-    store.saving()
-    data
-      .delete(`${Project.api}organisations/${orgId}/groups/${group}/`)
-      .then(() => {
-        controller.getGroups(orgId)
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
   getGroups: (orgId, page) => {
     store.loading()
     store.orgId = orgId
@@ -83,9 +74,6 @@ const controller = {
 }
 
 const store = Object.assign({}, BaseStore, {
-  getGroupsForEditing(id) {
-    return store.model && _.cloneDeep(_.find(store.model, { id })) // immutable
-  },
   getPaging() {
     return store.paging
   },
@@ -99,21 +87,11 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.GET_GROUPS:
-      store.search = ''
-      controller.getGroups(action.orgId)
-      break
     case Actions.UPDATE_GROUP:
       controller.updateGroup(action.orgId, action.data)
       break
     case Actions.CREATE_GROUP:
       controller.createGroup(action.orgId, action.data)
-      break
-    case Actions.GET_GROUPS_PAGE:
-      controller.getGroups(action.page)
-      break
-    case Actions.DELETE_GROUP:
-      controller.deleteGroup(action.orgId, action.data)
       break
     default:
   }

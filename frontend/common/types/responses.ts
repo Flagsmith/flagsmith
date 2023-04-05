@@ -258,6 +258,6 @@ export type Res = {
   tag: Tag
   tags: Tag[]
   groupAdmin: { id: string }
-  groups: UserGroup[]
+  groups: PagedResponse<UserGroup>
   // END OF TYPES
 }

@@ -317,9 +317,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     tabClassName,
   } = props
   const [tab, setTab] = useState()
-  useEffect(() => {
-    AppActions.getGroups(AccountStore.getOrganisation().id)
-  }, [])
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,

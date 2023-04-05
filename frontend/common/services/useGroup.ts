@@ -14,7 +14,15 @@ export const groupService = service
         query: (query: Req['createGroupAdmin']) => ({
           body: query,
           method: 'POST',
-          url: `organisations/:organisationid/groups/${query.id}/users/:userId/make-admin`,
+          url: `organisations/${query.orgId}/groups/${query.id}/users/:userId/make-admin`,
+        }),
+      }),
+      deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Group' }],
+        query: (query: Req['deleteGroup']) => ({
+          body: query,
+          method: 'DELETE',
+          url: `organisations/${query.orgId}/groups/${query.id}/`,
         }),
       }),
       deleteGroupAdmin: builder.mutation<
@@ -25,21 +33,13 @@ export const groupService = service
         query: (query: Req['deleteGroupAdmin']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/:organisationid/groups/${query.id}/users/:userId/remove-admin`,
-        }),
-      }),
-      deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Group' }],
-        query: (query: Req['deleteGroup']) => ({
-          body: query,
-          method: 'DELETE',
-          url: `organisations/:organisationId/groups/${query.id}/`,
+          url: `organisations/${query.orgId}/groups/${query.id}/users/${query.userId}/remove-admin`,
         }),
       }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({
         providesTags: [{ id: 'LIST', type: 'Group' }],
         query: (query) => ({
-          url: `organisations/${query.orgId}/groups/`,
+          url: `organisations/${query.orgId}/groups/?page=${query.page}`,
         }),
       }),
       // END OF ENDPOINTS

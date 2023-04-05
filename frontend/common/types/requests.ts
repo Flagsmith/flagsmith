@@ -65,11 +65,18 @@ export type Req = {
   }
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
-  createGroupAdmin: {}
-  deleteGroupAdmin: { id: string }
+  createGroupAdmin: {
+    id: number | string
+    orgId: number | string
+  }
+  deleteGroupAdmin: {
+    id: number | string
+    orgId: number | string
+    userId: number | string
+  }
   getGroups: PagedRequest<{
-    orgId: string
+    orgId: number | string
   }>
-  deleteGroup: { id: string; orgId: string }
+  deleteGroup: { id: number | string; orgId: number | string }
   // END OF TYPES
 }
