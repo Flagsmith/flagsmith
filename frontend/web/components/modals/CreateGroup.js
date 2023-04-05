@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import UserGroupsProvider from 'common/providers/UserGroupsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
+import Select from 'react-select'
 
 const CreateGroup = class extends Component {
   static displayName = 'CreateGroup'
@@ -16,7 +17,12 @@ const CreateGroup = class extends Component {
       external_id: props.group ? props.group.external_id : undefined,
       is_default: props.group ? props.group.is_default : false,
       name: props.group ? props.group.name : '',
-      users: props.group ? props.group.users : [],
+      users: props.group
+        ? props.group.users.map((v) => ({
+            group_admin: v.group_admin,
+            id: v.id,
+          }))
+        : [],
     }
   }
 
@@ -64,10 +70,12 @@ const CreateGroup = class extends Component {
     }
   }
 
-  toggleUser = (id) => {
+  toggleUser = (id, group_admin, update) => {
     const isMember = _.find(this.state.users, { id })
     const users = _.filter(this.state.users, (u) => u.id !== id)
-    this.setState({ users: isMember ? users : users.concat([{ id }]) })
+    this.setState({
+      users: isMember && !update ? users : users.concat([{ group_admin, id }]),
+    })
   }
 
   render() {
@@ -149,7 +157,7 @@ const CreateGroup = class extends Component {
                   <PanelSearch
                     id='org-members-list'
                     title='Members'
-                    className='mt-5 no-pad'
+                    className='mt-5 no-pad overflow-visible'
                     items={_.sortBy(users, 'first_name')}
                     filterRow={(item, search) => {
                       const strToSearch = `${item.first_name} ${item.last_name} ${item.id}`
@@ -159,20 +167,54 @@ const CreateGroup = class extends Component {
                           .indexOf(search.toLowerCase()) !== -1
                       )
                     }}
-                    renderRow={({ email, first_name, id, last_name }) => (
-                      <Row space className='list-item' key={id}>
-                        <div>
-                          {`${first_name} ${last_name}`}{' '}
-                          {id == AccountStore.getUserId() && '(You)'}
-                          <div className='list-item-footer faint'>{email}</div>
-                        </div>
-                        <Switch
-                          disabled={!(isAdmin || email !== yourEmail)}
-                          onChange={() => this.toggleUser(id)}
-                          checked={!!_.find(this.state.users, { id })}
-                        />
-                      </Row>
-                    )}
+                    renderRow={({
+                      email,
+                      first_name,
+                      group_admin,
+                      id,
+                      last_name,
+                    }) => {
+                      const matchingUser = this.state.users.find(
+                        (v) => v.id === id,
+                      )
+                      const isGroupAdmin = matchingUser?.group_admin
+                      return (
+                        <Row className='list-item' key={id}>
+                          <Flex>
+                            {`${first_name} ${last_name}`}{' '}
+                            {id == AccountStore.getUserId() && '(You)'}
+                            <div className='list-item-footer faint'>
+                              {email}
+                            </div>
+                          </Flex>
+                          {Utils.getFlagsmithHasFeature('group_admins') && (
+                            <div style={{ width: 200 }}>
+                              <Select
+                                classNamePrefix='flag-select'
+                                value={{
+                                  label: isGroupAdmin ? 'Group Admin' : 'User',
+                                  value: isGroupAdmin,
+                                }}
+                                onInputChange={this.search}
+                                placeholder={this.props.placeholder}
+                                onChange={(v) => {
+                                  this.toggleUser(id, v.value, true)
+                                }}
+                                options={[
+                                  { label: 'Group Admin', value: true },
+                                  { label: 'User', value: false },
+                                ]}
+                              />
+                            </div>
+                          )}
+                          <Switch
+                            disabled={!(isAdmin || email !== yourEmail)}
+                            onChange={() => this.toggleUser(id)}
+                            checked={!!_.find(this.state.users, { id })}
+                          />
+                        </Row>
+                      )
+                    }}
                   />
                 </div>
                 <div className='text-right'>
