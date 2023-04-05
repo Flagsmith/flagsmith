@@ -23,16 +23,22 @@ def create_health_check_model(health_check_model_uuid: str):
 @register_recurring_task(
     run_every=timedelta(days=1),
     first_run_time=time(1, 0, 0),
-    kwargs={"task_retention_days": settings.TASK_RETENTION_DAYS},
 )
-def clean_up_old_tasks(task_retention_days: int):
+def clean_up_old_tasks():
     now = timezone.now()
-    delete_before = now - timedelta(days=task_retention_days)
+    delete_before = now - timedelta(days=settings.TASK_RETENTION_DAYS)
 
-    query = Q(scheduled_for__lt=delete_before) & (
-        Q(completed=True) | Q(num_failures__gte=3)
-    )
+    # build the query
+    query = Q(completed=True)
+    if settings.TASK_DELETE_INCLUDE_FAILED_TASKS:
+        query = query | Q(num_failures__gte=3)
+    query = Q(scheduled_for__lt=delete_before) & query
+
     queryset = Task.objects.filter(query)
     while queryset.exists():
         # delete in batches of settings.TASK_DELETE_BATCH_SIZE
-        queryset[0 : settings.TASK_DELETE_BATCH_SIZE].delete()  # noqa:E203
+        Task.objects.filter(
+            pk__in=queryset.values_list("id", flat=True)[
+                0 : settings.TASK_DELETE_BATCH_SIZE  # noqa:E203
+            ]
+        ).delete()

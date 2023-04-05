@@ -832,6 +832,9 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
 )
 TASK_RETENTION_DAYS = env.int("TASK_RETENTION_DAYS", default=30)
 TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
+TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
+    "TASK_DELETE_INCLUDE_FAILED_TASKS", default=False
+)
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
