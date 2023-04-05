@@ -1,4 +1,5 @@
 import json
+import logging
 from threading import Thread
 from unittest.mock import mock_open, patch
 
@@ -26,8 +27,15 @@ def test_clear_unhealthy_threads(mocker):
     mocked_os.remove.assert_called_once_with(UNHEALTHY_THREADS_FILE_PATH)
 
 
-def test_write_unhealthy_threads():
+def test_write_unhealthy_threads(caplog, settings):
     # Given
+    # caplog doesn't allow you to capture logging outputs from loggers that don't
+    # propagate to root. Quick hack here to get the task_processor logger to
+    # propagate.
+    # TODO: look into using loguru.
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
     threads = [Thread(target=lambda: None)]
 
     # When
@@ -39,6 +47,11 @@ def test_write_unhealthy_threads():
     mocked_open.return_value.write.assert_called_once_with(
         json.dumps([t.name for t in threads])
     )
+    assert len(caplog.records) == 1
+    assert caplog.record_tuples[0][1] == 40  # ERROR
+    assert caplog.record_tuples[0][2] == "Writing unhealthy threads: %s" % [
+        t.name for t in threads
+    ]
 
 
 def test_get_unhealthy_thread_names_returns_empty_list_if_file_does_not_exist(mocker):
