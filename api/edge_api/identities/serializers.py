@@ -175,7 +175,6 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         # TODO:
-        #  - use async processor instead of `run_in_thread`
         #  - move this logic to the EdgeIdentity model
         call_environment_webhook_for_feature_state_change.delay(
             kwargs={
