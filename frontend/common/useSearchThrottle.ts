@@ -6,7 +6,7 @@ export default function useSearchThrottle(
   defaultValue?: string,
   cb?: () => void,
 ) {
-  const [search, setSearch] = useState(defaultValue)
+  const [search, setSearch] = useState(defaultValue || '')
   const [searchInput, setSearchInput] = useState(search)
   const searchItems = useThrottle((search: string) => {
     setSearch(search)
