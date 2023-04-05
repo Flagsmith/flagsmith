@@ -120,6 +120,7 @@ class Task(AbstractBaseTask):
 
 class RecurringTask(AbstractBaseTask):
     run_every = models.DurationField()
+    first_run_time = models.TimeField(blank=True, null=True)
 
     class Meta:
         constraints = [
@@ -131,6 +132,10 @@ class RecurringTask(AbstractBaseTask):
 
     @property
     def should_execute(self) -> bool:
+        now = timezone.now()
+        if self.first_run_time and self.first_run_time > now.time():
+            return False
+
         last_task_run = self.task_runs.order_by("-started_at").first()
         # if we have never run this task, then we should execute it
         if not last_task_run:
@@ -143,9 +148,7 @@ class RecurringTask(AbstractBaseTask):
         # more than 3 failures in t- run_every, then we should execute it
         if (
             last_task_run.result != TaskResult.SUCCESS.name
-            and self.task_runs.filter(
-                started_at__gte=(timezone.now() - self.run_every)
-            ).count()
+            and self.task_runs.filter(started_at__gte=(now - self.run_every)).count()
             <= 3
         ):
             return True

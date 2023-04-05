@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import time, timedelta
 
 from django.conf import settings
 from django.db.models import Q
@@ -22,6 +22,7 @@ def create_health_check_model(health_check_model_uuid: str):
 
 @register_recurring_task(
     run_every=timedelta(days=1),
+    first_run_time=time(1, 0, 0),
     kwargs={"task_retention_days": settings.TASK_RETENTION_DAYS},
 )
 def clean_up_old_tasks(task_retention_days: int):
@@ -33,5 +34,5 @@ def clean_up_old_tasks(task_retention_days: int):
     )
     queryset = Task.objects.filter(query)
     while queryset.exists():
-        # delete in batches of 2000
-        queryset[0:2000].delete()
+        # delete in batches of settings.TASK_DELETE_BATCH_SIZE
+        queryset[0 : settings.TASK_DELETE_BATCH_SIZE].delete()  # noqa:E203
