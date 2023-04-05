@@ -102,7 +102,7 @@ def test_get_organisation_permission_keys_returns_empty_set_if_no_permisson_exis
         group=user_permission_group, organisation=organisation
     )
 
-    # and role(s)
+    # and role(s) (with no permissions)
     RoleOrganisationPermission.objects.create(role=role)
     RoleOrganisationPermission.objects.create(role=role)
 

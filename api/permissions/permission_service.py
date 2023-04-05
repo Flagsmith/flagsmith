@@ -21,12 +21,6 @@ def is_user_project_admin(user, project) -> bool:
     return _is_user_object_admin(user, project)
 
 
-def _is_user_object_admin(user, object_: Union[Project | Environment]) -> bool:
-    query = _get_base_query(user)
-    query = query & Q(id=object_.id)
-    return type(object_).objects.filter(query).exists()
-
-
 def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -126,6 +120,12 @@ def is_user_environment_admin(user, environment) -> bool:
         or is_user_project_admin(user, environment.project)
         or _is_user_object_admin(user, environment)
     )
+
+
+def _is_user_object_admin(user, object_: Union[Project | Environment]) -> bool:
+    query = _get_base_query(user)
+    query = query & Q(id=object_.id)
+    return type(object_).objects.filter(query).exists()
 
 
 def _get_base_query(user, permission_key: str = None, allow_admin=True) -> Q:
