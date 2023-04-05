@@ -149,9 +149,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
-        organisation = getattr(self.request, "organisation", None)
-        if not organisation:
-            organisation = Organisation.objects.get(id=organisation_pk)
+        organisation = Organisation.objects.get(id=organisation_pk)
 
         qs = UserPermissionGroup.objects.filter(organisation=organisation)
         if not self.request.user.has_organisation_permission(

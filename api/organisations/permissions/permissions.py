@@ -126,7 +126,6 @@ class UserPermissionGroupPermission(BasePermission):
         except Organisation.DoesNotExist:
             return False
 
-        request.organisation = organisation
         return (
             view.action == "list" and request.user.belongs_to(organisation.id)
         ) or request.user.has_organisation_permission(organisation, MANAGE_USER_GROUPS)
