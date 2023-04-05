@@ -63,6 +63,9 @@ export type User = {
   last_name: string
   role: 'ADMIN' | 'USER'
 }
+export type GroupUser = Omit<User, 'role'> & {
+  group_admin: boolean
+}
 
 export type ProjectSummary = Omit<Project, 'environments'>
 
@@ -71,7 +74,7 @@ export type UserGroup = {
   id: number
   is_default: boolean
   name: string
-  users: User[]
+  users: GroupUser[]
 }
 
 export type UserPermission = {
@@ -254,5 +257,7 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  groupAdmin: { id: string }
+  groups: UserGroup[]
   // END OF TYPES
 }

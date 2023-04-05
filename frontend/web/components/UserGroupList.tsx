@@ -1,0 +1,139 @@
+// import propTypes from 'prop-types';
+import React, { FC, useState } from 'react'
+import CreateGroup from './modals/CreateGroup'
+import Button, { ButtonLink } from './base/forms/Button'
+import AccountStore from 'common/stores/account-store'
+import { UserGroup } from 'common/types/responses'
+import {
+  useDeleteGroupMutation,
+  useGetGroupsQuery,
+} from 'common/services/useGroup'
+import PanelSearch from './PanelSearch'
+import useSearchThrottle from 'common/useSearchThrottle'
+import { sortBy } from 'lodash' // we need this to make JSX compile
+
+type UserGroupsListType = {
+  noTitle?: boolean
+  orgId: string
+  showRemove?: boolean
+  onClick: (group: UserGroup) => void
+  onEditPermissions?: (group: UserGroup) => void
+}
+
+const UserGroupsList: FC<UserGroupsListType> = ({
+  noTitle,
+  onClick,
+  onEditPermissions,
+  orgId,
+  showRemove,
+}) => {
+  const [page, setPage] = useState(1)
+  const { data: userGroups, isLoading } = useGetGroupsQuery({
+    orgId,
+    page_size: 10,
+  })
+  const [deleteGroup] = useDeleteGroupMutation({})
+  const isAdmin = AccountStore.isAdmin()
+
+  const removeGroup = (id: string, name: string) => {
+    openConfirm(
+      <h3>Delete Group</h3>,
+      <p>
+        {'Are you sure you want to delete '}
+        <strong>{name}</strong>
+        {'?'}
+      </p>,
+      () => deleteGroup({ id, orgId }),
+    )
+  }
+
+  return (
+    <FormGroup>
+      <PanelSearch
+        id='users-list'
+        title={noTitle ? '' : 'Groups'}
+        className='no-pad'
+        itemHeight={64}
+        icon='ion-md-people'
+        items={sortBy(userGroups, 'name')}
+        paging={userGroups}
+        nextPage={() => setPage(page + 1)}
+        prevPage={() => setPage(page - 1)}
+        goToPage={setPage}
+        renderRow={(group: UserGroup, index: number) => {
+          const { id, name, users } = group
+          const _onClick = (group: UserGroup) => {
+            if (onClick) {
+              onClick(group)
+            } else {
+              openModal(
+                'Edit Group',
+                <CreateGroup orgId={orgId} group={group} />,
+              )
+            }
+          }
+          return (
+            <Row
+              space
+              className='list-item clickable'
+              key={id}
+              data-test={`user-item-${index}`}
+            >
+              <Flex onClick={_onClick}>
+                <div>
+                  <ButtonLink>{name}</ButtonLink>
+                </div>
+                <div className='list-item-footer faint'>
+                  {users.length}
+                  {users.length === 1 ? ' Member' : ' Members'}
+                </div>
+              </Flex>
+
+              {onEditPermissions && isAdmin && (
+                <Button
+                  onClick={() => onEditPermissions(group)}
+                  className='btn--link'
+                >
+                  Edit Permissions
+                </Button>
+              )}
+              {showRemove ? (
+                <Column>
+                  {isAdmin && (
+                    <button
+                      id='remove-group'
+                      className='btn btn--with-icon'
+                      type='button'
+                      onClick={() => this.removeGroup(id, name)}
+                    >
+                      <RemoveIcon />
+                    </button>
+                  )}
+                </Column>
+              ) : (
+                <span
+                  onClick={onClick}
+                  style={{ fontSize: 24 }}
+                  className='icon--primary ion ion-md-settings'
+                />
+              )}
+            </Row>
+          )
+        }}
+        isLoading={isLoading}
+        renderNoResults={
+          <Panel
+            icon='ion-md-people'
+            title={this.props.noTitle ? '' : 'Groups'}
+          >
+            <div className='p-2 text-center'>
+              You have no groups in your organisation.
+            </div>
+          </Panel>
+        }
+      />
+    </FormGroup>
+  )
+}
+
+export default UserGroupsList
