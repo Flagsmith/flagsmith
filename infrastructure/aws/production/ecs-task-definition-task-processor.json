@@ -13,7 +13,9 @@
                 "--sleepintervalms",
                 "700",
                 "--numthreads",
-                "25"
+                "25",
+                "--graceperiodms",
+                "20000"
             ],
             "essential": true,
             "environment": [
