@@ -433,10 +433,14 @@ def org_admin_role(organisation):
 
 
 @pytest.fixture
-def role_view_environment_permission(role, environment, view_environment_permission):
-    role_environment_permission = RoleEnvironmentPermission.objects.create(
-        role=role, environment=environment
-    )
+def role_environment_permission(role, environment):
+    return RoleEnvironmentPermission.objects.create(role=role, environment=environment)
+
+
+@pytest.fixture
+def role_view_environment_permission(
+    role_environment_permission, view_environment_permission
+):
     role_environment_permission.permissions.add(view_environment_permission)
     return role
 

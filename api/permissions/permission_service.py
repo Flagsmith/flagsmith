@@ -1,6 +1,6 @@
 from typing import Iterable, Set, Union
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
@@ -43,8 +43,10 @@ def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Proje
 
 
 def get_permitted_environments_for_user(
-    user, permission_key: str, project: Project
-) -> Iterable[Environment]:
+    user,
+    project: Project,
+    permission_key: str,
+) -> QuerySet[Environment]:
     """
     Get all environments that the user has the given permissions for.
 
@@ -54,7 +56,7 @@ def get_permitted_environments_for_user(
         - User is an admin for the project the environment belongs to
         - User is an admin for the organisation the environment belongs to
         - User has a role attached with the required permissions
-        - User is in a UserPermissionGroup has a role attached with the required permissions
+        - User is in a UserPermissionGroup that has a role attached with the required permissions
     """
 
     if is_user_project_admin(user, project):

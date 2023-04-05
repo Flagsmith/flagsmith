@@ -223,9 +223,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return True
         return project in self.get_permitted_projects(permission)
 
-    def has_environment_permission(self, permission, environment) -> bool:
+    def has_environment_permission(
+        self, permission: str, environment: Environment
+    ) -> bool:
         return environment in get_permitted_environments_for_user(
-            self, permission, environment.project
+            self, environment.project, permission
         )
 
     def is_project_admin(self, project: Project):
@@ -234,7 +236,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_permitted_environments(
         self, permission_key: str, project: Project
     ) -> QuerySet[Environment]:
-        return get_permitted_environments_for_user(self, permission_key, project)
+        return get_permitted_environments_for_user(self, project, permission_key)
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
