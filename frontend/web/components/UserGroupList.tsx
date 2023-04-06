@@ -50,9 +50,8 @@ const UserGroupsList: FC<UserGroupsListType> = ({
   return (
     <FormGroup>
       <InfoMessage>
-        Users with the organisation permission <strong>Manage Groups</strong> as
-        well as group admins can invite additional members to organisation
-        groups.
+        Group admins and users with the organisation permission{' '}
+        <strong>Manage Groups</strong> can invite additional members to groups.
       </InfoMessage>
       <PanelSearch
         id='users-list'
