@@ -21,9 +21,8 @@ class RoleOrganisationPermission(AbstractBasePermissionModel):
     role = models.ForeignKey(
         Role,
         on_delete=models.CASCADE,
-        related_query_name="rolepermission",
+        related_query_name="org_role_permission",
     )
-    # TODO: change related_query_name
 
 
 class RoleProjectPermission(AbstractBasePermissionModel):

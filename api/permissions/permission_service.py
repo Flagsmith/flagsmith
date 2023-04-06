@@ -76,7 +76,7 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
 
     role_query = Q(
         Q(role__userrole__user=user) | Q(role__grouprole__group__users=user)
-    ) & Q(role__rolepermission__permissions__key=permission_key)
+    ) & Q(role__org_role_permission__permissions__key=permission_key)
 
     query = user_query | group_query | role_query
 
@@ -100,11 +100,11 @@ def get_organisation_permission_keys_for_user(
 
     role_permission_keys = (
         organisation.roles.filter(
-            Q(rolepermission__role__userrole__user=user)
-            | Q(rolepermission__role__grouprole__group__users=user)
+            Q(org_role_permission__role__userrole__user=user)
+            | Q(org_role_permission__role__grouprole__group__users=user)
         )
-        .values_list("rolepermission__permissions__key", flat=True)
-        .exclude(rolepermission__permissions__key__isnull=True)
+        .values_list("org_role_permission__permissions__key", flat=True)
+        .exclude(org_role_permission__permissions__key__isnull=True)
     )
 
     all_permission_keys = (
