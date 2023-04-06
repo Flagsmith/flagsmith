@@ -93,11 +93,6 @@ const OrganisationGroupsPage = class extends Component {
                     Groups allow you to manage permissions for viewing and
                     editing projects, features and environments.
                   </p>
-                  <InfoMessage>
-                    Users with the organisation permission{' '}
-                    <strong>Manage Groups</strong> as well as group admins can
-                    invite additional members to organisation groups.
-                  </InfoMessage>
                   <UserGroupList
                     onEditPermissions={this.editGroupPermissions}
                     showRemove

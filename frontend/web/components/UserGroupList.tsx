@@ -8,7 +8,8 @@ import {
   useGetGroupsQuery,
 } from 'common/services/useGroup'
 import PanelSearch from './PanelSearch'
-import { sortBy } from 'lodash' // we need this to make JSX compile
+import { sortBy } from 'lodash'
+import InfoMessage from './InfoMessage' // we need this to make JSX compile
 const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
@@ -48,6 +49,11 @@ const UserGroupsList: FC<UserGroupsListType> = ({
 
   return (
     <FormGroup>
+      <InfoMessage>
+        Users with the organisation permission <strong>Manage Groups</strong> as
+        well as group admins can invite additional members to organisation
+        groups.
+      </InfoMessage>
       <PanelSearch
         id='users-list'
         title={noTitle ? '' : 'Groups'}
