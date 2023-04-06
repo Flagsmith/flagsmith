@@ -166,8 +166,20 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
-    def is_organisation_admin(self, organisation):
-        return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name
+    def is_organisation_admin(
+        self, organisation: Organisation = None, organisation_id: int = None
+    ):
+        if not (organisation or organisation_id) or (organisation and organisation_id):
+            raise ValueError(
+                "Must provide exactly one of organisation or organisation_id"
+            )
+
+        role = (
+            self.get_organisation_role(organisation)
+            if organisation
+            else self.get_user_organisation_by_id(organisation_id)
+        )
+        return role and role == OrganisationRole.ADMIN.name
 
     def get_admin_organisations(self):
         return Organisation.objects.filter(
@@ -200,6 +212,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.role
 
+    def get_organisation_role_by_id(self, organisation_id: int) -> typing.Optional[str]:
+        user_organisation = self.get_user_organisation_by_id(organisation_id)
+        return user_organisation.role
+
     def get_organisation_join_date(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
         if user_organisation:
@@ -211,6 +227,16 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         except UserOrganisation.DoesNotExist:
             logger.warning(
                 "User %d is not part of organisation %d" % (self.id, organisation.id)
+            )
+
+    def get_user_organisation_by_id(
+        self, organisation_id: int
+    ) -> typing.Optional[UserOrganisation]:
+        try:
+            return self.userorganisation_set.get(organisation__id=organisation_id)
+        except UserOrganisation.DoesNotExist:
+            logger.warning(
+                "User %d is not part of organisation %d" % (self.id, organisation_id)
             )
 
     def get_permitted_projects(self, permissions):
