@@ -14,11 +14,7 @@ const controller = {
   createGroup: (orgId, group) => {
     store.saving()
     data
-      .post(`${Project.api}organisations/${orgId}/groups/`, {
-        external_id: group.external_id,
-        is_default: group.is_default,
-        users: group.users,
-      })
+      .post(`${Project.api}organisations/${orgId}/groups/`, group)
       .then((res) => {
         let prom = Promise.resolve()
         if (group.users) {
@@ -49,7 +45,11 @@ const controller = {
   },
   getGroups: (orgId) => {
     store.loading()
-    getGroups(getStore(), { orgId, page: 1 }).then(() => {
+    getGroups(
+      getStore(),
+      { orgId: `${orgId}`, page: 1 },
+      { forceRefetch: true },
+    ).then(() => {
       store.loaded()
       store.saved()
     })
