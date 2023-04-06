@@ -66,13 +66,14 @@ export type Req = {
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
   createGroupAdmin: {
-    id: number | string
+    group: number | string
+    user: number | string
     orgId: number | string
   }
   deleteGroupAdmin: {
-    id: number | string
     orgId: number | string
-    userId: number | string
+    group: number | string
+    user: number | string
   }
   getGroups: PagedRequest<{
     orgId: number | string

@@ -3,6 +3,7 @@ import UserGroupsProvider from 'common/providers/UserGroupsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
 import Select from 'react-select'
+import InfoMessage from 'components/InfoMessage'
 
 const CreateGroup = class extends Component {
   static displayName = 'CreateGroup'
@@ -48,6 +49,22 @@ const CreateGroup = class extends Component {
   getUsersToRemove = (users) =>
     _.filter(users, ({ id }) => !_.find(this.state.users, { id }))
 
+  getUsersAdminChanged = (users, value) => {
+    return _.filter(this.state.users, (user) => {
+      if (user.group_admin !== value) {
+        //new user does not match value
+        return false
+      }
+      const existingUser = _.find(
+        users,
+        (existingUser) => existingUser.id === user.id,
+      )
+      const isAlreadyAdmin = !!existingUser?.group_admin
+
+      return isAlreadyAdmin !== value
+    })
+  }
+
   save = (allUsers) => {
     const { external_id, is_default, name, users } = this.state
     if (this.props.group) {
@@ -57,7 +74,9 @@ const CreateGroup = class extends Component {
         is_default: !!this.state.is_default,
         name,
         users,
+        usersToAddAdmin: this.getUsersAdminChanged(allUsers, true),
         usersToRemove: this.getUsersToRemove(allUsers),
+        usersToRemoveAdmin: this.getUsersAdminChanged(allUsers, false),
       })
     } else {
       AppActions.createGroup(this.props.orgId, {
@@ -167,17 +186,12 @@ const CreateGroup = class extends Component {
                           .indexOf(search.toLowerCase()) !== -1
                       )
                     }}
-                    renderRow={({
-                      email,
-                      first_name,
-                      group_admin,
-                      id,
-                      last_name,
-                    }) => {
+                    renderRow={({ email, first_name, id, last_name }) => {
                       const matchingUser = this.state.users.find(
                         (v) => v.id === id,
                       )
                       const isGroupAdmin = matchingUser?.group_admin
+                      const isEnabled = !!_.find(this.state.users, { id })
                       return (
                         <Row className='list-item' key={id}>
                           <Flex>
@@ -190,6 +204,7 @@ const CreateGroup = class extends Component {
                           {Utils.getFlagsmithHasFeature('group_admins') && (
                             <div style={{ width: 200 }}>
                               <Select
+                                isDisabled={!isEnabled}
                                 classNamePrefix='flag-select'
                                 value={{
                                   label: isGroupAdmin ? 'Group Admin' : 'User',

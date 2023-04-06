@@ -1,6 +1,12 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
+const {
+  createGroupAdmin,
+  deleteGroupAdmin,
+  getGroups,
+} = require('../services/useGroup')
+const { getStore } = require('../store')
 
 const PAGE_SIZE = 999
 
@@ -25,18 +31,7 @@ const controller = {
   },
   getGroups: (orgId, page) => {
     store.loading()
-    store.orgId = orgId
-    const endpoint =
-      (page && `${page}`) || `${Project.api}organisations/${orgId}/groups/`
-    data.get(endpoint).then((res) => {
-      store.model = res && res.results
-      store.paging.next = res.next
-      store.paging.count = res.count
-      store.paging.previous = res.previous
-      store.paging.currentPage =
-        endpoint.indexOf('?page=') !== -1
-          ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6))
-          : 1
+    getGroups(getStore(), { orgId, page: 1 }).then(() => {
       store.loaded()
       store.saved()
     })
@@ -65,6 +60,28 @@ const controller = {
             { user_ids: toRemove.map((u) => u.id) },
           ),
         ]).then(() => {
+          if (Utils.getFlagsmithHasFeature('group_admins')) {
+            Promise.all(
+              (group.usersToAddAdmin || [])
+                .map((v) =>
+                  createGroupAdmin(getStore(), {
+                    group: group.id,
+                    orgId,
+                    user: v.id,
+                  }),
+                )
+                .concat(
+                  (group.usersToRemoveAdmin || []).map((v) =>
+                    deleteGroupAdmin(getStore(), {
+                      group: group.id,
+                      orgId,
+                      user: v.id,
+                    }),
+                  ),
+                ),
+            )
+          }
+
           controller.getGroups(orgId)
         })
       })

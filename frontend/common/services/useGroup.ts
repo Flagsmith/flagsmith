@@ -12,9 +12,9 @@ export const groupService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'Group' }],
         query: (query: Req['createGroupAdmin']) => ({
-          body: query,
+          body: {},
           method: 'POST',
-          url: `organisations/${query.orgId}/groups/${query.id}/users/:userId/make-admin`,
+          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/make-admin`,
         }),
       }),
       deleteGroup: builder.mutation<Res['groups'], Req['deleteGroup']>({
@@ -31,9 +31,9 @@ export const groupService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'Group' }],
         query: (query: Req['deleteGroupAdmin']) => ({
-          body: query,
+          body: {},
           method: 'DELETE',
-          url: `organisations/${query.orgId}/groups/${query.id}/users/${query.userId}/remove-admin`,
+          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/make-admin`,
         }),
       }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({

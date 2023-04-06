@@ -24,7 +24,6 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
-const AppActions = require('common/dispatcher/app-actions')
 const Project = require('common/project')
 
 type EditPermissionModalType = {

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Utils from './utils/utils'
 import useThrottle from './useThrottle'
 
 export default function useSearchThrottle(

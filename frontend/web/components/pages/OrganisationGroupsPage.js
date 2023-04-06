@@ -6,6 +6,7 @@ import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import InfoMessage from 'components/InfoMessage'
 
 const OrganisationGroupsPage = class extends Component {
   static contextTypes = {
@@ -76,6 +77,11 @@ const OrganisationGroupsPage = class extends Component {
                     Groups allow you to manage permissions for viewing and
                     editing projects, features and environments.
                   </p>
+                  <InfoMessage>
+                    Users with the organisation permission{' '}
+                    <strong>Manage Groups</strong> as well as group admins can
+                    invite additional members to organisation groups.
+                  </InfoMessage>
                   <UserGroupList
                     onEditPermissions={this.editGroupPermissions}
                     showRemove
