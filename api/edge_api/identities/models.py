@@ -47,9 +47,8 @@ class EdgeIdentity:
 
     @property
     def id(self) -> typing.Union[int, str]:
-        return (
-            self._engine_identity_model.django_id
-            or self._engine_identity_model.identity_uuid
+        return self._engine_identity_model.django_id or str(
+            self._engine_identity_model.identity_uuid
         )
 
     @property
