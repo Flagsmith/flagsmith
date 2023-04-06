@@ -4,7 +4,14 @@ from functools import reduce
 
 from django.db.models import Q
 
-from organisations.roles.models import RoleProjectPermission
+from environments.permissions.models import (
+    UserEnvironmentPermission,
+    UserPermissionGroupEnvironmentPermission,
+)
+from organisations.roles.models import (
+    RoleEnvironmentPermission,
+    RoleProjectPermission,
+)
 from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
@@ -55,7 +62,7 @@ class RolePermissionData(_PermissionDataBase, _RolePermissionBase):
 
 
 @dataclass
-class UserProjectPermissionData:
+class PermissionData:
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
     roles: typing.List[RolePermissionData]
@@ -85,25 +92,34 @@ class UserProjectPermissionData:
         )
 
 
-class ProjectPermissionsCalculator:
-    def __init__(self, project_id: int):
-        self.project_id = project_id
+class BasePermissionCalculator:
+    pk_name = None
 
-    def get_user_project_permission_data(
-        self, user_id: int
-    ) -> UserProjectPermissionData:
-        return UserProjectPermissionData(
+    def __init__(self, pk: int):
+        self.pk = pk
+
+    def _get_user_permission_qs(self, user_id: int):
+        raise NotImplementedError()
+
+    def _get_group_permission_qs(self, user_id: int):
+        raise NotImplementedError()
+
+    def _get_role_permission_qs(self, user_id: int):
+        raise NotImplementedError()
+
+    def get_permission_data(self, user_id: int) -> PermissionData:
+        return PermissionData(
             user=self._get_user_permission_data(user_id),
             groups=self._get_groups_permission_data(user_id),
             roles=self._get_roles_permission_data(user_id),
         )
 
-    def _get_user_permission_data(self, user_id: int) -> UserPermissionData:
+    def _get_user_permission_data(self, user_id: int) -> PermissionData:
         user_permission_data = UserPermissionData()
 
-        for user_permission in UserProjectPermission.objects.filter(
-            user=user_id, project=self.project_id
-        ).prefetch_related("permissions"):
+        for user_permission in self._get_user_permission_qs(user_id).prefetch_related(
+            "permissions"
+        ):
             if user_permission.admin:
                 user_permission_data.admin = True
 
@@ -118,17 +134,15 @@ class ProjectPermissionsCalculator:
     def _get_groups_permission_data(
         self, user_id: int
     ) -> typing.List[GroupPermissionData]:
-        user_permission_group_project_permission_objects = (
-            UserPermissionGroupProjectPermission.objects.filter(
-                group__users=user_id, project=self.project_id
-            )
+        user_permission_group_permission_objects = (
+            self._get_group_permission_qs(user_id)
             .select_related("group")
             .prefetch_related("permissions")
         )
 
         group_permission_data_objects = []
 
-        for group_permission in user_permission_group_project_permission_objects:
+        for group_permission in user_permission_group_permission_objects:
             group = group_permission.group
             group_data = GroupData(id=group.id, name=group.name)
             group_permission_data_object = GroupPermissionData(group=group_data)
@@ -151,10 +165,10 @@ class ProjectPermissionsCalculator:
     ) -> typing.List[RolePermissionData]:
         pass
 
-        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
         role_permission_data_objects = []
+
         for role_project_permission in (
-            RoleProjectPermission.objects.filter(q)
+            self._get_role_permission_qs(user_id)
             .select_related("role")
             .prefetch_related("permissions")
         ):
@@ -176,3 +190,35 @@ class ProjectPermissionsCalculator:
             role_permission_data_objects.append(role_permission_data_object)
 
         return role_permission_data_objects
+
+
+class EnvironmentPermissionsCalculator(BasePermissionCalculator):
+    def _get_user_permission_qs(self, user_id: int):
+        return UserEnvironmentPermission.objects.filter(
+            user=user_id, environment_id=self.pk
+        )
+
+    def _get_group_permission_qs(self, user_id: int):
+        return UserPermissionGroupEnvironmentPermission.objects.filter(
+            group__users=user_id, environment=self.pk
+        )
+
+    def _get_role_permission_qs(self, user_id: int):
+        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
+        q = q & Q(environment=self.pk)
+        return RoleEnvironmentPermission.objects.filter(q)
+
+
+class ProjectPermissionsCalculator(BasePermissionCalculator):
+    def _get_user_permission_qs(self, user_id: int):
+        return UserProjectPermission.objects.filter(user=user_id, project_id=self.pk)
+
+    def _get_group_permission_qs(self, user_id: int):
+        return UserPermissionGroupProjectPermission.objects.filter(
+            group__users=user_id, project=self.pk
+        )
+
+    def _get_role_permission_qs(self, user_id: int):
+        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
+        q = q & Q(project=self.pk)
+        return RoleProjectPermission.objects.filter(q)

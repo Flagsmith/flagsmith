@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
+from permissions.permissions_calculator import ProjectPermissionsCalculator
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -35,7 +36,6 @@ from projects.permissions import (
     MasterAPIKeyProjectPermissions,
     ProjectPermissions,
 )
-from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
     CreateUpdateUserProjectPermissionSerializer,
@@ -141,11 +141,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "detail": "This endpoint can only be used with a user and not Master API Key"
                 },
             )
-        project_permissions_calculator = ProjectPermissionsCalculator(project_id=pk)
-        permission_data = (
-            project_permissions_calculator.get_user_project_permission_data(
-                user_id=request.user.id
-            )
+        project_permissions_calculator = ProjectPermissionsCalculator(pk=pk)
+        permission_data = project_permissions_calculator.get_permission_data(
+            user_id=request.user.id
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
@@ -222,9 +220,7 @@ def get_user_project_permissions(request, **kwargs):
     user_id = kwargs["user_pk"]
 
     project_permissions_calculator = ProjectPermissionsCalculator(kwargs["project_pk"])
-    user_permissions_data = (
-        project_permissions_calculator.get_user_project_permission_data(user_id)
-    )
+    user_permissions_data = project_permissions_calculator.get_permission_data(user_id)
 
     # TODO: expose `user` and `groups` attributes from user_permissions_data
     return Response(
