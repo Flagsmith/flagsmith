@@ -44,22 +44,22 @@ def call_environment_webhook_for_feature_state_change(
 
     if previous_enabled_state is not None and previous_value is not None:
         data["previous_state"] = Webhook.generate_webhook_feature_state_data(
-            feature,
-            environment,
-            identity_id,
-            identity_identifier,
-            previous_enabled_state,
-            previous_value,
+            feature=feature,
+            environment=environment,
+            identity_id=identity_id,
+            identity_identifier=identity_identifier,
+            enabled=previous_enabled_state,
+            value=previous_value,
         )
 
     if new_value is not None and new_value is not None:
         data["new_state"] = Webhook.generate_webhook_feature_state_data(
-            feature,
-            environment,
-            identity_id,
-            identity_identifier,
-            new_enabled_state,
-            new_value,
+            feature=feature,
+            environment=environment,
+            identity_id=identity_id,
+            identity_identifier=identity_identifier,
+            enabled=new_enabled_state,
+            value=new_value,
         )
 
     event_type = (
