@@ -85,7 +85,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     serializer.save()
 
     # Then
-    mock_call_environment_webhook.run_in_thread.assert_called_once_with(
+    mock_call_environment_webhook.delay.assert_called_once_with(
         kwargs={
             "feature_id": feature.id,
             "environment_api_key": identity.environment.api_key,
@@ -146,7 +146,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
     serializer.save()
 
     # Then
-    mock_call_environment_webhook.run_in_thread.assert_called_once_with(
+    mock_call_environment_webhook.delay.assert_called_once_with(
         kwargs={
             "feature_id": feature.id,
             "environment_api_key": identity.environment.api_key,

@@ -1059,3 +1059,44 @@ def test_remove_user_as_group_admin_success(
         ).group_admin
         is False
     )
+
+
+def test_list_user_groups_as_group_admin(organisation, api_client):
+    # Given
+    user1 = FFAdminUser.objects.create(email="user1@example.com")
+    user2 = FFAdminUser.objects.create(email="user2@example.com")
+
+    user1.add_organisation(organisation)
+    user2.add_organisation(organisation)
+
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_1, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user2, userpermissiongroup=user_permission_group_2, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_2
+    )
+
+    api_client.force_authenticate(user1)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == user_permission_group_1.id
