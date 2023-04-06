@@ -36,6 +36,12 @@ export const groupService = service
           url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/make-admin`,
         }),
       }),
+      getGroup: builder.query<Res['group'], Req['getGroup']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Group' }],
+        query: (query: Req['getGroup']) => ({
+          url: `organisations/${query.orgId}/groups/${query.id}`,
+        }),
+      }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({
         providesTags: [{ id: 'LIST', type: 'Group' }],
         query: (query) => ({
@@ -87,6 +93,13 @@ export async function deleteGroup(
   store.dispatch(groupService.endpoints.deleteGroup.initiate(data, options))
   return Promise.all(store.dispatch(groupService.util.getRunningQueriesThunk()))
 }
+export async function getGroup(
+  store: any,
+  data: Req['getGroup'],
+  options?: Parameters<typeof groupService.endpoints.getGroup.initiate>[1],
+) {
+  return store.dispatch(groupService.endpoints.getGroup.initiate(data, options))
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
@@ -94,6 +107,7 @@ export const {
   useDeleteGroupAdminMutation,
   useDeleteGroupMutation,
 
+  useGetGroupQuery,
   useGetGroupsQuery,
   // END OF EXPORTS
 } = groupService
