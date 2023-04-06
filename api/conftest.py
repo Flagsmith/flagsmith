@@ -446,17 +446,14 @@ def role_view_environment_permission(
 
 
 @pytest.fixture
-def role_view_project_permission(role, project, view_project_permission):
-    role_project_permission = RoleProjectPermission.objects.create(
-        role=role, project=project
-    )
-    role_project_permission.permissions.add(view_project_permission)
-    return role
+def role_project_permission(role, project):
+    return RoleProjectPermission.objects.create(role=role, project=project)
 
 
 @pytest.fixture
-def role_project_permission(role, project):
-    return RoleProjectPermission.objects.create(role=role, project=project)
+def role_view_project_permission(role_project_permission, view_project_permission):
+    role_project_permission.permissions.add(view_project_permission)
+    return role
 
 
 @pytest.fixture
