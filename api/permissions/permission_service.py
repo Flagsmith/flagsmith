@@ -1,4 +1,4 @@
-from typing import Iterable, Set, Union
+from typing import Set, Union
 
 from django.db.models import Q, QuerySet
 
@@ -21,7 +21,7 @@ def is_user_project_admin(user, project) -> bool:
     return _is_user_object_admin(user, project)
 
 
-def get_permitted_projects_for_user(user, permission_key: str) -> Iterable[Project]:
+def get_permitted_projects_for_user(user, permission_key: str) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
 

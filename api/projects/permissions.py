@@ -11,13 +11,20 @@ from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
 
 # Maintain a list of permissions here
+VIEW_PROJECT = "VIEW_PROJECT"
+CREATE_ENVIRONMENT = "CREATE_ENVIRONMENT"
+DELETE_FEATURE = "DELETE_FEATURE"
+CREATE_FEATURE = "CREATE_FEATURE"
+EDIT_FEATURE = "EDIT_FEATURE"
+MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
+
 PROJECT_PERMISSIONS = [
-    ("VIEW_PROJECT", "View permission for the given project."),
-    ("CREATE_ENVIRONMENT", "Ability to create an environment in the given project."),
-    ("DELETE_FEATURE", "Ability to delete features in the given project."),
-    ("CREATE_FEATURE", "Ability to create features in the given project."),
-    ("EDIT_FEATURE", "Ability to edit features in the given project."),
-    ("MANAGE_SEGMENTS", "Ability to manage segments in the given project."),
+    (VIEW_PROJECT, "View permission for the given project."),
+    (CREATE_ENVIRONMENT, "Ability to create an environment in the given project."),
+    (DELETE_FEATURE, "Ability to delete features in the given project."),
+    (CREATE_FEATURE, "Ability to create features in the given project."),
+    (EDIT_FEATURE, "Ability to edit features in the given project."),
+    (MANAGE_SEGMENTS, "Ability to manage segments in the given project."),
 ]
 
 

@@ -12,16 +12,15 @@ from environments.permissions.constants import (
 from permissions.permission_service import get_permitted_environments_for_user
 
 
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_org_admin(
+def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(
     admin_user, environment, project, project_two_environment
 ):
-    # When
-    permitted_environments = get_permitted_environments_for_user(
-        admin_user, project, VIEW_ENVIRONMENT
-    )
-
-    # Then
-    assert permitted_environments.count() == 1
+    for permission, _ in ENVIRONMENT_PERMISSIONS:
+        # Then
+        assert (
+            get_permitted_environments_for_user(admin_user, project, permission).count()
+            == 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -36,13 +35,12 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_or
 def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(
     test_user, environment, project, project_admin, project_two_environment
 ):
-    # When
-    permitted_environments = get_permitted_environments_for_user(
-        test_user, project, VIEW_ENVIRONMENT
-    )
-
-    # Then
-    assert permitted_environments.count() == 1
+    for permission, _ in ENVIRONMENT_PERMISSIONS:
+        # Then
+        assert (
+            get_permitted_environments_for_user(test_user, project, permission).count()
+            == 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -54,29 +52,17 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
         (lazy_fixture("environment_admin_via_group_role")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_the_environments_for_environment_admin(
+def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(
     test_user, environment, project, environment_admin, project_two_environment
 ):
-    # When
-    permitted_environments = get_permitted_environments_for_user(
-        test_user, project, VIEW_ENVIRONMENT
-    )
-
-    # Then
-    assert permitted_environments.count() == 1
-
-
-# @pytest.mark.parametrize(
-#     "environment_permission",
-#     [
-#         (lazy_fixture("environment_permission_using_user_permission")),
-#         (lazy_fixture("environment_permission_using_user_permission_group")),
-#         # (lazy_fixture("environment_admin_via_user_role")),
-#         # (lazy_fixture("environment_admin_via_group_role")),
+    for permission, _ in ENVIRONMENT_PERMISSIONS:
+        # Then
+        assert (
+            get_permitted_environments_for_user(test_user, project, permission).count()
+            == 1
+        )
 
 
-#     ],
-# )
 def test_get_permitted_environments_for_user_returns_correct_environment(
     test_user,
     environment,
