@@ -14,7 +14,11 @@ const controller = {
   createGroup: (orgId, group) => {
     store.saving()
     data
-      .post(`${Project.api}organisations/${orgId}/groups/`, group)
+      .post(`${Project.api}organisations/${orgId}/groups/`, {
+        external_id: group.external_id,
+        is_default: group.is_default,
+        users: group.users,
+      })
       .then((res) => {
         let prom = Promise.resolve()
         if (group.users) {
@@ -23,13 +27,27 @@ const controller = {
             { user_ids: group.users.map((u) => u.id) },
           )
         }
-        prom.then(() => {
-          controller.getGroups(orgId)
+        prom.then((res) => {
+          if (Utils.getFlagsmithHasFeature('group_admins')) {
+            Promise.all(
+              (group.usersToAddAdmin || []).map((v) =>
+                createGroupAdmin(getStore(), {
+                  group: res.id,
+                  orgId,
+                  user: v.id,
+                }),
+              ),
+            ).then(() => {
+              controller.getGroups(orgId)
+            })
+          } else {
+            controller.getGroups(orgId)
+          }
         })
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  getGroups: (orgId, page) => {
+  getGroups: (orgId) => {
     store.loading()
     getGroups(getStore(), { orgId, page: 1 }).then(() => {
       store.loaded()
@@ -79,10 +97,12 @@ const controller = {
                     }),
                   ),
                 ),
-            )
+            ).then(() => {
+              controller.getGroups(orgId)
+            })
+          } else {
+            controller.getGroups(orgId)
           }
-
-          controller.getGroups(orgId)
         })
       })
 
