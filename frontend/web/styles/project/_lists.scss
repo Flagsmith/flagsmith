@@ -26,8 +26,8 @@
     overflow-x: hidden !important;
 }
 
-.overflow-visible .search-list .List {
-    overflow: auto !important;
+.overflow-visible .search-list, .overflow-visible .List {
+    overflow-x: visible !important;
 }
 
 .table-header {
