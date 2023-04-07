@@ -16,7 +16,7 @@ def clear_unhealthy_threads():
 
 def write_unhealthy_threads(unhealthy_threads: typing.List[Thread]):
     unhealthy_thread_names = [t.name for t in unhealthy_threads]
-    logger.error("Writing unhealthy threads: %s", unhealthy_thread_names)
+    logger.warning("Writing unhealthy threads: %s", unhealthy_thread_names)
 
     with open(UNHEALTHY_THREADS_FILE_PATH, "w+") as f:
         f.write(json.dumps(unhealthy_thread_names))
