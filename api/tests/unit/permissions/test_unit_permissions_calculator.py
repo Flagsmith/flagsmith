@@ -11,9 +11,19 @@ from environments.permissions.models import (
     UserPermissionGroupEnvironmentPermission,
 )
 from organisations.models import OrganisationRole
+from organisations.permissions.models import (
+    OrganisationPermissionModel,
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    MANAGE_USER_GROUPS,
+)
 from organisations.roles.models import GroupRole, UserRole
 from permissions.permissions_calculator import (
     EnvironmentPermissionsCalculator,
+    OrganisationPermissionsCalculator,
     ProjectPermissionsCalculator,
 )
 from projects.models import (
@@ -320,6 +330,132 @@ def test_environment_permissions_calculator_get_permission_data(
         GroupRole.objects.create(group=group, role=role)
 
     permission_calculator = EnvironmentPermissionsCalculator(pk=environment.id)
+
+    # When
+    user_permission_data = permission_calculator.get_permission_data(user_id=user.id)
+
+    # Then
+    assert user_permission_data.admin == expected_admin
+    assert user_permission_data.permissions == expected_permissions
+
+
+@pytest.mark.parametrize(
+    (
+        "user_permissions, user_admin, group_permissions, "
+        " role_permissions, is_user_role, "
+        " expected_permissions, expected_admin"
+    ),
+    (
+        (set(), False, set(), set(), False, set(), False),
+        (set(), True, set(), set(), False, set(), True),
+        (
+            {CREATE_PROJECT},
+            False,
+            set(),
+            set(),
+            True,
+            {CREATE_PROJECT},
+            False,
+        ),
+        (
+            set(),
+            False,
+            {CREATE_PROJECT},
+            set(),
+            True,
+            {CREATE_PROJECT},
+            False,
+        ),
+        (
+            set(),
+            False,
+            set(),
+            {CREATE_PROJECT},
+            True,
+            {CREATE_PROJECT},
+            False,
+        ),
+        (
+            set(),
+            False,
+            set(),
+            {CREATE_PROJECT},
+            False,
+            {CREATE_PROJECT},
+            False,
+        ),
+        (
+            {CREATE_PROJECT},
+            False,
+            set(),
+            {MANAGE_USER_GROUPS},
+            False,
+            {CREATE_PROJECT, MANAGE_USER_GROUPS},
+            False,
+        ),
+    ),
+)
+def test_organisation_permissions_calculator_get_permission_data(
+    organisation,
+    django_user_model,
+    user_permissions,
+    user_admin,
+    group_permissions,
+    role_permissions,
+    is_user_role,
+    expected_permissions,
+    expected_admin,
+    role,
+    role_organisation_permission,
+):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+
+    org_role = OrganisationRole.ADMIN if user_admin else OrganisationRole.USER
+
+    user.add_organisation(organisation, org_role)
+
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group.users.add(user)
+
+    user_organisation_permission = UserOrganisationPermission.objects.create(
+        user=user, organisation=organisation
+    )
+    group_organisation_permission = (
+        UserPermissionGroupOrganisationPermission.objects.create(
+            group=group, organisation=organisation
+        )
+    )
+
+    organisation_permissions = {
+        pm.key: pm for pm in OrganisationPermissionModel.objects.all()
+    }
+
+    for permission_key in user_permissions:
+        user_organisation_permission.permissions.add(
+            organisation_permissions[permission_key]
+        )
+
+    for permission_key in group_permissions:
+        group_organisation_permission.permissions.add(
+            organisation_permissions[permission_key]
+        )
+
+    for permission_key in role_permissions:
+        role_organisation_permission.permissions.add(
+            organisation_permissions[permission_key]
+        )
+
+    role_organisation_permission.save()
+
+    if is_user_role:
+        UserRole.objects.create(user=user, role=role)
+    else:
+        GroupRole.objects.create(group=group, role=role)
+
+    permission_calculator = OrganisationPermissionsCalculator(pk=organisation.id)
 
     # When
     user_permission_data = permission_calculator.get_permission_data(user_id=user.id)

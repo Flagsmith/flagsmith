@@ -2,20 +2,28 @@ import typing
 from dataclasses import dataclass, field
 from functools import reduce
 
-from django.db.models import Q
+from django.db.models import Q, Value
 
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from organisations.models import Organisation
+from organisations.permissions.models import (
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
 from organisations.roles.models import (
     RoleEnvironmentPermission,
+    RoleOrganisationPermission,
     RoleProjectPermission,
 )
+from permissions.permission_service import is_user_organisation_admin
 from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
+from users.models import FFAdminUser
 
 
 @dataclass
@@ -120,7 +128,7 @@ class BasePermissionCalculator:
         for user_permission in self._get_user_permission_qs(user_id).prefetch_related(
             "permissions"
         ):
-            if user_permission.admin:
+            if getattr(user_permission, "admin", False):
                 user_permission_data.admin = True
 
             user_permission_data.permissions.update(
@@ -147,7 +155,7 @@ class BasePermissionCalculator:
             group_data = GroupData(id=group.id, name=group.name)
             group_permission_data_object = GroupPermissionData(group=group_data)
 
-            if group_permission.admin:
+            if getattr(group_permission, "admin", False):
                 group_permission_data_object.admin = True
 
             group_permission_data_object.permissions.update(
@@ -178,7 +186,7 @@ class BasePermissionCalculator:
             )
             role_permission_data_object = RolePermissionData(role=role_data)
 
-            if role_project_permission.admin:
+            if getattr(role_project_permission, "admin", False):
                 role_permission_data_object.admin = True
 
             role_permission_data_object.permissions.update(
@@ -190,6 +198,29 @@ class BasePermissionCalculator:
             role_permission_data_objects.append(role_permission_data_object)
 
         return role_permission_data_objects
+
+
+class OrganisationPermissionsCalculator(BasePermissionCalculator):
+    def _get_user_permission_qs(self, user_id: int):
+        user = FFAdminUser.objects.get(id=user_id)
+        organisation = Organisation.objects.get(id=self.pk)
+        is_admin = is_user_organisation_admin(user, organisation)
+
+        return UserOrganisationPermission.objects.filter(
+            user=user_id, organisation_id=self.pk
+        ).annotate(admin=Value(is_admin))
+
+    def _get_group_permission_qs(self, user_id: int):
+        return UserPermissionGroupOrganisationPermission.objects.filter(
+            group__users=user_id, organisation=self.pk
+        )
+
+    def _get_role_permission_qs(self, user_id: int):
+        q = Q(role__userrole__user_id=user_id) | Q(
+            role__grouprole__group__users=user_id
+        )
+        q = q & Q(role__organisation_id=self.pk)
+        return RoleOrganisationPermission.objects.filter(q)
 
 
 class EnvironmentPermissionsCalculator(BasePermissionCalculator):

@@ -1,13 +1,7 @@
 import pytest
 
 from environments.models import Environment
-from organisations.roles.models import RoleOrganisationPermission
 from projects.models import Project
-
-
-@pytest.fixture
-def role_organisation_permission(role, organisation):
-    return RoleOrganisationPermission.objects.create(role=role)
 
 
 @pytest.fixture()

@@ -18,7 +18,6 @@ from organisations.models import (
     UserOrganisation,
 )
 from permissions.permission_service import (
-    get_organisation_permission_keys_for_user,
     get_permitted_environments_for_user,
     get_permitted_projects_for_user,
     is_user_environment_admin,
@@ -270,11 +269,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return user_has_organisation_permission(self, organisation, permission_key)
         if self.is_organisation_admin(organisation):
             return True
-
-    def get_permission_keys_for_organisation(
-        self, organisation: Organisation
-    ) -> typing.Iterable[str]:
-        return get_organisation_permission_keys_for_user(self, organisation)
 
     def is_group_admin(self, group_id) -> bool:
         return UserPermissionGroupMembership.objects.filter(

@@ -38,6 +38,7 @@ from organisations.roles.models import (
     GroupRole,
     Role,
     RoleEnvironmentPermission,
+    RoleOrganisationPermission,
     RoleProjectPermission,
     UserRole,
 )
@@ -484,3 +485,8 @@ def create_project_permission(db):
 @pytest.fixture
 def manage_user_group_permission(db):
     return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
+
+
+@pytest.fixture
+def role_organisation_permission(role, organisation):
+    return RoleOrganisationPermission.objects.create(role=role)

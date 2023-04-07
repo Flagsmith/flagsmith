@@ -1,4 +1,4 @@
-from typing import Set, Union
+from typing import Union
 
 from django.db.models import Q, QuerySet
 
@@ -81,39 +81,6 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
     query = user_query | group_query | role_query
 
     return Organisation.objects.filter(query).exists()
-
-
-def get_organisation_permission_keys_for_user(
-    user, organisation: Organisation
-) -> Set[str]:
-    user_permission_keys = (
-        organisation.userpermissions.filter(user=user)
-        .values_list("permissions__key", flat=True)
-        .exclude(permissions__key__isnull=True)
-    )
-
-    group_permission_keys = (
-        organisation.grouppermissions.filter(group__users=user)
-        .values_list("permissions__key", flat=True)
-        .exclude(permissions__key__isnull=True)
-    )
-
-    role_permission_keys = (
-        organisation.roles.filter(
-            Q(org_role_permission__role__userrole__user=user)
-            | Q(org_role_permission__role__grouprole__group__users=user)
-        )
-        .values_list("org_role_permission__permissions__key", flat=True)
-        .exclude(org_role_permission__permissions__key__isnull=True)
-    )
-
-    all_permission_keys = (
-        set(user_permission_keys)
-        | set(group_permission_keys)
-        | set(role_permission_keys)
-    )
-
-    return all_permission_keys
 
 
 def is_user_environment_admin(user, environment) -> bool:
