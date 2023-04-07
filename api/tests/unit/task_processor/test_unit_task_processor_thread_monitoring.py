@@ -48,7 +48,7 @@ def test_write_unhealthy_threads(caplog, settings):
         json.dumps([t.name for t in threads])
     )
     assert len(caplog.records) == 1
-    assert caplog.record_tuples[0][1] == 40  # ERROR
+    assert caplog.record_tuples[0][1] == 30  # WARNING
     assert caplog.record_tuples[0][2] == "Writing unhealthy threads: %s" % [
         t.name for t in threads
     ]
