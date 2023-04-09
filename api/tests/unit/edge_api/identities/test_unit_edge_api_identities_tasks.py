@@ -54,12 +54,12 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        new_enabled_state,
-        new_value,
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=new_enabled_state,
+        value=new_value,
     )
     data = call_args[0][1]
     assert data["new_state"] == mock_feature_state_data
@@ -107,12 +107,12 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        previous_enabled_state,
-        previous_value,
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=previous_enabled_state,
+        value=previous_value,
     )
     data = call_args[0][1]
     assert data["previous_state"] == mock_feature_state_data
@@ -167,23 +167,23 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     assert mock_generate_webhook_feature_state_data.call_count == 2
     mock_generate_data_calls = mock_generate_webhook_feature_state_data.call_args_list
 
-    assert mock_generate_data_calls[0][0] == (
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        previous_enabled_state,
-        previous_value,
-    )
+    assert mock_generate_data_calls[0][1] == {
+        "feature": feature,
+        "environment": environment,
+        "identity_id": identity.id,
+        "identity_identifier": identity.identifier,
+        "enabled": previous_enabled_state,
+        "value": previous_value,
+    }
 
-    assert mock_generate_data_calls[1][0] == (
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        new_enabled_state,
-        new_value,
-    )
+    assert mock_generate_data_calls[1][1] == {
+        "feature": feature,
+        "environment": environment,
+        "identity_id": identity.id,
+        "identity_identifier": identity.identifier,
+        "enabled": new_enabled_state,
+        "value": new_value,
+    }
 
     data = call_args[0][1]
     assert data["previous_state"] == mock_feature_state_data
