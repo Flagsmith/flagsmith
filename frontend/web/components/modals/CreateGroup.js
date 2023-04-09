@@ -2,8 +2,6 @@ import React, { Component } from 'react'
 import UserGroupsProvider from 'common/providers/UserGroupsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
-import Select from 'react-select'
-import InfoMessage from 'components/InfoMessage'
 
 const CreateGroup = class extends Component {
   static displayName = 'CreateGroup'
@@ -205,7 +203,6 @@ const CreateGroup = class extends Component {
                             <div style={{ width: 200 }}>
                               <Select
                                 isDisabled={!isEnabled}
-                                classNamePrefix='flag-select'
                                 value={{
                                   label: isGroupAdmin ? 'Group Admin' : 'User',
                                   value: isGroupAdmin,
