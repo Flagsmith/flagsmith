@@ -32,8 +32,8 @@ export const groupService = service
         invalidatesTags: [{ id: 'LIST', type: 'Group' }],
         query: (query: Req['deleteGroupAdmin']) => ({
           body: {},
-          method: 'DELETE',
-          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/make-admin`,
+          method: 'POST',
+          url: `organisations/${query.orgId}/groups/${query.group}/users/${query.user}/remove-admin`,
         }),
       }),
       getGroup: builder.query<Res['group'], Req['getGroup']>({

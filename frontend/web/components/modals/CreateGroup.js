@@ -32,6 +32,12 @@ const CreateGroup = class extends Component {
     ).then((res) => {
       const group = res.data
       this.setState({
+        existingUsers: group
+          ? group.users.map((v) => ({
+              group_admin: v.group_admin,
+              id: v.id,
+            }))
+          : [],
         external_id: group ? group.external_id : undefined,
         isLoading: false,
         is_default: group ? group.is_default : false,
@@ -68,14 +74,14 @@ const CreateGroup = class extends Component {
   getUsersToRemove = (users) =>
     _.filter(users, ({ id }) => !_.find(this.state.users, { id }))
 
-  getUsersAdminChanged = (users, value) => {
+  getUsersAdminChanged = (existingUsers, value) => {
     return _.filter(this.state.users, (user) => {
-      if (user.group_admin !== value) {
-        //new user does not match value
+      if (!!user.group_admin !== value) {
+        //Ignore user
         return false
       }
       const existingUser = _.find(
-        users,
+        existingUsers,
         (existingUser) => existingUser.id === user.id,
       )
       const isAlreadyAdmin = !!existingUser?.group_admin
@@ -84,7 +90,7 @@ const CreateGroup = class extends Component {
     })
   }
 
-  save = (allUsers) => {
+  save = () => {
     const { external_id, is_default, name, users } = this.state
     if (this.props.group) {
       AppActions.updateGroup(this.props.orgId, {
@@ -93,9 +99,15 @@ const CreateGroup = class extends Component {
         is_default: !!this.state.is_default,
         name,
         users,
-        usersToAddAdmin: this.getUsersAdminChanged(allUsers, true),
-        usersToRemove: this.getUsersToRemove(allUsers),
-        usersToRemoveAdmin: this.getUsersAdminChanged(allUsers, false),
+        usersToAddAdmin: this.getUsersAdminChanged(
+          this.state.existingUsers,
+          true,
+        ),
+        usersToRemove: this.getUsersToRemove(this.state.existingUsers),
+        usersToRemoveAdmin: this.getUsersAdminChanged(
+          this.state.existingUsers,
+          false,
+        ),
       })
     } else {
       AppActions.createGroup(this.props.orgId, {
@@ -103,7 +115,7 @@ const CreateGroup = class extends Component {
         is_default,
         name,
         users,
-        usersToRemove: this.getUsersToRemove(allUsers),
+        usersToRemove: this.getUsersToRemove(this.state.existingUsers),
       })
     }
   }
@@ -135,7 +147,7 @@ const CreateGroup = class extends Component {
                 <form
                   onSubmit={(e) => {
                     Utils.preventDefault(e)
-                    this.save(users)
+                    this.save()
                   }}
                 >
                   <InputGroup
