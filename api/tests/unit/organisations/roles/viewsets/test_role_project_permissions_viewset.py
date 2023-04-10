@@ -6,7 +6,7 @@ from rest_framework import status
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 
 
-def test_create_project_permission_for_role(admin_client, role, project, organisation):
+def test_create_project_permissions_for_role(admin_client, role, project, organisation):
     # Given
     url = reverse(
         "api-v1:organisations:roles-projects-permissions-list",
@@ -30,7 +30,7 @@ def test_create_project_permission_for_role(admin_client, role, project, organis
     assert response.data["admin"] is False
 
 
-def test_list_project_permission_for_role(
+def test_list_project_permissions_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given
@@ -52,7 +52,7 @@ def test_list_project_permission_for_role(
     assert response.data["results"][0]["admin"] is False
 
 
-def test_retrieve_project_permission_for_role(
+def test_retrieve_project_permissions_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given
@@ -76,7 +76,7 @@ def test_retrieve_project_permission_for_role(
     assert response.data["admin"] is False
 
 
-def test_update_project_permission_for_role(
+def test_update_project_permissions_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given
@@ -102,7 +102,7 @@ def test_update_project_permission_for_role(
     assert response.data["admin"] is False
 
 
-def test_delete_project_permission_for_role(
+def test_delete_project_permissions_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given
@@ -118,7 +118,7 @@ def test_delete_project_permission_for_role(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_create_project_permission_for_role_with_project_from_different_organisation_returns_400(
+def test_create_project_permissions_for_role_with_project_from_different_organisation_returns_400(
     admin_client,
     role,
     project,

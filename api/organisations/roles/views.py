@@ -72,7 +72,7 @@ class GroupRoleViewSet(viewsets.ModelViewSet):
         serializer.save(role_id=role_id)
 
 
-class RoleEnvironmentPermissionViewSet(viewsets.ModelViewSet):
+class RoleEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
     serializer_class = RoleEnvironmentPermissionSerializer
     permission_classes = [IsAuthenticated, NestedRolePermission]
 
@@ -95,7 +95,7 @@ class RoleEnvironmentPermissionViewSet(viewsets.ModelViewSet):
         serializer.save(role_id=role_pk)
 
 
-class RoleProjectPermissionViewSet(viewsets.ModelViewSet):
+class RoleProjectPermissionsViewSet(viewsets.ModelViewSet):
     serializer_class = RoleProjectPermissionSerializer
     permission_classes = [IsAuthenticated, NestedRolePermission]
 

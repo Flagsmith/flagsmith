@@ -24,8 +24,8 @@ from .permissions.views import (
 )
 from .roles.views import (
     GroupRoleViewSet,
-    RoleEnvironmentPermissionViewSet,
-    RoleProjectPermissionViewSet,
+    RoleEnvironmentPermissionsViewSet,
+    RoleProjectPermissionsViewSet,
     RoleViewSet,
     UserRoleViewSet,
 )
@@ -73,12 +73,12 @@ nested_roles_router = routers.NestedSimpleRouter(
 )
 nested_roles_router.register(
     "environments-permissions",
-    RoleEnvironmentPermissionViewSet,
+    RoleEnvironmentPermissionsViewSet,
     basename="roles-environments-permissions",
 )
 nested_roles_router.register(
     "projects-permissions",
-    RoleProjectPermissionViewSet,
+    RoleProjectPermissionsViewSet,
     basename="roles-projects-permissions",
 )
 nested_roles_router.register("groups", GroupRoleViewSet, basename="group-roles")
