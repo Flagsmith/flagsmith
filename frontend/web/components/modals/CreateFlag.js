@@ -192,10 +192,7 @@ const CreateFlag = class extends Component {
   }
 
   getFeatureUsage = () => {
-    if (
-      Utils.getFlagsmithHasFeature('flag_analytics') &&
-      this.props.environmentFlag
-    ) {
+    if (this.props.environmentFlag) {
       AppActions.getFeatureUsage(
         this.props.projectId,
         this.props.environmentFlag.environment,
@@ -453,9 +450,7 @@ const CreateFlag = class extends Component {
     const is4EyesSegmentOverrides =
       is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides') //
     const project = ProjectStore.model
-    const caseSensitive =
-      Utils.getFlagsmithHasFeature('case_sensitive_flags') &&
-      project?.only_allow_lower_case_feature_names
+    const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
     const controlValue = Utils.calculateControl(multivariate_options)
     const invalid =
@@ -1358,9 +1353,6 @@ const CreateFlag = class extends Component {
                                 {!existingChangeRequest &&
                                   (!Project.disableInflux ||
                                     !Project.disableAnalytics) &&
-                                  Utils.getFlagsmithHasFeature(
-                                    'flag_analytics',
-                                  ) &&
                                   this.props.flagId && (
                                     <TabItem
                                       data-test='analytics'

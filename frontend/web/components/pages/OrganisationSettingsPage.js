@@ -476,33 +476,28 @@ const OrganisationSettingsPage = class extends Component {
                               </Row>
                             </FormGroup>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'delete_organisation',
-                          ) && (
-                            <FormGroup className='mt-4'>
-                              <Row className='mt-4' space>
-                                <div className='col-md-8 pl-0'>
-                                  <h3>Delete Organisation</h3>
-                                  <p>
-                                    This organisation will be permanently
-                                    deleted, along with all projects and
-                                    features.
-                                  </p>
-                                </div>
-                                <Button
-                                  id='delete-org-btn'
-                                  onClick={() =>
-                                    this.confirmRemove(organisation, () => {
-                                      deleteOrganisation()
-                                    })
-                                  }
-                                  className='btn btn--with-icon ml-auto btn--remove'
-                                >
-                                  <RemoveIcon />
-                                </Button>
-                              </Row>
-                            </FormGroup>
-                          )}
+                          <FormGroup className='mt-4'>
+                            <Row className='mt-4' space>
+                              <div className='col-md-8 pl-0'>
+                                <h3>Delete Organisation</h3>
+                                <p>
+                                  This organisation will be permanently deleted,
+                                  along with all projects and features.
+                                </p>
+                              </div>
+                              <Button
+                                id='delete-org-btn'
+                                onClick={() =>
+                                  this.confirmRemove(organisation, () => {
+                                    deleteOrganisation()
+                                  })
+                                }
+                                className='btn btn--with-icon ml-auto btn--remove'
+                              >
+                                <RemoveIcon />
+                              </Button>
+                            </Row>
+                          </FormGroup>
                         </TabItem>
 
                         <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
@@ -1255,22 +1250,18 @@ const OrganisationSettingsPage = class extends Component {
                             )}
                           </FormGroup>
                         </TabItem>
-                        {Utils.getFlagsmithHasFeature('usage_chart') &&
-                          (!Project.disableInflux ||
-                            !Project.disableAnalytics) && (
-                            <TabItem
-                              tabLabel='Usage'
-                              tabIcon='ion-md-analytics'
-                            >
-                              {this.state.tab === 4 && (
-                                <OrganisationUsage
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                />
-                              )}
-                            </TabItem>
-                          )}
+                        {(!Project.disableInflux ||
+                          !Project.disableAnalytics) && (
+                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                            {this.state.tab === 4 && (
+                              <OrganisationUsage
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                              />
+                            )}
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )

@@ -17,7 +17,6 @@ import _ from 'lodash'
 
 const semver = require('semver')
 
-let flagsmithBetaFeatures: string[] | null = null
 const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
@@ -169,21 +168,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
   },
   getFlagsmithHasFeature(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-enabled`) === 'boolean') {
-        return flagsmith.getTrait(`${key}-opt-in-enabled`)
-      }
-    }
     return flagsmith.hasFeature(key)
   },
   getFlagsmithValue(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-value`) !== 'undefined') {
-        return flagsmith.getTrait(`${key}-opt-in-value`)
-      }
-    }
     return flagsmith.getValue(key)
   },
   getIdentitiesEndpoint(_project: ProjectType) {
@@ -288,7 +275,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats')
+        valid = isScaleupOrGreater
         break
       }
       case 'FORCE_2FA': {
@@ -449,10 +436,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getViewIdentitiesPermission() {
-    if (Utils.getFlagsmithHasFeature('view_identities_permission')) {
-      return 'VIEW_IDENTITIES'
-    }
-    return 'MANAGE_IDENTITIES'
+    return 'VIEW_IDENTITIES'
   },
 
   isMigrating() {
@@ -496,29 +480,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       // @ts-ignore
       zE('messenger', 'open')
     }
-  },
-  parseBetaFeatures() {
-    if (!flagsmith.hasFeature('beta_features')) {
-      return []
-    }
-    if (flagsmithBetaFeatures) {
-      return flagsmithBetaFeatures
-    }
-    let res: Record<
-      string,
-      { flag: string; hasEnabled: boolean; description: string }[]
-    >
-    try {
-      res = JSON.parse(flagsmith.getValue('beta_features'))
-      const features: string[] = []
-      Object.keys(res).map((v) => {
-        res[v].map((v) => {
-          features.push(v.flag)
-        })
-      })
-      flagsmithBetaFeatures = features
-    } catch (e) {}
-    return flagsmithBetaFeatures || []
   },
 
   removeElementFromArray(array: any[], index: number) {
