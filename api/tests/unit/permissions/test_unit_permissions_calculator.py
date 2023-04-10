@@ -459,7 +459,7 @@ def test_organisation_permissions_calculator_get_permission_data(
 
     # When
     user_permission_data = permission_calculator.get_permission_data(
-        user_id=user.id, is_org_admin=user_admin
+        user_id=user.id, is_organisation_admin=user_admin
     )
 
     # Then

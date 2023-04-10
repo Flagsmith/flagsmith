@@ -99,7 +99,7 @@ def test_update_environment_permssion_for_role(
     assert response.status_code == status.HTTP_200_OK
     assert response.data["role"] == role.id
     assert response.data["environment"] == environment.id
-    assert response.data["permissions"] == [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
+    assert set(response.data["permissions"]) == {VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE}
     assert response.data["admin"] is False
 
 
