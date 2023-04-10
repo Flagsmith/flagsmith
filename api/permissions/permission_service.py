@@ -1,4 +1,4 @@
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from django.db.models import Q, QuerySet
 
@@ -6,8 +6,11 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
+if TYPE_CHECKING:
+    from users.models import FFAdminUser
 
-def is_user_organisation_admin(user, organisation: Organisation) -> bool:
+
+def is_user_organisation_admin(user: "FFAdminUser", organisation: Organisation) -> bool:
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None:
         if user_organisation.role == OrganisationRole.ADMIN.name:
@@ -15,13 +18,15 @@ def is_user_organisation_admin(user, organisation: Organisation) -> bool:
     return False
 
 
-def is_user_project_admin(user, project) -> bool:
+def is_user_project_admin(user: "FFAdminUser", project: Project) -> bool:
     if is_user_organisation_admin(user, project.organisation):
         return True
     return _is_user_object_admin(user, project)
 
 
-def get_permitted_projects_for_user(user, permission_key: str) -> QuerySet[Project]:
+def get_permitted_projects_for_user(
+    user: "FFAdminUser", permission_key: str
+) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
 
@@ -68,7 +73,9 @@ def get_permitted_environments_for_user(
     return Environment.objects.filter(query).distinct().defer("description")
 
 
-def user_has_organisation_permission(user, organisation, permission_key: str) -> bool:
+def user_has_organisation_permission(
+    user: "FFAdminUser", organisation: Organisation, permission_key: str
+) -> bool:
     if is_user_organisation_admin(user, organisation):
         return True
     user_query = _user_query(user, permission_key, allow_admin=False)
@@ -83,7 +90,7 @@ def user_has_organisation_permission(user, organisation, permission_key: str) ->
     return Organisation.objects.filter(query).exists()
 
 
-def is_user_environment_admin(user, environment) -> bool:
+def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> bool:
     return (
         is_user_organisation_admin(user, environment.project.organisation)
         or is_user_project_admin(user, environment.project)
@@ -91,13 +98,18 @@ def is_user_environment_admin(user, environment) -> bool:
     )
 
 
-def _is_user_object_admin(user, object_: Union[Project | Environment]) -> bool:
+def _is_user_object_admin(
+    user: "FFAdminUser", object_: Union[Project | Environment]
+) -> bool:
     query = _get_base_query(user)
     query = query & Q(id=object_.id)
     return type(object_).objects.filter(query).exists()
 
 
-def _get_base_query(user, permission_key: str = None, allow_admin=True) -> Q:
+def _get_base_query(
+    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+) -> Q:
+    # TODO: the comment
     """
     Get all objects of the given model that the user has the given permissions for.
     Rules:
@@ -115,7 +127,9 @@ def _get_base_query(user, permission_key: str = None, allow_admin=True) -> Q:
     return query
 
 
-def _user_query(user, permission_key=None, allow_admin=True) -> Q:
+def _user_query(
+    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+) -> Q:
     base_query = Q(userpermission__user=user)
     permission_query = Q(userpermission__admin=True) if allow_admin else Q()
 
@@ -127,7 +141,9 @@ def _user_query(user, permission_key=None, allow_admin=True) -> Q:
     return base_query & permission_query
 
 
-def _group_query(user, permission_key: str = None, allow_admin=True) -> Q:
+def _group_query(
+    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+) -> Q:
     base_query = Q(grouppermission__group__users=user)
     permission_query = Q(grouppermission__admin=True) if allow_admin else Q()
     if permission_key:
@@ -137,7 +153,9 @@ def _group_query(user, permission_key: str = None, allow_admin=True) -> Q:
     return base_query & permission_query
 
 
-def _role_query(user, permission_key: str = None, allow_admin=True) -> Q:
+def _role_query(
+    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+) -> Q:
     base_query = Q(rolepermission__role__userrole__user=user) | Q(
         rolepermission__role__grouprole__group__users=user
     )

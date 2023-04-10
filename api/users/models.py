@@ -197,10 +197,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.role
 
-    def get_organisation_role_by_id(self, organisation_id: int) -> typing.Optional[str]:
-        user_organisation = self.get_user_organisation_by_id(organisation_id)
-        return user_organisation.role
-
     def get_organisation_join_date(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
         if user_organisation:
@@ -214,10 +210,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 "User %d is not part of organisation %d" % (self.id, organisation.id)
             )
 
-    def get_permitted_projects(self, permission_key):
+    def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
         return get_permitted_projects_for_user(self, permission_key)
 
-    def has_project_permission(self, permission, project):
+    def has_project_permission(self, permission, project) -> bool:
         if self.is_project_admin(project):
             return True
         return project in self.get_permitted_projects(permission)
@@ -229,7 +225,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             self, environment.project, permission
         )
 
-    def is_project_admin(self, project: Project):
+    def is_project_admin(self, project: Project) -> bool:
         return is_user_project_admin(self, project)
 
     def get_permitted_environments(
@@ -255,12 +251,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         ]
 
     def belongs_to(self, organisation_id: int) -> bool:
-        return organisation_id in self.organisations.all().values_list("id", flat=True)
+        return self.userorganisation_set.filter(
+            organisation_id=organisation_id
+        ).exists()
 
     def is_environment_admin(
         self,
         environment: Environment,
-    ):
+    ) -> bool:
         return is_user_environment_admin(self, environment)
 
     def has_organisation_permission(
@@ -268,7 +266,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     ) -> bool:
         return user_has_organisation_permission(self, organisation, permission_key)
 
-    def is_group_admin(self, group_id) -> bool:
+    def is_group_admin(self, group_id: int) -> bool:
         return UserPermissionGroupMembership.objects.filter(
             ffadminuser=self, userpermissiongroup__id=group_id, group_admin=True
         ).exists()
