@@ -54,7 +54,7 @@ flagsmith
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     preventFetch: !!state,
-    realtime: true,
+    realtime: !state,
     state,
   })
   .catch(() => {
