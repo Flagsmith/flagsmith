@@ -17,9 +17,7 @@ def test_create_role(organisation, admin_client):
     }
 
     # When
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
+    response = admin_client.post(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -64,7 +62,7 @@ def test_update_role_name(organisation, admin_client, role):
         args=[organisation.id, role.id],
     )
     new_name = "new role name"
-    data = {"name": new_name, "organisation": organisation.id}
+    data = {"name": new_name}
 
     # When
     response = admin_client.put(url, data=data)
@@ -113,7 +111,7 @@ def test_create_role_organisation_id_in_body_is_read_only(
     assert response.json()["id"]
 
 
-def test_create_role_returns_403_if_user_not_organisation_admin(
+def test_create_role_returns_403_if_user_is_not_organisation_admin(
     test_user_client, organisation, test_user
 ):
     # Given

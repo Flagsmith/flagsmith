@@ -1,4 +1,5 @@
 from organisations.permissions.models import (
+    OrganisationPermissionModel,
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
@@ -15,30 +16,28 @@ from organisations.roles.models import (
 from permissions.permission_service import user_has_organisation_permission
 
 
-def test_user_has_organisation_permission_returns_true_if_user_does_not_have_permission(
+def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(
     test_user, organisation
 ):
-    assert (
-        user_has_organisation_permission(test_user, organisation, CREATE_PROJECT)
-        is False
-    )
-    assert (
-        user_has_organisation_permission(test_user, organisation, MANAGE_USER_GROUPS)
-        is False
-    )
+    for permission in OrganisationPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
+        assert (
+            user_has_organisation_permission(test_user, organisation, permission)
+            is False
+        )
 
 
 def test_user_has_organisation_permission_returns_true_if_user_is_admin(
     admin_user, organisation
 ):
-    assert (
-        user_has_organisation_permission(admin_user, organisation, CREATE_PROJECT)
-        is True
-    )
-    assert (
-        user_has_organisation_permission(admin_user, organisation, MANAGE_USER_GROUPS)
-        is True
-    )
+    for permission in OrganisationPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
+        assert (
+            user_has_organisation_permission(admin_user, organisation, permission)
+            is True
+        )
 
 
 def test_user_has_organisation_permission_returns_true_if_user_has_permission_directly(
