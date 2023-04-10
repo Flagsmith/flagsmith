@@ -4,6 +4,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
+import { components } from 'react-select'
+
+const widths = [80, 80]
 const CreateGroup = class extends Component {
   static displayName = 'CreateGroup'
 
@@ -92,17 +95,21 @@ const CreateGroup = class extends Component {
 
   save = () => {
     const { external_id, is_default, name, users } = this.state
+
+    const data = {
+      external_id,
+      is_default: !!this.state.is_default,
+      name,
+      users,
+      usersToAddAdmin: this.getUsersAdminChanged(
+        this.state.existingUsers,
+        true,
+      ),
+    }
     if (this.props.group) {
       AppActions.updateGroup(this.props.orgId, {
-        external_id,
+        ...data,
         id: this.props.group.id,
-        is_default: !!this.state.is_default,
-        name,
-        users,
-        usersToAddAdmin: this.getUsersAdminChanged(
-          this.state.existingUsers,
-          true,
-        ),
         usersToRemove: this.getUsersToRemove(this.state.existingUsers),
         usersToRemoveAdmin: this.getUsersAdminChanged(
           this.state.existingUsers,
@@ -110,13 +117,7 @@ const CreateGroup = class extends Component {
         ),
       })
     } else {
-      AppActions.createGroup(this.props.orgId, {
-        external_id,
-        is_default,
-        name,
-        users,
-        usersToRemove: this.getUsersToRemove(this.state.existingUsers),
-      })
+      AppActions.createGroup(this.props.orgId, data)
     }
   }
 
@@ -133,11 +134,12 @@ const CreateGroup = class extends Component {
     const isEdit = !!this.props.group
     const isAdmin = AccountStore.isAdmin()
     const yourEmail = AccountStore.model.email
-
     return (
       <OrganisationProvider>
-        {({ users }) =>
-          isLoading ? (
+        {({ users }) => {
+          const activeUsers = _.intersectionBy(users, this.state.users, 'id')
+          const inactiveUsers = _.differenceBy(users, this.state.users, 'id')
+          return isLoading ? (
             <div className='text-center'>
               <Loader />
             </div>
@@ -211,26 +213,82 @@ const CreateGroup = class extends Component {
                     isValid={name && name.length}
                     type='text'
                   />
-                  <div className='mb-5'>
+                  <div className='mb-4'>
+                    <label>Group members</label>
+                    <div style={{ width: 350 }}>
+                      <Select
+                        disabled={!inactiveUsers?.length}
+                        components={{
+                          Option: (props) => {
+                            const { email, first_name, id, last_name } =
+                              props.data.user || {}
+                            return (
+                              <components.Option {...props}>
+                                {`${first_name} ${last_name}`}{' '}
+                                {id == AccountStore.getUserId() && '(You)'}
+                                <div className='list-item-footer faint'>
+                                  {email}
+                                </div>
+                              </components.Option>
+                            )
+                          },
+                        }}
+                        value={{ label: 'Add a user' }}
+                        onChange={(v) => this.toggleUser(v.value)}
+                        options={inactiveUsers.map((user) => ({
+                          label: `${user.first_name || ''} ${
+                            user.last_name || ''
+                          } ${user.email} ${user.id}`,
+                          user,
+                          value: user.id,
+                        }))}
+                      />
+                    </div>
+
                     <PanelSearch
+                      noResultsText={(search) =>
+                        search ? (
+                          <>
+                            No results found for <strong>{search}</strong>
+                          </>
+                        ) : (
+                          'This group has no members'
+                        )
+                      }
                       id='org-members-list'
                       title='Members'
-                      className='mt-5 no-pad overflow-visible'
-                      items={_.sortBy(users, 'first_name')}
+                      className='mt-4 no-pad overflow-visible'
+                      renderSearchWithNoResults
+                      items={_.sortBy(activeUsers, 'first_name')}
                       filterRow={(item, search) => {
-                        const strToSearch = `${item.first_name} ${item.last_name} ${item.id}`
+                        const strToSearch = `${item.first_name} ${item.last_name} ${item.email} ${item.id}`
                         return (
                           strToSearch
                             .toLowerCase()
                             .indexOf(search.toLowerCase()) !== -1
                         )
                       }}
+                      header={
+                        <>
+                          <Row className='table-header'>
+                            <Flex>User</Flex>
+                            <div style={{ paddingLeft: 5, width: widths[0] }}>
+                              Admin
+                            </div>
+                            <div
+                              className='text-right'
+                              style={{ width: widths[1] }}
+                            >
+                              Remove
+                            </div>
+                          </Row>
+                        </>
+                      }
                       renderRow={({ email, first_name, id, last_name }) => {
                         const matchingUser = this.state.users.find(
                           (v) => v.id === id,
                         )
                         const isGroupAdmin = matchingUser?.group_admin
-                        const isEnabled = !!_.find(this.state.users, { id })
                         return (
                           <Row className='list-item' key={id}>
                             <Flex>
@@ -241,32 +299,29 @@ const CreateGroup = class extends Component {
                               </div>
                             </Flex>
                             {Utils.getFlagsmithHasFeature('group_admins') && (
-                              <div style={{ width: 200 }}>
-                                <Select
-                                  isDisabled={!isEnabled}
-                                  value={{
-                                    label: isGroupAdmin
-                                      ? 'Group Admin'
-                                      : 'User',
-                                    value: isGroupAdmin,
+                              <div style={{ width: widths[0] }}>
+                                <Switch
+                                  onChange={(e) => {
+                                    this.toggleUser(id, e, true)
                                   }}
-                                  onInputChange={this.search}
-                                  placeholder={this.props.placeholder}
-                                  onChange={(v) => {
-                                    this.toggleUser(id, v.value, true)
-                                  }}
-                                  options={[
-                                    { label: 'Group Admin', value: true },
-                                    { label: 'User', value: false },
-                                  ]}
+                                  checked={isGroupAdmin}
                                 />
                               </div>
                             )}
-                            <Switch
-                              disabled={!(isAdmin || email !== yourEmail)}
-                              onChange={() => this.toggleUser(id)}
-                              checked={!!_.find(this.state.users, { id })}
-                            />
+                            <div
+                              className='text-right'
+                              style={{ width: widths[1] }}
+                            >
+                              <button
+                                type='button'
+                                disabled={!(isAdmin || email !== yourEmail)}
+                                id='remove-feature'
+                                onClick={() => this.toggleUser(id)}
+                                className='btn btn--with-icon'
+                              >
+                                <RemoveIcon />
+                              </button>
+                            </div>
                           </Row>
                         )
                       }}
@@ -295,7 +350,7 @@ const CreateGroup = class extends Component {
               )}
             </UserGroupsProvider>
           )
-        }
+        }}
       </OrganisationProvider>
     )
   }
