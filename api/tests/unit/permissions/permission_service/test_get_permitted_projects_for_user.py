@@ -2,11 +2,11 @@ import pytest
 from pytest_lazyfixture import lazy_fixture
 
 from permissions.permission_service import get_permitted_projects_for_user
+from projects.models import ProjectPermissionModel
 from projects.permissions import (
     CREATE_ENVIRONMENT,
     DELETE_FEATURE,
     MANAGE_SEGMENTS,
-    PROJECT_PERMISSIONS,
     VIEW_PROJECT,
 )
 
@@ -14,7 +14,9 @@ from projects.permissions import (
 def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(
     admin_user, project, project_two
 ):
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         # Then
         assert get_permitted_projects_for_user(admin_user, permission).count() == 2
 
@@ -31,7 +33,9 @@ def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(
 def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(
     test_user, project, project_admin, project_two
 ):
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         # Then
         assert get_permitted_projects_for_user(test_user, permission).count() == 1
 
@@ -45,7 +49,9 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_group_role,
 ):
     # First, let's assert user does not have access to any project
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         assert get_permitted_projects_for_user(test_user, permission).count() == 0
 
     # Next, let's give user some permissions using `user_permission`
@@ -53,7 +59,9 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_user_permission.permissions.add(CREATE_ENVIRONMENT)
 
     # Next, let's assert the project is returned for those permissions(and not for the other)
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         project_count = get_permitted_projects_for_user(test_user, permission).count()
 
         assert (
@@ -67,7 +75,9 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_user_permission_group.permissions.add(DELETE_FEATURE)
 
     # And assert again
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         project_count = get_permitted_projects_for_user(test_user, permission).count()
 
         assert (
@@ -80,7 +90,9 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_user_role.permissions.add(DELETE_FEATURE)
 
     # And verify again that we can fetch the project using these permissions
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         project_count = get_permitted_projects_for_user(test_user, permission).count()
 
         assert (
@@ -97,7 +109,9 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_group_role.permissions.add(MANAGE_SEGMENTS)
 
     # And, verify that project is returned for those permission
-    for permission, _ in PROJECT_PERMISSIONS:
+    for permission in ProjectPermissionModel.objects.all().values_list(
+        "key", flat=True
+    ):
         project_count = get_permitted_projects_for_user(test_user, permission).count()
 
         assert (
