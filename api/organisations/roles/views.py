@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -28,9 +29,6 @@ class RoleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedIsOrganisationAdminPermission]
 
     def get_queryset(self):
-        if "organisation_pk" not in self.kwargs:
-            raise ValidationError("Missing required path parameter 'organisation_pk'")
-
         return Role.objects.filter(organisation_id=self.kwargs["organisation_pk"])
 
     def perform_update(self, serializer):
@@ -42,51 +40,11 @@ class RoleViewSet(viewsets.ModelViewSet):
         serializer.save(organisation_id=organisation_id)
 
 
-class RoleEnvironmentPermissionViewSet(viewsets.ModelViewSet):
-    serializer_class = RoleEnvironmentPermissionSerializer
-    permission_classes = [IsAuthenticated, NestedRolePermission]
-
-    def get_queryset(self):
-        if not self.kwargs.get("environment_api_key"):
-            raise ValidationError("Missing environment key.")
-
-        return RoleEnvironmentPermission.objects.filter(
-            environment__api_key=self.kwargs["environment_api_key"]
-        )
-
-    def perform_create(self, serializer):
-        role_pk = int(self.kwargs["role_pk"])
-        serializer.save(role_id=role_pk)
-
-    def perform_update(self, serializer):
-        role_pk = int(self.kwargs["role_pk"])
-        serializer.save(role_id=role_pk)
-
-
-class RoleProjectPermissionViewSet(viewsets.ModelViewSet):
-    serializer_class = RoleProjectPermissionSerializer
-    permission_classes = [IsAuthenticated, NestedRolePermission]
-
-    def get_queryset(self):
-        if not self.kwargs.get("environment_api_key"):
-            raise ValidationError("Missing environment key.")
-
-        return RoleProjectPermission.objects.filter(
-            environment__api_key=self.kwargs["environment_api_key"]
-        )
-
-    def perform_create(self, serializer):
-        role = Role.objects.get(id=self.kwargs["role_pk"])
-        serializer.save(role=role)
-
-
 class UserRoleViewSet(viewsets.ModelViewSet):
     serializer_class = UserRoleSerializer
     permission_classes = [IsAuthenticated, NestedRolePermission]
 
     def get_queryset(self):
-        if "role_pk" not in self.kwargs:
-            raise ValidationError("Missing required path parameter 'role_pk'")
         return UserRole.objects.filter(role_id=self.kwargs["role_pk"])
 
     def perform_update(self, serializer):
@@ -103,8 +61,6 @@ class GroupRoleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedRolePermission]
 
     def get_queryset(self):
-        if "role_pk" not in self.kwargs:
-            raise ValidationError("Missing required path parameter 'role_pk'")
         return GroupRole.objects.filter(role_id=self.kwargs["role_pk"])
 
     def perform_update(self, serializer):
@@ -114,3 +70,45 @@ class GroupRoleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         role_id = int(self.kwargs.get("role_pk"))
         serializer.save(role_id=role_id)
+
+
+class RoleEnvironmentPermissionViewSet(viewsets.ModelViewSet):
+    serializer_class = RoleEnvironmentPermissionSerializer
+    permission_classes = [IsAuthenticated, NestedRolePermission]
+
+    def get_queryset(self):
+        q = Q()
+        if self.action == "list":
+            environment_id = self.request.query_params.get("environment")
+            if not environment_id:
+                raise ValidationError("'environment' GET parameter is required.")
+            q &= Q(environment__id=environment_id)
+
+        return RoleEnvironmentPermission.objects.filter(q)
+
+    def perform_create(self, serializer):
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)
+
+    def perform_update(self, serializer):
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)
+
+
+class RoleProjectPermissionViewSet(viewsets.ModelViewSet):
+    serializer_class = RoleProjectPermissionSerializer
+    permission_classes = [IsAuthenticated, NestedRolePermission]
+
+    def get_queryset(self):
+        q = Q()
+        if self.action == "list":
+            project_id = self.request.query_params.get("project")
+            if not project_id:
+                raise ValidationError("'project' GET parameter is required.")
+            q &= Q(project__id=project_id)
+
+        return RoleProjectPermission.objects.filter(q)
+
+    def perform_create(self, serializer):
+        role = Role.objects.get(id=self.kwargs["role_pk"])
+        serializer.save(role=role)

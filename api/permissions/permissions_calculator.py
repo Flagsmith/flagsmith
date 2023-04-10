@@ -2,13 +2,12 @@ import typing
 from dataclasses import dataclass, field
 from functools import reduce
 
-from django.db.models import Q, Value
+from django.db.models import Q
 
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from organisations.models import Organisation
 from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
@@ -18,12 +17,10 @@ from organisations.roles.models import (
     RoleOrganisationPermission,
     RoleProjectPermission,
 )
-from permissions.permission_service import is_user_organisation_admin
 from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from users.models import FFAdminUser
 
 
 @dataclass
@@ -74,11 +71,13 @@ class PermissionData:
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
     roles: typing.List[RolePermissionData]
+    is_organisation_admin: bool = False
 
     @property
     def admin(self) -> bool:
         return (
-            self.user.admin
+            self.is_organisation_admin
+            or self.user.admin
             or any(group.admin for group in self.groups)
             or any(role.admin for role in self.roles)
         )
@@ -101,8 +100,6 @@ class PermissionData:
 
 
 class BasePermissionCalculator:
-    pk_name = None
-
     def __init__(self, pk: int):
         self.pk = pk
 
@@ -115,8 +112,11 @@ class BasePermissionCalculator:
     def _get_role_permission_qs(self, user_id: int):
         raise NotImplementedError()
 
-    def get_permission_data(self, user_id: int) -> PermissionData:
+    def get_permission_data(
+        self, user_id: int, is_organisation_admin: bool = False
+    ) -> PermissionData:
         return PermissionData(
+            is_organisation_admin=is_organisation_admin,
             user=self._get_user_permission_data(user_id),
             groups=self._get_groups_permission_data(user_id),
             roles=self._get_roles_permission_data(user_id),
@@ -202,13 +202,9 @@ class BasePermissionCalculator:
 
 class OrganisationPermissionsCalculator(BasePermissionCalculator):
     def _get_user_permission_qs(self, user_id: int):
-        user = FFAdminUser.objects.get(id=user_id)
-        organisation = Organisation.objects.get(id=self.pk)
-        is_admin = is_user_organisation_admin(user, organisation)
-
         return UserOrganisationPermission.objects.filter(
             user=user_id, organisation_id=self.pk
-        ).annotate(admin=Value(is_admin))
+        )
 
     def _get_group_permission_qs(self, user_id: int):
         return UserPermissionGroupOrganisationPermission.objects.filter(

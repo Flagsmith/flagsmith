@@ -249,9 +249,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             pk=org.id
         )
         permission_data = organisation_permissions_calculator.get_permission_data(
-            user_id=request.user.id
+            user_id=request.user.id,
+            is_organisation_admin=request.user.is_organisation_admin(org),
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
+
         return Response(serializer.data)
 
 

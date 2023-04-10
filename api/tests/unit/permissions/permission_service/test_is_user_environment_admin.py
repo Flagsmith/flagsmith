@@ -121,9 +121,14 @@ def test_is_user_environment_admin_returns_false_for_user_with_no_permission(
 def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_org(
     admin_user,
     environment,
-    other_environment,
+    organisation_two_project_one_environment_one,
 ):
-    assert is_user_environment_admin(admin_user, other_environment) is False
+    assert (
+        is_user_environment_admin(
+            admin_user, organisation_two_project_one_environment_one
+        )
+        is False
+    )
 
 
 def test_is_user_environment_admin_returns_false_for_user_with_incorrect_permission(
@@ -136,8 +141,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_incorrect_permiss
     user_project_permission_group,
     user_environment_permission_group,
     group_role,
-    other_project,
-    other_environment,
+    organisation_two_project_one_environment_one,
     environment,
 ):
     # Given
@@ -165,4 +169,9 @@ def test_is_user_environment_admin_returns_false_for_user_with_incorrect_permiss
     )
 
     # Then - the user should not have admin permission on the other environment
-    assert is_user_environment_admin(admin_user, other_environment) is False
+    assert (
+        is_user_environment_admin(
+            admin_user, organisation_two_project_one_environment_one
+        )
+        is False
+    )

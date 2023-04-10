@@ -14,7 +14,10 @@ class NestedRolePermission(NestedIsOrganisationAdminPermission):
             roles_pk = view.kwargs.get("role_pk")
             with suppress(ObjectDoesNotExist):
                 role = Role.objects.get(pk=roles_pk)
-                return role.organisation.id == int(view.kwargs.get("organisation_pk"))
+                if role.organisation.id == int(view.kwargs.get("organisation_pk")):
+                    if view.action == "create":
+                        return True
+                    return True
         return False
 
     def has_object_permission(self, request, view, obj):

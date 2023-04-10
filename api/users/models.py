@@ -206,7 +206,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.date_joined
 
-    def get_user_organisation(self, organisation):
+    def get_user_organisation(self, organisation) -> UserOrganisation:
         try:
             return self.userorganisation_set.get(organisation=organisation)
         except UserOrganisation.DoesNotExist:
@@ -267,8 +267,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         self, organisation: Organisation, permission_key: str
     ) -> bool:
         return user_has_organisation_permission(self, organisation, permission_key)
-        if self.is_organisation_admin(organisation):
-            return True
 
     def is_group_admin(self, group_id) -> bool:
         return UserPermissionGroupMembership.objects.filter(
