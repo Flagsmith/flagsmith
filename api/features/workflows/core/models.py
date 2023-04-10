@@ -226,6 +226,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
             html_message=render_to_string(
                 "workflows_core/change_request_assignee_notification.html", context
             ),
+            fail_silently=True,
         )
 
     @hook(AFTER_CREATE, when="approved_at", is_not=None)
@@ -249,6 +250,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
                 "workflows_core/change_request_approved_author_notification.html",
                 context,
             ),
+            fail_silently=True,
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
