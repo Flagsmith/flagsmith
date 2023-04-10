@@ -4,6 +4,6 @@ const flagsmithEnvironment = Project.flagsmith
 const flagsmithAPI = Project.flagsmithClientAPI
 if (flagsmithEnvironment && flagsmithAPI) {
   process.execSync(
-    `FLAGSMITH_ENVIRONMENT=${flagsmithEnvironment} npx flagsmith get -a ${flagsmithAPI} -o ./env/flagsmith.json`,
+    `FLAGSMITH_ENVIRONMENT=${flagsmithEnvironment} npx flagsmith get -p -a ${flagsmithAPI} -o ./env/flagsmith.json`,
   )
 }
