@@ -6,7 +6,7 @@ from rest_framework import status
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 
 
-def test_create_project_permssion_for_role(admin_client, role, project, organisation):
+def test_create_project_permission_for_role(admin_client, role, project, organisation):
     # Given
     url = reverse(
         "api-v1:organisations:roles-projects-permissions-list",
@@ -76,7 +76,7 @@ def test_retrieve_project_permission_for_role(
     assert response.data["admin"] is False
 
 
-def test_update_project_permssion_for_role(
+def test_update_project_permission_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given
@@ -102,7 +102,7 @@ def test_update_project_permssion_for_role(
     assert response.data["admin"] is False
 
 
-def test_delete_project_permssion_for_role(
+def test_delete_project_permission_for_role(
     admin_client, role, project, organisation, role_project_permission
 ):
     # Given

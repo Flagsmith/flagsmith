@@ -9,7 +9,7 @@ from environments.permissions.constants import (
 )
 
 
-def test_create_environment_permssion_for_role(
+def test_create_environment_permission_for_role(
     admin_client, role, environment, organisation
 ):
     # Given
@@ -35,7 +35,7 @@ def test_create_environment_permssion_for_role(
     assert response.data["admin"] is False
 
 
-def test_retrieve_environment_permssion_for_role(
+def test_retrieve_environment_permission_for_role(
     admin_client, role, environment, organisation, role_environment_permission
 ):
     # Given
@@ -55,7 +55,7 @@ def test_retrieve_environment_permssion_for_role(
     assert response.data["admin"] == role_environment_permission.admin
 
 
-def test_list_environment_permssion_for_role(
+def test_list_environment_permission_for_role(
     admin_client, role, environment, organisation, role_environment_permission
 ):
     # Given
@@ -77,7 +77,7 @@ def test_list_environment_permssion_for_role(
     assert response.data["results"][0]["admin"] == role_environment_permission.admin
 
 
-def test_update_environment_permssion_for_role(
+def test_update_environment_permission_for_role(
     admin_client, role, environment, organisation, role_environment_permission
 ):
     # Given
@@ -103,7 +103,7 @@ def test_update_environment_permssion_for_role(
     assert response.data["admin"] is False
 
 
-def test_delete_environment_permssion_for_role(
+def test_delete_environment_permission_for_role(
     admin_client, role, environment, organisation, role_environment_permission
 ):
     # Given
