@@ -1,3 +1,6 @@
+import pytest
+from pytest_lazyfixture import lazy_fixture
+
 from organisations.roles.models import (
     RoleEnvironmentPermission,
     RoleProjectPermission,
@@ -10,102 +13,34 @@ def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, enviro
     assert is_user_environment_admin(admin_user, environment) is True
 
 
-def test_is_user_environment_admin_returns_true_for_project_admin_through_user(
-    test_user, environment, user_project_permission
+@pytest.mark.parametrize(
+    "project_admin",
+    [
+        (lazy_fixture("project_admin_via_user_permission")),
+        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lazy_fixture("project_admin_via_user_role")),
+        (lazy_fixture("project_admin_via_group_role")),
+    ],
+)
+def test_is_user_environment_admin_returns_true_for_project_admin(
+    test_user, environment, project_admin
 ):
-    # Given
-    user_project_permission.admin = True
-    user_project_permission.save()
-
     # Then
     assert is_user_environment_admin(test_user, environment) is True
 
 
-def test_is_user_envionment_admin_returns_for_project_admin_through_user_role(
-    test_user, environment, role_project_permission, user_role
+@pytest.mark.parametrize(
+    "environment_admin",
+    [
+        (lazy_fixture("environment_admin_via_user_permission")),
+        (lazy_fixture("environment_admin_via_user_permission_group")),
+        (lazy_fixture("environment_admin_via_user_role")),
+        (lazy_fixture("environment_admin_via_group_role")),
+    ],
+)
+def test_is_user_environment_admin_returns_true_for_environment_admin(
+    test_user, environment, environment_admin
 ):
-    # Given
-    role_project_permission.admin = True
-    role_project_permission.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_environment_admin_returns_true_for_project_admin_through_group_role(
-    test_user, environment, role_project_permission, user_permission_group, group_role
-):
-    # Given
-    user_permission_group.users.add(test_user)
-
-    role_project_permission.admin = True
-    role_project_permission.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_environment_admin_returns_true_for_project_admin_through_user_group(
-    test_user, environment, user_project_permission_group, user_permission_group
-):
-    # Given
-    user_permission_group.users.add(test_user)
-
-    user_project_permission_group.admin = True
-    user_project_permission_group.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_environment_admin_returns_true_for_environment_admin_through_user(
-    test_user, environment, user_environment_permission
-):
-    # Given
-    user_environment_permission.admin = True
-    user_environment_permission.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_environment_admin_returns_true_for_environment_admin_through_user_group(
-    test_user, environment, user_environment_permission_group, user_permission_group
-):
-    # Given
-    user_permission_group.users.add(test_user)
-
-    user_environment_permission_group.admin = True
-    user_environment_permission_group.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_envionment_admin_returns_for_environment_admin_through_user_role(
-    test_user, environment, role_environment_permission, user_role
-):
-    # Given
-    role_environment_permission.admin = True
-    role_environment_permission.save()
-
-    # Then
-    assert is_user_environment_admin(test_user, environment) is True
-
-
-def test_is_user_environment_admin_returns_true_for_environment_admin_through_group_role(
-    test_user,
-    environment,
-    role_environment_permission,
-    user_permission_group,
-    group_role,
-):
-    # Given
-    user_permission_group.users.add(test_user)
-
-    role_environment_permission.admin = True
-    role_environment_permission.save()
-
     # Then
     assert is_user_environment_admin(test_user, environment) is True
 

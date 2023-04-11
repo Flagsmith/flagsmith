@@ -1,3 +1,6 @@
+import pytest
+from pytest_lazyfixture import lazy_fixture
+
 from organisations.roles.models import RoleProjectPermission, UserRole
 from permissions.permission_service import is_user_project_admin
 
@@ -8,64 +11,21 @@ def test_is_user_project_admin_returns_true_for_org_admin(
     assert is_user_project_admin(admin_user, project) is True
 
 
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_user(
-    organisation, test_user, project, user_project_permission
-):
-    # Given
-    user_project_permission.admin = True
-    user_project_permission.save()
-
-    # Then
-    assert is_user_project_admin(test_user, project) is True
-
-
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_user_group(
+@pytest.mark.parametrize(
+    "project_admin",
+    [
+        (lazy_fixture("project_admin_via_user_permission")),
+        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lazy_fixture("project_admin_via_user_role")),
+        (lazy_fixture("project_admin_via_group_role")),
+    ],
+)
+def test_is_user_project_admin_returns_true_for_project_admin(
     organisation,
     test_user,
     project,
-    user_project_permission_group,
-    user_permission_group,
+    project_admin,
 ):
-    # Given
-    user_permission_group.users.add(test_user)
-
-    user_project_permission_group.admin = True
-    user_project_permission_group.save()
-
-    # Then
-    assert is_user_project_admin(test_user, project) is True
-
-
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_user_role(
-    organisation,
-    test_user,
-    project,
-    user_role,
-    role_project_permission,
-):
-    # Given
-    role_project_permission.admin = True
-    role_project_permission.save()
-
-    # Then
-    assert is_user_project_admin(test_user, project) is True
-
-
-def test_is_user_project_admin_returns_true_for_user_with_admin_permission_through_group_role(
-    organisation,
-    test_user,
-    project,
-    group_role,
-    role_project_permission,
-    user_permission_group,
-):
-    # Given
-    # Add the user to the group
-    user_permission_group.users.add(test_user)
-
-    role_project_permission.admin = True
-    role_project_permission.save()
-
     # Then
     assert is_user_project_admin(test_user, project) is True
 
