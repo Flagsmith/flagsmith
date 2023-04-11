@@ -18,7 +18,6 @@ from environments.identities.serializers import (
     SDKIdentitiesQuerySerializer,
     SDKIdentitiesResponseSerializer,
 )
-from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
@@ -29,7 +28,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
-from features.serializers import FeatureStateSerializerFull
+from features.serializers import SDKFeatureStateSerializer
 from integrations.integration import (
     IDENTITY_INTEGRATIONS,
     identify_integrations,
@@ -179,6 +178,8 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
+        self.identity = identity
+
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
                 args=(
@@ -215,6 +216,8 @@ class SDKIdentities(SDKAPIView):
             # only set it if the request has the attribute to ensure that the
             # documentation works correctly still
             context["environment"] = self.request.environment
+            if getattr(self, "identity", None):
+                context["identity"] = self.identity
         return context
 
     @swagger_auto_schema(
@@ -226,6 +229,7 @@ class SDKIdentities(SDKAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        self.identity = instance.get("identity")
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
@@ -241,7 +245,7 @@ class SDKIdentities(SDKAPIView):
         # trait values are serialized correctly
         response_serializer = IdentifyWithTraitsSerializer(
             instance=instance,
-            context={"identity": instance.get("identity")},  # todo: improve this
+            context=self.get_serializer_context(),
         )
         return Response(
             response_serializer.data,
@@ -253,11 +257,11 @@ class SDKIdentities(SDKAPIView):
     def _get_single_feature_state_response(
         self, identity, feature_name, headers: typing.Dict[str, typing.Any]
     ):
+        context = self.get_serializer_context()
+
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
-                serializer = FeatureStateSerializerFull(
-                    feature_state, context={"identity": identity}
-                )
+                serializer = SDKFeatureStateSerializer(feature_state, context=context)
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
                 )
@@ -276,15 +280,17 @@ class SDKIdentities(SDKAPIView):
         :return: Response containing lists of both serialized flags and traits
         """
         all_feature_states = identity.get_all_feature_states()
-        serialized_flags = FeatureStateSerializerFull(
-            all_feature_states, many=True, context={"identity": identity}
-        )
-        serialized_traits = TraitSerializerBasic(
-            identity.identity_traits.all(), many=True
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(
+            {
+                "flags": all_feature_states,
+                "traits": identity.identity_traits.all(),
+            },
+            context=self.get_serializer_context(),
         )
 
         identify_integrations(identity, all_feature_states)
 
-        response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
-
-        return Response(data=response, status=status.HTTP_200_OK, headers=headers)
+        return Response(
+            data=serializer.data, status=status.HTTP_200_OK, headers=headers
+        )

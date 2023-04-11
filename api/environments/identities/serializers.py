@@ -9,7 +9,10 @@ from environments.identities.models import Identity
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
-from features.serializers import FeatureStateSerializerFull
+from features.serializers import (
+    FeatureStateSerializerFull,
+    SDKFeatureStateSerializer,
+)
 
 
 class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):
@@ -56,7 +59,7 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):
             help_text="Can be of type string, boolean, float or integer."
         )
 
-    flags = serializers.ListField(child=FeatureStateSerializerFull())
+    flags = serializers.ListField(child=SDKFeatureStateSerializer())
     traits = serializers.ListSerializer(child=_TraitSerializer())
 
 

@@ -11,9 +11,14 @@ from environments.identities.serializers import (
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
-from features.serializers import FeatureStateSerializerFull
+from features.serializers import (
+    FeatureStateSerializerFull,
+    SDKFeatureStateSerializer,
+)
 from integrations.integration import identify_integrations
 from segments.serializers import SegmentSerializerBasic
+
+from .serializers_mixins import HideSensitiveFieldsSerializerMixin
 
 
 class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
@@ -114,10 +119,14 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     segments = SegmentSerializerBasic(many=True)
 
 
-class IdentifyWithTraitsSerializer(serializers.Serializer):
+class IdentifyWithTraitsSerializer(
+    HideSensitiveFieldsSerializerMixin, serializers.Serializer
+):
     identifier = serializers.CharField(write_only=True, required=True)
     traits = TraitSerializerBasic(required=False, many=True)
-    flags = FeatureStateSerializerFull(read_only=True, many=True)
+    flags = SDKFeatureStateSerializer(read_only=True, many=True)
+
+    sensitive_fields = ("traits",)
 
     def save(self, **kwargs):
         """
