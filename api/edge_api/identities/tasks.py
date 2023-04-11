@@ -52,7 +52,7 @@ def call_environment_webhook_for_feature_state_change(
             value=previous_value,
         )
 
-    if new_value is not None and new_value is not None:
+    if new_enabled_state is not None and new_value is not None:
         data["new_state"] = Webhook.generate_webhook_feature_state_data(
             feature=feature,
             environment=environment,
