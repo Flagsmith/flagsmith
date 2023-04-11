@@ -133,13 +133,14 @@ class RecurringTask(AbstractBaseTask):
     @property
     def should_execute(self) -> bool:
         now = timezone.now()
-        if self.first_run_time and self.first_run_time > now.time():
-            return False
-
         last_task_run = self.task_runs.order_by("-started_at").first()
-        # if we have never run this task, then we should execute it
+
         if not last_task_run:
-            return True
+            # If we have never run this task, then we should execute it only if
+            # the time has passed after which we want to ensure this task runs.
+            # This allows us to control when intensive tasks should be run.
+            return not (self.first_run_time and self.first_run_time > now.time())
+
         # if the last run was at t- run_every, then we should execute it
         if (timezone.now() - last_task_run.started_at) >= self.run_every:
             return True
