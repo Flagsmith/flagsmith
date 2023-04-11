@@ -272,9 +272,11 @@ const CreateGroup = class extends Component {
                         <>
                           <Row className='table-header'>
                             <Flex>User</Flex>
-                            <div style={{ paddingLeft: 5, width: widths[0] }}>
-                              Admin
-                            </div>
+                            {Utils.getFlagsmithHasFeature('group_admins') && (
+                              <div style={{ paddingLeft: 5, width: widths[0] }}>
+                                Admin
+                              </div>
+                            )}
                             <div
                               className='text-right'
                               style={{ width: widths[1] }}
