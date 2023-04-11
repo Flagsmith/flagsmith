@@ -9,7 +9,7 @@ import TabItem from 'components/base/forms/TabItem'
 import RegexTester from 'components/RegexTester'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-
+import JSONReference from 'components/JSONReference'
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -164,6 +164,7 @@ const ProjectSettingsPage = class extends Component {
                   <Tabs inline transparent uncontrolled>
                     <TabItem tabLabel='General' tabIcon='ion-md-settings'>
                       <div className='mt-4'>
+                        <JSONReference title='Project' json={project} />
                         <h3>Project Name</h3>
                         <FormGroup>
                           <form onSubmit={saveProject}>
