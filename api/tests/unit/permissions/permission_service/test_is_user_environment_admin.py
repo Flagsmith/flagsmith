@@ -66,7 +66,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     )
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_incorrect_permission(
+def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(
     admin_user,
     project,
     organisation,
@@ -110,3 +110,5 @@ def test_is_user_environment_admin_returns_false_for_user_with_incorrect_permiss
         )
         is False
     )
+    # and the user should have admin permission on the environment
+    assert is_user_environment_admin(admin_user, environment) is False
