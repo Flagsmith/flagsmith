@@ -163,7 +163,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
-    def is_organisation_admin(self, organisation):
+    def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):
         return is_user_organisation_admin(self, organisation)
 
     def get_admin_organisations(self):
@@ -202,12 +202,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.date_joined
 
-    def get_user_organisation(self, organisation) -> UserOrganisation:
+    def get_user_organisation(
+        self, organisation: typing.Union["Organisation", int]
+    ) -> UserOrganisation:
         try:
             return self.userorganisation_set.get(organisation=organisation)
         except UserOrganisation.DoesNotExist:
             logger.warning(
-                "User %d is not part of organisation %d" % (self.id, organisation.id)
+                "User %d is not part of organisation %d"
+                % (self.id, getattr(organisation, "id", organisation))
             )
 
     def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
