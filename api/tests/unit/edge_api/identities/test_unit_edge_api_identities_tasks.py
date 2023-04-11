@@ -14,8 +14,12 @@ from environments.models import Webhook
 from webhooks.webhooks import WebhookEventType
 
 
+@pytest.mark.parametrize(
+    "new_enabled_state, new_value",
+    ((True, "foo"), (False, "foo"), (True, None), (False, None)),
+)
 def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
-    mocker, environment, feature, identity, admin_user
+    mocker, environment, feature, identity, admin_user, new_value, new_enabled_state
 ):
     # Given
     mock_call_environment_webhooks = mocker.patch(
@@ -31,8 +35,6 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     )
 
     now_isoformat = timezone.now().isoformat()
-    new_enabled_state = True
-    new_value = "foo"
 
     # When
     call_environment_webhook_for_feature_state_change(
@@ -120,8 +122,26 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["timestamp"] == now_isoformat
 
 
+@pytest.mark.parametrize(
+    "previous_enabled_state, previous_value, new_enabled_state, new_value",
+    (
+        (True, None, True, "foo"),
+        (True, "foo", False, "foo"),
+        (True, "foo", True, "bar"),
+        (True, None, False, None),
+        (False, None, True, None),
+    ),
+)
 def test_call_environment_webhook_for_feature_state_change_with_both_states(
-    mocker, environment, feature, identity, admin_user
+    mocker,
+    environment,
+    feature,
+    identity,
+    admin_user,
+    previous_enabled_state,
+    previous_value,
+    new_enabled_state,
+    new_value,
 ):
     # Given
     mock_call_environment_webhooks = mocker.patch(
@@ -137,11 +157,6 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     )
 
     now_isoformat = timezone.now().isoformat()
-    previous_enabled_state = False
-    previous_value = "foo"
-
-    new_enabled_state = True
-    new_value = "bar"
 
     # When
     call_environment_webhook_for_feature_state_change(
