@@ -1,4 +1,7 @@
 from django.db.models import Q
+from django.utils.decorators import method_decorator
+from drf_yasg2 import openapi
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -72,6 +75,20 @@ class GroupRoleViewSet(viewsets.ModelViewSet):
         serializer.save(role_id=role_id)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment to filter by.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            )
+        ]
+    ),
+)
 class RoleEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
     serializer_class = RoleEnvironmentPermissionSerializer
     permission_classes = [IsAuthenticated, NestedRolePermission]
@@ -95,6 +112,20 @@ class RoleEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
         serializer.save(role_id=role_pk)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "project",
+                openapi.IN_QUERY,
+                "ID of the project to filter by.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            )
+        ]
+    ),
+)
 class RoleProjectPermissionsViewSet(viewsets.ModelViewSet):
     serializer_class = RoleProjectPermissionSerializer
     permission_classes = [IsAuthenticated, NestedRolePermission]
