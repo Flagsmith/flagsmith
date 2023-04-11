@@ -15,15 +15,20 @@ def is_user_organisation_admin(
 ) -> bool:
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None:
-        if user_organisation.role == OrganisationRole.ADMIN.name:
-            return True
+        return user_organisation.role == OrganisationRole.ADMIN.name
     return False
 
 
 def is_user_project_admin(user: "FFAdminUser", project: Project) -> bool:
-    if is_user_organisation_admin(user, project.organisation):
-        return True
-    return _is_user_object_admin(user, project)
+    return is_user_organisation_admin(
+        user, project.organisation
+    ) or _is_user_object_admin(user, project)
+
+
+def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> bool:
+    return is_user_project_admin(user, environment.project) or _is_user_object_admin(
+        user, environment
+    )
 
 
 def get_permitted_projects_for_user(
@@ -37,7 +42,7 @@ def get_permitted_projects_for_user(
         - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
         - User is an admin for the organisation the project belongs to
         - User has a role attached with the required permissions
-        - User is in a UserPermissionGroup has a role attached with the required permissions
+        - User is in a UserPermissionGroup that has a role attached with the required permissions
     """
     base_query = _get_base_permission_query(user, permission_key)
 
@@ -50,7 +55,7 @@ def get_permitted_projects_for_user(
 
 
 def get_permitted_environments_for_user(
-    user,
+    user: "FFAdminUser",
     project: Project,
     permission_key: str,
 ) -> QuerySet[Environment]:
@@ -80,6 +85,7 @@ def user_has_organisation_permission(
 ) -> bool:
     if is_user_organisation_admin(user, organisation):
         return True
+
     user_query = _user_permission_query(user, permission_key, allow_admin=False)
     group_query = _group_permission_query(user, permission_key, allow_admin=False)
 
@@ -90,14 +96,6 @@ def user_has_organisation_permission(
     query = user_query | group_query | role_query
 
     return Organisation.objects.filter(query).exists()
-
-
-def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> bool:
-    return (
-        is_user_organisation_admin(user, environment.project.organisation)
-        or is_user_project_admin(user, environment.project)
-        or _is_user_object_admin(user, environment)
-    )
 
 
 def _is_user_object_admin(
