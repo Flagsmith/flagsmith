@@ -87,7 +87,7 @@ def test_delete_role(organisation, admin_client, role):
 
 
 def test_create_role_organisation_id_in_body_is_read_only(
-    organisation, admin_client, other_organisation
+    organisation, admin_client, organisation_two
 ):
     # Given
     url = reverse(
@@ -96,7 +96,7 @@ def test_create_role_organisation_id_in_body_is_read_only(
     )
     data = {
         "name": "a role",
-        "organisation": other_organisation.id,
+        "organisation": organisation_two.id,
     }
 
     # When

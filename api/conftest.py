@@ -490,9 +490,3 @@ def manage_user_group_permission(db):
 @pytest.fixture
 def role_organisation_permission(role, organisation):
     return RoleOrganisationPermission.objects.create(role=role)
-
-
-@pytest.fixture()
-def other_organisation(db):
-    org = Organisation.objects.create(name="Other Org")
-    return org

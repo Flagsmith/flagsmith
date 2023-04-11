@@ -114,13 +114,13 @@ def test_create_user_role_returns_400_for_user_in_different_organisation(
     admin_client,
     role,
     test_user,
-    other_organisation,
+    organisation_two,
     django_user_model,
 ):
     # Given
     # Create a user in another organisation
     other_user = django_user_model.objects.create(username="other_user")
-    other_user.add_organisation(other_organisation, role=OrganisationRole.ADMIN)
+    other_user.add_organisation(organisation_two, role=OrganisationRole.ADMIN)
 
     url = reverse(
         "api-v1:organisations:user-roles-list",

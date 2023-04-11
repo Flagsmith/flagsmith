@@ -107,11 +107,11 @@ def test_update_group_role(
 
 
 def test_create_role_group_returns_400_for_user_group_in_different_organisation(
-    organisation, other_organisation, admin_client, role
+    organisation, organisation_two, admin_client, role
 ):
     # Given
     other_user_permission_group = UserPermissionGroup.objects.create(
-        name="Other Group", organisation=other_organisation
+        name="Other Group", organisation=organisation_two
     )
     url = reverse(
         "api-v1:organisations:group-roles-list",
