@@ -31,6 +31,7 @@ from users.models import (
     UserPermissionGroupMembership,
 )
 from users.serializers import (
+    ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
     UserIdsSerializer,
     UserListSerializer,
@@ -145,7 +146,6 @@ def password_reset_redirect(request, uidb64, token):
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
-    serializer_class = UserPermissionGroupSerializerDetail
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
@@ -161,6 +161,11 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
             )
 
         return qs
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return UserPermissionGroupSerializerDetail
+        return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

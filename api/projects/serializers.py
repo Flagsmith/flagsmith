@@ -9,10 +9,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from users.serializers import (
-    UserListSerializer,
-    UserPermissionGroupSerializerList,
-)
+from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -84,4 +81,4 @@ class CreateUpdateUserPermissionGroupProjectPermissionSerializer(
 class ListUserPermissionGroupProjectPermissionSerializer(
     CreateUpdateUserPermissionGroupProjectPermissionSerializer
 ):
-    group = UserPermissionGroupSerializerList()
+    group = UserPermissionGroupSerializer()
