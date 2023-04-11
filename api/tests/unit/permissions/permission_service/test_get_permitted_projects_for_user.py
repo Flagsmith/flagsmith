@@ -48,7 +48,7 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_user_role,
     project_permission_using_group_role,
 ):
-    # First, let's assert user does not have access to any project
+    # First, let's assert that the user does not have access to any project
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
@@ -58,7 +58,7 @@ def test_get_permitted_projects_for_user_returns_correct_project(
     project_permission_using_user_permission.permissions.add(VIEW_PROJECT)
     project_permission_using_user_permission.permissions.add(CREATE_ENVIRONMENT)
 
-    # Next, let's assert the project is returned for those permissions(and not for the other)
+    # Next, let's assert that the project is returned only for those permissions (and not for others).
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):

@@ -216,7 +216,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
         return get_permitted_projects_for_user(self, permission_key)
 
-    def has_project_permission(self, permission, project) -> bool:
+    def has_project_permission(self, permission: str, project: Project) -> bool:
         if self.is_project_admin(project):
             return True
         return project in self.get_permitted_projects(permission)

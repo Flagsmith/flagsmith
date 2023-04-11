@@ -79,7 +79,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
     environment_permission_using_user_role,
     environment_permission_using_group_role,
 ):
-    # First, let's assert user does not have access to any environment
+    # First, let's assert that the user does not have access to any environment
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
@@ -91,13 +91,14 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
     environment_permission_using_user_permission.permissions.add(VIEW_ENVIRONMENT)
     environment_permission_using_user_permission.permissions.add(UPDATE_FEATURE_STATE)
 
-    # Next, let's assert the environment is returned for those permissions(and not for the other)
+    # Next, let's assert that the environment is returned only for those permissions (and not for others).
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         environment_count = get_permitted_environments_for_user(
             test_user, project, permission
         ).count()
+
         assert (
             environment_count == 0
             if permission not in [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
@@ -150,6 +151,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
             ]
             else 1
         )
+
     # Finally, let's give permissions using `group_role`
     environment_permission_using_group_role.permissions.add(CREATE_CHANGE_REQUEST)
 
