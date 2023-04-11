@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
-def is_user_organisation_admin(user: "FFAdminUser", organisation: Organisation) -> bool:
+def is_user_organisation_admin(
+    user: "FFAdminUser", organisation: Union[Organisation, int]
+) -> bool:
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None:
         if user_organisation.role == OrganisationRole.ADMIN.name:
@@ -37,7 +39,7 @@ def get_permitted_projects_for_user(
         - User has a role attached with the required permissions
         - User is in a UserPermissionGroup has a role attached with the required permissions
     """
-    base_query = _get_base_query(user, permission_key)
+    base_query = _get_base_permission_query(user, permission_key)
 
     organisation_query = Q(
         organisation__userorganisation__user=user,
@@ -67,7 +69,7 @@ def get_permitted_environments_for_user(
     if is_user_project_admin(user, project):
         return project.environments.all()
 
-    query = _get_base_query(user, permission_key)
+    query = _get_base_permission_query(user, permission_key)
     query = query & Q(project=project)
 
     return Environment.objects.filter(query).distinct().defer("description")
@@ -78,8 +80,8 @@ def user_has_organisation_permission(
 ) -> bool:
     if is_user_organisation_admin(user, organisation):
         return True
-    user_query = _user_query(user, permission_key, allow_admin=False)
-    group_query = _group_query(user, permission_key, allow_admin=False)
+    user_query = _user_permission_query(user, permission_key, allow_admin=False)
+    group_query = _group_permission_query(user, permission_key, allow_admin=False)
 
     role_query = Q(
         Q(role__userrole__user=user) | Q(role__grouprole__group__users=user)
@@ -101,33 +103,23 @@ def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> 
 def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project | Environment]
 ) -> bool:
-    query = _get_base_query(user)
+    query = _get_base_permission_query(user)
     query = query & Q(id=object_.id)
     return type(object_).objects.filter(query).exists()
 
 
-def _get_base_query(
+def _get_base_permission_query(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
-    # TODO: the comment
-    """
-    Get all objects of the given model that the user has the given permissions for.
-    Rules:
-        - User has the required permissions directly (UserObjectPermission)
-        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupObjectPermissions)
-        - User is an admin for the project or organisation the object belongs to
-        - User has a role attached with the required permissions
-        - User is in a UserPermissionGroup has a role attached with the required permissions
-    """
-    user_query = _user_query(user, permission_key, allow_admin)
-    group_query = _group_query(user, permission_key, allow_admin)
-    role_query = _role_query(user, permission_key, allow_admin)
+    user_query = _user_permission_query(user, permission_key, allow_admin)
+    group_query = _group_permission_query(user, permission_key, allow_admin)
+    role_query = _role_permission_query(user, permission_key, allow_admin)
 
     query = user_query | group_query | role_query
     return query
 
 
-def _user_query(
+def _user_permission_query(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
     base_query = Q(userpermission__user=user)
@@ -141,11 +133,12 @@ def _user_query(
     return base_query & permission_query
 
 
-def _group_query(
+def _group_permission_query(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
     base_query = Q(grouppermission__group__users=user)
     permission_query = Q(grouppermission__admin=True) if allow_admin else Q()
+
     if permission_key:
         permission_query = permission_query | Q(
             grouppermission__permissions__key=permission_key
@@ -153,7 +146,7 @@ def _group_query(
     return base_query & permission_query
 
 
-def _role_query(
+def _role_permission_query(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
     base_query = Q(rolepermission__role__userrole__user=user) | Q(
