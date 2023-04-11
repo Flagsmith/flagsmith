@@ -4,10 +4,7 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
-from users.serializers import (
-    UserListSerializer,
-    UserPermissionGroupSerializerList,
-)
+from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
 class UserOrganisationPermissionUpdateCreateSerializer(serializers.ModelSerializer):
@@ -33,4 +30,4 @@ class UserPermissionGroupOrganisationPermissionUpdateCreateSerializer(
 class UserPermissionGroupOrganisationPermissionListSerializer(
     UserPermissionGroupOrganisationPermissionUpdateCreateSerializer
 ):
-    group = UserPermissionGroupSerializerList()
+    group = UserPermissionGroupSerializer()
