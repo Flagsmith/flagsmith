@@ -99,7 +99,7 @@ def user_has_organisation_permission(
 
 
 def _is_user_object_admin(
-    user: "FFAdminUser", object_: Union[Project | Environment]
+    user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
     query = _get_base_permission_query(user)
     query = query & Q(id=object_.id)
