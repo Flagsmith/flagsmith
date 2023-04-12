@@ -3,7 +3,7 @@ name: Frontend Update Static Flags
 on: [push, pull_request]
 #on:
 #  schedule:
-#    - cron: 0 8 * * *
+#    - cron: 0 8 * * 1-5
 
 defaults:
   run:
