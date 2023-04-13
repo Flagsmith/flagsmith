@@ -111,4 +111,4 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
         is False
     )
     # and the user should have admin permission on the environment
-    assert is_user_environment_admin(admin_user, environment) is False
+    assert is_user_environment_admin(admin_user, environment) is True
