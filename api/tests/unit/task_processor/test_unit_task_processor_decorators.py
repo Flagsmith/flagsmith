@@ -20,6 +20,8 @@ def test_register_task_handler_run_in_thread(mocker, caplog):
     # TODO: look into using loguru.
     task_processor_logger = logging.getLogger("task_processor")
     task_processor_logger.propagate = True
+    # Assume required level for the logger.
+    task_processor_logger.setLevel(logging.INFO)
     caplog.set_level(logging.INFO)
 
     @register_task_handler()
