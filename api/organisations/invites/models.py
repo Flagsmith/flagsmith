@@ -61,9 +61,9 @@ class Invite(AbstractBaseInviteModel):
         db_table = "users_invite"
 
     def save(self, *args, **kwargs):
-        # send email invite before saving invite
+        super().save(*args, **kwargs)
+        # send email invite after saving invite
         self.send_invite_mail()
-        super(Invite, self).save(*args, **kwargs)
 
     def get_invite_uri(self):
         return f"{get_current_site_url()}/invite/{str(self.hash)}"
