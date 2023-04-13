@@ -5,7 +5,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template.loader import get_template
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from app.utils import create_hash
 from organisations.invites.exceptions import InviteLinksDisabledError
@@ -47,7 +52,7 @@ class InviteLink(
             raise InviteLinksDisabledError()
 
 
-class Invite(AbstractBaseInviteModel):
+class Invite(LifecycleModelMixin, AbstractBaseInviteModel):
     email = models.EmailField()
     invited_by = models.ForeignKey(
         FFAdminUser, related_name="sent_invites", null=True, on_delete=models.CASCADE
@@ -60,14 +65,10 @@ class Invite(AbstractBaseInviteModel):
         # reference existing table after moving to own app to avoid db inconsistencies
         db_table = "users_invite"
 
-    def save(self, *args, **kwargs):
-        # send email invite before saving invite
-        self.send_invite_mail()
-        super(Invite, self).save(*args, **kwargs)
-
     def get_invite_uri(self):
         return f"{get_current_site_url()}/invite/{str(self.hash)}"
 
+    @hook(AFTER_CREATE)
     def send_invite_mail(self):
         context = {
             "org_name": self.organisation.name,

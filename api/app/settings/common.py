@@ -870,3 +870,9 @@ SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 
 # Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
 SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
+
+# Controls the app domain used in emails (currently invites and change requests).
+# If set, domain stored with `django.contrib.sites` is disregarded.
+DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
+# Used when no Django site is specified.
+DEFAULT_DOMAIN = "app.flagsmith.com"
