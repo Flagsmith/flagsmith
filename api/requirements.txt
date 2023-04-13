@@ -293,6 +293,8 @@ sentry-sdk==1.17.0
     # via -r requirements.in
 shortuuid==1.0.1
     # via -r requirements.in
+simplejson==3.19.1
+    # via -r requirements.in
 six==1.16.0
     # via
     #   -r requirements.in
