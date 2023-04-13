@@ -43,5 +43,5 @@ runs:
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
         -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
         -e ACCESS_LOG_LOCATION=- \
-        -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
+        flagsmith/flagsmith-api:e2e-${{ github.sha }}
       shell: bash
