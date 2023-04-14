@@ -3,6 +3,7 @@ import traceback
 import typing
 
 from django.db import transaction
+from django.db.utils import DatabaseError
 from django.utils import timezone
 
 from task_processor.models import (
@@ -89,6 +90,13 @@ def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
 
         task_run.finished_at = timezone.now()
         task.mark_success()
+    except DatabaseError as e:
+        logger.error(
+            "Database error while running task %s:  %s",
+            task.id,
+            e,
+            exc_info=True,
+        )
     except Exception:
         task.mark_failure()
 
