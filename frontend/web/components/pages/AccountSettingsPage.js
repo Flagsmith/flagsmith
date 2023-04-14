@@ -10,6 +10,7 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -140,24 +141,42 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-8'>
                       <form className='mb-4' onSubmit={this.save}>
-                        <InputGroup
-                          className='mt-2'
-                          title='Email Address'
-                          data-test='firstName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                            readOnly: true,
-                          }}
-                          value={email}
-                          onChange={(e) =>
-                            this.setState({
-                              first_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          type='text'
-                          name='Email Address'
-                        />
+                        <div className='md-8'>
+                          <InputGroup
+                            className='mt-2'
+                            title='Email Address'
+                            data-test='firstName'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                              readOnly: true,
+                            }}
+                            value={email}
+                            onChange={(e) =>
+                              this.setState({
+                                first_name: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            type='text'
+                            name='Email Address'
+                          />
+                          {Utils.getFlagsmithHasFeature('change_email') && (
+                            <div className='text-right mt-2'>
+                              <Button
+                                onClick={() =>
+                                  openModal(
+                                    'Change Email Address',
+                                    <ChangeEmailAddress />,
+                                  )
+                                }
+                                type='button'
+                                class='input-group-addon'
+                              >
+                                Change Email Address
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <InputGroup
                           className='mt-2'
                           title='First Name'
