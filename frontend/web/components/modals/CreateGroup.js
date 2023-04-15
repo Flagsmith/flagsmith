@@ -17,7 +17,11 @@ const CreateGroup = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      emailEdited: false,
+      externalIdEdited: false,
+      isDeleted: false,
       isLoading: !!this.props.group,
+      toggleChange: false,
     }
     if (this.props.group) {
       this.loadGroup()
@@ -47,6 +51,7 @@ const CreateGroup = class extends Component {
         name: group ? group.name : '',
         users: group
           ? group.users.map((v) => ({
+              edited: false,
               group_admin: v.group_admin,
               id: v.id,
             }))
@@ -54,7 +59,6 @@ const CreateGroup = class extends Component {
       })
     })
   }
-
   close() {
     closeModal()
   }
@@ -125,7 +129,10 @@ const CreateGroup = class extends Component {
     const isMember = _.find(this.state.users, { id })
     const users = _.filter(this.state.users, (u) => u.id !== id)
     this.setState({
-      users: isMember && !update ? users : users.concat([{ group_admin, id }]),
+      users:
+        isMember && !update
+          ? users
+          : users.concat([{ edited: true, group_admin, id }]),
     })
   }
 
@@ -162,11 +169,15 @@ const CreateGroup = class extends Component {
                     }}
                     value={name}
                     onChange={(e) =>
-                      this.setState({ name: Utils.safeParseEventValue(e) })
+                      this.setState({
+                        emailEdited: true,
+                        name: Utils.safeParseEventValue(e),
+                      })
                     }
                     isValid={name && name.length}
                     type='text'
                     name='Name*'
+                    unsaved={this.state.emailEdited}
                     placeholder='E.g. Developers'
                   />
                   <InputGroup
@@ -180,12 +191,14 @@ const CreateGroup = class extends Component {
                     value={external_id}
                     onChange={(e) =>
                       this.setState({
+                        externalIdEdited: true,
                         external_id: Utils.safeParseEventValue(e),
                       })
                     }
                     isValid={name && name.length}
                     type='text'
                     name='Name*'
+                    unsaved={this.state.externalIdEdited}
                     placeholder='Add an optional external reference ID'
                   />
 
@@ -200,6 +213,7 @@ const CreateGroup = class extends Component {
                         onChange={(e) =>
                           this.setState({
                             is_default: Utils.safeParseEventValue(e),
+                            toggleChange: true,
                           })
                         }
                         checked={!!this.state.is_default}
@@ -209,6 +223,7 @@ const CreateGroup = class extends Component {
                       className: 'full-width',
                       name: 'groupName',
                     }}
+                    unsaved={this.state.toggleChange}
                     value={name}
                     isValid={name && name.length}
                     type='text'
@@ -271,7 +286,14 @@ const CreateGroup = class extends Component {
                       header={
                         <>
                           <Row className='table-header'>
-                            <Flex>User</Flex>
+                            <Flex>
+                              <div>
+                                User{' '}
+                                {this.state.isDeleted && (
+                                  <div className='unread'>Unsaved</div>
+                                )}
+                              </div>
+                            </Flex>
                             {Utils.getFlagsmithHasFeature('group_admins') && (
                               <div style={{ paddingLeft: 5, width: widths[0] }}>
                                 Admin
@@ -291,11 +313,17 @@ const CreateGroup = class extends Component {
                           (v) => v.id === id,
                         )
                         const isGroupAdmin = matchingUser?.group_admin
+                        const userEdited = matchingUser?.edited
                         return (
                           <Row className='list-item' key={id}>
                             <Flex>
-                              {`${first_name} ${last_name}`}{' '}
-                              {id == AccountStore.getUserId() && '(You)'}
+                              <div>
+                                {`${first_name} ${last_name}`}{' '}
+                                {id == AccountStore.getUserId() && '(You)'}{' '}
+                                {userEdited && (
+                                  <div className='unread'>Unsaved</div>
+                                )}
+                              </div>
                               <div className='list-item-footer faint'>
                                 {email}
                               </div>
@@ -318,7 +346,10 @@ const CreateGroup = class extends Component {
                                 type='button'
                                 disabled={!(isAdmin || email !== yourEmail)}
                                 id='remove-feature'
-                                onClick={() => this.toggleUser(id)}
+                                onClick={() => {
+                                  this.toggleUser(id)
+                                  this.setState({ isDeleted: true })
+                                }}
                                 className='btn btn--with-icon'
                               >
                                 <RemoveIcon />

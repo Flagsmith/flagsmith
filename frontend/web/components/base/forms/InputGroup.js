@@ -29,8 +29,11 @@ const InputGroup = class extends Component {
           <Tooltip
             title={
               <label htmlFor={id} className='cols-sm-2 control-label'>
-                {props.title}{' '}
-                <span className='icon ion-ios-information-circle' />
+                <div>
+                  {props.title}{' '}
+                  <span className='icon ion-ios-information-circle' />{' '}
+                  {props.unsaved && <div className='unread'>Unsaved</div>}
+                </div>
               </label>
             }
             place={this.props.tooltipPlace || 'right'}
@@ -42,7 +45,10 @@ const InputGroup = class extends Component {
             {!!props.title && (
               <Flex className='mr-4'>
                 <label htmlFor={id} className='cols-sm-2 control-label'>
-                  {props.title}
+                  <div>
+                    {props.title}{' '}
+                    {props.unsaved && <div className='unread'>Unsaved</div>}
+                  </div>
                 </label>
               </Flex>
             )}
