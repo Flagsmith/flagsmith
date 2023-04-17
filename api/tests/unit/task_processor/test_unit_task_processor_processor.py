@@ -3,7 +3,6 @@ import uuid
 from datetime import timedelta
 from threading import Thread
 
-from django.db import transaction
 from django.test.testcases import TransactionTestCase
 
 from organisations.models import Organisation
@@ -228,7 +227,7 @@ def test_run_next_task_runs_tasks_in_correct_order(db):
 
 
 class TestProcessor(TransactionTestCase):
-    def test_get_next_task_skips_locked_rows(self):
+    def test_run_tasks_skips_locked_tasks(self):
         """
         This test verifies that tasks are locked while being executed, and hence
         new task runners are not able to pick up 'in progress' tasks.
@@ -246,24 +245,20 @@ class TestProcessor(TransactionTestCase):
         )
         task_2.save()
 
-        threads = []
-
         # When
         # we spawn a new thread to run the first task (configured to just sleep)
         task_runner_thread = Thread(target=run_tasks)
-        threads.append(task_runner_thread)
         task_runner_thread.start()
 
-        with transaction.atomic():
-            # and subsequently attempt to run another task in the main thread
-            time.sleep(1)  # wait for the thread to start and hold the task
-            task_runs = run_tasks()
+        # and subsequently attempt to run another task in the main thread
+        time.sleep(1)  # wait for the thread to start and hold the task
+        task_runs = run_tasks()
 
-            # Then
-            # the second task is run while the 1st task is held
-            assert task_runs[0].task == task_2
+        # Then
+        # the second task is run while the 1st task is held
+        assert task_runs[0].task == task_2
 
-        [t.join() for t in threads]
+        task_runner_thread.join()
 
 
 def test_run_more_than_one_task(db):

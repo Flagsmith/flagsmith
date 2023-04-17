@@ -13,28 +13,33 @@ from task_processor.models import (
     TaskResult,
     TaskRun,
 )
+from util.postgres import try_advisory_lock
 
 logger = logging.getLogger(__name__)
 
 
-@transaction.atomic
 def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     if num_tasks < 1:
         raise ValueError("Number of tasks to process must be at least one")
 
-    tasks = (
-        Task.objects.select_for_update(skip_locked=True)
-        .filter(num_failures__lt=3, scheduled_for__lte=timezone.now(), completed=False)
-        .order_by("scheduled_for")[:num_tasks]
-    )
+    tasks = Task.objects.filter(
+        num_failures__lt=3, scheduled_for__lte=timezone.now(), completed=False
+    ).order_by("scheduled_for")
+
     if tasks:
         executed_tasks = []
         task_runs = []
 
         for task in tasks:
-            executed_task, task_run = _run_task(task)
-            executed_tasks.append(executed_task)
-            task_runs.append(task_run)
+            with try_advisory_lock(task.id) as acquired:
+                if acquired:
+                    task, task_run = _run_task(task)
+
+                    executed_tasks.append(task)
+                    task_runs.append(task_run)
+
+                    if len(executed_tasks) >= num_tasks:
+                        break
 
         if executed_tasks:
             Task.objects.bulk_update(
