@@ -35,7 +35,11 @@ def test_pipedrive_api_client_create_lead(
     assert len(responses.calls) == 1
     call = responses.calls[0]
     request_body = json.loads(call.request.body.decode("utf-8"))
-    assert request_body == {"title": title, "organization_id": organization_id}
+    assert request_body == {
+        "title": title,
+        "organization_id": organization_id,
+        "label_ids": [],
+    }
     assert call.request.params["api_token"] == pipedrive_api_token
 
     assert lead.id == lead_id
