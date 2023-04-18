@@ -44,5 +44,6 @@ class PipedrivePersonSchema(BaseSchema):
 
 
 class PipedriveLeadLabelSchema(BaseSchema):
+    id = fields.Str()
     name = fields.Str()
     color = fields.Str()

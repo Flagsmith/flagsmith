@@ -126,6 +126,7 @@ class PipedrivePerson(BasePipedriveModel):
 class PipedriveLeadLabel(BasePipedriveModel):
     schema = PipedriveLeadLabelSchema()
 
-    def __init__(self, name: str, color: str):
+    def __init__(self, id: str, name: str, color: str):
+        self.id = id
         self.name = name
         self.color = color
