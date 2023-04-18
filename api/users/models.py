@@ -224,8 +224,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def has_environment_permission(
         self, permission: str, environment: Environment
     ) -> bool:
-        return environment in get_permitted_environments_for_user(
-            self, environment.project, permission
+        return environment in self.get_permitted_environments_for_user(
+            permission, environment.project
         )
 
     def is_project_admin(self, project: Project) -> bool:

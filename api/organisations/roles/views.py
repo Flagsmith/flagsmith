@@ -140,6 +140,10 @@ class RoleProjectPermissionsViewSet(viewsets.ModelViewSet):
 
         return RoleProjectPermission.objects.filter(q)
 
+    def perform_update(self, serializer):
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)
+
     def perform_create(self, serializer):
-        role = Role.objects.get(id=self.kwargs["role_pk"])
-        serializer.save(role=role)
+        role_pk = int(self.kwargs["role_pk"])
+        serializer.save(role_id=role_pk)

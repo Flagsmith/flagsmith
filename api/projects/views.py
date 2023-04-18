@@ -220,12 +220,8 @@ def get_user_project_permissions(request, **kwargs):
     user_id = kwargs["user_pk"]
 
     project_permissions_calculator = ProjectPermissionsCalculator(kwargs["project_pk"])
-    user_permissions_data = project_permissions_calculator.get_permission_data(user_id)
+    permission_data = project_permissions_calculator.get_permission_data(user_id)
 
     # TODO: expose `user` and `groups` attributes from user_permissions_data
-    return Response(
-        {
-            "admin": user_permissions_data.admin,
-            "permissions": user_permissions_data.permissions,
-        }
-    )
+    serializer = UserObjectPermissionsSerializer(instance=permission_data)
+    return Response(serializer.data)
