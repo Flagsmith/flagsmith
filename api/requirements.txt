@@ -138,7 +138,7 @@ google-api-core==1.23.0
     #   opencensus
 google-api-python-client==1.12.5
     # via -r requirements.in
-google-auth==1.23.0
+google-auth==1.35.0
     # via
     #   google-api-core
     #   google-api-python-client
@@ -312,7 +312,7 @@ six==1.16.0
     #   oauth2client
     #   python-dateutil
     #   rudder-sdk-python
-slack-sdk==3.9.0
+slack-sdk==3.21.2
     # via -r requirements.in
 smsapi-client==2.4.3
     # via django-trench
