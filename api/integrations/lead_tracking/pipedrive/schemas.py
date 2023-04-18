@@ -41,3 +41,8 @@ class BasePipedriveCustomFieldSchema(BaseSchema):
 class PipedrivePersonSchema(BaseSchema):
     name = fields.Str()
     id = fields.Int()
+
+
+class PipedriveLeadLabelSchema(BaseSchema):
+    name = fields.Str()
+    color = fields.Str()

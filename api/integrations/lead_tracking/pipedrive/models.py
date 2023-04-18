@@ -5,6 +5,7 @@ from marshmallow.schema import Schema
 
 from integrations.lead_tracking.pipedrive.schemas import (
     BasePipedriveCustomFieldSchema,
+    PipedriveLeadLabelSchema,
     PipedriveLeadSchema,
     PipedriveOrganizationSchema,
     PipedrivePersonSchema,
@@ -120,3 +121,11 @@ class PipedrivePerson(BasePipedriveModel):
     def __init__(self, name: str, id: int = None):
         self.name = name
         self.id = id
+
+
+class PipedriveLeadLabel(BasePipedriveModel):
+    schema = PipedriveLeadLabelSchema()
+
+    def __init__(self, name: str, color: str):
+        self.name = name
+        self.color = color
