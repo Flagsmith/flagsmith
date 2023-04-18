@@ -280,3 +280,27 @@ def test_create_lead_adds_existing_customer_label_if_organisation_is_paid(
         **expected_create_lead_kwargs
     )
     mock_pipedrive_client.create_organization.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "subscription_id, label_id, expected_label_ids",
+    (("subscription-id", "label-id", ["label-id"]), (None, "label-id", [])),
+)
+def test_get_label_ids_for_user(
+    db, settings, subscription_id, label_id, expected_label_ids
+):
+    # Given
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id
+    )
+    user.add_organisation(organisation)
+
+    settings.PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = label_id
+
+    # When
+    label_ids = PipedriveLeadTracker.get_label_ids_for_user(user)
+
+    # Then
+    assert label_ids == expected_label_ids
