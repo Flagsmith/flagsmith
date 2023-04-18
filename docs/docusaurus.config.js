@@ -139,7 +139,7 @@ module.exports = {
                     sidebarPath: require.resolve('./sidebars.js'),
                     routeBasePath: '/',
                     // Please change this to your repo.
-                    editUrl: 'https://github.com/flagsmith/flagsmith-docs/tree/main',
+                    editUrl: 'https://github.com/flagsmith/flagsmith/tree/main/docs/',
                     lastVersion: 'current',
                     versions: {
                         current: {
