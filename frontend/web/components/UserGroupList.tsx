@@ -72,7 +72,9 @@ const UserGroupsList: FC<UserGroupsListType> = ({
             } else {
               openModal(
                 'Edit Group',
-                <CreateGroup orgId={orgId} group={group} />,
+                <CreateGroup isEdit orgId={orgId} group={group} />,
+                null,
+                { className: 'side-modal fade create-feature-modal in' },
               )
             }
           }

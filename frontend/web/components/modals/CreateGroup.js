@@ -5,6 +5,7 @@ import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
+import { setInterceptClose } from 'project/modals'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -17,11 +18,11 @@ const CreateGroup = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      emailEdited: false,
       externalIdEdited: false,
-      isDeleted: false,
+      groupNameEdited: false,
       isLoading: !!this.props.group,
       toggleChange: false,
+      userRemoved: false,
     }
     if (this.props.group) {
       this.loadGroup()
@@ -63,7 +64,32 @@ const CreateGroup = class extends Component {
     closeModal()
   }
 
+  onClosing = () => {
+    if (
+      this.state.groupNameEdited ||
+      this.state.externalIdEdited ||
+      this.state.toggleChange ||
+      this.state.userRemoved
+    ) {
+      return new Promise((resolve) => {
+        openConfirm(
+          'Are you sure',
+          'Closing this will discard your unsaved changes.',
+          () => resolve(true),
+          () => resolve(false),
+          'Ok',
+          'Cancel',
+        )
+      })
+    } else {
+      return Promise.resolve(true)
+    }
+  }
+
   componentDidMount = () => {
+    if (this.props.isEdit) {
+      setInterceptClose(this.onClosing)
+    }
     if (!this.props.isEdit && !E2E) {
       this.focusTimeout = setTimeout(() => {
         this.input.focus()
@@ -100,6 +126,12 @@ const CreateGroup = class extends Component {
   save = () => {
     const { external_id, is_default, name, users } = this.state
 
+    this.setState({
+      externalIdEdited: false,
+      groupNameEdited: false,
+      toggleChange: false,
+      userRemoved: false,
+    })
     const data = {
       external_id,
       is_default: !!this.state.is_default,
@@ -159,226 +191,233 @@ const CreateGroup = class extends Component {
                     this.save()
                   }}
                 >
-                  <InputGroup
-                    title='Group name*'
-                    ref={(e) => (this.input = e)}
-                    data-test='groupName'
-                    inputProps={{
-                      className: 'full-width',
-                      name: 'groupName',
-                    }}
-                    value={name}
-                    onChange={(e) =>
-                      this.setState({
-                        emailEdited: true,
-                        name: Utils.safeParseEventValue(e),
-                      })
-                    }
-                    isValid={name && name.length}
-                    type='text'
-                    name='Name*'
-                    unsaved={this.state.emailEdited}
-                    placeholder='E.g. Developers'
-                  />
-                  <InputGroup
-                    title='External ID'
-                    ref={(e) => (this.input = e)}
-                    data-test='groupName'
-                    inputProps={{
-                      className: 'full-width',
-                      name: 'groupName',
-                    }}
-                    value={external_id}
-                    onChange={(e) =>
-                      this.setState({
-                        externalIdEdited: true,
-                        external_id: Utils.safeParseEventValue(e),
-                      })
-                    }
-                    isValid={name && name.length}
-                    type='text'
-                    name='Name*'
-                    unsaved={this.state.externalIdEdited}
-                    placeholder='Add an optional external reference ID'
-                  />
+                  <FormGroup className='mb-4 mr-3 ml-3'>
+                    <InputGroup
+                      title='Group name*'
+                      ref={(e) => (this.input = e)}
+                      data-test='groupName'
+                      inputProps={{
+                        className: 'full-width',
+                        name: 'groupName',
+                      }}
+                      value={name}
+                      onChange={(e) =>
+                        this.setState({
+                          groupNameEdited: true,
+                          name: Utils.safeParseEventValue(e),
+                        })
+                      }
+                      isValid={name && name.length}
+                      type='text'
+                      name='Name*'
+                      unsaved={this.props.isEdit && this.state.groupNameEdited}
+                      placeholder='E.g. Developers'
+                    />
+                    <InputGroup
+                      title='External ID'
+                      ref={(e) => (this.input = e)}
+                      data-test='groupName'
+                      inputProps={{
+                        className: 'full-width',
+                        name: 'groupName',
+                      }}
+                      value={external_id}
+                      onChange={(e) =>
+                        this.setState({
+                          externalIdEdited: true,
+                          external_id: Utils.safeParseEventValue(e),
+                        })
+                      }
+                      isValid={name && name.length}
+                      type='text'
+                      name='Name*'
+                      unsaved={this.props.isEdit && this.state.externalIdEdited}
+                      placeholder='Add an optional external reference ID'
+                    />
 
-                  <InputGroup
-                    title='Add new users by default'
-                    tooltipPlace='top'
-                    tooltip='New users that sign up to your organisation will be automatically added to this group with USER permissions'
-                    ref={(e) => (this.input = e)}
-                    data-test='groupName'
-                    component={
-                      <Switch
-                        onChange={(e) =>
-                          this.setState({
-                            is_default: Utils.safeParseEventValue(e),
-                            toggleChange: true,
-                          })
+                    <InputGroup
+                      title='Add new users by default'
+                      tooltipPlace='top'
+                      tooltip='New users that sign up to your organisation will be automatically added to this group with USER permissions'
+                      ref={(e) => (this.input = e)}
+                      data-test='groupName'
+                      component={
+                        <Switch
+                          onChange={(e) =>
+                            this.setState({
+                              is_default: Utils.safeParseEventValue(e),
+                              toggleChange: true,
+                            })
+                          }
+                          checked={!!this.state.is_default}
+                        />
+                      }
+                      inputProps={{
+                        className: 'full-width',
+                        name: 'groupName',
+                      }}
+                      unsaved={this.props.isEdit && this.state.toggleChange}
+                      value={name}
+                      isValid={name && name.length}
+                      type='text'
+                    />
+                    <div className='mb-4'>
+                      <label>Group members</label>
+                      <div style={{ width: 350 }}>
+                        <Select
+                          disabled={!inactiveUsers?.length}
+                          components={{
+                            Option: (props) => {
+                              const { email, first_name, id, last_name } =
+                                props.data.user || {}
+                              return (
+                                <components.Option {...props}>
+                                  {`${first_name} ${last_name}`}{' '}
+                                  {id == AccountStore.getUserId() && '(You)'}
+                                  <div className='list-item-footer faint'>
+                                    {email}
+                                  </div>
+                                </components.Option>
+                              )
+                            },
+                          }}
+                          value={{ label: 'Add a user' }}
+                          onChange={(v) => this.toggleUser(v.value)}
+                          options={inactiveUsers.map((user) => ({
+                            label: `${user.first_name || ''} ${
+                              user.last_name || ''
+                            } ${user.email} ${user.id}`,
+                            user,
+                            value: user.id,
+                          }))}
+                        />
+                      </div>
+
+                      <PanelSearch
+                        noResultsText={(search) =>
+                          search ? (
+                            <>
+                              No results found for <strong>{search}</strong>
+                            </>
+                          ) : (
+                            'This group has no members'
+                          )
                         }
-                        checked={!!this.state.is_default}
-                      />
-                    }
-                    inputProps={{
-                      className: 'full-width',
-                      name: 'groupName',
-                    }}
-                    unsaved={this.state.toggleChange}
-                    value={name}
-                    isValid={name && name.length}
-                    type='text'
-                  />
-                  <div className='mb-4'>
-                    <label>Group members</label>
-                    <div style={{ width: 350 }}>
-                      <Select
-                        disabled={!inactiveUsers?.length}
-                        components={{
-                          Option: (props) => {
-                            const { email, first_name, id, last_name } =
-                              props.data.user || {}
-                            return (
-                              <components.Option {...props}>
-                                {`${first_name} ${last_name}`}{' '}
-                                {id == AccountStore.getUserId() && '(You)'}
+                        id='org-members-list'
+                        title='Members'
+                        className='mt-4 no-pad overflow-visible'
+                        renderSearchWithNoResults
+                        items={_.sortBy(activeUsers, 'first_name')}
+                        filterRow={(item, search) => {
+                          const strToSearch = `${item.first_name} ${item.last_name} ${item.email} ${item.id}`
+                          return (
+                            strToSearch
+                              .toLowerCase()
+                              .indexOf(search.toLowerCase()) !== -1
+                          )
+                        }}
+                        header={
+                          <>
+                            <Row className='table-header'>
+                              <Flex>
+                                <div>
+                                  User{' '}
+                                  {this.props.isEdit &&
+                                    this.state.userRemoved && (
+                                      <div className='unread'>Unsaved</div>
+                                    )}
+                                </div>
+                              </Flex>
+                              {Utils.getFlagsmithHasFeature('group_admins') && (
+                                <div
+                                  style={{ paddingLeft: 5, width: widths[0] }}
+                                >
+                                  Admin
+                                </div>
+                              )}
+                              <div
+                                className='text-right'
+                                style={{ width: widths[1] }}
+                              >
+                                Remove
+                              </div>
+                            </Row>
+                          </>
+                        }
+                        renderRow={({ email, first_name, id, last_name }) => {
+                          const matchingUser = this.state.users.find(
+                            (v) => v.id === id,
+                          )
+                          const isGroupAdmin = matchingUser?.group_admin
+                          const userEdited = matchingUser?.edited
+                          return (
+                            <Row className='list-item' key={id}>
+                              <Flex>
+                                <div>
+                                  {`${first_name} ${last_name}`}{' '}
+                                  {id == AccountStore.getUserId() && '(You)'}{' '}
+                                  {this.props.isEdit && userEdited && (
+                                    <div className='unread'>Unsaved</div>
+                                  )}
+                                </div>
                                 <div className='list-item-footer faint'>
                                   {email}
                                 </div>
-                              </components.Option>
-                            )
-                          },
+                              </Flex>
+                              {Utils.getFlagsmithHasFeature('group_admins') && (
+                                <div style={{ width: widths[0] }}>
+                                  <Switch
+                                    onChange={(e) => {
+                                      this.toggleUser(id, e, true)
+                                    }}
+                                    checked={isGroupAdmin}
+                                  />
+                                </div>
+                              )}
+                              <div
+                                className='text-right'
+                                style={{ width: widths[1] }}
+                              >
+                                <button
+                                  type='button'
+                                  disabled={!(isAdmin || email !== yourEmail)}
+                                  id='remove-feature'
+                                  onClick={() => {
+                                    this.toggleUser(id)
+                                    this.setState({ userRemoved: true })
+                                  }}
+                                  className='btn btn--with-icon'
+                                >
+                                  <RemoveIcon />
+                                </button>
+                              </div>
+                            </Row>
+                          )
                         }}
-                        value={{ label: 'Add a user' }}
-                        onChange={(v) => this.toggleUser(v.value)}
-                        options={inactiveUsers.map((user) => ({
-                          label: `${user.first_name || ''} ${
-                            user.last_name || ''
-                          } ${user.email} ${user.id}`,
-                          user,
-                          value: user.id,
-                        }))}
                       />
                     </div>
-
-                    <PanelSearch
-                      noResultsText={(search) =>
-                        search ? (
-                          <>
-                            No results found for <strong>{search}</strong>
-                          </>
-                        ) : (
-                          'This group has no members'
-                        )
-                      }
-                      id='org-members-list'
-                      title='Members'
-                      className='mt-4 no-pad overflow-visible'
-                      renderSearchWithNoResults
-                      items={_.sortBy(activeUsers, 'first_name')}
-                      filterRow={(item, search) => {
-                        const strToSearch = `${item.first_name} ${item.last_name} ${item.email} ${item.id}`
-                        return (
-                          strToSearch
-                            .toLowerCase()
-                            .indexOf(search.toLowerCase()) !== -1
-                        )
-                      }}
-                      header={
+                    <div className='text-right'>
+                      {isEdit ? (
                         <>
-                          <Row className='table-header'>
-                            <Flex>
-                              <div>
-                                User{' '}
-                                {this.state.isDeleted && (
-                                  <div className='unread'>Unsaved</div>
-                                )}
-                              </div>
-                            </Flex>
-                            {Utils.getFlagsmithHasFeature('group_admins') && (
-                              <div style={{ paddingLeft: 5, width: widths[0] }}>
-                                Admin
-                              </div>
-                            )}
-                            <div
-                              className='text-right'
-                              style={{ width: widths[1] }}
-                            >
-                              Remove
-                            </div>
-                          </Row>
+                          <Button
+                            data-test='update-feature-btn'
+                            id='update-feature-btn'
+                            disabled={isSaving || !name}
+                          >
+                            {isSaving ? 'Updating' : 'Update Group'}
+                          </Button>
                         </>
-                      }
-                      renderRow={({ email, first_name, id, last_name }) => {
-                        const matchingUser = this.state.users.find(
-                          (v) => v.id === id,
-                        )
-                        const isGroupAdmin = matchingUser?.group_admin
-                        const userEdited = matchingUser?.edited
-                        return (
-                          <Row className='list-item' key={id}>
-                            <Flex>
-                              <div>
-                                {`${first_name} ${last_name}`}{' '}
-                                {id == AccountStore.getUserId() && '(You)'}{' '}
-                                {userEdited && (
-                                  <div className='unread'>Unsaved</div>
-                                )}
-                              </div>
-                              <div className='list-item-footer faint'>
-                                {email}
-                              </div>
-                            </Flex>
-                            {Utils.getFlagsmithHasFeature('group_admins') && (
-                              <div style={{ width: widths[0] }}>
-                                <Switch
-                                  onChange={(e) => {
-                                    this.toggleUser(id, e, true)
-                                  }}
-                                  checked={isGroupAdmin}
-                                />
-                              </div>
-                            )}
-                            <div
-                              className='text-right'
-                              style={{ width: widths[1] }}
-                            >
-                              <button
-                                type='button'
-                                disabled={!(isAdmin || email !== yourEmail)}
-                                id='remove-feature'
-                                onClick={() => {
-                                  this.toggleUser(id)
-                                  this.setState({ isDeleted: true })
-                                }}
-                                className='btn btn--with-icon'
-                              >
-                                <RemoveIcon />
-                              </button>
-                            </div>
-                          </Row>
-                        )
-                      }}
-                    />
-                  </div>
-                  <div className='text-right'>
-                    {isEdit ? (
-                      <Button
-                        data-test='update-feature-btn'
-                        id='update-feature-btn'
-                        disabled={isSaving || !name}
-                      >
-                        {isSaving ? 'Updating' : 'Update Group'}
-                      </Button>
-                    ) : (
-                      <Button
-                        data-test='create-feature-btn'
-                        id='create-feature-btn'
-                        disabled={isSaving || !name}
-                      >
-                        {isSaving ? 'Creating' : 'Create Group'}
-                      </Button>
-                    )}
-                  </div>
+                      ) : (
+                        <Button
+                          data-test='create-feature-btn'
+                          id='create-feature-btn'
+                          disabled={isSaving || !name}
+                        >
+                          {isSaving ? 'Creating' : 'Create Group'}
+                        </Button>
+                      )}
+                    </div>
+                  </FormGroup>
                 </form>
               )}
             </UserGroupsProvider>
