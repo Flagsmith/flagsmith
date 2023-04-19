@@ -4,7 +4,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useUpdateUserEmailMutation } from 'common/services/useUserEmail'
 
 type ChangeEmailAddressType = {
-  onComplete?: () => void
+  onComplete?: (newEmail: string) => void
 }
 
 const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
@@ -24,7 +24,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
 
   useEffect(() => {
     if (updateSuccess) {
-      onComplete?.()
+      onComplete?.(email)
     }
     // eslint-disable-next-line
   }, [updateSuccess])
