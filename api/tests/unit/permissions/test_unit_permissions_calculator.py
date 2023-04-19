@@ -22,9 +22,9 @@ from organisations.permissions.permissions import (
 )
 from organisations.roles.models import GroupRole, UserRole
 from permissions.permissions_calculator import (
-    EnvironmentPermissionsCalculator,
-    OrganisationPermissionsCalculator,
-    ProjectPermissionsCalculator,
+    get_environment_permission_data,
+    get_organisation_permission_data,
+    get_project_permission_data,
 )
 from projects.models import (
     ProjectPermissionModel,
@@ -172,10 +172,8 @@ def test_project_permissions_calculator_get_permission_data(
     else:
         GroupRole.objects.create(group=group, role=role)
 
-    permission_calculator = ProjectPermissionsCalculator(pk=project.id)
-
     # When
-    user_permission_data = permission_calculator.get_permission_data(user_id=user.id)
+    user_permission_data = get_project_permission_data(project.id, user_id=user.id)
 
     # Then
     assert user_permission_data.admin == expected_admin
@@ -329,10 +327,10 @@ def test_environment_permissions_calculator_get_permission_data(
     else:
         GroupRole.objects.create(group=group, role=role)
 
-    permission_calculator = EnvironmentPermissionsCalculator(pk=environment.id)
-
     # When
-    user_permission_data = permission_calculator.get_permission_data(user_id=user.id)
+    user_permission_data = get_environment_permission_data(
+        environment.id, user_id=user.id
+    )
 
     # Then
     assert user_permission_data.admin == expected_admin
@@ -455,12 +453,8 @@ def test_organisation_permissions_calculator_get_permission_data(
     else:
         GroupRole.objects.create(group=group, role=role)
 
-    permission_calculator = OrganisationPermissionsCalculator(pk=organisation.id)
-
     # When
-    user_permission_data = permission_calculator.get_permission_data(
-        user_id=user.id, is_organisation_admin=user_admin
-    )
+    user_permission_data = get_organisation_permission_data(organisation.id, user=user)
 
     # Then
     assert user_permission_data.admin == expected_admin

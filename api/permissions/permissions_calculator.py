@@ -119,153 +119,188 @@ class PermissionData:
         )
 
 
-class BasePermissionCalculator:
-    def __init__(self, pk: int):
-        self.pk = pk
+@dataclass
+class _ProjectPermissionQs:
+    project_id: int
+    user_id: int
 
-    def _get_user_permission_qs(self, user_id: int) -> UserPermissionQs:
-        raise NotImplementedError()
-
-    def _get_group_permission_qs(self, user_id: int) -> GroupPermissionQs:
-        raise NotImplementedError()
-
-    def _get_role_permission_qs(self, user_id: int) -> RolePermissionQs:
-        raise NotImplementedError()
-
-    def get_permission_data(
-        self, user_id: int, is_organisation_admin: bool = False
-    ) -> PermissionData:
-        return PermissionData(
-            is_organisation_admin=is_organisation_admin,
-            user=self._get_user_permission_data(user_id),
-            groups=self._get_groups_permission_data(user_id),
-            roles=self._get_roles_permission_data(user_id),
+    @property
+    def user_qs(self) -> UserPermissionQs:
+        return UserProjectPermission.objects.filter(
+            project_id=self.project_id, user_id=self.user_id
         )
 
-    def _get_user_permission_data(self, user_id: int) -> PermissionData:
-        user_permission_data = UserPermissionData()
-
-        for user_permission in self._get_user_permission_qs(user_id).prefetch_related(
-            "permissions"
-        ):
-            if getattr(user_permission, "admin", False):
-                user_permission_data.admin = True
-
-            user_permission_data.permissions.update(
-                permission.key
-                for permission in user_permission.permissions.all()
-                if permission.key
-            )
-
-        return user_permission_data
-
-    def _get_groups_permission_data(
-        self, user_id: int
-    ) -> typing.List[GroupPermissionData]:
-        user_permission_group_permission_objects = (
-            self._get_group_permission_qs(user_id)
-            .select_related("group")
-            .prefetch_related("permissions")
+    @property
+    def group_qs(self) -> GroupPermissionQs:
+        return UserPermissionGroupProjectPermission.objects.filter(
+            group__users=self.user_id, project=self.project_id
         )
 
-        group_permission_data_objects = []
-
-        for group_permission in user_permission_group_permission_objects:
-            group = group_permission.group
-            group_data = GroupData(id=group.id, name=group.name)
-            group_permission_data_object = GroupPermissionData(group=group_data)
-
-            if getattr(group_permission, "admin", False):
-                group_permission_data_object.admin = True
-
-            group_permission_data_object.permissions.update(
-                permission.key
-                for permission in group_permission.permissions.all()
-                if permission.key
-            )
-
-            group_permission_data_objects.append(group_permission_data_object)
-
-        return group_permission_data_objects
-
-    def _get_roles_permission_data(
-        self, user_id: int
-    ) -> typing.List[RolePermissionData]:
-        pass
-
-        role_permission_data_objects = []
-
-        for role_project_permission in (
-            self._get_role_permission_qs(user_id)
-            .select_related("role")
-            .prefetch_related("permissions")
-        ):
-            role_data = RoleData(
-                id=role_project_permission.role.id,
-                name=role_project_permission.role.name,
-            )
-            role_permission_data_object = RolePermissionData(role=role_data)
-
-            if getattr(role_project_permission, "admin", False):
-                role_permission_data_object.admin = True
-
-            role_permission_data_object.permissions.update(
-                permission.key
-                for permission in role_project_permission.permissions.all()
-                if permission.key
-            )
-
-            role_permission_data_objects.append(role_permission_data_object)
-
-        return role_permission_data_objects
+    @property
+    def role_qs(self) -> RolePermissionQs:
+        q = Q(role__userrole__user=self.user_id) | Q(
+            role__grouprole__group__users=self.user_id
+        )
+        q = q & Q(project=self.project_id)
+        return RoleProjectPermission.objects.filter(q)
 
 
-class OrganisationPermissionsCalculator(BasePermissionCalculator):
-    def _get_user_permission_qs(self, user_id: int) -> UserPermissionQs:
+def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
+    project_permission_qs = _ProjectPermissionQs(project_id, user_id)
+    return PermissionData(
+        user=get_user_permission_data(project_permission_qs.user_qs),
+        groups=get_groups_permission_data(project_permission_qs.group_qs),
+        roles=get_roles_permission_data(project_permission_qs.role_qs),
+    )
+
+
+def get_organisation_permission_data(organisation_id: int, user) -> PermissionData:
+    org_permission_qs = _OrganisationPermissionQs(organisation_id, user.id)
+    return PermissionData(
+        is_organisation_admin=user.is_organisation_admin(organisation_id),
+        user=get_user_permission_data(org_permission_qs.user_qs),
+        groups=get_groups_permission_data(org_permission_qs.group_qs),
+        roles=get_roles_permission_data(org_permission_qs.role_qs),
+    )
+
+
+def get_environment_permission_data(
+    environment_id: int, user_id: int
+) -> PermissionData:
+    environment_permission_qs = _EnvironmentPermissionQs(environment_id, user_id)
+    return PermissionData(
+        user=get_user_permission_data(environment_permission_qs.user_qs),
+        groups=get_groups_permission_data(environment_permission_qs.group_qs),
+        roles=get_roles_permission_data(environment_permission_qs.role_qs),
+    )
+
+
+def _is_organisation_admin(organisation_id, user_id) -> bool:
+    # # TODO: implement
+    return False
+
+
+def get_user_permission_data(
+    user_permission_qs: UserPermissionQs,
+) -> UserPermissionData:
+    user_permission_data = UserPermissionData()
+
+    for user_permission in user_permission_qs.prefetch_related("permissions"):
+        if getattr(user_permission, "admin", False):
+            user_permission_data.admin = True
+
+        user_permission_data.permissions.update(
+            permission.key
+            for permission in user_permission.permissions.all()
+            if permission.key
+        )
+
+    return user_permission_data
+
+
+def get_groups_permission_data(
+    group_permission_qs: GroupPermissionQs,
+) -> typing.List[GroupPermissionData]:
+    user_permission_group_permission_objects = group_permission_qs.select_related(
+        "group"
+    ).prefetch_related("permissions")
+
+    group_permission_data_objects = []
+
+    for group_permission in user_permission_group_permission_objects:
+        group = group_permission.group
+        group_data = GroupData(id=group.id, name=group.name)
+        group_permission_data_object = GroupPermissionData(group=group_data)
+
+        if getattr(group_permission, "admin", False):
+            group_permission_data_object.admin = True
+
+        group_permission_data_object.permissions.update(
+            permission.key
+            for permission in group_permission.permissions.all()
+            if permission.key
+        )
+
+        group_permission_data_objects.append(group_permission_data_object)
+
+    return group_permission_data_objects
+
+
+def get_roles_permission_data(
+    role_permission_qs: RolePermissionQs,
+) -> typing.List[RolePermissionData]:
+    role_permission_data_objects = []
+
+    for role_project_permission in role_permission_qs.select_related(
+        "role"
+    ).prefetch_related("permissions"):
+        role_data = RoleData(
+            id=role_project_permission.role.id,
+            name=role_project_permission.role.name,
+        )
+        role_permission_data_object = RolePermissionData(role=role_data)
+
+        if getattr(role_project_permission, "admin", False):
+            role_permission_data_object.admin = True
+
+        role_permission_data_object.permissions.update(
+            permission.key
+            for permission in role_project_permission.permissions.all()
+            if permission.key
+        )
+
+        role_permission_data_objects.append(role_permission_data_object)
+
+    return role_permission_data_objects
+
+
+@dataclass
+class _OrganisationPermissionQs:
+    organisation_id: int
+    user_id: int
+
+    @property
+    def user_qs(self) -> UserPermissionQs:
         return UserOrganisationPermission.objects.filter(
-            user=user_id, organisation_id=self.pk
+            user=self.user_id, organisation_id=self.organisation_id
         )
 
-    def _get_group_permission_qs(self, user_id: int) -> GroupPermissionQs:
+    @property
+    def group_qs(self) -> GroupPermissionQs:
         return UserPermissionGroupOrganisationPermission.objects.filter(
-            group__users=user_id, organisation=self.pk
+            group__users=self.user_id, organisation=self.organisation_id
         )
 
-    def _get_role_permission_qs(self, user_id: int) -> RolePermissionQs:
-        q = Q(role__userrole__user_id=user_id) | Q(
-            role__grouprole__group__users=user_id
+    @property
+    def role_qs(self) -> RolePermissionQs:
+        q = Q(role__userrole__user_id=self.user_id) | Q(
+            role__grouprole__group__users=self.user_id
         )
-        q = q & Q(role__organisation_id=self.pk)
+        q = q & Q(role__organisation_id=self.organisation_id)
         return RoleOrganisationPermission.objects.filter(q)
 
 
-class EnvironmentPermissionsCalculator(BasePermissionCalculator):
-    def _get_user_permission_qs(self, user_id: int) -> UserPermissionQs:
+@dataclass
+class _EnvironmentPermissionQs:
+    environment_id: int
+    user_id: int
+
+    @property
+    def user_qs(self) -> UserPermissionQs:
         return UserEnvironmentPermission.objects.filter(
-            user=user_id, environment_id=self.pk
+            user_id=self.user_id, environment_id=self.environment_id
         )
 
-    def _get_group_permission_qs(self, user_id: int) -> GroupPermissionQs:
+    @property
+    def group_qs(self) -> GroupPermissionQs:
         return UserPermissionGroupEnvironmentPermission.objects.filter(
-            group__users=user_id, environment=self.pk
+            group__users=self.user_id, environment=self.environment_id
         )
 
-    def _get_role_permission_qs(self, user_id: int) -> RolePermissionQs:
-        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
-        q = q & Q(environment=self.pk)
+    @property
+    def role_qs(self) -> RolePermissionQs:
+        q = Q(role__userrole__user=self.user_id) | Q(
+            role__grouprole__group__users=self.user_id
+        )
+        q = q & Q(environment=self.environment_id)
         return RoleEnvironmentPermission.objects.filter(q)
-
-
-class ProjectPermissionsCalculator(BasePermissionCalculator):
-    def _get_user_permission_qs(self, user_id: int) -> UserPermissionQs:
-        return UserProjectPermission.objects.filter(user=user_id, project_id=self.pk)
-
-    def _get_group_permission_qs(self, user_id: int) -> GroupPermissionQs:
-        return UserPermissionGroupProjectPermission.objects.filter(
-            group__users=user_id, project=self.pk
-        )
-
-    def _get_role_permission_qs(self, user_id: int) -> RolePermissionQs:
-        q = Q(role__userrole__user=user_id) | Q(role__grouprole__group__users=user_id)
-        q = q & Q(project=self.pk)
-        return RoleProjectPermission.objects.filter(q)

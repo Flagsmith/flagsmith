@@ -19,7 +19,7 @@ from environments.permissions.permissions import (
     MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
-from permissions.permissions_calculator import EnvironmentPermissionsCalculator
+from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -187,11 +187,9 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             )
 
         environment = self.get_object()
-        environment_permissions_calculator = EnvironmentPermissionsCalculator(
-            pk=environment.id
-        )
-        permission_data = environment_permissions_calculator.get_permission_data(
-            user_id=request.user.id
+
+        permission_data = get_environment_permission_data(
+            environment.id, user_id=request.user.id
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)

@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
-from permissions.permissions_calculator import ProjectPermissionsCalculator
+from permissions.permissions_calculator import get_project_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -141,10 +141,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "detail": "This endpoint can only be used with a user and not Master API Key"
                 },
             )
-        project_permissions_calculator = ProjectPermissionsCalculator(pk=pk)
-        permission_data = project_permissions_calculator.get_permission_data(
-            user_id=request.user.id
-        )
+        permission_data = get_project_permission_data(pk, user_id=request.user.id)
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
@@ -219,9 +216,7 @@ class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet
 def get_user_project_permissions(request, **kwargs):
     user_id = kwargs["user_pk"]
 
-    project_permissions_calculator = ProjectPermissionsCalculator(kwargs["project_pk"])
-    permission_data = project_permissions_calculator.get_permission_data(user_id)
-
+    permission_data = get_project_permission_data(kwargs["project_pk"], user_id=user_id)
     # TODO: expose `user` and `groups` attributes from user_permissions_data
     serializer = UserObjectPermissionsSerializer(instance=permission_data)
     return Response(serializer.data)
