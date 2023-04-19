@@ -166,7 +166,11 @@ class TheComponent extends Component {
                                 onClick={() =>
                                   openModal(
                                     'Change Email Address',
-                                    <ChangeEmailAddress />,
+                                    <ChangeEmailAddress
+                                      onComplete={() => {
+                                        closeModal()
+                                      }}
+                                    />,
                                   )
                                 }
                                 type='button'

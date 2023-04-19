@@ -1,19 +1,33 @@
 import React, { FC, useEffect, useState } from 'react'
 import AccountProvider from 'common/providers/AccountProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import _data from 'common/data/base/_data'
+import { useUpdateUserEmailMutation } from 'common/services/useUserEmail'
 
-type ChangeEmailAddressType = {}
+type ChangeEmailAddressType = {
+  onComplete?: () => void
+}
 
-const ChangeEmailAddress: FC<ChangeEmailAddressType> = () => {
+const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+
+  const [
+    setUserEmail,
+    { isError, isLoading: updating, isSuccess: updateSuccess },
+  ] = useUpdateUserEmailMutation()
 
   useEffect(() => {
     setTimeout(() => {
       document.getElementById('email')?.focus()
     }, 500)
   }, [])
+
+  useEffect(() => {
+    if (updateSuccess) {
+      onComplete?.()
+    }
+    // eslint-disable-next-line
+  }, [updateSuccess])
 
   const close = () => {
     closeModal()
@@ -25,7 +39,10 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = () => {
         <form
           onSubmit={(e) => {
             Utils.preventDefault(e)
-            //this.sendConfirmationEmail(yourEmail)
+            setUserEmail({
+              current_password: password,
+              new_email: email,
+            })
           }}
         >
           <InputGroup
@@ -52,16 +69,25 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = () => {
               name: 'newPassword',
             }}
             value={password}
-            onChange={(e) => {
-              setPassword(e)
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setPassword(Utils.safeParseEventValue(event))
             }}
             type='password'
             name='password'
           />
-
+          {isError && (
+            <div className='alert alert-danger'>
+              Error Updating Email Address, please ensure you have entered your
+              current password or a new Email
+            </div>
+          )}
           <div className='text-right'>
-            <Button disabled={password.length === 0 && email.length === 0}>
-              Save Changes
+            <Button
+              disabled={
+                updating || (password.length !== 0 && email.length !== 0)
+              }
+            >
+              {updating ? 'Saving' : 'Save Changes'}
             </Button>
           </div>
         </form>
