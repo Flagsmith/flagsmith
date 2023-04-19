@@ -22,6 +22,7 @@ const CreateGroup = class extends Component {
       groupNameEdited: false,
       isLoading: !!this.props.group,
       toggleChange: false,
+      userAddedOrUpdated: false,
       userRemoved: false,
     }
     if (this.props.group) {
@@ -69,6 +70,7 @@ const CreateGroup = class extends Component {
       this.state.groupNameEdited ||
       this.state.externalIdEdited ||
       this.state.toggleChange ||
+      this.state.userAddedOrUpdated ||
       this.state.userRemoved
     ) {
       return new Promise((resolve) => {
@@ -161,6 +163,7 @@ const CreateGroup = class extends Component {
     const isMember = _.find(this.state.users, { id })
     const users = _.filter(this.state.users, (u) => u.id !== id)
     this.setState({
+      userAddedOrUpdated: true,
       users:
         isMember && !update
           ? users
