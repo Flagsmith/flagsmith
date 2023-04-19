@@ -121,7 +121,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
-    
 
     @hook(AFTER_UPDATE, when="email", has_changed=True)
     def send_warning_email(self):
@@ -139,7 +138,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         send_mail(
             subject="Your Flagsmith Email Address has been changed",
-            from_email= settings.DEFAULT_FROM_EMAIL,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             message=message,
             recipient_list=[self.initial_value("email")],
             fail_silently=True,
