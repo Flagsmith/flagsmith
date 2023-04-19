@@ -7,6 +7,7 @@ from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from segments.permissions import SegmentPermissions
 from users.models import FFAdminUser
@@ -40,7 +41,7 @@ class SegmentPermissionsTestCase(TestCase):
         user_project_permissions = UserProjectPermission.objects.create(
             project=self.project, user=self.project_user
         )
-        user_project_permissions.add_permission("VIEW_PROJECT")
+        user_project_permissions.add_permission(VIEW_PROJECT)
 
     def test_project_admin_has_permission(self):
         # Given

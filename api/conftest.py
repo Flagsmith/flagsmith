@@ -49,6 +49,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
+from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
@@ -317,7 +318,7 @@ def view_identities_permission():
 
 @pytest.fixture()
 def view_project_permission():
-    return PermissionModel.objects.get(key="VIEW_PROJECT")
+    return PermissionModel.objects.get(key=VIEW_PROJECT)
 
 
 @pytest.fixture()

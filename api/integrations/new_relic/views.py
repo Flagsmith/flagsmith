@@ -4,6 +4,7 @@ from rest_framework.generics import get_object_or_404
 
 from integrations.new_relic.models import NewRelicConfiguration
 from integrations.new_relic.serializers import NewRelicConfigurationSerializer
+from projects.permissions import VIEW_PROJECT
 
 
 class NewRelicConfigurationViewSet(viewsets.ModelViewSet):
@@ -12,7 +13,7 @@ class NewRelicConfigurationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         project = get_object_or_404(
-            self.request.user.get_permitted_projects("VIEW_PROJECT"),
+            self.request.user.get_permitted_projects(VIEW_PROJECT),
             pk=self.kwargs["project_pk"],
         )
         return NewRelicConfiguration.objects.filter(project=project)

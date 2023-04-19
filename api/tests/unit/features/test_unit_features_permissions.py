@@ -4,16 +4,20 @@ import pytest
 
 from permissions.models import PermissionModel
 from projects.models import UserProjectPermission
-from projects.permissions import NestedProjectPermissions
+from projects.permissions import (
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+    NestedProjectPermissions,
+)
 
 
 @pytest.mark.parametrize(
     "action_permission_map, action, user_permission, expected_result",
     (
         ({}, "list", None, False),
-        ({}, "list", "VIEW_PROJECT", True),
-        ({"create": "CREATE_FEATURE"}, "create", None, False),
-        ({"create": "CREATE_FEATURE"}, "create", "CREATE_FEATURE", True),
+        ({}, "list", VIEW_PROJECT, True),
+        ({"create": CREATE_FEATURE}, "create", None, False),
+        ({"create": CREATE_FEATURE}, "create", CREATE_FEATURE, True),
     ),
 )
 def test_nested_project_permissions_has_permission(
@@ -53,9 +57,9 @@ def test_nested_project_permissions_has_permission(
     "action_permission_map, action, user_permission, expected_result",
     (
         ({}, "list", None, False),
-        ({}, "list", "VIEW_PROJECT", True),
-        ({"update": "CREATE_FEATURE"}, "update", None, False),
-        ({"update": "CREATE_FEATURE"}, "update", "CREATE_FEATURE", True),
+        ({}, "list", VIEW_PROJECT, True),
+        ({"update": CREATE_FEATURE}, "update", None, False),
+        ({"update": CREATE_FEATURE}, "update", CREATE_FEATURE, True),
     ),
 )
 def test_nested_project_permissions_has_object_permission(

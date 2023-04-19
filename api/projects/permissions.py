@@ -60,7 +60,7 @@ class ProjectPermissions(IsAuthenticated):
             return True
 
         if view.action == "retrieve" and request.user.has_project_permission(
-            "VIEW_PROJECT", obj
+            VIEW_PROJECT, obj
         ):
             return True
 
@@ -144,7 +144,7 @@ class NestedProjectPermissions(IsAuthenticated):
     ):
         super().__init__(*args, **kwargs)
         self.action_permission_map = action_permission_map or {}
-        self.action_permission_map.setdefault("list", "VIEW_PROJECT")
+        self.action_permission_map.setdefault("list", VIEW_PROJECT)
 
         self.get_project_from_object_callable = get_project_from_object_callable
 
