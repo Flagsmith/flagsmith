@@ -104,6 +104,8 @@ class PermissionData:
 
     @property
     def permissions(self) -> typing.Set[str]:
+        # Returns a set of all permissions that the user has based on their direct permissions,
+        # group permissions, and role permissions.
         return self.user.permissions.union(
             reduce(
                 lambda a, b: a.union(b),
