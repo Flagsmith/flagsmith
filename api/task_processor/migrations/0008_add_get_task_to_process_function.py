@@ -35,9 +35,36 @@ BEGIN
 
     RETURN;
 END;
-$$ LANGUAGE plpgsql;
-
+$$ LANGUAGE plpgsql
             """,
             reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process()",
+        ),
+        PostgresOnlyRunSQL(
+            """
+CREATE OR REPLACE FUNCTION get_recurringtasks_to_process(num_tasks integer)
+RETURNS SETOF task_processor_recurringtask AS $$
+DECLARE
+    row_to_return task_processor_recurringtask;
+BEGIN
+    FOR row_to_return IN
+        SELECT *
+        FROM task_processor_recurringtask
+        WHERE is_locked = FALSE
+        ORDER BY id
+        LIMIT num_tasks
+        FOR UPDATE SKIP LOCKED
+    LOOP
+        UPDATE task_processor_recurringtask
+        SET is_locked = TRUE
+        WHERE id = row_to_return.id;
+        row_to_return.is_locked := TRUE;
+        RETURN NEXT row_to_return;
+    END LOOP;
+
+    RETURN;
+END;
+$$ LANGUAGE plpgsql
+            """,
+            reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process()",
         ),
     ]

@@ -2,8 +2,6 @@ import logging
 import traceback
 import typing
 
-from django.db import transaction
-from django.db.utils import DatabaseError
 from django.utils import timezone
 
 from task_processor.models import (
@@ -47,7 +45,6 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     return []
 
 
-@transaction.atomic
 def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
     if num_tasks < 1:
         raise ValueError("Number of tasks to process must be at least one")
@@ -55,9 +52,10 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
     # NOTE: We will probably see a lot of delay in the execution of recurring tasks
     # if the tasks take longer then `run_every` to execute. This is not
     # a problem for now, but we should be mindful of this limitation
-    tasks = RecurringTask.objects.select_for_update(skip_locked=True)[:num_tasks]
+    tasks = RecurringTask.objects.get_tasks_to_process(num_tasks)
     if tasks:
         task_runs = []
+        executed_tasks = []
 
         for task in tasks:
             # Remove the task if it's not registered anymore
@@ -66,8 +64,12 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
                 continue
 
             if task.should_execute:
-                _, task_run = _run_task(task)
+                task, task_run = _run_task(task)
+                executed_tasks.append(task)
                 task_runs.append(task_run)
+
+        if executed_tasks:
+            RecurringTask.objects.bulk_update(executed_tasks, fields=["is_locked"])
 
         if task_runs:
             RecurringTaskRun.objects.bulk_create(task_runs)

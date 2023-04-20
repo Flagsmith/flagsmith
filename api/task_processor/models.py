@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from task_processor.exceptions import TaskProcessingError
-from task_processor.managers import TaskManager
+from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
 
 
@@ -44,10 +44,10 @@ class AbstractBaseTask(models.Model):
         return json.loads(data)
 
     def mark_failure(self):
-        pass
+        self.is_locked = False
 
     def mark_success(self):
-        pass
+        self.is_locked = False
 
     def run(self):
         return self.callable(*self.args, **self.kwargs)
@@ -115,16 +115,18 @@ class Task(AbstractBaseTask):
         return task
 
     def mark_failure(self):
-        self.is_locked = False
+        super().mark_failure()
         self.num_failures += 1
 
     def mark_success(self):
-        self.is_locked = False
+        super().mark_failure()
         self.completed = True
 
 
 class RecurringTask(AbstractBaseTask):
     run_every = models.DurationField()
+
+    objects = RecurringTaskManager()
 
     class Meta:
         constraints = [
