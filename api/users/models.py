@@ -130,14 +130,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
             Your new email address is {self}.
 
-            If you haven't request this change please contact us at support team.
+            If you haven't request this change please contact us at support@flagsmith.com
 
             The Flagsmith Team
             """
         )
 
         send_mail(
-            subject="Your Flagsmith Email Address has been changed",
+            subject="Your Flagsmith email address has been changed",
             from_email=settings.DEFAULT_FROM_EMAIL,
             message=message,
             recipient_list=[self.initial_value("email")],
