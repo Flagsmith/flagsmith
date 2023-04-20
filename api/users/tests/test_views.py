@@ -285,17 +285,19 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         )
         data = {"name": "New Test Group"}
 
-        responses = [
-            client.post(self.list_url, data=data),
+        create_response = client.post(self.list_url, data=data)
+
+        _404_responses = [
             client.put(self._detail_url(group.id)),
             client.get(self._detail_url(group.id)),
             client.delete(self._detail_url(group.id)),
         ]
 
+        assert create_response.status_code == status.HTTP_403_FORBIDDEN
         assert all(
             [
-                response.status_code == status.HTTP_403_FORBIDDEN
-                for response in responses
+                response.status_code == status.HTTP_404_NOT_FOUND
+                for response in _404_responses
             ]
         )
         assert UserPermissionGroup.objects.filter(name=group_name).exists()
