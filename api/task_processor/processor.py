@@ -89,13 +89,6 @@ def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
 
         task_run.finished_at = timezone.now()
         task.mark_success()
-    except DatabaseError as e:
-        logger.error(
-            "Database error while running task %s:  %s",
-            task.id,
-            e,
-            exc_info=True,
-        )
     except Exception:
         task.mark_failure()
 
