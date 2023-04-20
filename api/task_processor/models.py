@@ -16,6 +16,7 @@ class AbstractBaseTask(models.Model):
     task_identifier = models.CharField(max_length=200)
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
+    is_locked = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
