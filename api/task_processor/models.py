@@ -7,6 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from task_processor.exceptions import TaskProcessingError
+from task_processor.managers import TaskManager
 from task_processor.task_registry import registered_tasks
 
 
@@ -69,6 +70,7 @@ class Task(AbstractBaseTask):
     # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
+    objects = TaskManager()
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
@@ -113,9 +115,11 @@ class Task(AbstractBaseTask):
         return task
 
     def mark_failure(self):
+        self.is_locked = False
         self.num_failures += 1
 
     def mark_success(self):
+        self.is_locked = False
         self.completed = True
 
 

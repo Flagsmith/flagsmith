@@ -3,6 +3,7 @@ import uuid
 from datetime import timedelta
 from threading import Thread
 
+import pytest
 from django.test.testcases import TransactionTestCase
 
 from organisations.models import Organisation
@@ -195,7 +196,7 @@ def test_run_recurring_task_runs_task_and_creates_recurring_task_run_object_when
     assert task_run.error_details is not None
 
 
-def test_run_next_task_does_nothing_if_no_tasks(db):
+def test_run_task_does_nothing_if_no_tasks(db):
     # Given - no tasks
     # When
     result = run_tasks()
@@ -204,7 +205,8 @@ def test_run_next_task_does_nothing_if_no_tasks(db):
     assert not TaskRun.objects.exists()
 
 
-def test_run_next_task_runs_tasks_in_correct_order(db):
+@pytest.mark.django_db(transaction=True)
+def test_run_task_runs_tasks_in_correct_order():
     # Given
     # 2 tasks
     task_1 = Task.create(
