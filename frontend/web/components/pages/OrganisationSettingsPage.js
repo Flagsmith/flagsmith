@@ -79,10 +79,10 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  deleteUser = (id) => {
+  deleteUser = (id, fullName) => {
     openConfirm(
       <h3>Delete User</h3>,
-      <p>Are you sure you want to delete this user?</p>,
+      <p>Are you sure you want to delete the user {fullName}?</p>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -984,7 +984,10 @@ const OrganisationSettingsPage = class extends Component {
                                                         id='delete-invite'
                                                         type='button'
                                                         onClick={() =>
-                                                          this.deleteUser(id)
+                                                          this.deleteUser(
+                                                            id,
+                                                            `${first_name} ${last_name}`,
+                                                          )
                                                         }
                                                         className='btn btn--with-icon ml-auto btn--remove'
                                                       >
