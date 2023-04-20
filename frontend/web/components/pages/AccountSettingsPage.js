@@ -10,6 +10,7 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+import ConfirmDeleteAccount from '../modals/ConfirmDeleteAccount'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -50,6 +51,12 @@ class TheComponent extends Component {
             'There was an error setting your account, please check your details',
         }),
       )
+  }
+
+  confirmRemove = (numUsers, id) => {
+    if (numUsers > 1) {
+      openModal('Are you sure', <ConfirmDeleteAccount userId={id} />)
+    }
   }
 
   invalidateToken = () => {
@@ -106,6 +113,7 @@ class TheComponent extends Component {
         email,
         error,
         first_name,
+        id,
         last_name,
         new_password1,
         new_password2,
@@ -115,9 +123,10 @@ class TheComponent extends Component {
 
     return (
       <AccountProvider>
-        {({ isSaving }) => {
+        {({ isSaving, organisation }) => {
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
+          const numUsers = organisation.num_seats
 
           return forced2Factor ? (
             <div className='app-container container'>
@@ -220,6 +229,19 @@ class TheComponent extends Component {
                           }}
                           checked={flagsmith.getTrait('json_inspect')}
                         />
+                      </Row>
+                      <Row className='mt-4' space>
+                        <div className='col-md-8 pl-0'>
+                          <h5>Delete Account</h5>
+                          <p>Your account will be permanently deleted.</p>
+                        </div>
+                        <Button
+                          id='delete-org-btn'
+                          onClick={() => this.confirmRemove(numUsers, id)}
+                          className='btn btn--with-icon ml-auto btn--remove'
+                        >
+                          <RemoveIcon />
+                        </Button>
                       </Row>
                     </div>
                   </div>
