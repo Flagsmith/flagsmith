@@ -488,3 +488,25 @@ def test_retrieve_user_permission_group_includes_group_admin(
         next(filter(lambda u: u["id"] == group_admin_user.id, users))["group_admin"]
         is True
     )
+
+
+def test_group_admin_can_retrieve_group(organisation, django_user_model, api_client):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation)
+    group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="Test group"
+    )
+    user.add_to_group(group, group_admin=True)
+
+    api_client.force_authenticate(user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
