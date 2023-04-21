@@ -5,10 +5,14 @@ import Utils from 'common/utils/utils'
 import { useDeleteDeleteUserAccountMutation } from 'common/services/useDeleteUserAccount'
 
 type ConfirmDeleteAccountType = {
+  lastUser: boolean
   userId: number
 }
 
-const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({ userId }) => {
+const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
+  lastUser,
+  userId,
+}) => {
   const [password, setPassword] = useState<string>('')
   const [
     deleteUserAccount,
@@ -32,10 +36,17 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({ userId }) => {
         }}
       >
         <FormGroup>
-          <p>
-            You will be removed from all organisations and all your account data
-            will be deleted.
-          </p>
+          {lastUser ? (
+            <p>
+              You are the last user from this organisation, all your account
+              data and organisation data will be deleted.
+            </p>
+          ) : (
+            <p>
+              You will be removed from all organisations and all your account
+              data will be deleted.
+            </p>
+          )}
           <label>Please re-enter your password for confirm this action.</label>
         </FormGroup>
         <InputGroup

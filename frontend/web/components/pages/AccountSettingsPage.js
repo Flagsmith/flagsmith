@@ -53,10 +53,11 @@ class TheComponent extends Component {
       )
   }
 
-  confirmRemove = (numUsers, id) => {
-    if (numUsers > 1) {
-      openModal('Are you sure', <ConfirmDeleteAccount userId={id} />)
-    }
+  confirmDeleteAccount = (lastUser, id) => {
+    openModal(
+      'Are you sure',
+      <ConfirmDeleteAccount userId={id} lastUser={lastUser} />,
+    )
   }
 
   invalidateToken = () => {
@@ -237,7 +238,12 @@ class TheComponent extends Component {
                         </div>
                         <Button
                           id='delete-org-btn'
-                          onClick={() => this.confirmRemove(numUsers, id)}
+                          onClick={() =>
+                            this.confirmDeleteAccount(
+                              numUsers > 1 ? false : true,
+                              id,
+                            )
+                          }
                           className='btn btn--with-icon ml-auto btn--remove'
                         >
                           <RemoveIcon />
