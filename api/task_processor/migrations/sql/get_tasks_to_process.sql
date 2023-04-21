@@ -12,11 +12,11 @@ BEGIN
         LIMIT num_tasks
         FOR UPDATE SKIP LOCKED
     LOOP
-        -- Lock(by updating `is_locked` to true) every selected task selected task
+        -- Lock every selected task(by updating `is_locked` to true)
         UPDATE task_processor_task
         SET is_locked = TRUE
         WHERE id = row_to_return.id;
-        -- Update `is_locked` to true before returning the row
+        -- If we don't explicitly update the `is_locked` column here, the client will receive the row that is actually locked but has the `is_locked` value set to `False`.
         row_to_return.is_locked := TRUE;
         RETURN NEXT row_to_return;
     END LOOP;
