@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
 import json
-import logging
 import os
 import sys
 import warnings
@@ -399,17 +398,17 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
-EMAIL_BACKEND = env(
-    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
+
+DEFAULT_EMAIL_BACKEND = (
+    "sgbackend.SendGridBackend"
+    if SENDGRID_API_KEY
+    else "django.core.mail.backends.smtp.EmailBackend"
 )
 
-if EMAIL_BACKEND == "sgbackend.SendGridBackend":
-    SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
-    if not SENDGRID_API_KEY:
-        logging.info(
-            "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
-        )
-elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+EMAIL_BACKEND = env("EMAIL_BACKEND", default=DEFAULT_EMAIL_BACKEND)
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_HOST = env("EMAIL_HOST", default="localhost")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
