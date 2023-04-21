@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import transformCorePaging from 'common/transformCorePaging'
 
 const getIdentityEndpoint = (environmentId: string, isEdge: boolean) => {
   const identityPart = isEdge ? 'edge-identities' : 'identities'
@@ -82,11 +83,14 @@ export const identityService = service
             url,
           }
         },
-        transformResponse(
-          baseQueryReturnValue: Res['identities'],
-          meta,
-          { isEdge, page=1, page_size = 10, pageType, pages: _pages },
-        ) {
+        transformResponse(baseQueryReturnValue: Res['identities'], meta, req) {
+          const {
+            isEdge,
+            page = 1,
+            page_size = 10,
+            pageType,
+            pages: _pages,
+          } = req
           if (isEdge) {
             // For edge, we create our own paging
             let pages = _pages ? _pages.concat([]) : []
@@ -119,11 +123,7 @@ export const identityService = service
               }), //
             }
           }
-          return {
-            ...baseQueryReturnValue,
-            pageSize: page_size,
-            currentPage: page,
-          }
+          return transformCorePaging(req, baseQueryReturnValue)
         },
       }),
       // END OF ENDPOINTS
