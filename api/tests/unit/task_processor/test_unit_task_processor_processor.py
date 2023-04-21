@@ -197,7 +197,8 @@ def test_run_task_runs_failed_task_again(db):
         assert task_run.error_details is not None
 
     task.refresh_from_db()
-    assert not task.completed
+    assert task.completed is False
+    assert task.is_locked is False
 
 
 def test_run_recurring_task_runs_task_and_creates_recurring_task_run_object_when_failure(
