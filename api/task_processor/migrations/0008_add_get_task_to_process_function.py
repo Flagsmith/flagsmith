@@ -3,6 +3,7 @@
 from django.db import migrations
 
 from core.migration_helpers import PostgresOnlyRunSQL
+import os
 
 
 class Migration(migrations.Migration):
@@ -12,59 +13,23 @@ class Migration(migrations.Migration):
 
     operations = [
         PostgresOnlyRunSQL(
-            """
-CREATE OR REPLACE FUNCTION get_tasks_to_process(num_tasks integer)
-RETURNS SETOF task_processor_task AS $$
-DECLARE
-    row_to_return task_processor_task;
-BEGIN
-    FOR row_to_return IN
-        SELECT *
-        FROM task_processor_task
-        WHERE num_failures < 3 AND scheduled_for < NOW() AND completed = FALSE AND is_locked = FALSE
-        ORDER BY scheduled_for ASC, created_at ASC
-        LIMIT num_tasks
-        FOR UPDATE SKIP LOCKED
-    LOOP
-        UPDATE task_processor_task
-        SET is_locked = TRUE
-        WHERE id = row_to_return.id;
-        row_to_return.is_locked := TRUE;
-        RETURN NEXT row_to_return;
-    END LOOP;
-
-    RETURN;
-END;
-$$ LANGUAGE plpgsql
-            """,
+            sql=open(
+                os.path.join(
+                    os.path.dirname(__file__), "sql", "get_tasks_to_process.sql"
+                ),
+                "r",
+            ).read(),
             reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process()",
         ),
         PostgresOnlyRunSQL(
-            """
-CREATE OR REPLACE FUNCTION get_recurringtasks_to_process(num_tasks integer)
-RETURNS SETOF task_processor_recurringtask AS $$
-DECLARE
-    row_to_return task_processor_recurringtask;
-BEGIN
-    FOR row_to_return IN
-        SELECT *
-        FROM task_processor_recurringtask
-        WHERE is_locked = FALSE
-        ORDER BY id
-        LIMIT num_tasks
-        FOR UPDATE SKIP LOCKED
-    LOOP
-        UPDATE task_processor_recurringtask
-        SET is_locked = TRUE
-        WHERE id = row_to_return.id;
-        row_to_return.is_locked := TRUE;
-        RETURN NEXT row_to_return;
-    END LOOP;
-
-    RETURN;
-END;
-$$ LANGUAGE plpgsql
-            """,
+            sql=open(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "sql",
+                    "get_recurring_tasks_to_process.sql",
+                ),
+                "r",
+            ).read(),
             reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process()",
         ),
     ]
