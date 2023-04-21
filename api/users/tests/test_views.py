@@ -1,9 +1,11 @@
 import json
+import typing
 from unittest.case import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth import login
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -490,7 +492,11 @@ def test_retrieve_user_permission_group_includes_group_admin(
     )
 
 
-def test_group_admin_can_retrieve_group(organisation, django_user_model, api_client):
+def test_group_admin_can_retrieve_group(
+    organisation: Organisation,
+    django_user_model: typing.Type[AbstractUser],
+    api_client: APIClient,
+):
     # Given
     user = django_user_model.objects.create(email="test@example.com")
     user.add_organisation(organisation)
