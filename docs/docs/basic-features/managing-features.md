@@ -25,8 +25,7 @@ the `Flag Value` altogether.
 
 :::important
 
-The maximum size of each String Value is **_20,000 bytes_**. You cannot store more data than that in a flag value, and
-the API will return a 500 error if you try to do so.
+The maximum size of each String Value is **_20,000 bytes_**.
 
 :::
 
