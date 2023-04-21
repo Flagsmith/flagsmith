@@ -90,6 +90,10 @@ const Format = {
       : Format.camelCase(sn)
   },
 
+  userDisplayName(person) {
+    return Format.fullName(person)
+  },
+
   initialAndLastName(person) {
     // {firstName:'Kyle', lastName:'Johnson'} > K. Johnson
     const value = Format.fullName(person)

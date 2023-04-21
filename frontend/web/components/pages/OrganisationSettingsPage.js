@@ -18,6 +18,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
+import Format from 'common/utils/format'
 
 const widths = [450, 150, 100]
 const OrganisationSettingsPage = class extends Component {
@@ -79,10 +80,13 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  deleteUser = (id, fullName) => {
+  deleteUser = (id, fullName, email) => {
     openConfirm(
       <h3>Delete User</h3>,
-      <p>Are you sure you want to delete the user {fullName}?</p>,
+      <p>
+        Are you sure you want to remove the user {fullName} with email address{' '}
+        {email}?
+      </p>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -986,7 +990,15 @@ const OrganisationSettingsPage = class extends Component {
                                                         onClick={() =>
                                                           this.deleteUser(
                                                             id,
-                                                            `${first_name} ${last_name}`,
+                                                            Format.userDisplayName(
+                                                              {
+                                                                firstName:
+                                                                  first_name,
+                                                                lastName:
+                                                                  last_name,
+                                                              },
+                                                            ),
+                                                            email,
                                                           )
                                                         }
                                                         className='btn btn--with-icon ml-auto btn--remove'
