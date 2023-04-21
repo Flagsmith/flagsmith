@@ -254,5 +254,6 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  deleteUserAccount: {}
   // END OF TYPES
 }

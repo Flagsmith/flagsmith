@@ -65,5 +65,6 @@ export type Req = {
   }
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
+  deleteDeleteUserAccount: { id: number; currentPassword: string }
   // END OF TYPES
 }
