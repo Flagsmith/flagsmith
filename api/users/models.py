@@ -1,4 +1,3 @@
-import inspect
 import logging
 import typing
 
@@ -8,6 +7,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q, QuerySet
+from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_UPDATE, LifecycleModel, hook
 
@@ -124,22 +124,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     @hook(AFTER_UPDATE, when="email", has_changed=True)
     def send_warning_email(self):
-        message = inspect.cleandoc(
-            f"""
-            Hi there,
-
-            Your new email address is {self}.
-
-            If you haven't request this change please contact us at support@flagsmith.com
-
-            The Flagsmith Team
-            """
-        )
-
+        context = {
+            "first_name": self.first_name,
+        }
         send_mail(
             subject="Your Flagsmith email address has been changed",
             from_email=settings.DEFAULT_FROM_EMAIL,
-            message=message,
+            message=render_to_string("users/email_updated.txt", context),
             recipient_list=[self.initial_value("email")],
             fail_silently=True,
         )

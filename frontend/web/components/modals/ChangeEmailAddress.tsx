@@ -63,7 +63,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
             placeholder='E.g. email123@email.com'
           />
           <InputGroup
-            title='Re-enter Password'
+            title='Confirm Password'
             inputProps={{
               className: 'full-width',
               name: 'newPassword',
