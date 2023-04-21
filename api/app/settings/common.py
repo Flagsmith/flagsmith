@@ -399,7 +399,10 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+)
+
 if EMAIL_BACKEND == "sgbackend.SendGridBackend":
     SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
     if not SENDGRID_API_KEY:
