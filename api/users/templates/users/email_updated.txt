@@ -1,5 +1,6 @@
-Hi {{first_name}},
+Hi {{ first_name | default:"there" }},
 
-A change was just made to update the email associated with your Flagsmith account. If you did not request this change, please contact support@flagsmith.com as soon as possible. 
+A change was just made to update the email associated with your Flagsmith account. 
+If you did not request this change, please contact support@flagsmith.com as soon as possible. 
 
 The Flagsmith Team
