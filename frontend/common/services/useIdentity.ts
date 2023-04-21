@@ -85,13 +85,12 @@ export const identityService = service
         transformResponse(
           baseQueryReturnValue: Res['identities'],
           meta,
-          { isEdge, page_size = 10, pageType, pages: _pages },
+          { isEdge, page=1, page_size = 10, pageType, pages: _pages },
         ) {
           if (isEdge) {
             // For edge, we create our own paging
             let pages = _pages ? _pages.concat([]) : []
             const next_evaluated_key = baseQueryReturnValue.last_evaluated_key
-
             if (pageType === 'NEXT') {
               pages.push(next_evaluated_key)
             } else if (pageType === 'PREVIOUS') {
@@ -120,7 +119,11 @@ export const identityService = service
               }), //
             }
           }
-          return baseQueryReturnValue
+          return {
+            ...baseQueryReturnValue,
+            pageSize: page_size,
+            currentPage: page,
+          }
         },
       }),
       // END OF ENDPOINTS
