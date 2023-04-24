@@ -10,7 +10,6 @@
         "deploy": "docusaurus deploy",
         "prettier": "npx prettier --check docs",
         "prettier:fix": "npx prettier --write --check docs",
-        "postinstall": "husky install",
         "clear": "docusaurus clear",
         "serve": "docusaurus serve",
         "write-translations": "docusaurus write-translations",
@@ -44,10 +43,5 @@
             "last 1 firefox version",
             "last 1 safari version"
         ]
-    },
-    "devDependencies": {
-        "husky": "^8.0.1",
-        "prettier": "^2.7.1",
-        "pretty-quick": "^3.1.3"
     }
 }
