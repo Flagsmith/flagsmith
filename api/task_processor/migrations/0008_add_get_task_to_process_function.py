@@ -13,23 +13,19 @@ class Migration(migrations.Migration):
 
     operations = [
         PostgresOnlyRunSQL(
-            sql=open(
-                os.path.join(
-                    os.path.dirname(__file__), "sql", "get_tasks_to_process.sql"
-                ),
-                "r",
-            ).read(),
+            sql_file_path=os.path.join(
+                os.path.dirname(__file__),
+                "sql",
+                "get_tasks_to_process.sql",
+            ),
             reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process()",
         ),
         PostgresOnlyRunSQL(
-            sql=open(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "sql",
-                    "get_recurring_tasks_to_process.sql",
-                ),
-                "r",
-            ).read(),
+            sql_file_path=os.path.join(
+                os.path.dirname(__file__),
+                "sql",
+                "get_recurring_tasks_to_process.sql",
+            ),
             reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process()",
         ),
     ]
