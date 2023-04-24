@@ -10,7 +10,7 @@
         "deploy": "docusaurus deploy",
         "prettier": "npx prettier --check docs",
         "prettier:fix": "npx prettier --write --check docs",
-        "postinstall": "husky install",
+        "postinstall": "cd .. && husky install docs/.husky",
         "clear": "docusaurus clear",
         "serve": "docusaurus serve",
         "write-translations": "docusaurus write-translations",
