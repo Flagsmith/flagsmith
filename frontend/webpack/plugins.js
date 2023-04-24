@@ -15,7 +15,10 @@ module.exports = [
     }),
     // // Fixes warning in moment-with-locales.min.js
     // // Module not found: Error: Can't resolve './locale' in ...
-    new webpack.IgnorePlugin(/\.\/locale$/),
+    new webpack.IgnorePlugin({
+        resourceRegExp: /^\.\/locale$/,
+        contextRegExp: /moment$/,
+    }),
     //
     // Copy static content
     new CopyWebpackPlugin({

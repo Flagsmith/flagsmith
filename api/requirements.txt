@@ -128,7 +128,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==3.3.2
+flagsmith-flag-engine==3.4.0
     # via -r requirements.in
 future==0.18.3
     # via django-ses
@@ -292,6 +292,8 @@ sendgrid-django==4.2.0
 sentry-sdk==1.17.0
     # via -r requirements.in
 shortuuid==1.0.1
+    # via -r requirements.in
+simplejson==3.19.1
     # via -r requirements.in
 six==1.16.0
     # via
