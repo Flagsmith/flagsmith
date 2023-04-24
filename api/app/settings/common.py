@@ -400,6 +400,8 @@ ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 # Set up Email
 SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
 
+# NOTE: Use `sgbackend.SendGridBackend` as default
+# if `SENDGRID_API_KEY` is set in order to maintain backwards compatibility
 DEFAULT_EMAIL_BACKEND = (
     "sgbackend.SendGridBackend"
     if SENDGRID_API_KEY
