@@ -15,7 +15,8 @@ BEGIN
     LOOP
         -- Lock every selected task(by updating `is_locked` to true)
         UPDATE task_processor_recurringtask
-        -- Lock this row by setting is_locked True, so that no other workers can select these once this transaction is committed
+        -- Lock this row by setting is_locked True, so that no other workers can select these tasks after this
+        -- transaction is complete (but the tasks are still being executed by the current worker)
         SET is_locked = TRUE
         WHERE id = row_to_return.id;
         -- If we don't explicitly update the `is_locked` column here, the client will receive the row that is actually locked but has the `is_locked` value set to `False`.
