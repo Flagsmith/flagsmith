@@ -24,7 +24,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
 
   useEffect(() => {
     if (updateSuccess) {
-      onComplete?.(email)
+      onComplete?.()
     }
     // eslint-disable-next-line
   }, [updateSuccess])

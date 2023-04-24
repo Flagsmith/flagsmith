@@ -167,9 +167,9 @@ class TheComponent extends Component {
                                   openModal(
                                     'Change Email Address',
                                     <ChangeEmailAddress
-                                      onComplete={(newEmail) => {
+                                      onComplete={() => {
                                         closeModal()
-                                        this.setState({ email: newEmail })
+                                        AppActions.logout()
                                       }}
                                     />,
                                   )
