@@ -122,6 +122,10 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                },
+                {
+                    "name": "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID",
+                    "value": "d828a3a0-bf34-11ed-b08d-b12d3497f5c4"
                 }
             ],
             "secrets": [

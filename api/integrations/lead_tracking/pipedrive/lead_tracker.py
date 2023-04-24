@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from django.conf import settings
 
@@ -66,11 +67,17 @@ class PipedriveLeadTracker(LeadTracker):
             "title": user.email,
             "organization_id": organization.id,
             "person_id": person.id,
-            "custom_fields": {
-                settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
-            },
+            "label_ids": self.get_label_ids_for_user(user),
+            "custom_fields": {},
         }
-        if user.sign_up_type:
+        if (
+            settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
+            and settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
+        ):
+            create_lead_kwargs["custom_fields"][
+                settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
+            ] = settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
+        if user.sign_up_type and settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY:
             create_lead_kwargs["custom_fields"][
                 settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY
             ] = user.sign_up_type
@@ -86,6 +93,12 @@ class PipedriveLeadTracker(LeadTracker):
             },
         )
         return organization
+
+    @staticmethod
+    def get_label_ids_for_user(user: FFAdminUser) -> typing.List[str]:
+        if any(org.is_paid for org in user.organisations.all()):
+            return [settings.PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID]
+        return []
 
     def _get_org_by_domain(self, domain: str) -> PipedriveOrganization:
         matching_organizations = self.client.search_organizations(domain)

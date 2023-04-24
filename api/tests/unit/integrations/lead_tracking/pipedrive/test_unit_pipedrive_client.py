@@ -35,7 +35,11 @@ def test_pipedrive_api_client_create_lead(
     assert len(responses.calls) == 1
     call = responses.calls[0]
     request_body = json.loads(call.request.body.decode("utf-8"))
-    assert request_body == {"title": title, "organization_id": organization_id}
+    assert request_body == {
+        "title": title,
+        "organization_id": organization_id,
+        "label_ids": [],
+    }
     assert call.request.params["api_token"] == pipedrive_api_token
 
     assert lead.id == lead_id
@@ -266,3 +270,37 @@ def test_pipedrive_api_client_create_person(
 
     assert person.name == person_name
     assert person.id == person_id
+
+
+@responses.activate
+def test_pipedrive_api_client_list_lead_labels(
+    pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
+):
+    # Given
+    example_response_file_name = join(
+        dirname(abspath(__file__)), "example_api_responses/list_lead_labels.json"
+    )
+
+    # obtained from file above, duplicated here to simplify test
+    result_label_id = "f08b42a0-4e75-11ea-9643-03698ef1cfd6"
+    result_label_name = "Hot"
+
+    with open(example_response_file_name) as f:
+        responses.add(
+            method=responses.GET,
+            url=f"{pipedrive_base_url}/leadLabels",
+            json=json.load(f),
+            status=200,
+        )
+
+    # When
+    persons = pipedrive_api_client.list_lead_labels()
+
+    # Then
+    assert len(responses.calls) == 1
+    call = responses.calls[0]
+    assert call.request.params["api_token"] == pipedrive_api_token
+
+    assert len(persons) == 1
+    assert persons[0].name == result_label_name
+    assert persons[0].id == result_label_id
