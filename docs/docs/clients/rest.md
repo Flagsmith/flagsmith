@@ -1,0 +1,307 @@
+---
+description: Manage your Feature Flags and Remote Config in your REST APIs.
+sidebar_label: REST
+sidebar_position: 2
+---
+
+# Direct API Access
+
+:::tip
+
+Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](#json-view) from your account
+settings page which will help you access these variables.
+
+:::
+
+Flagsmith is built around a client/server architecture. The REST API server is accessible from SDK clients as well as
+the administration front end. This decoupling means that you can programmatically access the entire API if you wish.
+
+We have a [Postman Collection](https://www.postman.com/flagsmith/workspace/flagsmith/overview) that you can use to play
+around with the API and get a feel for how it works.
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/14712118-a638325a-f1f4-4570-8b4d-fd2841218dfa?action=collection%2Ffork&collection-url=entityId%3D14712118-a638325a-f1f4-4570-8b4d-fd2841218dfa%26entityType%3Dcollection%26workspaceId%3D452554eb-f581-4754-b5b8-0deabdce9f4b#?env%5BFlagsmith%20Environment%5D=W3sia2V5IjoiRmxhZ3NtaXRoIEVudmlyb25tZW50IEtleSIsInZhbHVlIjoiOEt6RVRkRGVNWTd4a3FrU2tZM0dzZyIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiaHR0cHM6Ly9hcGkuZmxhZ3NtaXRoLmNvbS9hcGkvdjEvIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJJZGVudGl0eSIsInZhbHVlIjoicG9zdG1hbl91c2VyXzEyMyIsImVuYWJsZWQiOnRydWV9XQ==)
+
+You can also access the API directly with tools like [curl](https://curl.haxx.se/) or [httpie](https://httpie.org/), or
+with clients for languages that we do not currently have SDKs for.
+
+## API Explorer
+
+You can view the API via Swagger at [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/) or
+get OpenAPI as [JSON](https://api.flagsmith.com/api/v1/docs/?format=.json) or
+[YAML](https://api.flagsmith.com/api/v1/docs/?format=.yaml).
+
+## Environment Key
+
+Publicly accessible API calls need to have an environment key supplied with each request. This is provided as an HTTP
+header, with the name `X-Environment-Key` and the value of the Environment Key that you can find within the Flagsmith
+administrative area.
+
+## Curl Examples
+
+These are the two main endpoints that you need to consume the SDK aspect of the API.
+
+### Get Environment Flags
+
+```bash
+curl 'https://edge.api.flagsmith.com/api/v1/flags/' -H 'X-Environment-Key: <Your Env Key>'
+```
+
+### Send Identity with Traits and receive Flags
+
+This command will perform the entire SDK Identity workflow in a single call:
+
+1. Lazily create an Identity
+2. Setting Traits for the Identity
+3. Receiving the Flags for that Identity
+
+```bash
+curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
+--header 'X-Environment-Key: <Your Env Key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "identifier":"identifier_5",
+    "traits": [
+        {
+            "trait_key": "my_trait_key",
+            "trait_value": 123.5
+        },
+        {
+            "trait_key": "my_other_key",
+            "trait_value": true
+        }
+    ]
+}'
+```
+
+## Private Endpoints
+
+You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
+administrative front end via the API.
+
+To authenticate, you can use the token associated with your account. This can be found in the "Account" page from the
+top right navigation panel. Use this token for API calls. For example, to create a new evironment:
+
+```bash
+curl 'https://api.flagsmith.com/api/v1/environments/' \
+    -H 'content-type: application/json' \
+    -H 'authorization: Token <TOKEN FROM PREVIOUS STEP>' \
+    --data-binary '{"name":"New Environment","project":"<Project ID>"}'
+```
+
+You can find a complete list of endpoints via the Swagger REST API at
+[https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/).
+
+## JSON View
+
+You can enable the JSON view in your account settings page. This will then give you access to relevant object meta data
+in the Flag area of the dashboard:
+
+![JSON View](/img/json-view.png)
+
+## Code Examples
+
+Below are some simple examples for achieving certain actions with the REST API, using python.
+
+### Create a feature
+
+```python
+import os
+
+from requests import Session
+
+API_URL = os.environ.get("API_URL", "https://api.flagsmith.com/api/v1")  # update this if self-hosting
+PROJECT_ID = os.environ["PROJECT_ID"]  # obtain this from the URL on your dashboard
+TOKEN = os.environ["API_TOKEN"]  # obtain this from the account page in your dashboard
+FEATURE_NAME = os.environ["FEATURE_NAME"]  # name of the feature to create
+
+session = Session()
+session.headers.update({"Authorization": f"Token {TOKEN}"})
+
+create_feature_url = f"{API_URL}/projects/{PROJECT_ID}/features/"
+data = {"name": FEATURE_NAME}
+response = session.post(create_feature_url, json=data)
+```
+
+### Update the value / state of a feature in an environment
+
+```python
+import json
+import os
+
+import requests
+
+TOKEN = os.environ.get("API_TOKEN")  # obtained from Account section in dashboard
+ENV_KEY = os.environ.get("ENV_KEY")  # obtained from environment settings in dashboard
+BASE_URL = "https://api.flagsmith.com/api/v1"  # update this if self hosting
+FEATURE_STATES_URL = f"{BASE_URL}/environments/{ENV_KEY}/featurestates"
+FEATURE_NAME = os.environ.get("FEATURE_NAME")
+
+session = requests.Session()
+session.headers.update(
+    {"Authorization": f"Token {TOKEN}", "Content-Type": "application/json"}
+)
+
+# get the existing feature state id based on the feature name
+get_feature_states_response = session.get(
+    f"{FEATURE_STATES_URL}/?feature_name={FEATURE_NAME}"
+)
+feature_state_id = get_feature_states_response.json()["results"][0]["id"]
+
+# update the feature state
+data = {"enabled": True, "feature_state_value": "new value"}  # `feature_state_value` can be str, int, bool or float
+update_feature_state_response = session.patch(
+    f"{FEATURE_STATES_URL}/{feature_state_id}/", data=json.dumps(data)
+)
+```
+
+### Create a segment and segment override
+
+```python
+import os
+
+from requests import Session
+
+API_URL = os.environ.get("API_URL", "https://api.flagsmith.com/api/v1")  # update this if self-hosting
+SEGMENT_NAME = os.environ["SEGMENT_NAME"]  # define the name of the segment here
+PROJECT_ID = os.environ["PROJECT_ID"]  # obtain this from the URL on your dashboard
+TOKEN = os.environ["API_TOKEN"]  # obtain this from the account page in your dashboard
+FEATURE_ID = os.environ.get("FEATURE_ID")  # obtain this from the URL on your dashboard when viewing a feature
+IS_FEATURE_SPECIFIC = os.environ.get("IS_FEATURE_SPECIFIC", default=False) == "True"  # set this to True to create a feature specific segment
+ENVIRONMENT_ID = os.environ["ENVIRONMENT_ID"]  # must (currently) be obtained by inspecting the request to /api/v1/environments in the network console
+
+# set these values to create a segment override for the segment, feature, environment combination
+ENABLE_FOR_SEGMENT = os.environ.get("ENABLE_FOR_SEGMENT", default=False) == "True"
+VALUE_FOR_SEGMENT = os.environ.get("VALUE_FOR_SEGMENT")
+
+SEGMENT_DEFINITION = {
+    "name": SEGMENT_NAME,
+    "feature": FEATURE_ID if IS_FEATURE_SPECIFIC else None,
+    "project": PROJECT_ID,
+    "rules": [
+        {
+            "type": "ALL",
+            "rules": [  # add extra rules here to build up 'AND' logic
+                {
+                    "type": "ANY",
+                    "conditions": [  # add extra conditions here to build up 'OR' logic
+                        {
+                            "property": "my_trait",  # specify a trait key that you want to match on, e.g. organisationId
+                            "operator": "EQUAL",  # specify the operator you want to use (one of EQUAL, NOT_EQUAL, GREATER_THAN, LESS_THAN, GREATER_THAN_INCLUSIVE, LESS_THAN_INCLUSIVE, CONTAINS, NOT_CONTAINS, REGEX, PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET)
+                            "value": "my-value"  # the value to match against, e.g. 103
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+session = Session()
+session.headers.update({"Authorization": f"Token {TOKEN}"})
+
+# first let's create the segment
+create_segment_url = f"{API_URL}/projects/{PROJECT_ID}/segments/"
+create_segment_response = session.post(create_segment_url, json=SEGMENT_DEFINITION)
+assert create_segment_response.status_code == 201
+segment_id = create_segment_response.json()["id"]
+
+if not any(key in os.environ for key in ("ENABLE_FOR_SEGMENT", "VALUE_FOR_SEGMENT")):
+    print("Segment created! Not creating an override as no state / value defined.")
+    exit(0)
+
+# next we need to create a feature segment (a flagsmith internal entity)
+create_feature_segment_url = f"{API_URL}/features/feature-segments/"
+feature_segment_data = {
+    "feature": FEATURE_ID,
+    "segment": segment_id,
+    "environment": ENVIRONMENT_ID
+}
+create_feature_segment_response = session.post(create_feature_segment_url, json=feature_segment_data)
+assert create_feature_segment_response.status_code == 201
+feature_segment_id = create_feature_segment_response.json()["id"]
+
+# finally, we can create the segment override
+create_segment_override_url = f"{API_URL}/features/featurestates/"
+feature_state_data = {
+    "feature": FEATURE_ID,
+    "feature_segment": feature_segment_id,
+    "environment": ENVIRONMENT_ID,
+    "enabled": ENABLE_FOR_SEGMENT,
+    "feature_state_value": {
+        "type": "unicode",
+        "string_value": VALUE_FOR_SEGMENT
+    }
+}
+create_feature_state_response = session.post(create_segment_override_url, json=feature_state_data)
+assert create_feature_state_response.status_code == 201
+```
+
+### Update a segment's rules
+
+```python
+import os
+
+from requests import Session
+
+API_URL = os.environ.get("API_URL", "https://api.flagsmith.com/api/v1")  # update this if self-hosting
+PROJECT_ID = os.environ["PROJECT_ID"]  # obtain this from the URL on your dashboard
+TOKEN = os.environ["API_TOKEN"]  # obtain this from the account page in your dashboard
+SEGMENT_ID = os.environ.get("SEGMENT_ID")  # obtain this from the URL on your dashboard when viewing a segment
+
+SEGMENT_RULES_DEFINITION = {
+    "rules": [
+        {
+            "type": "ALL",
+            "rules": [
+                {
+                    "type": "ANY",
+                    "conditions": [  # add as many conditions here to build up a segment
+                        {
+                            "property": "my_trait",  # specify a trait key that you want to match on, e.g. organisationId
+                            "operator": "EQUAL",  # specify the operator you want to use (one of EQUAL, NOT_EQUAL, GREATER_THAN, LESS_THAN, GREATER_THAN_INCLUSIVE, LESS_THAN_INCLUSIVE, CONTAINS, NOT_CONTAINS, REGEX, PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET)
+                            "value": "my-value"  # the value to match against, e.g. 103
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+session = Session()
+session.headers.update({"Authorization": f"Token {TOKEN}"})
+
+update_segment_url = f"{API_URL}/projects/{PROJECT_ID}/segments/{SEGMENT_ID}/"
+session.patch(update_segment_url, json=SEGMENT_RULES_DEFINITION)
+```
+
+### Iterate over Identities
+
+Sometimes it can be useful to iterate over your Identities to check things like Segment overrides.
+
+```python
+import os
+
+import requests
+
+TOKEN = os.environ.get("API_TOKEN")  # obtained from Account section in dashboard
+ENV_KEY = os.environ.get("ENV_KEY")  # obtained from Environment settings in dashboard
+BASE_URL = "https://api.flagsmith.com/api/v1"  # update this if self hosting
+IDENTITIES_PAGE_URL = f"{BASE_URL}/environments/{ENV_KEY}/edge-identities/?page_size=20"
+
+session = requests.Session()
+session.headers.update(
+    {"Authorization": f"Token {TOKEN}", "Content-Type": "application/json"}
+)
+
+# get the existing feature state id based on the feature name
+page_of_identities = session.get(f"{IDENTITIES_PAGE_URL}")
+print(page_of_identities.json())
+
+for identity in page_of_identities.json()['results']:
+    print(str(identity))
+    IDENTITY_UUID = identity['identity_uuid']
+    IDENTITY_URL = f"{BASE_URL}/environments/{ENV_KEY}/edge-identities/{IDENTITY_UUID}/edge-featurestates/all/"
+    identity_data = session.get(f"{IDENTITY_URL}")
+    print(identity_data.json())
+```
