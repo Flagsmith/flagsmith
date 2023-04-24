@@ -80,12 +80,12 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  deleteUser = (id, fullName, email) => {
+  deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Delete User</h3>,
+      <h3>Remove User</h3>,
       <p>
-        Are you sure you want to remove the user {fullName} with email address{' '}
-        {email}?
+        Are you sure you want to remove the user {userDisplayName} from the
+        organisation?
       </p>,
       () => AppActions.deleteUser(id),
     )
@@ -996,6 +996,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
+                                                                email,
                                                               },
                                                             ),
                                                             email,
