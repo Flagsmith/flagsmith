@@ -10,10 +10,12 @@ BEGIN
         WHERE num_failures < 3 AND scheduled_for < NOW() AND completed = FALSE AND is_locked = FALSE
         ORDER BY scheduled_for ASC, created_at ASC
         LIMIT num_tasks
+        -- Select for update to ensure that no other workers can select these tasks while in this transaction block
         FOR UPDATE SKIP LOCKED
     LOOP
         -- Lock every selected task(by updating `is_locked` to true)
         UPDATE task_processor_task
+        -- Lock this row by setting is_locked True, so that no other workers can select these once this transaction is committed
         SET is_locked = TRUE
         WHERE id = row_to_return.id;
         -- If we don't explicitly update the `is_locked` column here, the client will receive the row that is actually locked but has the `is_locked` value set to `False`.
