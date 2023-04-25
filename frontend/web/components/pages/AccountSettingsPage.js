@@ -11,6 +11,8 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import ConfirmDeleteAccount from '../modals/ConfirmDeleteAccount'
+import { updateAccount } from 'common/services/useAccount'
+import { getStore } from 'common/store'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -34,23 +36,23 @@ class TheComponent extends Component {
     if (isSaving || !first_name || !last_name) {
       return
     }
-    // _data.patch(`${Project.api}auth/users/me/`, {
-    _data
-      .put(`${Project.api}auth/users/me/`, {
-        email,
-        first_name,
-        id: AccountStore.model.id,
-        last_name,
-      })
-      .then(() => {
-        toast('Your account has been updated')
-      })
-      .catch(() =>
+    this.setState({ isSaving: true })
+    updateAccount(getStore(), {
+      email,
+      first_name,
+      id: AccountStore.model.id,
+      last_name,
+    }).then((res) => {
+      this.setState({ isSaving: false })
+      if (res.error) {
         this.setState({
           error:
             'There was an error setting your account, please check your details',
-        }),
-      )
+        })
+      } else {
+        toast('Your account has been updated')
+      }
+    })
   }
 
   confirmDeleteAccount = (lastUserOrganisations, id, hasOrganisations) => {
@@ -93,7 +95,7 @@ class TheComponent extends Component {
     ) {
       return
     }
-    // _data.post(`${Project.api}auth/users/set_password/`, {
+    this.setState({ isSaving: true })
     _data
       .post(`${Project.api}auth/users/set_password/`, {
         current_password,
@@ -101,10 +103,12 @@ class TheComponent extends Component {
         re_new_password: new_password2,
       })
       .then(() => {
+        this.setState({ isSaving: false })
         toast('Your password has been updated')
       })
       .catch(() =>
         this.setState({
+          isSaving: false,
           passwordError:
             'There was an error setting your password, please check your details.',
         }),
@@ -133,7 +137,8 @@ class TheComponent extends Component {
 
     return (
       <AccountProvider>
-        {({ isSaving }) => {
+        {({}) => {
+          const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
 

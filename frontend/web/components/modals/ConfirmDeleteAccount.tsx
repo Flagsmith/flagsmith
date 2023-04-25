@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
-import { useDeleteDeleteUserAccountMutation } from 'common/services/useDeleteUserAccount'
+import { useDeleteAccountMutation } from 'common/services/useAccount'
 
 type ConfirmDeleteAccountType = {
   lastUserOrganisations: Array<object>
@@ -24,7 +24,7 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
       isLoading: updating,
       isSuccess: updateSuccess,
     },
-  ] = useDeleteDeleteUserAccountMutation()
+  ] = useDeleteAccountMutation()
 
   useEffect(() => {
     if (updateSuccess) {

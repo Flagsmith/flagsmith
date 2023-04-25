@@ -225,6 +225,20 @@ export type FeatureListProviderActions = {
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
 
+export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
+
+export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
+
+export type Account = {
+  first_name: string
+  last_name: string
+  sign_up_type: SignupType
+  id: number
+  email: string
+  auth_type: AuthType
+  is_superuser: boolean
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -254,6 +268,6 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
-  deleteUserAccount: {}
+  account: Account
   // END OF TYPES
 }
