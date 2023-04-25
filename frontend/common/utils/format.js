@@ -90,6 +90,11 @@ const Format = {
       : Format.camelCase(sn)
   },
 
+  userDisplayName(person) {
+    // {firstName:'John', lastName:'Doe', email: 'JD123@email.com'} > John Doe || JD123@email.com
+    return Format.fullName(person) || person.email
+  },
+
   initialAndLastName(person) {
     // {firstName:'Kyle', lastName:'Johnson'} > K. Johnson
     const value = Format.fullName(person)
