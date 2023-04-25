@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+import pytest
+
 from task_processor.decorators import register_task_handler
 from task_processor.models import Task
 
@@ -20,3 +24,14 @@ def test_task_run():
 
     # Then
     assert result == my_callable(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "input, expected_output",
+    (
+        ({"value": Decimal("10")}, '{"value": 10}'),
+        ({"value": Decimal("10.12345")}, '{"value": 10.12345}'),
+    ),
+)
+def test_serialize_data_handles_decimal_objects(input, expected_output):
+    assert Task.serialize_data(input) == expected_output

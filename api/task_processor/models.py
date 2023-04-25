@@ -1,12 +1,13 @@
-import json
 import typing
 import uuid
 from datetime import datetime
 
+import simplejson as json
 from django.db import models
 from django.utils import timezone
 
 from task_processor.exceptions import TaskProcessingError
+from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
 
 
@@ -16,6 +17,7 @@ class AbstractBaseTask(models.Model):
     task_identifier = models.CharField(max_length=200)
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
+    is_locked = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -42,10 +44,10 @@ class AbstractBaseTask(models.Model):
         return json.loads(data)
 
     def mark_failure(self):
-        pass
+        self.is_locked = False
 
     def mark_success(self):
-        pass
+        self.is_locked = False
 
     def run(self):
         return self.callable(*self.args, **self.kwargs)
@@ -68,6 +70,7 @@ class Task(AbstractBaseTask):
     # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
+    objects = TaskManager()
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
@@ -112,14 +115,18 @@ class Task(AbstractBaseTask):
         return task
 
     def mark_failure(self):
+        super().mark_failure()
         self.num_failures += 1
 
     def mark_success(self):
+        super().mark_failure()
         self.completed = True
 
 
 class RecurringTask(AbstractBaseTask):
     run_every = models.DurationField()
+
+    objects = RecurringTaskManager()
 
     class Meta:
         constraints = [

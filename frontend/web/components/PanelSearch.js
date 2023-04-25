@@ -12,6 +12,7 @@ const PanelSearch = class extends Component {
     isLoading: OptionalBool,
     items: propTypes.any,
     nextPage: OptionalFunc,
+    noResultsText: OptionalString,
     paging: OptionalObject,
     renderNoResults: propTypes.any,
     renderRow: RequiredFunc,
@@ -286,13 +287,17 @@ const PanelSearch = class extends Component {
           ) : (
             <Column>
               {!isLoading && (
-                <div className='mx-2 mt-1 mb-2'>
-                  {'No results '}
-                  {search && (
-                    <span>
-                      for
-                      <strong>{` "${search}"`}</strong>
-                    </span>
+                <div className='mx-2 pt-1 pb-2'>
+                  {this.props.noResultsText?.(search) || (
+                    <>
+                      {'No results '}
+                      {search && (
+                        <span>
+                          for
+                          <strong>{` "${search}"`}</strong>
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               )}

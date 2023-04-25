@@ -6,6 +6,8 @@ import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import InfoMessage from 'components/InfoMessage'
+import Permission from 'common/providers/Permission'
 
 const OrganisationGroupsPage = class extends Component {
   static contextTypes = {
@@ -58,19 +60,34 @@ const OrganisationGroupsPage = class extends Component {
                 <div>
                   <Row space className='mt-4'>
                     <h3 className='m-b-0'>User Groups</h3>
-                    <Button
-                      className='mr-2'
-                      id='btn-invite'
-                      onClick={() =>
-                        openModal(
-                          'Create Group',
-                          <CreateGroupModal orgId={organisation.id} />,
-                        )
-                      }
-                      type='button'
+                    <Permission
+                      level='organisation'
+                      permission='MANAGE_USER_GROUPS'
+                      id={AccountStore.getOrganisation().id}
                     >
-                      Create Group
-                    </Button>
+                      {({ permission }) => (
+                        <>
+                          {Utils.renderWithPermission(
+                            permission,
+                            Constants.organisationPermissions('Manage Groups'),
+                            <Button
+                              className='mr-2'
+                              id='btn-invite'
+                              disabled={!permission}
+                              onClick={() =>
+                                openModal(
+                                  'Create Group',
+                                  <CreateGroupModal orgId={organisation.id} />,
+                                )
+                              }
+                              type='button'
+                            >
+                              Create Group
+                            </Button>,
+                          )}
+                        </>
+                      )}
+                    </Permission>
                   </Row>
                   <p>
                     Groups allow you to manage permissions for viewing and

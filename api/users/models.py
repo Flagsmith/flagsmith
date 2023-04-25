@@ -435,6 +435,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         return all_permission_keys
 
+    def add_to_group(
+        self, group: "UserPermissionGroup", group_admin: bool = False
+    ) -> None:
+        UserPermissionGroupMembership.objects.create(
+            ffadminuser=self, userpermissiongroup=group, group_admin=group_admin
+        )
+
     def is_group_admin(self, group_id) -> bool:
         return UserPermissionGroupMembership.objects.filter(
             ffadminuser=self, userpermissiongroup__id=group_id, group_admin=True

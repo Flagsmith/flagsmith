@@ -126,7 +126,7 @@
     "webpack-hot-middleware": "2.25.3",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
-    "yaml": "^2.0.0"
+    "yaml": "^2.2.2"
   },
   "devDependencies": {
     "@dword-design/eslint-plugin-import-alias": "^2.0.7",
