@@ -646,6 +646,27 @@ def test_get_flags_hide_disabled_flags(
     assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
+def test_get_flags_hide_sensitive_data(api_client, environment, feature):
+    # Given
+    environment.hide_sensitive_data = True
+    environment.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert set(response.json()[0].keys()) == {
+        "feature",
+        "feature_state_value",
+        "enabled",
+    }
+    assert set(response.json()[0]["feature"].keys()) == {"id", "name", "type"}
+
+
 @pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )

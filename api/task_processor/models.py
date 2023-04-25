@@ -1,8 +1,8 @@
-import json
 import typing
 import uuid
 from datetime import datetime
 
+import simplejson as json
 from django.db import models
 from django.utils import timezone
 

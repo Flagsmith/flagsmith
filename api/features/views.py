@@ -62,6 +62,7 @@ from .serializers import (
     GetUsageDataQuerySerializer,
     ListCreateFeatureSerializer,
     ProjectFeatureSerializer,
+    SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
@@ -562,7 +563,7 @@ def get_feature_state_by_uuid(request, uuid):
 
 
 class SDKFeatureStates(GenericAPIView):
-    serializer_class = FeatureStateSerializerFull
+    serializer_class = SDKFeatureStateSerializer
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
