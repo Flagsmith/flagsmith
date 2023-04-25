@@ -42,8 +42,10 @@ who is responsible for a particular flag.
 ## Flag Defaults
 
 By default, when you create a feature with a value and enabled state it acts as a default for your other Environments.
-In the Project Settings page, you have the option of enabling this setting. It forces the user to create a Feature
-before setting its values per Environment.
+In the Project Settings page, you have the option of enabling the setting 'Prevent flag defaults' to prevent this
+behaviour. When this setting is enabled the user is not able to provide defaults when creating the feature. The feature
+will be created with an empty value and will be turned off in all environments. Users are then required to modify the
+state / value of the feature in each environment individually.
 
 ## Comparing Flags
 
