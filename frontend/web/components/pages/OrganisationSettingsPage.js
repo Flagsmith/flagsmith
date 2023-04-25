@@ -1256,8 +1256,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {Utils.getFlagsmithHasFeature('usage_chart') &&
-                          (!Project.disableInflux ||
-                            !Project.disableAnalytics) && (
+                          !Project.disableAnalytics && (
                             <TabItem
                               tabLabel='Usage'
                               tabIcon='ion-md-analytics'
