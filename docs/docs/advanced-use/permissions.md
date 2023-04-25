@@ -20,6 +20,9 @@ these features as part of a self hosted/on premise solution, please [get in touc
 Groups are a convenient way to manage permissions for multiple team members. Groups can contain any number of team
 members. You can create groups with the Organisation Settings page.
 
+Members of a group can be designated as an admin for that group. As a group admin, users can manage the membership for
+that group, but not the permissions the group has on other entities.
+
 ## Organisations
 
 Team members can be defined as Organisation Administrators or Users. Organisation Administrator is effectively a
