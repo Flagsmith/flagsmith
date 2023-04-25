@@ -5,13 +5,15 @@ import Utils from 'common/utils/utils'
 import { useDeleteDeleteUserAccountMutation } from 'common/services/useDeleteUserAccount'
 
 type ConfirmDeleteAccountType = {
-  lastUser: boolean
+  lastUserOrganisations: Array<object>
   userId: number
+  hasOrganisations: boolean
 }
 
 const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
-  lastUser,
+  lastUserOrganisations,
   userId,
+  hasOrganisations,
 }) => {
   const [password, setPassword] = useState<string>('')
   const [
@@ -23,6 +25,41 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
       isSuccess: updateSuccess,
     },
   ] = useDeleteDeleteUserAccountMutation()
+
+  useEffect(() => {
+    if (updateSuccess) {
+      closeModal()
+      AppActions.logout()
+    }
+  }, [updateSuccess])
+
+  const ModalBody: FC<ConfirmDeleteAccountType> = ({
+    lastUserOrganisations,
+    hasOrganisations,
+  }) => {
+    if (lastUserOrganisations.length >= 1) {
+      return (
+        <p>
+          You are the last user from:
+          {lastUserOrganisations.map((o) => {
+            return <strong key={o.id}> {o.name}, </strong>
+          })}
+          all your account data and{' '}
+          {lastUserOrganisations.length > 1 ? 'organisations' : 'organisation'}{' '}
+          data will be deleted.
+        </p>
+      )
+    } else if (hasOrganisations) {
+      return (
+        <p>
+          You will be removed from all organisations and all your account data
+          will be permanetly deleted.
+        </p>
+      )
+    } else {
+      return <p>All your account data will be permanetly deleted.</p>
+    }
+  }
 
   return (
     <div>
@@ -36,21 +73,13 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
         }}
       >
         <FormGroup>
-          {lastUser ? (
-            <p>
-              You are the last user from this organisation, all your account
-              data and organisation data will be deleted.
-            </p>
-          ) : (
-            <p>
-              You will be removed from all organisations and all your account
-              data will be deleted.
-            </p>
-          )}
-          <label>Please re-enter your password for confirm this action.</label>
+          <ModalBody
+            lastUserOrganisations={lastUserOrganisations}
+            hasOrganisations={hasOrganisations}
+          />
         </FormGroup>
         <InputGroup
-          title='Password'
+          title='Confirm Password'
           inputProps={{
             className: 'full-width',
             name: 'currentPassword',

@@ -53,10 +53,14 @@ class TheComponent extends Component {
       )
   }
 
-  confirmDeleteAccount = (lastUser, id) => {
+  confirmDeleteAccount = (lastUserOrganisations, id, hasOrganisations) => {
     openModal(
       'Are you sure',
-      <ConfirmDeleteAccount userId={id} lastUser={lastUser} />,
+      <ConfirmDeleteAccount
+        userId={id}
+        lastUserOrganisations={lastUserOrganisations}
+        hasOrganisations={hasOrganisations}
+      />,
     )
   }
 
@@ -122,12 +126,16 @@ class TheComponent extends Component {
       },
     } = this
 
+    const hasOrganisations = this.state.organisations.length >= 1
+    const lastUserOrganisations = hasOrganisations
+      ? this.state.organisations?.filter((o) => o?.num_seats == 1)
+      : []
+
     return (
       <AccountProvider>
-        {({ isSaving, organisation }) => {
+        {({ isSaving }) => {
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
-          const numUsers = organisation.num_seats
 
           return forced2Factor ? (
             <div className='app-container container'>
@@ -234,14 +242,15 @@ class TheComponent extends Component {
                       <Row className='mt-4' space>
                         <div className='col-md-8 pl-0'>
                           <h5>Delete Account</h5>
-                          <p>Your account will be permanently deleted.</p>
+                          <p>Your account data will be permanently deleted.</p>
                         </div>
                         <Button
                           id='delete-org-btn'
                           onClick={() =>
                             this.confirmDeleteAccount(
-                              numUsers > 1 ? false : true,
+                              lastUserOrganisations,
                               id,
+                              hasOrganisations,
                             )
                           }
                           className='btn btn--with-icon ml-auto btn--remove'

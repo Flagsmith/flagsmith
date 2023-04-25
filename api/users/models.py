@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, BEFORE_DELETE, LifecycleModel, hook
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -120,6 +120,18 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
+
+    @hook(BEFORE_DELETE)
+    def delete_organisation_with_a_last_user(self):
+        user_organisations = UserOrganisation.objects.filter(
+            user_id=self.initial_value("id")
+        )
+        for user_organisation in user_organisations:
+            users_count = UserOrganisation.objects.filter(
+                organisation_id=user_organisation.organisation_id
+            ).count()
+            if users_count == 1:
+                Organisation.objects.get(id=user_organisation.organisation_id).delete()
 
     @property
     def auth_type(self):
