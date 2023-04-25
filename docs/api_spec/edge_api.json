@@ -1,0 +1,313 @@
+{
+    "openapi": "3.0.3",
+    "info": { "title": "Edge API", "version": "1" },
+    "servers": [
+        {
+            "url": "https://edge.api.flagsmith.com/api/v1/",
+            "description": "Edge API"
+        }
+    ],
+    "paths": {
+        "/flags": {
+            "get": {
+                "tags": [],
+                "summary": "Get flags",
+                "description": "Retrieve the flags for an environment.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Flag"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/identities": {
+            "get": {
+                "tags": [],
+                "summary": "Get identity flags and traits",
+                "description": "Retrieve the flags and traits for an identity. Note: identity will be lazily created if it does not already exist.",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "query",
+                        "description": "Identity Key",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "items": {
+                                        "$ref": "#/components/schemas/IdentitiesResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [],
+                "summary": "Identify user",
+                "description": "Identify a user and retrieve their flags and traits in response.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "example": {},
+                                "$ref": "#/components/schemas/IdentitiesRequestData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "items": {
+                                        "$ref": "#/components/schemas/IdentitiesResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bulk-identities": {
+            "post": {
+                "tags": [],
+                "summary": "Bulk insert identities (overwrite)",
+                "description": "Bulk uploading identities and traits. If there is an existing identity, using POST will overwrite the existing identity with the data from the request.\n\n\n:::info INFO\nIt has a limit of 100 identities per request\n\n:::\n\n \n\n",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "example": {},
+                                "$ref": "#/components/schemas/BulkIdentitiesData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Number of identities must not be more than 100"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Environment not found"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Organisation is disabled from serving flags."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [],
+                "summary": "Bulk insert identities (update)",
+                "description": "Bulk uploading identities and traits. If there is an existing identity, using PUT will update the existing identity with the data from the request.\n\n\n:::info INFO\nIt has a limit of 100 identities per request\n\n:::\n\n \n\n",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "example": {},
+                                "$ref": "#/components/schemas/BulkIdentitiesData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Number of identities must not be more than 100"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Environment not found"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "Organisation is disabled from serving flags."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "EnvironmentKeyAuth": { "type": "apiKey", "in": "header", "name": "X-Environment-Key" }
+        },
+        "schemas": {
+            "Flag": {
+                "required": [],
+                "type": "array",
+                "properties": {
+                    "feature": {
+                        "$ref": "#/components/schemas/Feature"
+                    },
+                    "feature_state_value": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "float"
+                            }
+                        ],
+                        "description": "Can be any of the following types: string, integer, boolean, float"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Feature": {
+                "title": "feature",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Trait": {
+                "type": "object",
+                "properties": {
+                    "trait_key": {
+                        "type": "string"
+                    },
+                    "trait_value": {
+                        "type": "string"
+                    }
+                }
+            },
+            "IdentitiesResponse": {
+                "required": [],
+                "type": "object",
+                "properties": {
+                    "identifier": {
+                        "type": "string"
+                    },
+                    "flags": {
+                        "$ref": "#/components/schemas/Flag"
+                    },
+                    "traits": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Trait"
+                        }
+                    }
+                }
+            },
+            "IdentitiesRequestData": {
+                "required": true,
+                "type": "object",
+                "properties": {
+                    "traits": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Trait"
+                        }
+                    },
+                    "identifier": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BulkIdentitiesData": {
+                "required": true,
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/IdentitiesRequestData"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "security": [{ "EnvironmentKeyAuth": [] }],
+    "tags": []
+}

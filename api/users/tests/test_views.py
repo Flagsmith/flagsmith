@@ -1,9 +1,11 @@
 import json
+import typing
 from unittest.case import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth import login
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -285,17 +287,19 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         )
         data = {"name": "New Test Group"}
 
-        responses = [
-            client.post(self.list_url, data=data),
+        create_response = client.post(self.list_url, data=data)
+
+        _404_responses = [
             client.put(self._detail_url(group.id)),
             client.get(self._detail_url(group.id)),
             client.delete(self._detail_url(group.id)),
         ]
 
+        assert create_response.status_code == status.HTTP_403_FORBIDDEN
         assert all(
             [
-                response.status_code == status.HTTP_403_FORBIDDEN
-                for response in responses
+                response.status_code == status.HTTP_404_NOT_FOUND
+                for response in _404_responses
             ]
         )
         assert UserPermissionGroup.objects.filter(name=group_name).exists()
@@ -486,3 +490,29 @@ def test_retrieve_user_permission_group_includes_group_admin(
         next(filter(lambda u: u["id"] == group_admin_user.id, users))["group_admin"]
         is True
     )
+
+
+def test_group_admin_can_retrieve_group(
+    organisation: Organisation,
+    django_user_model: typing.Type[AbstractUser],
+    api_client: APIClient,
+):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation)
+    group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="Test group"
+    )
+    user.add_to_group(group, group_admin=True)
+
+    api_client.force_authenticate(user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

@@ -1,4 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+import UserGroupList from 'components/UserGroupList'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -63,15 +65,21 @@ export type User = {
   last_name: string
   role: 'ADMIN' | 'USER'
 }
+export type GroupUser = Omit<User, 'role'> & {
+  group_admin: boolean
+}
 
 export type ProjectSummary = Omit<Project, 'environments'>
 
-export type UserGroup = {
+export type UserGroupSummary = {
   external_id: string | null
   id: number
   is_default: boolean
   name: string
-  users: User[]
+}
+
+export type UserGroup = UserGroupSummary & {
+  users: GroupUser[]
 }
 
 export type UserPermission = {
@@ -269,5 +277,8 @@ export type Res = {
   tag: Tag
   tags: Tag[]
   account: Account
+  groupAdmin: { id: string }
+  groups: PagedResponse<UserGroupSummary>
+  group: UserGroup
   // END OF TYPES
 }

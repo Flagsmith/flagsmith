@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "f08b42a0-4e75-11ea-9643-03698ef1cfd6",
+      "name": "Hot",
+      "color": "red",
+      "add_time": "2020-02-13T15:31:44.000Z",
+      "update_time": "2020-02-13T15:31:44.000Z"
+    }
+  ]
+}

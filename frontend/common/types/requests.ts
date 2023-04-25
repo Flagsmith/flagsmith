@@ -67,5 +67,20 @@ export type Req = {
   getSegment: { projectId: string; id: string }
   updateAccount: Account
   deleteAccount: Account
+  createGroupAdmin: {
+    group: number | string
+    user: number | string
+    orgId: number | string
+  }
+  deleteGroupAdmin: {
+    orgId: number | string
+    group: number | string
+    user: number | string
+  }
+  getGroups: PagedRequest<{
+    orgId: string
+  }>
+  deleteGroup: { id: number | string; orgId: number | string }
+  getGroup: { id: string; orgId: string }
   // END OF TYPES
 }
