@@ -3,8 +3,7 @@ import uuid
 from datetime import timedelta
 from threading import Thread
 
-from django.db import transaction
-from django.test.testcases import TransactionTestCase
+import pytest
 
 from organisations.models import Organisation
 from task_processor.decorators import (
@@ -46,7 +45,8 @@ def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
 
 
 def test_run_recurring_tasks_runs_task_and_creates_recurring_task_run_object_when_success(
-    db, monkeypatch
+    db,
+    monkeypatch,
 ):
     # Given
     monkeypatch.setenv("RUN_BY_PROCESSOR", "True")
@@ -73,6 +73,7 @@ def test_run_recurring_tasks_runs_task_and_creates_recurring_task_run_object_whe
     assert task_run.error_details is None
 
 
+@pytest.mark.django_db(transaction=True)
 def test_run_recurring_tasks_multiple_runs(db, run_by_processor):
     # Given
     organisation_name = "test-org"
@@ -105,8 +106,9 @@ def test_run_recurring_tasks_multiple_runs(db, run_by_processor):
         assert task_run.error_details is None
 
 
-def test_run_recurring_tasks_only_executes_tasks_and_interval_set_by_run_every(
-    db, run_by_processor
+def test_run_recurring_tasks_only_executes_tasks_after_interval_set_by_run_every(
+    db,
+    run_by_processor,
 ):
     # Given
     organisation_name = "test-org"
@@ -172,8 +174,36 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     assert not task.completed
 
 
+def test_run_task_runs_failed_task_again(db):
+    # Given
+    task = Task.create(_raise_exception.task_identifier)
+    task.save()
+
+    # When
+    first_task_runs = run_tasks()
+
+    # Now, let's run the task again
+    second_task_runs = run_tasks()
+
+    # Then
+    task_runs = first_task_runs + second_task_runs
+    assert len(task_runs) == TaskRun.objects.filter(task=task).count() == 2
+
+    # Then
+    for task_run in task_runs:
+        assert task_run.result == TaskResult.FAILURE
+        assert task_run.started_at
+        assert task_run.finished_at is None
+        assert task_run.error_details is not None
+
+    task.refresh_from_db()
+    assert task.completed is False
+    assert task.is_locked is False
+
+
 def test_run_recurring_task_runs_task_and_creates_recurring_task_run_object_when_failure(
-    db, run_by_processor
+    db,
+    run_by_processor,
 ):
     # Given
     task_identifier = "test_unit_task_processor_processor._raise_exception"
@@ -196,7 +226,7 @@ def test_run_recurring_task_runs_task_and_creates_recurring_task_run_object_when
     assert task_run.error_details is not None
 
 
-def test_run_next_task_does_nothing_if_no_tasks(db):
+def test_run_task_does_nothing_if_no_tasks(db):
     # Given - no tasks
     # When
     result = run_tasks()
@@ -205,7 +235,8 @@ def test_run_next_task_does_nothing_if_no_tasks(db):
     assert not TaskRun.objects.exists()
 
 
-def test_run_next_task_runs_tasks_in_correct_order(db):
+@pytest.mark.django_db(transaction=True)
+def test_run_task_runs_tasks_in_correct_order():
     # Given
     # 2 tasks
     task_1 = Task.create(
@@ -227,43 +258,39 @@ def test_run_next_task_runs_tasks_in_correct_order(db):
     assert task_runs_2[0].task == task_2
 
 
-class TestProcessor(TransactionTestCase):
-    def test_get_next_task_skips_locked_rows(self):
-        """
-        This test verifies that tasks are locked while being executed, and hence
-        new task runners are not able to pick up 'in progress' tasks.
-        """
-        # Given
-        # 2 tasks
-        # One which is configured to just sleep for 3 seconds, to simulate a task
-        # being held for a short period of time
-        task_1 = Task.create(_sleep.task_identifier, args=(3,))
-        task_1.save()
+@pytest.mark.django_db(transaction=True)
+def test_run_tasks_skips_locked_tasks():
+    """
+    This test verifies that tasks are locked while being executed, and hence
+    new task runners are not able to pick up 'in progress' tasks.
+    """
+    # Given
+    # 2 tasks
+    # One which is configured to just sleep for 3 seconds, to simulate a task
+    # being held for a short period of time
+    task_1 = Task.create(_sleep.task_identifier, args=(3,))
+    task_1.save()
 
-        # and another which should create an organisation
-        task_2 = Task.create(
-            _create_organisation.task_identifier, args=("task 2 organisation",)
-        )
-        task_2.save()
+    # and another which should create an organisation
+    task_2 = Task.create(
+        _create_organisation.task_identifier, args=("task 2 organisation",)
+    )
+    task_2.save()
 
-        threads = []
+    # When
+    # we spawn a new thread to run the first task (configured to just sleep)
+    task_runner_thread = Thread(target=run_tasks)
+    task_runner_thread.start()
 
-        # When
-        # we spawn a new thread to run the first task (configured to just sleep)
-        task_runner_thread = Thread(target=run_tasks)
-        threads.append(task_runner_thread)
-        task_runner_thread.start()
+    # and subsequently attempt to run another task in the main thread
+    time.sleep(1)  # wait for the thread to start and hold the task
+    task_runs = run_tasks()
 
-        with transaction.atomic():
-            # and subsequently attempt to run another task in the main thread
-            time.sleep(1)  # wait for the thread to start and hold the task
-            task_runs = run_tasks()
+    # Then
+    # the second task is run while the 1st task is held
+    assert task_runs[0].task == task_2
 
-            # Then
-            # the second task is run while the 1st task is held
-            assert task_runs[0].task == task_2
-
-        [t.join() for t in threads]
+    task_runner_thread.join()
 
 
 def test_run_more_than_one_task(db):
