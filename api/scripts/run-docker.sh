@@ -17,7 +17,7 @@ function serve() {
 
     python manage.py waitfordb
 
-    gunicorn --bind 0.0.0.0:8000 \
+    exec gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
              --workers ${GUNICORN_WORKERS:-3} \
