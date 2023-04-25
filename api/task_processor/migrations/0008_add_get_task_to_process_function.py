@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 "sql",
                 "get_tasks_to_process.sql",
             ),
-            reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process()",
+            reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process",
         ),
         PostgresOnlyRunSQL.from_sql_file(
             os.path.join(
@@ -26,6 +26,6 @@ class Migration(migrations.Migration):
                 "sql",
                 "get_recurring_tasks_to_process.sql",
             ),
-            reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process()",
+            reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process",
         ),
     ]
