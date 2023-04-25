@@ -79,13 +79,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       env,
     })
   },
-  deleteGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_GROUP,
-      data,
-      orgId,
-    })
-  },
   deleteIdentityTrait(envId, identity, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_IDENTITY_TRAIT,
@@ -267,19 +260,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
       search,
       sort,
-    })
-  },
-  getGroups(orgId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_GROUPS,
-      orgId,
-    })
-  },
-  getGroupsPage(orgId, page) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_GROUPS_PAGE,
-      orgId,
-      page,
     })
   },
   getIdentity(envId, id) {

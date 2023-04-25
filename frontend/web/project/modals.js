@@ -190,12 +190,14 @@ const Confirm = class extends React.Component {
     return this.props.body || ''
   }
 
-  onNo = () => {
+  onNo = (e) => {
+    e?.preventDefault()
     this.props.onNo && this.props.onNo()
     this.refs.modal.close()
   }
 
-  onYes = () => {
+  onYes = (e) => {
+    e?.preventDefault()
     this.props.onYes && this.props.onYes()
     this.refs.modal.close()
   }

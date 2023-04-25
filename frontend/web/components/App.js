@@ -391,7 +391,10 @@ const App = class extends Component {
                                       >
                                         {({ permission }) => (
                                           <>
-                                            {!!permission && (
+                                            {(!!permission ||
+                                              Utils.getFlagsmithHasFeature(
+                                                'group_admins',
+                                              )) && (
                                               <NavLink
                                                 id='org-settings-link'
                                                 activeClassName='active'

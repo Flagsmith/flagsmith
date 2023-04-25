@@ -1,11 +1,22 @@
 .react-select{
+
+  &--is-disabled {
+    opacity: 0.5;
+  }
   input[type="text"] {
     border: none !important;
+  }
+  &__indicator-separator {
+    display: none;
   }
   &__control {
     background: $input-bg-dark;
     height: $input-height !important;
     border-radius: $border-radius-default !important;
+    &--is-focused {
+      border-color: $bt-brand-primary !important;
+      box-shadow: 0 0 0 1px $bt-brand-primary !important;
+    }
   }
   &__value-container {
     padding: 0px 8px;
@@ -21,6 +32,9 @@
 }
 .dark {
   .react-select {
+    &--is-disabled {
+      opacity: 0.25;
+    }
     input[type="text"] {
       color: white !important;
       border: none !important;
@@ -28,15 +42,17 @@
     &__control {
       background: $input-bg-dark;
       border: none;
+      box-shadow: none;
+      &--is-focused {
+        border-color: transparent !important;
+        box-shadow: none !important;
+      }
     }
     &__single-value {
       color: $input-color-dark;
     }
-    &__indicator-separator {
-      display: none;
-    }
     &__menu {
-      background: $input-bg-dark;
+      background: $dark-bg-0;
       color: $input-color-dark;
     }
     &__option {

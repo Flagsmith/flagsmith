@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Select from 'react-select'
 
 const EnvironmentSelect = class extends Component {
   static displayName = 'EnvironmentSelect'

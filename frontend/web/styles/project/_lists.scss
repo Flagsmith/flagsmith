@@ -26,6 +26,10 @@
     overflow-x: hidden !important;
 }
 
+.overflow-visible .search-list, .overflow-visible .List {
+    overflow-x: visible !important;
+}
+
 .table-header {
     line-height: 44px;
     border-bottom: 1px solid $bt-input-border;
