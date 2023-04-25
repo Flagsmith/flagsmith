@@ -1119,6 +1119,11 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
+                                                    null,
+                                                    {
+                                                      className:
+                                                        'side-modal fade create-feature-modal in',
+                                                    },
                                                   )
                                                 }
                                                 type='button'

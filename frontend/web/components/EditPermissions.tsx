@@ -24,7 +24,6 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
-const AppActions = require('common/dispatcher/app-actions')
 const Project = require('common/project')
 
 type EditPermissionModalType = {
@@ -317,9 +316,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     tabClassName,
   } = props
   const [tab, setTab] = useState()
-  useEffect(() => {
-    AppActions.getGroups(AccountStore.getOrganisation().id)
-  }, [])
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
