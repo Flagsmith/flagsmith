@@ -84,8 +84,8 @@ const OrganisationSettingsPage = class extends Component {
     openConfirm(
       <h3>Remove User</h3>,
       <p>
-        Are you sure you want to remove the user {userDisplayName} from the
-        organisation?
+        Are you sure you want to remove the user{' '}
+        <strong>{userDisplayName}</strong> from the organisation?
       </p>,
       () => AppActions.deleteUser(id),
     )
