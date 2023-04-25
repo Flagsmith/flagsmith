@@ -61,6 +61,7 @@ services:
       context: .
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: 'True' # Store API and Flag Analytics data in Postgres
     entrypoint:
       - 'python'
       - 'manage.py'
