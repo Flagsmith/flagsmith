@@ -28,6 +28,13 @@ function serve() {
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
              app.wsgi
 }
+function run_task_processor() {
+    python manage.py waitfordb --waitfor 30 --migrations
+    if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        python manage.py waitfordb --waitfor 30 --migrations --database analytics
+    fi
+    python manage.py runprocessor --sleepintervalms 500
+}
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
 }
@@ -48,6 +55,7 @@ function dump_organisation_to_s3(){
 function dump_organisation_to_local_fs(){
     python manage.py dumporganisationtolocalfs "$1" "$2"
 }
+# Note: `go_to_sleep` is deprecated and will be removed in a future release.
 function go_to_sleep(){
     echo "Sleeping for ${1} seconds before startup"
     sleep ${1}
@@ -59,6 +67,8 @@ if [ "$1" == "migrate" ]; then
 elif [ "$1" == "serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
+elif [ "$1" == "run-task-processor" ]; then
+    run_task_processor
 elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
