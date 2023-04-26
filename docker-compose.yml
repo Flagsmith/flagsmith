@@ -31,7 +31,6 @@ services:
       # To use task processor service, uncomment line below and additional 'flagsmith_processor'
       # container below
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
-
       # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
       #
       # Example SMTP:
@@ -62,12 +61,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'True' # Store API and Flag Analytics data in Postgres
-    entrypoint:
-      - 'python'
-      - 'manage.py'
-      - 'runprocessor'
-      - '--sleepintervalms'
-      - '500'
+    command:
+      - run-task-processor
     depends_on:
       - flagsmith
       - postgres
