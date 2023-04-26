@@ -10,6 +10,8 @@ import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
+import { getStore } from 'common/store'
+import { segmentService } from 'common/services/useSegment'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -463,6 +465,7 @@ class TheComponent extends Component {
         : SegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
+    const store = getStore()
 
     return (
       <div>
@@ -538,6 +541,7 @@ class TheComponent extends Component {
                   segmentEditId: undefined,
                 })
                 this.props.setShowCreateSegment(false)
+                store.dispatch(segmentService.util.resetApiState())
               }}
               onCancel={() => {
                 this.setState({ segmentEditId: undefined })
