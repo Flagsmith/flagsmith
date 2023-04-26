@@ -44,6 +44,7 @@ export const segmentService = service
       updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
         invalidatesTags: (q, e, arg) => [
           { id: `LIST${arg.projectId}`, type: 'Segment' },
+          { id: `${arg.segment.id}`, type: 'Segment' },
         ],
         query: (query: Req['updateSegment']) => ({
           body: query.segment,
