@@ -40,9 +40,7 @@ A basic docker-compose setup might look like:
        environment:
            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
        command:
-           - "python"
-           - "manage.py"
-           - "runprocessor"
+           - run-task-processor
        depends_on:
            - flagsmith
            - postgres
