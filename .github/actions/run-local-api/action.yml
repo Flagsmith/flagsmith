@@ -20,6 +20,11 @@ inputs:
     required: false
     default: 'false'
 
+outputs:
+  containerId:
+    description: Docker container ID for the running Flagsmith API instance
+    value: ${{ steps.run-api-container.outputs.containerId }}
+
 runs:
   using: composite
 
@@ -30,6 +35,7 @@ runs:
       shell: bash
 
     - name: Run the API
+      id: run-api-container
       working-directory: api
       env:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
@@ -38,7 +44,7 @@ runs:
         SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
         DISABLE_ANALYTICS_FEATURES: ${{ inputs.disable_analytics_features }}
       run: |
-        docker run \
+        CONTAINER_ID=$( docker run \
         -p 8000:8000 \
         -e DATABASE_URL=$DATABASE_URL \
         -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
@@ -48,5 +54,7 @@ runs:
         -e DJANGO_ALLOWED_HOSTS="*" \
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
         -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
-        -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
+        -e ACCESS_LOG_LOCATION=- \
+        -d flagsmith/flagsmith-api:e2e-${{ github.sha }} )
+        echo "containerId=$CONTAINER_ID" >> "$GITHUB_OUTPUT"
       shell: bash

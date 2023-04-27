@@ -27,6 +27,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Local API
+        id: run-local-api
         uses: ./.github/actions/run-local-api
         with:
           e2e_test_token: some-token
@@ -42,3 +43,9 @@ jobs:
           e2e_test_token: some-token
           slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: local
+
+      - name: Output API logs
+        if: failure()
+        env:
+          API_CONTAINER_ID: ${{ steps.run-local-api.outputs.containerId }}
+        run: docker logs $API_CONTAINER_ID
