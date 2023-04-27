@@ -39,6 +39,11 @@ which states ‘_Once you've completed these fields, hit the Save button to crea
   Okta applications dashboard and the Flagsmith dashboard (by entering the organisation name given to you by Flagsmith
   support).
 
+## Attributes
+
+Information about attribute mappings can be found in the documentation for SAML
+[here](https://docs.flagsmith.com/deployment/authentication#attribute-mapping-information).
+
 ## Troubleshooting & Tips
 
 - If your users are unable to sign in to the Flagsmith application via Okta, it’s important to check if they already
