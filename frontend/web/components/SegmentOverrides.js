@@ -146,7 +146,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   <RemoveIcon />
                 </button>
               )}
-              {
+              {!!v.id && (
                 <Permission
                   id={projectId}
                   permission={'MANAGE_SEGMENTS'}
@@ -156,20 +156,37 @@ const SegmentOverrideInner = class Override extends React.Component {
                     Utils.renderWithPermission(
                       permission,
                       Constants.projectPermissions('Manage Segments'),
-                      <ButtonLink
-                        disabled={!permission}
-                        onClick={() => {
-                          setShowCreateSegment(true)
-                          setSegmentEditId(v.segment)
-                        }}
-                        className='ml-2'
-                      >
-                        Edit Segment
-                      </ButtonLink>,
+                      <>
+                        {v.is_feature_specific ? (
+                          <ButtonLink
+                            disabled={!permission}
+                            onClick={() => {
+                              setShowCreateSegment(true)
+                              setSegmentEditId(v.segment)
+                            }}
+                            className='ml-2'
+                          >
+                            Edit Segment
+                          </ButtonLink>
+                        ) : (
+                          <ButtonLink
+                            disabled={!permission}
+                            target='_blank'
+                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                            onClick={() => {
+                              setShowCreateSegment(true)
+                              setSegmentEditId(v.segment)
+                            }}
+                            className='ml-2'
+                          >
+                            Edit Segment
+                          </ButtonLink>
+                        )}
+                      </>,
                     )
                   }
                 </Permission>
-              }
+              )}
             </Row>
           </div>
         </Row>
