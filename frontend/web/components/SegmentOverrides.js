@@ -173,10 +173,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                             disabled={!permission}
                             target='_blank'
                             href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            onClick={() => {
-                              setShowCreateSegment(true)
-                              setSegmentEditId(v.segment)
-                            }}
                             className='ml-2'
                           >
                             Edit Segment
