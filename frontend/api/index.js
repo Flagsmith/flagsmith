@@ -87,12 +87,6 @@ app.get('/config/project-overrides', (req, res) => {
       value: envToBool('DISABLE_ANALYTICS_FEATURES', false),
     },
     {
-      name: 'disableInflux',
-      value:
-        !envToBool('ENABLE_INFLUXDB_FEATURES', true) ||
-        envToBool('DISABLE_INFLUXDB_FEATURES', false),
-    },
-    {
       name: 'flagsmithAnalytics',
       value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true),
     },
