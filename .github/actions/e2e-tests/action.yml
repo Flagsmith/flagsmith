@@ -11,10 +11,6 @@ inputs:
   environment:
     description: The value of the ENV environment variable to use for npm run env.
     required: true
-  enable_influxdb_features:
-    description: Boolean to enable / disable influxdb features
-    required: false
-    default: 'true'
 
 runs:
   using: composite
@@ -40,7 +36,6 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         STATIC_ASSET_CDN_URL: /
         ENV: ${{ inputs.environment }}
-        ENABLE_INFLUXDB_FEATURES: ${{ inputs.enable_influxdb_features }}
 
       run: |
         node -v

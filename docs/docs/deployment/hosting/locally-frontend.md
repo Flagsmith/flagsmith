@@ -70,8 +70,8 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
   flagsmith. E.g. `https://edge.api.flagsmith.com/api/v1/`. If you are self hosting and using your own Flagsmith
   instance to manage its own features, you would generally point this to the same domain name as your own Flagsmith
   instance.
-- `ENABLE_INFLUXDB_FEATURES`: Enables any features that rely on influxdb. API Usage charts, flag analytics. E.g.
-  `ENABLE_INFLUXDB_FEATURES=1`.
+- `DISABLE_ANALYTICS_FEATURES`: Disables any in-app analytics-related features: API Usage charts, flag analytics. E.g.
+  `DISABLE_ANALYTICS_FEATURES=1`.
 - `ENABLE_FLAG_EVALUATION_ANALYTICS`: Determines if the flagsmith sdk should send usage analytics, if you want to enable
   Flag Analytics, set this. E.g. `ENABLE_FLAG_EVALUATION_ANALYTICS=1`.
 - `PROXY_API_URL`: Proxies the API via this application. Set this to the hostname of the API being proxied. Proxies
