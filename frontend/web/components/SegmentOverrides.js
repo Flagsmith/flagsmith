@@ -176,6 +176,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             className='ml-2'
                           >
                             Edit Segment
+                            <ion className={'ion ml-1 ion-md-open'} />
                           </ButtonLink>
                         )}
                       </>,
