@@ -10,6 +10,8 @@ import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
+import Permission from 'common/providers/Permission'
+import Constants from 'common/constants'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -42,6 +44,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       multivariateOptions,
       name,
       onSortEnd,
+      projectId,
       readOnly,
       setSegmentEditId,
       setShowCreateSegment,
@@ -144,15 +147,28 @@ const SegmentOverrideInner = class Override extends React.Component {
                 </button>
               )}
               {
-                <ButtonLink
-                  onClick={() => {
-                    setShowCreateSegment(true)
-                    setSegmentEditId(v.segment)
-                  }}
-                  className='ml-2'
+                <Permission
+                  id={projectId}
+                  permission={'MANAGE_SEGMENTS'}
+                  level={'project'}
                 >
-                  Edit Segment
-                </ButtonLink>
+                  {({ permission }) =>
+                    Utils.renderWithPermission(
+                      permission,
+                      Constants.projectPermissions('Manage Segments'),
+                      <ButtonLink
+                        disabled={!permission}
+                        onClick={() => {
+                          setShowCreateSegment(true)
+                          setSegmentEditId(v.segment)
+                        }}
+                        className='ml-2'
+                      >
+                        Edit Segment
+                      </ButtonLink>,
+                    )
+                  }
+                </Permission>
               }
             </Row>
           </div>
