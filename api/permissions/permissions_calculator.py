@@ -177,7 +177,7 @@ def get_environment_permission_data(
     )
 
 
-def _is_organisation_admin(organisation_id, user_id) -> bool:
+def _is_organisation_admin(organisation_id: int, user_id: int) -> bool:
     # # TODO: implement
     return False
 
