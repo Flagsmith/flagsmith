@@ -45,8 +45,7 @@ completed these fields, hit the Save button to create the SAML configuration._�
   - **For SaaS customers: **Save this metadata to a file and send it to Flagsmith
     ([support@flagsmith.com](mailto:support@flagsmith.com))
   - **For Self-Hosted customers: **Copy this metadata and paste it into the ‘Idp metadata xml’ field in the Flagsmith
-    admin dashboard as per the instructions
-    [here](https://docs.flagsmith.com/deployment/authentication#saml---enterprise-on-premise).
+    admin dashboard as per the instructions [here](/deployment/authentication#saml---enterprise-on-premise).
 - Once Flagsmith support have confirmed that the metadata has been uploaded, you should now be able to sign in via the
   Okta applications dashboard and the Flagsmith dashboard (by entering the organisation name given to you by Flagsmith
   support).
