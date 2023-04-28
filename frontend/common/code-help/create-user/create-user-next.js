@@ -1,6 +1,7 @@
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME, USER_ID },
+  userId,
 ) => `
 // Option 1: Identify clientside
 //Home Page
@@ -42,7 +43,9 @@ MyApp.getInitialProps = async () => {
       environmentID,
       preventFetch: true
   });
-  await flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // Will hydrate the app with the user's flags
+  await flagsmith.identify('${
+    userId || USER_ID
+  }', {${TRAIT_NAME}: 21}); // Will hydrate the app with the user's flags
   return { flagsmithState: flagsmith.getState() }
 }
 `
