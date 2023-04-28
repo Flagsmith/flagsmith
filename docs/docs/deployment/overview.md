@@ -454,7 +454,7 @@ The list of the flags and remote config we're currently using in production is b
 
 ### `oauth_github`
 
-Find instructions for GitHub Authentication [here](../deployment/configuration/authentication#github).
+Find instructions for GitHub Authentication [here](../deployment/configuration/authentication/oauth#github).
 
 Create an OAuth application in the GitHub Developer Console and then provide the following as the Flag value:
 
