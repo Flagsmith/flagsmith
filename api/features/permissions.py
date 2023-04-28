@@ -11,11 +11,11 @@ from environments.permissions.constants import (
 )
 from features.models import Feature, FeatureState
 from projects.models import Project
-from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
+from projects.permissions import CREATE_FEATURE, DELETE_FEATURE, VIEW_PROJECT
 
 ACTION_PERMISSIONS_MAP = {
     "retrieve": VIEW_PROJECT,
-    "destroy": "DELETE_FEATURE",
+    "destroy": DELETE_FEATURE,
     "list": VIEW_PROJECT,
     "create": CREATE_FEATURE,
     "add_owners": CREATE_FEATURE,
