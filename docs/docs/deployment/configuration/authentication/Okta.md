@@ -23,9 +23,9 @@ support team (support@flagsmith.com) to create a SAML organisation and we will p
 ### Enterprise Self Hosted
 
 To configure the Okta integration with Flagsmith self hosted, you must be using an Enterprise licence to self host the
-Flagsmith application. You should then complete the steps listed
-[here](/deployment/authentication#saml---enterprise-on-premise) up to and including the line which states ‘_Once you've
-completed these fields, hit the Save button to create the SAML configuration._’
+Flagsmith application. You should then complete the steps listed [here](/deployment/configuration/authentication/saml)
+up to and including the line which states ‘_Once you've completed these fields, hit the Save button to create the SAML
+configuration._’
 
 ## Supported Features
 
@@ -45,7 +45,7 @@ completed these fields, hit the Save button to create the SAML configuration._�
   - **For SaaS customers: **Save this metadata to a file and send it to Flagsmith
     ([support@flagsmith.com](mailto:support@flagsmith.com))
   - **For Self-Hosted customers: **Copy this metadata and paste it into the ‘Idp metadata xml’ field in the Flagsmith
-    admin dashboard as per the instructions [here](/deployment/authentication#saml---enterprise-on-premise).
+    admin dashboard as per the instructions [here](/deployment/configuration/authentication/saml).
 - Once Flagsmith support have confirmed that the metadata has been uploaded, you should now be able to sign in via the
   Okta applications dashboard and the Flagsmith dashboard (by entering the organisation name given to you by Flagsmith
   support).
