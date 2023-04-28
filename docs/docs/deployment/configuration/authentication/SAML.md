@@ -1,7 +1,5 @@
 ---
-title: Authentication
-sidebar_label: Authentication
-sidebar_position: 78
+title: SAML
 ---
 
 :::tip
@@ -16,7 +14,7 @@ this.
 
 As well as Email/Password and OAuth2 via Google or Github, we also provide the following methods of authentication.
 
-## SAML - SaaS
+## SaaS
 
 The Flagsmith platform can be configured for a given organisation to use SAML authentication. To configure SAML login
 for your organisation please get in touch with us directly to help set it up.
@@ -38,7 +36,7 @@ To set up SAML authentication, we will provide you with a unique name for your S
 enter when prompted by the 'Single Sign on' dialog. We will also provide you with our Service Provider metadata and
 expect your IdP metadata in return.
 
-## SAML - Enterprise On-premise
+## Enterprise On-premise
 
 :::tip
 
@@ -104,7 +102,7 @@ Here's an example configuration from Google's SAML app creation flow.
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/saml-mapping-configuration.png"/></div>
 
-## SAML Group Sync
+## Group Sync
 
 You can configure Flagsmith to add or remove a user from a group (on login) based on your SAML response.
 
@@ -134,47 +132,3 @@ ID. e.g: if your SAML attribute looks like the below xml snippet (and you want t
 Then you need to create an equivalent group in the Flagsmith that will look like this:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/saml-group-sync-external-id.png"/></div>
-
-## OAuth
-
-### Google
-
-To configure OAuth for Google:
-
-- [Setting up OAuth 2.0](https://support.google.com/cloud/answer/6158849?hl=en)
-- Create the Flagsmith on Flagsmith flag as it shows [here](/deployment/overview#oauth_google).
-
-### Github
-
-As a pre-requisite for this configuration make sure to have
-[Flagsmith on Flagsmith](/deployment/overview#running-flagsmith-on-flagsmith) set up.
-
-Configure the following environment variables:
-
-- `GITHUB_CLIENT_ID`
-- `GITHUB_CLIENT_SECRET`
-
-To configure OAuth for Github:
-
-- [Create an OAuth Github application](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app)
-- For the Authorization callback URL use: `https://<your flagsmith domain name>/oauth/github`
-- Create the Flagsmith on Flagsmith flag as it shows [here](/deployment/overview#oauth_github).
-
-Now you would be able to see the GitHub SSO option.
-
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/Flagsmith_GitHub_SignUp.png"/></div>
-
-## LDAP
-
-LDAP Authentication is available in our [Enterprise Edition](/deployment/configuration/enterprise-edition.md). Please
-contact us if this is of interest. We also support sync-ing of LDAP groups into
-[Flagsmith RBAC groups](/advanced-use/permissions.md#groups)).
-
-## AD FS
-
-Active Directory Federation Services Authentication is available in our
-[Enterprise Edition](/deployment/configuration/enterprise-edition.md).
-
-## Okta
-
-Okta Integration is available in our [Enterprise Edition](/deployment/configuration/enterprise-edition.md).
