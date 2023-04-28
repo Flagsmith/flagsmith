@@ -17,8 +17,4 @@ export default function HomePage() {
       userId || USER_ID
     }', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
   };
-  
-  return (
-    &lt;>{...}&lt;/>
-  );
 }`

@@ -16,10 +16,6 @@ export default function HomePage() {
   const identify = () => {
     flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
   };
-  
-  return (
-    &lt;>{...}&lt;/>
-  );
 }
 
 //Option 2: Alternatively, if you wish to do this serverside
