@@ -88,8 +88,8 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
             == 0
         )
     # Next, let's give user some permissions using `user_permission`
-    environment_permission_using_user_permission.permissions.add(VIEW_ENVIRONMENT)
-    environment_permission_using_user_permission.permissions.add(UPDATE_FEATURE_STATE)
+    permissions_as_user = [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
+    environment_permission_using_user_permission.permissions.add(*permissions_as_user)
 
     # Next, let's assert that the environment is returned only for those permissions (and not for others).
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -99,18 +99,12 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
             test_user, project, permission
         ).count()
 
-        assert (
-            environment_count == 0
-            if permission not in [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
-            else 1
-        )
+        assert environment_count == 0 if permission not in permissions_as_user else 1
 
     # Next, let's give some more permissions using `user_permission_group`
+    permissions_as_group = [UPDATE_FEATURE_STATE, MANAGE_IDENTITIES]
     environment_permission_using_user_permission_group.permissions.add(
-        UPDATE_FEATURE_STATE
-    )
-    environment_permission_using_user_permission_group.permissions.add(
-        MANAGE_IDENTITIES
+        *permissions_as_group
     )
 
     # And assert again
@@ -123,14 +117,13 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
 
         assert (
             environment_count == 0
-            if permission
-            not in [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE, MANAGE_IDENTITIES]
+            if permission not in permissions_as_group + permissions_as_user
             else 1
         )
 
     # Next, let's give more permissions using `user_role`
-    environment_permission_using_user_role.permissions.add(MANAGE_IDENTITIES)
-    environment_permission_using_user_role.permissions.add(VIEW_IDENTITIES)
+    permissions_as_user_role = [MANAGE_IDENTITIES, VIEW_IDENTITIES]
+    environment_permission_using_user_role.permissions.add(*permissions_as_user_role)
 
     # And verify again that we can fetch the environment using these permissions
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -143,17 +136,13 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         assert (
             environment_count == 0
             if permission
-            not in [
-                VIEW_ENVIRONMENT,
-                UPDATE_FEATURE_STATE,
-                MANAGE_IDENTITIES,
-                VIEW_IDENTITIES,
-            ]
+            not in permissions_as_group + permissions_as_user + permissions_as_user_role
             else 1
         )
 
     # Finally, let's give permissions using `group_role`
-    environment_permission_using_group_role.permissions.add(CREATE_CHANGE_REQUEST)
+    permissions_as_group_role = [CREATE_CHANGE_REQUEST]
+    environment_permission_using_group_role.permissions.add(*permissions_as_group_role)
 
     # And, verify that environment is returned for those permission
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -166,12 +155,9 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         assert (
             environment_count == 0
             if permission
-            not in [
-                VIEW_ENVIRONMENT,
-                UPDATE_FEATURE_STATE,
-                MANAGE_IDENTITIES,
-                VIEW_IDENTITIES,
-                CREATE_CHANGE_REQUEST,
-            ]
+            not in permissions_as_group
+            + permissions_as_user
+            + permissions_as_user_role
+            + permissions_as_group_role
             else 1
         )
