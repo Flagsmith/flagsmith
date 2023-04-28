@@ -316,7 +316,7 @@ slack-sdk==3.9.0
     # via -r requirements.in
 smsapi-client==2.4.3
     # via django-trench
-sqlparse==0.4.2
+sqlparse==0.4.4
     # via
     #   django
     #   django-debug-toolbar

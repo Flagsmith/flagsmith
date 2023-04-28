@@ -7,6 +7,11 @@ from permissions.models import PermissionModel
 
 
 class PostgresOnlyRunSQL(migrations.RunSQL):
+    @classmethod
+    def from_sql_file(cls, file_path: str, reverse_sql: str) -> "PostgresOnlyRunSQL":
+        with open(file_path) as f:
+            return cls(f.read(), reverse_sql=reverse_sql)
+
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
         if schema_editor.connection.vendor != "postgresql":
             return
