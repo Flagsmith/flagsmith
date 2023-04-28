@@ -13,7 +13,7 @@ Flags flags = flagsmith.getEnvironmentFlags();
 boolean isEnabled = flags.isFeatureEnabled("${customFeature || FEATURE_NAME}");
 
 // Or, use the value of a feature
-Object featureValue = flags.GetFeatureValue("${
+Object featureValue = flags.getFeatureValue("${
   customFeature || FEATURE_NAME_ALT
 }");
 `
