@@ -25,51 +25,67 @@ export default {
       '.NET': require('./code-help/create-user/create-user-dotnet')(
         envId,
         keywords,
+        userId,
       ),
       'Flutter': require('./code-help/create-user/create-user-flutter')(
         envId,
         keywords,
+        userId,
       ),
-      'Go': require('./code-help/create-user/create-user-go')(envId, keywords),
+      'Go': require('./code-help/create-user/create-user-go')(
+        envId,
+        keywords,
+        userId,
+      ),
       'Java': require('./code-help/create-user/create-user-java')(
         envId,
         keywords,
+        userId,
       ),
       'JavaScript': require('./code-help/create-user/create-user-js')(
         envId,
         keywords,
+        userId,
       ),
       'Next.js': require('./code-help/create-user/create-user-next')(
         envId,
         keywords,
+        userId,
       ),
       'Node JS': require('./code-help/create-user/create-user-node')(
         envId,
         keywords,
+        userId,
       ),
       'PHP': require('./code-help/create-user/create-user-php')(
         envId,
         keywords,
+        userId,
       ),
       'Python': require('./code-help/create-user/create-user-python')(
         envId,
         keywords,
+        userId,
       ),
       'React': require('./code-help/create-user/create-user-react')(
         envId,
         keywords,
+        userId,
       ),
       'React Native': require('./code-help/create-user/create-user-rn')(
         envId,
         keywords,
+        userId,
       ),
       'Ruby': require('./code-help/create-user/create-user-ruby')(
         envId,
         keywords,
+        userId,
       ),
       'Rust': require('./code-help/create-user/create-user-rust')(
         envId,
         keywords,
+        userId,
       ),
       'curl': require('./code-help/create-user/create-user-curl')(
         envId,
@@ -79,6 +95,7 @@ export default {
       'iOS': require('./code-help/create-user/create-user-ios')(
         envId,
         keywords,
+        userId,
       ),
     }),
 

@@ -153,7 +153,9 @@ const CodeHelp = class extends Component {
                   flagsmith.setTrait('preferred_language', lang)
                   this.setState({ tab })
                 }}
-                options={Object.keys(this.props.snippets).map((v, i) => ({
+                options={_.sortBy(Object.keys(this.props.snippets), (key) =>
+                  key[0].toLowerCase(),
+                ).map((v, i) => ({
                   label: v,
                   value: i,
                 }))}

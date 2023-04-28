@@ -1,6 +1,6 @@
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT },
+  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,
 ) => `require "flagsmith"
 
@@ -9,7 +9,7 @@ $flagsmith = Flagsmith::Client.new(
 )
 
 // Identify the user
-$flags = $flagsmith.get_identity_flags('${userId}')
+$flags = $flagsmith.get_identity_flags('${userId || USER_ID}')
 
 // get the state / value of the user's flags
 $is_enabled = $flags.is_feature_enabled('${FEATURE_NAME}')

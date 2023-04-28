@@ -1,6 +1,6 @@
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT },
+  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,
 ) => `use Flagsmith\\Flagsmith;
 

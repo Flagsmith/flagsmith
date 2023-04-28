@@ -1,6 +1,7 @@
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, NPM_RN_CLIENT, TRAIT_NAME, USER_ID },
+  userId,
 ) => `
 // Home Page
 import flagsmith from '${NPM_RN_CLIENT}';
@@ -12,10 +13,8 @@ export default function HomePage() {
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   
   const identify = () => {
-    flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
+    flagsmith.identify('${
+      userId || USER_ID
+    }', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
   };
-  
-  return (
-    &lt;>{...}&lt;/>
-  );
 }`
