@@ -34,14 +34,6 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
-from organisations.roles.models import (
-    GroupRole,
-    Role,
-    RoleEnvironmentPermission,
-    RoleOrganisationPermission,
-    RoleProjectPermission,
-    UserRole,
-)
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
 from projects.models import (
@@ -425,60 +417,6 @@ def project_content_type():
 
 
 @pytest.fixture
-def role(organisation):
-    return Role.objects.create(name="A test role", organisation=organisation)
-
-
-@pytest.fixture
-def org_admin_role(organisation):
-    return Role.objects.create(name="Org Admin", organisation=organisation, admin=True)
-
-
-@pytest.fixture
-def role_environment_permission(role, environment):
-    return RoleEnvironmentPermission.objects.create(role=role, environment=environment)
-
-
-@pytest.fixture
-def role_view_environment_permission(
-    role_environment_permission, view_environment_permission
-):
-    role_environment_permission.permissions.add(view_environment_permission)
-    return role
-
-
-@pytest.fixture
-def role_project_permission(role, project):
-    return RoleProjectPermission.objects.create(role=role, project=project)
-
-
-@pytest.fixture
-def role_view_project_permission(role_project_permission, view_project_permission):
-    role_project_permission.permissions.add(view_project_permission)
-    return role
-
-
-@pytest.fixture
-def user_role(role, test_user):
-    return UserRole.objects.create(user=test_user, role=role)
-
-
-@pytest.fixture
-def org_admin_user_role(org_admin_role, test_user):
-    return UserRole.objects.create(user=test_user, role=org_admin_role)
-
-
-@pytest.fixture
-def group_role(role, user_permission_group):
-    return GroupRole.objects.create(role=role, group=user_permission_group)
-
-
-@pytest.fixture
-def org_admin_group_role(org_admin_role, user_permission_group):
-    return GroupRole.objects.create(role=org_admin_role, group=user_permission_group)
-
-
-@pytest.fixture
 def create_project_permission(db):
     return OrganisationPermissionModel.objects.get(key=CREATE_PROJECT)
 
@@ -486,8 +424,3 @@ def create_project_permission(db):
 @pytest.fixture
 def manage_user_group_permission(db):
     return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
-
-
-@pytest.fixture
-def role_organisation_permission(role, organisation):
-    return RoleOrganisationPermission.objects.create(role=role)
