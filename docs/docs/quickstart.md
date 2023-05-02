@@ -16,7 +16,7 @@ Let's get up and running in 5 minutes. We're going to run through the following 
 
 :::tip
 
-To get up and running quickly, we're going to use the hosted service at flagsmith.com, but you can easily run the
+To get up and running quickly, we're going to use the hosted service at flagsmith.com, but you can run the
 [platform locally via Docker](/deployment/hosting/docker.md).
 
 :::
@@ -32,20 +32,19 @@ Flagsmith manages Flags with Projects, so let's create one now:
 
 Flagsmith organises Projects into separate Environments. When you create a Project, Flagsmith automatically creates
 `Development` and `Production` Environments. We will come to these Environments later. Let's go ahead and create our
-first Flag. This flag is simply going to control whether a button shows on our super simple web page.
+first Flag. This flag will control whether a button shows on our web page.
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_3.png"/></div>
 
 Flags within Flagsmith are a combination of both: A Boolean value - the `Flag State` and then optionally: A
-String/Integer/Float value - the `Flag Value`. For now, we're just going to use the `Boolean` value of the flag to
-control whether the button shows. Let's go ahead and create a flag called `show_demo_button`. We're going to leave it as
-Disabled by default:
+String/Integer/Float value - the `Flag Value`. For now, we're going to use the `Boolean` value of the flag to control
+whether the button shows. Create a flag called `show_demo_button`, and leave it as Disabled by default:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_4.png"/></div>
 
 ## 2. Import the Javascript SDK
 
-OK so we've set up our flag; now let's bring it into our application. We have a (very!) simple web page:
+OK so we've set up our flag; now let's bring it into our application. We have a (pretty small!) web page:
 
 ```html
 <!DOCTYPE html>
@@ -63,7 +62,7 @@ OK so we've set up our flag; now let's bring it into our application. We have a 
 </html>
 ```
 
-It's pretty simple, and looks like this:
+The page looks like this:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_8.png"/></div>
 
@@ -117,7 +116,7 @@ Let's hook this value up to our button, so that the value of the flag controls w
 </script>
 ```
 
-This code sets up a callback, which is triggered when we get a response back from the Flagsmith API. We simply check for
+This code sets up a callback, which is triggered when we get a response back from the Flagsmith API. We will check for
 the state of the flag and set the display visibility based on the result.
 
 Our entire webpage now reads like this:
@@ -163,7 +162,7 @@ Return to your browser, refresh the page, and the button will re-appear.
 
 ## Finishing Up
 
-This was a pretty simple demo, but it covers the core concepts involved in integrating Flagsmith into your application.
+This was a pretty quick demo, but it covers the core concepts involved in integrating Flagsmith into your application.
 From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](basic-features/managing-features.md),

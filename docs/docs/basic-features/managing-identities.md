@@ -45,9 +45,9 @@ and modifying their Flags.
 
 ## Identity Traits
 
-You can also use Flagsmith to store 'Traits' against identities. Traits are simply key/value pairs that are associated
-with individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case
-is to drive [Segments](managing-segments.md).
+You can also use Flagsmith to store 'Traits' against identities. Traits are key/value pairs that are associated with
+individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case is to
+drive [Segments](managing-segments.md).
 
 :::important
 
