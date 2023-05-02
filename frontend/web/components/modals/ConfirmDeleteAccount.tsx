@@ -1,19 +1,17 @@
 import React, { FC, useEffect, useState } from 'react'
-import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
+import { Organisation } from 'common/types/responses'
 import { useDeleteAccountMutation } from 'common/services/useAccount'
 
 type ConfirmDeleteAccountType = {
   lastUserOrganisations: Array<object>
   userId: number
-  hasOrganisations: boolean
 }
 
 const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
   lastUserOrganisations,
   userId,
-  hasOrganisations,
 }) => {
   const [password, setPassword] = useState<string>('')
   const [
@@ -35,30 +33,26 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
 
   const ModalBody: FC<ConfirmDeleteAccountType> = ({
     lastUserOrganisations,
-    hasOrganisations,
   }) => {
-    if (lastUserOrganisations.length >= 1) {
-      return (
-        <p>
-          You are the last user from:
-          {lastUserOrganisations.map((o) => {
-            return <strong key={o.id}> {o.name}, </strong>
-          })}
-          all your account data and{' '}
-          {lastUserOrganisations.length > 1 ? 'organisations' : 'organisation'}{' '}
-          data will be deleted.
-        </p>
-      )
-    } else if (hasOrganisations) {
-      return (
+    return (
+      <>
         <p>
           You will be removed from all organisations and all your account data
-          will be permanetly deleted.
+          will be permanently deleted.
         </p>
-      )
-    } else {
-      return <p>All your account data will be permanetly deleted.</p>
-    }
+        {lastUserOrganisations.length >= 1 && (
+          <p>
+            You are the last user of
+            <strong>
+              {` ${lastUserOrganisations
+                .map((o: Organisation) => o.name)
+                .join(',')}.`}
+            </strong>{' '}
+            If you continue those organisations will be also deleted.
+          </p>
+        )}
+      </>
+    )
   }
 
   return (
@@ -73,10 +67,7 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
         }}
       >
         <FormGroup>
-          <ModalBody
-            lastUserOrganisations={lastUserOrganisations}
-            hasOrganisations={hasOrganisations}
-          />
+          <ModalBody lastUserOrganisations={lastUserOrganisations} />
         </FormGroup>
         <InputGroup
           title='Confirm Password'

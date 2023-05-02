@@ -10,7 +10,7 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
-import ConfirmDeleteAccount from '../modals/ConfirmDeleteAccount'
+import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import { updateAccount } from 'common/services/useAccount'
 import { getStore } from 'common/store'
 
@@ -55,13 +55,12 @@ class TheComponent extends Component {
     })
   }
 
-  confirmDeleteAccount = (lastUserOrganisations, id, hasOrganisations) => {
+  confirmDeleteAccount = (lastUserOrganisations, id) => {
     openModal(
       'Are you sure',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
-        hasOrganisations={hasOrganisations}
       />,
     )
   }
@@ -130,10 +129,10 @@ class TheComponent extends Component {
       },
     } = this
 
-    const hasOrganisations = this.state.organisations.length >= 1
-    const lastUserOrganisations = hasOrganisations
-      ? this.state.organisations?.filter((o) => o?.num_seats == 1)
-      : []
+    const lastUserOrganisations =
+      this.state.organisations.length >= 1
+        ? this.state.organisations?.filter((o) => o?.num_seats == 1)
+        : []
 
     return (
       <AccountProvider>
@@ -252,11 +251,7 @@ class TheComponent extends Component {
                         <Button
                           id='delete-org-btn'
                           onClick={() =>
-                            this.confirmDeleteAccount(
-                              lastUserOrganisations,
-                              id,
-                              hasOrganisations,
-                            )
+                            this.confirmDeleteAccount(lastUserOrganisations, id)
                           }
                           className='btn btn--with-icon ml-auto btn--remove'
                         >
