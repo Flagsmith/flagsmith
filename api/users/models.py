@@ -123,10 +123,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     @hook(BEFORE_DELETE)
     def delete_orphan_organisations(self):
-        Organisation.objects.filter(id__in=self.organisations.values_list('id', flat=True)) \
-            .annotate(users_count=Count('users')) \
-            .filter(users_count=1) \
-            .delete()
+        Organisation.objects.filter(
+            id__in=self.organisations.values_list("id", flat=True)
+        ).annotate(users_count=Count("users")).filter(users_count=1).delete()
 
     @property
     def auth_type(self):
