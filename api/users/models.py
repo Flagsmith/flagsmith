@@ -122,7 +122,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         mailer_lite.subscribe(self)
 
     @hook(BEFORE_DELETE)
-    def delete_organisation_with_a_last_user(self):
+    def delete_orphan_organisations(self):
         Organisation.objects.filter(id__in=self.organisations.values_list('id', flat=True)) \
             .annotate(users_count=Count('users')) \
             .filter(users_count=1) \
