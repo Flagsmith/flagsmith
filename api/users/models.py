@@ -6,7 +6,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_DELETE, LifecycleModel, hook
 
@@ -123,15 +123,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     @hook(BEFORE_DELETE)
     def delete_organisation_with_a_last_user(self):
-        user_organisations = UserOrganisation.objects.filter(
-            user_id=self.initial_value("id")
-        )
-        for user_organisation in user_organisations:
-            users_count = UserOrganisation.objects.filter(
-                organisation_id=user_organisation.organisation_id
-            ).count()
-            if users_count == 1:
-                Organisation.objects.get(id=user_organisation.organisation_id).delete()
+        Organisation.objects.filter(id__in=self.organisations.values_list('id', flat=True)) \
+            .annotate(users_count=Count('users')) \
+            .filter(users_count=1) \
+            .delete()
 
     @property
     def auth_type(self):

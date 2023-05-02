@@ -289,6 +289,52 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
     assert user_permission_group not in admin_user.permission_groups.all()
 
 
+@pytest.mark.django_db
+def test_delete_organisation_with_a_last_user():
+    # create a couple of users
+    user1 = FFAdminUser.objects.create(email="test1@example.com")
+    user2 = FFAdminUser.objects.create(email="test2@example.com")
+    user3 = FFAdminUser.objects.create(email="test3@example.com")
+
+    # crete some organizations
+    org1 = Organisation.objects.create(name='org1')
+    org2 = Organisation.objects.create(name='org2')
+    org3 = Organisation.objects.create(name='org3')
+
+    # add the test user 1 to all the organizations
+    org1.users.add(user1)
+    org2.users.add(user1)
+    org3.users.add(user1)
+
+    # add test user 2 to org2 and user 3 to to org1
+    org2.users.add(user2)
+    org1.users.add(user3)
+
+    # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
+
+    # All organisations remain since user 2 has org2 as only organization and it has 2 users
+    user2.delete_organisation_with_a_last_user()
+    assert Organisation.objects.filter(name='org3').count() == 1
+    assert Organisation.objects.filter(name='org1').count() == 1
+    assert Organisation.objects.filter(name='org2').count() == 1
+
+
+    # organization org3 is deleted since its only user is user1
+    user1.delete_organisation_with_a_last_user()
+    assert Organisation.objects.filter(name='org3').count() == 0
+    # org1 and org2 remain
+    assert Organisation.objects.filter(name='org1').count() == 1
+    assert Organisation.objects.filter(name='org2').count() == 1
+
+    # delete user 1 and user 2
+    user1.delete()
+    user2.delete()
+
+    # Check if org2 is deleted and org1 remains
+    assert Organisation.objects.filter(name='org1').count() == 1
+    assert Organisation.objects.filter(name='org2').count() == 0
+
+
 def test_user_create_calls_pipedrive_tracking(mocker, db, settings):
     # Given
     mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
