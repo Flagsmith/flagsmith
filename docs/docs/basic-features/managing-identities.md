@@ -14,11 +14,10 @@ will then send an API message to the Flagsmith API, with the relevant Identity i
 
 :::tip
 
-The SDK part of the Flagsmith API is public by design. The Environment Key is designed to be public and is easy to
-view/find when building a client integration. When identifying users, it is important to use an Identity value that is
-not easy to guess. For example, if you used an incrementing integer to identify your users, it would be trivial to
-request Identities by enumerating this integer. This would effectively give public access to any user traits that are
-associated with users.
+The SDK part of the Flagsmith API is public by design; the Environment Key is designed to be public. When identifying
+users, it is important to use an Identity value that is not easy to guess. For example, if you used an incrementing
+integer to identify your users, it would be trivial to request Identities by enumerating this integer. This would
+effectively give public access to any user traits that are associated with users.
 
 We strongly recommend using an unguessable, unidentifiable Identity Key, such as a
 [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), when identifying your users, to prevent
