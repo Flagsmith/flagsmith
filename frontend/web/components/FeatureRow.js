@@ -105,7 +105,11 @@ class TheComponent extends Component {
     )
 
     if (this.props.condensed) {
-      return (
+      return Utils.renderWithPermission(
+        permission,
+        Constants.environmentPermissions(
+          Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
+        ),
         <Row
           onClick={() =>
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
@@ -155,11 +159,15 @@ class TheComponent extends Component {
               data-test={`feature-value-${this.props.index}`}
             />
           </div>
-        </Row>
+        </Row>,
       )
     }
 
-    return (
+    return Utils.renderWithPermission(
+      permission,
+      Constants.environmentPermissions(
+        Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
+      ),
       <Row
         style={{ flexWrap: 'nowrap' }}
         className={`list-item ${readOnly ? '' : 'clickable'} ${
@@ -352,7 +360,7 @@ class TheComponent extends Component {
             </Permission>
           )}
         </Row>
-      </Row>
+      </Row>,
     )
   }
 }

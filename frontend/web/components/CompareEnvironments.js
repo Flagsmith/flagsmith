@@ -170,7 +170,7 @@ class CompareEnvironments extends Component {
                               environmentLeft.minimum_change_request_approvals,
                             ),
                           )}
-                          id={this.props.environmentId}
+                          id={environmentLeft.api_key}
                         >
                           {({ permission }) => (
                             <FeatureRow
@@ -199,7 +199,7 @@ class CompareEnvironments extends Component {
                               environmentRight.minimum_change_request_approvals,
                             ),
                           )}
-                          id={this.props.environmentId}
+                          id={environmentRight.api_key}
                         >
                           {({ permission }) => (
                             <FeatureRow
