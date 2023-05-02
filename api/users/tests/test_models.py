@@ -290,7 +290,7 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
 
 
 @pytest.mark.django_db
-def test_delete_organisation_with_a_last_user():
+def test_delete_orphan_organisations():
     # create a couple of users
     user1 = FFAdminUser.objects.create(email="test1@example.com")
     user2 = FFAdminUser.objects.create(email="test2@example.com")
@@ -313,13 +313,13 @@ def test_delete_organisation_with_a_last_user():
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 
     # All organisations remain since user 2 has org2 as only organization and it has 2 users
-    user2.delete_organisation_with_a_last_user()
+    user2.delete_orphan_organisations()
     assert Organisation.objects.filter(name="org3").count() == 1
     assert Organisation.objects.filter(name="org1").count() == 1
     assert Organisation.objects.filter(name="org2").count() == 1
 
     # organization org3 is deleted since its only user is user1
-    user1.delete_organisation_with_a_last_user()
+    user1.delete_orphan_organisations()
     assert Organisation.objects.filter(name="org3").count() == 0
     # org1 and org2 remain
     assert Organisation.objects.filter(name="org1").count() == 1
