@@ -72,3 +72,45 @@ Every time an `Identity` requests their flags from the Flagsmith API, Flagsmith 
  }
 }
 ```
+
+## Getting Mixpanel Cohorts into Flagsmith
+
+If you want to control Flagsmith Flags based on Cohorts in Mixpanel, you will need to send cohort data from Mixpanel
+into Flagsmith. There is no way currently of automating this process from the Mixpanel side, but you can send cohort
+data from MixPanel into Flagsmith, using [Mixpanel Webhooks](https://developer.mixpanel.com/docs/cohort-webhooks). The
+flow looks like this:
+
+Identity cohort changes in Mixpanel -> Triggers MixPanel Webhook -> Hits endpoint on your infrastructure -> You trigger
+a request to Flagsmith to set traits
+
+This Webhook will be triggered by Mixpanel as Identities/Users enter or leave Mixpanel cohorts. We can use this trigger
+to copy the relevant data from Mixpanel into Flagsmith.
+
+Set up a webhook that accepts Mixpanel cohort data as described
+[here](https://developer.mixpanel.com/docs/cohort-webhooks), then write the cohorts as Traits within the relevant
+Identities. You can send Trait data either using our SDKs or with a REST query:
+
+```bash
+## Bulk Set Traits
+curl -X "PUT" "https://edge.api.flagsmith.com/api/v1/traits/bulk/" \
+     -H 'X-Environment-Key: XXXXXX' \
+     -H 'Content-Type: application/json' \
+     -d $'[
+  {
+    "identity": {
+      "identifier": "bennyr"
+    },
+    "trait_key": "mixpanel_cohorts",
+    "trait_value": "cohort_a,cohort_b"
+  },
+  {
+    "identity": {
+      "identifier": "blah"
+    },
+    "trait_key": "mixpanel_cohorts",
+    "trait_value": "cohort_b"
+  }
+]'
+```
+
+Note you can clear a trait by setting the `trait_value` to `null`.
