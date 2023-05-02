@@ -72,3 +72,35 @@ Every time an `Identity` requests their flags from the Flagsmith API, Flagsmith 
  }
 }
 ```
+
+## Getting Mixpanel Cohorts into Flagsmith
+
+You need to send data in the other direction, and push cohorts from MixPanel into Flagsmith, using
+[Mixpanel Webhooks](https://developer.mixpanel.com/docs/cohort-webhooks).
+
+Set up a webhook that accepts Mixpanel cohort data as described
+[here](https://developer.mixpanel.com/docs/cohort-webhooks), then write the cohorts as Traits within the relevant
+Identities. You can send Trait data either using our SDKs or with a REST query:
+
+```bash
+## Bulk Set Traits
+curl -X "PUT" "https://edge.api.flagsmith.com/api/v1/traits/bulk/" \
+     -H 'X-Environment-Key: XXXXXX' \
+     -H 'Content-Type: application/json' \
+     -d $'[
+  {
+    "trait_value": 3.14,
+    "identity": {
+      "identifier": "bennyr"
+    },
+    "trait_key": "floaty"
+  },
+  {
+    "trait_key": "floaty222",
+    "trait_value": 3.14444,
+    "identity": {
+      "identifier": "blah"
+    }
+  }
+]'
+```
