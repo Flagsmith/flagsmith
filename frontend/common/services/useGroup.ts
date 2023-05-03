@@ -39,7 +39,7 @@ export const groupService = service
       getGroup: builder.query<Res['group'], Req['getGroup']>({
         providesTags: (res) => [{ id: res?.id, type: 'Group' }],
         query: (query: Req['getGroup']) => ({
-          url: `organisations/${query.orgId}/groups/${query.id}`,
+          url: `organisations/${query.orgId}/groups/${query.id}/`,
         }),
       }),
       getGroups: builder.query<Res['groups'], Req['getGroups']>({
