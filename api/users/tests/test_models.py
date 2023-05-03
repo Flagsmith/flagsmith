@@ -1,7 +1,11 @@
+import json
 from unittest import TestCase, mock
 
 import pytest
+from django.core import mail
 from django.db.utils import IntegrityError
+from rest_framework import status
+from rest_framework.test import APIClient
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
@@ -19,6 +23,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+from users.tasks import send_email_changed_notification_email
 
 
 @pytest.mark.django_db
@@ -318,3 +323,55 @@ def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
 
 def test_user_email_domain_property():
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+
+
+@pytest.mark.django_db
+def test_change_email_address_api(mocker):
+    # Given
+    mocked_send_mail = mocker.patch("users.tasks.send_mail")
+    # create an user
+    user = FFAdminUser.objects.create(
+        username="test_user",
+        email="test_user@test.com",
+        first_name="test",
+        last_name="user",
+    )
+    user.set_password("user1234")
+
+    client = APIClient()
+    client.force_authenticate(user)
+
+    data = {"new_email": "test_user1@test.com", "current_password": "user1234"}
+
+    url = "/api/v1/auth/users/set_email/"
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert user.email == "test_user1@test.com"
+
+    args, kwargs = mocked_send_mail.call_args
+
+    assert len(args) == 0
+    assert len(kwargs) == 5
+    assert kwargs["subject"] == "Your Flagsmith email address has been changed"
+    assert kwargs["from_email"] == "noreply@flagsmith.com"
+    assert kwargs["recipient_list"] == ["test_user@test.com"]
+    assert kwargs["fail_silently"] is True
+
+
+def test_send_email_changed_notification():
+    # When
+    send_email_changed_notification_email(
+        first_name="first_name",
+        from_email="fromtest@test.com",
+        original_email="test2@test.com",
+    )
+
+    # Then
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].subject == "Your Flagsmith email address has been changed"
+    assert mail.outbox[0].from_email == "fromtest@test.com"
+    assert mail.outbox[0].recipients() == ["test2@test.com"]
