@@ -84,8 +84,6 @@ class AuditLog(LifecycleModel):
 
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
-        # Don't update the environments updated_at if the audit log
-        # can not change the value of a feature for sdk
         if not self.can_related_object_type_change_feature_value_for_sdk:
             return
 
