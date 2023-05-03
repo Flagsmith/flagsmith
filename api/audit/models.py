@@ -8,6 +8,10 @@ from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
+from sse import (
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
+)
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
@@ -72,15 +76,17 @@ class AuditLog(LifecycleModel):
         module = import_module(module_path)
         return getattr(module, class_name)
 
+    @property
+    def can_related_object_type_change_feature_value_for_sdk(self) -> bool:
+        # Returns true if the audit log have an object type that can change the
+        # feature value for the sdk endpoints
+        return self.related_object_type != RelatedObjectType.CHANGE_REQUEST.name
+
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
         # Don't update the environments updated_at if the audit log
-        # is of certain types (since they don't (directly) impact
-        # the value of a given feature in an environment)
-        if self.related_object_type in (
-            RelatedObjectType.CHANGE_REQUEST.name,
-            RelatedObjectType.EDGE_IDENTITY.name,
-        ):
+        # can not change the value of a feature for sdk
+        if not self.can_related_object_type_change_feature_value_for_sdk:
             return
 
         environments_filter = Q()
@@ -92,6 +98,14 @@ class AuditLog(LifecycleModel):
         self.project.environments.filter(environments_filter).update(
             updated_at=self.created_date
         )
+
+        if self.environment_id:
+            environment = self.environment
+            # update manually to save a db call
+            environment.updated_at = self.created_date
+            send_environment_update_message_for_environment(environment)
+        else:
+            send_environment_update_message_for_project(self.project)
 
     @hook(BEFORE_CREATE)
     def add_project(self):
