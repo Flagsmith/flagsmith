@@ -8,6 +8,7 @@ venv
 checkstyle.txt
 .python-version
 .env*
+!.env-local
 .direnv
 .envrc
 .tool-versions
