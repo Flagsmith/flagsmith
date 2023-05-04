@@ -9,6 +9,7 @@ checkstyle.txt
 .python-version
 .env*
 !.env-local
+!.env-ci
 .direnv
 .envrc
 .tool-versions
