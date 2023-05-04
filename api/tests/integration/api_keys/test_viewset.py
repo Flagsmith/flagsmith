@@ -125,3 +125,42 @@ def test_create_master_api_key_ignores_organisation_in_body(admin_client, organi
 
     assert list_response_json["results"][0]["name"] == name
     assert key.startswith(list_response_json["results"][0]["prefix"])
+
+
+def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
+    admin_client, organisation, master_api_key, master_api_key_client
+):
+    # Given
+    # the relevant URLs
+    list_url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-list",
+        args=[organisation],
+    )
+    detail_url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-detail",
+        args=[organisation, master_api_key["prefix"]],
+    )
+    list_projects_url = "%s?organisation=%s" % (
+        reverse("api-v1:projects:project-list"),
+        organisation,
+    )
+
+    # and we verify that before deletion, the master api key authenticated client
+    # can retrieve the projects for the organisation
+    valid_response = master_api_key_client.get(list_projects_url)
+    assert valid_response.status_code == 200
+
+    # When
+    # we delete the api key
+    delete_response = admin_client.delete(detail_url)
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Then
+    # It is not returned in the list response
+    list_response = admin_client.get(list_url)
+    assert list_response.json()["count"] == 0
+
+    # And
+    # it cannot be used to authenticate with the API anymore
+    invalid_response = master_api_key_client.get(list_projects_url)
+    assert invalid_response.status_code == 401
