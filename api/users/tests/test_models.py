@@ -313,25 +313,18 @@ def test_delete_orphan_organisations():
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 
     # All organisations remain since user 2 has org2 as only organization and it has 2 users
-    user2.delete_orphan_organisations()
+    user2.delete()
     assert Organisation.objects.filter(name="org3").count() == 1
     assert Organisation.objects.filter(name="org1").count() == 1
     assert Organisation.objects.filter(name="org2").count() == 1
 
-    # organization org3 is deleted since its only user is user1
-    user1.delete_orphan_organisations()
-    assert Organisation.objects.filter(name="org3").count() == 0
-    # org1 and org2 remain
-    assert Organisation.objects.filter(name="org1").count() == 1
-    assert Organisation.objects.filter(name="org2").count() == 1
-
-    # delete user 1 and user 2
+    # organization org3 and org2 are deleted since its only user is user1
     user1.delete()
-    user2.delete()
-
-    # Check if org2 is deleted and org1 remains
-    assert Organisation.objects.filter(name="org1").count() == 1
+    assert Organisation.objects.filter(name="org3").count() == 0
     assert Organisation.objects.filter(name="org2").count() == 0
+
+    # org1 remain
+    assert Organisation.objects.filter(name="org1").count() == 1
 
 
 def test_user_create_calls_pipedrive_tracking(mocker, db, settings):

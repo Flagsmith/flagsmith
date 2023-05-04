@@ -6,6 +6,14 @@ export const accountService = service
   .enhanceEndpoints({ addTagTypes: ['Account'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      deleteAccount: builder.mutation<Res['account'], Req['deleteAccount']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Account' }],
+        query: (query: Req['deleteAccount']) => ({
+          body: { current_password: query.current_password },
+          method: 'DELETE',
+          url: `auth/users/${query.id}/`,
+        }),
+      }),
       updateAccount: builder.mutation<Res['account'], Req['updateAccount']>({
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'Account' },
@@ -17,15 +25,6 @@ export const accountService = service
           url: `auth/users/me`,
         }),
       }),
-      deleteAccount: builder.mutation<Res['account'], Req['deleteAccount']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Account' }],
-        query: (query: Req['deleteAccount']) => ({
-          body: { current_password: query.current_password },
-          method: 'DELETE',
-          url: `auth/users/${query.id}/`,
-        }),
-      }),
-
       // END OF ENDPOINTS
     }),
   })

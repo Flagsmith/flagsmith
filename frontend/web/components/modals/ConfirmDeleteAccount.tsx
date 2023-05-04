@@ -48,7 +48,7 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
                 .map((o: Organisation) => o.name)
                 .join(',')}.`}
             </strong>{' '}
-            If you continue those organisations will be also deleted.
+            If you continue, those organisations will be also deleted.
           </p>
         )}
       </>

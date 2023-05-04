@@ -243,21 +243,28 @@ class TheComponent extends Component {
                           checked={flagsmith.getTrait('json_inspect')}
                         />
                       </Row>
-                      <Row className='mt-4' space>
-                        <div className='col-md-8 pl-0'>
-                          <h5>Delete Account</h5>
-                          <p>Your account data will be permanently deleted.</p>
-                        </div>
-                        <Button
-                          id='delete-org-btn'
-                          onClick={() =>
-                            this.confirmDeleteAccount(lastUserOrganisations, id)
-                          }
-                          className='btn btn--with-icon ml-auto btn--remove'
-                        >
-                          <RemoveIcon />
-                        </Button>
-                      </Row>
+                      {Utils.getFlagsmithHasFeature('delete_account') && (
+                        <Row className='mt-4' space>
+                          <div className='col-md-8 pl-0'>
+                            <h5>Delete Account</h5>
+                            <p>
+                              Your account data will be permanently deleted.
+                            </p>
+                          </div>
+                          <Button
+                            id='delete-org-btn'
+                            onClick={() =>
+                              this.confirmDeleteAccount(
+                                lastUserOrganisations,
+                                id,
+                              )
+                            }
+                            className='btn btn--with-icon ml-auto btn--remove'
+                          >
+                            <RemoveIcon />
+                          </Button>
+                        </Row>
+                      )}
                     </div>
                   </div>
                 </TabItem>

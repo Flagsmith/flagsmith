@@ -66,7 +66,7 @@ export type Req = {
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
   updateAccount: Account
-  deleteAccount: Account
+  deleteAccount: { current_password: string; id: string }
   createGroupAdmin: {
     group: number | string
     user: number | string
