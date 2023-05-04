@@ -10,12 +10,16 @@ DOTENV_OVERRIDE_FILE ?= .env
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
+.PHONY: install-pip
+install-pip:
+	python -m pip install --upgrade pip
+
 .PHONY: install-packages
 install-packages:
 	pip install -r requirements-all.txt
 
 .PHONY: install
-install: install-packages
+install: install-pip install-packages
 
 .PHONY: lint-black
 lint-black:
