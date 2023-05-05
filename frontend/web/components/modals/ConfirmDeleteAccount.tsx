@@ -14,15 +14,8 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
   userId,
 }) => {
   const [password, setPassword] = useState<string>('')
-  const [
-    deleteUserAccount,
-    {
-      data: updateSegmentData,
-      isError,
-      isLoading: updating,
-      isSuccess: updateSuccess,
-    },
-  ] = useDeleteAccountMutation()
+  const [deleteUserAccount, { isError, isSuccess: updateSuccess }] =
+    useDeleteAccountMutation()
 
   useEffect(() => {
     if (updateSuccess) {
@@ -62,6 +55,7 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
           Utils.preventDefault(e)
           deleteUserAccount({
             current_password: password,
+            deleteOrphanOrganizations: true,
             id: userId,
           })
         }}

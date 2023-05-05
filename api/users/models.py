@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_DELETE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -121,11 +121,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
 
-    @hook(BEFORE_DELETE)
     def delete_orphan_organisations(self):
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()
+        self.delete()
 
     @property
     def auth_type(self):

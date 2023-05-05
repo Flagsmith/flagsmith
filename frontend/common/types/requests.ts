@@ -81,6 +81,6 @@ export type Req = {
     orgId: string
   }>
   deleteGroup: { id: number | string; orgId: number | string }
-  getGroup: { id: string; orgId: string }
+  getGroup: { id: string; orgId: string; deleteOrphanOrganizations: boolean }
   // END OF TYPES
 }

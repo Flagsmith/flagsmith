@@ -1,4 +1,5 @@
 from django.contrib.auth import user_logged_out
+from django.http import HttpResponseBadRequest
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -10,6 +11,8 @@ from trench.views.authtoken import (
     AuthTokenLoginOrRequestMFACode,
     AuthTokenLoginWithMFACode,
 )
+
+from users.models import FFAdminUser
 
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
@@ -51,3 +54,22 @@ def delete_token(request):
         sender=request.user.__class__, request=request, user=request.user
     )
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomUserDeleteView(UserViewSet):
+    def destroy(self, request, *args, **kwargs):
+        if "delete_orphan_organizations" in request.query_params:
+            delete_orphan_organizations = request.query_params[
+                "delete_orphan_organizations"
+            ]
+            if delete_orphan_organizations.lower() == "true":
+                FFAdminUser.delete_orphan_organisations(request.user)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            elif delete_orphan_organizations.lower() == "false":
+                return super().destroy(request, *args, **kwargs)
+            else:
+                return HttpResponseBadRequest(
+                    "Invalid value for delete_orphan_organizations"
+                )
+        else:
+            return super().destroy(request, *args, **kwargs)

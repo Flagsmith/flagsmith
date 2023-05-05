@@ -11,7 +11,7 @@ export const accountService = service
         query: (query: Req['deleteAccount']) => ({
           body: { current_password: query.current_password },
           method: 'DELETE',
-          url: `auth/users/${query.id}/`,
+          url: `auth/users/${query.id}?delete_orphan_organizations=${query.deleteOrphanOrganizations}`,
         }),
       }),
       updateAccount: builder.mutation<Res['account'], Req['updateAccount']>({

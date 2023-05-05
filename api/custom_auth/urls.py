@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from custom_auth.views import (
     CustomAuthTokenLoginOrRequestMFACode,
     CustomAuthTokenLoginWithMFACode,
+    CustomUserDeleteView,
     ThrottledUserViewSet,
     delete_token,
 )
@@ -32,4 +33,9 @@ urlpatterns = [
     path("", include("trench.urls")),  # MFA
     path("", include("trench.urls.djoser")),  # override necessary urls for MFA auth
     path("oauth/", include("custom_auth.oauth.urls")),
+    path(
+        "users/<str:id>",
+        CustomUserDeleteView.as_view({"delete": "destroy"}),
+        name="user-delete",
+    ),
 ]
