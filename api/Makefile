@@ -60,15 +60,19 @@ docker-build:
 test:
 	pytest $(opts)
 
-.PHONY: migrations
-migrations:
+.PHONY: django-migrations
+django-make-migrations:
 	python manage.py waitfordb
 	python manage.py makemigrations $(opts)
 
-.PHONY: migrate
-migrate:
+.PHONY: django-migrate
+django-migrate:
 	python manage.py waitfordb
 	python manage.py migrate
+
+.PHONY: django-collect-static
+django-collect-static:
+	python manage.py collectstatic --noinput
 
 .PHONY: serve
 serve:
