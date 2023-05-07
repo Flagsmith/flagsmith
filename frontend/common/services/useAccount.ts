@@ -9,9 +9,12 @@ export const accountService = service
       deleteAccount: builder.mutation<Res['account'], Req['deleteAccount']>({
         invalidatesTags: [{ id: 'LIST', type: 'Account' }],
         query: (query: Req['deleteAccount']) => ({
-          body: { current_password: query.current_password },
+          body: {
+            current_password: query.current_password,
+            delete_orphan_organisations: query.delete_orphan_organisations,
+          },
           method: 'DELETE',
-          url: `auth/users/${query.id}?delete_orphan_organizations=${query.deleteOrphanOrganizations}`,
+          url: `auth/users/me`,
         }),
       }),
       updateAccount: builder.mutation<Res['account'], Req['updateAccount']>({

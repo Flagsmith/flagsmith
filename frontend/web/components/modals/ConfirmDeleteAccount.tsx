@@ -55,8 +55,7 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
           Utils.preventDefault(e)
           deleteUserAccount({
             current_password: password,
-            deleteOrphanOrganizations: true,
-            id: userId,
+            delete_orphan_organisations: true,
           })
         }}
       >

@@ -66,7 +66,10 @@ export type Req = {
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
   updateAccount: Account
-  deleteAccount: { current_password: string; id: string }
+  deleteAccount: {
+    current_password: string
+    delete_orphan_organisations: boolean
+  }
   createGroupAdmin: {
     group: number | string
     user: number | string
@@ -81,6 +84,6 @@ export type Req = {
     orgId: string
   }>
   deleteGroup: { id: number | string; orgId: number | string }
-  getGroup: { id: string; orgId: string; deleteOrphanOrganizations: boolean }
+  getGroup: { id: string; orgId: string }
   // END OF TYPES
 }
