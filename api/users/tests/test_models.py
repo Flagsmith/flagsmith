@@ -336,12 +336,12 @@ def test_change_email_address_api(mocker):
         first_name="test",
         last_name="user",
     )
-    user.set_password("user1234")
+    user.set_password("password")
 
     client = APIClient()
     client.force_authenticate(user)
 
-    data = {"new_email": "test_user1@test.com", "current_password": "user1234"}
+    data = {"new_email": "test_user1@test.com", "current_password": "password"}
 
     url = "/api/v1/auth/users/set_email/"
 
