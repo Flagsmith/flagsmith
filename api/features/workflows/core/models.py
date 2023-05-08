@@ -24,7 +24,9 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
+    FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
 )
+from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.tasks import create_feature_state_went_live_audit_log
 from features.models import FeatureState
@@ -98,7 +100,7 @@ class ChangeRequest(
         feature_states = list(self.feature_states.all())
 
         for feature_state in feature_states:
-            if not feature_state.live_from:
+            if not feature_state.live_from or feature_state.live_from < timezone.now():
                 feature_state.live_from = timezone.now()
 
             feature_state.version = FeatureState.get_next_version_number(
@@ -181,15 +183,25 @@ class ChangeRequest(
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def schedule_audit_log_creation_task_for_feature_state_going_live(self):
-        now = timezone.now()
-        feature_states = list(
-            self.feature_states.filter(live_from__gt=now).order_by("live_from")
-        )
-        for feature_state in feature_states:
-            create_feature_state_went_live_audit_log.delay(
-                delay_until=feature_state.live_from, args=(feature_state.id,)
-            )
+    def create_audit_log_for_related_feature_state(self):
+        for feature_state in self.feature_states.all():
+            if self.committed_at < feature_state.live_from:
+                create_feature_state_went_live_audit_log.delay(
+                    delay_until=feature_state.live_from, args=(feature_state.id,)
+                )
+            else:
+                message = FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE % (
+                    feature_state.feature.name,
+                    feature_state.change_request.title,
+                )
+                AuditLog.objects.create(
+                    related_object_id=feature_state.id,
+                    related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                    environment=feature_state.environment,
+                    project=feature_state.environment.project,
+                    log=message,
+                    is_system_event=True,
+                )
 
 
 class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
