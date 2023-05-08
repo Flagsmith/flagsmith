@@ -3,7 +3,13 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model, Q
-from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_SAVE,
+    BEFORE_CREATE,
+    LifecycleModel,
+    hook,
+    priority,
+)
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
@@ -76,17 +82,13 @@ class AuditLog(LifecycleModel):
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    @property
-    def can_related_object_type_change_feature_value_for_sdk(self) -> bool:
-        # Returns true if the audit log have an object type that can change the
-        # feature value for the sdk endpoints
-        return self.related_object_type != RelatedObjectType.CHANGE_REQUEST.name
-
-    @hook(AFTER_SAVE)
+    @hook(
+        AFTER_SAVE,
+        priority=priority.HIGHEST_PRIORITY,
+        when="related_object_type",
+        is_not=RelatedObjectType.CHANGE_REQUEST.name,
+    )
     def update_environments_updated_at(self):
-        if not self.can_related_object_type_change_feature_value_for_sdk:
-            return
-
         environments_filter = Q()
         if self.environment_id:
             environments_filter = Q(id=self.environment_id)
@@ -97,9 +99,17 @@ class AuditLog(LifecycleModel):
             updated_at=self.created_date
         )
 
+    @hook(
+        AFTER_SAVE,
+        priority=priority.HIGH_PRIORITY,
+        when="related_object_type",
+        is_not=RelatedObjectType.CHANGE_REQUEST.name,
+    )
+    def send_environment_update_message(self):
         if self.environment_id:
             environment = self.environment
-            # update manually to save a db call
+            # Because we updated the environment `updated_at` in the previous hook in bulk
+            # we will update it manually here to save a `refresh_from_db` call
             environment.updated_at = self.created_date
             send_environment_update_message_for_environment(environment)
         else:
