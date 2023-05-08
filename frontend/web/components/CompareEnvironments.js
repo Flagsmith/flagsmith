@@ -158,9 +158,21 @@ class CompareEnvironments extends Component {
                   <div className='list-item'>
                     <Row>
                       <div style={{ width: featureNameWidth }}>
-                        <Tooltip title={<strong>{p.projectFlag.name}</strong>}>
-                          {p.projectFlag.description}
-                        </Tooltip>
+                        {p.projectFlag.description ? (
+                          <Tooltip
+                            title={
+                              <strong style={{ wordWrap: 'break-word' }}>
+                                {p.projectFlag.name}
+                              </strong>
+                            }
+                          >
+                            {p.projectFlag.description}
+                          </Tooltip>
+                        ) : (
+                          <strong style={{ wordWrap: 'break-word' }}>
+                            {p.projectFlag.name}
+                          </strong>
+                        )}
                       </div>
                       <Flex className='mr-2'>
                         <Permission
@@ -175,6 +187,7 @@ class CompareEnvironments extends Component {
                           {({ permission }) => (
                             <FeatureRow
                               condensed
+                              isCompareEnv
                               fadeEnabled={fadeEnabled}
                               fadeValue={fadeValue}
                               environmentFlags={this.state.environmentLeftFlags}
@@ -204,6 +217,7 @@ class CompareEnvironments extends Component {
                           {({ permission }) => (
                             <FeatureRow
                               condensed
+                              isCompareEnv
                               fadeEnabled={fadeEnabled}
                               fadeValue={fadeValue}
                               environmentFlags={
@@ -275,7 +289,12 @@ class CompareEnvironments extends Component {
                             >
                               <span style={{ width: featureNameWidth }} />
                               <Flex>
-                                <strong>
+                                <strong
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                  }}
+                                >
                                   {
                                     ProjectStore.getEnvironment(
                                       this.state.environmentLeft,
@@ -284,7 +303,12 @@ class CompareEnvironments extends Component {
                                 </strong>
                               </Flex>
                               <Flex>
-                                <strong>
+                                <strong
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                  }}
+                                >
                                   {
                                     ProjectStore.getEnvironment(
                                       this.state.environmentRight,
@@ -325,7 +349,12 @@ class CompareEnvironments extends Component {
                               >
                                 <span style={{ width: featureNameWidth }} />
                                 <Flex>
-                                  <strong>
+                                  <strong
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
                                     {
                                       ProjectStore.getEnvironment(
                                         this.state.environmentLeft,
@@ -334,7 +363,12 @@ class CompareEnvironments extends Component {
                                   </strong>
                                 </Flex>
                                 <Flex>
-                                  <strong>
+                                  <strong
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
                                     {
                                       ProjectStore.getEnvironment(
                                         this.state.environmentRight,
