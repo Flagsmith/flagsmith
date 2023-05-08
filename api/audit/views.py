@@ -46,7 +46,10 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
-        return Q(project__organisation__users=self.request.user)
+        return Q(
+            project__organisation__users=self.request.user,
+            project__organisations__users__admin=True,
+        )
 
 
 class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
