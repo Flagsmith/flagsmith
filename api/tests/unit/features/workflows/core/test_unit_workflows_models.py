@@ -466,10 +466,13 @@ def test_committing_cr_after_live_from_creates_correct_audit_log_for_related_fea
             feature_state.feature.name,
             feature_state.change_request.title,
         )
-        AuditLog.objects.get(
-            related_object_id=feature_state.id,
-            related_object_type=RelatedObjectType.FEATURE_STATE.name,
-            log=log,
+        assert (
+            AuditLog.objects.filter(
+                related_object_id=feature_state.id,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                log=log,
+            ).count()
+            == 1
         )
 
 
