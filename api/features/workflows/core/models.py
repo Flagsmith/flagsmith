@@ -24,11 +24,12 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
-    FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
 )
-from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from audit.tasks import create_feature_state_went_live_audit_log
+from audit.tasks import (
+    create_feature_state_updated_by_change_request_audit_log,
+    create_feature_state_went_live_audit_log,
+)
 from features.models import FeatureState
 
 from .exceptions import (
@@ -190,17 +191,8 @@ class ChangeRequest(
                     delay_until=feature_state.live_from, args=(feature_state.id,)
                 )
             else:
-                message = FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE % (
-                    feature_state.feature.name,
-                    feature_state.change_request.title,
-                )
-                AuditLog.objects.create(
-                    related_object_id=feature_state.id,
-                    related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                    environment=feature_state.environment,
-                    project=feature_state.environment.project,
-                    log=message,
-                    is_system_event=True,
+                create_feature_state_updated_by_change_request_audit_log.delay(
+                    args=(feature_state.id,)
                 )
 
 
