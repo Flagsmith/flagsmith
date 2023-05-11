@@ -8,6 +8,7 @@ from app.pagination import CustomPagination
 from audit.models import AuditLog
 from audit.permissions import OrganisationAuditLogPermissions
 from audit.serializers import AuditLogSerializer, AuditLogsQueryParamSerializer
+from organisations.models import OrganisationRole
 
 
 @method_decorator(
@@ -47,8 +48,8 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
         return Q(
-            project__organisation__users=self.request.user,
-            project__organisation__users__admin=True,
+            project__organisation__userorganisation__user=self.request.user,
+            project__organisation__userorganisation__role=OrganisationRole.ADMIN,
         )
 
 
