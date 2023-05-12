@@ -4,7 +4,8 @@ const exphbs = require('express-handlebars')
 const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
-
+const path = require('path')
+const fs = require('fs')
 const app = express()
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
@@ -139,7 +140,11 @@ if (isDev) {
   if (!process.env.VERCEL) {
     app.use(express.static('public'))
   }
-  app.set('views', 'public/static')
+  if (fs.existsSync(path.join(process.cwd(),'frontend'))) {
+    app.set('views', 'frontend/public/static')
+  } else {
+    app.set('views', 'public/static')
+  }
 }
 
 app.engine(
