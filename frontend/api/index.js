@@ -5,7 +5,6 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
 const path = require('path')
-const fs = require('fs')
 const app = express()
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
