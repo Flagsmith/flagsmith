@@ -20,5 +20,5 @@ test('Project Test', async () => {
 }).after(async (t) => {
     console.log('Start of Project Requests');
     await logResults(logger.requests);
-    console.log('End of Project Errors');
+    console.log('End of Project Requests');
 });

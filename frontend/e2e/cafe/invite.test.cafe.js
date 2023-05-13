@@ -65,5 +65,5 @@ test('Invite Test', async () => {
 }).after(async (t) => {
     console.log('Start of Invite Requests');
     await logResults(logger.requests);
-    console.log('End of Invite Errors');
+    console.log('End of Invite Requests');
 });

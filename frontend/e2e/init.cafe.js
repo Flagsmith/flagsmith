@@ -258,5 +258,5 @@ test('[Initialise]', async () => {
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
     await logResults(logger.requests);
-    console.log('Start of Initialise Requests');
+    console.log('End of Initialise Requests');
 });

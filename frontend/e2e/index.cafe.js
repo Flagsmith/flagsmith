@@ -26,7 +26,8 @@ createTestCafe()
                 resolve();
             });
         });
-        const runner = testcafe.createRunner();
+        const runner = testcafe.createRunner()
+            .clientScripts('e2e/add-error-logs.js');
         return runner
             .src(['./e2e/init.cafe.js'])
             .run(options)

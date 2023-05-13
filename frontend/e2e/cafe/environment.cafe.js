@@ -29,5 +29,5 @@ test('Submit a Form', async () => {
 }).after(async (t) => {
     console.log('Start of Environment Requests');
     await logResults(logger.requests);
-    console.log('End of Environment Errors');
+    console.log('End of Environment Requests');
 });
