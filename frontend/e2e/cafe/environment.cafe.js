@@ -28,6 +28,6 @@ test('Submit a Form', async () => {
     await waitForElementVisible(byId('features-page'));
 }).after(async (t) => {
     console.log('Start of Environment Requests');
-    await logResults(logger.requests);
+    await logResults(logger.requests, t);
     console.log('End of Environment Requests');
 });

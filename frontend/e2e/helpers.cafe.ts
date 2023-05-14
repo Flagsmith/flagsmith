@@ -24,7 +24,7 @@ export const waitForElementVisible = async (selector:string) => {
     return t.expect(Selector(selector).visible).ok();
 };
 
-export const logResults = async (requests:LoggedRequest[],t)=> {
+export const logResults = async (requests:LoggedRequest[], t)=> {
     console.log(JSON.stringify(requests.filter((v)=>{
         if(v.request?.url?.includes("get-subscription-meta-data")) {
             return false

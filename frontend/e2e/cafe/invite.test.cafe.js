@@ -64,6 +64,6 @@ test('Invite Test', async () => {
     await assertTextContent('.nav-link-featured', organisationName);
 }).after(async (t) => {
     console.log('Start of Invite Requests');
-    await logResults(logger.requests);
+    await logResults(logger.requests, t);
     console.log('End of Invite Requests');
 });

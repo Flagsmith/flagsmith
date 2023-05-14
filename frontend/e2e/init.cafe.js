@@ -257,6 +257,6 @@ test('[Initialise]', async () => {
     await deleteFeature(0, 'mv_flag');
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
-    await logResults(logger.requests);
+    await logResults(logger.requests, t);
     console.log('End of Initialise Requests');
 });

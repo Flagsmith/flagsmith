@@ -143,6 +143,6 @@ test('Segments Test', async () => {
     await waitForElementVisible(byId('user-feature-switch-1-on'));
 }).after(async (t) => {
     console.log('Start of Segment Requests');
-    await logResults(logger.requests);
+    await logResults(logger.requests, t);
     console.log('End of Segment Requests');
 });
