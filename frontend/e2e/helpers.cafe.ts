@@ -9,7 +9,7 @@ export type Rule = {
     name: string,
     operator: string,
     value: string,
-    ors:Rule[]
+    ors?:Rule[]
 }
 export const setText = async (selector:string, text:string) => {
     console.log(`Set text ${selector} : ${text}`);
@@ -25,11 +25,11 @@ export const waitForElementVisible = async (selector:string) => {
 };
 
 export const logResults = async (requests:LoggedRequest[], t)=> {
+    if(!t.testRun?.errs?.length) {
+        return // do not log anything for passed tests
+    }
     console.log(JSON.stringify(requests.filter((v)=>{
-        if(v.request?.url?.includes("get-subscription-meta-data")) {
-            return false
-        }
-        if ((v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
+        if(v.request?.url?.includes("get-subscription-metadata")) {
             return false
         }
         return true
@@ -229,25 +229,28 @@ export const setSegmentRule = async (ruleIndex:number, orIndex:number, name:stri
     await setText(byId(`rule-${ruleIndex}-value-${orIndex}`), value);
 };
 
-export const createSegment = async (index:number, id:string, rules:Rule[]) => {
+export const createSegment = async (index:number, id:string, rules?:Rule[]) => {
     await click(byId('show-create-segment-btn'));
     await setText(byId('segmentID'), id);
-    for (let x = 0; x<rules.length; x++) {
-        const rule = rules[x];
-        if (x > 0) {
+        for (let x = 0; x<rules.length; x++) {
+            const rule = rules[x];
+            if (x > 0) {
+                // eslint-disable-next-line no-await-in-loop
+                await click(byId('add-rule'));
+            }
             // eslint-disable-next-line no-await-in-loop
-            await click(byId('add-rule'));
-        }
-        // eslint-disable-next-line no-await-in-loop
-        await setSegmentRule(x, 0, rule.name, rule.operator, rule.value);
-        for (let orIndex = 0; orIndex<rule.ors.length; orIndex++) {
-            const or = rule.ors[orIndex];
-            // eslint-disable-next-line no-await-in-loop
-            await click(byId(`rule-${x}-or`));
-            // eslint-disable-next-line no-await-in-loop
-            await setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
-        }
-    }
+            await setSegmentRule(x, 0, rule.name, rule.operator, rule.value);
+            if( rule.ors) {
+                for (let orIndex = 0; orIndex<rule.ors.length; orIndex++) {
+                    const or = rule.ors[orIndex];
+                    // eslint-disable-next-line no-await-in-loop
+                    await click(byId(`rule-${x}-or`));
+                    // eslint-disable-next-line no-await-in-loop
+                    await setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
+                }
+            }
+            }
+
     // Create
     await click(byId('create-segment'));
     await waitForElementVisible(byId(`segment-${index}-name`));
