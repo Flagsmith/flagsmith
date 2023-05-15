@@ -29,7 +29,7 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         return // do not log anything for passed tests
     }
     console.log(JSON.stringify(requests.filter((v)=>{
-        if(v.request?.url?.includes("get-subscription-metadata")) {
+        if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
             return false
         }
         if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
@@ -37,7 +37,8 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         }
         return true
     }), null, 2));
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+    console.log("Session JavaScript Errors")
+    console.log(JSON.stringify((await t.getBrowserConsoleMessages())));
 }
 
 export const waitForElementNotExist = async (selector:string) => {
