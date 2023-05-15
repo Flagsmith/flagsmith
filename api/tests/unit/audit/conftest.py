@@ -1,6 +1,9 @@
-import pytest as pytest
+import typing
 
-from organisations.models import OrganisationRole
+import pytest as pytest
+from django.db.models import Model
+
+from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import VIEW_AUDIT_LOG
 from permissions.models import PermissionModel
@@ -12,7 +15,11 @@ def view_audit_log_permission(db):
 
 
 @pytest.fixture()
-def view_audit_log_user(organisation, django_user_model, view_audit_log_permission):
+def view_audit_log_user(
+    organisation: Organisation,
+    django_user_model: typing.Type[Model],
+    view_audit_log_permission: PermissionModel,
+):
     user = django_user_model.objects.create(email="test@example.com")
     user.add_organisation(organisation, OrganisationRole.USER)
     user_org_permission = UserOrganisationPermission.objects.create(

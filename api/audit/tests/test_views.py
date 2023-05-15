@@ -1,5 +1,9 @@
+import typing
+
+from django.db.models import Model
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from environments.models import Environment
@@ -91,7 +95,11 @@ def test_audit_log_can_be_filtered_by_is_system_event(
 
 
 def test_regular_user_cannot_list_audit_log(
-    project, environment, organisation, django_user_model, api_client
+    project: Project,
+    environment: Environment,
+    organisation: Organisation,
+    django_user_model: typing.Type[Model],
+    api_client: APIClient,
 ):
     # Given
     AuditLog.objects.create(environment=environment)
@@ -108,7 +116,10 @@ def test_regular_user_cannot_list_audit_log(
 
 
 def test_admin_user_cannot_list_audit_log_of_another_organisation(
-    api_client, organisation, project, django_user_model
+    api_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    django_user_model: typing.Type[Model],
 ):
     # Given
     another_organisation = Organisation.objects.create(name="another organisation")

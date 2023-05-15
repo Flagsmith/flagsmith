@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
@@ -20,7 +20,7 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     pagination_class = CustomPagination
     filterset_fields = ["is_system_event"]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[AuditLog]:
         q = self._get_base_filters()
 
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
