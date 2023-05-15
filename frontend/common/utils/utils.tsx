@@ -96,10 +96,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return conditions.find((v) => v.value === operator)
   },
   getApproveChangeRequestPermission() {
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'APPROVE_CHANGE_REQUEST'
-    }
-    return 'VIEW_ENVIRONMENT'
+    return 'APPROVE_CHANGE_REQUEST'
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -197,28 +194,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'UPDATE_FEATURE_STATE'
-    }
-    return 'ADMIN'
+    return 'UPDATE_FEATURE_STATE'
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'Create Change Request'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'Update Feature State'
-    }
-    return 'Admin'
+    return 'Update Feature State'
   },
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'

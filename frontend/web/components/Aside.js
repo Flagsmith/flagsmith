@@ -114,9 +114,7 @@ const Aside = class extends Component {
         ProjectStore.model.environments[0] &&
         ProjectStore.model.environments[0].api_key)
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
-    const hasRbacPermission =
-      Utils.getPlansPermission('AUDIT') ||
-      !Utils.getFlagsmithHasFeature('scaleup_audit')
+    const hasRbacPermission = Utils.getPlansPermission('AUDIT')
     const changeRequest =
       environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
