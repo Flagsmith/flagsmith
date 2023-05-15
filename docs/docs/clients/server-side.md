@@ -84,17 +84,17 @@ pip install flagsmith
 
 ```xml
 # Check https://search.maven.org/artifact/com.flagsmith/flagsmith-java-client
-        # for the latest version!
+# for the latest version!
 
-        # Maven
+# Maven
 <dependency>
   <groupId>com.flagsmith</groupId>
   <artifactId>flagsmith-java-client</artifactId>
   <version>5.0.0</version>
 </dependency>
 
-        # Gradle
-        implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
+# Gradle
+implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 ```
 
 </TabItem>
