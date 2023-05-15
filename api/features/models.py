@@ -884,7 +884,7 @@ class FeatureState(
             and self.feature_segment_id is None
             and self.identity_id is None
         ):
-            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+            kwargs["skip_subscribers"] = "send_environments_to_dynamodb"
 
         return kwargs
 

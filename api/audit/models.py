@@ -4,7 +4,7 @@ from importlib import import_module
 from django.db import models
 from django.db.models import Model, Q
 from django_lifecycle import (
-    AFTER_SAVE,
+    AFTER_CREATE,
     BEFORE_CREATE,
     LifecycleModel,
     hook,
@@ -54,10 +54,10 @@ class AuditLog(LifecycleModel):
     related_object_type = models.CharField(max_length=20, null=True)
     related_object_uuid = models.CharField(max_length=36, null=True)
 
-    skip_signals = models.CharField(
+    skip_subscribers = models.CharField(
         null=True,
         blank=True,
-        help_text="comma separated list of signal functions to skip",
+        help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
     )
     is_system_event = models.BooleanField(default=False)
@@ -68,6 +68,15 @@ class AuditLog(LifecycleModel):
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
+
+    @property
+    def environment_document_updated(self) -> bool:
+        if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
+            return False
+        skip_subscribers = (
+            self.skip_subscribers.split(",") if self.skip_subscribers else []
+        )
+        return "send_environments_to_dynamodb" not in skip_subscribers
 
     @property
     def history_record(self):
@@ -83,10 +92,10 @@ class AuditLog(LifecycleModel):
         return getattr(module, class_name)
 
     @hook(
-        AFTER_SAVE,
+        AFTER_CREATE,
         priority=priority.HIGHEST_PRIORITY,
-        when="related_object_type",
-        is_not=RelatedObjectType.CHANGE_REQUEST.name,
+        when="environment_document_updated",
+        is_now=True,
     )
     def update_environments_updated_at(self):
         environments_filter = Q()
@@ -100,16 +109,28 @@ class AuditLog(LifecycleModel):
         )
 
     @hook(
-        AFTER_SAVE,
+        AFTER_CREATE,
         priority=priority.HIGH_PRIORITY,
-        when="related_object_type",
-        is_not=RelatedObjectType.CHANGE_REQUEST.name,
+        when="environment_document_updated",
+        is_now=True,
+    )
+    def send_environments_to_dynamodb(self):
+        from environments.models import Environment
+
+        Environment.write_environments_to_dynamodb(
+            environment_id=self.environment_id, project_id=self.project_id
+        )
+
+    @hook(
+        AFTER_CREATE,
+        when="environment_document_updated",
+        is_now=True,
     )
     def send_environment_update_message(self):
         if self.environment_id:
             environment = self.environment
             # Because we updated the environment `updated_at` in the previous hook in bulk
-            # we will update it manually here to save a `refresh_from_db` call
+            # update it manually here to save a `refresh_from_db` call
             environment.updated_at = self.created_date
             send_environment_update_message_for_environment(environment)
         else:
