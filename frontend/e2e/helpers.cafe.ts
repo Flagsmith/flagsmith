@@ -32,6 +32,9 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         if(v.request?.url?.includes("get-subscription-metadata")) {
             return false
         }
+        if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
+            return false
+        }
         return true
     }), null, 2));
     console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
