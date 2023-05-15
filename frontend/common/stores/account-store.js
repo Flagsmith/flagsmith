@@ -147,14 +147,8 @@ const controller = {
         password,
       })
       .then((res) => {
-        const isDemo = email === Project.demoAccount.email
-        store.isDemo = isDemo
-        if (isDemo) {
-          AsyncStorage.setItem('isDemo', `${isDemo}`)
-          API.trackEvent(Constants.events.LOGIN_DEMO)
-        } else {
-          API.trackEvent(Constants.events.LOGIN)
-        }
+        API.trackEvent(Constants.events.LOGIN)
+
         if (res.ephemeral_token) {
           store.ephemeral_token = res.ephemeral_token
           store.model = {
@@ -265,13 +259,9 @@ const controller = {
   setToken: (token) => {
     store.loading()
     store.user = {}
-    AsyncStorage.getItem('isDemo', (err, res) => {
-      if (res) {
-        store.isDemo = true
-      }
-      data.setToken(token)
-      return controller.onLogin()
-    })
+
+    data.setToken(token)
+    return controller.onLogin()
   },
 
   setUser(user) {
@@ -309,10 +299,8 @@ const controller = {
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
-      if (!store.isDemo) {
-        API.alias(user.email)
-        API.identify(user && user.email, user)
-      }
+      API.alias(user.email)
+      API.identify(user && user.email, user)
       if (E2E) {
         console.info(`Account loaded`)
       }
@@ -322,7 +310,6 @@ const controller = {
       AsyncStorage.clear()
       API.setCookie('t', '')
       data.setToken(null)
-      store.isDemo = false
       store.model = user
       store.organisation = null
       store.trigger('logout')
