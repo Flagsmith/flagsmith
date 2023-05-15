@@ -987,11 +987,11 @@ const OrganisationSettingsPage = class extends Component {
                                                             id,
                                                             Format.userDisplayName(
                                                               {
+                                                                email,
                                                                 firstName:
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
-                                                                email,
                                                               },
                                                             ),
                                                             email,
@@ -1272,19 +1272,16 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {!Project.disableAnalytics && (
-                            <TabItem
-                              tabLabel='Usage'
-                              tabIcon='ion-md-analytics'
-                            >
-                              {this.state.tab === 4 && (
-                                <OrganisationUsage
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                />
-                              )}
-                            </TabItem>
-                          )}
+                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                            {this.state.tab === 4 && (
+                              <OrganisationUsage
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                              />
+                            )}
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )
