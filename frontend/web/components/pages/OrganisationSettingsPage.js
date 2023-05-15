@@ -18,6 +18,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
+import Format from 'common/utils/format'
 
 const widths = [450, 150, 100]
 const OrganisationSettingsPage = class extends Component {
@@ -79,10 +80,13 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  deleteUser = (id) => {
+  deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Delete User</h3>,
-      <p>Are you sure you want to delete this user?</p>,
+      <h3>Remove User</h3>,
+      <p>
+        Are you sure you want to remove the user{' '}
+        <strong>{userDisplayName}</strong> from the organisation?
+      </p>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -979,7 +983,19 @@ const OrganisationSettingsPage = class extends Component {
                                                         id='delete-invite'
                                                         type='button'
                                                         onClick={() =>
-                                                          this.deleteUser(id)
+                                                          this.deleteUser(
+                                                            id,
+                                                            Format.userDisplayName(
+                                                              {
+                                                                firstName:
+                                                                  first_name,
+                                                                lastName:
+                                                                  last_name,
+                                                                email,
+                                                              },
+                                                            ),
+                                                            email,
+                                                          )
                                                         }
                                                         className='btn btn--with-icon ml-auto btn--remove'
                                                       >
@@ -1114,6 +1130,11 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
+                                                    null,
+                                                    {
+                                                      className:
+                                                        'side-modal fade create-feature-modal in',
+                                                    },
                                                   )
                                                 }
                                                 type='button'
@@ -1250,18 +1271,20 @@ const OrganisationSettingsPage = class extends Component {
                             )}
                           </FormGroup>
                         </TabItem>
-                        {(!Project.disableInflux ||
-                          !Project.disableAnalytics) && (
-                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
-                            {this.state.tab === 4 && (
-                              <OrganisationUsage
-                                organisationId={
-                                  AccountStore.getOrganisation().id
-                                }
-                              />
-                            )}
-                          </TabItem>
-                        )}
+                        {!Project.disableAnalytics && (
+                            <TabItem
+                              tabLabel='Usage'
+                              tabIcon='ion-md-analytics'
+                            >
+                              {this.state.tab === 4 && (
+                                <OrganisationUsage
+                                  organisationId={
+                                    AccountStore.getOrganisation().id
+                                  }
+                                />
+                              )}
+                            </TabItem>
+                          )}
                       </Tabs>
                     </div>
                   )

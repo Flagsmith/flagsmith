@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    MANAGE_USER_GROUPS,
     NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
@@ -30,6 +31,7 @@ from users.models import (
     UserPermissionGroupMembership,
 )
 from users.serializers import (
+    ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
     UserIdsSerializer,
     UserListSerializer,
@@ -144,11 +146,26 @@ def password_reset_redirect(request, uidb64, token):
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
-    serializer_class = UserPermissionGroupSerializerDetail
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
-        return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
+        organisation = Organisation.objects.get(id=organisation_pk)
+
+        qs = UserPermissionGroup.objects.filter(organisation=organisation)
+        if not self.request.user.has_organisation_permission(
+            organisation, MANAGE_USER_GROUPS
+        ):
+            qs = qs.filter(
+                userpermissiongroupmembership__ffadminuser=self.request.user,
+                userpermissiongroupmembership__group_admin=True,
+            )
+
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return UserPermissionGroupSerializerDetail
+        return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

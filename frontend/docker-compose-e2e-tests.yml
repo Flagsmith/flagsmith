@@ -21,14 +21,14 @@ services:
       FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
       DJANGO_ALLOWED_HOSTS: '*'
       DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
-      ENABLE_INFLUXDB_FEATURES: 'false'
+      DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
     ports:
-    - 8000:8000
+      - 8000:8000
     depends_on:
-    - db
+      - db
     links:
-    - db:db
+      - db:db
 
   frontend:
     build:
@@ -37,13 +37,13 @@ services:
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
-      ENABLE_INFLUXDB_FEATURES: 'false'
+      DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
     ports:
-    - 8080:8080
+      - 8080:8080
     depends_on:
-    - flagsmith-api
+      - flagsmith-api
     links:
-    - flagsmith-api:flagsmith-api
+      - flagsmith-api:flagsmith-api
     command: [npm, run, test]

@@ -153,7 +153,7 @@ const CreateFlag = class extends Component {
       }, 500)
     }
     if (
-      (!Project.disableInflux || !Project.disableAnalytics) &&
+      !Project.disableAnalytics &&
       this.props.projectFlag &&
       this.props.environmentFlag
     ) {
@@ -1351,8 +1351,7 @@ const CreateFlag = class extends Component {
                                     </TabItem>
                                   )}
                                 {!existingChangeRequest &&
-                                  (!Project.disableInflux ||
-                                    !Project.disableAnalytics) &&
+                                  !Project.disableAnalytics &&
                                   this.props.flagId && (
                                     <TabItem
                                       data-test='analytics'

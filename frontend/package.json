@@ -18,9 +18,9 @@
     "lint:fix": "npx eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
-    "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
-    "bundle": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
-    "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html"
+    "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
+    "bundle": "npx webpack --config ./webpack/webpack.config.prod.js",
+    "bundledjango": "mkdir -p ../api/app/templates/webpack/ && npx webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html"
   },
   "engines": {
     "node": "16.x",
@@ -119,14 +119,14 @@
     "terser-webpack-plugin": "^5.3.6",
     "toml": "^3.0.0",
     "vercel": "^28.16.15",
-    "webpack": "5.52.1",
+    "webpack": "5.76.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-middleware": "5.3.3",
     "webpack-hot-middleware": "2.25.3",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
-    "yaml": "^2.0.0"
+    "yaml": "^2.2.2"
   },
   "devDependencies": {
     "@dword-design/eslint-plugin-import-alias": "^2.0.7",
@@ -148,7 +148,6 @@
     "eslint-plugin-react-hooks": "4.3.0",
     "eslint-plugin-sort-destructure-keys": "^1.4.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
-
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
     "ssgrtk": "^0.3.4",

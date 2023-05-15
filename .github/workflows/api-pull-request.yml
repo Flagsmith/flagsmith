@@ -30,7 +30,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.10', '3.11']
 
     steps:
       - name: Cloning repo
@@ -45,19 +45,10 @@ jobs:
           cache: pip
 
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-all.txt
+        run: make install
 
-      - name: Check black formatting
-        run: black --check .
-
-      - name: Check flake8 linting
-        working-directory: . # working dir should be root due to conflicts with pre-commit
-        run: flake8 .
-
-      - name: Check isort imports
-        run: isort --check .
+      - name: Run Linters
+        run: make lint
 
       - name: Create analytics database
         env:
@@ -66,10 +57,5 @@ jobs:
 
       - name: Run Tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
-          ANALYTICS_DATABASE_URL:
-            postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/analytics
-          DJANGO_SETTINGS_MODULE: app.settings.test
-          LOG_LEVEL: INFO
-        run: |
-          pytest -p no:warnings
+          DOTENV_OVERRIDE_FILE: .env-ci
+        run: make test

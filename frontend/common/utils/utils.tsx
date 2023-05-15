@@ -221,6 +221,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('startup')) {
       return planNames.startup
     }
+    if (plan && plan.includes('start-up')) {
+      return planNames.startup
+    }
     if (plan && plan.includes('enterprise')) {
       return planNames.enterprise
     }

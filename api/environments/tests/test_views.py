@@ -651,6 +651,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     banner_colour = "#FF0000"
     hide_disabled_flags = True
     use_mv_v2_evaluation = True
+    hide_sensitive_data = True
 
     data = {
         "project": project.id,
@@ -659,6 +660,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
         "banner_colour": banner_colour,
         "hide_disabled_flags": hide_disabled_flags,
         "use_mv_v2_evaluation": use_mv_v2_evaluation,
+        "hide_sensitive_data": hide_sensitive_data,
     }
 
     # When
@@ -675,6 +677,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     assert response.json()["banner_text"] == banner_text
     assert response.json()["banner_colour"] == banner_colour
     assert response.json()["hide_disabled_flags"] == hide_disabled_flags
+    assert response.json()["hide_sensitive_data"] == hide_sensitive_data
     assert response.json()["use_mv_v2_evaluation"] == use_mv_v2_evaluation
 
 
