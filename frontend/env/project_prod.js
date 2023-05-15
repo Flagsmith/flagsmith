@@ -6,19 +6,13 @@ module.exports = global.Project = {
     site: 'flagsmith',
   },
 
-  // trigger maintenance mode
   cookieDomain: '.flagsmith.com',
 
-  demoAccount: {
-    email: 'kyle+bullet-train@solidstategroup.com',
-    password: 'demo_account',
-  },
-
-  // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   env: 'prod',
 
   excludeAnalytics: 'nightwatch@solidstategroup.com',
 
+  // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   flagsmith: '4vfqhypYjcPoGGu8ByrBaj',
 
   flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',

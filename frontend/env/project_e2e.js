@@ -9,12 +9,6 @@ module.exports = global.Project = {
   // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   debug: false,
 
-  // trigger maintenance mode
-  demoAccount: {
-    email: 'kyle+bullet-train@solidstategroup.com',
-    password: 'demo_account',
-  },
-
   env: 'dev',
 
   flagsmith: 'ENktaJnfLVbLifybz34JmX',
