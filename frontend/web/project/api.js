@@ -242,7 +242,7 @@ global.API = {
   setInvite(id) {
     const cookie = require('js-cookie')
     if (E2E) {
-      console.info(`Set invite ${id}`)
+      console.info(`Set invite to ${id}`)
     }
     cookie.set('invite', id)
   },
