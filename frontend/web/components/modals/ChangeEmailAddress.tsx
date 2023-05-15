@@ -4,7 +4,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useUpdateUserEmailMutation } from 'common/services/useUserEmail'
 
 type ChangeEmailAddressType = {
-  onComplete?: (newEmail: string) => void
+  onComplete?: () => void
 }
 
 const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
@@ -13,7 +13,12 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
 
   const [
     setUserEmail,
-    { isError, isLoading: updating, isSuccess: updateSuccess },
+    {
+      error: updateError,
+      isError,
+      isLoading: updating,
+      isSuccess: updateSuccess,
+    },
   ] = useUpdateUserEmailMutation()
 
   useEffect(() => {
@@ -77,8 +82,9 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
           />
           {isError && (
             <div className='alert alert-danger'>
-              Error Updating Email Address, please ensure you have entered your
-              current password or a new Email
+              {updateError.data.current_password
+                ? updateError.data.current_password[0]
+                : 'An error occurred attempting to update your email address. Please verify that the email address you have provided is not already being used.'}
             </div>
           )}
           <div className='text-right'>
