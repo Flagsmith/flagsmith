@@ -59,7 +59,7 @@ cryptography==39.0.1
     #   pyjwt
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.18
+django==3.2.19
     # via
     #   -r requirements.in
     #   django-admin-sso
