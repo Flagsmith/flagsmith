@@ -81,6 +81,9 @@ const App = class extends Component {
   }
 
   onLogin = () => {
+    if (E2E) {
+      console.info('On Login')
+    }
     resolveAuthFlow({
       isAuthenticated: true,
     })
@@ -88,6 +91,9 @@ const App = class extends Component {
     let redirect = API.getRedirect()
     const invite = API.getInvite()
     if (invite) {
+      if (E2E) {
+        console.info('Set invite redirect')
+      }
       redirect = `/invite/${invite}`
     }
 
@@ -108,6 +114,9 @@ const App = class extends Component {
       return
     }
 
+    if (E2E) {
+      console.info(`Redirect ${this.props.location.pathname} ${redirect}`)
+    }
     // Redirect on login
     if (
       this.props.location.pathname === '/' ||

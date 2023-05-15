@@ -275,6 +275,9 @@ const controller = {
   },
 
   setUser(user) {
+    if (E2E) {
+      console.info(`Set User`)
+    }
     if (user) {
       store.model = user
       if (user && user.organisations) {
@@ -309,6 +312,9 @@ const controller = {
       if (!store.isDemo) {
         API.alias(user.email)
         API.identify(user && user.email, user)
+      }
+      if (E2E) {
+        console.info(`Account loaded`)
       }
       store.loaded()
     } else if (!user) {
