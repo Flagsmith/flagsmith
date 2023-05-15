@@ -77,11 +77,6 @@ const AccountProvider = class extends Component {
   login = (details) => {
     AppActions.login(details)
   }
-
-  loginDemo = () => {
-    AppActions.login(Project.demoAccount)
-  }
-
   register = (details, isInvite) => {
     AppActions.register(details, isInvite)
   }
@@ -110,7 +105,6 @@ const AccountProvider = class extends Component {
         editOrganisation: AppActions.editOrganisation,
         enableTwoFactor: AppActions.enableTwoFactor,
         login: this.login,
-        loginDemo: this.loginDemo,
         register: this.register,
         selectOrganisation: AppActions.selectOrganisation,
         twoFactorLogin: AppActions.twoFactorLogin,
