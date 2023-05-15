@@ -1,7 +1,7 @@
 from django.contrib.auth import user_logged_out
-from djoser import utils
-from djoser.serializers import UserDeleteSerializer
+from django.utils.decorators import method_decorator
 from djoser.views import UserViewSet
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -42,10 +42,14 @@ def delete_token(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserDeleteQuerySerializer(UserDeleteSerializer):
+class UserDeleteQuerySerializer(serializers.Serializer):
     delete_orphan_organisations = serializers.BooleanField(default=False)
 
 
+@method_decorator(
+    name="destroy",
+    decorator=swagger_auto_schema(query_serializer=UserDeleteQuerySerializer()),
+)
 class FFAdminUserViewSet(UserViewSet):
     throttle_scope = "signup"
 
@@ -58,24 +62,12 @@ class FFAdminUserViewSet(UserViewSet):
             throttles = [ScopedRateThrottle()]
         return throttles
 
-    def get_serializer_class(self):
-        if self.action == "destroy" or (
-            self.action == "me" and self.request and self.request.method == "DELETE"
-        ):
-            return UserDeleteQuerySerializer
-        else:
-            return super().get_serializer_class()
+    def perform_destroy(self, instance):
+        if self.request.data:
+            serializer = UserDeleteQuerySerializer(data=self.request.data)
+            serializer.is_valid(raise_exception=True)
+            self.request.user.delete(
+                serializer.validated_data.get("delete_orphan_organisations")
+            )
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        if serializer.validated_data["delete_orphan_organisations"]:
-            instance.delete_orphan_organisations()
-
-        if instance == request.user:
-            utils.logout_user(self.request)
-
-        self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -126,6 +126,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()
 
+    def delete(self, delete_orphan_organisations: False):
+        if delete_orphan_organisations:
+            self.delete_orphan_organisations()
+        super().delete()
+
     @property
     def auth_type(self):
         if self.google_user_id:
