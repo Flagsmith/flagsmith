@@ -224,7 +224,7 @@ _flagsmithClient = new("<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>");
 const Flagsmith = require('flagsmith-nodejs');
 
 const flagsmith = new Flagsmith({
-  environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
+ environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
 });
 ```
 
@@ -627,11 +627,11 @@ static Flag defaultFlagHandler(string featureName)
 
 ```javascript
 const flagsmith = new Flagsmith({
-  environmentKey,
-  enableLocalEvaluation: true,
-  defaultFlagHandler: (str) => {
-    return { enabled: false, isDefault: true, value: { colour: '#ababab' } };
-  },
+ environmentKey,
+ enableLocalEvaluation: true,
+ defaultFlagHandler: (str) => {
+  return { enabled: false, isDefault: true, value: { colour: '#ababab' } };
+ },
 });
 ```
 
@@ -1064,83 +1064,83 @@ $flagsmith = Flagsmith::Client.new(
 import { bool, number } from 'prop-types';
 
 const flagsmith = new Flagsmith({
-  /*
+ /*
    Your API Token.
    Note that this is either the `Environment API` key or the `Server Side SDK Token`
    depending on if you are using Local or Remote Evaluation
    Required.
    */
-  environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
+ environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
 
-  /*
+ /*
    Override the default Flagsmith API URL if you are self-hosting.
    Optional.
    Defaults to https://edge.api.flagsmith.com/api/v1/
    */
-  apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
+ apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
 
-  /*
+ /*
    Adds caching support
    Optional
    See https://docs.flagsmith.com/clients/server-side#caching
    */
-  cache: {
-    has: (key: string) => bool,
-    get: (key: string) => string | number | null,
-    set: (k: string, v: Flags) => (cache[k] = v),
-  },
+ cache: {
+  has: (key: string) => bool,
+  get: (key: string) => string | number | null,
+  set: (k: string, v: Flags) => (cache[k] = v),
+ },
 
-  /*
+ /*
    Custom http headers can be added to the http client
    Optional
    */
-  customHeaders: { aHeader: 'aValue' },
+ customHeaders: { aHeader: 'aValue' },
 
-  /*
+ /*
    Controls whether Flag Analytics data is sent to the Flagsmith API
    See https://docs.flagsmith.com/advanced-use/flag-analytics
    Optional
    Defaults to false
    */
-  enableAnalytics: true,
+ enableAnalytics: true,
 
-  /*
+ /*
    Controls which mode to run in; local or remote evaluation.
    See the `SDKs Overview Page` for more info
    Optional.
    Defaults to false.
    */
-  enableLocalEvaluation: true,
+ enableLocalEvaluation: true,
 
-  /*
+ /*
    Set environment refresh rate with polling manager.
    Only needed when local evaluation is true.
    Optional.
    Defaults to 60 seconds
    */
-  environmentRefreshIntervalSeconds: 60,
+ environmentRefreshIntervalSeconds: 60,
 
-  /*
+ /*
    The network timeout in seconds.
    Optional.
    Defaults to 10 seconds
    */
-  requestTimeoutSeconds: 30,
+ requestTimeoutSeconds: 30,
 
-  /*
+ /*
    You can specify default Flag values on initialisation.
    Optional
    */
-  defaultFlagHandler: (featureName: string) => {
-    return { enabled: false, isDefault: true, value: null };
-  },
+ defaultFlagHandler: (featureName: string) => {
+  return { enabled: false, isDefault: true, value: null };
+ },
 
-  /*
+ /*
     A callback for whenever the environment model is updated or there is an error retrieving it.
     This is only used in local evaluation mode.
     Optional
     */
-  onEnvironmentChange: (error: Error | null, result: EnvironmentModel) => {},
+ onEnvironmentChange: (error: Error | null, result: EnvironmentModel) => {},
 });
 ```
 
@@ -1511,44 +1511,44 @@ const flagsmith = require('flagsmith-nodejs');
 const redis = require('redis');
 
 const redisClient = redis.createClient({
-  host: 'localhost',
-  port: 6379,
+ host: 'localhost',
+ port: 6379,
 });
 
 flagsmith.init({
-  environmentID: '<Flagsmith Environment API Key>',
-  cache: {
-    has: (key) =>
-            new Promise((resolve, reject) => {
-              redisClient.exists(key, (err, reply) => {
-                console.log('check ' + key + ' from cache', err, reply);
-                resolve(reply === 1);
-              });
-            }),
-    get: (key) =>
-            new Promise((resolve) => {
-              redisClient.get(key, (err, cacheValue) => {
-                console.log('get ' + key + ' from cache');
-                resolve(cacheValue && JSON.parse(cacheValue));
-              });
-            }),
-    set: (key, value) =>
-            new Promise((resolve) => {
-              // Expire the key after 60 seconds
-              redisClient.set(key, JSON.stringify(value), 'EX', 60, (err, reply) => {
-                console.log('set ' + key + ' to cache', err);
-                resolve();
-              });
-            }),
-  },
+ environmentID: '<Flagsmith Environment API Key>',
+ cache: {
+  has: (key) =>
+   new Promise((resolve, reject) => {
+    redisClient.exists(key, (err, reply) => {
+     console.log('check ' + key + ' from cache', err, reply);
+     resolve(reply === 1);
+    });
+   }),
+  get: (key) =>
+   new Promise((resolve) => {
+    redisClient.get(key, (err, cacheValue) => {
+     console.log('get ' + key + ' from cache');
+     resolve(cacheValue && JSON.parse(cacheValue));
+    });
+   }),
+  set: (key, value) =>
+   new Promise((resolve) => {
+    // Expire the key after 60 seconds
+    redisClient.set(key, JSON.stringify(value), 'EX', 60, (err, reply) => {
+     console.log('set ' + key + ' to cache', err);
+     resolve();
+    });
+   }),
+ },
 });
 
 router.get('/', function (req, res, next) {
-  flagsmith.getValue('background_colour').then((value) => {
-    res.render('index', {
-      title: value,
-    });
+ flagsmith.getValue('background_colour').then((value) => {
+  res.render('index', {
+   title: value,
   });
+ });
 });
 ```
 
