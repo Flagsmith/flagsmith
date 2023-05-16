@@ -30,6 +30,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.auth_type import AuthType
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
@@ -126,7 +127,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()
 
-    def delete(self, delete_orphan_organisations: False):
+    def delete(
+        self,
+        delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
+    ):
         if delete_orphan_organisations:
             self.delete_orphan_organisations()
         super().delete()

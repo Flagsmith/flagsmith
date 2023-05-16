@@ -1,10 +1,7 @@
-import json
 from unittest import TestCase, mock
 
 import pytest
 from django.db.utils import IntegrityError
-from rest_framework import status
-from rest_framework.test import APIClient
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
@@ -294,25 +291,14 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
 
 @pytest.mark.django_db
 def test_delete_user():
-    def delete_user(user: FFAdminUser, password: str):
-        client.force_authenticate(user)
-        data = {"current_password": password, "delete_orphan_organisations": True}
-        url = "/api/v1/auth/users/me/"
-        return client.delete(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
     # create a couple of users
     email1 = "test1@example.com"
     email2 = "test2@example.com"
     email3 = "test3@example.com"
     password = "password"
-    user1 = FFAdminUser.objects.create(email=email1)
-    user1.set_password(password)
-    user2 = FFAdminUser.objects.create(email=email2)
-    user2.set_password(password)
-    user3 = FFAdminUser.objects.create(email=email3)
-    user3.set_password(password)
+    user1 = FFAdminUser.objects.create_user(email=email1, password=password)
+    user2 = FFAdminUser.objects.create(email=email2, password=password)
+    user3 = FFAdminUser.objects.create(email=email3, password=password)
 
     # crete some organizations
     org1 = Organisation.objects.create(name="org1")
@@ -330,11 +316,8 @@ def test_delete_user():
 
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 
-    client = APIClient()
-
     # Delete user2
-    response = delete_user(user2, password)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    user2.delete(delete_orphan_organisations=True)
     assert not FFAdminUser.objects.filter(email=email2).exists()
 
     # All organisations remain since user 2 has org2 as only organization and it has 2 users
@@ -343,8 +326,7 @@ def test_delete_user():
     assert Organisation.objects.filter(name="org2").count() == 1
 
     # Delete user1
-    response = delete_user(user1, password)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    user1.delete(delete_orphan_organisations=True)
     assert not FFAdminUser.objects.filter(email=email1).exists()
 
     # organization org3 and org2 are deleted since its only user is user1
@@ -356,6 +338,11 @@ def test_delete_user():
 
     # user3 remain
     assert FFAdminUser.objects.filter(email=email3).exists()
+
+    # Delete user3
+    user3.delete(delete_orphan_organisations=False)
+    assert not FFAdminUser.objects.filter(email=email3).exists()
+    assert Organisation.objects.filter(name="org1").count() == 1
 
 
 def test_user_create_calls_pipedrive_tracking(mocker, db, settings):

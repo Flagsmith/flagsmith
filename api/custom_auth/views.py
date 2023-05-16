@@ -13,6 +13,8 @@ from trench.views.authtoken import (
     AuthTokenLoginWithMFACode,
 )
 
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     """
@@ -63,11 +65,9 @@ class FFAdminUserViewSet(UserViewSet):
         return throttles
 
     def perform_destroy(self, instance):
-        if self.request.data:
-            serializer = UserDeleteQuerySerializer(data=self.request.data)
-            serializer.is_valid(raise_exception=True)
-            self.request.user.delete(
-                serializer.validated_data.get("delete_orphan_organisations")
+        instance.delete(
+            delete_orphan_organisations=self.request.data.get(
+                "delete_orphan_organisations",
+                DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
             )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        )
