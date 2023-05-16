@@ -137,29 +137,3 @@ jobs:
           context: frontend/
           push: false
           tags: flagsmith/flagsmith-frontend:testing
-
-  web-deploy-branch-production:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-production-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Production Deployment
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-
-  web-deploy-branch-staging:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-staging-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Staging Deployment
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
