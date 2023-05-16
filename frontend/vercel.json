@@ -1,8 +1,5 @@
 {
     "version": 2,
-    "github": {
-        "enabled": false
-    },
     "functions": {
         "api/index.js": {
             "includeFiles": "CI_COMMIT_SHA"
