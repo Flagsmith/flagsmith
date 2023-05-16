@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
-from django_lifecycle import AFTER_CREATE, AFTER_UPDATE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -120,18 +120,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
-
-    @hook(AFTER_UPDATE, when="email", has_changed=True)
-    def send_warning_email(self):
-        from users.tasks import send_email_changed_notification_email
-
-        send_email_changed_notification_email.delay(
-            args=(
-                self.first_name,
-                settings.DEFAULT_FROM_EMAIL,
-                self.initial_value("email"),
-            )
-        )
 
     @property
     def auth_type(self):
