@@ -2,7 +2,8 @@ import typing
 from dataclasses import dataclass, field
 from functools import reduce
 
-from django.db.models import Q, QuerySet
+from django.conf import settings
+from django.db.models import QuerySet
 
 from environments.permissions.models import (
     UserEnvironmentPermission,
@@ -12,15 +13,30 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
-from organisations.roles.models import (
-    RoleEnvironmentPermission,
-    RoleOrganisationPermission,
-    RoleProjectPermission,
-)
 from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
+
+if settings.IS_RBAC_INSTALLED:
+    from roles.permissions_calculator import (
+        RolePermissionData,
+        get_roles_permission_data_for_environment,
+        get_roles_permission_data_for_organisation,
+        get_roles_permission_data_for_project,
+    )
+else:
+    RolePermissionData = []
+
+    def get_roles_permission_data_for_organisation(*args, **kwargs):
+        return []
+
+    def get_roles_permission_data_for_project(*args, **kwargs):
+        return []
+
+    def get_roles_permission_data_for_environment(*args, **kwargs):
+        return []
+
 
 UserPermissionQs = QuerySet[
     typing.Union[
@@ -33,12 +49,6 @@ GroupPermissionQs = QuerySet[
         UserPermissionGroupProjectPermission,
         UserPermissionGroupEnvironmentPermission,
         UserPermissionGroupOrganisationPermission,
-    ]
-]
-
-RolePermissionQs = QuerySet[
-    typing.Union[
-        RoleProjectPermission, RoleEnvironmentPermission, RoleOrganisationPermission
     ]
 ]
 
@@ -56,19 +66,8 @@ class GroupData:
 
 
 @dataclass
-class RoleData:
-    id: int
-    name: str
-
-
-@dataclass
 class _GroupPermissionBase:
     group: GroupData
-
-
-@dataclass
-class _RolePermissionBase:
-    role: RoleData
 
 
 @dataclass
@@ -82,11 +81,6 @@ class GroupPermissionData(_PermissionDataBase, _GroupPermissionBase):
 
 
 @dataclass
-class RolePermissionData(_PermissionDataBase, _RolePermissionBase):
-    pass
-
-
-@dataclass
 class PermissionData:
     """
     Dataclass to hold the permissions of a user w.r.t. a project, environment or organisation.
@@ -94,7 +88,9 @@ class PermissionData:
 
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
-    roles: typing.List[RolePermissionData]
+    roles: typing.List[
+        "RolePermissionData" if "RolePermissionData" in globals() else typing.Any
+    ]
     is_organisation_admin: bool = False
 
     @property
@@ -125,38 +121,12 @@ class PermissionData:
         )
 
 
-@dataclass
-class _ProjectPermissionQsService:
-    project_id: int
-    user_id: int
-
-    @property
-    def user_qs(self) -> UserPermissionQs:
-        return UserProjectPermission.objects.filter(
-            project_id=self.project_id, user_id=self.user_id
-        )
-
-    @property
-    def group_qs(self) -> GroupPermissionQs:
-        return UserPermissionGroupProjectPermission.objects.filter(
-            group__users=self.user_id, project=self.project_id
-        )
-
-    @property
-    def role_qs(self) -> RolePermissionQs:
-        q = Q(role__userrole__user=self.user_id) | Q(
-            role__grouprole__group__users=self.user_id
-        )
-        q = q & Q(project=self.project_id)
-        return RoleProjectPermission.objects.filter(q)
-
-
 def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
     project_permission_qs_svc = _ProjectPermissionQsService(project_id, user_id)
     return PermissionData(
         user=get_user_permission_data(project_permission_qs_svc.user_qs),
         groups=get_groups_permission_data(project_permission_qs_svc.group_qs),
-        roles=get_roles_permission_data(project_permission_qs_svc.role_qs),
+        roles=get_roles_permission_data_for_project(project_id, user_id),
     )
 
 
@@ -166,7 +136,7 @@ def get_organisation_permission_data(organisation_id: int, user) -> PermissionDa
         is_organisation_admin=user.is_organisation_admin(organisation_id),
         user=get_user_permission_data(org_permission_qs_svc.user_qs),
         groups=get_groups_permission_data(org_permission_qs_svc.group_qs),
-        roles=get_roles_permission_data(org_permission_qs_svc.role_qs),
+        roles=get_roles_permission_data_for_organisation(organisation_id, user.id),
     )
 
 
@@ -179,7 +149,7 @@ def get_environment_permission_data(
     return PermissionData(
         user=get_user_permission_data(environment_permission_qs_svc.user_qs),
         groups=get_groups_permission_data(environment_permission_qs_svc.group_qs),
-        roles=get_roles_permission_data(environment_permission_qs_svc.role_qs),
+        roles=get_roles_permission_data_for_environment(environment_id, user_id),
     )
 
 
@@ -229,34 +199,6 @@ def get_groups_permission_data(
     return group_permission_data_objects
 
 
-def get_roles_permission_data(
-    role_permission_qs: RolePermissionQs,
-) -> typing.List[RolePermissionData]:
-    role_permission_data_objects = []
-
-    for role_project_permission in role_permission_qs.select_related(
-        "role"
-    ).prefetch_related("permissions"):
-        role_data = RoleData(
-            id=role_project_permission.role.id,
-            name=role_project_permission.role.name,
-        )
-        role_permission_data_object = RolePermissionData(role=role_data)
-
-        if getattr(role_project_permission, "admin", False):
-            role_permission_data_object.admin = True
-
-        role_permission_data_object.permissions.update(
-            permission.key
-            for permission in role_project_permission.permissions.all()
-            if permission.key
-        )
-
-        role_permission_data_objects.append(role_permission_data_object)
-
-    return role_permission_data_objects
-
-
 @dataclass
 class _OrganisationPermissionQsService:
     organisation_id: int
@@ -273,14 +215,6 @@ class _OrganisationPermissionQsService:
         return UserPermissionGroupOrganisationPermission.objects.filter(
             group__users=self.user_id, organisation=self.organisation_id
         )
-
-    @property
-    def role_qs(self) -> RolePermissionQs:
-        q = Q(role__userrole__user_id=self.user_id) | Q(
-            role__grouprole__group__users=self.user_id
-        )
-        q = q & Q(role__organisation_id=self.organisation_id)
-        return RoleOrganisationPermission.objects.filter(q)
 
 
 @dataclass
@@ -300,10 +234,20 @@ class _EnvironmentPermissionQsService:
             group__users=self.user_id, environment=self.environment_id
         )
 
+
+@dataclass
+class _ProjectPermissionQsService:
+    project_id: int
+    user_id: int
+
     @property
-    def role_qs(self) -> RolePermissionQs:
-        q = Q(role__userrole__user=self.user_id) | Q(
-            role__grouprole__group__users=self.user_id
+    def user_qs(self) -> UserPermissionQs:
+        return UserProjectPermission.objects.filter(
+            project_id=self.project_id, user_id=self.user_id
         )
-        q = q & Q(environment=self.environment_id)
-        return RoleEnvironmentPermission.objects.filter(q)
+
+    @property
+    def group_qs(self) -> GroupPermissionQs:
+        return UserPermissionGroupProjectPermission.objects.filter(
+            group__users=self.user_id, project=self.project_id
+        )
