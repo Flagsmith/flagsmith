@@ -10,7 +10,10 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+import { updateAccount } from 'common/services/useAccount'
+import { getStore } from 'common/store'
 import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
+import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -34,23 +37,33 @@ class TheComponent extends Component {
     if (isSaving || !first_name || !last_name) {
       return
     }
-    // _data.patch(`${Project.api}auth/users/me/`, {
-    _data
-      .put(`${Project.api}auth/users/me/`, {
-        email,
-        first_name,
-        id: AccountStore.model.id,
-        last_name,
-      })
-      .then(() => {
-        toast('Your account has been updated')
-      })
-      .catch(() =>
+    this.setState({ isSaving: true })
+    updateAccount(getStore(), {
+      email,
+      first_name,
+      id: AccountStore.model.id,
+      last_name,
+    }).then((res) => {
+      this.setState({ isSaving: false })
+      if (res.error) {
         this.setState({
           error:
             'There was an error setting your account, please check your details',
-        }),
-      )
+        })
+      } else {
+        toast('Your account has been updated')
+      }
+    })
+  }
+
+  confirmDeleteAccount = (lastUserOrganisations, id) => {
+    openModal(
+      'Are you sure',
+      <ConfirmDeleteAccount
+        userId={id}
+        lastUserOrganisations={lastUserOrganisations}
+      />,
+    )
   }
 
   invalidateToken = () => {
@@ -82,7 +95,7 @@ class TheComponent extends Component {
     ) {
       return
     }
-    // _data.post(`${Project.api}auth/users/set_password/`, {
+    this.setState({ isSaving: true })
     _data
       .post(`${Project.api}auth/users/set_password/`, {
         current_password,
@@ -90,10 +103,12 @@ class TheComponent extends Component {
         re_new_password: new_password2,
       })
       .then(() => {
+        this.setState({ isSaving: false })
         toast('Your password has been updated')
       })
       .catch(() =>
         this.setState({
+          isSaving: false,
           passwordError:
             'There was an error setting your password, please check your details.',
         }),
@@ -107,6 +122,7 @@ class TheComponent extends Component {
         email,
         error,
         first_name,
+        id,
         last_name,
         new_password1,
         new_password2,
@@ -114,9 +130,15 @@ class TheComponent extends Component {
       },
     } = this
 
+    const lastUserOrganisations =
+      this.state.organisations.length >= 1
+        ? this.state.organisations?.filter((o) => o?.num_seats == 1)
+        : []
+
     return (
       <AccountProvider>
-        {({ isSaving }) => {
+        {({}) => {
+          const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
 
@@ -245,6 +267,28 @@ class TheComponent extends Component {
                           checked={flagsmith.getTrait('json_inspect')}
                         />
                       </Row>
+                      {Utils.getFlagsmithHasFeature('delete_account') && (
+                        <Row className='mt-4' space>
+                          <div className='col-md-8 pl-0'>
+                            <h5>Delete Account</h5>
+                            <p>
+                              Your account data will be permanently deleted.
+                            </p>
+                          </div>
+                          <Button
+                            id='delete-org-btn'
+                            onClick={() =>
+                              this.confirmDeleteAccount(
+                                lastUserOrganisations,
+                                id,
+                              )
+                            }
+                            className='btn btn--with-icon ml-auto btn--remove'
+                          >
+                            <RemoveIcon />
+                          </Button>
+                        </Row>
+                      )}
                     </div>
                   </div>
                 </TabItem>

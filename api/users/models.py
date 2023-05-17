@@ -6,7 +6,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
@@ -30,6 +30,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.auth_type import AuthType
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
@@ -120,6 +121,19 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
+
+    def delete_orphan_organisations(self):
+        Organisation.objects.filter(
+            id__in=self.organisations.values_list("id", flat=True)
+        ).annotate(users_count=Count("users")).filter(users_count=1).delete()
+
+    def delete(
+        self,
+        delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
+    ):
+        if delete_orphan_organisations:
+            self.delete_orphan_organisations()
+        super().delete()
 
     @property
     def auth_type(self):
