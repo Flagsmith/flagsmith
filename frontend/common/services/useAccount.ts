@@ -14,7 +14,7 @@ export const accountService = service
             delete_orphan_organisations: query.delete_orphan_organisations,
           },
           method: 'DELETE',
-          url: `auth/users/me`,
+          url: `auth/users/me/`,
         }),
       }),
       updateAccount: builder.mutation<Res['account'], Req['updateAccount']>({
@@ -25,7 +25,7 @@ export const accountService = service
         query: (query: Req['updateAccount']) => ({
           body: query,
           method: 'PUT',
-          url: `auth/users/me`,
+          url: `auth/users/me/`,
         }),
       }),
       // END OF ENDPOINTS
