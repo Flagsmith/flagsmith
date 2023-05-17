@@ -14,8 +14,8 @@ USER root
 RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical
 USER 1001
 
-ADD --chown=1001:0 requirements.txt .
-RUN pip install -r requirements.txt
+ADD --chown=1001:0 pyproject.toml poetry.lock .
+RUN poetry install
 ADD --chown=1001:0 docker/ bin/
 ADD --chown=1001:0 . src/
 
