@@ -4,10 +4,6 @@
 
 Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
 
-:::
-
-:::info
-
 Real-time Flags are currently in beta. Please contact us to join the beta!
 
 :::
@@ -17,6 +13,13 @@ Real-time Flags are currently in beta. Please contact us to join the beta!
 Real-time flags allow you to stream flag changes from Flagsmith downstream to connected clients.
 
 ## How it works
+
+:::info
+
+You need to enable the realtime listener in the Flagsmith SDK. Please check the docs for your SDK language on how to do
+this.
+
+:::
 
 Our SDK will make a long-lived request (actually a
 [Server Sent Event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)), to

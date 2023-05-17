@@ -115,7 +115,6 @@ const App = class extends Component {
       this.props.location.pathname === '/saml' ||
       this.props.location.pathname.includes('/oauth') ||
       this.props.location.pathname === '/login' ||
-      this.props.location.pathname === '/demo' ||
       this.props.location.pathname === '/signup'
     ) {
       if (redirect) {
@@ -269,16 +268,6 @@ const App = class extends Component {
               </div>
             ) : (
               <div>
-                {AccountStore.isDemo && (
-                  <AlertBar preventClose className='pulse'>
-                    <div>
-                      You are using a demo account. Finding this useful?{' '}
-                      <Link onClick={() => AppActions.setUser(null)} to='/'>
-                        Click here to Sign up
-                      </Link>
-                    </div>
-                  </AlertBar>
-                )}
                 <div
                   className={
                     pageHasAside
@@ -518,9 +507,6 @@ const App = class extends Component {
                     )}
                   {pageHasAside && (
                     <Aside
-                      className={`${AccountStore.isDemo ? 'demo' : ''} ${
-                        AccountStore.isDemo ? 'footer' : ''
-                      }`}
                       projectId={projectId}
                       environmentId={environmentId}
                       toggleAside={this.toggleAside}

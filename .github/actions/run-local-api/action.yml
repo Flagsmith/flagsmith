@@ -15,6 +15,15 @@ inputs:
     description: The token to use for authenticating the E2E test process
     required: false
     default: some-token
+  disable_analytics_features:
+    description: Disables analytics features.
+    required: false
+    default: 'false'
+
+outputs:
+  containerId:
+    description: Docker container ID for the running Flagsmith API instance
+    value: ${{ steps.run-api-container.outputs.containerId }}
 
 runs:
   using: composite
@@ -26,21 +35,26 @@ runs:
       shell: bash
 
     - name: Run the API
+      id: run-api-container
       working-directory: api
       env:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
         DATABASE_URL: ${{ inputs.database_url }}
         SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
         SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
+        DISABLE_ANALYTICS_FEATURES: ${{ inputs.disable_analytics_features }}
       run: |
-        docker run \
+        CONTAINER_ID=$( docker run \
         -p 8000:8000 \
         -e DATABASE_URL=$DATABASE_URL \
         -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
         -e SENDGRID_API_KEY=$SENDGRID_API_KEY \
         -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
+        -e DISABLE_ANALYTICS_FEATURES=$DISABLE_ANALYTICS_FEATURES \
         -e DJANGO_ALLOWED_HOSTS="*" \
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
         -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
-        -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
+        -e ACCESS_LOG_LOCATION=- \
+        -d flagsmith/flagsmith-api:e2e-${{ github.sha }} )
+        echo "containerId=$CONTAINER_ID" >> "$GITHUB_OUTPUT"
       shell: bash

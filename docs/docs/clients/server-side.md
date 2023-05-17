@@ -1060,67 +1060,87 @@ $flagsmith = Flagsmith::Client.new(
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-```javascript
+```typescript
+import { bool, number } from 'prop-types';
+
 const flagsmith = new Flagsmith({
-    /*
-    Your API Token.
-    Note that this is either the `Environment API` key or the `Server Side SDK Token`
-    depending on if you are using Local or Remote Evaluation
-    Required.
-    */
-    environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
+ /*
+   Your API Token.
+   Note that this is either the `Environment API` key or the `Server Side SDK Token`
+   depending on if you are using Local or Remote Evaluation
+   Required.
+   */
+ environmentKey: '<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>',
 
-    /*
-    Controls which mode to run in; local or remote evaluation.
-    See the `SDKs Overview Page` for more info
-    Optional.
-    Defaults to false.
-    */
-    enableLocalEvaluation: true,
+ /*
+   Override the default Flagsmith API URL if you are self-hosting.
+   Optional.
+   Defaults to https://edge.api.flagsmith.com/api/v1/
+   */
+ apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
 
-    /*
-    Override the default Flagsmith API URL if you are self-hosting.
-    Optional.
-    Defaults to https://edge.api.flagsmith.com/api/v1/
-    */
-    apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
+ /*
+   Adds caching support
+   Optional
+   See https://docs.flagsmith.com/clients/server-side#caching
+   */
+ cache: {
+  has: (key: string) => bool,
+  get: (key: string) => string | number | null,
+  set: (k: string, v: Flags) => (cache[k] = v),
+ },
 
-    /*
-    Set environment refresh rate with polling manager.
-    Only needed when local evaluation is true.
-    Optional.
-    Defaults to 60 seconds
-    */
-    environmentRefreshIntervalSeconds: 60,
+ /*
+   Custom http headers can be added to the http client
+   Optional
+   */
+ customHeaders: { aHeader: 'aValue' },
 
-    /*
-    You can specify default Flag values on initialisation.
+ /*
+   Controls whether Flag Analytics data is sent to the Flagsmith API
+   See https://docs.flagsmith.com/advanced-use/flag-analytics
+   Optional
+   Defaults to false
+   */
+ enableAnalytics: true,
+
+ /*
+   Controls which mode to run in; local or remote evaluation.
+   See the `SDKs Overview Page` for more info
+   Optional.
+   Defaults to false.
+   */
+ enableLocalEvaluation: true,
+
+ /*
+   Set environment refresh rate with polling manager.
+   Only needed when local evaluation is true.
+   Optional.
+   Defaults to 60 seconds
+   */
+ environmentRefreshIntervalSeconds: 60,
+
+ /*
+   The network timeout in seconds.
+   Optional.
+   Defaults to 10 seconds
+   */
+ requestTimeoutSeconds: 30,
+
+ /*
+   You can specify default Flag values on initialisation.
+   Optional
+   */
+ defaultFlagHandler: (featureName: string) => {
+  return { enabled: false, isDefault: true, value: null };
+ },
+
+ /*
+    A callback for whenever the environment model is updated or there is an error retrieving it.
+    This is only used in local evaluation mode.
     Optional
     */
-    defaultFlagHandler: str => {
-        return { enabled: false, isDefault: true, value: null };
-    },
-
-    /*
-    Controls whether Flag Analytics data is sent to the Flagsmith API
-    See https://docs.flagsmith.com/advanced-use/flag-analytics
-    Optional
-    Defaults to false
-    */
-    enableAnalytics: true
-
-    /*
-    The network timeout in seconds.
-    Optional.
-    Defaults to 10 seconds
-    */
-    requestTimeoutSeconds: 30,
-
-    /*
-    Custom http headers can be added to the http client
-    Optional
-    */
-    customHeaders: { 'aHeader': 'aValue' },
+ onEnvironmentChange: (error: Error | null, result: EnvironmentModel) => {},
 });
 ```
 
@@ -1473,10 +1493,10 @@ You can initialise the SDK with something like this:
 
 ```javascript
 flagsmith.init({
- cache: {
-   has:(key)=> return Promise.resolve(!!cache[key]) , // true | false
-   get: (k)=> cache[k] // return flags or flags for user
-   set: (k,v)=> cache[k] = v // gets called if has returns false with response from API for Identify or getFlags
+  cache: {
+    has:(key)=> return Promise.resolve(!!cache[key]) , // true | false
+    get: (k)=> cache[k] // return flags or flags for user
+    set: (k,v)=> cache[k] = v // gets called if has returns false with response from API for Identify or getFlags
   }
 })
 ```
@@ -1556,9 +1576,9 @@ then include an implementation, i.e.:
 
 ```xml
 <dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-simple</artifactId>
-    <version>${slf4j.version}</version>
+  <groupId>org.slf4j</groupId>
+  <artifactId>slf4j-simple</artifactId>
+  <version>${slf4j.version}</version>
 </dependency>
 ```
 

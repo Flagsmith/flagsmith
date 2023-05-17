@@ -10,6 +10,8 @@ import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
+import Permission from 'common/providers/Permission'
+import Constants from 'common/constants'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -42,7 +44,10 @@ const SegmentOverrideInner = class Override extends React.Component {
       multivariateOptions,
       name,
       onSortEnd,
+      projectId,
       readOnly,
+      setSegmentEditId,
+      setShowCreateSegment,
       setValue,
       setVariations,
       toggle,
@@ -141,14 +146,43 @@ const SegmentOverrideInner = class Override extends React.Component {
                   <RemoveIcon />
                 </button>
               )}
-              {this.props.showEditSegment && (
-                <ButtonLink
-                  target='_blank'
-                  href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                  className='ml-2'
+              {!!v.id && (
+                <Permission
+                  id={projectId}
+                  permission={'MANAGE_SEGMENTS'}
+                  level={'project'}
                 >
-                  Edit Segment
-                </ButtonLink>
+                  {({ permission }) =>
+                    Utils.renderWithPermission(
+                      permission,
+                      Constants.projectPermissions('Manage Segments'),
+                      <>
+                        {v.is_feature_specific ? (
+                          <ButtonLink
+                            disabled={!permission}
+                            onClick={() => {
+                              setShowCreateSegment(true)
+                              setSegmentEditId(v.segment)
+                            }}
+                            className='ml-2'
+                          >
+                            Edit Segment
+                          </ButtonLink>
+                        ) : (
+                          <ButtonLink
+                            disabled={!permission}
+                            target='_blank'
+                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                            className='ml-2'
+                          >
+                            Edit Segment
+                            <ion className={'ion ml-1 ion-md-open'} />
+                          </ButtonLink>
+                        )}
+                      </>,
+                    )
+                  }
+                </Permission>
               )}
             </Row>
           </div>
@@ -280,6 +314,8 @@ const SegmentOverrideListInner = ({
   onSortEnd,
   projectId,
   readOnly,
+  setSegmentEditId,
+  setShowCreateSegment,
   setValue,
   setVariations,
   showEditSegment,
@@ -304,6 +340,8 @@ const SegmentOverrideListInner = ({
             index={index}
             readOnly={readOnly}
             value={value}
+            setSegmentEditId={setSegmentEditId}
+            setShowCreateSegment={setShowCreateSegment}
             confirmRemove={() => confirmRemove(index)}
             controlValue={controlValue}
             toggle={() => toggle(index)}
@@ -341,7 +379,7 @@ class TheComponent extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = { segmentEditId: undefined }
   }
 
   addItem = () => {
@@ -412,6 +450,10 @@ class TheComponent extends Component {
   setValue = (i, value) => {
     this.props.value[i].value = value
     this.props.onChange(this.props.value)
+  }
+
+  setSegmentEditId = (id) => {
+    this.setState({ segmentEditId: id })
   }
 
   setVariations = (i, value) => {
@@ -487,7 +529,7 @@ class TheComponent extends Component {
                 </Button>
               </div>
             )}
-          {this.props.showCreateSegment && (
+          {this.props.showCreateSegment && !this.state.segmentEditId && (
             <div className='text-left panel--grey mt-2'>
               <CreateSegmentModal
                 onComplete={(segment) => {
@@ -515,6 +557,25 @@ class TheComponent extends Component {
                 projectId={this.props.projectId}
               />
             </div>
+          )}
+          {this.props.showCreateSegment && this.state.segmentEditId && (
+            <CreateSegmentModal
+              segment={this.state.segmentEditId}
+              isEdit
+              condensed
+              onComplete={() => {
+                this.setState({
+                  segmentEditId: undefined,
+                })
+                this.props.setShowCreateSegment(false)
+              }}
+              onCancel={() => {
+                this.setState({ segmentEditId: undefined })
+                this.props.setShowCreateSegment(false)
+              }}
+              environmentId={this.props.environmentId}
+              projectId={this.props.projectId}
+            />
           )}
           {visibleValues &&
             !!visibleValues.length &&
@@ -559,9 +620,11 @@ class TheComponent extends Component {
                       showEditSegment={this.props.showEditSegment}
                       environmentId={this.props.environmentId}
                       projectId={this.props.projectId}
+                      setShowCreateSegment={this.props.setShowCreateSegment}
                       items={value.map((v) => ({
                         ...v,
                       }))}
+                      setSegmentEditId={this.setSegmentEditId}
                       onSortEnd={this.onSortEnd}
                     />
                     <div className='text-left mt-4'>

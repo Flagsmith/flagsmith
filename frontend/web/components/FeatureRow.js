@@ -105,12 +105,20 @@ class TheComponent extends Component {
     )
 
     if (this.props.condensed) {
-      return (
+      return Utils.renderWithPermission(
+        permission,
+        Constants.environmentPermissions(
+          Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
+        ),
         <Row
           onClick={() =>
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
           }
-          style={{ overflow: 'hidden', ...(this.props.style || {}) }}
+          style={{
+            flexDirection: this.props.isCompareEnv ? 'column' : 'row',
+            overflow: 'hidden',
+            ...(this.props.style || {}),
+          }}
         >
           <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
             <Switch
@@ -142,7 +150,10 @@ class TheComponent extends Component {
               }}
             />
           </div>
-          <div className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}>
+          <div
+            className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}
+            style={this.props.isCompareEnv && { marginTop: '5px' }}
+          >
             <FeatureValue
               onClick={() =>
                 permission &&
@@ -155,11 +166,15 @@ class TheComponent extends Component {
               data-test={`feature-value-${this.props.index}`}
             />
           </div>
-        </Row>
+        </Row>,
       )
     }
 
-    return (
+    return Utils.renderWithPermission(
+      permission,
+      Constants.environmentPermissions(
+        Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
+      ),
       <Row
         style={{ flexWrap: 'nowrap' }}
         className={`list-item ${readOnly ? '' : 'clickable'} ${
@@ -352,7 +367,7 @@ class TheComponent extends Component {
             </Permission>
           )}
         </Row>
-      </Row>
+      </Row>,
     )
   }
 }

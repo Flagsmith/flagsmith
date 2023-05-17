@@ -70,6 +70,7 @@ export type Req = {
     current_password: string
     delete_orphan_organisations: boolean
   }
+  updateUserEmail: { current_password: string; new_email: string }
   createGroupAdmin: {
     group: number | string
     user: number | string

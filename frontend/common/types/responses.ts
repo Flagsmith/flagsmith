@@ -277,6 +277,7 @@ export type Res = {
   tag: Tag
   tags: Tag[]
   account: Account
+  userEmail: {}
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
