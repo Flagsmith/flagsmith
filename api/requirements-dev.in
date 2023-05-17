@@ -14,3 +14,4 @@ pytest-mock
 pytest-lazy-fixture
 moto
 pytest-freezegun
+pytest-xdist

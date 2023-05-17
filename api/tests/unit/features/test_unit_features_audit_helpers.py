@@ -1,5 +1,7 @@
 from datetime import timedelta
+from typing import Generator
 
+import freezegun
 import pytest
 from django.utils import timezone
 
@@ -14,8 +16,18 @@ from features.audit_helpers import (
 from features.models import Feature, FeatureSegment, FeatureState
 from segments.models import Segment
 
-one_hour_from_now = timezone.now() + timedelta(hours=1)
-one_hour_ago = timezone.now() - timedelta(hours=1)
+_frozen_time = freezegun.freeze_time("04/05/2023 12:12:12")
+
+
+@pytest.fixture(autouse=True)
+def frozen_time() -> Generator[None, None, None]:
+    with _frozen_time:
+        yield
+
+
+with _frozen_time:
+    one_hour_from_now = timezone.now() + timedelta(hours=1)
+    one_hour_ago = timezone.now() - timedelta(hours=1)
 
 
 @pytest.mark.parametrize(
