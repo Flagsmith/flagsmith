@@ -4,20 +4,14 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
 
-# Set up venv
-RUN python -m venv /opt/venv
-# Make sure we use the virtualenv:
-ENV PATH="/opt/venv/bin:$PATH"
-
-COPY requirements.txt .
-
-# Make sure we are running latest pip and setuptools to avoid potential security warnings
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
+RUN pip install poetry
+# Set up venv
+RUN python -m venv /opt/venv
 
-# Install our python dependencies
-RUN pip install -r requirements.txt
-
+COPY pyproject.toml poetry.lock ./
+RUN . /opt/venv/bin/activate && poetry install --no-dev --no-root
 
 # Step 2 - Build Django Application
 FROM python:3.11-slim as application
