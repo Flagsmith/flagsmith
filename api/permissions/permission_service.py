@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Union
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from environments.models import Environment
@@ -93,7 +94,10 @@ def user_has_organisation_permission(
         Q(role__userrole__user=user) | Q(role__grouprole__group__users=user)
     ) & Q(role__org_role_permission__permissions__key=permission_key)
 
-    query = user_query | group_query | role_query
+    query = user_query | group_query
+
+    if settings.IS_RBAC_INSTALLED:
+        query = query | role_query
 
     return Organisation.objects.filter(query).exists()
 
@@ -113,7 +117,10 @@ def _get_base_permission_query(
     group_query = _group_permission_query(user, permission_key, allow_admin)
     role_query = _role_permission_query(user, permission_key, allow_admin)
 
-    query = user_query | group_query | role_query
+    query = user_query | group_query
+    if settings.IS_RBAC_INSTALLED:
+        query = query | role_query
+
     return query
 
 
