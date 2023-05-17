@@ -2,7 +2,7 @@ from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
 from djoser.views import UserViewSet
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +13,7 @@ from trench.views.authtoken import (
     AuthTokenLoginWithMFACode,
 )
 
+from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 
 
@@ -44,13 +45,9 @@ def delete_token(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserDeleteQuerySerializer(serializers.Serializer):
-    delete_orphan_organisations = serializers.BooleanField(default=False)
-
-
 @method_decorator(
     name="destroy",
-    decorator=swagger_auto_schema(query_serializer=UserDeleteQuerySerializer()),
+    decorator=swagger_auto_schema(query_serializer=CustomUserDelete()),
 )
 class FFAdminUserViewSet(UserViewSet):
     throttle_scope = "signup"
