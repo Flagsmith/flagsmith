@@ -40,7 +40,7 @@ https://github.com/Flagsmith/flagsmith-dotnet-client
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-https://github.com/Flagsmith/flagsmith-nodejs-client
+https://github.com/Flagsmith/flagsmith-nodejs-client https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
