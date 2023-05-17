@@ -68,6 +68,7 @@ app_name = "organisations"
 
 urlpatterns = [
     url(r"^", include(router.urls)),
+    url(r"^", include(organisations_router.urls)),
     path(
         "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
