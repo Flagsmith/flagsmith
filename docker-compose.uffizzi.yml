@@ -42,6 +42,7 @@ services:
       PREVENT_SIGNUP: 'false'
       ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
       DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
+      EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
 
       ENV:
         dev # set to "prod" in production.

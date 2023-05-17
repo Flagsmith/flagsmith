@@ -262,6 +262,7 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  userEmail: {}
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
