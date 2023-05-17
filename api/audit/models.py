@@ -54,11 +54,12 @@ class AuditLog(LifecycleModel):
     related_object_type = models.CharField(max_length=20, null=True)
     related_object_uuid = models.CharField(max_length=36, null=True)
 
-    skip_subscribers = models.CharField(
+    skip_signals_and_hooks = models.CharField(
         null=True,
         blank=True,
         help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
+        db_column="skip_signals",
     )
     is_system_event = models.BooleanField(default=False)
 
@@ -73,10 +74,12 @@ class AuditLog(LifecycleModel):
     def environment_document_updated(self) -> bool:
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
             return False
-        skip_subscribers = (
-            self.skip_subscribers.split(",") if self.skip_subscribers else []
+        skip_signals_and_hooks = (
+            self.skip_signals_and_hooks.split(",")
+            if self.skip_signals_and_hooks
+            else []
         )
-        return "send_environments_to_dynamodb" not in skip_subscribers
+        return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
     @property
     def history_record(self):
