@@ -94,12 +94,22 @@ class AuditLog(LifecycleModel):
         module = import_module(module_path)
         return getattr(module, class_name)
 
+    @hook(BEFORE_CREATE)
+    def add_project(self):
+        if self.environment and self.project is None:
+            self.project = self.environment.project
+
     @hook(
         AFTER_CREATE,
         priority=priority.HIGHEST_PRIORITY,
         when="environment_document_updated",
         is_now=True,
     )
+    def process_environment_update(self):
+        self.update_environments_updated_at()
+        self.send_environments_to_dynamodb()
+        self.send_environment_update_message()
+
     def update_environments_updated_at(self):
         environments_filter = Q()
         if self.environment_id:
@@ -111,12 +121,6 @@ class AuditLog(LifecycleModel):
             updated_at=self.created_date
         )
 
-    @hook(
-        AFTER_CREATE,
-        priority=priority.HIGH_PRIORITY,
-        when="environment_document_updated",
-        is_now=True,
-    )
     def send_environments_to_dynamodb(self):
         from environments.models import Environment
 
@@ -124,11 +128,6 @@ class AuditLog(LifecycleModel):
             environment_id=self.environment_id, project_id=self.project_id
         )
 
-    @hook(
-        AFTER_CREATE,
-        when="environment_document_updated",
-        is_now=True,
-    )
     def send_environment_update_message(self):
         if self.environment_id:
             environment = self.environment
@@ -138,8 +137,3 @@ class AuditLog(LifecycleModel):
             send_environment_update_message_for_environment(environment)
         else:
             send_environment_update_message_for_project(self.project)
-
-    @hook(BEFORE_CREATE)
-    def add_project(self):
-        if self.environment and self.project is None:
-            self.project = self.environment.project
