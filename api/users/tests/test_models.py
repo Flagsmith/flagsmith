@@ -295,10 +295,9 @@ def test_delete_user():
     email1 = "test1@example.com"
     email2 = "test2@example.com"
     email3 = "test3@example.com"
-    password = "password"
-    user1 = FFAdminUser.objects.create_user(email=email1, password=password)
-    user2 = FFAdminUser.objects.create(email=email2, password=password)
-    user3 = FFAdminUser.objects.create(email=email3, password=password)
+    user1 = FFAdminUser.objects.create(email=email1)
+    user2 = FFAdminUser.objects.create(email=email2)
+    user3 = FFAdminUser.objects.create(email=email3)
 
     # crete some organizations
     org1 = Organisation.objects.create(name="org1")
