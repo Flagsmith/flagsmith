@@ -2,11 +2,9 @@ import pytest
 from pytest_lazyfixture import lazy_fixture
 
 from environments.permissions.constants import (
-    CREATE_CHANGE_REQUEST,
     MANAGE_IDENTITIES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
 )
 from environments.permissions.models import EnvironmentPermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
@@ -30,8 +28,6 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
     [
         (lazy_fixture("project_admin_via_user_permission")),
         (lazy_fixture("project_admin_via_user_permission_group")),
-        (lazy_fixture("project_admin_via_user_role")),
-        (lazy_fixture("project_admin_via_group_role")),
     ],
 )
 def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(
@@ -52,8 +48,6 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
     [
         (lazy_fixture("environment_admin_via_user_permission")),
         (lazy_fixture("environment_admin_via_user_permission_group")),
-        (lazy_fixture("environment_admin_via_user_role")),
-        (lazy_fixture("environment_admin_via_group_role")),
     ],
 )
 def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(
@@ -76,8 +70,6 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
     project,
     environment_permission_using_user_permission,
     environment_permission_using_user_permission_group,
-    environment_permission_using_user_role,
-    environment_permission_using_group_role,
 ):
     # First, let's assert that the user does not have access to any environment
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -118,46 +110,5 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         assert (
             environment_count == 0
             if permission not in permissions_as_group + permissions_as_user
-            else 1
-        )
-
-    # Next, let's give more permissions using `user_role`
-    permissions_as_user_role = [MANAGE_IDENTITIES, VIEW_IDENTITIES]
-    environment_permission_using_user_role.permissions.add(*permissions_as_user_role)
-
-    # And verify again that we can fetch the environment using these permissions
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        environment_count = get_permitted_environments_for_user(
-            test_user, project, permission
-        ).count()
-
-        assert (
-            environment_count == 0
-            if permission
-            not in permissions_as_group + permissions_as_user + permissions_as_user_role
-            else 1
-        )
-
-    # Finally, let's give permissions using `group_role`
-    permissions_as_group_role = [CREATE_CHANGE_REQUEST]
-    environment_permission_using_group_role.permissions.add(*permissions_as_group_role)
-
-    # And, verify that environment is returned for those permission
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        environment_count = get_permitted_environments_for_user(
-            test_user, project, permission
-        ).count()
-
-        assert (
-            environment_count == 0
-            if permission
-            not in permissions_as_group
-            + permissions_as_user
-            + permissions_as_user_role
-            + permissions_as_group_role
             else 1
         )
