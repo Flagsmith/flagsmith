@@ -277,7 +277,9 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
 
 class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
-    change_request = models.ForeignKey(ChangeRequest, on_delete=models.CASCADE)
+    change_request = models.ForeignKey(
+        ChangeRequest, on_delete=models.CASCADE, related_name="group_assignments"
+    )
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
 
     @hook(AFTER_SAVE)
