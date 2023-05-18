@@ -81,8 +81,8 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             code, self._get_slack_callback_url(environment_api_key)
         )
 
-        SlackConfiguration.objects.update_or_create(
-            project=env.project, defaults={"api_token": bot_token}
+        SlackConfiguration.objects.all_with_deleted().update_or_create(
+            project=env.project, defaults={"api_token": bot_token, "deleted_at": None}
         )
         return redirect(self._get_front_end_redirect_url())
 

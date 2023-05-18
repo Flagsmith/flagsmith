@@ -272,3 +272,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
     def _get_environment(self):
         return self.change_request.environment
+
+
+class ChangeRequestGroupAssignment:
+    pass
