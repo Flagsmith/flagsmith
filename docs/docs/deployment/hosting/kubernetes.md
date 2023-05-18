@@ -18,8 +18,11 @@ kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 
 Then view `http://localhost:8080` in a browser. This will install using default options, in a new namespace `flagsmith`.
 
-If you want to make changes to the default setup as defined in `charts/flagsmith/values.yaml`, you don’t have to pull
-the project to use your own values. Just make a copy of the file and point to it with the -f flag:
+If you want to make changes to the default setup as defined in
+[`charts/flagsmith/values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml),
+you don’t have to pull the project to use your own values. Just make a local copy of the
+[`charts/flagsmith/values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml)
+file and point to it with the -f flag:
 
 ```bash
 helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f my-values.yaml
