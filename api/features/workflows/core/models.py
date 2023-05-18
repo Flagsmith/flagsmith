@@ -1,8 +1,10 @@
+import importlib
 import logging
 import typing
 
 from core.helpers import get_current_site_url
 from core.models import (
+    AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -170,7 +172,7 @@ class ChangeRequest(
                 "Change request must be saved before it has a url attribute."
             )
         url = get_current_site_url()
-        url += f"/project/{self.environment.project.id}"
+        url += f"/project/{self.environment.project_id}"
         url += f"/environment/{self.environment.api_key}"
         url += f"/change-requests/{self.id}"
         return url
@@ -272,3 +274,18 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
     def _get_environment(self):
         return self.change_request.environment
+
+
+class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
+    change_request = models.ForeignKey(ChangeRequest, on_delete=models.CASCADE)
+    group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
+
+    @hook(AFTER_SAVE)
+    def notify_group(self):
+        if settings.WORKFLOWS_LOGIC_INSTALLED:
+            workflows_tasks = importlib.import_module(
+                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.tasks"
+            )
+            workflows_tasks.notify_group_of_change_request_assignment.delay(
+                kwargs={"change_request_group_assignment_id": self.id}
+            )
