@@ -25,7 +25,8 @@ you don’t have to pull the project to use your own values. Just make a local c
 file and point to it with the -f flag:
 
 ```bash
-helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f my-values.yaml
+wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/flagsmith/values.yaml
+helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f values.yaml
 ```
 
 ### Ingress configuration
