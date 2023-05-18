@@ -59,7 +59,7 @@ cryptography==39.0.1
     #   pyjwt
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.18
+django==3.2.19
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -316,7 +316,7 @@ slack-sdk==3.9.0
     # via -r requirements.in
 smsapi-client==2.4.3
     # via django-trench
-sqlparse==0.4.2
+sqlparse==0.4.4
     # via
     #   django
     #   django-debug-toolbar

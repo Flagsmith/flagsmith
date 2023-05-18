@@ -4,7 +4,7 @@ const exphbs = require('express-handlebars')
 const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
-
+const path = require('path')
 const app = express()
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
@@ -87,12 +87,6 @@ app.get('/config/project-overrides', (req, res) => {
       value: envToBool('DISABLE_ANALYTICS_FEATURES', false),
     },
     {
-      name: 'disableInflux',
-      value:
-        !envToBool('ENABLE_INFLUXDB_FEATURES', true) ||
-        envToBool('DISABLE_INFLUXDB_FEATURES', false),
-    },
-    {
       name: 'flagsmithAnalytics',
       value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true),
     },
@@ -145,7 +139,11 @@ if (isDev) {
   if (!process.env.VERCEL) {
     app.use(express.static('public'))
   }
-  app.set('views', 'public/static')
+  if (fs.existsSync(path.join(process.cwd(),'frontend'))) {
+    app.set('views', 'frontend/public/static')
+  } else {
+    app.set('views', 'public/static')
+  }
 }
 
 app.engine(

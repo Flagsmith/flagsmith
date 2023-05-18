@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
 import json
-import logging
 import os
 import sys
 import warnings
@@ -399,14 +398,19 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
-if EMAIL_BACKEND == "sgbackend.SendGridBackend":
-    SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
-    if not SENDGRID_API_KEY:
-        logging.info(
-            "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
-        )
-elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
+
+# NOTE: Use `sgbackend.SendGridBackend` as default
+# if `SENDGRID_API_KEY` is set in order to maintain backwards compatibility
+DEFAULT_EMAIL_BACKEND = (
+    "sgbackend.SendGridBackend"
+    if SENDGRID_API_KEY
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default=DEFAULT_EMAIL_BACKEND)
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_HOST = env("EMAIL_HOST", default="localhost")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
@@ -650,6 +654,7 @@ DJOSER = {
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
+        "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
     },
     "EMAIL": {
@@ -730,8 +735,9 @@ ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
-DISABLE_ANALYTICS_FEATURES = env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
-DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+DISABLE_ANALYTICS_FEATURES = env.bool(
+    "DISABLE_INFLUXDB_FEATURES", default=False
+) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
@@ -863,6 +869,9 @@ PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
 )
 PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
 PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
+PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
+    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
+)
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
