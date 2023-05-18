@@ -41,7 +41,7 @@ latency.
 Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any
 associated DNS changes.
 
-Eg:
+Eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -61,7 +61,7 @@ Set the following values for flagsmith, with changes as needed to accommodate yo
 associated DNS changes. Also, set the `FLAGSMITH_API_URL` env-var such that the URL is reachable from a browser
 accessing the frontend.
 
-Eg:
+Eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -92,7 +92,7 @@ Then, once any out-of-cluster DNS or CDN changes have been applied, access `http
 
 If using minikube, enable ingress with `minikube addons enable ingress`.
 
-Then set the following values for flagsmith:
+Then set the following values for flagsmith in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -128,7 +128,7 @@ your cluster, or using a service like [AWS RDS](https://aws.amazon.com/rds/postg
 :::
 
 You can provide configuration options to the postgres database by modifying the values, for example the below changes
-the max_connections:
+the max_connections in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
@@ -140,7 +140,8 @@ postgresql:
 
 ### External Database configuration
 
-To connect the Flagsmith API to an external PostgreSQL server set the values under `databaseExternal`, eg:
+To connect the Flagsmith API to an external PostgreSQL server set the values under `databaseExternal`, eg in the
+`charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
@@ -179,7 +180,7 @@ running pods, but this will change upon redeployment, which you probably don't w
 
 The chart handles most environment variables required, but see the
 [API readme](https://docs.flagsmith.com/deployment/hosting/locally-api#environment-variables) for all available
-configuration options. These can be set using `api.extraEnv`, eg:
+configuration options. These can be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -209,7 +210,7 @@ For each of the deployments, you can set `deploymentStrategy`. By default this i
 Kubernetes behaviour, but you can set this to an object to adjust this. See
 https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy.
 
-For example:
+Eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
