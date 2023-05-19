@@ -29,6 +29,9 @@ wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/fl
 helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f values.yaml
 ```
 
+We recommend reading the [Helm docs](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package) for
+further information.
+
 ### Ingress configuration
 
 The above is a quick and simple way of gaining access to Flagsmith, but in many cases will need to configure ingress to
