@@ -3,6 +3,8 @@ name: Platform Pull Requests
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - docs/**
 
 jobs:
   run-e2e-tests:
