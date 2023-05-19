@@ -21,7 +21,7 @@ const HomePage = class extends React.Component {
     super(props, context)
     this.state = {
       marketing_consent_given:
-        API.getCookie('marketing_consent_given') !== 'false',
+        API.getCookie('marketing_consent_given') === 'true',
     }
   }
 
