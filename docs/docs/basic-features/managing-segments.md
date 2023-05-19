@@ -57,8 +57,8 @@ Overrides' drop down.
 At this point, all users who log in with an email address that contains `@flagsmith.com` will have all Beta features
 enabled.
 
-Let's say that you then partner with another company who need access to all Beta features. You can then simply modify
-the Segment rules:
+Let's say that you then partner with another company who need access to all Beta features. You can then modify the
+Segment rules:
 
 - `email_address` contains `@flagsmith.com`
 - `email_address` contains `@solidstategroup.com`

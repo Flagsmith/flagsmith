@@ -8,7 +8,7 @@ Staged Feature Rollouts allow you to test a new feature with a small subset of y
 feature, you can increase the percentage of users that see the feature until it is available to your entire user base.
 
 This method can increase your confidence in rolling out a new feature. If there are issues with the rollout, you can
-simply disable the Feature Flag, thus hiding the feature within your application.
+disable the Feature Flag, thus hiding the feature within your application.
 
 ## Creating Staged Rollouts
 

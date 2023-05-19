@@ -20,8 +20,8 @@ Then view `http://localhost:8080` in a browser. This will install using default 
 
 ### Ingress configuration
 
-The above is a quick and simple way of gaining access to Flagsmith, but in many cases will need to configure ingress to
-work with an ingress controller.
+The above is a quick way of gaining access to Flagsmith, but in many cases you will need to configure ingress to work
+with an ingress controller.
 
 #### Port forwarding
 
@@ -88,7 +88,7 @@ Then, once any out-of-cluster DNS or CDN changes have been applied, access `http
 
 #### Minikube ingress
 
-(See https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/ for more details.)
+(See <https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/> for more details.)
 
 If using minikube, enable ingress with `minikube addons enable ingress`.
 
@@ -207,7 +207,7 @@ TODO: create a pod-disruption-budget
 
 For each of the deployments, you can set `deploymentStrategy`. By default this is unset, meaning you get the default
 Kubernetes behaviour, but you can set this to an object to adjust this. See
-https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy.
+<https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy>.
 
 For example:
 
@@ -227,8 +227,8 @@ By default, Flagsmith connects directly to the database - either in-cluster, or 
 
 ### All-in-one Docker image
 
-The Docker image at https://hub.docker.com/r/flagsmith/flagsmith/ contains both the API and the frontend. To make use of
-this, set the following values:
+The Docker image at <https://hub.docker.com/r/flagsmith/flagsmith/> contains both the API and the frontend. To make use
+of this, set the following values:
 
 ```yaml
 api:
@@ -245,152 +245,152 @@ requests are handled by the API deployment.
 
 The following table lists the configurable parameters of the chart and their default values.
 
-| Parameter                                          | Description                                                    | Default                        |
-| -------------------------------------------------- | -------------------------------------------------------------- | ------------------------------ |
-| `api.image.repository`                             | docker image repository for flagsmith api                      | `flagsmith/flagsmith-api`      |
-| `api.image.tag`                                    | docker image tag for flagsmith api                             | appVersion                     |
-| `api.image.imagePullPolicy`                        |                                                                | `IfNotPresent`                 |
-| `api.image.imagePullSecrets`                       |                                                                | `[]`                           |
-| `api.separateApiAndFrontend`                       | Set to false if using flagsmith/flagsmith image for the api    | `true`                         |
-| `api.replicacount`                                 | number of replicas for the flagsmith api, `null` to unset      | 1                              |
-| `api.deploymentStrategy`                           | See "Deployment strategy" above                                |                                |
-| `api.resources`                                    | resources per pod for the flagsmith api                        | `{}`                           |
-| `api.podLabels`                                    | additional labels to apply to pods for the flagsmith api       | `{}`                           |
-| `api.extraEnv`                                     | extra environment variables to set for the flagsmith api       | `{}`                           |
-| `api.nodeSelector`                                 |                                                                | `{}`                           |
-| `api.tolerations`                                  |                                                                | `[]`                           |
-| `api.affinity`                                     |                                                                | `{}`                           |
-| `api.podSecurityContext`                           |                                                                | `{}`                           |
-| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                    | `true`                         |
-| `api.livenessProbe.failureThreshold`               |                                                                | 5                              |
-| `api.livenessProbe.initialDelaySeconds`            |                                                                | 10                             |
-| `api.livenessProbe.periodSeconds`                  |                                                                | 10                             |
-| `api.livenessProbe.successThreshold`               |                                                                | 1                              |
-| `api.livenessProbe.timeoutSeconds`                 |                                                                | 2                              |
-| `api.readinessProbe.failureThreshold`              |                                                                | 10                             |
-| `api.readinessProbe.initialDelaySeconds`           |                                                                | 10                             |
-| `api.readinessProbe.periodSeconds`                 |                                                                | 10                             |
-| `api.readinessProbe.successThreshold`              |                                                                | 1                              |
-| `api.readinessProbe.timeoutSeconds`                |                                                                | 2                              |
-| `api.dbWaiter.image.repository`                    |                                                                | `willwill/wait-for-it`         |
-| `api.dbWaiter.image.tag`                           |                                                                | `latest`                       |
-| `api.dbWaiter.image.imagePullPolicy`               |                                                                | `IfNotPresent`                 |
-| `api.dbWaiter.timeoutSeconds`                      | Time before init container will retry                          | 30                             |
-| `frontend.enabled`                                 | Whether the flagsmith frontend is enabled                      | `true`                         |
-| `frontend.image.repository`                        | docker image repository for flagsmith frontend                 | `flagsmith/flagsmith-frontend` |
-| `frontend.image.tag`                               | docker image tag for flagsmith frontend                        | appVersion                     |
-| `frontend.image.imagePullPolicy`                   |                                                                | `IfNotPresent`                 |
-| `frontend.image.imagePullSecrets`                  |                                                                | `[]`                           |
-| `frontend.replicacount`                            | number of replicas for the flagsmith frontend, `null` to unset | 1                              |
-| `frontend.deploymentStrategy`                      | See "Deployment strategy" above                                |                                |
-| `frontend.resources`                               | resources per pod for the flagsmith frontend                   | `{}`                           |
-| `frontend.apiProxy.enabled`                        | proxy API requests to the API service within the cluster       | `true`                         |
-| `frontend.extraEnv`                                | extra environment variables to set for the flagsmith frontend  | `{}`                           |
-| `frontend.nodeSelector`                            |                                                                | `{}`                           |
-| `frontend.tolerations`                             |                                                                | `[]`                           |
-| `frontend.affinity`                                |                                                                | `{}`                           |
-| `api.podSecurityContext`                           |                                                                | `{}`                           |
-| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                    | `true`                         |
-| `frontend.livenessProbe.failureThreshold`          |                                                                | 20                             |
-| `frontend.livenessProbe.initialDelaySeconds`       |                                                                | 20                             |
-| `frontend.livenessProbe.periodSeconds`             |                                                                | 10                             |
-| `frontend.livenessProbe.successThreshold`          |                                                                | 1                              |
-| `frontend.livenessProbe.timeoutSeconds`            |                                                                | 10                             |
-| `frontend.readinessProbe.failureThreshold`         |                                                                | 20                             |
-| `frontend.readinessProbe.initialDelaySeconds`      |                                                                | 20                             |
-| `frontend.readinessProbe.periodSeconds`            |                                                                | 10                             |
-| `frontend.readinessProbe.successThreshold`         |                                                                | 1                              |
-| `frontend.readinessProbe.timeoutSeconds`           |                                                                | 10                             |
-| `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database              | `true`                         |
-| `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                  | `true`                         |
-| `nameOverride`                                     |                                                                | `flagsmith-postgres`           |
-| `postgresqlDatabase`                               |                                                                | `flagsmith`                    |
-| `postgresqlUsername`                               |                                                                | `postgres`                     |
-| `postgresqlPassword`                               |                                                                | `flagsmith`                    |
-| `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.  | `false`                        |
-| `databaseExternal.url`                             | See https://github.com/kennethreitz/dj-database-url#url-schema |                                |
-| `databaseExternal.type`                            | Note: Only postgres supported by default images.               | `postgres`                     |
-| `databaseExternal.port`                            |                                                                | 5432                           |
-| `databaseExternal.database`                        | Name of the database within the server                         |                                |
-| `databaseExternal.username`                        |                                                                |                                |
-| `databaseExternal.password`                        |                                                                |                                |
-| `databaseExternal.urlFromExistingSecret.enabled`   | Reference an existing secret containing the database URL       |                                |
-| `databaseExternal.urlFromExistingSecret.name`      | Name of referenced secret                                      |                                |
-| `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secrt to use                         |                                |
-| `influxdb.enabled`                                 |                                                                | `true`                         |
-| `influxdb.nameOverride`                            |                                                                | `influxdb`                     |
-| `influxdb.image.repository`                        | docker image repository for influxdb                           | `quay.io/influxdb/influxdb`    |
-| `influxdb.image.tag`                               | docker image tag for influxdb                                  | `v2.0.2`                       |
-| `influxdb.image.imagePullPolicy`                   |                                                                | `IfNotPresent`                 |
-| `influxdb.image.imagePullSecrets`                  |                                                                | `[]`                           |
-| `influxdb.adminUser.organization`                  |                                                                | `influxdata`                   |
-| `influxdb.adminUser.bucket`                        |                                                                | `default`                      |
-| `influxdb.adminUser.user`                          |                                                                | `admin`                        |
-| `influxdb.adminUser.password`                      |                                                                | randomly generated             |
-| `influxdb.adminUser.token`                         |                                                                | randomly generated             |
-| `influxdb.persistence.enabled`                     |                                                                | `false`                        |
-| `influxdb.resources`                               | resources per pod for the influxdb                             | `{}`                           |
-| `influxdb.nodeSelector`                            |                                                                | `{}`                           |
-| `influxdb.tolerations`                             |                                                                | `[]`                           |
-| `influxdb.affinity`                                |                                                                | `{}`                           |
-| `influxdbExternal.enabled`                         | Use an InfluxDB not managed by this chart                      | `false`                        |
-| `influxdbExternal.url`                             |                                                                |                                |
-| `influxdbExternal.bucket`                          |                                                                |                                |
-| `influxdbExternal.organization`                    |                                                                |                                |
-| `influxdbExternal.token`                           |                                                                |                                |
-| `influxdbExternal.tokenFromExistingSecret.enabled` | Use reference to a k8s secret not managed by this chart        | `false`                        |
-| `influxdbExternal.tokenFromExistingSecret.name`    | Referenced secret name                                         |                                |
-| `influxdbExternal.tokenFromExistingSecret.key`     | Key within the referenced secret to use                        |                                |
-| `pgbouncer.enabled`                                |                                                                | `false`                        |
-| `pgbouncer.image.repository`                       |                                                                | `bitnami/pgbouncer`            |
-| `pgbouncer.image.tag`                              |                                                                | `1.16.0`                       |
-| `pgbouncer.image.imagePullPolicy`                  |                                                                | `IfNotPresent`                 |
-| `pgbouncer.image.imagePullSecrets`                 |                                                                | `[]`                           |
-| `pgbouncer.replicaCount`                           | number of replicas for pgbouncer, `null` to unset              | 1                              |
-| `pgbouncer.deploymentStrategy`                     | See "Deployment strategy" above                                |                                |
-| `pgbouncer.podAnnotations`                         |                                                                | `{}`                           |
-| `pgbouncer.resources`                              |                                                                | `{}`                           |
-| `pgbouncer.podLabels`                              |                                                                | `{}`                           |
-| `pgbouncer.extraEnv`                               |                                                                | `{}`                           |
-| `pgbouncer.nodeSelector`                           |                                                                | `{}`                           |
-| `pgbouncer.tolerations`                            |                                                                | `[]`                           |
-| `pgbouncer.affinity`                               |                                                                | `{}`                           |
-| `pgbouncer.podSecurityContext`                     |                                                                | `{}`                           |
-| `pgbouncer.securityContext`                        |                                                                | `{}`                           |
-| `pgbouncer.defaultSecurityContext.enabled`         |                                                                | `true`                         |
-| `pgbouncer.defaultSecurityContext`                 |                                                                | `{}`                           |
-| `pgbouncer.livenessProbe.failureThreshold`         |                                                                | 5                              |
-| `pgbouncer.livenessProbe.initialDelaySeconds`      |                                                                | 5                              |
-| `pgbouncer.livenessProbe.periodSeconds`            |                                                                | 10                             |
-| `pgbouncer.livenessProbe.successThreshold`         |                                                                | 1                              |
-| `pgbouncer.livenessProbe.timeoutSeconds`           |                                                                | 2                              |
-| `pgbouncer.readinessProbe.failureThreshold`        |                                                                | 10                             |
-| `pgbouncer.readinessProbe.initialDelaySeconds`     |                                                                | 1                              |
-| `pgbouncer.readinessProbe.periodSeconds`           |                                                                | 10                             |
-| `pgbouncer.readinessProbe.successThreshold`        |                                                                | 1                              |
-| `pgbouncer.readinessProbe.timeoutSeconds`          |                                                                | 2                              |
-| `service.influxdb.externalPort`                    |                                                                | `8080`                         |
-| `service.api.type`                                 |                                                                | `ClusterIP`                    |
-| `service.api.port`                                 |                                                                | `8000`                         |
-| `service.frontend.type`                            |                                                                | `ClusterIP`                    |
-| `service.frontend.port`                            |                                                                | `8080`                         |
-| `ingress.frontend.enabled`                         |                                                                | `false`                        |
-| `ingress.frontend.ingressClassName`                |                                                                |                                |
-| `ingress.frontend.annotations`                     |                                                                | `{}`                           |
-| `ingress.frontend.hosts[].host`                    |                                                                | `chart-example.local`          |
-| `ingress.frontend.hosts[].paths`                   |                                                                | `[]`                           |
-| `ingress.frontend.tls`                             |                                                                | `[]`                           |
-| `ingress.api.enabled`                              |                                                                | `false`                        |
-| `ingress.api.ingressClassName`                     |                                                                |                                |
-| `ingress.api.annotations`                          |                                                                | `{}`                           |
-| `ingress.api.hosts[].host`                         |                                                                | `chart-example.local`          |
-| `ingress.api.hosts[].paths`                        |                                                                | `[]`                           |
-| `ingress.api.tls`                                  |                                                                | `[]`                           |
-| `api.statsd.enabled`                               | Enable statsd metric reporting from gunicorn.                  | `false`                        |
-| `api.statsd.host`                                  | Host URL to receive statsd metrics                             | `null`                         |
-| `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead      | `false`                        |
-| `api.statsd.port`                                  | Host port to receive statsd metrics                            | `8125`                         |
-| `api.statsd.prefix`                                | Prefix to add to metric ids                                    | `flagsmith.api`                |
+| Parameter                                          | Description                                                      | Default                        |
+| -------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------ |
+| `api.image.repository`                             | docker image repository for flagsmith api                        | `flagsmith/flagsmith-api`      |
+| `api.image.tag`                                    | docker image tag for flagsmith api                               | appVersion                     |
+| `api.image.imagePullPolicy`                        |                                                                  | `IfNotPresent`                 |
+| `api.image.imagePullSecrets`                       |                                                                  | `[]`                           |
+| `api.separateApiAndFrontend`                       | Set to false if using flagsmith/flagsmith image for the api      | `true`                         |
+| `api.replicacount`                                 | number of replicas for the flagsmith api, `null` to unset        | 1                              |
+| `api.deploymentStrategy`                           | See "Deployment strategy" above                                  |                                |
+| `api.resources`                                    | resources per pod for the flagsmith api                          | `{}`                           |
+| `api.podLabels`                                    | additional labels to apply to pods for the flagsmith api         | `{}`                           |
+| `api.extraEnv`                                     | extra environment variables to set for the flagsmith api         | `{}`                           |
+| `api.nodeSelector`                                 |                                                                  | `{}`                           |
+| `api.tolerations`                                  |                                                                  | `[]`                           |
+| `api.affinity`                                     |                                                                  | `{}`                           |
+| `api.podSecurityContext`                           |                                                                  | `{}`                           |
+| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                      | `true`                         |
+| `api.livenessProbe.failureThreshold`               |                                                                  | 5                              |
+| `api.livenessProbe.initialDelaySeconds`            |                                                                  | 10                             |
+| `api.livenessProbe.periodSeconds`                  |                                                                  | 10                             |
+| `api.livenessProbe.successThreshold`               |                                                                  | 1                              |
+| `api.livenessProbe.timeoutSeconds`                 |                                                                  | 2                              |
+| `api.readinessProbe.failureThreshold`              |                                                                  | 10                             |
+| `api.readinessProbe.initialDelaySeconds`           |                                                                  | 10                             |
+| `api.readinessProbe.periodSeconds`                 |                                                                  | 10                             |
+| `api.readinessProbe.successThreshold`              |                                                                  | 1                              |
+| `api.readinessProbe.timeoutSeconds`                |                                                                  | 2                              |
+| `api.dbWaiter.image.repository`                    |                                                                  | `willwill/wait-for-it`         |
+| `api.dbWaiter.image.tag`                           |                                                                  | `latest`                       |
+| `api.dbWaiter.image.imagePullPolicy`               |                                                                  | `IfNotPresent`                 |
+| `api.dbWaiter.timeoutSeconds`                      | Time before init container will retry                            | 30                             |
+| `frontend.enabled`                                 | Whether the flagsmith frontend is enabled                        | `true`                         |
+| `frontend.image.repository`                        | docker image repository for flagsmith frontend                   | `flagsmith/flagsmith-frontend` |
+| `frontend.image.tag`                               | docker image tag for flagsmith frontend                          | appVersion                     |
+| `frontend.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
+| `frontend.image.imagePullSecrets`                  |                                                                  | `[]`                           |
+| `frontend.replicacount`                            | number of replicas for the flagsmith frontend, `null` to unset   | 1                              |
+| `frontend.deploymentStrategy`                      | See "Deployment strategy" above                                  |                                |
+| `frontend.resources`                               | resources per pod for the flagsmith frontend                     | `{}`                           |
+| `frontend.apiProxy.enabled`                        | proxy API requests to the API service within the cluster         | `true`                         |
+| `frontend.extraEnv`                                | extra environment variables to set for the flagsmith frontend    | `{}`                           |
+| `frontend.nodeSelector`                            |                                                                  | `{}`                           |
+| `frontend.tolerations`                             |                                                                  | `[]`                           |
+| `frontend.affinity`                                |                                                                  | `{}`                           |
+| `api.podSecurityContext`                           |                                                                  | `{}`                           |
+| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                      | `true`                         |
+| `frontend.livenessProbe.failureThreshold`          |                                                                  | 20                             |
+| `frontend.livenessProbe.initialDelaySeconds`       |                                                                  | 20                             |
+| `frontend.livenessProbe.periodSeconds`             |                                                                  | 10                             |
+| `frontend.livenessProbe.successThreshold`          |                                                                  | 1                              |
+| `frontend.livenessProbe.timeoutSeconds`            |                                                                  | 10                             |
+| `frontend.readinessProbe.failureThreshold`         |                                                                  | 20                             |
+| `frontend.readinessProbe.initialDelaySeconds`      |                                                                  | 20                             |
+| `frontend.readinessProbe.periodSeconds`            |                                                                  | 10                             |
+| `frontend.readinessProbe.successThreshold`         |                                                                  | 1                              |
+| `frontend.readinessProbe.timeoutSeconds`           |                                                                  | 10                             |
+| `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database                | `true`                         |
+| `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                    | `true`                         |
+| `nameOverride`                                     |                                                                  | `flagsmith-postgres`           |
+| `postgresqlDatabase`                               |                                                                  | `flagsmith`                    |
+| `postgresqlUsername`                               |                                                                  | `postgres`                     |
+| `postgresqlPassword`                               |                                                                  | `flagsmith`                    |
+| `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.    | `false`                        |
+| `databaseExternal.url`                             | See <https://github.com/kennethreitz/dj-database-url#url-schema> |                                |
+| `databaseExternal.type`                            | Note: Only postgres supported by default images.                 | `postgres`                     |
+| `databaseExternal.port`                            |                                                                  | 5432                           |
+| `databaseExternal.database`                        | Name of the database within the server                           |                                |
+| `databaseExternal.username`                        |                                                                  |                                |
+| `databaseExternal.password`                        |                                                                  |                                |
+| `databaseExternal.urlFromExistingSecret.enabled`   | Reference an existing secret containing the database URL         |                                |
+| `databaseExternal.urlFromExistingSecret.name`      | Name of referenced secret                                        |                                |
+| `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secrt to use                           |                                |
+| `influxdb.enabled`                                 |                                                                  | `true`                         |
+| `influxdb.nameOverride`                            |                                                                  | `influxdb`                     |
+| `influxdb.image.repository`                        | docker image repository for influxdb                             | `quay.io/influxdb/influxdb`    |
+| `influxdb.image.tag`                               | docker image tag for influxdb                                    | `v2.0.2`                       |
+| `influxdb.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
+| `influxdb.image.imagePullSecrets`                  |                                                                  | `[]`                           |
+| `influxdb.adminUser.organization`                  |                                                                  | `influxdata`                   |
+| `influxdb.adminUser.bucket`                        |                                                                  | `default`                      |
+| `influxdb.adminUser.user`                          |                                                                  | `admin`                        |
+| `influxdb.adminUser.password`                      |                                                                  | randomly generated             |
+| `influxdb.adminUser.token`                         |                                                                  | randomly generated             |
+| `influxdb.persistence.enabled`                     |                                                                  | `false`                        |
+| `influxdb.resources`                               | resources per pod for the influxdb                               | `{}`                           |
+| `influxdb.nodeSelector`                            |                                                                  | `{}`                           |
+| `influxdb.tolerations`                             |                                                                  | `[]`                           |
+| `influxdb.affinity`                                |                                                                  | `{}`                           |
+| `influxdbExternal.enabled`                         | Use an InfluxDB not managed by this chart                        | `false`                        |
+| `influxdbExternal.url`                             |                                                                  |                                |
+| `influxdbExternal.bucket`                          |                                                                  |                                |
+| `influxdbExternal.organization`                    |                                                                  |                                |
+| `influxdbExternal.token`                           |                                                                  |                                |
+| `influxdbExternal.tokenFromExistingSecret.enabled` | Use reference to a k8s secret not managed by this chart          | `false`                        |
+| `influxdbExternal.tokenFromExistingSecret.name`    | Referenced secret name                                           |                                |
+| `influxdbExternal.tokenFromExistingSecret.key`     | Key within the referenced secret to use                          |                                |
+| `pgbouncer.enabled`                                |                                                                  | `false`                        |
+| `pgbouncer.image.repository`                       |                                                                  | `bitnami/pgbouncer`            |
+| `pgbouncer.image.tag`                              |                                                                  | `1.16.0`                       |
+| `pgbouncer.image.imagePullPolicy`                  |                                                                  | `IfNotPresent`                 |
+| `pgbouncer.image.imagePullSecrets`                 |                                                                  | `[]`                           |
+| `pgbouncer.replicaCount`                           | number of replicas for pgbouncer, `null` to unset                | 1                              |
+| `pgbouncer.deploymentStrategy`                     | See "Deployment strategy" above                                  |                                |
+| `pgbouncer.podAnnotations`                         |                                                                  | `{}`                           |
+| `pgbouncer.resources`                              |                                                                  | `{}`                           |
+| `pgbouncer.podLabels`                              |                                                                  | `{}`                           |
+| `pgbouncer.extraEnv`                               |                                                                  | `{}`                           |
+| `pgbouncer.nodeSelector`                           |                                                                  | `{}`                           |
+| `pgbouncer.tolerations`                            |                                                                  | `[]`                           |
+| `pgbouncer.affinity`                               |                                                                  | `{}`                           |
+| `pgbouncer.podSecurityContext`                     |                                                                  | `{}`                           |
+| `pgbouncer.securityContext`                        |                                                                  | `{}`                           |
+| `pgbouncer.defaultSecurityContext.enabled`         |                                                                  | `true`                         |
+| `pgbouncer.defaultSecurityContext`                 |                                                                  | `{}`                           |
+| `pgbouncer.livenessProbe.failureThreshold`         |                                                                  | 5                              |
+| `pgbouncer.livenessProbe.initialDelaySeconds`      |                                                                  | 5                              |
+| `pgbouncer.livenessProbe.periodSeconds`            |                                                                  | 10                             |
+| `pgbouncer.livenessProbe.successThreshold`         |                                                                  | 1                              |
+| `pgbouncer.livenessProbe.timeoutSeconds`           |                                                                  | 2                              |
+| `pgbouncer.readinessProbe.failureThreshold`        |                                                                  | 10                             |
+| `pgbouncer.readinessProbe.initialDelaySeconds`     |                                                                  | 1                              |
+| `pgbouncer.readinessProbe.periodSeconds`           |                                                                  | 10                             |
+| `pgbouncer.readinessProbe.successThreshold`        |                                                                  | 1                              |
+| `pgbouncer.readinessProbe.timeoutSeconds`          |                                                                  | 2                              |
+| `service.influxdb.externalPort`                    |                                                                  | `8080`                         |
+| `service.api.type`                                 |                                                                  | `ClusterIP`                    |
+| `service.api.port`                                 |                                                                  | `8000`                         |
+| `service.frontend.type`                            |                                                                  | `ClusterIP`                    |
+| `service.frontend.port`                            |                                                                  | `8080`                         |
+| `ingress.frontend.enabled`                         |                                                                  | `false`                        |
+| `ingress.frontend.ingressClassName`                |                                                                  |                                |
+| `ingress.frontend.annotations`                     |                                                                  | `{}`                           |
+| `ingress.frontend.hosts[].host`                    |                                                                  | `chart-example.local`          |
+| `ingress.frontend.hosts[].paths`                   |                                                                  | `[]`                           |
+| `ingress.frontend.tls`                             |                                                                  | `[]`                           |
+| `ingress.api.enabled`                              |                                                                  | `false`                        |
+| `ingress.api.ingressClassName`                     |                                                                  |                                |
+| `ingress.api.annotations`                          |                                                                  | `{}`                           |
+| `ingress.api.hosts[].host`                         |                                                                  | `chart-example.local`          |
+| `ingress.api.hosts[].paths`                        |                                                                  | `[]`                           |
+| `ingress.api.tls`                                  |                                                                  | `[]`                           |
+| `api.statsd.enabled`                               | Enable statsd metric reporting from gunicorn.                    | `false`                        |
+| `api.statsd.host`                                  | Host URL to receive statsd metrics                               | `null`                         |
+| `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead        | `false`                        |
+| `api.statsd.port`                                  | Host port to receive statsd metrics                              | `8125`                         |
+| `api.statsd.prefix`                                | Prefix to add to metric ids                                      | `flagsmith.api`                |
 
 ---
 

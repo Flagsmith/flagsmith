@@ -63,8 +63,8 @@ We recommend running Flagsmith with [Docker](/deployment/hosting/docker). We hav
 
 ## Architecture
 
-The Flagsmith architecture is based around a simple REST API that is accessed by both SDK clients and the Flagsmith
-Dashboard Front End Web App.
+The Flagsmith architecture is based around a REST API that is accessed by both SDK clients and the Flagsmith Dashboard
+Front End Web App.
 
 ![Application Architecture](/img/architecture.svg)
 

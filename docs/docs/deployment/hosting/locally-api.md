@@ -31,8 +31,8 @@ brew install cmake re2
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial to run locally using
-the above steps as it gives you hot reloading. To run using docker compose, simply run the following command from the
-project root:
+the above steps as it gives you hot reloading. To run using docker compose, run the following command from the project
+root:
 
 ```bash
 git clone https://github.com/Flagsmith/self-hosted.git
@@ -106,7 +106,7 @@ described below.
 | Site domain[^1] | The domain that the FE of the site will be running on, e.g. app.flagsmith.com. This will be used for e.g. password reset emails. |
 
 Once you've created the super user, you can use the details to log in at `/admin/`. From here, you can create an
-organisation and either create another user or simply assign the organisation to your admin user to begin using the
+organisation and either create another user or assign the organisation to your admin user to begin using the
 application.
 
 Further information on the admin pages can be found [here](/deployment/configuration/django-admin).
@@ -119,8 +119,8 @@ Further information on the admin pages can be found [here](/deployment/configura
 
 ### Using Heroku-ish Platform (e.g. Heroku, Dokku, Flynn)
 
-The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the required git repo and
-pushing the code. The code for running the app is contained in the Procfile.
+The application should run on any Heroku-ish platform (e.g. Dokku) by adding the required git repo and pushing the code.
+The code for running the app is contained in the Procfile.
 
 To get it running, you'll need to add the necessary config variables as outlined below.
 
@@ -141,7 +141,7 @@ are required using your chosen CI/CD. Alternatively, you can add your own `optio
 If you want to run the entire Flagsmith platform, including the front end dashboard, take a look at our
 [Flagsmith Docker repository](https://github.com/Flagsmith/self-hosted).
 
-The application can be configured to run using docker with simply by running the following command:
+The application can be configured to run using docker with the following command:
 
 ```bash
 git clone https://github.com/Flagsmith/self-hosted.git

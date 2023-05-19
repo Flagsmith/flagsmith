@@ -18,7 +18,7 @@ greatly benefits Continuous Integration and Continuous Deployment (CI/CD). The t
    the flag.
 5. Once you are happy with your Feature, you can enable the "sharing_button" for other members of your team and with
    Beta testers.
-6. If everything is working as intended, simply flip the "sharing_button" flag to True for everyone in your production
+6. If everything is working as intended, flip the "sharing_button" flag to True for everyone in your production
    environment, and your feature is rolled out.
 
 If you want to learn more about Feature Flags,
@@ -64,8 +64,8 @@ For more info see [Identities](/basic-features/managing-identities).
 
 ### Traits
 
-You can store any number of Traits against an Identity. Traits are simple name:value pairs that can store any type of
-data. Some examples of traits that you might store against an Identity might be:
+You can store any number of Traits against an Identity. Traits are key:value pairs that can store any type of data. Some
+examples of traits that you might store against an Identity might be:
 
 - The number of times the user has logged in.
 - If they have accepted the application terms and conditions.

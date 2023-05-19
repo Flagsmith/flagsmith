@@ -18,7 +18,7 @@ your server. Not on the client.
 
 You don't need to run a set of complicated rule evaluations to get your flags. Just hit our endpoint and you get your
 flags. You won't receive any information on Segments or rollout rules, and this is by design. If you want to run your
-own HTTP client within your application its just a simple HTTP GET and you're good.
+own HTTP client within your application it's just an HTTP GET and you're good.
 
 ### Build Time Flag Retrieval
 

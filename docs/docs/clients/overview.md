@@ -68,7 +68,7 @@ the particular request.
 
 ![Remote Evaluation Diagram](/img/sdk-remote-evaluation.svg)
 
-`Remote Evaluation` is the default mode; simply initialise the SDK and you will be running in `Remote Evaluation` mode.
+`Remote Evaluation` is the default mode; initialise the SDK and you will be running in `Remote Evaluation` mode.
 
 This is the same way that the [Client Side SDKs](#client-side-sdks) work.
 

@@ -1,6 +1,6 @@
 # Releases
 
-We have a fairly simple tagging strategy:
+We have a fairly standard tagging strategy:
 
 - Git tags created from the `main` branch trigger Docker image builds tagged `latest`.
 - Git tags e.g. `2.7.1` will trigger Docker image builds tagged:

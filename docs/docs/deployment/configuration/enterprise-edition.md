@@ -340,7 +340,7 @@ We also recommend using [wrk](https://github.com/wg/wrk) for load testing the co
 (make sure you update URL and environment keys!)
 
 ```bash
-# Simple get flags endpoint
+#  Get flags endpoint
 wrk -t6 -c200 -d20s -H 'X-Environment-Key: iyiS5EDNDxMDuiFpHoiwzG' http://127.0.0.1:8000/api/v1/flags/
 
 # Get flags for an identity
