@@ -119,5 +119,5 @@ black = "^23.3.0"
 pip-tools = "^6.13.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.5.0"]
 build-backend = "poetry.core.masonry.api"
