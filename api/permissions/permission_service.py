@@ -42,7 +42,7 @@ def get_permitted_projects_for_user(
         - User has the required permissions directly (UserProjectPermission)
         - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
         - User is an admin for the organisation the project belongs to
-        - User has a role attached with the required permissions
+        - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions
     """
     base_query = get_base_permission_q_lookup(user, permission_key)
@@ -68,8 +68,8 @@ def get_permitted_environments_for_user(
         - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
         - User is an admin for the project the environment belongs to
         - User is an admin for the organisation the environment belongs to
-        - User has a role attached with the required permissions
-        - User is in a UserPermissionGroup that has a role attached with the required permissions
+        - User has a role attached with the required permissions(if rbac is enabled)
+        - User is in a UserPermissionGroup that has a role attached with the required permissions(if rbac is enabled)
     """
 
     if is_user_project_admin(user, project):
