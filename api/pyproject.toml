@@ -37,11 +37,11 @@ skip = ['migrations','.venv','.direnv']
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '-n', 'auto']
 
 [tool.poetry]
-name = "y"
-version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
+name = "flagsmith-api"
+version = "2.52.0"
+description = "The API component for the Flagsmith application."
+authors = ["Flagsmith <support@flagsmith.com>"]
+readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "~3.11"
