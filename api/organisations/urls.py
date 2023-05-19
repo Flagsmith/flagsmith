@@ -7,6 +7,7 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
+from audit.views import OrganisationAuditLogViewSet
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
 from users.views import (
@@ -60,6 +61,10 @@ organisations_router.register(
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
 )
+organisations_router.register(
+    "audit", OrganisationAuditLogViewSet, basename="audit-log"
+)
+
 app_name = "organisations"
 
 urlpatterns = [
