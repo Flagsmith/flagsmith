@@ -7,6 +7,8 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
+POETRY_VERSION ?= 1.5.0
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
@@ -14,12 +16,16 @@ DOTENV_OVERRIDE_FILE ?= .env
 install-pip:
 	python -m pip install --upgrade pip
 
+.PHONY: install-poetry
+install-poetry:
+	pip install poetry==${POETRY_VERSION}
+
 .PHONY: install-packages
 install-packages:
 	pip install -r requirements-all.txt
 
 .PHONY: install
-install: install-pip install-packages
+install: install-pip install-poetry install-packages
 
 .PHONY: lint-black
 lint-black:

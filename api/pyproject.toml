@@ -44,7 +44,7 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "~3.10,~3.11"
+python = "~3.11"
 django = "3.2.19"
 analytics-python = "1.4.0"
 appdirs = "1.4.4"

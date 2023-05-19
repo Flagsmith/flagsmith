@@ -14,8 +14,11 @@ USER root
 RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical
 USER 1001
 
+ENV POETRY_VERSION=1.5.0
+
 ADD --chown=1001:0 pyproject.toml poetry.lock .
-RUN poetry install
+RUN pip install "poetry==$POETRY_VERSION"
+RUN poetry install --only main
 ADD --chown=1001:0 docker/ bin/
 ADD --chown=1001:0 . src/
 

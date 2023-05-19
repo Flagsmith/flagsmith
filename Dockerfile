@@ -17,14 +17,17 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
 
+ENV POETRY_VERSION=1.5.0
+
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
-RUN pip install poetry
+RUN pip install "poetry==$POETRY_VERSION"
+
 # Set up venv
 RUN python -m venv /opt/venv
 
 COPY api/pyproject.toml api/poetry.lock ./
-RUN . /opt/venv/bin/activate && poetry install --no-dev --no-root
+RUN . /opt/venv/bin/activate && poetry install --only main
 
 # Step 2 - Build Django Application
 FROM python:3.11-slim as application
