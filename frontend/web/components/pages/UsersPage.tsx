@@ -65,7 +65,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
   const { permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageFeaturePermission(false),
+    permission: Utils.getViewIdentitiesPermission(),
   })
 
   const removeIdentity = (id: string, identifier: string) => {
