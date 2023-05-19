@@ -88,9 +88,9 @@ The Proxy is now running and available on port 8000.
 
 ## Consuming the Edge Proxy
 
-The Edge Proxy provides an identical set of API methods as our Core API. This means you simply need to point your SDK to
-the Edge Proxy domain name and you're good to go. For example, lets say you had your proxy running locally as per the
-instructions above, you could simply do:
+The Edge Proxy provides an identical set of API methods as our Core API. You need to point your SDK to the Edge Proxy
+domain name and you're good to go. For example, lets say you had your proxy running locally as per the instructions
+above:
 
 ```bash
 curl "http://localhost:8000/api/v1/flags" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
@@ -162,10 +162,10 @@ Note that the Edge Proxy will currently _not_ send the Trait data back to the Co
 
 ## Architecture
 
-The standard Flagsmith architecture is very simple:
+The standard Flagsmith architecture:
 
 ![Image](/img/edge-proxy-existing.png)
 
-With the proxy added to the mix, things are still simple; they are just lower latency!
+With the proxy added to the mix:
 
 ![Image](/img/edge-proxy-proxy.png)
