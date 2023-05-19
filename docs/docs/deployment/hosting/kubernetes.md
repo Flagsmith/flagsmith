@@ -20,7 +20,7 @@ Then view `http://localhost:8080` in a browser. This will install using default 
 
 ### Ingress configuration
 
-The above is a quick way of gaining access to Flagsmith, but in many cases will need to configure ingress to work with
+The above is a quick way of gaining access to Flagsmith, but in many cases you will need to configure ingress to work with
 an ingress controller.
 
 #### Port forwarding
