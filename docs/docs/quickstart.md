@@ -37,7 +37,7 @@ first Flag. This flag will control whether a button shows on our web page.
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_3.png"/></div>
 
 Flags within Flagsmith are a combination of both: A Boolean value - the `Flag State` and then optionally: A
-String/Integer/Float value - the `Flag Value`. For now, we're going to use the `Boolean` value of the flag to control
+String/Integer/Float value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to control
 whether the button shows. Create a flag called `show_demo_button`, and leave it as Disabled by default:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_4.png"/></div>
