@@ -166,6 +166,6 @@ The standard Flagsmith architecture:
 
 ![Image](/img/edge-proxy-existing.png)
 
-With the proxy added to the mix they are just lower latency!
+With the proxy added to the mix:
 
 ![Image](/img/edge-proxy-proxy.png)
