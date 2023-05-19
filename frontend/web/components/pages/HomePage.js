@@ -579,7 +579,8 @@ const HomePage = class extends React.Component {
                                     checked={this.state.marketing_consent_given}
                                   />
                                   <label className='mb-0' htmlFor='mailinglist'>
-                                    Join our mailing list!
+                                    Yes, I would like to signup for the twice
+                                    monthly newsletter (optional)
                                   </label>
                                 </Row>
                               )}
