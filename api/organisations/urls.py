@@ -92,7 +92,7 @@ urlpatterns = [
 ]
 
 if settings.IS_RBAC_INSTALLED:
-    from roles.views import (
+    from rbac.views import (
         GroupRoleViewSet,
         RoleEnvironmentPermissionsViewSet,
         RoleProjectPermissionsViewSet,

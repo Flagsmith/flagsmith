@@ -19,7 +19,7 @@ from projects.models import (
 )
 
 if settings.IS_RBAC_INSTALLED:
-    from roles.permissions_calculator import (
+    from rbac.permissions_calculator import (
         RolePermissionData,
         get_roles_permission_data_for_environment,
         get_roles_permission_data_for_organisation,

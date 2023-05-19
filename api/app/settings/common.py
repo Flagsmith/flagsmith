@@ -796,10 +796,9 @@ if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
 
-# TODO: need better name
-IS_RBAC_INSTALLED = importlib.util.find_spec("roles") is not None
+IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
-    INSTALLED_APPS.append("roles")
+    INSTALLED_APPS.append("rbac")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

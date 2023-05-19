@@ -93,7 +93,7 @@ def user_has_organisation_permission(
     query = user_query | group_query
 
     if settings.IS_RBAC_INSTALLED:
-        from roles.permission_service import (
+        from rbac.permission_service import (
             get_role_permission_q_lookup_for_organisation,
         )
 
@@ -120,7 +120,7 @@ def get_base_permission_q_lookup(
 
     query = user_query | group_query
     if settings.IS_RBAC_INSTALLED:
-        from roles.permission_service import get_role_permission_q_lookup
+        from rbac.permission_service import get_role_permission_q_lookup
 
         query = query | get_role_permission_q_lookup(user, permission_key, allow_admin)
 
