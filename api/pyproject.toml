@@ -100,6 +100,23 @@ django-ordered-model = "^3.7.4"
 django-ses = "^3.4.1"
 django-axes = "^6.0.1"
 
+[tool.poetry.group.dev.dependencies]
+django-test-migrations = "~1.2.0"
+responses = "^0.23.1"
+pre-commit = "^3.3.2"
+flake8 = "^6.0.0"
+pytest-mock = "^3.10.0"
+pytest-lazy-fixture = "^0.6.3"
+moto = "^4.1.9"
+pytest-freezegun = "^0.4.2"
+pytest-xdist = "^3.3.1"
+pylint = "^2.17.4"
+pep8 = "^1.7.1"
+autopep8 = "^2.0.2"
+pytest = "^7.3.1"
+pytest-django = "^4.5.2"
+black = "^23.3.0"
+pip-tools = "^6.13.0"
 
 [build-system]
 requires = ["poetry-core"]
