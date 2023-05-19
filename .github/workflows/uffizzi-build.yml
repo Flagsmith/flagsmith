@@ -2,6 +2,8 @@ name: Build PR Image
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
+    paths-ignore:
+      - docs/**
 
 jobs:
   build-flagsmith:
