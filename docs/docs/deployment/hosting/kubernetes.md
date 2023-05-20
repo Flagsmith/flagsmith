@@ -18,19 +18,21 @@ kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 
 Then view `http://localhost:8080` in a browser. This will install using default options, in a new namespace `flagsmith`.
 
-If you want to make changes to the default setup as defined in
-[`charts/flagsmith/values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml),
-you don’t have to pull the project to use your own values. Just make a local copy of the
-[`charts/flagsmith/values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml)
-file and point to it with the -f flag:
+If you want to make changes to the default setup you can make a local copy of the
+[`charts/flagsmith/values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml)file,
+modify it and then install with the `-f` flag:
 
 ```bash
 wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/flagsmith/values.yaml
 helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f values.yaml
 ```
 
-We recommend reading the [Helm docs](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package) for
-further information.
+We would suggest only doing this when running the platform locally, and recommend reading the Helm docs for
+[installation](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package),
+[upgrading](https://helm.sh/docs/helm/helm_upgrade/) and
+[values](https://helm.sh/docs/chart_template_guide/values_files/) for further information.
+
+## Configuration
 
 ### Ingress configuration
 
@@ -256,7 +258,16 @@ api:
 This switches off the Kubernetes deployment for the frontend. However, the ingress and service are retained, but all
 requests are handled by the API deployment.
 
-## Configuration
+### InfluxDB
+
+By default, Flagsmith uses Postgres to store time series data. You can alternatively use Influx to track:
+
+- SDK API traffic
+- SDK Flag Evaluations
+
+[You need to perform some additional steps to configure InfluxDB.](/deployment/overview#influxdb).
+
+## Chart Values
 
 The following table lists the configurable parameters of the chart and their default values.
 
@@ -409,15 +420,6 @@ The following table lists the configurable parameters of the chart and their def
 
 ---
 
-### InfluxDB
-
-By default, Flagsmith uses Postgres to store time series data. You can alternatively use Influx to track:
-
-- SDK API traffic
-- SDK Flag Evaluations
-
-[You need to perform some additional steps to configure InfluxDB.](/deployment/overview#influxdb).
-
 ## Development and contributing
 
 ### Requirements
@@ -437,7 +439,7 @@ helm install flagsmith --debug ./flagsmith
 minikube dashboard
 ```
 
-### Test install Chart
+### Test chart installation
 
 Install Chart without building a package:
 
@@ -451,7 +453,7 @@ Run template and check kubernetes resouces are made:
 helm template flagsmith flagsmith --debug -f flagsmith/values.yaml
 ```
 
-### build chart package
+### Build chart package
 
 To build chart package run:
 
