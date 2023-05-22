@@ -1,6 +1,6 @@
 # Flag Management
 
-Managing larger numbers of flags is easy using some of the tools built into Flagsmith.
+Managing larger numbers of flags is made easier using some of the tools built into Flagsmith.
 
 ![Image](/img/flag-settings.png)
 
