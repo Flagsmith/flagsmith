@@ -45,14 +45,14 @@ def get_permitted_projects_for_user(
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions
     """
-    base_query = get_base_permission_q_lookup(user, permission_key)
+    base_filter = get_base_permission_filter(user, Project, permission_key)
 
-    organisation_query = Q(
+    organisation_filter = Q(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
     )
-    query = base_query | organisation_query
-    return Project.objects.filter(query).distinct()
+    filter_ = base_filter | organisation_filter
+    return Project.objects.filter(filter_).distinct()
 
 
 def get_permitted_environments_for_user(
@@ -75,10 +75,10 @@ def get_permitted_environments_for_user(
     if is_user_project_admin(user, project):
         return project.environments.all()
 
-    query = get_base_permission_q_lookup(user, permission_key)
-    query = query & Q(project=project)
+    base_filter = get_base_permission_filter(user, Environment, permission_key)
+    filter_ = base_filter & Q(project=project)
 
-    return Environment.objects.filter(query).distinct().defer("description")
+    return Environment.objects.filter(filter_).distinct().defer("description")
 
 
 def user_has_organisation_permission(
@@ -87,68 +87,64 @@ def user_has_organisation_permission(
     if is_user_organisation_admin(user, organisation):
         return True
 
-    user_query = get_user_permission_q_lookup(user, permission_key, allow_admin=False)
-    group_query = get_group_permission_q_lookup(user, permission_key, allow_admin=False)
+    base_filter = get_base_permission_filter(
+        user, Organisation, permission_key, allow_admin=False
+    )
+    filter_ = base_filter & Q(id=organisation.id)
 
-    query = user_query | group_query
-
-    if settings.IS_RBAC_INSTALLED:
-        from rbac.permission_service import (
-            get_role_permission_q_lookup_for_organisation,
-        )
-
-        query = query | get_role_permission_q_lookup_for_organisation(
-            user, permission_key
-        )
-
-    return Organisation.objects.filter(query).exists()
+    return Organisation.objects.filter(filter_).exists()
 
 
 def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
-    query = get_base_permission_q_lookup(user)
-    query = query & Q(id=object_.id)
-    return type(object_).objects.filter(query).exists()
+    base_filter = get_base_permission_filter(user, type(object_))
+    filter_ = base_filter & Q(id=object_.id)
+    return type(object_).objects.filter(filter_).exists()
 
 
-def get_base_permission_q_lookup(
-    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+def get_base_permission_filter(
+    user: "FFAdminUser",
+    for_model: Union[Organisation, Project, Environment] = None,
+    permission_key: str = None,
+    allow_admin: bool = True,
 ) -> Q:
-    user_query = get_user_permission_q_lookup(user, permission_key, allow_admin)
-    group_query = get_group_permission_q_lookup(user, permission_key, allow_admin)
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin)
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin)
 
-    query = user_query | group_query
+    filter_ = user_filter | group_filter
     if settings.IS_RBAC_INSTALLED:
-        from rbac.permission_service import get_role_permission_q_lookup
+        from rbac.permission_service import get_role_permission_filter
 
-        query = query | get_role_permission_q_lookup(user, permission_key, allow_admin)
+        filter_ = filter_ | get_role_permission_filter(
+            user, for_model, permission_key, allow_admin
+        )
 
-    return query
+    return filter_
 
 
-def get_user_permission_q_lookup(
+def get_user_permission_filter(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
-    base_query = Q(userpermission__user=user)
-    permission_query = Q(userpermission__admin=True) if allow_admin else Q()
+    base_filter = Q(userpermission__user=user)
+    permission_filter = Q(userpermission__admin=True) if allow_admin else Q()
 
     if permission_key:
-        permission_query = permission_query | Q(
+        permission_filter = permission_filter | Q(
             userpermission__permissions__key=permission_key
         )
 
-    return base_query & permission_query
+    return base_filter & permission_filter
 
 
-def get_group_permission_q_lookup(
+def get_group_permission_filter(
     user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
 ) -> Q:
-    base_query = Q(grouppermission__group__users=user)
-    permission_query = Q(grouppermission__admin=True) if allow_admin else Q()
+    base_filter = Q(grouppermission__group__users=user)
+    permission_filter = Q(grouppermission__admin=True) if allow_admin else Q()
 
     if permission_key:
-        permission_query = permission_query | Q(
+        permission_filter = permission_filter | Q(
             grouppermission__permissions__key=permission_key
         )
-    return base_query & permission_query
+    return base_filter & permission_filter
