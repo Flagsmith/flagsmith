@@ -1,8 +1,8 @@
-ENV POETRY_VERSION=1.5.0
 
 # Step 1 - Build Python virtualenv
 FROM python:3.11 as build-python
 WORKDIR /app
+ENV POETRY_VERSION=1.5.0
 
 RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
 
