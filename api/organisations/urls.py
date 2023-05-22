@@ -65,7 +65,7 @@ organisations_router.register(
 
 organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
-
+)
 
 app_name = "organisations"
 
