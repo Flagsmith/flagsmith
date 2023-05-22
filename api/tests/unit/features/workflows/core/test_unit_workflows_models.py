@@ -18,7 +18,11 @@ from features.workflows.core.exceptions import (
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
-from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
+from features.workflows.core.models import (
+    ChangeRequest,
+    ChangeRequestApproval,
+    ChangeRequestGroupAssignment,
+)
 from users.models import FFAdminUser
 
 
@@ -568,3 +572,29 @@ def test_committing_scheduled_change_requests_results_in_correct_versions(
     )
     assert len(feature_states) == 1
     assert feature_states[0] == cr_2_fs
+
+
+def test_change_request_group_assignment_sends_notification_emails_to_group_users(
+    change_request, user_permission_group, settings, mocker
+):
+    # Given
+    change_request_group_assignment = ChangeRequestGroupAssignment(
+        change_request=change_request, group=user_permission_group
+    )
+
+    workflows_logic_tasks_module_mock = mocker.MagicMock()
+
+    mocked_importlib = mocker.patch("features.workflows.core.models.importlib")
+    mocked_importlib.import_module.return_value = workflows_logic_tasks_module_mock
+
+    settings.WORKFLOWS_LOGIC_INSTALLED = True
+
+    # When
+    change_request_group_assignment.save()
+
+    # Then
+    workflows_logic_tasks_module_mock.notify_group_of_change_request_assignment.delay.assert_called_once_with(
+        kwargs={
+            "change_request_group_assignment_id": change_request_group_assignment.id
+        }
+    )
