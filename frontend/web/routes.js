@@ -163,7 +163,7 @@ export default (
         component={BetaFeaturesPage}
       />
       <Route path='/create' exact component={CreateOrganisationPage} />
-      <Route component={NotFoundPage} />
+      <Route path='*' component={NotFoundPage} />
     </Switch>
   </App>
 )
