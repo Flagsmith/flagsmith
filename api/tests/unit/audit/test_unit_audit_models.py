@@ -158,3 +158,76 @@ def test_audit_log_save_project_is_added_if_not_set(environment):
 
     # Then
     assert audit_log.project == environment.project
+
+
+def test_creating_audit_logs_triggers_environment_update_message(environment, mocker):
+    # Given
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.models.send_environment_update_message_for_environment"
+    )
+
+    # When
+    audit_log = AuditLog.objects.create(environment=environment)
+
+    # Then
+    send_environment_update_message_for_environment.assert_called_once_with(environment)
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_creating_audit_logs_triggers_environment_update_message_for_environment_if_environment_is_present(
+    environment, mocker, project
+):
+    # Given
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.models.send_environment_update_message_for_environment"
+    )
+    send_environment_update_message_for_project = mocker.patch(
+        "audit.models.send_environment_update_message_for_project"
+    )
+    # When
+    audit_log = AuditLog.objects.create(environment=environment, project=project)
+
+    # Then
+    send_environment_update_message_for_environment.assert_called_once_with(environment)
+    send_environment_update_message_for_project.assert_not_called()
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_creating_audit_logs_triggers_environment_update_message_for_project_if_environment_is_not_present(
+    environment, mocker, project
+):
+    # Given
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.models.send_environment_update_message_for_environment"
+    )
+    send_environment_update_message_for_project = mocker.patch(
+        "audit.models.send_environment_update_message_for_project"
+    )
+    # When
+    AuditLog.objects.create(project=project)
+
+    # Then
+    send_environment_update_message_for_project.assert_called_once_with(project)
+    send_environment_update_message_for_environment.assert_not_called()
+
+
+def test_creating_audit_logs_for_change_request_does_not_trigger_environment_update_message(
+    environment, mocker, project
+):
+    # Given
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.models.send_environment_update_message_for_environment"
+    )
+    send_environment_update_message_for_project = mocker.patch(
+        "audit.models.send_environment_update_message_for_project"
+    )
+    # When
+    audit_log = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+    )
+
+    # Then
+    send_environment_update_message_for_environment.assert_not_called()
+    send_environment_update_message_for_project.assert_not_called()
+    assert audit_log.created_date != environment.updated_at

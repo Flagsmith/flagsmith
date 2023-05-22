@@ -92,7 +92,7 @@ django-health-check==3.14.3
     # via -r requirements.in
 django-ipware==3.0.2
     # via django-axes
-django-lifecycle==0.9.0
+django-lifecycle==1.0.0
     # via -r requirements.in
 django-ordered-model==3.4.1
     # via -r requirements.in
@@ -203,6 +203,7 @@ opencensus-ext-django==0.7.6
 packaging==23.0
     # via
     #   -r requirements.in
+    #   django-lifecycle
     #   drf-yasg2
 portalocker==2.4.0
     # via msal-extensions

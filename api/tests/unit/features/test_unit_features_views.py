@@ -627,11 +627,16 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     client, project, environment, feature, feature_state, settings, mocker
 ):
     # Given
+    project.enable_dynamo_db = True
+    project.save()
+
     url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment.api_key, feature_state.id],
     )
-    mock_environment_class = mocker.patch("audit.signals.Environment")
+    mock_dynamo_environment_wrapper = mocker.patch(
+        "environments.models.environment_wrapper"
+    )
 
     # When
     response = client.patch(
@@ -642,7 +647,7 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
 
     # Then
     assert response.status_code == 200
-    mock_environment_class.write_environments_to_dynamodb.assert_called_once()
+    mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
 @pytest.mark.parametrize(

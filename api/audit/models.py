@@ -3,11 +3,21 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model, Q
-from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModel,
+    hook,
+    priority,
+)
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
+from sse import (
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
+)
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
@@ -44,11 +54,12 @@ class AuditLog(LifecycleModel):
     related_object_type = models.CharField(max_length=20, null=True)
     related_object_uuid = models.CharField(max_length=36, null=True)
 
-    skip_signals = models.CharField(
+    skip_signals_and_hooks = models.CharField(
         null=True,
         blank=True,
-        help_text="comma separated list of signal functions to skip",
+        help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
+        db_column="skip_signals",
     )
     is_system_event = models.BooleanField(default=False)
 
@@ -58,6 +69,17 @@ class AuditLog(LifecycleModel):
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
+
+    @property
+    def environment_document_updated(self) -> bool:
+        if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
+            return False
+        skip_signals_and_hooks = (
+            self.skip_signals_and_hooks.split(",")
+            if self.skip_signals_and_hooks
+            else []
+        )
+        return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
     @property
     def history_record(self):
@@ -72,17 +94,23 @@ class AuditLog(LifecycleModel):
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    @hook(AFTER_SAVE)
-    def update_environments_updated_at(self):
-        # Don't update the environments updated_at if the audit log
-        # is of certain types (since they don't (directly) impact
-        # the value of a given feature in an environment)
-        if self.related_object_type in (
-            RelatedObjectType.CHANGE_REQUEST.name,
-            RelatedObjectType.EDGE_IDENTITY.name,
-        ):
-            return
+    @hook(BEFORE_CREATE)
+    def add_project(self):
+        if self.environment and self.project is None:
+            self.project = self.environment.project
 
+    @hook(
+        AFTER_CREATE,
+        priority=priority.HIGHEST_PRIORITY,
+        when="environment_document_updated",
+        is_now=True,
+    )
+    def process_environment_update(self):
+        self.update_environments_updated_at()
+        self.send_environments_to_dynamodb()
+        self.send_environment_update_message()
+
+    def update_environments_updated_at(self):
         environments_filter = Q()
         if self.environment_id:
             environments_filter = Q(id=self.environment_id)
@@ -93,7 +121,19 @@ class AuditLog(LifecycleModel):
             updated_at=self.created_date
         )
 
-    @hook(BEFORE_CREATE)
-    def add_project(self):
-        if self.environment and self.project is None:
-            self.project = self.environment.project
+    def send_environments_to_dynamodb(self):
+        from environments.models import Environment
+
+        Environment.write_environments_to_dynamodb(
+            environment_id=self.environment_id, project_id=self.project_id
+        )
+
+    def send_environment_update_message(self):
+        if self.environment_id:
+            environment = self.environment
+            # Because we updated the environment `updated_at` in the previous hook in bulk
+            # update it manually here to save a `refresh_from_db` call
+            environment.updated_at = self.created_date
+            send_environment_update_message_for_environment(environment)
+        else:
+            send_environment_update_message_for_project(self.project)

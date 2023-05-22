@@ -225,7 +225,6 @@ class Environment(
         environments = list(
             cls.objects.filter_for_document_builder(environments_filter)
         )
-
         if not environments:
             return
 
