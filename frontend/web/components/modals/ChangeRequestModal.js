@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
-import GroupSelect from 'components/groupSelect'
+import GroupSelect from 'components/GroupSelect'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
