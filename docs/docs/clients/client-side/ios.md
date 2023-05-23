@@ -150,6 +150,27 @@ func determineAppConfiguration() async throws {
 }
 ```
 
+### Providing Default Flags
+
+You can define default flag values when initialising the SDK. This ensures that your application works as intended in
+the event that it cannot receive a response from our API.
+
+```swift
+    // set default flags
+    Flagsmith.shared.defaultFlags = [Flag(featureName: "feature_a", enabled: false),
+                                     Flag(featureName: "font_size", intValue:12, enabled: true),
+                                     Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
+```
+
+### Cache
+
+By default, Flagsmith will cache all flags returned by the API (to permanent storage), and in case of a failed response, fall back on the cached values. The cache can be turned off or on using:
+
+```swift
+    // set cache on / off (defaults to on)
+    Flagsmith.shared.useCache = true
+```
+
 ## Override default configuration
 
 By default, the client uses a default configuration. You can override the configuration as follows:
