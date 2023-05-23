@@ -196,6 +196,7 @@ class TheComponent extends Component {
                                     />,
                                   )
                                 }
+                                id='change-email-button'
                                 type='button'
                                 class='input-group-addon'
                               >
