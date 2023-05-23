@@ -144,58 +144,68 @@ const ChangeRequestModal = class extends Component {
               </div>
               {!this.props.changeRequest &&
                 this.props.showAssignees &&
-                Utils.getFlagsmithHasFeature('users_as_reviewers') && (
+                (Utils.getFlagsmithHasFeature('users_as_reviewers') ||
+                  Utils.getFlagsmithHasFeature('groups_as_reviewers')) && (
                   <FormGroup className='mb-4'>
                     <InputGroup
                       component={
                         <div>
-                          <Row>
-                            <strong style={{ width: 70 }}> User: </strong>
-                            {ownerUsers.map((u) => (
-                              <Row
-                                key={u.id}
-                                onClick={() => this.removeOwner(u.id)}
-                                className='chip chip--active'
-                                style={{ marginTop: 4, marginBottom: 4 }}
+                          {Utils.getFlagsmithHasFeature(
+                            'users_as_reviewers',
+                          ) && (
+                            <Row>
+                              <strong style={{ width: 70 }}> Users: </strong>
+                              {ownerUsers.map((u) => (
+                                <Row
+                                  key={u.id}
+                                  onClick={() => this.removeOwner(u.id)}
+                                  className='chip chip--active'
+                                  style={{ marginTop: 4, marginBottom: 4 }}
+                                >
+                                  <span className='font-weight-bold'>
+                                    {u.first_name} {u.last_name}
+                                  </span>
+                                  <span className='chip-icon ion ion-ios-close' />
+                                </Row>
+                              ))}
+                              <Button
+                                className='btn--link btn--link-primary'
+                                onClick={() =>
+                                  this.setState({ showUsers: true })
+                                }
                               >
-                                <span className='font-weight-bold'>
-                                  {u.first_name} {u.last_name}
-                                </span>
-                                <span className='chip-icon ion ion-ios-close' />
-                              </Row>
-                            ))}
-                            <Button
-                              className='btn--link btn--link-primary'
-                              onClick={() => this.setState({ showUsers: true })}
-                            >
-                              Add user
-                            </Button>
-                          </Row>
-
-                          <Row>
-                            <strong style={{ width: 70 }}> Groups: </strong>
-                            {ownerGroups.map((u) => (
-                              <Row
-                                key={u.id}
-                                onClick={() => this.removeOwner(u.id, false)}
-                                className='chip chip--active'
-                                style={{ marginTop: 4, marginBottom: 4 }}
+                                Add user
+                              </Button>
+                            </Row>
+                          )}
+                          {Utils.getFlagsmithHasFeature(
+                            'groups_as_reviewers',
+                          ) && (
+                            <Row>
+                              <strong style={{ width: 70 }}> Groups: </strong>
+                              {ownerGroups.map((u) => (
+                                <Row
+                                  key={u.id}
+                                  onClick={() => this.removeOwner(u.id, false)}
+                                  className='chip chip--active'
+                                  style={{ marginTop: 4, marginBottom: 4 }}
+                                >
+                                  <span className='font-weight-bold'>
+                                    {u.name}
+                                  </span>
+                                  <span className='chip-icon ion ion-ios-close' />
+                                </Row>
+                              ))}
+                              <Button
+                                className='btn--link btn--link-primary'
+                                onClick={() =>
+                                  this.setState({ showGroups: true })
+                                }
                               >
-                                <span className='font-weight-bold'>
-                                  {u.name}
-                                </span>
-                                <span className='chip-icon ion ion-ios-close' />
-                              </Row>
-                            ))}
-                            <Button
-                              className='btn--link btn--link-primary'
-                              onClick={() =>
-                                this.setState({ showGroups: true })
-                              }
-                            >
-                              Add group
-                            </Button>
-                          </Row>
+                                Add group
+                              </Button>
+                            </Row>
+                          )}
                         </div>
                       }
                       onChange={(e) =>
