@@ -300,7 +300,7 @@ const OrganisationSettingsPage = class extends Component {
                         onChange={(tab) => this.setState({ tab })}
                       >
                         <TabItem tabLabel='General' tabIcon='ion-md-settings'>
-                          <FormGroup>
+                          <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
                                 <JSONReference
@@ -339,6 +339,12 @@ const OrganisationSettingsPage = class extends Component {
                                     </Button>
                                   </Row>
                                 </form>
+                                <div>
+                                  <Row space className='mt-4'>
+                                    <h3 className='m-b-0'>Organisation ID</h3>
+                                  </Row>
+                                  <p>{organisation.id}</p>
+                                </div>
                                 {paymentsEnabled && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
@@ -459,52 +465,56 @@ const OrganisationSettingsPage = class extends Component {
                             'restrict_project_create_to_admin',
                           ) && (
                             <FormGroup className='mt-4'>
-                              <Row>
-                                <Column>
-                                  <h3>Admin Settings</h3>
-                                  <Row>
+                              <h3>Admin Settings</h3>
+                              <div className='row'>
+                                <div className='col-md-10'>
+                                  <p>
                                     Only allow organisation admins to create
                                     projects
-                                    <Switch
-                                      checked={
-                                        organisation.restrict_project_create_to_admin
-                                      }
-                                      onChange={() =>
-                                        this.setAdminCanCreateProject(
-                                          !organisation.restrict_project_create_to_admin,
-                                        )
-                                      }
-                                    />
-                                  </Row>
-                                </Column>
-                              </Row>
+                                  </p>
+                                </div>
+                                <div className='col-md-2 text-right'>
+                                  <Switch
+                                    checked={
+                                      organisation.restrict_project_create_to_admin
+                                    }
+                                    onChange={() =>
+                                      this.setAdminCanCreateProject(
+                                        !organisation.restrict_project_create_to_admin,
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
                             </FormGroup>
                           )}
                           {Utils.getFlagsmithHasFeature(
                             'delete_organisation',
                           ) && (
                             <FormGroup className='mt-4'>
-                              <Row className='mt-4' space>
-                                <div className='col-md-8 pl-0'>
-                                  <h3>Delete Organisation</h3>
+                              <h3>Delete Organisation</h3>
+                              <div className='row'>
+                                <div className='col-md-10'>
                                   <p>
                                     This organisation will be permanently
                                     deleted, along with all projects and
                                     features.
                                   </p>
                                 </div>
-                                <Button
-                                  id='delete-org-btn'
-                                  onClick={() =>
-                                    this.confirmRemove(organisation, () => {
-                                      deleteOrganisation()
-                                    })
-                                  }
-                                  className='btn btn--with-icon ml-auto btn--remove'
-                                >
-                                  <RemoveIcon />
-                                </Button>
-                              </Row>
+                                <div className='col-md-2 text-right'>
+                                  <Button
+                                    id='delete-org-btn'
+                                    onClick={() =>
+                                      this.confirmRemove(organisation, () => {
+                                        deleteOrganisation()
+                                      })
+                                    }
+                                    className='btn btn--with-icon ml-auto btn--remove'
+                                  >
+                                    <RemoveIcon />
+                                  </Button>
+                                </div>
+                              </div>
                             </FormGroup>
                           )}
                         </TabItem>

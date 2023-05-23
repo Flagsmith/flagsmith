@@ -100,7 +100,7 @@ in the Flag area of the dashboard:
 
 ## Code Examples
 
-Below are some simple examples for achieving certain actions with the REST API, using python.
+Below are some examples for achieving certain actions with the REST API, using python.
 
 ### Create a feature
 
