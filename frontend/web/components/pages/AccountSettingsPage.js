@@ -197,6 +197,7 @@ class TheComponent extends Component {
                                   )
                                 }
                                 id='change-email-button'
+                                data-test='change-email-button'
                                 type='button'
                                 class='input-group-addon'
                               >
@@ -277,7 +278,8 @@ class TheComponent extends Component {
                             </p>
                           </div>
                           <Button
-                            id='delete-org-btn'
+                            id='delete-user-btn'
+                            data-test='delete-user-btn'
                             onClick={() =>
                               this.confirmDeleteAccount(
                                 lastUserOrganisations,
