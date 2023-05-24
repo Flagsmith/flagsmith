@@ -110,7 +110,7 @@ Released **11 November 2022**
 - Prevent invite links creation in the API
 - Make master API keys read only
 
-## v2.35
+## v2.35
 
 Released **8 November 2022**
 
