@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
 import AccountStore from 'common/stores/account-store'
+import UserGroupStore from 'common/stores/user-group-store'
 
 const OrganisationProvider = class extends Component {
   static displayName = 'OrganisationProvider'
@@ -8,6 +9,7 @@ const OrganisationProvider = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      groups: UserGroupStore.getGroups(),
       invites: OrganisationStore.getInvites(),
       isLoading: OrganisationStore.isLoading,
       name:
@@ -20,6 +22,7 @@ const OrganisationProvider = class extends Component {
     ES6Component(this)
     this.listenTo(OrganisationStore, 'change', () => {
       this.setState({
+        groups: UserGroupStore.getGroups(),
         inviteLinks: OrganisationStore.getInviteLinks(),
         invites: OrganisationStore.getInvites(),
         isLoading: OrganisationStore.isLoading,
@@ -46,6 +49,7 @@ const OrganisationProvider = class extends Component {
   render() {
     return this.props.children({
       ...{
+        groups: UserGroupStore.getGroups(),
         inviteLinks: OrganisationStore.getInviteLinks(),
         invites: OrganisationStore.getInvites(),
         isLoading: OrganisationStore.isLoading,
