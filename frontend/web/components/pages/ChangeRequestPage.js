@@ -381,8 +381,8 @@ const ChangeRequestsPage = class extends Component {
                     <InputGroup
                       component={
                         <div>
-                          {Utils.getFlagsmithHasFeature(
-                            'users_as_reviewers',
+                          {!Utils.getFlagsmithHasFeature(
+                            'disable_users_as_reviewers',
                           ) && (
                             <>
                               <Row>
@@ -437,7 +437,7 @@ const ChangeRequestsPage = class extends Component {
                             </>
                           )}
                           {Utils.getFlagsmithHasFeature(
-                            'groups_as_reviewers',
+                            'enable_groups_as_reviewers',
                           ) && (
                             <>
                               <Row>

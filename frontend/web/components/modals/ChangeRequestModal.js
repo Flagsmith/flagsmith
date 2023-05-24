@@ -144,14 +144,16 @@ const ChangeRequestModal = class extends Component {
               </div>
               {!this.props.changeRequest &&
                 this.props.showAssignees &&
-                (Utils.getFlagsmithHasFeature('users_as_reviewers') ||
-                  Utils.getFlagsmithHasFeature('groups_as_reviewers')) && (
+                (!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') ||
+                  Utils.getFlagsmithHasFeature(
+                    'enable_groups_as_reviewers',
+                  )) && (
                   <FormGroup className='mb-4'>
                     <InputGroup
                       component={
                         <div>
-                          {Utils.getFlagsmithHasFeature(
-                            'users_as_reviewers',
+                          {!Utils.getFlagsmithHasFeature(
+                            'disable_users_as_reviewers',
                           ) && (
                             <Row>
                               <strong style={{ width: 70 }}> Users: </strong>
@@ -160,7 +162,7 @@ const ChangeRequestModal = class extends Component {
                                   key={u.id}
                                   onClick={() => this.removeOwner(u.id)}
                                   className='chip chip--active'
-                                  style={{ marginTop: 4, marginBottom: 4 }}
+                                  style={{ marginBottom: 4, marginTop: 4 }}
                                 >
                                   <span className='font-weight-bold'>
                                     {u.first_name} {u.last_name}
@@ -179,7 +181,7 @@ const ChangeRequestModal = class extends Component {
                             </Row>
                           )}
                           {Utils.getFlagsmithHasFeature(
-                            'groups_as_reviewers',
+                            'enable_groups_as_reviewers',
                           ) && (
                             <Row>
                               <strong style={{ width: 70 }}> Groups: </strong>
@@ -188,7 +190,7 @@ const ChangeRequestModal = class extends Component {
                                   key={u.id}
                                   onClick={() => this.removeOwner(u.id, false)}
                                   className='chip chip--active'
-                                  style={{ marginTop: 4, marginBottom: 4 }}
+                                  style={{ marginBottom: 4, marginTop: 4 }}
                                 >
                                   <span className='font-weight-bold'>
                                     {u.name}
@@ -227,7 +229,7 @@ const ChangeRequestModal = class extends Component {
                   </FormGroup>
                 )}
               {!this.props.changeRequest &&
-                Utils.getFlagsmithHasFeature('users_as_reviewers') && (
+                !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                   <UserSelect
                     users={users.filter(
                       (v) => v.id !== AccountStore.getUser().id,
@@ -242,7 +244,7 @@ const ChangeRequestModal = class extends Component {
                   />
                 )}
               {!this.props.changeRequest &&
-                Utils.getFlagsmithHasFeature('groups_as_reviewers') && (
+                Utils.getFlagsmithHasFeature('enable_groups_as_reviewers') && (
                   <GroupSelect
                     groups={groups}
                     selectedGroups={this.state.approvals.map((v) => v.group)}
