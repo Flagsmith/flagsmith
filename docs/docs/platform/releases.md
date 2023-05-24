@@ -110,7 +110,7 @@ Released **11 November 2022**
 - Prevent invite links creation in the API
 - Make master API keys read only
 
-## v2.35
+## v2.35
 
 Released **8 November 2022**
 
@@ -148,7 +148,7 @@ Released **6 October 2022**
 - Add fix for testing webhooks in UI when webhook has basic authentication
 - Add MV options support for Terraform
 
-## v2.31
+## v2.31
 
 Released **29 September 2022**
 
