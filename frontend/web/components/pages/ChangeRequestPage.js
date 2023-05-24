@@ -381,115 +381,117 @@ const ChangeRequestsPage = class extends Component {
                     <InputGroup
                       component={
                         <div>
-                          <Row>
-                            <span>
-                              <strong style={{ width: 70 }}>
-                                Assigned users
-                              </strong>
-                            </span>
-                          </Row>
-                          <Row className='mt-2'>
-                            {ownerUsers.length !== 0
-                              ? ownerUsers.map((u) => (
-                                  <Row
-                                    key={u.id}
-                                    onClick={() => this.removeOwner(u.id)}
-                                    className='chip chip--active'
-                                    style={{ marginBottom: 4, marginTop: 4 }}
-                                  >
-                                    <span className='font-weight-bold'>
-                                      {u.first_name} {u.last_name}
-                                    </span>
-                                    <span className='chip-icon ion ion-ios-close' />
-                                  </Row>
-                                ))
-                              : !Utils.getFlagsmithHasFeature(
-                                  'users_as_reviewers',
-                                ) && (
-                                  <span style={{ marginBottom: 10 }}>
-                                    No users assigned
-                                  </span>
-                                )}
-                            {Utils.getFlagsmithHasFeature(
-                              'users_as_reviewers',
-                            ) && (
-                              <Button
-                                className='btn--link btn--link-primary'
-                                onClick={() =>
-                                  this.setState({ showUsers: true })
+                          {Utils.getFlagsmithHasFeature(
+                            'users_as_reviewers',
+                          ) && (
+                            <>
+                              <Row>
+                                <span>
+                                  <strong style={{ width: 70 }}>
+                                    Assigned users
+                                  </strong>
+                                </span>
+                              </Row>
+                              <Row className='mt-2'>
+                                {ownerUsers.length !== 0 &&
+                                  ownerUsers.map((u) => (
+                                    <Row
+                                      key={u.id}
+                                      onClick={() => this.removeOwner(u.id)}
+                                      className='chip chip--active'
+                                      style={{
+                                        marginBottom: 4,
+                                        marginTop: 4,
+                                      }}
+                                    >
+                                      <span className='font-weight-bold'>
+                                        {u.first_name} {u.last_name}
+                                      </span>
+                                      <span className='chip-icon ion ion-ios-close' />
+                                    </Row>
+                                  ))}
+                                <Button
+                                  className='btn--link btn--link-primary'
+                                  onClick={() =>
+                                    this.setState({ showUsers: true })
+                                  }
+                                  style={{ marginBottom: 10, marginTop: 4 }}
+                                >
+                                  Add user
+                                </Button>
+                              </Row>
+                              <UserSelect
+                                users={orgUsers}
+                                value={
+                                  ownerUsers && ownerUsers.map((v) => v.id)
                                 }
-                                style={{ marginBottom: 10, marginTop: 4 }}
-                              >
-                                Add user
-                              </Button>
-                            )}
-                          </Row>
-                          <UserSelect
-                            users={orgUsers}
-                            value={ownerUsers && ownerUsers.map((v) => v.id)}
-                            onAdd={this.addOwner}
-                            onRemove={this.removeOwner}
-                            isOpen={this.state.showUsers}
-                            onToggle={() =>
-                              this.setState({
-                                showUsers: !this.state.showUsers,
-                              })
-                            }
-                          />
-                          <Row>
-                            <span>
-                              <strong style={{ width: 70 }}>
-                                Assigned groups
-                              </strong>
-                            </span>
-                          </Row>
-                          <Row className='mt-2'>
-                            {ownerGroups.length !== 0
-                              ? ownerGroups.map((g) => (
-                                  <Row
-                                    key={g.id}
-                                    onClick={() =>
-                                      this.removeOwner(g.id, false)
-                                    }
-                                    className='chip chip--active'
-                                    style={{ marginBottom: 4, marginTop: 4 }}
-                                  >
-                                    <span className='font-weight-bold'>
-                                      {g.name}
-                                    </span>
-                                    <span className='chip-icon ion ion-ios-close' />
-                                  </Row>
-                                ))
-                              : !Utils.getFlagsmithHasFeature(
-                                  'groups_as_reviewers',
-                                ) && <span>No groups assigned</span>}
-                            {Utils.getFlagsmithHasFeature(
-                              'groups_as_reviewers',
-                            ) && (
-                              <Button
-                                className='btn--link btn--link-primary'
-                                onClick={() =>
-                                  this.setState({ showGroups: true })
+                                onAdd={this.addOwner}
+                                onRemove={this.removeOwner}
+                                isOpen={this.state.showUsers}
+                                onToggle={() =>
+                                  this.setState({
+                                    showUsers: !this.state.showUsers,
+                                  })
                                 }
-                              >
-                                Add group
-                              </Button>
-                            )}
-                          </Row>
-                          <GroupSelect
-                            groups={orgGroups}
-                            selectedGroups={
-                              ownerGroups && ownerGroups.map((v) => v.group)
-                            }
-                            onAdd={this.addOwner}
-                            onRemove={this.removeOwner}
-                            isOpen={this.state.showGroups}
-                            onToggle={() =>
-                              this.setState({
-                                showGroups: !this.state.showGroups,
-                              })
-                            }
-                          />
+                              />
+                            </>
+                          )}
+                          {Utils.getFlagsmithHasFeature(
+                            'groups_as_reviewers',
+                          ) && (
+                            <>
+                              <Row>
+                                <span>
+                                  <strong style={{ width: 70 }}>
+                                    Assigned groups
+                                  </strong>
+                                </span>
+                              </Row>
+                              <Row className='mt-2'>
+                                {ownerGroups.length !== 0 &&
+                                  ownerGroups.map((g) => (
+                                    <Row
+                                      key={g.id}
+                                      onClick={() =>
+                                        this.removeOwner(g.id, false)
+                                      }
+                                      className='chip chip--active'
+                                      style={{
+                                        marginBottom: 4,
+                                        marginTop: 4,
+                                      }}
+                                    >
+                                      <span className='font-weight-bold'>
+                                        {g.name}
+                                      </span>
+                                      <span className='chip-icon ion ion-ios-close' />
+                                    </Row>
+                                  ))}
+                                <Button
+                                  className='btn--link btn--link-primary'
+                                  onClick={() =>
+                                    this.setState({ showGroups: true })
+                                  }
+                                >
+                                  Add group
+                                </Button>
+                              </Row>
+                              <GroupSelect
+                                groups={orgGroups}
+                                selectedGroups={
+                                  ownerGroups && ownerGroups.map((v) => v.group)
+                                }
+                                onAdd={this.addOwner}
+                                onRemove={this.removeOwner}
+                                isOpen={this.state.showGroups}
+                                onToggle={() =>
+                                  this.setState({
+                                    showGroups: !this.state.showGroups,
+                                  })
+                                }
+                              />
+                            </>
+                          )}
                         </div>
                       }
                     />
