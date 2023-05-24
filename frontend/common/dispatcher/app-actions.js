@@ -262,6 +262,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       sort,
     })
   },
+  getGroups(orgId) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.GET_GROUPS,
+      orgId,
+    })
+  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,

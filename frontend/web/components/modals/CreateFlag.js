@@ -83,6 +83,7 @@ const CreateFlag = class extends Component {
       tab: Utils.fromParam().tab || 0,
       tags: tags || [],
     }
+    AppActions.getGroups(AccountStore.getOrganisation().id)
   }
 
   close() {
