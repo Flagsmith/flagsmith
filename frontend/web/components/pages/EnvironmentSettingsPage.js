@@ -160,7 +160,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   confirmToggle = (description, feature, featureValue) => {
     openModal(
-      'Toggle Feature',
+      'Enable "Hide Sensitive Data"',
       <ConfirmToggleEnvFeature
         description={description}
         feature={feature}
@@ -358,14 +358,25 @@ const EnvironmentSettingsPage = class extends Component {
                               <div className='col-md-8 pl-0'>
                                 <h3 className='m-b-0'>Hide sensitive data</h3>
                                 <p>
-                                  Exclude flags' description and tags from data
-                                  returned by API for this environment
+                                  Exclude sensitive data from endpoints
+                                  returning flags and identity information to
+                                  the SDKs or via our REST API. For full
+                                  information on the excluded fields see
+                                  documentation{' '}
+                                  {/* TODO: Update the link below once the documentation is generated. */}
+                                  <ButtonLink
+                                    href='https://docs.flagsmith.com'
+                                    target='_blank'
+                                  >
+                                    here.
+                                  </ButtonLink>
+                                  <br />
+                                  <strong>
+                                    Warning! Enabling this feature will change
+                                    schema returned by the API and could break
+                                    your existing code.
+                                  </strong>
                                 </p>
-                                <strong>
-                                  Warning! Enabling this feature will change the
-                                  schema returned by the API and could break
-                                  your existing code.
-                                </strong>
                               </div>
                               <div className='col-md-4 pr-0 text-right'>
                                 <div>

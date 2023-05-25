@@ -12,7 +12,7 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
   feature,
   featureValue,
   onToggleChange,
-}) => {
+}: ConfirmToggleEnvFeatureType) => {
   const isEnabled = featureValue
   return (
     <div id='confirm-toggle-feature-modal'>
