@@ -364,7 +364,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   information on the excluded fields see
                                   documentation{' '}
                                   <ButtonLink
-                                    href='https://docs.flagsmith.com/advanced-use/hide-sensitive-data'
+                                    href='https://docs.flagsmith.com/advanced-use/system-administration#hide-sensitive-data'
                                     target='_blank'
                                   >
                                     here.
