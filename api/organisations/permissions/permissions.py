@@ -89,12 +89,25 @@ class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):
         if view.action == "create" and settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
             return request.user.is_superuser
-        return True
+        return request.user.organisations.filter(id=view.kwargs["pk"]).exists()
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_organisation_admin(obj) or (
             view.action == "my_permissions" and obj in request.user.organisations.all()
         )
+
+
+class IsOrganisationAdmin(BasePermission):
+    def __init__(self, org_id_kwarg: str = "pk"):
+        super().__init__()
+        self.org_id_kwarg = org_id_kwarg
+
+    def has_permission(self, request, view):
+        organisation_id = view.kwargs.get(self.org_id_kwarg)
+        return request.user.is_organisation_admin(organisation_id=int(organisation_id))
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_organisation_admin(obj)
 
 
 class OrganisationUsersPermission(BasePermission):

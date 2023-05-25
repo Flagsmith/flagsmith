@@ -70,7 +70,12 @@ def organisation_two_project_one_environment_two(organisation_two_project_one):
 
 @pytest.fixture()
 def user_one():
-    return FFAdminUser.objects.create(email="test@example.com")
+    return FFAdminUser.objects.create(email="test1@example.com")
+
+
+@pytest.fixture()
+def user_two():
+    return FFAdminUser.objects.create(email="test2@example.com")
 
 
 @pytest.fixture()
@@ -88,6 +93,12 @@ def organisation_one_admin_user(organisation_one):
         organisation_one, role=OrganisationRole.ADMIN
     )
     return organisation_one_admin_user
+
+
+@pytest.fixture()
+def organisation_two_user(user_two, organisation_two):
+    user_two.add_organisation(organisation_two)
+    return user_two
 
 
 @pytest.fixture()
