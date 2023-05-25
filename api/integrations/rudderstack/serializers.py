@@ -1,9 +1,10 @@
-from rest_framework import serializers
-
+from integrations.common.serializers import (
+    BaseEnvironmentIntegrationModelSerializer,
+)
 from integrations.rudderstack.models import RudderstackConfiguration
 
 
-class RudderstackConfigurationSerializer(serializers.ModelSerializer):
+class RudderstackConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = RudderstackConfiguration
         fields = ("id", "base_url", "api_key")

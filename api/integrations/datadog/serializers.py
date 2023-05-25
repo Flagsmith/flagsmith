@@ -1,9 +1,11 @@
-from rest_framework import serializers
+from integrations.common.serializers import (
+    BaseProjectIntegrationModelSerializer,
+)
 
 from .models import DataDogConfiguration
 
 
-class DataDogConfigurationSerializer(serializers.ModelSerializer):
+class DataDogConfigurationSerializer(BaseProjectIntegrationModelSerializer):
     class Meta:
         model = DataDogConfiguration
         fields = ("id", "base_url", "api_key")

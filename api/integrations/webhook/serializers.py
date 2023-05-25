@@ -4,12 +4,15 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
+from integrations.common.serializers import (
+    BaseEnvironmentIntegrationModelSerializer,
+)
 from segments.models import Segment
 
 from .models import WebhookConfiguration
 
 
-class WebhookConfigurationSerializer(serializers.ModelSerializer):
+class WebhookConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = WebhookConfiguration
         fields = ("id", "url", "secret")
