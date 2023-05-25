@@ -43,4 +43,9 @@ urlpatterns = [
         views.trigger_update_organisation_subscription_information_caches,
         name="update-organisation-subscription-information-caches",
     ),
+    path(
+        "update-chargebee-cache",
+        views.trigger_update_chargebee_caches,
+        name="update-chargebee-cache",
+    ),
 ]

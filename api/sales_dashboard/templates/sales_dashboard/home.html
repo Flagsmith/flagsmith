@@ -11,11 +11,19 @@
         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Organisations</h1>
         <div class="float-right">
-          <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
-            {% csrf_token %}
-            <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
-          </form>
-          <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-chargebee-cache' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update chargebee cache" class="btn btn-primary m-1">
+            </form>
+          </div>
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
+            </form>
+            <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
+          </div>
         </div>
       </div>
 

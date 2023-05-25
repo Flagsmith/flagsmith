@@ -23,6 +23,7 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
@@ -218,4 +219,10 @@ def download_org_data(request, organisation_id):
 @staff_member_required()
 def trigger_update_organisation_subscription_information_caches(request):
     update_organisation_subscription_information_caches.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def trigger_update_chargebee_caches(request):
+    update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
