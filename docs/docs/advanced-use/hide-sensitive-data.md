@@ -141,7 +141,7 @@ To this
         {
             "feature": {
                 "id": 9423,
-                "name": "second_one",
+                "name": "second_feature",
                 "type": "STANDARD"
             },
             "feature_state_value": null,
