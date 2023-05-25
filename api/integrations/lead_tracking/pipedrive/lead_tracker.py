@@ -7,6 +7,7 @@ from integrations.lead_tracking.lead_tracking import LeadTracker
 from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
+from .constants import MarketingStatus
 from .exceptions import EntityNotFoundError, MultipleMatchingOrganizationsError
 from .models import PipedriveLead, PipedriveOrganization, PipedrivePerson
 
@@ -61,7 +62,11 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
-        person = self._get_or_create_person(name=user.full_name, email=user.email)
+        person = self._get_or_create_person(
+            name=user.full_name,
+            email=user.email,
+            marketing_consent_given=user.marketing_consent_given,
+        )
 
         create_lead_kwargs = {
             "title": user.email,
@@ -108,7 +113,9 @@ class PipedriveLeadTracker(LeadTracker):
             raise MultipleMatchingOrganizationsError()
         return matching_organizations[0]
 
-    def _get_or_create_person(self, name: str, email: str) -> PipedrivePerson:
+    def _get_or_create_person(
+        self, name: str, email: str, marketing_consent_given: bool = False
+    ) -> PipedrivePerson:
         existing_persons = self.client.search_persons(email)
         if existing_persons:
             if len(existing_persons) > 1:
@@ -116,7 +123,12 @@ class PipedriveLeadTracker(LeadTracker):
             # if there are multiple persons, just return the first one in the list
             return existing_persons[0]
         else:
-            return self.client.create_person(name, email)
+            marketing_status = (
+                MarketingStatus.SUBSCRIBED
+                if marketing_consent_given
+                else MarketingStatus.NO_CONSENT
+            )
+            return self.client.create_person(name, email, marketing_status)
 
     def _get_client(self) -> PipedriveAPIClient:
         return PipedriveAPIClient(

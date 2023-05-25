@@ -2,6 +2,7 @@ import typing
 
 import requests
 
+from integrations.lead_tracking.pipedrive.constants import MarketingStatus
 from integrations.lead_tracking.pipedrive.exceptions import PipedriveAPIError
 from integrations.lead_tracking.pipedrive.models import (
     PipedriveDealField,
@@ -103,13 +104,16 @@ class PipedriveAPIClient:
         )
         return PipedriveLead.from_response_data(api_response_data)
 
-    def create_person(self, name: str, email: str) -> PipedrivePerson:
+    def create_person(
+        self, name: str, email: str, marketing_status: str = MarketingStatus.NO_CONSENT
+    ) -> PipedrivePerson:
         api_response_data = self._make_request(
             resource="persons",
             http_method="post",
             data={
                 "name": name,
                 "email": email,
+                "marketing_status": marketing_status,
             },
             expected_status_code=201,
         )

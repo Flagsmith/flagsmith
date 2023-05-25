@@ -3,6 +3,7 @@ import typing
 
 from marshmallow.schema import Schema
 
+from integrations.lead_tracking.pipedrive.constants import MarketingStatus
 from integrations.lead_tracking.pipedrive.schemas import (
     BasePipedriveCustomFieldSchema,
     PipedriveLeadLabelSchema,
@@ -118,9 +119,15 @@ class PipedriveDealField(BasePipedriveCustomField):
 class PipedrivePerson(BasePipedriveModel):
     schema = PipedrivePersonSchema()
 
-    def __init__(self, name: str, id: int = None):
+    def __init__(
+        self,
+        name: str,
+        id: int = None,
+        marketing_status: str = MarketingStatus.NO_CONSENT,
+    ):
         self.name = name
         self.id = id
+        self.marketing_status = marketing_status
 
 
 class PipedriveLeadLabel(BasePipedriveModel):
