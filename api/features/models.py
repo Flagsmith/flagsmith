@@ -112,6 +112,7 @@ class Feature(
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+    is_server_key_only = models.BooleanField(default=False)
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE

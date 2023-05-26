@@ -48,6 +48,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
 
@@ -109,6 +110,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "project",
             "num_segment_overrides",
             "num_identity_overrides",
+            "is_server_key_only",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
