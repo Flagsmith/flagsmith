@@ -89,6 +89,8 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
           )}
           <div className='text-right'>
             <Button
+              id='save-changes'
+              data-tests='save-changes'
               disabled={
                 updating || (password.length === 0 && email.length === 0)
               }

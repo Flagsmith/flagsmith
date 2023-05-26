@@ -346,6 +346,7 @@ const App = class extends Component {
                                   </a>
                                   <NavLink
                                     id='account-settings-link'
+                                    data-test='account-settings-link'
                                     activeClassName='active'
                                     className='nav-link'
                                     to={

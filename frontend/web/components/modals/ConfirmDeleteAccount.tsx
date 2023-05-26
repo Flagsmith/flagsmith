@@ -82,7 +82,9 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
           </div>
         )}
         <FormGroup className='text-right'>
-          <Button>Delete</Button>
+          <Button id='delete-account' data-test='delete-account'>
+            Delete
+          </Button>
         </FormGroup>
       </form>
     </div>
