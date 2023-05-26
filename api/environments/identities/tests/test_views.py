@@ -904,3 +904,57 @@ def test_post_identities_with_hide_sensitive_data(
     }
 
     assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
+
+
+def test_post_identities__server_key_only_feature__return_expected(
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.json()["flags"]
+
+
+def test_post_identities__server_key_only_feature__server_key_auth__return_expected(
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+    identity: Identity,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["flags"]

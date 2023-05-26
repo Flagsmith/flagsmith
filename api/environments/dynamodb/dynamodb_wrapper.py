@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
-    build_environment_document,
     build_identity_document,
 )
 from flag_engine.environments.builders import build_environment_model
@@ -17,6 +16,8 @@ from flag_engine.identities.builders import build_identity_model
 from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
+
+from environments.mappers import map_environment_to_document
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -146,7 +147,7 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
     def write_environments(self, environments: Iterable["Environment"]):
         with self._table.batch_writer() as writer:
             for environment in environments:
-                writer.put_item(Item=build_environment_document(environment))
+                writer.put_item(Item=map_environment_to_document(environment))
 
     def get_item(self, api_key: str) -> dict:
         try:
