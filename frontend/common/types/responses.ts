@@ -43,6 +43,7 @@ export type Environment = {
   project: number
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
+  hide_sensitive_data: boolean
 }
 export type Project = {
   id: number
