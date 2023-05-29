@@ -20,7 +20,6 @@ ORGANISATION_PERMISSIONS = (
         MANAGE_USER_GROUPS,
         "Allows the user to manage the groups in the organisation and their members.",
     ),
-    (VIEW_AUDIT_LOG, "Allows the user to view the audit logs for this organisation."),
 )
 
 

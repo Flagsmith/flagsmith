@@ -18,6 +18,7 @@ PROJECT_PERMISSIONS = [
     ("CREATE_FEATURE", "Ability to create features in the given project."),
     ("EDIT_FEATURE", "Ability to edit features in the given project."),
     ("MANAGE_SEGMENTS", "Ability to manage segments in the given project."),
+    ("VIEW_AUDIT_LOG", "Allows the user to view the audit logs for this organisation."),
 ]
 
 
