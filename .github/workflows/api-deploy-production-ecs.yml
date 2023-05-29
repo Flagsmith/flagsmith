@@ -41,6 +41,7 @@ jobs:
           flagsmith_saml_revision: v1.0.2
           flagsmith_workflows_revision: v1.1.1
           flagsmith_auth_controller_revision: v0.0.1
+          flagsmith_rbac_revision: v0.1.0
 
       - name: Deploy task processor to Production
         uses: ./.github/actions/task-processor-deploy-ecs
