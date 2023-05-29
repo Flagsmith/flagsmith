@@ -151,7 +151,10 @@ class IdentifyWithTraitsSerializer(
                 persist=environment.project.organisation.persist_trait_data,
             )
 
-        all_feature_states = identity.get_all_feature_states(traits=trait_models)
+        all_feature_states = identity.get_all_feature_states(
+            traits=trait_models,
+            additional_filters=self.context.get("feature_states_additional_filters"),
+        )
         identify_integrations(identity, all_feature_states, trait_models)
 
         return {

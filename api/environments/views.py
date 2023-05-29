@@ -6,7 +6,6 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.api.document_builders import build_environment_document
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -196,10 +195,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
-        environment = Environment.objects.select_related(
-            "project", "project__organisation"
-        ).get(api_key=api_key)
-        return Response(build_environment_document(environment))
+        return Response(Environment.get_environment_document(api_key))
 
 
 class NestedEnvironmentViewSet(viewsets.GenericViewSet):

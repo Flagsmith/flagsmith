@@ -18,7 +18,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import (
     Feature,
     FeatureSegment,
@@ -666,6 +666,46 @@ def test_get_flags_hide_sensitive_data(api_client, environment, feature):
         "enabled",
     }
     assert set(response.json()[0]["feature"].keys()) == {"id", "name", "type"}
+
+
+def test_get_flags__server_key_only_feature__return_expected(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.json()
+
+
+def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
+    api_client: APIClient,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()
 
 
 @pytest.mark.parametrize(

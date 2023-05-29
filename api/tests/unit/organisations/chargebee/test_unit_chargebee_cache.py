@@ -49,7 +49,7 @@ def test_get_item_generator_fetches_all_items(mocker):
     assert kwargs == {}
 
 
-def test_charebee_cache(mocker, db):
+def test_chargebee_cache(mocker, db):
     # Given
 
     # a plan

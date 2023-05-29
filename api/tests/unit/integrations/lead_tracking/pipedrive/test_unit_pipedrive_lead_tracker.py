@@ -1,5 +1,6 @@
 import pytest
 
+from integrations.lead_tracking.pipedrive.constants import MarketingStatus
 from integrations.lead_tracking.pipedrive.exceptions import (
     MultipleMatchingOrganizationsError,
 )
@@ -234,7 +235,7 @@ def test_create_lead_creates_person_if_none_found(db, mocker, settings):
     )
     mock_pipedrive_client.create_organization.assert_not_called()
     mock_pipedrive_client.create_person.assert_called_once_with(
-        user.full_name, user.email
+        user.full_name, user.email, MarketingStatus.NO_CONSENT
     )
 
 
