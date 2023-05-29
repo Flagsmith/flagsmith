@@ -8,6 +8,7 @@ on:
 env:
   FLAGSMITH_SAML_REVISION: v1.0.2
   FLAGSMITH_WORKFLOWS_REVISION: v1.0.4
+  FLAGSMITH_RBAC_REVISION: v0.1.0
 
 jobs:
   build-dockerhub:
@@ -43,6 +44,18 @@ jobs:
 
       - name: Integrate Workflows Logic module
         run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
+
+      - name: Checkout RBAC module
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-rbac
+          token: ${{ inputs.github_access_token }}
+          ref: ${{ inputs.flagsmith_rbac_revision }}
+          path: ./flagsmith-rbac
+
+      - name: Integrate RBAC module
+        run: mv ./flagsmith-rbac/rbac ./api
+        shell: bash
 
       - name: Write git info to Docker image
         run: |
