@@ -13,8 +13,10 @@ def create_permissions(apps: Apps, schema_editor: BaseDatabaseSchemaEditor):
 
     permission_model_class.objects.get_or_create(
         key=VIEW_AUDIT_LOG,
-        description="Allows the user to view the audit logs for this organisation.",
-        type=ORGANISATION_PERMISSION_TYPE,
+        defaults={
+            "description": "Allows the user to view the audit logs for this organisation.",
+            "type": ORGANISATION_PERMISSION_TYPE,
+        },
     )
 
 
