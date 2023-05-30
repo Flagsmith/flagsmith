@@ -8,15 +8,17 @@ from organisations.permissions.permissions import VIEW_AUDIT_LOG
 from permissions.models import ORGANISATION_PERMISSION_TYPE, PROJECT_PERMISSION_TYPE
 
 
-def move_permission_to_project(apps: Apps, schema_editor: BaseDatabaseSchemaEditor):
+def move_permission_to_project(
+    apps: Apps, schema_editor: BaseDatabaseSchemaEditor
+):
     permission_model_class = apps.get_model("permissions", "PermissionModel")
 
-    permission_model_class.objects.update_or_create(
+    permission_model_class.objects.filter(
         key=VIEW_AUDIT_LOG,
-        defaults={
-            "type": PROJECT_PERMISSION_TYPE,
-            "description": "Allows the user to view the audit logs for this organisation.",
-        },
+    ).update(
+        key=VIEW_AUDIT_LOG,
+        type=PROJECT_PERMISSION_TYPE,
+        description="Allows the user to view the audit logs for this project.",
     )
 
 
@@ -25,12 +27,12 @@ def move_permission_to_organisation(
 ):
     permission_model_class = apps.get_model("permissions", "PermissionModel")
 
-    permission_model_class.objects.update_or_create(
+    permission_model_class.objects.filter(
         key=VIEW_AUDIT_LOG,
-        defaults={
-            "type": ORGANISATION_PERMISSION_TYPE,
-            "description": "Allows the user to view the audit logs for this organisation.",
-        },
+    ).update(
+        key=VIEW_AUDIT_LOG,
+        type=ORGANISATION_PERMISSION_TYPE,
+        description="Allows the user to view the audit logs for this organisation.",
     )
 
 
