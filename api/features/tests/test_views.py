@@ -656,13 +656,13 @@ def test_get_flags_hide_sensitive_data(api_client, environment, feature):
     # When
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     response = api_client.get(url)
-    fs_sensitive_fields = [
+    feature_sensitive_fields = [
         "created_date",
         "description",
         "initial_value",
         "default_enabled",
     ]
-    feature_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
