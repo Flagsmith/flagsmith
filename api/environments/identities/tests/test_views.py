@@ -17,6 +17,10 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature, FeatureSegment, FeatureState
+from features.serializers import (
+    SDKFeatureSerializer,
+    SDKFeatureStateSerializer,
+)
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
@@ -841,14 +845,22 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}&feature={feature.name}"
+    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
+    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
 
     # When
     response = api_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"feature", "feature_state_value", "enabled"}
-    assert set(response.json()["feature"].keys()) == {"id", "name", "type"}
+    flag = response.json()
+
+    # Check that the sensitive fields are None
+    for field in fs_sensitive_fields:
+        assert flag[field] is None
+
+    for field in feature_sensitive_fields:
+        assert flag["feature"][field] is None
 
 
 def test_get_identities_with_hide_sensitive_data(
@@ -860,20 +872,24 @@ def test_get_identities_with_hide_sensitive_data(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}"
+    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
+    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
 
     # When
     response = api_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"flags"}
-    assert set(response.json()["flags"][0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
-    }
 
-    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
+    # Check that the scalar sensitive fields are None
+    for flag in response.json()["flags"]:
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+    assert response.json()["traits"] == []
 
 
 def test_post_identities_with_hide_sensitive_data(
@@ -888,6 +904,8 @@ def test_post_identities_with_hide_sensitive_data(
         "identifier": identity.identifier,
         "traits": [{"trait_key": "foo", "trait_value": "bar"}],
     }
+    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
+    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
 
     # When
     response = api_client.post(
@@ -896,14 +914,16 @@ def test_post_identities_with_hide_sensitive_data(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"flags"}
-    assert set(response.json()["flags"][0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
-    }
 
-    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
+    # Check that the scalar sensitive fields are None
+    for flag in response.json()["flags"]:
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+    assert response.json()["traits"] == []
 
 
 def test_post_identities__server_key_only_feature__return_expected(

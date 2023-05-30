@@ -25,6 +25,10 @@ from features.models import (
     FeatureState,
     FeatureStateValue,
 )
+from features.serializers import (
+    SDKFeatureSerializer,
+    SDKFeatureStateSerializer,
+)
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -656,15 +660,18 @@ def test_get_flags_hide_sensitive_data(api_client, environment, feature):
     # When
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     response = api_client.get(url)
+    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
+    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json()[0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
-    }
-    assert set(response.json()[0]["feature"].keys()) == {"id", "name", "type"}
+    # Check that the sensitive fields are None
+    for flag in response.json():
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
 
 
 def test_get_flags__server_key_only_feature__return_expected(
