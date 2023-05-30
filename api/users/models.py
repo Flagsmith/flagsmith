@@ -263,7 +263,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is an admin for the organisation the project belongs to
         """
 
-        print("DEBUG: get_permitted_projects", permissions)
         user_permission_query = Q()
         group_permission_query = Q()
         for permission in permissions:

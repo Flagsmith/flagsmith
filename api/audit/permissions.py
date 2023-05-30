@@ -20,7 +20,6 @@ class OrganisationAuditLogPermissions(BasePermission):
 
 class ProjectAuditLogPermissions(BasePermission):
     def has_permission(self, request: Request, view: View):
-        print("DEBUG: self", "view:", view.kwargs["project_pk"])
         try:
             project_id = view.kwargs["project_pk"]
             project = Project.objects.get(id=project_id)
