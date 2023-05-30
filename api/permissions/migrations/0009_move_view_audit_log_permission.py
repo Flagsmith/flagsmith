@@ -16,7 +16,6 @@ def move_permission_to_project(
     permission_model_class.objects.filter(
         key=VIEW_AUDIT_LOG,
     ).update(
-        key=VIEW_AUDIT_LOG,
         type=PROJECT_PERMISSION_TYPE,
         description="Allows the user to view the audit logs for this project.",
     )
@@ -30,7 +29,6 @@ def move_permission_to_organisation(
     permission_model_class.objects.filter(
         key=VIEW_AUDIT_LOG,
     ).update(
-        key=VIEW_AUDIT_LOG,
         type=ORGANISATION_PERMISSION_TYPE,
         description="Allows the user to view the audit logs for this organisation.",
     )
