@@ -257,6 +257,10 @@ The following table lists the configurable parameters of the chart and their def
 | `api.resources`                                    | resources per pod for the flagsmith api                          | `{}`                           |
 | `api.podLabels`                                    | additional labels to apply to pods for the flagsmith api         | `{}`                           |
 | `api.extraEnv`                                     | extra environment variables to set for the flagsmith api         | `{}`                           |
+| `api.secretKey`                                    | See `secretKey` docs above                                       | `null`                         |
+| `api.secretKeyFromExistingSecret.enabled`          | Set to true to use a secret key stored in an existing k8s secret | `false`                        |
+| `api.secretKeyFromExistingSecret.name`             | The name of the secret key k8s secret                            | `null`                         |
+| `api.secretKeyFromExistingSecret.key`              | The key of the secret key in the k8s secret                      | `null`                         |
 | `api.nodeSelector`                                 |                                                                  | `{}`                           |
 | `api.tolerations`                                  |                                                                  | `[]`                           |
 | `api.affinity`                                     |                                                                  | `{}`                           |
