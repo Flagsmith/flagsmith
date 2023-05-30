@@ -17,10 +17,6 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature, FeatureSegment, FeatureState
-from features.serializers import (
-    SDKFeatureSerializer,
-    SDKFeatureStateSerializer,
-)
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
@@ -845,8 +841,13 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}&feature={feature.name}"
-    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
-    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
+    fs_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    feature_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.get(url)
@@ -872,8 +873,13 @@ def test_get_identities_with_hide_sensitive_data(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}"
-    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
-    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
+    fs_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    feature_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.get(url)
@@ -904,8 +910,13 @@ def test_post_identities_with_hide_sensitive_data(
         "identifier": identity.identifier,
         "traits": [{"trait_key": "foo", "trait_value": "bar"}],
     }
-    fs_sensitive_fields = SDKFeatureStateSerializer.sensitive_fields
-    feature_sensitive_fields = SDKFeatureSerializer.sensitive_fields
+    fs_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    feature_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.post(
