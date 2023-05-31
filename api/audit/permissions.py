@@ -15,7 +15,7 @@ class OrganisationAuditLogPermissions(BasePermission):
         except (Organisation.DoesNotExist, KeyError):
             return False
 
-        return request.user.has_organisation_permission(organisation, VIEW_AUDIT_LOG)
+        return request.user.is_organisation_admin(organisation)
 
 
 class ProjectAuditLogPermissions(BasePermission):
