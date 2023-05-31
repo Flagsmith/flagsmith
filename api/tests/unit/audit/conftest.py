@@ -3,10 +3,10 @@ import typing
 import pytest as pytest
 from django.db.models import Model
 
-from organisations.models import Organisation, OrganisationRole
-from organisations.permissions.models import UserOrganisationPermission
+from organisations.models import OrganisationRole
 from organisations.permissions.permissions import VIEW_AUDIT_LOG
 from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 
 
 @pytest.fixture()
@@ -16,14 +16,36 @@ def view_audit_log_permission(db):
 
 @pytest.fixture()
 def view_audit_log_user(
-    organisation: Organisation,
+    project: Project,
     django_user_model: typing.Type[Model],
     view_audit_log_permission: PermissionModel,
 ):
     user = django_user_model.objects.create(email="test@example.com")
-    user.add_organisation(organisation, OrganisationRole.USER)
-    user_org_permission = UserOrganisationPermission.objects.create(
-        user=user, organisation=organisation
+    user.add_organisation(project.organisation, OrganisationRole.USER)
+    user_proj_permission = UserProjectPermission.objects.create(
+        user=user, project=project
     )
-    user_org_permission.permissions.add(view_audit_log_permission)
+    user_proj_permission.permissions.add(view_audit_log_permission)
+    return user
+
+
+@pytest.fixture()
+def project_admin_user(
+    project: Project,
+    django_user_model: typing.Type[Model],
+):
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(project.organisation, OrganisationRole.USER)
+    UserProjectPermission.objects.create(user=user, project=project, admin=True)
+    return user
+
+
+@pytest.fixture()
+def project_user(
+    project: Project,
+    django_user_model: typing.Type[Model],
+):
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(project.organisation, OrganisationRole.USER)
+    UserProjectPermission.objects.create(user=user, project=project)
     return user
