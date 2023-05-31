@@ -34,4 +34,4 @@ known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','cor
 skip = ['migrations','.venv','.direnv']
 
 [tool.pytest.ini_options]
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings' ]
+addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '-n', 'auto']
