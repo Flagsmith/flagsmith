@@ -351,5 +351,4 @@ session.headers.update(
 delete_identity_url = f"{BASE_URL}/environments/{ENV_KEY}/identities/{IDENTITY_ID}/"
 delete_identity_response = session.delete(delete_identity_url)
 assert delete_identity_response.status_code == 204
-
 ```
