@@ -338,6 +338,9 @@ The following fields will always be Null:
 - `flags[].feature_segment`
 - `flags[].environment`
 - `flags[].identity`
+
+The following field(s) will be empty
+
 - `traits[]`
 
 The response for `/api/v1/identities` will change from this:
