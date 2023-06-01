@@ -4,7 +4,7 @@ from django.apps.registry import Apps
 from django.db import migrations
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
-from organisations.permissions.permissions import VIEW_AUDIT_LOG
+from projects.permissions import VIEW_AUDIT_LOG
 from permissions.models import ORGANISATION_PERMISSION_TYPE, PROJECT_PERMISSION_TYPE
 
 

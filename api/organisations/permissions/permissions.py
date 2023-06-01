@@ -12,7 +12,6 @@ from organisations.models import Organisation
 
 CREATE_PROJECT = "CREATE_PROJECT"
 MANAGE_USER_GROUPS = "MANAGE_USER_GROUPS"
-VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
 
 ORGANISATION_PERMISSIONS = (
     (CREATE_PROJECT, "Allows the user to create projects in this organisation."),

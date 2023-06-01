@@ -4,9 +4,9 @@ import pytest as pytest
 from django.db.models import Model
 
 from organisations.models import OrganisationRole
-from organisations.permissions.permissions import VIEW_AUDIT_LOG
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
+from projects.permissions import VIEW_AUDIT_LOG
 
 
 @pytest.fixture()
