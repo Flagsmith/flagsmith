@@ -380,8 +380,23 @@ const controller = {
         `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
       )
       .then(() => {
-        const { featureStateId, multivariate_options, ...changeRequestData } =
-          changeRequest
+        const {
+          featureStateId,
+          multivariate_options,
+          approvals,
+          ...changeRequestData
+        } = changeRequest
+
+        const userApprovals = approvals.filter((u) => {
+          const keys = Object.keys(u)
+          return keys.includes('user')
+        })
+
+        const group_assignments = approvals.filter((g) => {
+          const keys = Object.keys(g)
+          return keys.includes('group')
+        })
+
         const req = {
           feature_states: [
             {
@@ -394,6 +409,8 @@ const controller = {
               live_from: changeRequest.live_from || new Date().toISOString(),
             },
           ],
+          approvals: userApprovals,
+          group_assignments,
           ...changeRequestData,
         }
         const reqType = req.id ? 'put' : 'post'

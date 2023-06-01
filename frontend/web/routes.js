@@ -3,7 +3,6 @@ import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
 import HomePage from './components/pages/HomePage'
-import DemoPage from './components/pages/DemoPage'
 import Maintenance from './components/Maintenance'
 import ProjectSelectPage from './components/pages/ProjectSelectPage'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
@@ -37,7 +36,6 @@ export default (
       <Route path='/login' exact component={HomePage} />
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
-      <Route path='/demo' exact component={DemoPage} />
       <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
       <Route path='/projects' exact component={ProjectSelectPage} />
@@ -159,7 +157,7 @@ export default (
         component={AuditLogPage}
       />
       <Route path='/create' exact component={CreateOrganisationPage} />
-      <Route component={NotFoundPage} />
+      <Route path='*' component={NotFoundPage} />
     </Switch>
   </App>
 )

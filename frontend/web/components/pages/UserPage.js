@@ -164,7 +164,7 @@ const UserPage = class extends Component {
       />,
       null,
       {
-        className: 'side-modal fade create-feature-modal',
+        className: 'side-modal fade create-feature-modal overflow-y-auto',
         onClose: () => {
           history.replaceState({}, null, `${document.location.pathname}`)
         },

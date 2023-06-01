@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import withWebhooks from 'common/providers/withWebhooks'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
+import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
 import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
 import PaymentModal from 'components/modals/Payment'
@@ -95,6 +96,7 @@ const EnvironmentSettingsPage = class extends Component {
         banner_text: this.state.banner_text,
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
+        hide_sensitive_data: !!this.state.hide_sensitive_data,
         minimum_change_request_approvals: has4EyesPermission
           ? this.state.minimum_change_request_approvals
           : null,
@@ -156,10 +158,30 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
+  confirmToggle = (description, feature, featureValue) => {
+    openModal(
+      'Enable "Hide Sensitive Data"',
+      <ConfirmToggleEnvFeature
+        description={description}
+        feature={feature}
+        featureValue={featureValue}
+        onToggleChange={(value) => {
+          this.setState({ hide_sensitive_data: value }, this.saveEnv)
+          closeModal()
+        }}
+      />,
+    )
+  }
+
   render() {
     const {
       props: { webhooks, webhooksLoading },
-      state: { allow_client_traits, name, use_mv_v2_evaluation },
+      state: {
+        allow_client_traits,
+        hide_sensitive_data,
+        name,
+        use_mv_v2_evaluation,
+      },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
@@ -185,6 +207,7 @@ const EnvironmentSettingsPage = class extends Component {
                   banner_colour: env.banner_colour || Constants.tagColors[0],
                   banner_text: env.banner_text,
                   hide_disabled_flags: env.hide_disabled_flags,
+                  hide_sensitive_data: !!env.hide_sensitive_data,
                   minimum_change_request_approvals: Utils.changeRequestsEnabled(
                     env.minimum_change_request_approvals,
                   )
@@ -327,6 +350,51 @@ const EnvironmentSettingsPage = class extends Component {
                             </Row>
                           )}
                         </div>
+                        {Utils.getFlagsmithHasFeature(
+                          'configure_hide_sensitive_data',
+                        ) && (
+                          <div>
+                            <Row space style={{ marginTop: '1.5rem' }}>
+                              <div className='col-md-8 pl-0'>
+                                <h3 className='m-b-0'>Hide sensitive data</h3>
+                                <p>
+                                  Exclude sensitive data from endpoints
+                                  returning flags and identity information to
+                                  the SDKs or via our REST API. For full
+                                  information on the excluded fields see
+                                  documentation{' '}
+                                  <ButtonLink
+                                    href='https://docs.flagsmith.com/advanced-use/system-administration#hide-sensitive-data'
+                                    target='_blank'
+                                  >
+                                    here.
+                                  </ButtonLink>
+                                  <br />
+                                  <strong>
+                                    Warning! Enabling this feature will change
+                                    schema returned by the API and could break
+                                    your existing code.
+                                  </strong>
+                                </p>
+                              </div>
+                              <div className='col-md-4 pr-0 text-right'>
+                                <div>
+                                  <Switch
+                                    className='float-right'
+                                    checked={hide_sensitive_data}
+                                    onChange={(v) => {
+                                      this.confirmToggle(
+                                        'The schema returned by the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                        'hide_sensitive_data',
+                                        hide_sensitive_data,
+                                      )
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </Row>
+                          </div>
+                        )}
                         <FormGroup className='mt-4'>
                           <Row space>
                             <div className='col-md-8 pl-0'>

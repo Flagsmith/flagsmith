@@ -21,7 +21,7 @@ const HomePage = class extends React.Component {
     super(props, context)
     this.state = {
       marketing_consent_given:
-        API.getCookie('marketing_consent_given') !== 'false',
+        API.getCookie('marketing_consent_given') === 'true',
     }
   }
 
@@ -560,8 +560,7 @@ const HomePage = class extends React.Component {
                                 id='password'
                               />
                               {Utils.getFlagsmithHasFeature('mailing_list') && (
-                                <Row className='text-right'>
-                                  <Flex />
+                                <div>
                                   <input
                                     onChange={(e) => {
                                       API.setCookie(
@@ -578,10 +577,15 @@ const HomePage = class extends React.Component {
                                     type='checkbox'
                                     checked={this.state.marketing_consent_given}
                                   />
-                                  <label className='mb-0' htmlFor='mailinglist'>
-                                    Join our mailing list!
+                                  <label
+                                    className='mb-0'
+                                    htmlFor='mailinglist'
+                                    style={{ display: 'inline' }}
+                                  >
+                                    Yes, I would like to signup for the twice
+                                    monthly newsletter (optional)
                                   </label>
-                                </Row>
+                                </div>
                               )}
                               <div className='form-cta'>
                                 <Button

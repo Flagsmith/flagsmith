@@ -112,6 +112,7 @@ class Feature(
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+    is_server_key_only = models.BooleanField(default=False)
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -884,7 +885,7 @@ class FeatureState(
             and self.feature_segment_id is None
             and self.identity_id is None
         ):
-            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+            kwargs["skip_signals_and_hooks"] = "send_environments_to_dynamodb"
 
         return kwargs
 

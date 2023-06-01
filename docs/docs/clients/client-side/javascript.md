@@ -11,7 +11,7 @@ projects. The source code for the client is available on [Github](https://github
 Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can
 be found here:
 
-- [Flagsmith Framework Examples](https://github.com/flagsmith/flagsmith-js-client/tree/main/examples)
+- [Flagsmith Framework Examples](https://github.com/Flagsmith/flagsmith-js-examples/tree/main)
 
 ## Installation
 
@@ -406,7 +406,7 @@ flagsmith_trait_<FEATURE_NAME> // remote config
 ```
 
 You can find an example of this integration
-[here](https://github.com/Flagsmith/flagsmith-js-client/blob/main/examples/datadog-realtime-user-monitoring/src/index.tsx).
+[here](https://github.com/Flagsmith/flagsmith-js-examples/blob/main/datadog-realtime-user-monitoring/src/index.tsx).
 
 ## Dynatrace JavaScript SDK Integration
 
@@ -529,5 +529,4 @@ The Flagsmith JavaScript client uses the [fetch](https://developer.mozilla.org/e
 API to handle REST calls. Some frameworks such as Manifest and Nuxt do not support this out of the box.
 
 In order to resolve this issue, you can provide a custom fetch implementation to the Flagsmith SDK. An example of this
-can be found
-[here](https://github.com/Flagsmith/flagsmith-js-client/blob/main/examples/nuxt/plugins/flagsmith-plugin.ts#L9).
+can be found [here](https://github.com/Flagsmith/flagsmith-js-examples/blob/main/nuxt/plugins/flagsmith-plugin.ts#L9).

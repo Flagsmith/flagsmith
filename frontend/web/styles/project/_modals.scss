@@ -155,6 +155,11 @@ $side-width: 66%;
         .modal-body {
             overflow-y: hidden;
         }
+        &.overflow-y-auto {
+            .modal-body {
+                overflow-y: auto;
+            }
+        }
         .tabs {
             .tab-item {
                 margin-top: 16px;

@@ -43,7 +43,11 @@ class Identity(models.Model):
     def get_hash_key(self, use_mv_v2_evaluation: bool = False) -> str:
         return self.composite_key if use_mv_v2_evaluation else str(self.id)
 
-    def get_all_feature_states(self, traits: typing.List[Trait] = None):
+    def get_all_feature_states(
+        self,
+        traits: list[Trait] | None = None,
+        additional_filters: Q | None = None,
+    ) -> list[FeatureState]:
         """
         Get all feature states for an identity. This method returns a single flag for
         each feature in the identity's environment's project. The flag returned is the
@@ -80,6 +84,9 @@ class Identity(models.Model):
                 | environment_default_query
             )
         )
+
+        if additional_filters:
+            full_query &= additional_filters
 
         select_related_args = [
             "feature",

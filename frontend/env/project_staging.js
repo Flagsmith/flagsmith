@@ -6,15 +6,9 @@ module.exports = global.Project = {
     site: 'flagsmith-test',
   },
 
-  // trigger maintenance mode
-  demoAccount: {
-    email: 'kyle+bullet-train@solidstategroup.com',
-    password: 'demo_account',
-  },
-
-  // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   env: 'staging',
 
+  // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   flagsmith: 'ENktaJnfLVbLifybz34JmX',
 
   flagsmithClientAPI: 'https://edge.api.flagsmith.com/api/v1/',
