@@ -18,6 +18,13 @@ Open Source, SaaS hosted and Enterprise versions:
   - [SAML](/deployment/configuration/authentication/saml)
   - [ADFS](/deployment/configuration/authentication/adfs)
 
+:::tip
+
+You can switch between SaaS and Self Hosted Flagsmith using our
+[Import and Export tools](deployment/configuration/importing-and-exporting.md).
+
+:::
+
 ## SaaS Benefits
 
 Our SaaS platform has a number of benefits:
