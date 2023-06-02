@@ -3,6 +3,7 @@ import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
+import { useGetProjectAuditLogsQuery } from 'common/services/useProjectAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
@@ -43,15 +44,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
   const hasHadResults = useRef(false)
 
   const {
-    data: auditLog,
+    data: projectAuditLog,
     isError,
     isFetching,
-  } = useGetAuditLogsQuery({
-    environments,
-    page,
-    page_size: props.pageSize,
-    project: props.projectId,
-    search,
+  } = useGetProjectAuditLogsQuery({
+    id: props.projectId,
+    params: {
+      environments,
+      page,
+      page_size: props.pageSize,
+      project: props.projectId,
+      search,
+    },
   })
 
   useEffect(() => {
@@ -59,7 +63,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
     //eslint-disable-next-line
   }, [])
 
-  if (auditLog?.results) {
+  if (projectAuditLog?.results) {
     hasHadResults.current = true
   }
 
@@ -117,13 +121,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
       isLoading={isFetching}
       className='no-pad'
       icon='ion-md-browsers'
-      items={auditLog?.results}
+      items={projectAuditLog?.results}
       filter={envFilter}
       search={searchInput}
       onChange={(e: InputEvent) => {
         setSearchInput(Utils.safeParseEventValue(e))
       }}
-      paging={{ ...(auditLog || {}), page, pageSize: props.pageSize }}
+      paging={{ ...(projectAuditLog || {}), page, pageSize: props.pageSize }}
       nextPage={() => {
         setPage(page + 1)
       }}
@@ -147,7 +151,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         <JSONReference
           className='mt-4 ml-2'
           title={'Audit'}
-          json={auditLog?.results}
+          json={projectAuditLog?.results}
         />
       )}
       renderNoResults={
