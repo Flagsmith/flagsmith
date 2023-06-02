@@ -54,6 +54,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 100 - total
   },
 
+  calculaterRemainingCallsPercentage(value, total) {
+    const minRemainingPercentage = 30
+    if (total === 0) {
+      return 0
+    }
+
+    const percentage = (value / total) * 100
+    const remainingPercentage = 100 - percentage
+
+    if (remainingPercentage <= minRemainingPercentage) {
+      return true
+    }
+    return false
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },

@@ -112,6 +112,17 @@ const Format = {
     return value
   },
 
+  formatNumber(number) {
+    const suffixes = ['', 'K', 'M', 'B', 'T']
+    const numDigits = Math.floor(Math.log10(number)) + 1
+    const suffixIndex = Math.floor((numDigits - 1) / 3)
+
+    let shortValue = number / Math.pow(1000, suffixIndex)
+    shortValue = Math.floor(shortValue)
+
+    return shortValue + suffixes[suffixIndex]
+  },
+
   moment(value, format) {
     // DATE, hh:mm > 23:00
     if (value) {
