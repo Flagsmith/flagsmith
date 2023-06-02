@@ -305,3 +305,50 @@ for identity in page_of_identities.json()['results']:
     identity_data = session.get(f"{IDENTITY_URL}")
     print(identity_data.json())
 ```
+
+### Delete an Edge Identity
+
+```python
+import os
+
+import requests
+
+TOKEN = os.environ.get("API_TOKEN")  # obtained from Account section in dashboard
+ENV_KEY = os.environ.get("ENV_KEY")  # obtained from Environment settings in dashboard
+IDENTITY_UUDI = os.environ["IDENTITY_UUDI"] # must (currently) be obtained by inspecting the request to /api/v1/environments/{ENV_KEY}/edge-identities/{IDENTITY_UUDI} in the network console
+BASE_URL = "https://edge.api.flagsmith.com/api/v1"  # update this if self hosting
+
+session = requests.Session()
+session.headers.update(
+    {"Authorization": f"Token {TOKEN}", "Content-Type": "application/json"}
+)
+
+# delete the existing edge identity based on the uuid
+delete_edge_identity_url = f"{BASE_URL}/environments/{ENV_KEY}/edge-identities/{IDENTITY_UUDI}/"
+delete_edge_identity_response = session.delete(delete_edge_identity_url)
+assert delete_edge_identity_response.status_code == 204
+
+```
+
+### Delete an Identity
+
+```python
+import os
+
+import requests
+
+TOKEN = os.environ.get("API_TOKEN")  # obtained from Account section in dashboard
+ENV_KEY = os.environ.get("ENV_KEY")  # obtained from Environment settings in dashboard
+IDENTITY_ID = os.environ["IDENTITY_ID"] # obtain this from the URL on your dashboard when viewing an identity
+BASE_URL = "https://api.flagsmith.com/api/v1"  # update this if self hosting
+
+session = requests.Session()
+session.headers.update(
+    {"Authorization": f"Token {TOKEN}", "Content-Type": "application/json"}
+)
+
+# delete the existing identity based on the identity id
+delete_identity_url = f"{BASE_URL}/environments/{ENV_KEY}/identities/{IDENTITY_ID}/"
+delete_identity_response = session.delete(delete_identity_url)
+assert delete_identity_response.status_code == 204
+```
