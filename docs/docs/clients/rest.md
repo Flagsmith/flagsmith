@@ -316,7 +316,7 @@ import requests
 TOKEN = os.environ.get("API_TOKEN")  # obtained from Account section in dashboard
 ENV_KEY = os.environ.get("ENV_KEY")  # obtained from Environment settings in dashboard
 IDENTITY_UUDI = os.environ["IDENTITY_UUDI"] # must (currently) be obtained by inspecting the request to /api/v1/environments/{ENV_KEY}/edge-identities/{IDENTITY_UUDI} in the network console
-BASE_URL = "https://api.flagsmith.com/api/v1"  # update this if self hosting
+BASE_URL = "https://edge.api.flagsmith.com/api/v1"  # update this if self hosting
 
 session = requests.Session()
 session.headers.update(
