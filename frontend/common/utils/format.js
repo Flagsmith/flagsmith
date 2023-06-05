@@ -112,13 +112,15 @@ const Format = {
     return value
   },
 
-  formatNumber(number) {
+  shortenNumber(number) {
+    // Converts a float number into a short literal with suffix for the magnitude:
+    // 1523125 > 1.5M
     const suffixes = ['', 'K', 'M', 'B', 'T']
     const numDigits = Math.floor(Math.log10(number)) + 1
     const suffixIndex = Math.floor((numDigits - 1) / 3)
 
     let shortValue = number / Math.pow(1000, suffixIndex)
-    shortValue = Math.floor(shortValue)
+    shortValue = +parseFloat(shortValue).toFixed(1)
 
     return shortValue + suffixes[suffixIndex]
   },

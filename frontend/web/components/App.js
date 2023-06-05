@@ -364,9 +364,9 @@ const App = class extends Component {
                                         ) ? (
                                           <>
                                             <span>
-                                              {`You used ${Format.formatNumber(
+                                              {`You used ${Format.shortenNumber(
                                                 totalApiCalls,
-                                              )}/${Format.formatNumber(
+                                              )}/${Format.shortenNumber(
                                                 organisation.subscription
                                                   .max_api_calls,
                                               )} requests. Click to`}{' '}
