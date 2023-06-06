@@ -338,6 +338,9 @@ const App = class extends Component {
                                             totalApiCalls,
                                             organisation.subscription
                                               .max_api_calls,
+                                          ) &&
+                                          Utils.getFlagsmithHasFeature(
+                                            'max_api_calls_alert',
                                           )
                                             ? {
                                                 border: '#7B51FB',
@@ -361,6 +364,9 @@ const App = class extends Component {
                                           totalApiCalls,
                                           organisation.subscription
                                             .max_api_calls,
+                                        ) &&
+                                        Utils.getFlagsmithHasFeature(
+                                          'max_api_calls_alert',
                                         ) ? (
                                           <>
                                             <span>
