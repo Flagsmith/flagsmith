@@ -53,7 +53,7 @@ state.
 
 ```javascript
 import { FlagsmithProvider } from 'flagsmith/react';
-import flagsmith, {createFlagsmithInstance} from 'flagsmith/isomorphic';
+import flagsmith, { createFlagsmithInstance } from 'flagsmith/isomorphic';
 function MyApp({ Component, pageProps, flagsmithState }) {
  return (
   <FlagsmithProvider flagsmith={flagsmith} serverState={flagsmithState}>
@@ -65,7 +65,7 @@ function MyApp({ Component, pageProps, flagsmithState }) {
 MyApp.getInitialProps = async () => {
  // This could be getStaticProps too depending on your build flow.
  // Using createFlagsmithInstance rather than flagsmith here is only necessary if your servers allow for concurrent requests to getInitialProps.
- const flagsmithSSR = createFlagsmithInstance()
+ const flagsmithSSR = createFlagsmithInstance();
  await flagsmithSSR.init({
   // fetches flags on the server
   environmentID: '<YOUR_ENVIRONMENT_ID>',
