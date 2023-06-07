@@ -15,6 +15,7 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
+import { ButtonLink } from '../base/forms/Button'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -372,7 +373,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   <br />
                                   <strong>
                                     Warning! Enabling this feature will change
-                                    schema returned by the API and could break
+                                    the response from the API and could break
                                     your existing code.
                                   </strong>
                                 </p>
@@ -384,7 +385,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     checked={hide_sensitive_data}
                                     onChange={(v) => {
                                       this.confirmToggle(
-                                        'The schema returned by the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                        'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
                                         'hide_sensitive_data',
                                         hide_sensitive_data,
                                       )
