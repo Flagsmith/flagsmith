@@ -27,6 +27,8 @@ import Format from 'common/utils/format'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
+import OrganisationStore from 'common/stores/organisation-store'
+
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -38,6 +40,7 @@ const App = class extends Component {
 
   state = {
     asideIsVisible: !isMobile,
+    maxApiCalls: 0,
     pin: '',
     totalApiCalls: 0,
   }
@@ -50,6 +53,7 @@ const App = class extends Component {
   componentDidMount = () => {
     getBuildVersion()
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
+    this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     window.addEventListener('scroll', this.handleScroll)
   }
 
@@ -188,7 +192,7 @@ const App = class extends Component {
     }
     const { location } = this.props
     const pathname = location.pathname
-    const { asideIsVisible, totalApiCalls } = this.state
+    const { asideIsVisible, maxApiCalls, totalApiCalls } = this.state
     const match = matchPath(pathname, {
       exact: false,
       path: '/project/:projectId/environment/:environmentId',
@@ -254,6 +258,17 @@ const App = class extends Component {
         this.setState({ totalApiCalls: res[0]?.data?.totals.total })
       })
     }
+    const subscriptionModel = OrganisationStore.getSubscriptionMeta()
+    if (
+      subscriptionModel &&
+      subscriptionModel.max_api_calls &&
+      this.state.maxApiCalls !== subscriptionModel.max_api_calls
+    ) {
+      this.setState({
+        maxApiCalls: subscriptionModel.max_api_calls,
+      })
+    }
+
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -336,8 +351,7 @@ const App = class extends Component {
                                         style={
                                           Utils.calculaterRemainingCallsPercentage(
                                             totalApiCalls,
-                                            organisation.subscription
-                                              .max_api_calls,
+                                            maxApiCalls,
                                           ) &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
@@ -362,8 +376,7 @@ const App = class extends Component {
                                       >
                                         {Utils.calculaterRemainingCallsPercentage(
                                           totalApiCalls,
-                                          organisation.subscription
-                                            .max_api_calls,
+                                          maxApiCalls,
                                         ) &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
@@ -373,8 +386,7 @@ const App = class extends Component {
                                               {`You used ${Format.shortenNumber(
                                                 totalApiCalls,
                                               )}/${Format.shortenNumber(
-                                                organisation.subscription
-                                                  .max_api_calls,
+                                                maxApiCalls,
                                               )} requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade'}
