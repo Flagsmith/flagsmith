@@ -31,13 +31,14 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success():
 
     config = AmplitudeConfiguration(api_key=api_key)
     amplitude_wrapper = AmplitudeWrapper(config)
-    identity = Identity(identifier="user123")
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)
-    Environment.objects.create(name="Test Environment 1", project=project)
+    environment = Environment.objects.create(name="Test Environment 1", project=project)
     feature = Feature.objects.create(name="Test Feature", project=project)
     feature_states = FeatureState.objects.filter(feature=feature)
+
+    identity = Identity(identifier="user123", environment=environment)
 
     # When
     user_data = amplitude_wrapper.generate_user_data(

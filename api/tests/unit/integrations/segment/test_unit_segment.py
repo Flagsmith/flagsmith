@@ -27,13 +27,14 @@ def test_segment_when_generate_user_data_with_correct_values_then_success():
     api_key = "123key"
     config = SegmentConfiguration(api_key=api_key)
     segment_wrapper = SegmentWrapper(config)
-    identity = Identity(identifier="user123")
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)
-    Environment.objects.create(name="Test Environment 1", project=project)
+    environment = Environment.objects.create(name="Test Environment 1", project=project)
     feature = Feature.objects.create(name="Test Feature", project=project)
     feature_states = FeatureState.objects.filter(feature=feature)
+
+    identity = Identity(identifier="user123", environment=environment)
 
     # When
     user_data = segment_wrapper.generate_user_data(

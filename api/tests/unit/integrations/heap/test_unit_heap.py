@@ -14,14 +14,15 @@ def test_heap_when_generate_user_data_with_correct_values_then_success():
     # Given
     api_key = "123key"
     config = HeapConfiguration(api_key=api_key)
-    identity = Identity(identifier="user123")
     heap_wrapper = HeapWrapper(config)
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)
-    Environment.objects.create(name="Test Environment 1", project=project)
+    environment = Environment.objects.create(name="Test Environment 1", project=project)
     feature = Feature.objects.create(name="Test Feature", project=project)
     feature_states = FeatureState.objects.filter(feature=feature)
+
+    identity = Identity(identifier="user123", environment=environment)
 
     # When
     user_data = heap_wrapper.generate_user_data(

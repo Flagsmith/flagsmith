@@ -606,4 +606,4 @@ def test_get_feature_state_value_for_multivariate_features(
     # the correct value is returned
     assert feature_state_value == value
     # and the correct call is made to get the multivariate feature state value
-    mock_get_mv_feature_state_value.assert_called_once_with(str(identity.id))
+    mock_get_mv_feature_state_value.assert_called_once_with(identity.composite_key)
