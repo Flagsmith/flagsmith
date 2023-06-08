@@ -19,7 +19,9 @@ kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 Then view `http://localhost:8080` in a browser. This will install the chart using default options, in a new namespace
 `flagsmith`.
 
-Refer to the chart's default [`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn which values are expected by the chart. You can use it as a reference for building your own values file:
+Refer to the chart's default
+[`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn
+which values are expected by the chart. You can use it as a reference for building your own values file:
 
 ```bash
 wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/flagsmith/values.yaml
