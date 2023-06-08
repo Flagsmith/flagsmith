@@ -10,7 +10,13 @@ const controller = {
     API.setInviteType('')
     return data
       .post(`${Project.api}users/join/link/${id}/`)
-      .catch(() => data.post(`${Project.api}users/join/${id}/`))
+      .catch((error) => {
+        if (error.status === 403) {
+          API.ajaxHandler(store, error)
+          return
+        }
+        return data.post(`${Project.api}users/join/${id}/`)
+      })
       .then((res) => {
         store.savedId = res.id
         store.model.organisations.push(res)

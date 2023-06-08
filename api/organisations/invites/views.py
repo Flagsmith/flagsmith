@@ -59,6 +59,12 @@ def join_organisation_from_link(request, hash):
 
     invite = get_object_or_404(InviteLink, hash=hash)
 
+    organisation = Organisation.objects.get(id=invite.organisation.id)
+    if organisation.over_plan_seats_limit(shift=1):
+        raise PermissionDenied(
+            "The seats limit has been reached. Please contact your organisation."
+        )
+
     if invite.is_expired:
         raise InviteExpiredError()
 
@@ -85,6 +91,12 @@ class InviteLinkViewSet(
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
+        organisation = Organisation.objects.get(id=organisation_pk)
+        if organisation.over_plan_seats_limit(shift=1):
+            raise PermissionDenied(
+                "The seats limit has been reached in your organisation."
+            )
+
         return InviteLink.objects.filter(
             organisation__in=user.organisations.all()
         ).filter(organisation__pk=organisation_pk)

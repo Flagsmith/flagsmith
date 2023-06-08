@@ -664,162 +664,167 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                               </InfoMessage>
                                             )}
-                                            {inviteLinks && (
-                                              <form
-                                                onSubmit={(e) => {
-                                                  e.preventDefault()
-                                                }}
-                                              >
-                                                <div className='mt-3'>
-                                                  <Row>
-                                                    <div
-                                                      className='mr-2'
-                                                      style={{ width: 280 }}
-                                                    >
-                                                      <Select
-                                                        value={{
-                                                          label:
-                                                            this.state.role ===
-                                                            'ADMIN'
-                                                              ? 'Organisation Administrator'
-                                                              : 'User',
-                                                          value:
-                                                            this.state.role,
-                                                        }}
-                                                        onChange={(v) =>
-                                                          this.setState({
-                                                            role: v.value,
-                                                          })
-                                                        }
-                                                        options={[
-                                                          {
+                                            {!needsUpgradeForAdditionalSeats &&
+                                              inviteLinks && (
+                                                <form
+                                                  onSubmit={(e) => {
+                                                    e.preventDefault()
+                                                  }}
+                                                >
+                                                  <div className='mt-3'>
+                                                    <Row>
+                                                      <div
+                                                        className='mr-2'
+                                                        style={{ width: 280 }}
+                                                      >
+                                                        <Select
+                                                          value={{
                                                             label:
-                                                              'Organisation Administrator',
-                                                            value: 'ADMIN',
-                                                          },
-                                                          {
-                                                            isDisabled:
-                                                              !hasRbacPermission,
-                                                            label:
-                                                              hasRbacPermission
-                                                                ? 'User'
-                                                                : 'User - Please upgrade for role based access',
-                                                            value: 'USER',
-                                                          },
-                                                        ]}
-                                                      />
-                                                    </div>
-                                                    {inviteLinks.find(
-                                                      (f) =>
-                                                        f.role ===
-                                                        this.state.role,
-                                                    ) && (
-                                                      <>
-                                                        <Flex className='mr-4'>
-                                                          <Input
-                                                            style={{
-                                                              width: '100%',
-                                                            }}
-                                                            value={`${
-                                                              document.location
-                                                                .origin
-                                                            }/invite-link/${
-                                                              inviteLinks.find(
-                                                                (f) =>
-                                                                  f.role ===
-                                                                  this.state
-                                                                    .role,
-                                                              ).hash
-                                                            }`}
-                                                            data-test='invite-link'
-                                                            inputClassName='input input--wide'
-                                                            className='full-width'
-                                                            type='text'
-                                                            readonly='readonly'
-                                                            title={
-                                                              <h3>Link</h3>
-                                                            }
-                                                            placeholder='Link'
-                                                          />
-                                                        </Flex>
+                                                              this.state
+                                                                .role ===
+                                                              'ADMIN'
+                                                                ? 'Organisation Administrator'
+                                                                : 'User',
+                                                            value:
+                                                              this.state.role,
+                                                          }}
+                                                          onChange={(v) =>
+                                                            this.setState({
+                                                              role: v.value,
+                                                            })
+                                                          }
+                                                          options={[
+                                                            {
+                                                              label:
+                                                                'Organisation Administrator',
+                                                              value: 'ADMIN',
+                                                            },
+                                                            {
+                                                              isDisabled:
+                                                                !hasRbacPermission,
+                                                              label:
+                                                                hasRbacPermission
+                                                                  ? 'User'
+                                                                  : 'User - Please upgrade for role based access',
+                                                              value: 'USER',
+                                                            },
+                                                          ]}
+                                                        />
+                                                      </div>
+                                                      {inviteLinks.find(
+                                                        (f) =>
+                                                          f.role ===
+                                                          this.state.role,
+                                                      ) && (
+                                                        <>
+                                                          <Flex className='mr-4'>
+                                                            <Input
+                                                              style={{
+                                                                width: '100%',
+                                                              }}
+                                                              value={`${
+                                                                document
+                                                                  .location
+                                                                  .origin
+                                                              }/invite-link/${
+                                                                inviteLinks.find(
+                                                                  (f) =>
+                                                                    f.role ===
+                                                                    this.state
+                                                                      .role,
+                                                                ).hash
+                                                              }`}
+                                                              data-test='invite-link'
+                                                              inputClassName='input input--wide'
+                                                              className='full-width'
+                                                              type='text'
+                                                              readonly='readonly'
+                                                              title={
+                                                                <h3>Link</h3>
+                                                              }
+                                                              placeholder='Link'
+                                                            />
+                                                          </Flex>
 
-                                                        <Row>
-                                                          <Button
-                                                            className='btn-secondary'
-                                                            style={{
-                                                              width: 180,
-                                                            }}
-                                                            onClick={() => {
-                                                              navigator.clipboard.writeText(
-                                                                `${
-                                                                  document
-                                                                    .location
-                                                                    .origin
-                                                                }/invite/${
-                                                                  inviteLinks.find(
-                                                                    (f) =>
-                                                                      f.role ===
-                                                                      this.state
-                                                                        .role,
-                                                                  ).hash
-                                                                }`,
-                                                              )
-                                                              toast(
-                                                                'Link copied',
-                                                              )
-                                                            }}
-                                                          >
-                                                            Copy Invite Link
-                                                          </Button>
-                                                          <Button
-                                                            className='ml-4'
-                                                            type='button'
-                                                            onClick={() => {
-                                                              openConfirm(
-                                                                'Regenerate Invite Link',
-                                                                'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?',
-                                                                () => {
-                                                                  invalidateInviteLink(
+                                                          <Row>
+                                                            <Button
+                                                              className='btn-secondary'
+                                                              style={{
+                                                                width: 180,
+                                                              }}
+                                                              onClick={() => {
+                                                                navigator.clipboard.writeText(
+                                                                  `${
+                                                                    document
+                                                                      .location
+                                                                      .origin
+                                                                  }/invite/${
                                                                     inviteLinks.find(
                                                                       (f) =>
                                                                         f.role ===
                                                                         this
                                                                           .state
                                                                           .role,
-                                                                    ),
-                                                                  )
-                                                                },
-                                                              )
-                                                            }}
-                                                          >
-                                                            Regenerate
-                                                          </Button>
-                                                        </Row>
-                                                      </>
+                                                                    ).hash
+                                                                  }`,
+                                                                )
+                                                                toast(
+                                                                  'Link copied',
+                                                                )
+                                                              }}
+                                                            >
+                                                              Copy Invite Link
+                                                            </Button>
+                                                            <Button
+                                                              className='ml-4'
+                                                              type='button'
+                                                              onClick={() => {
+                                                                openConfirm(
+                                                                  'Regenerate Invite Link',
+                                                                  'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?',
+                                                                  () => {
+                                                                    invalidateInviteLink(
+                                                                      inviteLinks.find(
+                                                                        (f) =>
+                                                                          f.role ===
+                                                                          this
+                                                                            .state
+                                                                            .role,
+                                                                      ),
+                                                                    )
+                                                                  },
+                                                                )
+                                                              }}
+                                                            >
+                                                              Regenerate
+                                                            </Button>
+                                                          </Row>
+                                                        </>
+                                                      )}
+                                                    </Row>
+                                                  </div>
+                                                  <p className='mt-3'>
+                                                    Anyone with link can join as
+                                                    a standard user, once they
+                                                    have joined you can edit
+                                                    their role from the team
+                                                    members panel.{' '}
+                                                    <ButtonLink
+                                                      target='_blank'
+                                                      href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    >
+                                                      Learn about User Roles.
+                                                    </ButtonLink>
+                                                  </p>
+                                                  <div className='text-right mt-2'>
+                                                    {error && (
+                                                      <ErrorMessage
+                                                        error={error}
+                                                      />
                                                     )}
-                                                  </Row>
-                                                </div>
-                                                <p className='mt-3'>
-                                                  Anyone with link can join as a
-                                                  standard user, once they have
-                                                  joined you can edit their role
-                                                  from the team members panel.{' '}
-                                                  <ButtonLink
-                                                    target='_blank'
-                                                    href='https://docs.flagsmith.com/advanced-use/permissions'
-                                                  >
-                                                    Learn about User Roles.
-                                                  </ButtonLink>
-                                                </p>
-                                                <div className='text-right mt-2'>
-                                                  {error && (
-                                                    <ErrorMessage
-                                                      error={error}
-                                                    />
-                                                  )}
-                                                </div>
-                                              </form>
-                                            )}
+                                                  </div>
+                                                </form>
+                                              )}
                                             <PanelSearch
                                               id='org-members-list'
                                               title='Members'
