@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -264,7 +266,7 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation):
+def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation
     )
