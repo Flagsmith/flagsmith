@@ -137,7 +137,7 @@ def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
     organisation: int,
     master_api_key: typing.Tuple[MasterAPIKey, str],
     master_api_key_client: APIClient,
-):
+) -> None:
     # Given
     # the relevant URLs
     list_url = reverse(
