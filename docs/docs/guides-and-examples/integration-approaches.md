@@ -5,7 +5,7 @@ title: Integration Approaches
 ## Client Side SDK Flag endpoints are public
 
 The API endpoints that our SDKs make calls to are all public. Your Environment API key should also be considered public.
-Think if it in the same way you would a Google Analytics key. The key is sent to browsers in plain HTML or Javascript
+Think of it in the same way you would a Google Analytics key. The key is sent to browsers in plain HTML or Javascript
 and as a result should not be considered 'secret'.
 
 Given this fact, it is important to ensure that attackers cannot enumerate or guess Identity keys. If an attacker is
