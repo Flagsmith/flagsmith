@@ -395,9 +395,19 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     class Meta:
         model = FeatureState
         fields = (
+            "id",
             "enabled",
             "feature_state_value",
             "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "version",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
         )
 
     def _get_save_kwargs(self, field_name):
