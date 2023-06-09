@@ -54,6 +54,7 @@ urlpatterns = [
         SDKEnvironmentAPIView.as_view(),
         name="environment-document",
     ),
+    url("", include("features.versioning.urls")),
     # API documentation
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
