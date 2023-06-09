@@ -25,7 +25,7 @@ def test_segment_when_generate_user_data_with_correct_values_then_success(
     feature_state: FeatureState,
     feature_state_with_value: FeatureState,
     identity: Identity,
-):
+) -> None:
     # Given
     api_key = "123key"
     config = SegmentConfiguration(api_key=api_key)
@@ -39,9 +39,7 @@ def test_segment_when_generate_user_data_with_correct_values_then_success(
     # Then
     feature_properties = {
         feature_state.feature.name: feature_state.enabled,
-        feature_state_with_value.feature.name: feature_state_with_value.get_feature_state_value(
-            identity=identity
-        ),
+        feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
     }
 
     expected_user_data = {

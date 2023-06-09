@@ -13,7 +13,7 @@ def test_heap_when_generate_user_data_with_correct_values_then_success(
     feature_state: FeatureState,
     feature_state_with_value: FeatureState,
     identity: Identity,
-):
+) -> None:
     # Given
     api_key = "123key"
     config = HeapConfiguration(api_key=api_key)
@@ -31,9 +31,7 @@ def test_heap_when_generate_user_data_with_correct_values_then_success(
         "event": "Flagsmith Feature Flags",
         "properties": {
             feature_state.feature.name: feature_state.enabled,
-            feature_state_with_value.feature.name: feature_state_with_value.get_feature_state_value(
-                identity=identity
-            ),
+            feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
         },
     }
     assert expected_user_data == user_data
