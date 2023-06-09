@@ -156,10 +156,10 @@ You can define default flag values when initialising the SDK. This ensures that 
 the event that it cannot receive a response from our API.
 
 ```swift
-// set default flags
+    // set default flags
 Flagsmith.shared.defaultFlags = [Flag(featureName: "feature_a", enabled: false),
-                                    Flag(featureName: "font_size", intValue:12, enabled: true),
-                                    Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
+                                     Flag(featureName: "font_size", intValue:12, enabled: true),
+                                     Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
 ```
 
 ### Cache
@@ -170,6 +170,17 @@ fall back on the cached values. The cache can be turned off or on using:
 ```swift
 // set cache on / off (defaults to on)
 Flagsmith.shared.useCache = true
+```
+
+You can also set a TTL for the cache (in seconds), and request that Flagsmith skip calling the API if a valid cache is
+present
+
+```swift
+// set skip API on / off (defaults to off)
+Flagsmith.shared.skipAPI = false
+
+// set cache TTL in seconds (defaults to 0, i.e. infinite)
+Flagsmith.shared.cacheTTL = 0
 ```
 
 ## Override default configuration
