@@ -1,8 +1,12 @@
 import pytest
 from core.request_origin import RequestOrigin
+from django.db.models import Q
+from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.sdk.serializers import IdentifyWithTraitsSerializer
+from features.models import Feature
 
 
 @pytest.mark.parametrize(
@@ -10,8 +14,11 @@ from environments.sdk.serializers import IdentifyWithTraitsSerializer
     ((True, True), (True, False), (False, True), (False, False)),
 )
 def test_identify_with_traits_serializer_runs_identity_integrations_on_create(
-    mocker, environment, feature, create_identity_before, persist_traits
-):
+    mocker: MockerFixture,
+    environment: Environment,
+    create_identity_before: bool,
+    persist_traits: bool,
+) -> None:
     # Given
     identifier = "johnnybravo"
     trait_key = "foo"
@@ -47,3 +54,33 @@ def test_identify_with_traits_serializer_runs_identity_integrations_on_create(
 
     identity = call_args[0]
     assert identity.identifier == identifier
+
+
+def test_identify_with_traits_serializer__additional_filters_in_context__filters_expected(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given
+    data = {
+        "identifier": identity.identifier,
+        "traits": [],
+    }
+    request_mock = mocker.MagicMock()
+
+    serializer = IdentifyWithTraitsSerializer(
+        data=data,
+        context={
+            "environment": environment,
+            "request": request_mock,
+            "feature_states_additional_filters": ~Q(feature_id=feature.id),
+        },
+    )
+
+    # When
+    assert serializer.is_valid()
+    serializer.save()
+
+    # Then
+    assert "flags" not in serializer.data

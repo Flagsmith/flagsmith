@@ -1,8 +1,8 @@
 import pytest
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.api.document_builders import build_environment_document
 
 from environments.dynamodb import DynamoEnvironmentWrapper
+from environments.mappers import map_environment_to_document
 from environments.models import Environment
 
 
@@ -13,7 +13,7 @@ def test_write_environments_calls_internal_methods_with_correct_arguments(
     dynamo_environment_wrapper = DynamoEnvironmentWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_environment_wrapper, "_table")
 
-    expected_environment_document = build_environment_document(environment)
+    expected_environment_document = map_environment_to_document(environment)
     environments = Environment.objects.filter(id=environment.id)
 
     # When

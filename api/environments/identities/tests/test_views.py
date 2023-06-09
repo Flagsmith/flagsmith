@@ -841,14 +841,27 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}&feature={feature.name}"
+    feature_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"feature", "feature_state_value", "enabled"}
-    assert set(response.json()["feature"].keys()) == {"id", "name", "type"}
+    flag = response.json()
+
+    # Check that the sensitive fields are None
+    for field in fs_sensitive_fields:
+        assert flag[field] is None
+
+    for field in feature_sensitive_fields:
+        assert flag["feature"][field] is None
 
 
 def test_get_identities_with_hide_sensitive_data(
@@ -860,20 +873,29 @@ def test_get_identities_with_hide_sensitive_data(
     environment.save()
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity.identifier}"
+    feature_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"flags"}
-    assert set(response.json()["flags"][0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
-    }
 
-    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
+    # Check that the scalar sensitive fields are None
+    for flag in response.json()["flags"]:
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+    assert response.json()["traits"] == []
 
 
 def test_post_identities_with_hide_sensitive_data(
@@ -888,6 +910,13 @@ def test_post_identities_with_hide_sensitive_data(
         "identifier": identity.identifier,
         "traits": [{"trait_key": "foo", "trait_value": "bar"}],
     }
+    feature_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # When
     response = api_client.post(
@@ -896,11 +925,67 @@ def test_post_identities_with_hide_sensitive_data(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json().keys()) == {"flags"}
-    assert set(response.json()["flags"][0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
+
+    # Check that the scalar sensitive fields are None
+    for flag in response.json()["flags"]:
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+    assert response.json()["traits"] == []
+
+
+def test_post_identities__server_key_only_feature__return_expected(
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
     }
 
-    assert set(response.json()["flags"][0]["feature"].keys()) == {"id", "name", "type"}
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.json()["flags"]
+
+
+def test_post_identities__server_key_only_feature__server_key_auth__return_expected(
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+    identity: Identity,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["flags"]

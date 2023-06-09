@@ -3,6 +3,8 @@ from os.path import abspath, dirname, join
 
 import responses
 
+from integrations.lead_tracking.pipedrive.constants import MarketingStatus
+
 
 @responses.activate
 def test_pipedrive_api_client_create_lead(
@@ -246,6 +248,7 @@ def test_pipedrive_api_client_create_person(
     # obtained from file above, duplicated here to simplfiy test
     person_name = "Yogi Bear"
     person_email = "yogi.bear@testing.com"
+    marketing_status = MarketingStatus.SUBSCRIBED
     person_id = 1
 
     with open(example_response_file_name) as f:
@@ -257,7 +260,9 @@ def test_pipedrive_api_client_create_person(
         )
 
     # When
-    person = pipedrive_api_client.create_person(name=person_name, email=person_email)
+    person = pipedrive_api_client.create_person(
+        name=person_name, email=person_email, marketing_status=marketing_status
+    )
 
     # Then
     assert len(responses.calls) == 1
@@ -267,6 +272,7 @@ def test_pipedrive_api_client_create_person(
     json_request_body = json.loads(call.request.body)
     assert json_request_body["name"] == person_name
     assert json_request_body["email"] == person_email
+    assert json_request_body["marketing_status"] == marketing_status
 
     assert person.name == person_name
     assert person.id == person_id

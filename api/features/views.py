@@ -6,6 +6,7 @@ from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
+from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
@@ -629,6 +630,9 @@ class SDKFeatureStates(GenericAPIView):
 
         if self.request.environment.get_hide_disabled_flags() is True:
             return filters & Q(enabled=True)
+
+        if self.request.originated_from is RequestOrigin.CLIENT:
+            return filters & Q(feature__is_server_key_only=False)
 
         return filters
 

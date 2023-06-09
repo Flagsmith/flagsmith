@@ -654,6 +654,7 @@ DJOSER = {
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
+        "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
     },
     "EMAIL": {

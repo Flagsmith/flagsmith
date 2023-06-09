@@ -5,7 +5,19 @@ title: Integration Approaches
 ## Client Side SDK Flag endpoints are public
 
 The API endpoints that our SDKs make calls to are all public. Your Environment API key should also be considered public.
-Think if it in the same way you would a Google Analytics key.
+Think of it in the same way you would a Google Analytics key. The key is sent to browsers in plain HTML or Javascript
+and as a result should not be considered 'secret'.
+
+Given this fact, it is important to ensure that attackers cannot enumerate or guess Identity keys. If an attacker is
+able to do this, they can easily overwrite trait values for Identities that are not related to their user. The simplest
+way to achieve this is to use a computer generated GUID or hash as the Identity key. You might already be doing this
+(for example if your datastore associates a GUID with a User record).
+
+If, for example, your database uses an auto-incrementing integer as the user record key, we strongly recommend you
+either store a GUID alongside that record, or compute a 2-way hash of the user and use that as the Identity key.
+
+Note that this only relates to _Client Side Keys_. _Server Side Keys_, on the other hand, should be considered secret
+and stored appropriately.
 
 ### Segment and Targeting rules are not leaked to the client
 
@@ -18,7 +30,7 @@ your server. Not on the client.
 
 You don't need to run a set of complicated rule evaluations to get your flags. Just hit our endpoint and you get your
 flags. You won't receive any information on Segments or rollout rules, and this is by design. If you want to run your
-own HTTP client within your application its just a simple HTTP GET and you're good.
+own HTTP client within your application it's just an HTTP GET and you're good.
 
 ### Build Time Flag Retrieval
 

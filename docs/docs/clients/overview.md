@@ -24,7 +24,7 @@ depending on the SDK you are using.
 Client-side SDKs run in web browsers or on mobile devices. These runtimes execute within _untrusted environments_.
 Anyone using the Javascript SDK in a web browser, for example, can find the Client-side SDK, create a new Identity, look
 at their flags and
-[potentially write Traits to the Identity](../advanced-use/system-administration.md#preventing-client-sdks-to-set-traits).
+[potentially write Traits to the Identity](../advanced-use/system-administration.md#preventing-client-sdks-from-setting-traits).
 
 Client-side SDKs are also limited to the
 [types of data that they have access to](/guides-and-examples/integration-approaches#segment-and-targeting-rules-are-not-leaked-to-the-client).
@@ -68,7 +68,7 @@ the particular request.
 
 ![Remote Evaluation Diagram](/img/sdk-remote-evaluation.svg)
 
-`Remote Evaluation` is the default mode; simply initialise the SDK and you will be running in `Remote Evaluation` mode.
+`Remote Evaluation` is the default mode; initialise the SDK and you will be running in `Remote Evaluation` mode.
 
 This is the same way that the [Client Side SDKs](#client-side-sdks) work.
 

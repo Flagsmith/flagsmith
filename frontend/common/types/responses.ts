@@ -43,6 +43,7 @@ export type Environment = {
   project: number
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
+  hide_sensitive_data: boolean
 }
 export type Project = {
   id: number
@@ -204,6 +205,7 @@ export type ProjectFlag = {
   id: number
   initial_value: string
   is_archived: boolean
+  is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
   name: string
   num_identity_overrides: number | null
@@ -231,6 +233,20 @@ export type FeatureListProviderActions = {
     projectFlags: ProjectFlag[],
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+}
+
+export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
+
+export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
+
+export type Account = {
+  first_name: string
+  last_name: string
+  sign_up_type: SignupType
+  id: number
+  email: string
+  auth_type: AuthType
+  is_superuser: boolean
 }
 
 export type Res = {
@@ -262,8 +278,11 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  account: Account
+  userEmail: {}
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
+  projectAuditLogs: PagedResponse<AuditLogItem>
   // END OF TYPES
 }
