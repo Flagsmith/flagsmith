@@ -197,7 +197,6 @@ const controller = {
     onComplete,
   ) => {
     let prom
-    const featureFlagId = flag.id || projectFlag.id || environmentFlag.feature
     const segmentOverridesProm = (segmentOverrides || [])
       .map((v, i) => () => {
         if (v.toRemove) {
@@ -210,6 +209,7 @@ const controller = {
           })
         }
         if (!v.id) {
+          const featureFlagId = v.feature
           return data
             .post(
               `${Project.api}environments/${environmentId}/features/${featureFlagId}/create-segment-override/`,
