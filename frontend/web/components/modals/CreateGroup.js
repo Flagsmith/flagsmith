@@ -5,7 +5,7 @@ import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
-import { setInterceptClose } from 'project/modals'
+import { setInterceptClose } from './base/ModalDefault';
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -132,8 +132,8 @@ const CreateGroup = class extends Component {
       externalIdEdited: false,
       groupNameEdited: false,
       toggleChange: false,
-      userRemoved: false,
       userAddedOrUpdated: false,
+      userRemoved: false,
     })
     const data = {
       external_id,
@@ -190,7 +190,7 @@ const CreateGroup = class extends Component {
             <UserGroupsProvider onSave={this.close}>
               {({ isSaving }) => (
                 <form
-                  class='create-feature-tab'
+                  className='create-feature-tab'
                   onSubmit={(e) => {
                     Utils.preventDefault(e)
                     this.save()

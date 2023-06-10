@@ -1,5 +1,4 @@
 @import "../mixins/custom-scrollbar";
-
 $animation-duration: 350ms;
 $animation-timing-function: ease-in-out;
 
@@ -48,7 +47,7 @@ $animation-timing-function: ease-in-out;
             }
         }
 
-        .btn--project {
+        .btn-project {
             &:hover {
                 color: white;
             }
@@ -234,7 +233,7 @@ $animation-timing-function: ease-in-out;
         display: flex;
     }
 
-    .btn--project {
+    .btn-project {
         width: 38px;
         height: 38px;
         justify-content: center;
@@ -290,13 +289,6 @@ $animation-timing-function: ease-in-out;
         margin-bottom: 1em;
         text-align: center;
 
-        &:hover {
-            .btn--project {
-                @extend .btn:hover;
-                @extend .btn--project:hover;
-            }
-        }
-
         &-title {
             color: $aside-left-color;
             font-family: $font-family-header;
@@ -340,6 +332,7 @@ $animation-timing-function: ease-in-out;
     }
 
     &__nav-item {
+        text-decoration: none;
         color: $aside-nav-color;
         &.disabled {
             opacity: 0.5;

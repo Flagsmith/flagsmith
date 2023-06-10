@@ -117,21 +117,12 @@ $side-width: 66%;
         left: auto;
     }
 
-    &.in {
+    &.show {
         .modal-dialog {
             transform: translate(0%, 0%) !important;
         }
     }
 
-    //.footer {
-    //    position: fixed;
-    //    bottom: 0;
-    //    left: 0;
-    //    right: 0;
-    //    padding: 20px;
-    //    height:130px;
-    //    background-color: white;
-    //}
     &__footer {
         position: fixed;
         bottom: 0;
@@ -257,7 +248,7 @@ $side-width: 66%;
             transform: scale(.5);
         }
     }
-    &.in {
+    &.show {
         .modal-content {
             -webkit-transform: scale(1);
             -moz-transform: scale(1);

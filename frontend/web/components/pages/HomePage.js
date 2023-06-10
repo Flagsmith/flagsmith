@@ -2,7 +2,6 @@ import React from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/ForgotPasswordModal'
 import Card from 'components/Card'
-import { ButtonLink } from 'components/base/forms/Button'
 import NavIconSmall from 'components/svg/NavIconSmall'
 import SamlForm from 'components/SamlForm'
 import data from 'common/data/base/_data'
@@ -102,7 +101,7 @@ const HomePage = class extends React.Component {
         }}
       />,
       null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -212,13 +211,14 @@ const HomePage = class extends React.Component {
                           We have a 100% free for life plan for smaller
                           projects.
                         </p>
-                        <ButtonLink
+                        <Button
+                          theme='text'
                           className='pt-3 pb-3'
                           href='https://flagsmith.com/pricing'
                           target='_blank'
                         >
                           Check out our Pricing
-                        </ButtonLink>
+                        </Button>
                       </>
                     )}
                   </>
@@ -239,9 +239,9 @@ const HomePage = class extends React.Component {
                     for an invite link.
                     <div>
                       <Link id='existing-member-btn' to={`/login${redirect}`}>
-                        <ButtonLink className='mt-2 pb-3 pt-2'>
+                        <Button theme='text' className='mt-2 pb-3 pt-2'>
                           Already a member?
-                        </ButtonLink>
+                        </Button>
                       </Link>
                     </div>
                   </Card>
@@ -334,12 +334,13 @@ const HomePage = class extends React.Component {
                                             to={`/password-recovery${redirect}`}
                                             onClick={this.showForgotPassword}
                                           >
-                                            <ButtonLink
+                                            <Button
+                                              theme='text'
                                               tabIndex={-1}
                                               type='button'
                                             >
                                               Forgot password?
-                                            </ButtonLink>
+                                            </Button>
                                           </Link>
                                         )
                                       }
@@ -386,12 +387,13 @@ const HomePage = class extends React.Component {
                                 id='existing-member-btn'
                                 to={`/signup${redirect}`}
                               >
-                                <ButtonLink
+                                <Button
+                                  theme='text'
                                   data-test='jsSignup'
                                   className='ml-1'
                                 >
                                   Sign up
-                                </ButtonLink>
+                                </Button>
                               </Link>
                             </Row>
                           )}
@@ -605,7 +607,9 @@ const HomePage = class extends React.Component {
                       <Row className='justify-content-center mt-2'>
                         Have an account?{' '}
                         <Link id='existing-member-btn' to={`/login${redirect}`}>
-                          <ButtonLink className='ml-1'>Log in</ButtonLink>
+                          <Button theme='text' className='ml-1'>
+                            Log in
+                          </Button>
                         </Link>
                       </Row>
                     </React.Fragment>

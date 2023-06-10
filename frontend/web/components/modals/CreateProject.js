@@ -52,8 +52,6 @@ const CreateProject = class extends Component {
                       openModal(
                         'Payment plans',
                         <PaymentModal viewOnly={false} />,
-                        null,
-                        { large: true },
                       )
                     }}
                   >

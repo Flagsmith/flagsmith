@@ -26,9 +26,6 @@ class TheComponent extends Component {
       ...AccountStore.getUser(),
     }
   }
-
-  componentDidMount() {}
-
   save = (e) => {
     Utils.preventDefault(e)
     const {
@@ -427,8 +424,6 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
-                                null,
-                                { large: true },
                               )
                             }}
                           >

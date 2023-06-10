@@ -5,7 +5,6 @@ import { useGetIdentitiesQuery } from 'common/services/useIdentity'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 import { components } from 'react-select'
-import { ButtonOutline } from './base/forms/Button'
 import Utils from 'common/utils/utils'
 
 type IdentitySelectType = {
@@ -57,14 +56,15 @@ const IdentitySelect: FC<IdentitySelectType> = ({
                   {props.children}
                   {!!data?.next && (
                     <div className='text-center mb-4'>
-                      <ButtonOutline
+                      <Button
+                        theme='outline'
                         onClick={() => {
                           loadMore()
                         }}
                         disabled={isLoading}
                       >
                         Load More
-                      </ButtonOutline>
+                      </Button>
                     </div>
                   )}
                 </React.Fragment>

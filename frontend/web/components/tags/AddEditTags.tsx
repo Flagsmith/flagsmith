@@ -7,7 +7,6 @@ import Constants from 'common/constants'
 import TagValues from './TagValues'
 import { useDeleteTagMutation, useGetTagsQuery } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
-import { ButtonLink } from 'components/base/forms/Button'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
@@ -154,7 +153,8 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   {Utils.renderWithPermission(
                     projectAdminPermission,
                     Constants.projectPermissions('Admin'),
-                    <ButtonLink
+                    <Button
+                      theme='text'
                       disabled={!projectAdminPermission}
                       onClick={() => {
                         setTab('CREATE')
@@ -163,7 +163,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                       type='button'
                     >
                       Create a New Tag <span className='ml-3 icon ion-md-add' />
-                    </ButtonLink>,
+                    </Button>,
                   )}
                 </div>
               )}

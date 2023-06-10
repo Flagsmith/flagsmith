@@ -1,19 +1,19 @@
 @import "../variables";
 $google: #c53d23;
 $github: #eeefee;
-a, .btn, button{
-    outline:none;
 
-    &:hover, &:focus, &:active{
-        outline:none;
-    }
-}
 .dark {
     .btn {
         &.btn-link {
             background: transparent;
         }
-
+        &.btn-secondary {
+            color: $header-color-dark !important;
+            background-color: $button-bg-dark !important;
+            &:hover {
+                background-color: $button-bg-dark-hover !important;
+            }
+        }
         &:hover, &:disabled:hover {
             background: $button-bg-dark-hover;
         }
@@ -26,9 +26,8 @@ a, .btn, button{
 
         &--outline {
             background: $body-bg-dark;
-            border: 2px solid $dark-highlight !important;
+            border-color: $dark-highlight !important;
             color: $dark-highlight-color;
-            line-height: 37px;
 
             &:hover {
                 background-color: darken($body-bg-dark,2);
@@ -57,7 +56,7 @@ a, .btn, button{
                 }
             }
         }
-        &--link {
+        .btn-link {
             color: $bt-link-color-dark;
             background-color: transparent;
             &:hover, &:active, &:focus  {
@@ -77,65 +76,7 @@ a, .btn, button{
     }
 }
 .btn, button.btn{
-    outline: none !important;
-    background: $bt-brand-primary-dark-desaturated-lighter;
-    transition: $button-transition;
-    border-radius: $border-radius-default !important;
-    color:$btn-color;
-    text-align: center;
-    border: none !important;
-    padding: 0 20px;
-    line-height: $input-height;
-    -webkit-font-smoothing:antialiased;
-    text-transform: capitalize;
-    font-weight: 700;
-    font-size: 16px;
-    height:$input-height;
-    //box-shadow:0 0 5px rgba(0,0,0,0.2);
-    &:hover, &:disabled:hover {
-        background: darken($bt-brand-primary-dark-desaturated-lighter,10);
-    }
-    &:hover {
-        box-shadow:0 0 10px rgba(0,0,0,0.5);
-    }
-    &:disabled {
-        box-shadow: none;
-    }
-    //&:active,&:focus{
-    //    background: #098783;
-    //    box-shadow:0 0 10px rgba(0,0,0,0.5);
-    //}
-    &.white{
-        background:#fff;
-        color:black;
-    }
-
-    &.btn-danger{
-        background:#d9534f;
-    }
-
-
-    &--outline{
-        background: white;
-        border: 2px solid $bt-brand-secondary-faint !important;
-        color: $bt-brand-secondary-faint;
-        line-height: 37px;
-        &:hover {
-            background-color: white;
-        }
-
-        &-danger {
-            border-color: $alert-danger-bg !important;
-            color: $alert-danger-bg !important;
-        }
-    }
-
-    &--small {
-            height: 32px;
-        line-height: 32px;
-    }
-
-
+    // Project button, to remove with project select bar
     &--transparent {
         background-color: transparent;
         justify-content: center;
@@ -153,59 +94,22 @@ a, .btn, button{
             box-shadow: none;
         }
     }
-    &--neutral {
-        background-color: transparent;
-        padding: 0;
-        text-align: left;
-        height: auto;
-        width: 100%;
+
+    &--outline{
+        background: white;
+        border: 2px solid $bt-brand-secondary-faint !important;
+        color: $bt-brand-secondary-faint;
+        line-height: 37px;
         &:hover {
-            background-color: transparent;
-            box-shadow: none;
+            background-color: white;
+        }
+
+        &-danger {
+            border-color: $alert-danger-bg !important;
+            color: $alert-danger-bg !important;
         }
     }
 
-    &--link {
-
-        text-decoration: none !important;
-        &-primary {
-            color: $bt-brand-primary;
-            span {
-                color: $bt-brand-primary;
-            }
-            &:hover {
-                color: $bt-brand-primary-light;
-                span {
-                    color: $bt-brand-primary-light;
-                }
-            }
-        }
-        vertical-align: baseline;
-        font-family: $font-family;
-        background: transparent;
-        color: $bt-link-color;
-        @include transition(all 200ms)
-        //text-decoration: underline;
-        border: none;
-        box-shadow: none;
-        padding: 0;
-        height: 25px;
-        font-size: 16px;
-        text-transform: inherit;
-        line-height: 0px;
-        font-weight: bold;
-        &:hover, &:focus  {
-            color: $bt-link-color-hover;
-            background: transparent;
-            text-decoration: underline;
-            border: none;
-            box-shadow: none;
-        }
-    }
-
-    &--condensed {
-        padding: 0px 0px;
-    }
     &--remove:hover {
         svg path {
             fill: #d93939;
@@ -303,22 +207,6 @@ a, .btn, button{
     }
 }
 
-.pill{
-    .btn:first-child{
-        border-bottom-left-radius:$border-radius-default!important;
-        border-top-left-radius:$border-radius-default!important;
-        border-bottom-right-radius:0!important;
-        border-top-right-radius:0!important;
-    }
-    .btn:last-child{
-        border-bottom-right-radius:$border-radius-default!important;
-        border-top-right-radius:$border-radius-default!important;
-        border-bottom-left-radius:0!important;
-        border-top-left-radius:0!important;
-    }
-}
-
-
 $remove-btn-size: 24px;
 $add-btn-size: 34px;
 .btn.btn-remove {
@@ -345,102 +233,16 @@ $add-btn-size: 34px;
     font-size: 16px;
     color: $bt-brand-primary;
 }
-.btn.btn-add {
-    line-height: $add-btn-size;
-    height: $add-btn-size;
-    padding: 0;
-    width: $add-btn-size;
-    align-items: center;
-    text-align: center;
-    color: #929292;
-    background-color: #f7f7f7;
-    &:hover {
-        background-color: #eaeaea;
-        color: #929292;
-    }
-    font-size: 1em;
-    span {
-        line-height: $add-btn-size;
-    }
-}
-
-.btn-link {
-    background: transparent;
-    vertical-align: auto;
-    font-weight: 500;
-    box-shadow: none !important;
-    line-height: 44px;
-    height: 44px;
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-.btn-link:hover {
-    color: $bt-brand-primary-dark;
-    background-color: transparent !important;
-    text-decoration: none;
-}
-
-.btn-white {
-    background-color: white !important;
-    color: $body-color !important;
-}
-
-.btn-white:hover {
-    background-color: #f9f9f9 !important;
-    text-decoration: none;
-}
-
-.btn-link-secondary {
-    color: $bt-brand-primary;
-}
-
-#btn-add-invite {
-    &:hover {
-        background-color: transparent;
-    }
-}
-
-
 
 
 @include media-breakpoint-down(sm) {
     .btn {
         &__md-full {
             width: 100%;
-            background-color: red;
         }
         &__oauth {
             margin-right: 12px;
         }
     }
 
-}
-
-
-.btn-secondary {
-    background: $bt-brand-faint !important;
-    color: $body-text !important;
-    &:hover {
-        box-shadow: none !important;
-        background: $bt-brand-faint-hover !important;
-    }
-    &:active {
-        background: $bt-brand-faint-hover !important;
-    }
-    a {
-        &:hover {
-            text-decoration: none !important;
-        }
-    }
-}
-
-.dark {
-    .btn-secondary {
-        color: $header-color-dark !important;
-        background-color: $button-bg-dark !important;
-        &:hover {
-            background-color: $button-bg-dark-hover !important;
-        }
-    }
 }

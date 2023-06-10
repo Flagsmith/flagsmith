@@ -8,7 +8,7 @@ export default function AddVariationButton({ disabled, onClick }) {
         data-test='add-variation'
         type='button'
         onClick={onClick}
-        className='btn btn--outline '
+        className='btn btn--outline'
       >
         Add Variation
       </button>

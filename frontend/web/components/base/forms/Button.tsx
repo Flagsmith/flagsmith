@@ -1,49 +1,59 @@
-import React, { FC, HTMLAttributeAnchorTarget } from 'react'
+import cn from 'classnames'
+import { ButtonHTMLAttributes, FC } from 'react'
+import Icon, { IconName } from 'components/Icon'
 
-export type ButtonType = React.ButtonHTMLAttributes<HTMLButtonElement>
-export type ButtonLinkType = ButtonType & {
-  href?: string
-  target?: HTMLAttributeAnchorTarget
+export const themeClassNames = {
+  danger: 'btn btn-danger',
+  outline: 'btn btn--outline',
+  primary: 'btn-primary',
+  project: 'btn-project',
+  secondary: 'btn-secondary',
+  tertiary: 'btn-tertiary',
+  text: 'btn-link',
 }
 
-const Button: FC<ButtonType> = (props) => {
+export const sizeClassNames = {
+  default: '',
+  large: 'btn-lg',
+  small: 'btn-sm',
+}
+
+export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
+  iconRight?: IconName
+  iconLeft?: IconName
+  theme?: keyof typeof themeClassNames
+  size?: keyof typeof sizeClassNames
+}
+
+export const Button: FC<ButtonType> = ({
+  children,
+  className,
+  iconLeft,
+  iconRight,
+  onMouseUp,
+  size = 'default',
+  theme = 'primary',
+  type = 'submit',
+  ...rest
+}) => {
   return (
-    <button {...props} className={`btn ${props.className || ''}`}>
-      {props.children}
+    <button
+      type={type}
+      {...rest}
+      onMouseUp={onMouseUp}
+      className={cn(
+        { btn: true },
+        className,
+        themeClassNames[theme],
+        sizeClassNames[size],
+      )}
+    >
+      {!!iconLeft && <Icon className='mr-1' name={iconLeft} />}
+      {children}
+      {!!iconRight && <Icon className='ml-2' name={iconRight} />}
     </button>
   )
 }
 
+Button.displayName = 'Button'
 export default Button
-
-export const ButtonOutline: FC<ButtonType> = (props) => {
-  return (
-    <Button {...props} className={`btn--outline ${props.className || ''}`} />
-  )
-}
-
-export const ButtonProject: FC<ButtonType> = (props) => {
-  return (
-    <Button {...props} className={`btn--project ${props.className || ''}`} />
-  )
-}
-
-export const ButtonLink: FC<ButtonLinkType> = ({
-  children,
-  className,
-  href,
-  target,
-  ...rest
-}) => {
-  return (
-    <Button {...rest} className={`btn--link ${className || ''}`}>
-      {href ? (
-        <a className='btn--link' target={target} href={href}>
-          {children}
-        </a>
-      ) : (
-        <span className='btn--link'>{children}</span>
-      )}
-    </Button>
-  )
-}

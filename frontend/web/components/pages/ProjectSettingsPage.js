@@ -326,7 +326,8 @@ const ProjectSettingsPage = class extends Component {
                                     >
                                       Save
                                     </Button>
-                                    <ButtonLink
+                                    <Button
+                                      theme='text'
                                       type='button'
                                       onClick={() => {
                                         openModal(
@@ -347,7 +348,7 @@ const ProjectSettingsPage = class extends Component {
                                       disabled={!regexValid || isLoading}
                                     >
                                       Test RegEx
-                                    </ButtonLink>
+                                    </Button>
                                   </Row>
                                 </form>
                               }

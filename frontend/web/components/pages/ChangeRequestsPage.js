@@ -84,8 +84,6 @@ const ChangeRequestsPage = class extends Component {
                     openModal(
                       'Payment plans',
                       <PaymentModal viewOnly={false} />,
-                      null,
-                      { large: true },
                     )
                   }}
                 >
@@ -192,12 +190,12 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
                             <div>
-                              <ButtonLink>
+                              <Button theme='text'>
                                 {title}
                                 {isScheduled && (
                                   <span className='ml-1 mr-4 ion ion-md-time' />
                                 )}
-                              </ButtonLink>
+                              </Button>
                               <div className='list-item-footer faint'>
                                 Created at{' '}
                                 {moment(created_at).format(
@@ -272,7 +270,7 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
                             <div>
-                              <ButtonLink>{title}</ButtonLink>
+                              <Button theme='text'>{title}</Button>
                               <div className='list-item-footer faint'>
                                 Live from{' '}
                                 {moment(created_at).format(

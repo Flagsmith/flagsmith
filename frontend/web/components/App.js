@@ -5,9 +5,7 @@ import amplitude from 'amplitude-js'
 import NavLink from 'react-router-dom/NavLink'
 import Aside from './Aside'
 import Popover from './base/Popover'
-import Feedback from './modals/Feedback'
 import PaymentModal from './modals/Payment'
-import AlertBar from './AlertBar'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
 import Blocked from './Blocked'
@@ -175,10 +173,6 @@ const App = class extends Component {
     this.context.router.history.replace('/')
   }
 
-  feedback = () => {
-    openModal('Feedback', <Feedback />)
-  }
-
   render() {
     if (
       Utils.getFlagsmithHasFeature('dark_mode') &&
@@ -292,7 +286,7 @@ const App = class extends Component {
                 >
                   {!isHomepage &&
                     (!pageHasAside || !asideIsVisible || !isMobile) && (
-                      <nav className='navbar'>
+                      <nav className='navbar px-4'>
                         <Row space>
                           <div className='navbar-left'>
                             <div className='navbar-nav'>
@@ -337,7 +331,7 @@ const App = class extends Component {
                                           Utils.calculaterRemainingCallsPercentage(
                                             totalApiCalls,
                                             organisation.subscription
-                                              .max_api_calls,
+                                              ?.max_api_calls,
                                           ) &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
@@ -355,15 +349,13 @@ const App = class extends Component {
                                           openModal(
                                             'Payment plans',
                                             <PaymentModal viewOnly={false} />,
-                                            null,
-                                            { large: true },
                                           )
                                         }}
                                       >
                                         {Utils.calculaterRemainingCallsPercentage(
                                           totalApiCalls,
                                           organisation.subscription
-                                            .max_api_calls,
+                                            ?.max_api_calls,
                                         ) &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',

@@ -29,7 +29,8 @@ class Token extends Component {
           className={`${this.state.showToken ? 'font-weight-bold' : ''}`}
         />
         {this.props.show ? (
-          <ButtonOutline
+          <Button
+            theme='outline'
             style={{ width: 80 }}
             className='btn-secondary ml-2 mr-4'
             onClick={() => {
@@ -38,7 +39,7 @@ class Token extends Component {
             }}
           >
             Copy
-          </ButtonOutline>
+          </Button>
         ) : (
           <Button
             style={{ width: 80 }}

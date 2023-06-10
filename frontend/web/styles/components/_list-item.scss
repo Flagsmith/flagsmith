@@ -8,7 +8,7 @@
 		text-decoration: none;
 	}
 	transition: all .2s ease-in;
-		.btn--link {
+		.btn-link {
 			color: $bt-link-color;
 			&:hover {
 				color: $bt-link-color-hover;
@@ -23,7 +23,7 @@
 	&.clickable:hover {
 		background: $card-default;
 		box-shadow: $card-default;
-		.btn--link {
+		.btn-link {
 			color: $bt-link-color-hover;
 			text-decoration: none !important;
 		}

@@ -1,0 +1,24 @@
+@import "~bootstrap/scss/mixins";
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+
+
+$primary: #6837FC;
+$danger: #EF4D56;
+$link-color: $primary;
+$theme-colors: (
+        primary: $primary,
+        danger: $danger,
+  // add any additional color below
+);
+
+
+//Buttons
+$btn-height: 48px;
+$btn-line-height: 48px;
+$btn-padding-y:0;
+$btn-font-weight: 600;
+$btn-border-radius: 12px;
+$btn-padding-x: 20px; // todo, $spacer PR should change this to $spacer*5
+.btn{border-width: 0;}
+

@@ -15,7 +15,6 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
-import { ButtonLink } from '../base/forms/Button'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -126,8 +125,7 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.createWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -142,8 +140,7 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.saveWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -364,12 +361,13 @@ const EnvironmentSettingsPage = class extends Component {
                                   the SDKs or via our REST API. For full
                                   information on the excluded fields see
                                   documentation{' '}
-                                  <ButtonLink
+                                  <Button
+                                    theme='text'
                                     href='https://docs.flagsmith.com/advanced-use/system-administration#hide-sensitive-data'
                                     target='_blank'
                                   >
                                     here.
-                                  </ButtonLink>
+                                  </Button>
                                   <br />
                                   <strong>
                                     Warning! Enabling this feature will change
@@ -410,8 +408,6 @@ const EnvironmentSettingsPage = class extends Component {
                                       openModal(
                                         'Payment plans',
                                         <PaymentModal viewOnly={false} />,
-                                        null,
-                                        { large: true },
                                       )
                                     }}
                                   >
@@ -431,12 +427,13 @@ const EnvironmentSettingsPage = class extends Component {
                                 <p>
                                   Require a minimum number of people to approve
                                   changes to features.{' '}
-                                  <ButtonLink
+                                  <Button
+                                    theme='text'
                                     href='https://docs.flagsmith.com/advanced-use/change-requests'
                                     target='_blank'
                                   >
                                     Learn about Change Requests.
-                                  </ButtonLink>
+                                  </Button>
                                 </p>
                               )}
                             </div>
@@ -734,12 +731,13 @@ const EnvironmentSettingsPage = class extends Component {
                               Feature webhooks let you know when features have
                               changed. You can configure 1 or more Feature
                               Webhooks per Environment.{' '}
-                              <ButtonLink
+                              <Button
+                                theme='text'
                                 href='https://docs.flagsmith.com/advanced-use/system-administration#web-hooks'
                                 target='_blank'
                               >
                                 Learn about Feature Webhooks.
-                              </ButtonLink>
+                              </Button>
                             </p>
                           </div>
                           <div className='col-md-4 pr-0'>
@@ -782,7 +780,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 key={webhook.id}
                               >
                                 <div>
-                                  <ButtonLink>{webhook.url}</ButtonLink>
+                                  <Button theme='text'>{webhook.url}</Button>
                                   <div className='list-item-footer faint'>
                                     Created{' '}
                                     {moment(webhook.created_date).format(

@@ -75,8 +75,6 @@ const ChangeRequestsPage = class extends Component {
                         openModal(
                           'Payment plans',
                           <PaymentModal viewOnly={false} />,
-                          null,
-                          { large: true },
                         )
                       }}
                     >
@@ -153,7 +151,7 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-ios-timer' />
                             <div>
-                              <ButtonLink>{title}</ButtonLink>
+                              <Button theme='text'>{title}</Button>
                               <div className='list-item-footer faint'>
                                 Created at{' '}
                                 {moment(created_at).format(
