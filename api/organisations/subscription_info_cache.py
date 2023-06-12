@@ -52,6 +52,7 @@ def update_caches():
             "api_calls_30d",
             "allowed_seats",
             "allowed_30d_api_calls",
+            "chargebee_email",
             "updated_at",
         ],
     )
