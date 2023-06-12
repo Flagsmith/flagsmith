@@ -33,6 +33,7 @@ from users.models import (
 from users.serializers import (
     ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
+    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
@@ -155,16 +156,19 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if not self.request.user.has_organisation_permission(
             organisation, MANAGE_USER_GROUPS
         ):
-            qs = qs.filter(
-                userpermissiongroupmembership__ffadminuser=self.request.user,
-                userpermissiongroupmembership__group_admin=True,
-            )
+            qs = qs.filter(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if not self.action == "my-groups":
+                # my-groups returns a very cut down set of data, we can safely allow all users
+                # of the groups to retrieve them in this case.
+                qs = qs.filter(userpermissiongroupmembership__group_admin=True)
 
         return qs
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
+        elif self.action == "my_groups":
+            return MyUserPermissionGroupsSerializer
         return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
@@ -221,6 +225,14 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+    @action(detail=False, methods=["GET"], url_path="my-groups")
+    def my_groups(self, request: Request, organisation_pk: int) -> Response:
+        """
+        A cut down version of the list endpoint which returns only a subset of the data returned
+        by the main list endpoint for only the groups the user is a member of.
+        """
+        return self.list(request, organisation_pk)
 
 
 @permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
