@@ -481,7 +481,7 @@ const ChangeRequestsPage = class extends Component {
                                 orgId={AccountStore.getOrganisation().id}
                                 groups={orgGroups}
                                 value={
-                                  ownerGroups && ownerGroups.map((v) => v.group)
+                                  ownerGroups && ownerGroups.map((v) => v.id)
                                 }
                                 onAdd={this.addOwner}
                                 onRemove={this.removeOwner}
