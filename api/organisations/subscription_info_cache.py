@@ -105,3 +105,4 @@ def _update_caches_with_chargebee_data(
         subscription_info_cache = organisation_info_cache_dict[organisation.id]
         subscription_info_cache.allowed_seats = metadata.seats
         subscription_info_cache.allowed_30d_api_calls = metadata.api_calls
+        subscription_info_cache.chargebee_email = metadata.chargebee_email
