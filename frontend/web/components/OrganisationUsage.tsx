@@ -77,6 +77,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
                 <EnvironmentFilter
                   showAll
                   projectId={project}
+                  idField={'id'}
                   onChange={setEnvironment}
                   value={environment}
                 />

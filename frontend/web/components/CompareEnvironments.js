@@ -8,6 +8,7 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
+import EnvironmentFilter from './EnvironmentFilter'
 
 const featureNameWidth = 300
 
@@ -119,8 +120,13 @@ class CompareEnvironments extends Component {
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>
-              <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentRight}
+              <EnvironmentFilter
+                ignoreAPIKey={
+                  this.state.environmentRight
+                    ? [this.state.environmentRight]
+                    : undefined
+                }
+                projectId={this.props.projectId}
                 onChange={(environmentLeft) =>
                   this.setState({ environmentLeft })
                 }
@@ -133,8 +139,13 @@ class CompareEnvironments extends Component {
             </div>
 
             <div style={{ width: featureNameWidth }}>
-              <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentLeft}
+              <EnvironmentFilter
+                projectId={this.props.projectId}
+                ignore={
+                  this.state.environmentLeft
+                    ? [this.state.environmentLeft]
+                    : undefined
+                }
                 onChange={(environmentRight) =>
                   this.setState({ environmentRight })
                 }
