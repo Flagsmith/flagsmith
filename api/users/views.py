@@ -229,8 +229,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["GET"], url_path="my-groups")
     def my_groups(self, request: Request, organisation_pk: int) -> Response:
         """
-        A cut down version of the list endpoint which returns only a subset of the data returned
-        by the main list endpoint for only the groups the user is a member of.
+        Returns a list of summary group objects only for the groups a user is a member of.
         """
         return self.list(request, organisation_pk)
 
