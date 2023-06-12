@@ -159,7 +159,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
             q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
             if self.action != "my_groups":
                 # my-groups returns a very cut down set of data, we can safely allow all users
-                # of the groups to retrieve them in this case.
+                # of the groups to retrieve them in this case, otherwise they must be a group
+                # admin.
                 q = q & Q(userpermissiongroupmembership__group_admin=True)
             qs = qs.filter(q)
 
