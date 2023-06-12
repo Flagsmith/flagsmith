@@ -3,7 +3,7 @@ from contextlib import suppress
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -156,11 +156,12 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if not self.request.user.has_organisation_permission(
             organisation, MANAGE_USER_GROUPS
         ):
-            qs = qs.filter(userpermissiongroupmembership__ffadminuser=self.request.user)
-            if not self.action == "my-groups":
+            q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if self.action != "my_groups":
                 # my-groups returns a very cut down set of data, we can safely allow all users
                 # of the groups to retrieve them in this case.
-                qs = qs.filter(userpermissiongroupmembership__group_admin=True)
+                q = q & Q(userpermissiongroupmembership__group_admin=True)
+            qs = qs.filter(q)
 
         return qs
 
