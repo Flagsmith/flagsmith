@@ -373,6 +373,12 @@ const OrganisationSettingsPage = class extends Component {
                                             )
                                           : 'Free'}
                                       </h3>
+                                      <p>
+                                        Management Email:{' '}
+                                        <strong>
+                                          {organisation.chargebee_email}
+                                        </strong>
+                                      </p>
                                     </div>
                                     <div>
                                       {organisation.subscription && (
