@@ -3,6 +3,7 @@ import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
+import { useGetProjectAuditLogsQuery } from 'common/services/useProjectAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
@@ -46,12 +47,15 @@ const AuditLog: FC<AuditLogType> = (props) => {
     data: projectAuditLog,
     isError,
     isFetching,
-  } = useGetAuditLogsQuery({
-    environments,
-    page,
-    page_size: props.pageSize,
-    project: props.projectId,
-    search,
+  } = useGetProjectAuditLogsQuery({
+    id: props.projectId,
+    params: {
+      environments,
+      page,
+      page_size: props.pageSize,
+      project: props.projectId,
+      search,
+    },
   })
 
   useEffect(() => {

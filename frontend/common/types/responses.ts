@@ -284,5 +284,6 @@ export type Res = {
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
+  projectAuditLogs: PagedResponse<AuditLogItem>
   // END OF TYPES
 }

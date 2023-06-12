@@ -1,18 +1,20 @@
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 import InlineModal from './InlineModal'
-import { UserGroup, UserGroupSummary } from 'common/types/responses'
-import Input from './base/forms/Input'
-import Utils from 'common/utils/utils'
+import { UserGroup } from 'common/types/responses'
 
-export type GroupSelectType = {
-  disabled: boolean
-  groups: UserGroup[] | UserGroupSummary[] | undefined
-  value: number[] | undefined
-  isOpen: boolean
-  onAdd: (id: number, isUser: boolean) => void
-  onRemove: (id: number, isUser: boolean) => void
-  onToggle: () => void
+type SelectedGroups = {
+  group: string
 }
+type GroupSelectType = {
+  disabled: boolean
+  groups: UserGroup
+  isOpen: boolean
+  onAdd: () => void
+  onRemove: () => void
+  onToggle: boolean
+  selectedGroups: SelectedGroups[]
+}
+
 const GroupSelect: FC<GroupSelectType> = ({
   disabled,
   groups,
@@ -20,7 +22,7 @@ const GroupSelect: FC<GroupSelectType> = ({
   onAdd,
   onRemove,
   onToggle,
-  value,
+  selectedGroups,
 }) => {
   const [filter, setFilter] = useState<string>('')
   const grouplist =
@@ -50,7 +52,7 @@ const GroupSelect: FC<GroupSelectType> = ({
             <div className='list-item clickable' key={v.id}>
               <Row
                 onClick={() => {
-                  const isRemove = value?.includes(v.id)
+                  const isRemove = selectedGroups.includes(v.id)
                   if (isRemove && onRemove) {
                     onRemove(v.id, false)
                   } else if (!isRemove && onAdd) {
@@ -60,11 +62,13 @@ const GroupSelect: FC<GroupSelectType> = ({
                 space
               >
                 <Flex
-                  className={value?.includes(v.id) ? 'font-weight-bold' : ''}
+                  className={
+                    selectedGroups.includes(v.id) ? 'font-weight-bold' : ''
+                  }
                 >
                   {v.name}
                 </Flex>
-                {value?.includes(v.id) && (
+                {selectedGroups.includes(v.id) && (
                   <span
                     style={{ fontSize: 24 }}
                     className='ion `text-primary` ion-ios-checkmark'
