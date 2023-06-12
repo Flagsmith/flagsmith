@@ -247,7 +247,7 @@ const ChangeRequestModal = class extends Component {
                 Utils.getFlagsmithHasFeature('enable_groups_as_reviewers') && (
                   <GroupSelect
                     groups={groups}
-                    selectedGroups={this.state.approvals.map((v) => v.group)}
+                    value={this.state.approvals.map((v) => v.group)}
                     onAdd={this.addOwner}
                     onRemove={this.removeOwner}
                     isOpen={this.state.showGroups}

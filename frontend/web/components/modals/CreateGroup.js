@@ -132,8 +132,8 @@ const CreateGroup = class extends Component {
       externalIdEdited: false,
       groupNameEdited: false,
       toggleChange: false,
-      userRemoved: false,
       userAddedOrUpdated: false,
+      userRemoved: false,
     })
     const data = {
       external_id,
@@ -190,7 +190,7 @@ const CreateGroup = class extends Component {
             <UserGroupsProvider onSave={this.close}>
               {({ isSaving }) => (
                 <form
-                  class='create-feature-tab'
+                  className='create-feature-tab'
                   onSubmit={(e) => {
                     Utils.preventDefault(e)
                     this.save()

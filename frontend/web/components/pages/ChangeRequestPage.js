@@ -15,6 +15,7 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import InfoMessage from 'components/InfoMessage'
 import Permission from 'common/providers/Permission'
 import JSONReference from 'components/JSONReference'
+import MyGroupsSelect from 'components/MyGroupsSelect'
 
 const labelWidth = 200
 
@@ -26,7 +27,7 @@ const ChangeRequestsPage = class extends Component {
   }
 
   getApprovals = (users, approvals) =>
-    users.filter((v) => approvals.includes(v.id))
+    users?.filter((v) => approvals?.includes(v.id))
 
   constructor(props, context) {
     super(props, context)
@@ -448,7 +449,7 @@ const ChangeRequestsPage = class extends Component {
                                 </span>
                               </Row>
                               <Row className='mt-2'>
-                                {ownerGroups.length !== 0 &&
+                                {!!ownerGroups?.length &&
                                   ownerGroups.map((g) => (
                                     <Row
                                       key={g.id}
@@ -476,9 +477,10 @@ const ChangeRequestsPage = class extends Component {
                                   Add group
                                 </Button>
                               </Row>
-                              <GroupSelect
+                              <MyGroupsSelect
+                                orgId={AccountStore.getOrganisation().id}
                                 groups={orgGroups}
-                                selectedGroups={
+                                value={
                                   ownerGroups && ownerGroups.map((v) => v.group)
                                 }
                                 onAdd={this.addOwner}
