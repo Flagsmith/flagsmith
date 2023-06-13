@@ -800,6 +800,7 @@ def test_get_subscription_metadata(
     expected_seats = 10
     expected_projects = 5
     expected_api_calls = 100
+    expected_chargebee_email = "test@example.com"
 
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata",
@@ -807,6 +808,7 @@ def test_get_subscription_metadata(
             seats=expected_seats,
             projects=expected_projects,
             api_calls=expected_api_calls,
+            chargebee_email=expected_chargebee_email,
         ),
     )
 
@@ -825,6 +827,7 @@ def test_get_subscription_metadata(
         "max_projects": expected_projects,
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
+        "chargebee_email": expected_chargebee_email,
     }
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -879,6 +882,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
         "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
+        "chargebee_email": None,
     }
 
 
