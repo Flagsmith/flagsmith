@@ -282,7 +282,7 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
-                  const { max_seats } = subscriptionMeta ||
+                  const { max_seats, chargebee_email } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
                   const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
@@ -373,12 +373,14 @@ const OrganisationSettingsPage = class extends Component {
                                             )
                                           : 'Free'}
                                       </h3>
+                                      {!!chargebee_email && (
                                       <p>
                                         Management Email:{' '}
                                         <strong>
-                                          {organisation.chargebee_email}
+                                          {chargebee_email}
                                         </strong>
                                       </p>
+                                      )}
                                     </div>
                                     <div>
                                       {organisation.subscription && (
