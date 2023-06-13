@@ -45,8 +45,8 @@ class BaseSubscriptionMetadata:
                 self.payment_source.title(),
                 self.seats,
                 self.api_calls,
-                self.chargebee_email,
                 str(self.projects) if self.projects is not None else "no limit",
+                self.chargebee_email,
             )
         )
 
