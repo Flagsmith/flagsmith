@@ -44,12 +44,14 @@ class MockChargeBeeHostedPageResponse:
         plan_id="plan-id",
         created_at=datetime.utcnow(),
         customer_id="customer-id",
+        chargebee_email="chargebee-email",
     ):
         self.hosted_page = MockChargeBeeHostedPage(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
+            chargebee_email=chargebee_email,
         )
 
 
@@ -60,6 +62,7 @@ class MockChargeBeeHostedPage:
         plan_id,
         created_at,
         customer_id,
+        chargebee_email,
         hosted_page_id="some-id",
     ):
         self.id = hosted_page_id
@@ -68,15 +71,18 @@ class MockChargeBeeHostedPage:
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
+            chargebee_email=chargebee_email,
         )
 
 
 class MockChargeBeeHostedPageContent:
-    def __init__(self, subscription_id, plan_id, created_at, customer_id):
+    def __init__(
+        self, subscription_id, plan_id, created_at, customer_id, chargebee_email
+    ):
         self.subscription = MockChargeBeeSubscription(
             subscription_id=subscription_id, plan_id=plan_id, created_at=created_at
         )
-        self.customer = MockChargeBeeCustomer(customer_id)
+        self.customer = MockChargeBeeCustomer(customer_id, chargebee_email)
 
 
 class MockChargeBeeSubscriptionResponse:
@@ -86,11 +92,12 @@ class MockChargeBeeSubscriptionResponse:
         plan_id="plan-id",
         created_at=datetime.now(),
         customer_id="customer-id",
+        chargebee_email="chargebee-email",
     ):
         self.subscription = MockChargeBeeSubscription(
             subscription_id, plan_id, created_at
         )
-        self.customer = MockChargeBeeCustomer(customer_id)
+        self.customer = MockChargeBeeCustomer(customer_id, chargebee_email)
 
 
 class MockChargeBeeSubscription:
@@ -101,8 +108,9 @@ class MockChargeBeeSubscription:
 
 
 class MockChargeBeeCustomer:
-    def __init__(self, customer_id):
+    def __init__(self, customer_id, chargebee_email):
         self.id = customer_id
+        self.chargebee_email = chargebee_email
 
 
 class MockChargeBeePortalSessionResponse:
@@ -169,12 +177,14 @@ class ChargeBeeTestCase(TestCase):
         expected_max_seats = 3
         created_at = datetime.now(tz=UTC)
         customer_id = "customer-id"
+        chargebee_email = "chargebee-email"
 
         self.mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
+            chargebee_email=chargebee_email,
         )
         self.mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
             expected_max_seats
