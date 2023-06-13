@@ -282,8 +282,9 @@ const OrganisationSettingsPage = class extends Component {
                   subscriptionMeta,
                   users,
                 }) => {
-                  const { max_seats, chargebee_email } = subscriptionMeta ||
+                  const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const { chargebee_email } = subscriptionMeta || {}
                   const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
