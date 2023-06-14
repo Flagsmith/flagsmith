@@ -21,7 +21,7 @@ class AbstractBaseFeatureValueModel(models.Model):
         null=True,
         blank=True,
     )
-    boolean_value = models.NullBooleanField(null=True, blank=True)
+    boolean_value = models.BooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=20000, blank=True)
 

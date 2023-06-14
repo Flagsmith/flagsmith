@@ -31,7 +31,7 @@ class Trait(models.Model):
     value_type = models.CharField(
         max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING, null=True, blank=True
     )
-    boolean_value = models.NullBooleanField(null=True, blank=True)
+    boolean_value = models.BooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
     float_value = models.FloatField(null=True, blank=True)
