@@ -2,14 +2,12 @@ import pytest
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import FeatureState
 from integrations.amplitude.amplitude import (
     AMPLITUDE_API_URL,
     AmplitudeWrapper,
 )
 from integrations.amplitude.models import AmplitudeConfiguration
-from organisations.models import Organisation
-from projects.models import Project
 
 
 def test_amplitude_initialized_correctly():
@@ -25,33 +23,28 @@ def test_amplitude_initialized_correctly():
 
 
 @pytest.mark.django_db
-def test_amplitude_when_generate_user_data_with_correct_values_then_success():
+def test_amplitude_when_generate_user_data_with_correct_values_then_success(
+    environment: Environment,
+    feature_state: FeatureState,
+    feature_state_with_value: FeatureState,
+    identity: Identity,
+) -> None:
     # Given
     api_key = "123key"
 
     config = AmplitudeConfiguration(api_key=api_key)
     amplitude_wrapper = AmplitudeWrapper(config)
-    identity = Identity(identifier="user123")
-
-    organisation = Organisation.objects.create(name="Test Org")
-    project = Project.objects.create(name="Test Project", organisation=organisation)
-    Environment.objects.create(name="Test Environment 1", project=project)
-    feature = Feature.objects.create(name="Test Feature", project=project)
-    feature_states = FeatureState.objects.filter(feature=feature)
 
     # When
     user_data = amplitude_wrapper.generate_user_data(
-        identity=identity, feature_states=feature_states
+        identity=identity, feature_states=[feature_state, feature_state_with_value]
     )
 
     # Then
-    feature_properties = {}
-
-    for feature_state in feature_states:
-        value = feature_state.get_feature_state_value()
-        feature_properties[feature_state.feature.name] = (
-            value if (feature_state.enabled and value) else feature_state.enabled
-        )
+    feature_properties = {
+        feature_state.feature.name: feature_state.enabled,
+        feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
+    }
 
     expected_user_data = {
         "user_id": identity.identifier,

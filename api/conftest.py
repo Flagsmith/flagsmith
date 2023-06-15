@@ -211,8 +211,21 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def feature_state(feature, environment):
-    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+def feature_state(feature: Feature, environment: Environment) -> FeatureState:
+    return FeatureState.objects.get(environment=environment, feature=feature)
+
+
+@pytest.fixture()
+def feature_state_with_value(environment: Environment) -> FeatureState:
+    feature = Feature.objects.create(
+        name="feature_with_value",
+        initial_value="foo",
+        default_enabled=True,
+        project=environment.project,
+    )
+    return FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment=None, identity=None
+    )
 
 
 @pytest.fixture()
