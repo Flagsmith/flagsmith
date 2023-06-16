@@ -50,7 +50,7 @@ const controller = {
       { orgId: `${orgId}`, page: 1 },
       { forceRefetch: true },
     ).then((response) => {
-      store.groups = response[0].data.results
+      store.groups = response.data.results
 
       store.loaded()
       store.saved()
