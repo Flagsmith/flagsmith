@@ -4,6 +4,8 @@ import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
+import { getMyGroups } from 'common/services/useMyGroup'
+import { getStore } from 'common/store'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -17,10 +19,19 @@ const ChangeRequestModal = class extends Component {
       (this.props.changeRequest && this.props.changeRequest.approvals) || [],
     description:
       (this.props.changeRequest && this.props.changeRequest.description) || '',
+    groups: [],
     live_from:
       this.props.changeRequest &&
       this.props.changeRequest.feature_states[0].live_from,
     title: (this.props.changeRequest && this.props.changeRequest.title) || '',
+  }
+
+  componentDidMount() {
+    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
+      (res) => {
+        this.setState({ groups: res?.data?.results || [] })
+      },
+    )
   }
 
   addOwner = (id, isUser = true) => {
@@ -56,10 +67,10 @@ const ChangeRequestModal = class extends Component {
   }
 
   render() {
-    const { description, title } = this.state
+    const { description, groups, title } = this.state
     return (
       <OrganisationProvider>
-        {({ groups, users }) => {
+        {({ users }) => {
           const ownerGroups = this.getGroupApprovals(
             groups,
             this.state.approvals || [],
