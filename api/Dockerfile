@@ -2,24 +2,18 @@
 # Step 1 - Build Python virtualenv
 FROM python:3.11 as build-python
 WORKDIR /app
-ENV POETRY_VERSION=1.5.0
 
-RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
+COPY pyproject.toml poetry.lock Makefile ./
 
-RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools
-RUN pip install "poetry==$POETRY_VERSION"
-# Set up venv
-RUN python -m venv /opt/venv
+ARG POETRY_VIRTUALENVS_CREATE=false
+RUN make install-poetry
+ENV PATH="$PATH:/root/.local/bin"
 
-COPY pyproject.toml poetry.lock ./
-RUN . /opt/venv/bin/activate && poetry install --only main
+RUN make install-packages opts="--no-root --only main"
 
 # Step 2 - Build Django Application
 FROM python:3.11-slim as application
-
 WORKDIR /app
-COPY . .
 
 # Install SAML dependency if required
 ARG SAML_INSTALLED="0"
@@ -30,8 +24,11 @@ ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Copy the python venv from step 2
-COPY --from=build-python /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy the bin folder as well to copy the executables created in package installation
+COPY --from=build-python /usr/local/bin /usr/local/bin
+
+COPY . .
 
 # Compile static Django assets
 RUN python manage.py collectstatic --no-input
