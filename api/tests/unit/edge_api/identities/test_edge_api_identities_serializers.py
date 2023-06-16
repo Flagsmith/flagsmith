@@ -1,5 +1,4 @@
 from django.utils import timezone
-from flag_engine.api.document_builders import build_identity_document
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 
 from edge_api.identities.models import EdgeIdentity
@@ -9,6 +8,7 @@ from environments.identities.serializers import (
 )
 from features.feature_types import STANDARD
 from features.models import FeatureState
+from mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 
@@ -17,7 +17,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
 ):
     # Given
     identity_model = EdgeIdentity.from_identity_document(
-        build_identity_document(identity)
+        map_identity_to_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user, master_api_key=None)
@@ -55,7 +55,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
 ):
     # Given
     identity_model = EdgeIdentity.from_identity_document(
-        build_identity_document(identity)
+        map_identity_to_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user, master_api_key=None)
@@ -106,7 +106,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
 ):
     # Given
     identity_model = EdgeIdentity.from_identity_document(
-        build_identity_document(identity)
+        map_identity_to_identity_document(identity)
     )
     view = mocker.MagicMock(identity=identity_model)
     request = mocker.MagicMock(user=admin_user)
@@ -166,7 +166,7 @@ def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_fo
     identity, multivariate_feature, environment
 ):
     # Given
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     del identity_document["django_id"]  # delete django id to simulate an edge identity
     identity_model = EdgeIdentity.from_identity_document(identity_document)
 

@@ -40,8 +40,8 @@ from environments.dynamodb import (
 )
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
-from environments.mappers import map_environment_to_document
 from features.models import Feature, FeatureSegment, FeatureState
+from mappers import map_environment_to_environment_document
 from metadata.models import Metadata
 from segments.models import Segment
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -326,7 +326,7 @@ class Environment(
         api_key: str,
     ) -> dict[str, typing.Any]:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return map_environment_to_document(environment)
+        return map_environment_to_environment_document(environment)
 
     def _get_environment(self):
         return self

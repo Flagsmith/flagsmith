@@ -2,11 +2,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from core.request_origin import RequestOrigin
-from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
+from mappers import map_environment_to_environment_document
 from segments.models import Segment
 
 
@@ -180,7 +180,7 @@ def test_environment_get_environment_document(environment, django_assert_num_que
     # Given
 
     # When
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(3):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -197,8 +197,8 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
     )
-    mocked_environment_document_cache.get.return_value = build_environment_document(
-        environment
+    mocked_environment_document_cache.get.return_value = (
+        map_environment_to_environment_document(environment)
     )
 
     # When
@@ -222,7 +222,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     mocked_environment_document_cache.get.return_value = None
 
     # When
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(3):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then

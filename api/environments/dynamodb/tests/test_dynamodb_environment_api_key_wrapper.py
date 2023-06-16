@@ -1,9 +1,6 @@
-from flag_engine.api.document_builders import (
-    build_environment_api_key_document,
-)
-
 from environments.dynamodb import DynamoEnvironmentAPIKeyWrapper
 from environments.models import EnvironmentAPIKey
+from mappers import map_environment_api_key_to_environment_api_key_document
 
 
 def test_write_api_keys_calls_internal_methods_correctly(
@@ -15,8 +12,8 @@ def test_write_api_keys_calls_internal_methods_correctly(
         dynamo_environment_api_key_wrapper, "_table"
     )
 
-    expected_environment_api_key_document = build_environment_api_key_document(
-        environment_api_key
+    expected_environment_api_key_document = (
+        map_environment_api_key_to_environment_api_key_document(environment_api_key)
     )
     api_keys = EnvironmentAPIKey.objects.filter(id=environment_api_key.id)
 

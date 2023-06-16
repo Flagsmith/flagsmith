@@ -694,10 +694,9 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
         identity_uuid
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert (
-        response.json()["multivariate_feature_state_values"]
-        == "Total percentage allocation for feature must be less than 100 percent"
-    )
+    assert response.json()["multivariate_feature_state_values"] == [
+        "Total percentage allocation for feature must be less than 100 percent"
+    ]
 
 
 @pytest.mark.parametrize(
