@@ -293,5 +293,8 @@ class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
                 f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.tasks"
             )
             workflows_tasks.notify_group_of_change_request_assignment.delay(
-                kwargs={"change_request_group_assignment_id": self.id}
+                kwargs={
+                    "change_request_group_assignment_id": self.id,
+                    "exclude_emails": [self.change_request.user.email],
+                }
             )

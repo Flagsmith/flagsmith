@@ -595,6 +595,7 @@ def test_change_request_group_assignment_sends_notification_emails_to_group_user
     # Then
     workflows_logic_tasks_module_mock.notify_group_of_change_request_assignment.delay.assert_called_once_with(
         kwargs={
-            "change_request_group_assignment_id": change_request_group_assignment.id
+            "change_request_group_assignment_id": change_request_group_assignment.id,
+            "exclude_emails": [change_request.user.email],
         }
     )
