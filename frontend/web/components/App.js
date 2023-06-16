@@ -337,7 +337,7 @@ const App = class extends Component {
                                           Utils.calculaterRemainingCallsPercentage(
                                             totalApiCalls,
                                             organisation.subscription
-                                              .max_api_calls,
+                                              ?.max_api_calls,
                                           ) &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
@@ -363,7 +363,7 @@ const App = class extends Component {
                                         {Utils.calculaterRemainingCallsPercentage(
                                           totalApiCalls,
                                           organisation.subscription
-                                            .max_api_calls,
+                                            ?.max_api_calls,
                                         ) &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
@@ -374,7 +374,7 @@ const App = class extends Component {
                                                 totalApiCalls,
                                               )}/${Format.shortenNumber(
                                                 organisation.subscription
-                                                  .max_api_calls,
+                                                  ?.max_api_calls,
                                               )} requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade'}
