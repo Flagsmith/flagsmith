@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
-import MyGroupsSelect from 'components/MyGroupsSelect';
+import MyGroupsSelect from 'components/MyGroupsSelect'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -246,6 +246,7 @@ const ChangeRequestModal = class extends Component {
               {!this.props.changeRequest &&
                 Utils.getFlagsmithHasFeature('enable_groups_as_reviewers') && (
                   <MyGroupsSelect
+                    orgId={AccountStore.getOrganisation().id}
                     value={this.state.approvals.map((v) => v.group)}
                     onAdd={this.addOwner}
                     onRemove={this.removeOwner}
