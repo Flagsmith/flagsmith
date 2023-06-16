@@ -38,7 +38,6 @@ COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/
 # Copy the bin folder as well to copy the executables created in package installation
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
-RUN pip list
 COPY api /app/
 
 # Compile static Django assets
