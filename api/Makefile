@@ -74,6 +74,18 @@ django-migrate:
 django-collect-static:
 	python manage.py collectstatic --noinput
 
+.PHONY: django-createcachetable
+django-createcachetable:
+	python manage.py createcachetable
+
+.PHONY: django-superuser
+django-superuser:
+	python manage.py createsuperuser
+
+.PHONY: django-flush
+django-flush:
+	python manage.py flush
+
 .PHONY: serve
 serve:
 	gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
