@@ -63,9 +63,9 @@ def call_environment_webhook_for_feature_state_change(
         )
 
     event_type = (
-        WebhookEventType.FLAG_DELETED
+        WebhookEventType.FLAG_FEATURE_DELETED
         if new_enabled_state is None
-        else WebhookEventType.FLAG_UPDATED
+        else WebhookEventType.FLAG_FEATURE_UPDATED
     )
 
     call_environment_webhooks(environment, data, event_type=event_type)

@@ -47,10 +47,12 @@ Environment level, and can be configured in the Environment settings page.
 
 Currently the following events will generate a Web Hook action:
 
-- Creating Features (Sent as event_type `FLAG_UPDATED`)
-- Updating Feature value / state in an Environment (Sent as event_type `FLAG_UPDATED`)
-- Overriding a Feature for an Identity (Sent as event_type `FLAG_UPDATED`)
-- Overriding a Feature for a Segment (Sent as event_type `FLAG_UPDATED`)
+- Creating Features (Sent as event_type `FLAG_FEATURE_CREATED`)
+- Updating Feature value / state in an Environment (Sent as event_type `FLAG_FEATURE_UPDATED`)
+- Overriding a Feature for an Identity (Sent as event_type `FLAG_IDENTITY_UPDATED`)
+- Overriding a Feature for a Segment (Sent as event_type `FLAG_SEGMENT_UPDATED`)
+- Deleting a Feature (Set as event_type `FLAG_FEATURE_DELETED`)
+- Deleting a Segment (Sent as event_type `FLAG_SEGMENT_DELETED`)
 
 You can define any number of Web Hook endpoints per Environment. Web Hooks can be managed from the Environment settings
 page.
@@ -114,7 +116,7 @@ Environment:
   },
   "timestamp": "2021-06-18T07:50:26.595298Z"
  },
- "event_type": "FLAG_UPDATED"
+ "event_type": "FLAG_FEATURE_UPDATED"
 }
 ```
 

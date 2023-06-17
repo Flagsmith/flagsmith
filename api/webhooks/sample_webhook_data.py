@@ -39,7 +39,7 @@ environment_webhook_data = {
         },
         "timestamp": "2021-06-18T07:50:26.595298Z",
     },
-    "event_type": "FLAG_UPDATED",
+    "event_type": "FLAG_FEATURE_UPDATED",
 }
 
 organisation_webhook_data = {
