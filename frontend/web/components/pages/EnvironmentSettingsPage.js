@@ -15,7 +15,7 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
-import { ButtonLink } from '../base/forms/Button'
+import { ButtonLink } from 'components/base/forms/Button'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },

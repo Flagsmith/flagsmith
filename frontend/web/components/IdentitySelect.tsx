@@ -8,12 +8,13 @@ import { components } from 'react-select'
 import { ButtonOutline } from './base/forms/Button'
 import Utils from 'common/utils/utils'
 
-type IdentitySelectType = {
-  value: Identity['id'] | null | undefined
+export type IdentitySelectType = {
+  value: { value: string; label: string } | null | undefined
   ignoreIds?: Identity['id'][]
   isEdge: boolean
-  onChange: (v: Identity) => void
+  onChange: (v: { value: string; label: string }) => void
   environmentId: string
+  placeholder?: string
 }
 
 const IdentitySelect: FC<IdentitySelectType> = ({
@@ -21,6 +22,7 @@ const IdentitySelect: FC<IdentitySelectType> = ({
   ignoreIds,
   isEdge,
   onChange,
+  placeholder = 'Search Identities...',
   value,
 }) => {
   const { data, isLoading, loadMore, searchItems } = useInfiniteScroll<
@@ -35,7 +37,8 @@ const IdentitySelect: FC<IdentitySelectType> = ({
     return filter(
       data?.results,
       (identity) =>
-        !ignoreIds?.length || !find(ignoreIds, (v) => v === identity.id),
+        !ignoreIds?.length ||
+        !find(ignoreIds, (v) => `${v}` === `${identity.id}`),
     )
       .map(({ id: value, identifier: label }) => ({ label, value }))
       .slice(0, 10)
@@ -47,7 +50,7 @@ const IdentitySelect: FC<IdentitySelectType> = ({
           searchItems(Utils.safeParseEventValue(e))
         }}
         data-test='select-identity'
-        placeholder='Create an Identity Override...'
+        placeholder={placeholder}
         value={value}
         components={{
           Menu: ({ ...props }: any) => {

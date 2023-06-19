@@ -5,6 +5,7 @@ import Tabs from 'components/base/forms/Tabs'
 import CompareEnvironments from 'components/CompareEnvironments'
 import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import CompareIdentities from 'components/CompareIdentities'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -44,6 +45,16 @@ class TheComponent extends Component {
               <CompareFeatures projectId={this.props.match.params.projectId} />
             </div>
           </TabItem>
+          {Utils.getFlagsmithHasFeature('compare_identities') && (
+            <TabItem tabLabel='Feature Values'>
+              <div className='mt-2'>
+                <CompareIdentities
+                  environmentId={this.props.match.params.environmentId}
+                  projectId={this.props.match.params.projectId}
+                />
+              </div>
+            </TabItem>
+          )}
         </Tabs>
       </div>
     )

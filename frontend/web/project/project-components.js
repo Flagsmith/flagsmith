@@ -44,7 +44,6 @@ window.Panel = require('../components/base/grid/Panel')
 window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
-window.FeatureValue = require('../components/FeatureValue')
 window.CodeHelp = require('../components/CodeHelp')
 
 // Useful for components used all the time within a project

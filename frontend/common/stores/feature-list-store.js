@@ -381,9 +381,9 @@ const controller = {
       )
       .then(() => {
         const {
+          approvals,
           featureStateId,
           multivariate_options,
-          approvals,
           ...changeRequestData
         } = changeRequest
 
@@ -398,6 +398,7 @@ const controller = {
         })
 
         const req = {
+          approvals: userApprovals,
           feature_states: [
             {
               enabled: flag.default_enabled,
@@ -409,7 +410,6 @@ const controller = {
               live_from: changeRequest.live_from || new Date().toISOString(),
             },
           ],
-          approvals: userApprovals,
           group_assignments,
           ...changeRequestData,
         }

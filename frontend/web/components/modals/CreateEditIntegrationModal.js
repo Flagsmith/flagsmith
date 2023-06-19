@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import EnvironmentSelect from 'components/EnvironmentSelect'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
+import EnvironmentSelect from 'components/EnvironmentSelect'
 
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'

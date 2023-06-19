@@ -29,6 +29,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
+import FeatureValue from 'components/FeatureValue'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -535,22 +536,22 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
 
-        {!identity && Utils.getFlagsmithHasFeature("is_server_key_only") && (
-            <FormGroup className='mb-4 mr-3 ml-3'>
-              <InputGroup
-                  component={
-                    <Switch
-                        checked={this.state.is_server_key_only}
-                        onChange={(is_server_key_only) =>
-                            this.setState({ is_server_key_only, settingsChanged: true })
-                        }
-                    />
+        {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
+          <FormGroup className='mb-4 mr-3 ml-3'>
+            <InputGroup
+              component={
+                <Switch
+                  checked={this.state.is_server_key_only}
+                  onChange={(is_server_key_only) =>
+                    this.setState({ is_server_key_only, settingsChanged: true })
                   }
-                  type='text'
-                  title='Server-side only'
-                  tooltip='Prevent this feature from being accessed with client-side SDKs.'
-              />
-            </FormGroup>
+                />
+              }
+              type='text'
+              title='Server-side only'
+              tooltip='Prevent this feature from being accessed with client-side SDKs.'
+            />
+          </FormGroup>
         )}
 
         {!identity && isEdit && (

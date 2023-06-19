@@ -9,9 +9,10 @@ import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
-import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
+import UsersIcon from './svg/UsersIcon'
+import FeatureValue from 'components/FeatureValue'; // we need this to make JSX compile
 
-class TheComponent extends Component {
+class FeatureRow extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
@@ -372,4 +373,4 @@ class TheComponent extends Component {
   }
 }
 
-export default TheComponent
+export default FeatureRow

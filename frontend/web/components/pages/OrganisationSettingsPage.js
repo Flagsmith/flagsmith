@@ -1002,11 +1002,11 @@ const OrganisationSettingsPage = class extends Component {
                                                             id,
                                                             Format.userDisplayName(
                                                               {
+                                                                email,
                                                                 firstName:
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
-                                                                email,
                                                               },
                                                             ),
                                                             email,

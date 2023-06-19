@@ -87,5 +87,6 @@ export type Req = {
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }
   getProjectAuditLogs: { id: string; params: getAuditLogs }
+  getIdentityFeatureState: { id: string }
   // END OF TYPES
 }

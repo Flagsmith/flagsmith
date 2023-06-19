@@ -3,6 +3,7 @@ import Switch from 'components/Switch'
 import EditBetaFeatureModal from 'components/modals/EditBetaFeature'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Format from 'common/utils/format'
+import FeatureValue from '../FeatureValue';
 
 const BetaFeaturesPage = class extends Component {
   static displayName = 'BetaFeaturesPage'

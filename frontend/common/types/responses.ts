@@ -185,6 +185,7 @@ export type FeatureState = {
   feature_state_value: string
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   identity?: string
+  identity_uuid?: string
   uuid: string
   enabled: boolean
   created_at: string
@@ -284,5 +285,6 @@ export type Res = {
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
   projectAuditLogs: PagedResponse<AuditLogItem>
+  identityFeatureState: { id: string }
   // END OF TYPES
 }

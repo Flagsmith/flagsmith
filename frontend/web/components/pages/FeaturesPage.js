@@ -507,8 +507,8 @@ const FeaturesPage = class extends Component {
                               .
                               <p className='faint'>
                                 EXAMPLE: You're working on a new messaging
-                                feature for your app but only want to show it for that
-                                Identity.
+                                feature for your app but only want to show it
+                                for that Identity.
                               </p>
                             </p>
                           </Panel>

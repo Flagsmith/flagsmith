@@ -1,26 +1,27 @@
-import { FC, useMemo } from 'react'
+import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import ignore from 'ignore'
 
-export type EnvironmentFilterType = {
+export type EnvironmentSelectType = {
   projectId: string
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
 
+  readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]
 }
 
-const EnvironmentFilter: FC<EnvironmentFilterType> = ({
+const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   idField = 'api_key',
   ignore,
   onChange,
   projectId,
+  readOnly,
   showAll,
   value,
 }) => {
-  const { data } = useGetEnvironmentsQuery({ projectId })
+  const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
   const foundValue = useMemo(
     () =>
       data?.results?.find((environment) => `${environment[idField]}` === value),
@@ -39,6 +40,9 @@ const EnvironmentFilter: FC<EnvironmentFilterType> = ({
         return true
       })
   }, [data?.results, ignore, idField])
+  if (readOnly) {
+    return <div className='mb-2'>{foundValue?.name}</div>
+  }
   return (
     <Select
       value={
@@ -60,4 +64,4 @@ const EnvironmentFilter: FC<EnvironmentFilterType> = ({
   )
 }
 
-export default EnvironmentFilter
+export default EnvironmentSelect

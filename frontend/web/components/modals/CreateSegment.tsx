@@ -21,7 +21,6 @@ import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button, { ButtonLink, ButtonOutline } from 'components/base/forms/Button'
-import EnvironmentSelect from 'components/EnvironmentSelect'
 import InfoMessage from 'components/InfoMessage'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -33,6 +32,7 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
+import EnvironmentSelect from 'components/EnvironmentSelect'
 
 type PageType = {
   number: number
@@ -472,6 +472,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     title='Environment'
                     component={
                       <EnvironmentSelect
+                        projectId={`${projectId}`}
                         value={environmentId}
                         onChange={(environmentId: string) => {
                           setEnvironmentId(environmentId)

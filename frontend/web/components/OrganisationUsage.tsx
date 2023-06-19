@@ -10,7 +10,7 @@ import {
 } from 'recharts'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import ProjectFilter from './ProjectFilter'
-import EnvironmentFilter from './EnvironmentFilter'
+import EnvironmentSelect from './EnvironmentSelect'
 import moment from 'moment'
 
 type OrganisationUsageType = {
@@ -74,7 +74,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
             <>
               <strong className='ml-2'>Environment</strong>
               <div className='ml-2' style={{ width: 200 }}>
-                <EnvironmentFilter
+                <EnvironmentSelect
                   showAll
                   projectId={project}
                   idField={'id'}
