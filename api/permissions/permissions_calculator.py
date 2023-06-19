@@ -2,7 +2,6 @@ import typing
 from dataclasses import dataclass, field
 from functools import reduce
 
-from django.conf import settings
 from django.db.models import QuerySet
 
 from environments.permissions.models import (
@@ -18,25 +17,12 @@ from projects.models import (
     UserProjectPermission,
 )
 
-if settings.IS_RBAC_INSTALLED:
-    from rbac.permissions_calculator import (
-        RolePermissionData,
-        get_roles_permission_data_for_environment,
-        get_roles_permission_data_for_organisation,
-        get_roles_permission_data_for_project,
-    )
-else:
-    RolePermissionData = []
-
-    def get_roles_permission_data_for_organisation(*args, **kwargs):
-        return []
-
-    def get_roles_permission_data_for_project(*args, **kwargs):
-        return []
-
-    def get_roles_permission_data_for_environment(*args, **kwargs):
-        return []
-
+from .rbac_wrapper import (
+    RolePermissionData,
+    get_roles_permission_data_for_environment,
+    get_roles_permission_data_for_organisation,
+    get_roles_permission_data_for_project,
+)
 
 UserPermissionQs = QuerySet[
     typing.Union[
