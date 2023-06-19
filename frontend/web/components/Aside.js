@@ -336,7 +336,7 @@ const Aside = class extends Component {
 
                           <Permission
                             level='project'
-                            permission='ADMIN'
+                            permission='VIEW_AUDIT_LOG'
                             id={this.props.projectId}
                           >
                             {({ permission }) =>

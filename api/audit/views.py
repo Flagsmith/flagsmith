@@ -6,7 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 
 from app.pagination import CustomPagination
 from audit.models import AuditLog
-from audit.permissions import OrganisationAuditLogPermissions
+from audit.permissions import (
+    OrganisationAuditLogPermissions,
+    ProjectAuditLogPermissions,
+)
 from audit.serializers import AuditLogSerializer, AuditLogsQueryParamSerializer
 from organisations.models import OrganisationRole
 
@@ -58,3 +61,10 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
 
     def _get_base_filters(self) -> Q:
         return Q(project__organisation__id=self.kwargs["organisation_pk"])
+
+
+class ProjectAuditLogViewSet(_BaseAuditLogViewSet):
+    permission_classes = [IsAuthenticated, ProjectAuditLogPermissions]
+
+    def _get_base_filters(self) -> Q:
+        return Q(project__id=self.kwargs["project_pk"])

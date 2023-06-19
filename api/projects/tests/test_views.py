@@ -116,7 +116,7 @@ def test_can_list_project_permission(client, project):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        len(response.json()) == 5
+        len(response.json()) == 6
     )  # hard code how many permissions we expect there to be
 
 

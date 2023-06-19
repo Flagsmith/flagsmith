@@ -3,7 +3,7 @@ from contextlib import suppress
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -33,6 +33,7 @@ from users.models import (
 from users.serializers import (
     ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
+    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
@@ -155,16 +156,21 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if not self.request.user.has_organisation_permission(
             organisation, MANAGE_USER_GROUPS
         ):
-            qs = qs.filter(
-                userpermissiongroupmembership__ffadminuser=self.request.user,
-                userpermissiongroupmembership__group_admin=True,
-            )
+            q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if self.action != "my_groups":
+                # my-groups returns a very cut down set of data, we can safely allow all users
+                # of the groups to retrieve them in this case, otherwise they must be a group
+                # admin.
+                q = q & Q(userpermissiongroupmembership__group_admin=True)
+            qs = qs.filter(q)
 
         return qs
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
+        elif self.action == "my_groups":
+            return MyUserPermissionGroupsSerializer
         return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
@@ -221,6 +227,13 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+    @action(detail=False, methods=["GET"], url_path="my-groups")
+    def my_groups(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
 
 
 @permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])

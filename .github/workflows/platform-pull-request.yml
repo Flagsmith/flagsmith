@@ -8,7 +8,6 @@ on:
 
 jobs:
   run-e2e-tests:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: Full E2E tests
 
@@ -51,7 +50,6 @@ jobs:
         run: docker logs $API_CONTAINER_ID
 
   run-e2e-tests-docker-unified:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: Full E2E tests with unified image in Docker
 

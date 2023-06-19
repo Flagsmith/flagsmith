@@ -205,6 +205,7 @@ export type ProjectFlag = {
   id: number
   initial_value: string
   is_archived: boolean
+  is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
   name: string
   num_identity_overrides: number | null
@@ -282,5 +283,7 @@ export type Res = {
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
+  myGroups: PagedResponse<UserGroupSummary>
+  projectAuditLogs: PagedResponse<AuditLogItem>
   // END OF TYPES
 }
