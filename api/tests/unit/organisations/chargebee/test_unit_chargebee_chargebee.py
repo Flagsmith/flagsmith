@@ -44,14 +44,14 @@ class MockChargeBeeHostedPageResponse:
         plan_id="plan-id",
         created_at=datetime.utcnow(),
         customer_id="customer-id",
-        chargebee_email="chargebee-email",
+        customer_email="chargebee-email",
     ):
         self.hosted_page = MockChargeBeeHostedPage(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
-            chargebee_email=chargebee_email,
+            chargebee_email=customer_email,
         )
 
 
@@ -177,14 +177,14 @@ class ChargeBeeTestCase(TestCase):
         expected_max_seats = 3
         created_at = datetime.now(tz=UTC)
         customer_id = "customer-id"
-        chargebee_email = "chargebee-email"
+        customer_email = "chargebee-email"
 
         self.mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
-            chargebee_email=chargebee_email,
+            customer_email=customer_email,
         )
         self.mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
             expected_max_seats
