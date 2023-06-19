@@ -15,7 +15,10 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
-from organisations.permissions.permissions import CREATE_PROJECT
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    MANAGE_USER_GROUPS,
+)
 from permissions.permissions_calculator import (
     get_environment_permission_data,
     get_organisation_permission_data,
@@ -37,32 +40,11 @@ from users.models import UserPermissionGroup
     ),
     (
         (set(), False, set(), False, set(), False),
-        (
-            {VIEW_PROJECT},
-            False,
-            set(),
-            False,
-            {VIEW_PROJECT},
-            False,
-        ),
-        (
-            set(),
-            False,
-            {VIEW_PROJECT},
-            False,
-            {VIEW_PROJECT},
-            False,
-        ),
-        (
-            set(),
-            False,
-            set(),
-            False,
-            set(),
-            False,
-        ),
         (set(), True, set(), False, set(), True),
         (set(), False, set(), True, set(), True),
+        (set(), True, set(), True, set(), True),
+        ({VIEW_PROJECT}, False, set(), False, {VIEW_PROJECT}, False),
+        (set(), False, {VIEW_PROJECT}, False, {VIEW_PROJECT}, False),
         (
             {VIEW_PROJECT, CREATE_ENVIRONMENT},
             False,
@@ -79,7 +61,6 @@ from users.models import UserPermissionGroup
             {VIEW_PROJECT, CREATE_ENVIRONMENT},
             False,
         ),
-        (set(), True, set(), True, set(), True),
     ),
 )
 def test_project_permissions_calculator_get_permission_data(
@@ -132,6 +113,7 @@ def test_project_permissions_calculator_get_permission_data(
     ),
     (
         (set(), False, set(), False, set(), False),
+        (set(), True, set(), True, set(), True),
         (
             {VIEW_ENVIRONMENT},
             False,
@@ -148,7 +130,6 @@ def test_project_permissions_calculator_get_permission_data(
             {VIEW_ENVIRONMENT},
             False,
         ),
-        (set(), False, set(), False, set(), False),
         (set(), True, set(), False, set(), True),
         (set(), False, set(), True, set(), True),
         (
@@ -167,7 +148,6 @@ def test_project_permissions_calculator_get_permission_data(
             {VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE},
             False,
         ),
-        (set(), True, set(), True, set(), True),
     ),
 )
 def test_environment_permissions_calculator_get_permission_data(
@@ -231,32 +211,14 @@ def test_environment_permissions_calculator_get_permission_data(
     (
         (set(), False, set(), set(), False),
         (set(), True, set(), set(), True),
+        ({CREATE_PROJECT}, False, set(), {CREATE_PROJECT}, False),
+        (set(), False, {CREATE_PROJECT}, {CREATE_PROJECT}, False),
+        ({CREATE_PROJECT}, False, set(), {CREATE_PROJECT}, False),
         (
             {CREATE_PROJECT},
             False,
-            set(),
-            {CREATE_PROJECT},
-            False,
-        ),
-        (
-            set(),
-            False,
-            {CREATE_PROJECT},
-            {CREATE_PROJECT},
-            False,
-        ),
-        (
-            set(),
-            False,
-            set(),
-            set(),
-            False,
-        ),
-        (
-            {CREATE_PROJECT},
-            False,
-            set(),
-            {CREATE_PROJECT},
+            {MANAGE_USER_GROUPS},
+            {CREATE_PROJECT, MANAGE_USER_GROUPS},
             False,
         ),
     ),
