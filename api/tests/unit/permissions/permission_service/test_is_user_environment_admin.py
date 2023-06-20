@@ -56,6 +56,8 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
 
 
 def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(
+    admin_user,
+    environment,
     user_project_permission,
     user_environment_permission,
     user_project_permission_group,
@@ -75,3 +77,6 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
 
     user_environment_permission_group.admin = True
     user_environment_permission_group.save()
+
+    # Then - the user should not be admin of the environment
+    assert is_user_environment_admin(admin_user, environment) is False
