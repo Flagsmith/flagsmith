@@ -364,6 +364,7 @@ const UserPage = class extends Component {
                                 }
                                 return (
                                   <IdentityStateRow
+                                    i={i}
                                     actualFlags={actualFlags}
                                     environmentFlags={environmentFlags}
                                     environmentId={environmentId}
