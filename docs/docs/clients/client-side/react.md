@@ -155,5 +155,5 @@ useFlagsmith()=> IFlagsmith
 This hook allows you to access the [SDK loading state](javascript#flagsmith-loading-state).
 
 ```javascript
-useFlagsmith()=> LoadingState
+useFlagsmithLoading()=> LoadingState
 ```
