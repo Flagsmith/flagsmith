@@ -144,6 +144,16 @@ export function MyComponent() {
 
 ## useFlagsmith API Reference
 
+This allows you to access the SDK instance that is used within the FlagsmithProvider.
+
 ```javascript
 useFlagsmith()=> IFlagsmith
+```
+
+## useFlagsmithLoading API Reference
+
+This hook allows you to access the [SDK loading state](javascript#flagsmith-loading-state).
+
+```javascript
+useFlagsmith()=> LoadingState
 ```
