@@ -13,12 +13,13 @@ import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
 import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Toolip'
+import IdentityProvider from 'common/providers/IdentityProvider'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
+window.IdentityProvider = IdentityProvider
 window.AccountProvider = require('../../common/providers/AccountProvider')
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')

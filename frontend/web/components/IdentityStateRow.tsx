@@ -1,17 +1,18 @@
-import { FC } from 'react'
-import FeatureValue from './FeatureValue'
+import React, { FC } from 'react'
 import Utils from 'common/utils/utils'
-import {
-  FeatureState,
-  MultivariateFeatureStateValue,
-  ProjectFlag,
-} from 'common/types/responses' // we need this to make JSX compile
+import { FeatureState, ProjectFlag } from 'common/types/responses' // we need this to make JSX compile
 import API from 'project/api'
 import Constants from 'common/constants'
-import { ButtonLink } from './base/forms/Button'
-import TagValues from './tags/TagValues'
 import { useHasPermission } from 'common/providers/Permission'
+import ConfirmToggleEnvFeature from './modals/ConfirmToggleEnvFeature'
+import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
+import IdentityProvider from 'common/providers/IdentityProvider'
+import Button, { ButtonLink } from './base/forms/Button'
+import TagValues from './tags/TagValues'
+import FeatureValue from './FeatureValue'
+import Switch from './Switch'
 const CreateFlagModal = require('components/modals/CreateFlag')
+
 type IdentityStateRowType = {
   actualFlags: Record<string, FeatureState> | undefined //
   identityFlags: Record<string, FeatureState> | undefined
@@ -24,8 +25,9 @@ type IdentityStateRowType = {
   projectId: string
   identityId: string
   identityName: string
-  onClick?: () => void
+  onClick?: (projectFlag: ProjectFlag) => void
   onClose?: () => void
+  onSave?: () => void
 }
 const valuesEqual = (
   actualValue: string | undefined,
@@ -82,6 +84,57 @@ const editFeature = (
     },
   )
 }
+
+const confirmToggle = ({
+  cb,
+  environmentFlag,
+  environmentId,
+  identity,
+  identityName,
+  projectFlag,
+}: {
+  identity: string
+  identityName: string
+  environmentId: string
+  projectFlag: ProjectFlag
+  environmentFlag: FeatureState
+  cb?: () => void
+}) => {
+  openModal(
+    'Toggle Feature',
+    <ConfirmToggleEnvFeature
+      identity={identity}
+      identityName={identityName}
+      environmentId={environmentId}
+      projectFlag={projectFlag}
+      environmentFlag={environmentFlag}
+      cb={cb}
+    />,
+  )
+}
+
+const confirmRemove = ({
+  cb,
+  environmentId,
+  identity,
+  projectFlag,
+}: {
+  cb: () => void
+  projectFlag: ProjectFlag
+  identity: string
+  environmentId: string
+}) => {
+  openModal(
+    'Reset User Feature',
+    <ConfirmRemoveFeature
+      identity={identity}
+      environmentId={environmentId}
+      projectFlag={projectFlag}
+      cb={cb}
+    />,
+  )
+}
+
 const IdentityStateRow: FC<IdentityStateRowType> = ({
   actualFlags,
   environmentFlags,
@@ -94,6 +147,7 @@ const IdentityStateRow: FC<IdentityStateRowType> = ({
   identityName,
   onClick,
   onClose,
+  onSave,
   projectFlags,
   projectId,
 }) => {
@@ -106,14 +160,9 @@ const IdentityStateRow: FC<IdentityStateRowType> = ({
   const flagValue = hasUserOverride
     ? identityFlag.feature_state_value
     : environmentFlag?.feature_state_value
-
-  const actualEnabled =
-    (actualFlags &&
-      !!actualFlags &&
-      actualFlags[featureName] &&
-      actualFlags[featureName].enabled) ||
-    false
-  const actualValue = actualFlags?.[featureName]?.feature_state_value
+  const actualFlag = actualFlags?.[featureName]
+  const actualEnabled = !!actualFlag?.enabled
+  const actualValue = actualFlag?.feature_state_value
   const flagEnabledDifferent = hasUserOverride
     ? false
     : actualEnabled !== flagEnabled
@@ -139,169 +188,187 @@ const IdentityStateRow: FC<IdentityStateRowType> = ({
     permission: Utils.getManageFeaturePermission(false),
   })
   return (
-    <Row
-      className={`list-item clickable py-1 ${
-        flagDifferent && 'flag-different'
-      }`}
-      space
-      data-test={`user-feature-${i}`}
-    >
-      <div
-        onClick={() => {
-          onClick?.()
-          editFeature(
-            projectFlag!,
-            environmentFlag!,
-            identityFlag!,
-            identityId,
-            identityName,
-            environmentId,
-            projectId,
-            onClose,
-          )
-        }}
-        className='flex flex-1'
-      >
-        <Row>
-          <ButtonLink className='mr-2'>{featureName}</ButtonLink>
-          <TagValues projectId={`${projectId}`} value={projectFlag?.tags} />
-        </Row>
-        {hasUserOverride ? (
-          <Row className='chip'>
-            <span>Overriding defaults</span>
-            <span className='chip-icon icon ion-md-information' />
-          </Row>
-        ) : flagEnabledDifferent ? (
-          <span data-test={`feature-override-${i}`} className='flex-row chip'>
+    <IdentityProvider onSave={onSave}>
+      {(
+        _: any,
+        { removeFlag, toggleFlag }: any, //todo: Identity provider will be replaced
+      ) => (
+        <Row
+          className={`list-item clickable py-1 ${
+            flagDifferent && 'flag-different'
+          }`}
+          space
+          data-test={`user-feature-${i}`}
+        >
+          <div
+            onClick={() => {
+              onClick?.(projectFlag!)
+              editFeature(
+                projectFlag!,
+                environmentFlag!,
+                identityFlag || actualFlag!,
+                identityId,
+                identityName,
+                environmentId,
+                projectId,
+                onClose,
+              )
+            }}
+            className='flex flex-1'
+          >
             <Row>
-              <Flex>
-                {isMultiVariateOverride ? (
-                  <span>
-                    This flag is being overridden by a variation defined on your
-                    feature, the control value is{' '}
-                    <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                  </span>
-                ) : (
-                  <span>
-                    This flag is being overridden by segments and would normally
-                    be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this
-                    user
-                  </span>
-                )}
-              </Flex>
-              <span className='ml-1 chip-icon icon ion-md-information' />
+              <ButtonLink className='mr-2'>{featureName}</ButtonLink>
+              <TagValues projectId={`${projectId}`} value={projectFlag?.tags} />
             </Row>
-          </span>
-        ) : flagValueDifferent ? (
-          isMultiVariateOverride ? (
-            <span data-test={`feature-override-${i}`} className='flex-row chip'>
-              <span>
-                This feature is being overriden by a % variation in the
-                environment, the control value of this feature is{' '}
-                <FeatureValue
-                  includeEmpty
-                  data-test={`user-feature-original-value-${i}`}
-                  value={`${flagValue}`}
-                />
-              </span>
-              <span className='chip-icon icon ion-md-information' />
-            </span>
-          ) : (
-            <span data-test={`feature-override-${i}`} className='flex-row chip'>
-              <span>
-                This feature is being overriden by segments and would normally
-                be{' '}
-                <FeatureValue
-                  includeEmpty
-                  data-test={`user-feature-original-value-${i}`}
-                  value={`${flagValue}`}
-                />{' '}
-                for this user
-              </span>
-              <span className='chip-icon icon ion-md-information' />
-            </span>
-          )
-        ) : (
-          <div className='list-item-footer'>
-            <span className='faint'>Using environment defaults</span>
-          </div>
-        )}
-      </div>
-      <Row>
-        <Column>
-          <div className='feature-value'>
-            <FeatureValue
-              data-test={`user-feature-value-${i}`}
-              value={actualValue as any}
-            />
-          </div>
-        </Column>
-        <Column>
-          <div>
-            {Utils.renderWithPermission(
-              permission,
-              Constants.environmentPermissions(
-                Utils.getManageFeaturePermissionDescription(false, true),
-              ),
-              <Switch
-                disabled={!permission}
-                data-test={`user-feature-switch-${i}${
-                  actualEnabled ? '-on' : '-off'
-                }`}
-                checked={actualEnabled}
-                onChange={() =>
-                  this.confirmToggle(
-                    _.find(projectFlags, {
-                      id,
-                    }),
-                    actualFlags[name],
-                    () => {
-                      toggleFlag({
-                        environmentFlag: actualFlags[name],
-                        environmentId: this.props.match.params.environmentId,
-                        identity: this.props.match.params.id,
-                        identityFlag,
-                        projectFlag: { id },
-                      })
-                    },
-                  )
-                }
-              />,
-            )}
-          </div>
-        </Column>
-        {hasUserOverride && (
-          <Column>
-            {Utils.renderWithPermission(
-              permission,
-              Constants.environmentPermissions(
-                Utils.getManageFeaturePermissionDescription(false, true),
-              ),
-              <Button
-                disabled={!permission}
-                onClick={() =>
-                  this.confirmRemove(
-                    _.find(projectFlags, {
-                      id,
-                    }),
-                    () => {
-                      removeFlag({
-                        environmentId: this.props.match.params.environmentId,
-                        identity: this.props.match.params.id,
-                        identityFlag,
-                      })
-                    },
-                    identity.identity.identifier,
-                  )
-                }
+            {hasUserOverride ? (
+              <Row className='chip'>
+                <span>Overriding defaults</span>
+                <span className='chip-icon icon ion-md-information' />
+              </Row>
+            ) : flagEnabledDifferent ? (
+              <span
+                data-test={`feature-override-${i}`}
+                className='flex-row chip'
               >
-                Reset
-              </Button>,
+                <Row>
+                  <Flex>
+                    {isMultiVariateOverride ? (
+                      <span>
+                        This flag is being overridden by a variation defined on
+                        your feature, the control value is{' '}
+                        <strong>{flagEnabled ? 'on' : 'off'}</strong> for this
+                        user
+                      </span>
+                    ) : (
+                      <span>
+                        This flag is being overridden by segments and would
+                        normally be{' '}
+                        <strong>{flagEnabled ? 'on' : 'off'}</strong> for this
+                        user
+                      </span>
+                    )}
+                  </Flex>
+                  <span className='ml-1 chip-icon icon ion-md-information' />
+                </Row>
+              </span>
+            ) : flagValueDifferent ? (
+              isMultiVariateOverride ? (
+                <span
+                  data-test={`feature-override-${i}`}
+                  className='flex-row chip'
+                >
+                  <span>
+                    This feature is being overriden by a % variation in the
+                    environment, the control value of this feature is{' '}
+                    <FeatureValue
+                      includeEmpty
+                      data-test={`user-feature-original-value-${i}`}
+                      value={`${flagValue}`}
+                    />
+                  </span>
+                  <span className='chip-icon icon ion-md-information' />
+                </span>
+              ) : (
+                <span
+                  data-test={`feature-override-${i}`}
+                  className='flex-row chip'
+                >
+                  <span>
+                    This feature is being overriden by segments and would
+                    normally be{' '}
+                    <FeatureValue
+                      includeEmpty
+                      data-test={`user-feature-original-value-${i}`}
+                      value={`${flagValue}`}
+                    />{' '}
+                    for this user
+                  </span>
+                  <span className='chip-icon icon ion-md-information' />
+                </span>
+              )
+            ) : (
+              <div className='list-item-footer'>
+                <span className='faint'>Using environment defaults</span>
+              </div>
             )}
-          </Column>
-        )}
-      </Row>
-    </Row>
+          </div>
+          <Row>
+            <Column>
+              <div className='feature-value'>
+                <FeatureValue
+                  data-test={`user-feature-value-${i}`}
+                  value={actualValue as any}
+                />
+              </div>
+            </Column>
+            <Column>
+              <div>
+                {Utils.renderWithPermission(
+                  permission,
+                  Constants.environmentPermissions(
+                    Utils.getManageFeaturePermissionDescription(false, true),
+                  ),
+                  <Switch
+                    disabled={!permission}
+                    data-test={`user-feature-switch-${i}${
+                      actualEnabled ? '-on' : '-off'
+                    }`}
+                    checked={actualEnabled}
+                    onChange={() =>
+                      confirmToggle({
+                        cb: () => {
+                          toggleFlag({
+                            environmentFlag,
+                            environmentId,
+                            identity: identityId,
+                            identityFlag,
+                            projectFlag,
+                          })
+                        },
+                        environmentFlag: environmentFlag!,
+                        environmentId,
+                        identity: identityId,
+                        identityName: identityName,
+                        projectFlag: projectFlag!,
+                      })
+                    }
+                  />,
+                )}
+              </div>
+            </Column>
+            {hasUserOverride && (
+              <Column>
+                {Utils.renderWithPermission(
+                  permission,
+                  Constants.environmentPermissions(
+                    Utils.getManageFeaturePermissionDescription(false, true),
+                  ),
+                  <Button
+                    disabled={!permission}
+                    onClick={() =>
+                      confirmRemove({
+                        cb: () => {
+                          removeFlag({
+                            environmentId: environmentId,
+                            identity: identityId,
+                            identityFlag,
+                          })
+                        },
+                        environmentId,
+                        identity: identityId,
+                        projectFlag: projectFlag!,
+                      })
+                    }
+                  >
+                    Reset
+                  </Button>,
+                )}
+              </Column>
+            )}
+          </Row>
+        </Row>
+      )}
+    </IdentityProvider>
   )
 }
 

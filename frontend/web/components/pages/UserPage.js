@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
-import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateTraitModal from 'components/modals/CreateTrait'
 import TryIt from 'components/TryIt'
 import CreateSegmentModal from 'components/modals/CreateSegment'
@@ -16,7 +14,7 @@ import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import IdentityStateRow from 'components/IdentityStateRow'
-import FeatureValue from '../FeatureValue';
+import FeatureValue from 'components/FeatureValue'
 const UserPage = class extends Component {
   static displayName = 'UserPage'
 
@@ -121,19 +119,6 @@ const UserPage = class extends Component {
     )
   }
 
-  confirmToggle = (projectFlag, environmentFlag, cb) => {
-    openModal(
-      'Toggle Feature',
-      <ConfirmToggleFeature
-        identity={this.props.match.params.id}
-        identityName={decodeURIComponent(this.props.match.params.identity)}
-        environmentId={this.props.match.params.environmentId}
-        projectFlag={projectFlag}
-        environmentFlag={environmentFlag}
-        cb={cb}
-      />,
-    )
-  }
   createTrait = () => {
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
@@ -161,18 +146,6 @@ const UserPage = class extends Component {
         identityName={decodeURIComponent(this.props.match.params.identity)}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
-      />,
-    )
-  }
-
-  confirmRemove = (projectFlag, cb, identity) => {
-    openModal(
-      'Reset User Feature',
-      <ConfirmRemoveFeature
-        identity={identity}
-        environmentId={this.props.match.params.environmentId}
-        projectFlag={projectFlag}
-        cb={cb}
       />,
     )
   }
@@ -219,18 +192,15 @@ const UserPage = class extends Component {
       >
         {({ permission: manageUserPermission }) => (
           <div className='app-container'>
-            <IdentityProvider onSave={this.onSave}>
-              {(
-                {
-                  environmentFlags,
-                  identity,
-                  identityFlags,
-                  isLoading,
-                  projectFlags,
-                  traits,
-                },
-                { removeFlag, toggleFlag },
-              ) =>
+            <IdentityProvider>
+              {({
+                environmentFlags,
+                identity,
+                identityFlags,
+                isLoading,
+                projectFlags,
+                traits,
+              }) =>
                 isLoading &&
                 !this.state.tags.length &&
                 !this.state.tags.length &&
@@ -392,22 +362,22 @@ const UserPage = class extends Component {
                                     `${document.location.pathname}?flag=${projectFlag.name}`,
                                   )
                                 }
-
-                                return <div/>
-
                                 return (
                                   <IdentityStateRow
-                                    onClick={onClick}
                                     actualFlags={actualFlags}
-                                    identityFlags={identityFlags}
-                                    projectFlags={projectFlags}
                                     environmentFlags={environmentFlags}
+                                    environmentId={environmentId}
                                     featureId={id}
                                     featureName={name}
-                                    environmentId={environmentId}
+                                    identityFlags={identityFlags}
+                                    identityId={this.props.match.params.id}
+                                    identityName={decodeURIComponent(
+                                      this.props.match.params.identity,
+                                    )}
+                                    onClick={onClick}
+                                    onSave={this.onSave}
+                                    projectFlags={projectFlags}
                                     projectId={projectId}
-                                    identityId={id}
-                                    identityName={name}
                                   />
                                 )
                               }}

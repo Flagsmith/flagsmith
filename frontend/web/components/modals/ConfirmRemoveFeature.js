@@ -31,7 +31,7 @@ const ConfirmRemoveFeature = class extends Component {
           <form id='confirm-remove-feature-modal' onSubmit={this.submit}>
             {identity ? (
               <p>
-                This will reset <strong>{projectFlag.name}</strong> for to the
+                This will reset <strong>{projectFlag.name}</strong> to the
                 environment defaults for the user <strong>{identity}</strong>
               </p>
             ) : (
@@ -71,6 +71,4 @@ const ConfirmRemoveFeature = class extends Component {
   }
 }
 
-ConfirmRemoveFeature.propTypes = {}
-
-module.exports = ConfirmRemoveFeature
+export default ConfirmRemoveFeature

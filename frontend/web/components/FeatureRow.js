@@ -10,7 +10,7 @@ import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon'
-import FeatureValue from 'components/FeatureValue'; // we need this to make JSX compile
+import FeatureValue from './FeatureValue' // we need this to make JSX compile
 
 class FeatureRow extends Component {
   static contextTypes = {
