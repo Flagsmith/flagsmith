@@ -284,6 +284,7 @@ export type Res = {
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
+  myGroups: PagedResponse<UserGroupSummary>
   projectAuditLogs: PagedResponse<AuditLogItem>
   identityFeatureState: { id: string }
   // END OF TYPES

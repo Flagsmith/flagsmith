@@ -88,5 +88,8 @@ export type Req = {
   getGroup: { id: string; orgId: string }
   getProjectAuditLogs: { id: string; params: getAuditLogs }
   getIdentityFeatureState: { id: string }
+  getMyGroups: PagedRequest<{
+    orgId: string
+  }>
   // END OF TYPES
 }

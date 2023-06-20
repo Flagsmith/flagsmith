@@ -603,7 +603,13 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
-        identity_hash_key = identity.get_hash_key() if identity else None
+        identity_hash_key = (
+            identity.get_hash_key(
+                use_mv_v2_evaluation=identity.environment.use_mv_v2_evaluation
+            )
+            if identity
+            else None
+        )
         return self.get_feature_state_value_by_hash_key(identity_hash_key)
 
     def get_feature_state_value_defaults(self) -> dict:
