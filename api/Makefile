@@ -27,17 +27,21 @@ install-packages:
 .PHONY: install
 install: install-pip install-poetry install-packages
 
+.PHONY: generate-requirements-file
+generate-requirements-file: 
+	poetry export -f requirements.txt --output requirements.txt --only $(opts)
+
 .PHONY: lint-black
 lint-black:
-	black --check .
+	poetry run black --check .
 
 .PHONY: lint-isort
 lint-isort:
-	isort  --check-only --diff .
+	poetry run isort  --check-only --diff .
 
 .PHONY: lint-flake8
 lint-flake8:
-	flake8
+	poetry run flake8
 
 .PHONY: lint
 lint: lint-black lint-isort lint-flake8
