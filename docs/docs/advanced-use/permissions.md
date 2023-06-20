@@ -32,11 +32,10 @@ that Organisation.
 Users that are not Organisation Administrators must have permissions assigned to them manually at the relevant levels.
 The permissions available at the Organisation level are defined below.
 
-| **Role**       | **Ability**                                                  |
-| -------------- | ------------------------------------------------------------ |
-| Create Project | Allows the user to create projects in the given Organisation |
-
-![Image](/img/organisation-permissions.png)
+| **Role**           | **Ability**                                                                 |
+| ------------------ | --------------------------------------------------------------------------- |
+| Create Project     | Allows the user to create Projects in the given Organisation                |
+| Manage User Groups | Allows the user to manage the Groups in the Organisation and their members. |
 
 ## Projects
 
@@ -50,8 +49,7 @@ Team Members and Groups can be given individual roles at a Project level.
 | Create Feature     | Can create a new Feature / Remote Config                                                   |
 | Delete Feature     | Can remove an existing Feature / Remote Config entirely from the Project                   |
 | Manage Segments    | Can create, delete and edit Segments within the Project                                    |
-
-![Image](/img/project-permissions.png)
+| View audit log     | Allows the user to view the audit logs for this Project.                                   |
 
 ## Environments
 
@@ -66,5 +64,3 @@ Team Members and Groups can be given individual roles at an Environment level.
 | Create Change Request  | Creating a new Change Request                             |
 | Approve Change Request | Approving or denying existing Change Requests             |
 | View Identities        | Viewing Identities                                        |
-
-![Image](/img/environment-permissions.png)
