@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING, Union
 
-from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
+
+from .rbac_wrapper import get_role_permission_filter
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
@@ -98,9 +99,10 @@ def user_has_organisation_permission(
 def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
-    base_filter = get_base_permission_filter(user, type(object_))
+    model_class = type(object_)
+    base_filter = get_base_permission_filter(user, model_class)
     filter_ = base_filter & Q(id=object_.id)
-    return type(object_).objects.filter(filter_).exists()
+    return type(model_class).objects.filter(filter_).exists()
 
 
 def get_base_permission_filter(
@@ -112,15 +114,11 @@ def get_base_permission_filter(
     user_filter = get_user_permission_filter(user, permission_key, allow_admin)
     group_filter = get_group_permission_filter(user, permission_key, allow_admin)
 
-    filter_ = user_filter | group_filter
-    if settings.IS_RBAC_INSTALLED:
-        from rbac.permission_service import get_role_permission_filter
+    role_filter = get_role_permission_filter(
+        user, for_model, permission_key, allow_admin
+    )
 
-        filter_ = filter_ | get_role_permission_filter(
-            user, for_model, permission_key, allow_admin
-        )
-
-    return filter_
+    return user_filter | group_filter | role_filter
 
 
 def get_user_permission_filter(
