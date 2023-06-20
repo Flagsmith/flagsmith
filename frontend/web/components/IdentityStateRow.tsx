@@ -20,7 +20,7 @@ type IdentityStateRowType = {
   environmentFlags: Record<string, FeatureState> | undefined
   featureId: string
   featureName: string
-  i?: number
+  i: number
   environmentId: string
   projectId: string
   identityId: string
