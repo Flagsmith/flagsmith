@@ -9,6 +9,14 @@ sidebar_position: 6
 Flagsmith has a [CLI tool](https://github.com/Flagsmith/flagsmith-cli) that you can use to help in your development
 workflows.
 
+## Installation
+
+Install globally:
+
+```bash
+npm install -g flagsmith-cli
+```
+
 ## Sample Usage
 
 ```bash
