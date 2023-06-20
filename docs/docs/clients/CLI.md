@@ -1,5 +1,5 @@
 ---
-description: Flagsmith 3rd Party Client SDKs
+description: Flagsmith Command Line Interface (CLI)
 sidebar_label: CLI
 sidebar_position: 6
 ---
