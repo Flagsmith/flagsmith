@@ -9,7 +9,7 @@ export const myGroupService = service
       getMyGroups: builder.query<Res['myGroups'], Req['getMyGroups']>({
         providesTags: [{ id: 'LIST', type: 'MyGroup' }],
         query: (q) => ({
-          url: `/organisations/${q.orgId}/groups/my-groups/`,
+          url: `/organisations/${q.orgId}/groups/my-groups`,
         }),
       }),
       // END OF ENDPOINTS
@@ -21,9 +21,8 @@ export async function getMyGroups(
   data: Req['getMyGroups'],
   options?: Parameters<typeof myGroupService.endpoints.getMyGroups.initiate>[1],
 ) {
-  store.dispatch(myGroupService.endpoints.getMyGroups.initiate(data, options))
-  return Promise.all(
-    store.dispatch(myGroupService.util.getRunningQueriesThunk()),
+  return store.dispatch(
+    myGroupService.endpoints.getMyGroups.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS
