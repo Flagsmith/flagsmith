@@ -289,12 +289,12 @@ const flagsmithB = createFlagsmithInstance();
 // now you can use flagsmith as before but in its own instance
 ```
 
-## Flagsmith loading state
+## Flagsmith Loading State
 
 [Version 1.9 and above](https://github.com/Flagsmith/flagsmith-js-client/releases/tag/1.9.0) allows you to determine the
 current loading state of the SDK and whether its current data is from default flags, cache or the API. Flagsmith loading
 state can be accessed via the onChange event and the [`useFlagsmithLoading()`](react#useflagsmithloading-api-reference)
-hook in the React SDK. The expected type of flagsmith loading state is as follows:
+hook in the React SDK. The expected type of Flagsmith loading state is as follows:
 
 ```typescript
 export declare enum FlagSource {
