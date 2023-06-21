@@ -244,6 +244,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const isSideProjectOrGreater = planName !== planNames.sideProject
     const isScaleupOrGreater =
       isSideProjectOrGreater && planName !== planNames.startup
+    const isEnterprise = planName === planNames.enterprise
+
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
@@ -266,7 +268,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater
+        valid = isScaleupOrGreater && !isEnterprise
         break
       }
       case 'FORCE_2FA': {
