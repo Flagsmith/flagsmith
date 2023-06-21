@@ -60,8 +60,8 @@ export async function deleteAccount(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useUpdateAccountMutation,
   useDeleteAccountMutation,
+  useUpdateAccountMutation,
   // END OF EXPORTS
 } = accountService
 
