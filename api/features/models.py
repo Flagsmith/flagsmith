@@ -464,11 +464,18 @@ class FeatureState(
                 )
             return True
 
-        if self.feature_segment_id:
+        if (
+            self.feature_segment_id
+            and self.feature_segment_id != other.feature_segment_id
+        ):
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
             return not (
-                other.identity_id or self.feature_segment < other.feature_segment
+                other.identity_id
+                or (
+                    other.feature_segment_id
+                    and self.feature_segment < other.feature_segment
+                )
             )
 
         if self.type == other.type:
