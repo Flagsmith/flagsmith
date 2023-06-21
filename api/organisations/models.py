@@ -261,3 +261,5 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
+
+    chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
