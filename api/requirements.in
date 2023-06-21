@@ -49,13 +49,10 @@ opencensus-ext-django
 djangorestframework-api-key
 backoff
 pymemcache
-<<<<<<< HEAD
 opentelemetry-instrumentation
 opentelemetry-instrumentation-django
 opentelemetry-sdk
 opentelemetry-exporter-otlp-proto-http
-=======
 google-re2
 django-softdelete
 simplejson
->>>>>>> main
