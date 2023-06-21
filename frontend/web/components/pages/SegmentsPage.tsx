@@ -36,13 +36,13 @@ const HowToUseSegmentsMessage = () => (
     <p className='alert alert-info'>
       In order to use segments, please set the segment_operators remote config
       value.{' '}
-      <a
+      <Button
+        theme='text'
         target='_blank'
         href='https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith'
-        rel='noreferrer'
       >
         Learn about self hosting
-      </a>
+      </Button>
       .
     </p>
   </div>

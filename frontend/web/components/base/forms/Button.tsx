@@ -1,5 +1,5 @@
 import cn from 'classnames'
-import { ButtonHTMLAttributes, FC } from 'react'
+import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
 
 export const themeClassNames = {
@@ -21,6 +21,8 @@ export const sizeClassNames = {
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconRight?: IconName
   iconLeft?: IconName
+  href?: string
+  target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
 }
@@ -28,15 +30,26 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
 export const Button: FC<ButtonType> = ({
   children,
   className,
+  href,
   iconLeft,
   iconRight,
   onMouseUp,
   size = 'default',
+  target,
   theme = 'primary',
   type = 'submit',
   ...rest
 }) => {
-  return (
+  return href ? (
+    <a
+      className={themeClassNames[theme]}
+      target={target}
+      href={href}
+      rel='noreferrer'
+    >
+      {children}
+    </a>
+  ) : (
     <button
       type={type}
       {...rest}
@@ -50,6 +63,7 @@ export const Button: FC<ButtonType> = ({
     >
       {!!iconLeft && <Icon className='mr-1' name={iconLeft} />}
       {children}
+
       {!!iconRight && <Icon className='ml-2' name={iconRight} />}
     </button>
   )

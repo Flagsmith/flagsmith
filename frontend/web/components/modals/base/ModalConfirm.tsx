@@ -55,7 +55,7 @@ const Confirm: FC<Confirm> = ({
             theme='danger'
             id='confirm-btn-yes'
             disabled={disabled || disabledYes}
-            iconRight='fas fa-trash'
+            iconRight='plus'
             onClick={yes}
           >
             {yesText}

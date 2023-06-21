@@ -299,9 +299,13 @@ class TheComponent extends Component {
                       <p>
                         You can use this token to integrate with our RESTful
                         API, the documentation can be found{' '}
-                        <a href='https://api.flagsmith.com/api/v1/docs/'>
+                        <Button
+                          theme='text'
+                          href='https://api.flagsmith.com/api/v1/docs/'
+                          target='_blank'
+                        >
                           here
-                        </a>
+                        </Button>
                         .
                       </p>
                     </div>
