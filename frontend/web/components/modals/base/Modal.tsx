@@ -95,9 +95,9 @@ export const openModal2 = (global.openModal2 = (
   className?: string,
   onClose?: () => void,
 ) => {
-  document.getElementById('modal') &&
+  document.getElementById('modal2') &&
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    unmountComponentAtNode(document.getElementById('modal')!)
+    unmountComponentAtNode(document.getElementById('modal2')!)
   render(
     <_ModalDefault2
       isOpen

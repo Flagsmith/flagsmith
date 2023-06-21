@@ -181,7 +181,7 @@ const HomePage = class extends React.Component {
               }
             }}
             key='single-sign-on'
-            className='btn btn__oauth btn__oauth--saml'
+            className='btn btn__oauth btn-primary btn__oauth--saml'
           >
             Single Sign-On
           </a>,

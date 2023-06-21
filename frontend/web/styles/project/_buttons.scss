@@ -82,6 +82,7 @@ $github: #eeefee;
 }
 .btn,
 button.btn {
+  white-space: nowrap;
   // Project button, to remove with project select bar
   &--transparent {
     background-color: transparent;
@@ -158,12 +159,13 @@ button.btn {
     }
   }
   &__oauth {
+    display: flex;
+    align-items: center;
     margin-right: 20px;
     &:last-child {
       margin-right: 0;
     }
     border-radius: $border-radius-default;
-    display: inline-block;
     color: #000 !important;
     font-weight: bold;
     text-align: left;
@@ -179,7 +181,6 @@ button.btn {
     svg {
       position: absolute;
       left: 20px;
-      top: 7px;
       height: 24px;
     }
     margin-top: 10px;
