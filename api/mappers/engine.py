@@ -162,7 +162,7 @@ def map_environment_to_engine(
     environment: "Environment",
 ) -> EnvironmentModel:
     """
-    Maps Core API's `environments.models.Environment` mode instance to the
+    Maps Core API's `environments.models.Environment` model instance to the
     flag_engine environment document.
     Before building the document, takes care of resolving relationships and
     feature versions.
@@ -189,13 +189,13 @@ def map_environment_to_engine(
         if feature_state.feature_segment_id is None
         and feature_state.identity_id is None
     ]
-    all_feature_states = (
+    all_environment_feature_states = (
         *environment_feature_states,
         *chain(*project_segment_feature_states_by_segment_id.values()),
     )
     multivariate_feature_state_values_by_feature_state_id = {
         feature_state.pk: feature_state.multivariate_feature_state_values.all()
-        for feature_state in all_feature_states
+        for feature_state in all_environment_feature_states
     }
 
     # Read integrations.
