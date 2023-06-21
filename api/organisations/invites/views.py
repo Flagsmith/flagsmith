@@ -58,12 +58,15 @@ def join_organisation_from_link(request, hash):
         raise PermissionDenied("Invite links are disabled.")
 
     invite = get_object_or_404(InviteLink, hash=hash)
-
     organisation = Organisation.objects.get(id=invite.organisation.id)
-    if organisation.over_plan_seats_limit(shift=1):
-        raise PermissionDenied(
-            "The seats limit has been reached. Please contact your organisation."
-        )
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    if (
+        len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+        and organisation.num_seats >= subscription_metadata.seats
+        and not organisation.subscription.can_auto_upgrade_seats
+    ):
+        raise SubscriptionDoesNotSupportSeatUpgrade()
 
     if invite.is_expired:
         raise InviteExpiredError()
@@ -92,10 +95,14 @@ class InviteLinkViewSet(
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
         organisation = Organisation.objects.get(id=organisation_pk)
-        if organisation.over_plan_seats_limit(shift=1):
-            raise PermissionDenied(
-                "The seats limit has been reached in your organisation."
-            )
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and organisation.num_seats >= subscription_metadata.seats
+            and not organisation.subscription.can_auto_upgrade_seats
+        ):
+            raise SubscriptionDoesNotSupportSeatUpgrade()
 
         return InviteLink.objects.filter(
             organisation__in=user.organisations.all()

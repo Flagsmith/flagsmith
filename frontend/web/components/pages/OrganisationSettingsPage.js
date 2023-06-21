@@ -290,7 +290,7 @@ const OrganisationSettingsPage = class extends Component {
                   const overSeats =
                     paymentsEnabled && organisation.num_seats > max_seats
                   const needsUpgradeForAdditionalSeats =
-                    overSeats || (!autoSeats && usedSeats)
+                    (!autoSeats && overSeats) || (!autoSeats && usedSeats)
                   return (
                     <div>
                       <Tabs
@@ -608,7 +608,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 for your plan.{' '}
                                                 {usedSeats && (
                                                   <>
-                                                    {overSeats ? (
+                                                    {!autoSeats && overSeats ? (
                                                       <strong>
                                                         If you wish to invite
                                                         any additional members,
@@ -664,7 +664,10 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                               </InfoMessage>
                                             )}
-                                            {!needsUpgradeForAdditionalSeats &&
+                                            {Utils.getFlagsmithHasFeature(
+                                              'verify_seats_limit_for_invite_links',
+                                            ) &&
+                                              !needsUpgradeForAdditionalSeats &&
                                               inviteLinks && (
                                                 <form
                                                   onSubmit={(e) => {
@@ -1007,11 +1010,11 @@ const OrganisationSettingsPage = class extends Component {
                                                             id,
                                                             Format.userDisplayName(
                                                               {
+                                                                email,
                                                                 firstName:
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
-                                                                email,
                                                               },
                                                             ),
                                                             email,

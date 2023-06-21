@@ -99,12 +99,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_paid(self):
         return self.has_subscription() and self.subscription.cancellation_date is None
 
-    def over_plan_seats_limit(self, shift=0):
+    def over_plan_seats_limit(self):
         if self.has_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats + shift > susbcription_metadata.seats
+            return self.num_seats > susbcription_metadata.seats
 
-        return self.num_seats + shift > MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats > MAX_SEATS_IN_FREE_PLAN
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False

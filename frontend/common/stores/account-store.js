@@ -11,7 +11,7 @@ const controller = {
     return data
       .post(`${Project.api}users/join/link/${id}/`)
       .catch((error) => {
-        if (error.status === 403) {
+        if (error.status === 400) {
           API.ajaxHandler(store, error)
           return
         }
