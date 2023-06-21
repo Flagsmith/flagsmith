@@ -145,6 +145,13 @@ class Environment(
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
+    @hook(AFTER_UPDATE, when="use_v2_feature_versioning", was=False, is_now=True)
+    def create_initial_versions(self):
+        # TODO: only import if module is installed?
+        from features.versioning.tasks import create_initial_feature_versions
+
+        create_initial_feature_versions.delay(kwargs={"environment_id": self.id})
+
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 

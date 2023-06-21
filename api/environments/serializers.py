@@ -49,6 +49,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "hide_disabled_flags",
             "use_mv_v2_evaluation",
             "hide_sensitive_data",
+            "use_v2_feature_versioning",
         )
 
 

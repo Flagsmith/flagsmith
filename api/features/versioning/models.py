@@ -97,6 +97,7 @@ class EnvironmentFeatureVersion(LifecycleModel):
                 published=True,
             )
             .order_by("-live_from")
+            .exclude(sha=self.sha)
             .first()
         )
 
