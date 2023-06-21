@@ -243,3 +243,5 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     max_projects = serializers.IntegerField(source="projects", allow_null=True)
 
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
+
+    chargebee_email = serializers.EmailField()

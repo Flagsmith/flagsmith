@@ -44,12 +44,14 @@ class MockChargeBeeHostedPageResponse:
         plan_id="plan-id",
         created_at=datetime.utcnow(),
         customer_id="customer-id",
+        customer_email="test@example.com",
     ):
         self.hosted_page = MockChargeBeeHostedPage(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
+            customer_email=customer_email,
         )
 
 
@@ -60,6 +62,7 @@ class MockChargeBeeHostedPage:
         plan_id,
         created_at,
         customer_id,
+        customer_email,
         hosted_page_id="some-id",
     ):
         self.id = hosted_page_id
@@ -68,41 +71,60 @@ class MockChargeBeeHostedPage:
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
+            customer_email=customer_email,
         )
 
 
 class MockChargeBeeHostedPageContent:
-    def __init__(self, subscription_id, plan_id, created_at, customer_id):
+    def __init__(
+        self, subscription_id, plan_id, created_at, customer_id, customer_email
+    ):
         self.subscription = MockChargeBeeSubscription(
             subscription_id=subscription_id, plan_id=plan_id, created_at=created_at
         )
-        self.customer = MockChargeBeeCustomer(customer_id)
+        self.customer = MockChargeBeeCustomer(customer_id, customer_email)
+
+
+class MockChargeBeeAddOn:
+    def __init__(self, addon_id: str, quantity: int):
+        self.id = addon_id
+        self.quantity = quantity
 
 
 class MockChargeBeeSubscriptionResponse:
     def __init__(
         self,
-        subscription_id="subscription-id",
-        plan_id="plan-id",
-        created_at=datetime.now(),
-        customer_id="customer-id",
+        subscription_id: str = "subscription-id",
+        plan_id: str = "plan-id",
+        created_at: datetime = None,
+        customer_id: str = "customer-id",
+        customer_email: str = "test@example.com",
+        addons: list[MockChargeBeeAddOn] = None,
     ):
         self.subscription = MockChargeBeeSubscription(
-            subscription_id, plan_id, created_at
+            subscription_id, plan_id, created_at or datetime.now(), addons
         )
-        self.customer = MockChargeBeeCustomer(customer_id)
+        self.customer = MockChargeBeeCustomer(customer_id, customer_email)
 
 
 class MockChargeBeeSubscription:
-    def __init__(self, subscription_id, plan_id, created_at):
+    def __init__(
+        self,
+        subscription_id: str,
+        plan_id: str,
+        created_at: datetime,
+        addons: list[MockChargeBeeAddOn] = None,
+    ):
         self.id = subscription_id
         self.plan_id = plan_id
         self.created_at = datetime.timestamp(created_at)
+        self.addons = addons or []
 
 
 class MockChargeBeeCustomer:
-    def __init__(self, customer_id):
+    def __init__(self, customer_id, customer_email):
         self.id = customer_id
+        self.email = customer_email
 
 
 class MockChargeBeePortalSessionResponse:
@@ -244,19 +266,19 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
     plan_id = "plan-id"
     addon_id = "addon-id"
     subscription_id = "subscription-id"
+    customer_email = "test@example.com"
 
     # Let's create a (mocked) subscription object
-    mocked_subscription = mocker.MagicMock(
-        id=subscription_id,
+    mock_subscription_response = MockChargeBeeSubscriptionResponse(
+        subscription_id=subscription_id,
         plan_id=plan_id,
-        addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
+        customer_email=customer_email,
+        addons=[MockChargeBeeAddOn(addon_id=addon_id, quantity=addon_quantity)],
     )
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
     # tie that subscription object to the mocked chargebee object
-    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
-        mocked_subscription
-    )
+    mocked_chargebee.Subscription.retrieve.return_value = mock_subscription_response
 
     # now, let's mock chargebee cache object
     mocked_chargebee_cache = mocker.patch(
@@ -272,6 +294,7 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    assert subscription_metadata.chargebee_email == customer_email
 
 
 def test_cancel_subscription(mocker):

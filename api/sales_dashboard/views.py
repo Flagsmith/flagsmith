@@ -129,6 +129,7 @@ def organisation_info(request, organisation_id):
         "max_api_calls": subscription_metadata.api_calls,
         "max_seats": subscription_metadata.seats,
         "max_projects": subscription_metadata.projects,
+        "chargebee_email": subscription_metadata.chargebee_email,
         "identity_count_dict": identity_count_dict,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
