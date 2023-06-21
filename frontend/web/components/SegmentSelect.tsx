@@ -6,6 +6,7 @@ import { Req } from 'common/types/requests' // we need this to make JSX compile
 import { components } from 'react-select'
 import { SelectProps } from '@material-ui/core/Select/Select'
 import Utils from 'common/utils/utils'
+import Button from './base/forms/Button'
 
 type SegmentSelectType = {
   projectId: string

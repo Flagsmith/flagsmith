@@ -206,13 +206,13 @@ export default class AdminAPIKeys extends PureComponent {
           </Button>
           <p>
             Terraform API keys are used to authenticate with the Admin API.{' '}
-            <a
+            <Button
+              theme='text'
               href='https://docs.flagsmith.com/advanced-use/system-administration#terraform-api-keys-for-organisations'
               target='_blank'
-              rel='noreferrer'
             >
               Learn about Terraform Keys.
-            </a>
+            </Button>
           </p>
         </Row>
         {this.state.isLoading && (

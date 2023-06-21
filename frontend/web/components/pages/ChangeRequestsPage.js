@@ -78,8 +78,8 @@ const ChangeRequestsPage = class extends Component {
               <InfoMessage>
                 View and manage your feature changes with a Change Request flow
                 with our{' '}
-                <a
-                  href='#'
+                <Button
+                  theme='text'
                   onClick={() => {
                     openModal(
                       'Payment plans',
@@ -88,15 +88,16 @@ const ChangeRequestsPage = class extends Component {
                   }}
                 >
                   Scale-up plan
-                </a>
+                </Button>
                 . Find out more{' '}
-                <a
+                <Button
+                  theme='text'
                   href='https://docs.flagsmith.com/advanced-use/change-requests'
                   target='_blank'
                   rel='noreferrer'
                 >
                   here
-                </a>
+                </Button>
                 .
               </InfoMessage>
             </div>

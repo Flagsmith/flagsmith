@@ -10,6 +10,7 @@ import { Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
+import Button from 'components/base/forms/Button'
 
 type AddEditTagsType = {
   value?: number[]

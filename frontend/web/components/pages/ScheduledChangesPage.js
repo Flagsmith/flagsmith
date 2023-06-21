@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Button from '../base/forms/Button'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -69,8 +70,8 @@ const ChangeRequestsPage = class extends Component {
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
                     with our{' '}
-                    <a
-                      href='#'
+                    <Button
+                      theme='text'
                       onClick={() => {
                         openModal(
                           'Payment plans',
@@ -79,15 +80,15 @@ const ChangeRequestsPage = class extends Component {
                       }}
                     >
                       Start-up plan
-                    </a>
+                    </Button>
                     . Find out more{' '}
-                    <a
+                    <Button
+                      theme='text'
                       href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'
                       target='_blank'
-                      rel='noreferrer'
                     >
                       here
-                    </a>
+                    </Button>
                     .
                   </InfoMessage>
                 </div>
