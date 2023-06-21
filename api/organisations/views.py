@@ -34,6 +34,7 @@ from organisations.permissions.permissions import (
 )
 from organisations.serializers import (
     GetHostedPageForSubscriptionUpgradeSerializer,
+    InfluxDataQuerySerializer,
     InfluxDataSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
@@ -134,10 +135,16 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=200)
 
-    @action(detail=True, methods=["GET"])
+    @swagger_auto_schema(
+        deprecated=True,
+        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total-count​/",
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+    )
     def usage(self, request, pk):
         organisation = self.get_object()
-
         try:
             events = get_events_for_organisation(organisation.id)
         except (TypeError, ValueError):
@@ -206,10 +213,21 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        deprecated=True,
+        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        query_serializer=InfluxDataQuerySerializer(),
+    )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk):
+        filters = InfluxDataQuerySerializer(data=request.query_params)
+        filters.is_valid(raise_exception=True)
         serializer = self.get_serializer(
-            data={"events_list": get_multiple_event_list_for_organisation(pk)}
+            data={
+                "events_list": get_multiple_event_list_for_organisation(
+                    pk, **filters.data
+                )
+            }
         )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

@@ -11,31 +11,40 @@
         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Organisations</h1>
         <div class="float-right">
-          <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
-            {% csrf_token %}
-            <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
-          </form>
-          <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-chargebee-cache' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update chargebee cache" class="btn btn-primary m-1">
+            </form>
+          </div>
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
+            </form>
+            <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
+          </div>
         </div>
       </div>
 
       <div class="sort-form">
         <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
+        <label for="filter-plan">Filter: </label>
           <select name="filter_plan" id="filter-plan" class="custom-select m-1">
             <option value="" {% if not filter_plan %}selected{% endif %}>Filter Plan</option>
             <option value="free" {% if filter_plan == "free" %}selected{% endif %}>Free</option>
             <option value="start" {% if filter_plan == "start" %}selected{% endif %}>Start Up</option>
             <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
           </select>
+          <label for="sort-field">Sort: </label>
           <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
-            <option value="" {% if not sort_field %}selected{% endif %}>Sort by...</option>
             <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Users</option>
             <option value="subscription_information_cache__allowed_seats" {% if sort_field == "subscription_information_cache__allowed_seats" %}selected{% endif %}>Seats</option>
             <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
             <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
             <option value="subscription_information_cache__api_calls_24h" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
             <option value="subscription_information_cache__api_calls_7d" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
-            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" %}selected{% endif %}>30d API calls</option>
+            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" or not sort_field %}selected{% endif %}>30d API calls</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
             <option value="DESC" {% if not sort_direction or sort_direction == "DESC" %}selected{% endif %}>Descending</option>
@@ -60,6 +69,7 @@
               <th>24h</th>
               <th>7d</th>
               <th>30d</th>
+              <th>Overage</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +91,7 @@
               <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
               <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
               <td><span class="{% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}badge badge-danger{% endif %}">{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</span></td>
+              <td>{% if org.subscription.get_api_call_overage > 0 %}<span class="badge badge-danger">{{org.subscription.get_api_call_overage}}</span>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

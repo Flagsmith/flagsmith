@@ -5,6 +5,11 @@ module.exports = [
         exclude: /node_modules/,
         use: ['babel-loader'],
     },
+    {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: ['babel-loader'],
+    },
     { test: /.json$/, loader: 'json-loader', exclude: /node_modules/ },
 
     {
@@ -17,7 +22,7 @@ module.exports = [
     },
     {
         test: /\.html$/,
-        use: 'html-loader?attrs[]=source:src&attrs[]=img:src',
+        use: 'html-loader',
     },
     {
         test: /\.(otf|ttf|eot|png|jpg|jpeg|gif|svg|woff|woff2|ogv|mp4|webm)$/,

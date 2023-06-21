@@ -1,57 +1,78 @@
-import data from '../data/base/_data';
+import data from 'common/data/base/_data'
 
 export default (WrappedComponent) => {
-    class HOC extends React.Component {
-        static displayName = 'withWebhooks';
+  class HOC extends React.Component {
+    static displayName = 'withWebhooks'
 
-        getWebhooks = () => data.get(`${Project.api}organisations/${AccountStore.getOrganisation().id}/webhooks/`)
-            .then((webhooks) => {
-                this.setState({
-                    webhooks: webhooks.results,
-                    webhooksLoading: false,
-                });
-            })
+    getWebhooks = () =>
+      data
+        .get(
+          `${Project.api}organisations/${
+            AccountStore.getOrganisation().id
+          }/webhooks/`,
+        )
+        .then((webhooks) => {
+          this.setState({
+            webhooks: webhooks.results,
+            webhooksLoading: false,
+          })
+        })
 
-        deleteWebhook = (webhook) => {
-            this.setState({ webhooksLoading: true });
-            return data.delete(`${Project.api}organisations/${AccountStore.getOrganisation().id}/webhooks/${webhook.id}/`)
-                .then(() => {
-                    this.getWebhooks();
-                });
-        }
-
-
-        saveWebhook = (webhook) => {
-            this.setState({ webhooksLoading: true });
-            return data.put(`${Project.api}organisations/${AccountStore.getOrganisation().id}/webhooks/${webhook.id}/`, webhook)
-                .then(() => {
-                    this.getWebhooks();
-                });
-        }
-
-
-        createWebhook = (webhook) => {
-            this.setState({ webhooksLoading: true });
-            return data.post(`${Project.api}organisations/${AccountStore.getOrganisation().id}/webhooks/`, webhook)
-                .then(() => {
-                    this.getWebhooks();
-                });
-        }
-
-        render() {
-            return (
-                <WrappedComponent
-                  ref="wrappedComponent"
-                  saveWebhook={this.saveWebhook}
-                  createWebhook={this.createWebhook}
-                  deleteWebhook={this.deleteWebhook}
-                  getWebhooks={this.getWebhooks}
-                  {...this.props}
-                  {...this.state}
-                />
-            );
-        }
+    deleteWebhook = (webhook) => {
+      this.setState({ webhooksLoading: true })
+      return data
+        .delete(
+          `${Project.api}organisations/${
+            AccountStore.getOrganisation().id
+          }/webhooks/${webhook.id}/`,
+        )
+        .then(() => {
+          this.getWebhooks()
+        })
     }
 
-    return HOC;
-};
+    saveWebhook = (webhook) => {
+      this.setState({ webhooksLoading: true })
+      return data
+        .put(
+          `${Project.api}organisations/${
+            AccountStore.getOrganisation().id
+          }/webhooks/${webhook.id}/`,
+          webhook,
+        )
+        .then(() => {
+          this.getWebhooks()
+        })
+    }
+
+    createWebhook = (webhook) => {
+      this.setState({ webhooksLoading: true })
+      return data
+        .post(
+          `${Project.api}organisations/${
+            AccountStore.getOrganisation().id
+          }/webhooks/`,
+          webhook,
+        )
+        .then(() => {
+          this.getWebhooks()
+        })
+    }
+
+    render() {
+      return (
+        <WrappedComponent
+          ref='wrappedComponent'
+          saveWebhook={this.saveWebhook}
+          createWebhook={this.createWebhook}
+          deleteWebhook={this.deleteWebhook}
+          getWebhooks={this.getWebhooks}
+          {...this.props}
+          {...this.state}
+        />
+      )
+    }
+  }
+
+  return HOC
+}

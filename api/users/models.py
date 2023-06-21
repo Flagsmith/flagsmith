@@ -6,7 +6,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
@@ -30,6 +30,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.auth_type import AuthType
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
@@ -42,6 +43,12 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
+
+
+class SignUpType(models.TextChoices):
+    NO_INVITE = "NO_INVITE"
+    INVITE_EMAIL = "INVITE_EMAIL"
+    INVITE_LINK = "INVITE_LINK"
 
 
 class UserManager(BaseUserManager):
@@ -97,9 +104,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         default=False,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )
+    sign_up_type = models.CharField(
+        choices=SignUpType.choices, max_length=100, blank=True, null=True
+    )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
         ordering = ["id"]
@@ -111,6 +121,19 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
+
+    def delete_orphan_organisations(self):
+        Organisation.objects.filter(
+            id__in=self.organisations.values_list("id", flat=True)
+        ).annotate(users_count=Count("users")).filter(users_count=1).delete()
+
+    def delete(
+        self,
+        delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
+    ):
+        if delete_orphan_organisations:
+            self.delete_orphan_organisations()
+        super().delete()
 
     @property
     def auth_type(self):
@@ -125,6 +148,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @property
     def full_name(self):
         return self.get_full_name()
+
+    @property
+    def email_domain(self):
+        return self.email.split("@")[1]
 
     def get_full_name(self):
         if not self.first_name:
@@ -143,10 +170,30 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and invite.organisation.num_seats >= subscription_metadata.seats
+        ):
+            organisation.subscription.add_single_seat()
+
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
-    def is_organisation_admin(self, organisation):
-        return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name
+    def is_organisation_admin(
+        self, organisation: Organisation = None, organisation_id: int = None
+    ):
+        if not (organisation or organisation_id) or (organisation and organisation_id):
+            raise ValueError(
+                "Must provide exactly one of organisation or organisation_id"
+            )
+
+        role = (
+            self.get_organisation_role(organisation)
+            if organisation
+            else self.get_user_organisation_by_id(organisation_id)
+        )
+        return role and role == OrganisationRole.ADMIN.name
 
     def get_admin_organisations(self):
         return Organisation.objects.filter(
@@ -179,6 +226,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.role
 
+    def get_organisation_role_by_id(self, organisation_id: int) -> typing.Optional[str]:
+        user_organisation = self.get_user_organisation_by_id(organisation_id)
+        return user_organisation.role
+
     def get_organisation_join_date(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
         if user_organisation:
@@ -192,6 +243,16 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 "User %d is not part of organisation %d" % (self.id, organisation.id)
             )
 
+    def get_user_organisation_by_id(
+        self, organisation_id: int
+    ) -> typing.Optional[UserOrganisation]:
+        try:
+            return self.userorganisation_set.get(organisation__id=organisation_id)
+        except UserOrganisation.DoesNotExist:
+            logger.warning(
+                "User %d is not part of organisation %d" % (self.id, organisation_id)
+            )
+
     def get_permitted_projects(self, permissions):
         """
         Get all projects that the user has the given permissions for.
@@ -201,6 +262,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
             - User is an admin for the organisation the project belongs to
         """
+
         user_permission_query = Q()
         group_permission_query = Q()
         for permission in permissions:
@@ -288,9 +350,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             | Q(grouppermission__admin=True)
         )
 
-        return Environment.objects.filter(
-            Q(project=project) & Q(user_query | group_query)
-        ).distinct()
+        return (
+            Environment.objects.filter(Q(project=project) & Q(user_query | group_query))
+            .distinct()
+            .defer("description")
+        )
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
@@ -341,7 +405,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if self.is_organisation_admin(organisation):
             return True
 
-        return (
+        return permission_key is not None and (
             UserOrganisationPermission.objects.filter(
                 user=self, organisation=organisation, permissions__key=permission_key
             ).exists()
@@ -374,6 +438,40 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         return all_permission_keys
 
+    def add_to_group(
+        self, group: "UserPermissionGroup", group_admin: bool = False
+    ) -> None:
+        UserPermissionGroupMembership.objects.create(
+            ffadminuser=self, userpermissiongroup=group, group_admin=group_admin
+        )
+
+    def is_group_admin(self, group_id) -> bool:
+        return UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id, group_admin=True
+        ).exists()
+
+    def make_group_admin(self, group_id: int):
+        UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id
+        ).update(group_admin=True)
+
+    def remove_as_group_admin(self, group_id: int):
+        UserPermissionGroupMembership.objects.filter(
+            ffadminuser=self, userpermissiongroup__id=group_id
+        ).update(group_admin=False)
+
+
+class UserPermissionGroupMembership(models.Model):
+    userpermissiongroup = models.ForeignKey(
+        "users.UserPermissionGroup",
+        on_delete=models.CASCADE,
+    )
+    ffadminuser = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    group_admin = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "users_userpermissiongroup_users"
+
 
 class UserPermissionGroup(models.Model):
     """
@@ -382,7 +480,11 @@ class UserPermissionGroup(models.Model):
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
-        "users.FFAdminUser", related_name="permission_groups"
+        "users.FFAdminUser",
+        blank=True,
+        related_name="permission_groups",
+        through=UserPermissionGroupMembership,
+        through_fields=["userpermissiongroup", "ffadminuser"],
     )
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
@@ -404,18 +506,14 @@ class UserPermissionGroup(models.Model):
         unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
-        users_to_add = []
-        for user_id in user_ids:
-            try:
-                user = FFAdminUser.objects.get(
-                    id=user_id, organisations=self.organisation
-                )
-            except FFAdminUser.DoesNotExist:
-                # re-raise exception with useful error message
-                raise FFAdminUser.DoesNotExist(
-                    "User %d does not exist in this organisation" % user_id
-                )
-            users_to_add.append(user)
+        users_to_add = list(
+            FFAdminUser.objects.filter(id__in=user_ids, organisations=self.organisation)
+        )
+        if len(user_ids) != len(users_to_add):
+            missing_ids = set(users_to_add).difference({u.id for u in users_to_add})
+            raise FFAdminUser.DoesNotExist(
+                "Users %s do not exist in this organisation" % ", ".join(missing_ids)
+            )
         self.users.add(*users_to_add)
 
     def remove_users_by_id(self, user_ids: list):

@@ -6,7 +6,6 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.api.document_builders import build_environment_document
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -16,6 +15,7 @@ from rest_framework.response import Response
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
+    MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
 from permissions.serializers import (
@@ -41,7 +41,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
-    EnvironmentSerializerLight,
+    EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
 
@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
-    permission_classes = [IsAuthenticated, EnvironmentPermissions]
+    permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
 
     def get_serializer_class(self):
         if self.action == "trait_keys":
@@ -75,7 +75,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return CloneEnvironmentSerializer
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
-        return EnvironmentSerializerLight
+        return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):
         context = super(EnvironmentViewSet, self).get_serializer_context()
@@ -94,6 +94,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
 
+            if self.request.user.is_anonymous:
+                return (
+                    self.request.master_api_key.organisation.projects.environments.all()
+                )
             return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
             )
@@ -103,9 +107,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         environment = serializer.save()
-        UserEnvironmentPermission.objects.create(
-            user=self.request.user, environment=environment, admin=True
-        )
+        if not self.request.user.is_anonymous:
+            UserEnvironmentPermission.objects.create(
+                user=self.request.user, environment=environment, admin=True
+            )
 
     @action(detail=True, methods=["GET"], url_path="trait-keys")
     def trait_keys(self, request, *args, **kwargs):
@@ -135,9 +140,12 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         clone = serializer.save(source_env=self.get_object())
-        UserEnvironmentPermission.objects.create(
-            user=self.request.user, environment=clone, admin=True
-        )
+
+        if not self.request.user.is_anonymous:
+            UserEnvironmentPermission.objects.create(
+                user=self.request.user, environment=clone, admin=True
+            )
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
@@ -169,6 +177,14 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
+        if request.user.is_anonymous:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    "detail": "This endpoint can only be used with a user and not Master API Key"
+                },
+            )
+
         # TODO: tidy this mess up
         environment = self.get_object()
 
@@ -213,10 +229,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
-        environment = Environment.objects.select_related(
-            "project", "project__organisation"
-        ).get(api_key=api_key)
-        return Response(build_environment_document(environment))
+        return Response(Environment.get_environment_document(api_key))
 
 
 class NestedEnvironmentViewSet(viewsets.GenericViewSet):

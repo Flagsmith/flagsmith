@@ -1,15 +1,31 @@
 import logging
 
+from app_analytics.analytics_db_service import (
+    get_total_events_count,
+    get_usage_data,
+)
+from app_analytics.tasks import track_feature_evaluation
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from telemetry.serializers import TelemetrySerializer
 
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState
+from organisations.models import Organisation
+
+from .permissions import UsageDataPermission
+from .serializers import (
+    UsageDataQuerySerializer,
+    UsageDataSerializer,
+    UsageTotalCountSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +50,8 @@ class SDKAnalyticsFlags(GenericAPIView):
                 content_type="application/json",
                 status=status.HTTP_200_OK,
             )
+        if settings.USE_POSTGRES_FOR_ANALYTICS:
+            track_feature_evaluation.delay(args=(request.environment.id, request.data))
 
         if settings.INFLUXDB_TOKEN:
             track_feature_evaluation_influxdb(request.environment.id, request.data)
@@ -77,3 +95,36 @@ class SelfHostedTelemetryAPIView(CreateAPIView):
     permission_classes = ()
     authentication_classes = ()
     serializer_class = TelemetrySerializer
+
+
+@swagger_auto_schema(
+    responses={200: UsageTotalCountSerializer()},
+    methods=["GET"],
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, UsageDataPermission])
+def get_usage_data_total_count_view(request, organisation_pk=None):
+    organisation = Organisation.objects.get(id=organisation_pk)
+    count = get_total_events_count(organisation)
+    serializer = UsageTotalCountSerializer(data={"count": count})
+    serializer.is_valid(raise_exception=True)
+
+    return Response(serializer.data)
+
+
+@swagger_auto_schema(
+    query_serializer=UsageDataQuerySerializer(),
+    responses={200: UsageDataSerializer()},
+    methods=["GET"],
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, UsageDataPermission])
+def get_usage_data_view(request, organisation_pk=None):
+    filters = UsageDataQuerySerializer(data=request.query_params)
+    filters.is_valid(raise_exception=True)
+
+    organisation = Organisation.objects.get(id=organisation_pk)
+    usage_data = get_usage_data(organisation, **filters.data)
+    serializer = UsageDataSerializer(usage_data, many=True)
+
+    return Response(serializer.data)

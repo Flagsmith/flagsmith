@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
 
+# The script can take 2 optional arguments:
+# 1. The django target to run
+# 2. For migrate, serve and migrate-and-serve, the number of seconds to sleep before running
+
 function migrate () {
-    python manage.py migrate && python manage.py createcachetable
+    python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
+    migrate_analytics_db
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -10,7 +15,9 @@ function serve() {
     export STATSD_PORT=${STATSD_PORT:-8125}
     export STATSD_PREFIX=${STATSD_PREFIX:-flagsmith.api}
 
-    gunicorn --bind 0.0.0.0:8000 \
+    python manage.py waitfordb
+
+    exec gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
              --workers ${GUNICORN_WORKERS:-3} \
@@ -21,8 +28,23 @@ function serve() {
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
              app.wsgi
 }
+function run_task_processor() {
+    python manage.py waitfordb --waitfor 30 --migrations
+    if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        python manage.py waitfordb --waitfor 30 --migrations --database analytics
+    fi
+    python manage.py runprocessor --sleepintervalms 500
+}
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
+}
+function migrate_analytics_db(){
+    # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
+    # run the migration command
+    if [[ -z "$ANALYTICS_DATABASE_URL" && -z "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        return 0
+    fi
+    python manage.py migrate --database analytics
 }
 function import_organisation_from_s3(){
     python manage.py importorganisationfroms3 "$1" "$2"
@@ -33,12 +55,25 @@ function dump_organisation_to_s3(){
 function dump_organisation_to_local_fs(){
     python manage.py dumporganisationtolocalfs "$1" "$2"
 }
+# Note: `go_to_sleep` is deprecated and will be removed in a future release.
+function go_to_sleep(){
+    echo "Sleeping for ${1} seconds before startup"
+    sleep ${1}
+}
 
 if [ "$1" == "migrate" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
 elif [ "$1" == "serve" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
-elif [ "$1" == "migrate_identities" ]; then
+elif [ "$1" == "run-task-processor" ]; then
+    run_task_processor
+elif [ "$1" == "migrate-and-serve" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
+    migrate
+    serve
+elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"
 elif [ "$1" == "import-organisation-from-s3" ]; then
     import_organisation_from_s3 "$2" "$3"
@@ -46,9 +81,6 @@ elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
 elif [ "$1" == "dump-organisation-to-local-fs" ]; then
     dump_organisation_to_local_fs "$2" "$3"
-elif [ "$1" == "migrate-and-serve" ]; then
-    migrate
-    serve
 else
    echo "ERROR: unrecognised command '$1'"
 fi

@@ -1,4 +1,4 @@
-import Utils from '../../utils/utils';
+import Utils from 'common/utils/utils'
 
 module.exports = () => `// Maven
 ${Utils.escapeHtml('<dependency>')}
@@ -9,4 +9,4 @@ ${Utils.escapeHtml('<version>5.0.0/version>')}
 
 // Gradle
 implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
-`;
+`

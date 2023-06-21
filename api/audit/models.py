@@ -1,69 +1,40 @@
-import enum
+import typing
+from importlib import import_module
 
 from django.db import models
-from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
+from django.db.models import Model, Q
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModel,
+    hook,
+    priority,
+)
 
 from api_keys.models import MasterAPIKey
+from audit.related_object_type import RelatedObjectType
 from projects.models import Project
-
-FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
-FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
-FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
-SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
-SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
-FEATURE_SEGMENT_UPDATED_MESSAGE = (
-    "Segment rules updated for flag: %s in environment: %s"
+from sse import (
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
 )
-ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
-ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
-FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote Config value updated for feature: %s"
-)
-FEATURE_STATE_WENT_LIVE_MESSAGE = (
-    "Scheduled change to Flag state / Remote config value went live for feature: %s by"
-    " Change Request: %s"
-)
-
-IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and segment '%s'"
-)
-IDENTITY_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and segment '%s'"
-)
-
-CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
-CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
-CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
-
-
-class RelatedObjectType(enum.Enum):
-    FEATURE = "Feature"
-    FEATURE_STATE = "Feature state"
-    SEGMENT = "Segment"
-    ENVIRONMENT = "Environment"
-    CHANGE_REQUEST = "Change request"
-
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
 class AuditLog(LifecycleModel):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+
     project = models.ForeignKey(
-        Project, related_name="audit_logs", null=True, on_delete=models.SET_NULL
+        Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="audit_logs",
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
     )
+
     log = models.TextField()
     author = models.ForeignKey(
         "users.FFAdminUser",
@@ -81,55 +52,88 @@ class AuditLog(LifecycleModel):
     )
     related_object_id = models.IntegerField(null=True)
     related_object_type = models.CharField(max_length=20, null=True)
+    related_object_uuid = models.CharField(max_length=36, null=True)
 
-    skip_signals = models.CharField(
+    skip_signals_and_hooks = models.CharField(
         null=True,
         blank=True,
-        help_text="comma separated list of signal functions to skip",
+        help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
+        db_column="skip_signals",
     )
     is_system_event = models.BooleanField(default=False)
+
+    history_record_id = models.IntegerField(blank=True, null=True)
+    history_record_class_path = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
 
-    def __str__(self):
-        return "Audit Log %s" % self.id
-
-    @hook(AFTER_SAVE)
-    def update_environments_updated_at(self):
-        # Don't update the environments updated_at if the audit log
-        # is of CHANGE_REQUEST type since they(directly) don't impact
-        # value of a given feature in an environment
+    @property
+    def environment_document_updated(self) -> bool:
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
-            return
-
-        if self.environment:
-            self.environment.updated_at = self.created_date
-            self.environment.save()
-        else:
-            self.project.environments.update(updated_at=self.created_date)
-
-    @classmethod
-    def create_record(
-        cls,
-        obj,
-        obj_type,
-        log_message,
-        author,
-        project=None,
-        environment=None,
-        persist=True,
-    ):
-        record = cls(
-            related_object_id=obj.id,
-            related_object_type=obj_type.name,
-            log=log_message,
-            author=author,
-            project=project,
-            environment=environment,
+            return False
+        skip_signals_and_hooks = (
+            self.skip_signals_and_hooks.split(",")
+            if self.skip_signals_and_hooks
+            else []
         )
-        if persist:
-            record.save()
-        return record
+        return "send_environments_to_dynamodb" not in skip_signals_and_hooks
+
+    @property
+    def history_record(self):
+        klass = self.get_history_record_model_class(self.history_record_class_path)
+        return klass.objects.get(id=self.history_record_id)
+
+    @staticmethod
+    def get_history_record_model_class(
+        history_record_class_path: str,
+    ) -> typing.Type[Model]:
+        module_path, class_name = history_record_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_path)
+        return getattr(module, class_name)
+
+    @hook(BEFORE_CREATE)
+    def add_project(self):
+        if self.environment and self.project is None:
+            self.project = self.environment.project
+
+    @hook(
+        AFTER_CREATE,
+        priority=priority.HIGHEST_PRIORITY,
+        when="environment_document_updated",
+        is_now=True,
+    )
+    def process_environment_update(self):
+        self.update_environments_updated_at()
+        self.send_environments_to_dynamodb()
+        self.send_environment_update_message()
+
+    def update_environments_updated_at(self):
+        environments_filter = Q()
+        if self.environment_id:
+            environments_filter = Q(id=self.environment_id)
+
+        # Use a queryset to perform update to prevent signals being called at this point.
+        # Since we're re-saving the environment, we don't want to duplicate signals.
+        self.project.environments.filter(environments_filter).update(
+            updated_at=self.created_date
+        )
+
+    def send_environments_to_dynamodb(self):
+        from environments.models import Environment
+
+        Environment.write_environments_to_dynamodb(
+            environment_id=self.environment_id, project_id=self.project_id
+        )
+
+    def send_environment_update_message(self):
+        if self.environment_id:
+            environment = self.environment
+            # Because we updated the environment `updated_at` in the previous hook in bulk
+            # update it manually here to save a `refresh_from_db` call
+            environment.updated_at = self.created_date
+            send_environment_update_message_for_environment(environment)
+        else:
+            send_environment_update_message_for_project(self.project)

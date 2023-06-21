@@ -2,15 +2,30 @@ import { t } from 'testcafe';
 import fetch from 'node-fetch';
 import Project from '../common/project';
 import {
+    addSegmentOverride,
     assertTextContent,
-    byId, click, closeModal,
-    getLogger,
+    byId,
+    click,
+    closeModal,
     createFeature,
-    createRemoteConfig, createSegment, createTrait,
-    deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
+    createRemoteConfig,
+    createSegment,
+    createTrait,
+    deleteFeature,
+    deleteSegment,
+    deleteTrait,
+    getLogger,
+    getText,
+    gotoFeature,
+    gotoFeatures,
+    gotoSegments,
+    gotoTraits,
+    log,
+    logResults,
     setText,
     toggleFeature,
-    waitForElementVisible, gotoFeatures, gotoFeature, addSegmentOverride, waitAndRefresh,
+    waitAndRefresh,
+    waitForElementVisible,
 } from './helpers.cafe';
 
 require('dotenv').config();
@@ -71,6 +86,7 @@ test('[Initialise]', async () => {
 
     log('Hide disabled flags');
     await click('#project-settings-link');
+    await click(byId('js-sdk-settings'));
     await click(byId('js-hide-disabled-flags'));
     await setText(byId('js-project-name'), 'My Test Project');
     await click(byId('js-confirm'));
@@ -241,7 +257,6 @@ test('[Initialise]', async () => {
     await deleteFeature(0, 'mv_flag');
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
-    console.log(JSON.stringify(logger.requests, null, 2));
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+    await logResults(logger.requests);
     console.log('Start of Initialise Requests');
 });

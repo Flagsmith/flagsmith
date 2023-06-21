@@ -41,23 +41,16 @@
 	}
 }
 .tabs-nav {
+	position: relative;
 	display: flex;
 	flex-direction: row;
-	background-color: $bt-brand-faint-alt;
-	border-top-left-radius: $border-radius-default;
-	border-top-right-radius: $border-radius-default;
 	.tab-text {
 		font-weight: 600;
 	}
 	button,button.btn,button.btn-primary {
 		border-radius: 0 !important;
 		box-shadow: none;
-		&:first-child {
-			border-top-left-radius: $border-radius-default !important;
-		}
-		&:last-child {
-			border-top-right-radius: $border-radius-default !important;
-		}
+
 		flex:1;
 		background-color: $tab-inactive-background;
 		color: $tab-inactive-color;
@@ -70,9 +63,46 @@
 			box-shadow: none;
 		}
 		min-height: 34px;
+		font-weight: 500;
 		&.tab-active {
+			font-weight: bold;
 			background: $tab-active-background;
 			color: $tab-active-color;
+		}
+	}
+}
+
+.tabs {
+	&--inline {
+		.tabs-nav {
+			width: fit-content;
+			flex:0;
+			background-color: transparent;
+			button,button.btn,button.btn-primary {
+				&.tab-active {
+					border-bottom: 2px solid $bt-brand-primary !important;
+				}
+				flex:0;
+				padding: 0 10px;
+				margin: 0 20px;
+			}
+		}
+		.tab-line {
+			display: none;
+		}
+	}
+	&--transparent {
+		.tabs-nav {
+			background-color: transparent;
+			button,button.btn,button.btn-primary {
+				&:first-child {
+					margin-left: 0;
+				}
+				background-color: transparent;
+				&.tab-active {
+					background-color: transparent;
+				}
+			}
 		}
 	}
 }
@@ -81,8 +111,7 @@
 	bottom: 0px;
 	display: block;
 	height: 2px;
-	margin-top: -2px;
-	position: relative;
+	position: absolute;
 	transition: left 1s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
 	background-color: $tab-line-color;
 }
@@ -130,4 +159,17 @@
 	.tab-icon {
 		font-size: 1.4em;
 		display: block;
+	}
+
+	.btn-tab {
+		position: relative;
+		.unread {
+			position: absolute;
+			right:0;
+			top:13px;
+			padding-left: 0 !important;
+			padding-right: 0 !important;
+			width: 16px;
+			height: 16px;
+		}
 	}

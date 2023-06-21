@@ -1,27 +1,39 @@
+from contextlib import suppress
+
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    MANAGE_USER_GROUPS,
+    NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
 )
 from organisations.serializers import UserOrganisationSerializer
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 from users.serializers import (
+    ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
+    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
@@ -135,11 +147,40 @@ def password_reset_redirect(request, uidb64, token):
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
-    serializer_class = UserPermissionGroupSerializerDetail
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
-        return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
+        organisation = Organisation.objects.get(id=organisation_pk)
+
+        qs = UserPermissionGroup.objects.filter(organisation=organisation)
+        if not self.request.user.has_organisation_permission(
+            organisation, MANAGE_USER_GROUPS
+        ):
+            q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if self.action != "my_groups":
+                # my-groups returns a very cut down set of data, we can safely allow all users
+                # of the groups to retrieve them in this case, otherwise they must be a group
+                # admin.
+                q = q & Q(userpermissiongroupmembership__group_admin=True)
+            qs = qs.filter(q)
+
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return UserPermissionGroupSerializerDetail
+        elif self.action == "my_groups":
+            return MyUserPermissionGroupsSerializer
+        return ListUserPermissionGroupSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.detail is True:
+            with suppress(ValueError):
+                context["group_admins"] = UserPermissionGroupMembership.objects.filter(
+                    userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True
+                ).values_list("ffadminuser__id", flat=True)
+        return context
 
     def perform_create(self, serializer):
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
@@ -154,8 +195,15 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="add-users")
     def add_users(self, request, organisation_pk, pk):
         group = self.get_object()
+        user_ids = request.data["user_ids"]
+
+        if request.user.id in user_ids and not request.user.is_organisation_admin(
+            Organisation.objects.get(pk=organisation_pk)
+        ):
+            raise PermissionDenied("Non-admin users cannot add themselves to a group.")
+
         try:
-            group.add_users_by_id(request.data["user_ids"])
+            group.add_users_by_id(user_ids)
         except FFAdminUser.DoesNotExist as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -168,5 +216,51 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, organisation_pk, pk):
         group = self.get_object()
-        group.remove_users_by_id(request.data["user_ids"])
+        user_ids = request.data["user_ids"]
+
+        if request.user.id in user_ids and not request.user.is_organisation_admin(
+            Organisation.objects.get(pk=organisation_pk)
+        ):
+            raise PermissionDenied(
+                "Non-admin users cannot remove themselves from a group."
+            )
+
+        group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+    @action(detail=False, methods=["GET"], url_path="my-groups")
+    def my_groups(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
+
+
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
+@api_view(["POST"])
+def make_user_group_admin(
+    request: Request, organisation_pk: int, group_pk: int, user_pk: int
+):
+    user = get_object_or_404(
+        FFAdminUser,
+        userorganisation__organisation_id=organisation_pk,
+        permission_groups__id=group_pk,
+        id=user_pk,
+    )
+    user.make_group_admin(group_pk)
+    return Response()
+
+
+@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
+@api_view(["POST"])
+def remove_user_as_group_admin(
+    request: Request, organisation_pk: int, group_pk: int, user_pk: int
+):
+    user = get_object_or_404(
+        FFAdminUser,
+        userorganisation__organisation_id=organisation_pk,
+        permission_groups__id=group_pk,
+        id=user_pk,
+    )
+    user.remove_as_group_admin(group_pk)
+    return Response()

@@ -50,7 +50,6 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
         "is_active",
         "date_joined",
-        "organisations",
     )
 
     search_fields = (

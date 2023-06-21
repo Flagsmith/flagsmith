@@ -1,71 +1,99 @@
+const classNames = require('classnames')
 /**
  * Created by kylejohnson on 30/07/2016.
  */
 const Tabs = class extends React.Component {
-    static displayName = 'Tabs'
-
-    render() {
-        const children = this.props.children.filter(c => !!c);
-        return (
-            <div className={`tabs ${this.props.className || ''}`}>
-                <div className="tabs-nav" style={isMobile ? { flexWrap: 'wrap' } : {}}>
-                    {children.map((child, i) => {
-                        const isSelected = this.props.value == i;
-                        if (!child) {
-                            return null;
-                        }
-                        return (
-                            <Button
-                              type="button"
-                              data-test={child.props['data-test']}
-                              id={child.props.id}
-                              key={`button${i}`}
-                              onClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  this.props.onChange(i);
-                              }}
-                              style={{ padding: '0 5px' }}
-                              className={`btn-tab btn-primary${isSelected ? ' tab-active' : ''}`}
-                            >
-                                {child.props.tabLabel}
-                            </Button>
-                        );
-                    })}
-                </div>
-                <div
-                  className="tab-line" style={{
-                      width: `${100 / children.length}%`,
-                      left: `${100 / children.length * this.props.value}%`,
-                  }}
-                />
-                <div className="tabs-content">
-                    {children.map((child, i) => {
-                        const isSelected = this.props.value == i;
-                        return (
-                            <div key={`content${i}`} className={`tab-item${isSelected ? ' tab-active' : ''}`}>
-                                {child}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
+  static displayName = 'Tabs'
+  constructor() {
+    super()
+    this.state = {
+      value: 0,
     }
-};
+  }
+  render() {
+    const children = this.props.children.filter((c) => !!c)
+    const value = this.props.uncontrolled ? this.state.value : this.props.value
+    return (
+      <div
+        className={`tabs ${this.props.className || ''} ${
+          this.props.transparent ? 'tabs--transparent' : ''
+        } ${this.props.inline ? 'tabs--inline' : ''}`}
+      >
+        <div className='tabs-nav' style={isMobile ? { flexWrap: 'wrap' } : {}}>
+          {children.map((child, i) => {
+            const isSelected = value == i
+            if (!child) {
+              return null
+            }
+            return (
+              <Button
+                type='button'
+                data-test={child.props['data-test']}
+                id={child.props.id}
+                key={`button${i}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  if (this.props.uncontrolled) {
+                    this.setState({ value: i })
+                  } else {
+                    this.props.onChange(i)
+                  }
+                }}
+                className={`btn-tab btn-primary${
+                  isSelected ? ' tab-active' : ''
+                }`}
+              >
+                {child.props.tabIcon && (
+                  <span
+                    className={classNames('icon mr-2', child.props.tabIcon)}
+                  />
+                )}
+                {child.props.tabLabel}
+              </Button>
+            )
+          })}
+          <div
+            className='tab-line'
+            style={{
+              left: `${(100 / children.length) * value}%`,
+              width: `${100 / children.length}%`,
+            }}
+          />
+        </div>
+        <div className='tabs-content'>
+          {children.map((child, i) => {
+            const isSelected = value === i
+            return (
+              <div
+                key={`content${i}`}
+                className={`tab-item${isSelected ? ' tab-active' : ''}`}
+              >
+                {child}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+}
 
 Tabs.defaultProps = {
-    className: '',
-    value: 0,
-};
+  className: '',
+  value: 0,
+}
 
 Tabs.propTypes = {
-    onChange: OptionalFunc,
-    children: RequiredElement,
-    value: OptionalNumber,
-};
+  children: RequiredElement,
+  inline: OptionalBool,
+  onChange: OptionalFunc,
+  transparent: OptionalBool,
+  uncontrolled: OptionalBool,
+  value: OptionalNumber,
+}
 
-module.exports = Tabs;
+export default Tabs
 
 // Example Usage
 //   <Tabs value={this.state.tab} onChange={this.selectTab}>

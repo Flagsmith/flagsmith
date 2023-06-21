@@ -6,9 +6,13 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
-from features.serializers import FeatureStateSerializerFull
+from features.serializers import (
+    FeatureStateSerializerFull,
+    SDKFeatureStateSerializer,
+)
 
 
 class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):
@@ -55,7 +59,7 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):
             help_text="Can be of type string, boolean, float or integer."
         )
 
-    flags = serializers.ListField(child=FeatureStateSerializerFull())
+    flags = serializers.ListField(child=SDKFeatureStateSerializer())
     traits = serializers.ListSerializer(child=_TraitSerializer())
 
 
@@ -106,16 +110,15 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):
         self, instance: typing.Union[FeatureState, FeatureStateModel]
     ) -> typing.Union[str, int, bool]:
         identity = self.context["identity"]
+        environment_api_key = self.context["environment_api_key"]
 
-        if isinstance(identity, Identity):
-            identity_id = identity.id
-        else:
-            identity_id = identity.django_id or identity.identity_uuid
+        environment = Environment.get_from_cache(environment_api_key)
+        hash_key = identity.get_hash_key(environment.use_mv_v2_evaluation)
 
         if isinstance(instance, FeatureState):
-            return instance.get_feature_state_value_by_id(identity_id)
+            return instance.get_feature_state_value_by_hash_key(hash_key)
 
-        return instance.get_value(identity_id)
+        return instance.get_value(hash_key)
 
     def get_overridden_by(self, instance) -> typing.Optional[str]:
         if getattr(instance, "feature_segment_id", None) is not None:

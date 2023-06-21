@@ -1,0 +1,17 @@
+pylint
+pep8
+autopep8
+pytest
+pytest-django
+pytest-mock
+django-test-migrations
+black
+pip-tools
+responses
+pre-commit
+flake8
+pytest-mock
+pytest-lazy-fixture
+moto
+pytest-freezegun
+pytest-xdist

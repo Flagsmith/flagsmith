@@ -21,10 +21,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "__str__",
         "created_date",
     )
-    list_filter = (
-        "created_date",
-        "project",
-    )
+    list_filter = ("created_date",)
     search_fields = (
         "name",
         "project__name",

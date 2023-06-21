@@ -4,6 +4,7 @@ from unittest import TestCase, mock
 import pytest
 from core.constants import STRING
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -13,13 +14,14 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
+from metadata.models import Metadata
 from organisations.models import Organisation, OrganisationRole
 from projects.models import (
     Project,
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import EQUAL, Condition, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -58,28 +60,6 @@ class EnvironmentTestCase(TestCase):
     def tearDown(self) -> None:
         Environment.objects.all().delete()
         AuditLog.objects.all().delete()
-
-    def test_should_create_environments(self):
-        # Given
-        url = reverse("api-v1:environments:environment-list")
-        description = "This is the description"
-        data = {
-            "name": "Test environment",
-            "project": self.project.id,
-            "description": description,
-        }
-
-        # When
-        response = self.client.post(url, data=data)
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.json()["description"] == description
-
-        # and user is admin
-        assert UserEnvironmentPermission.objects.filter(
-            user=self.user, admin=True, environment__id=response.json()["id"]
-        ).exists()
 
     def test_should_return_identities_for_an_environment(self):
         # Given
@@ -144,28 +124,6 @@ class EnvironmentTestCase(TestCase):
             == 1
         )
 
-    def test_audit_log_entry_created_when_environment_updated(self):
-        # Given
-        environment = Environment.objects.create(
-            name="Test environment", project=self.project
-        )
-        url = reverse(
-            "api-v1:environments:environment-detail", args=[environment.api_key]
-        )
-        data = {"project": self.project.id, "name": "New name"}
-
-        # When
-        response = self.client.put(url, data=data)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.ENVIRONMENT.name
-            ).count()
-            == 1
-        )
-
     def test_audit_log_created_when_feature_state_updated(self):
         # Given
         feature = Feature.objects.create(name="feature", project=self.project)
@@ -192,54 +150,6 @@ class EnvironmentTestCase(TestCase):
 
         # and
         assert AuditLog.objects.first().author
-
-    def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(self):
-        # Given
-        trait_key_one = "trait-key-one"
-        trait_key_two = "trait-key-two"
-
-        environment = Environment.objects.create(
-            project=self.project, name="Test Environment"
-        )
-
-        identity_one = Identity.objects.create(
-            environment=environment, identifier="identity-one"
-        )
-        identity_two = Identity.objects.create(
-            environment=environment, identifier="identity-two"
-        )
-
-        Trait.objects.create(
-            identity=identity_one,
-            trait_key=trait_key_one,
-            string_value="blah",
-            value_type=STRING,
-        )
-        Trait.objects.create(
-            identity=identity_one,
-            trait_key=trait_key_two,
-            string_value="blah",
-            value_type=STRING,
-        )
-        Trait.objects.create(
-            identity=identity_two,
-            trait_key=trait_key_one,
-            string_value="blah",
-            value_type=STRING,
-        )
-
-        url = reverse(
-            "api-v1:environments:environment-trait-keys", args=[environment.api_key]
-        )
-
-        # When
-        res = self.client.get(url)
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and - only distinct keys are returned
-        assert len(res.json().get("keys")) == 2
 
     def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(self):
         # Given
@@ -291,62 +201,6 @@ class EnvironmentTestCase(TestCase):
             identity=identity_one_environment_two, trait_key=trait_key
         ).exists()
 
-    def test_delete_trait_keys_deletes_traits_matching_provided_key_only(self):
-        # Given
-        environment = Environment.objects.create(
-            project=self.project, name="Test Environment"
-        )
-
-        identity = Identity.objects.create(
-            identifier="test-identity", environment=environment
-        )
-
-        trait_to_delete = "trait-key-to-delete"
-        Trait.objects.create(
-            identity=identity,
-            trait_key=trait_to_delete,
-            value_type=STRING,
-            string_value="blah",
-        )
-
-        trait_to_persist = "trait-key-to-persist"
-        Trait.objects.create(
-            identity=identity,
-            trait_key=trait_to_persist,
-            value_type=STRING,
-            string_value="blah",
-        )
-
-        url = reverse(
-            "api-v1:environments:environment-delete-traits", args=[environment.api_key]
-        )
-
-        # When
-        self.client.post(url, data={"key": trait_to_delete})
-
-        # Then
-        assert not Trait.objects.filter(
-            identity=identity, trait_key=trait_to_delete
-        ).exists()
-
-        # and
-        assert Trait.objects.filter(
-            identity=identity, trait_key=trait_to_persist
-        ).exists()
-
-    def test_user_can_list_environment_permission(self):
-        # Given
-        url = reverse("api-v1:environments:environment-permissions")
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert (
-            len(response.json()) == 5
-        )  # hard code how many permissions we expect there to be
-
     def test_environment_user_can_get_their_permissions(self):
         # Given
         user = FFAdminUser.objects.create(email="new-test@test.com")
@@ -370,35 +224,6 @@ class EnvironmentTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert not response.json()["admin"]
         assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
-
-    def test_get_document(self):
-        # Given
-        # an environment
-        environment = Environment.objects.create(
-            name="Test Environment", project=self.project
-        )
-
-        # and some other sample data to make sure we're testing all of the document
-        Feature.objects.create(name="test_feature", project=self.project)
-        segment = Segment.objects.create(name="My segment", project=self.project)
-        segment_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator=EQUAL, property="property", value="value", rule=segment_rule
-        )
-
-        # and the relevant URL to get an environment document
-        url = reverse(
-            "api-v1:environments:environment-get-document", args=[environment.api_key]
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()
 
 
 @pytest.mark.django_db
@@ -672,3 +497,321 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
         # Then
         assert not EnvironmentAPIKey.objects.filter(id=api_key.id)
+
+
+@pytest.mark.parametrize(
+    "client, is_master_api_key_client",
+    [
+        (lazy_fixture("master_api_key_client"), True),
+        (lazy_fixture("admin_client"), False),
+    ],
+)
+def test_should_create_environments(
+    project, client, admin_user, is_master_api_key_client
+):
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    data = {
+        "name": "Test environment",
+        "project": project.id,
+        "description": description,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["description"] == description
+    assert response.json()["use_mv_v2_evaluation"] is True
+
+    # and user is admin
+    if not is_master_api_key_client:
+        assert UserEnvironmentPermission.objects.filter(
+            user=admin_user, admin=True, environment__id=response.json()["id"]
+        ).exists()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_environment_without_required_metadata_returns_400(
+    project,
+    client,
+    required_a_environment_metadata_field,
+    optional_b_environment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    data = {
+        "name": "Test environment",
+        "project": project.id,
+        "description": description,
+    }
+
+    # When
+    response = client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Missing required metadata field" in response.json()["metadata"][0]
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_environment_with_required_metadata_returns_201(
+    project,
+    client,
+    required_a_environment_metadata_field,
+    optional_b_environment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test environment",
+        "project": project.id,
+        "description": description,
+        "metadata": [
+            {
+                "model_field": required_a_environment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_environment_metadata_field.field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_environment_metadata(
+    project,
+    client,
+    environment,
+    environment_metadata_a,
+    environment_metadata_b,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+    updated_field_value = 999
+
+    # Update metadata for field a (environment_metadata_a) and remove metadata for field b
+    data = {
+        "project": project.id,
+        "name": "New name",
+        "description": "new_data",
+        "metadata": [
+            {
+                "model_field": environment_metadata_a.model_field.id,
+                "field_value": updated_field_value,
+                "id": environment_metadata_a.id,
+            },
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()["metadata"]) == 1
+
+    # value for metadata field a was updated
+    assert response.json()["metadata"][0]["field_value"] == str(updated_field_value)
+    environment_metadata_a.refresh_from_db()
+    environment_metadata_a.field_value = str(updated_field_value)
+
+    # and environment_metadata_b does not exists
+    assert Metadata.objects.filter(id=environment_metadata_b.id).exists() is False
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_audit_log_entry_created_when_environment_updated(environment, project, client):
+    # Given
+    environment = Environment.objects.create(name="Test environment", project=project)
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+    banner_text = "production environment be careful"
+    banner_colour = "#FF0000"
+    hide_disabled_flags = True
+    use_mv_v2_evaluation = True
+    hide_sensitive_data = True
+
+    data = {
+        "project": project.id,
+        "name": "New name",
+        "banner_text": banner_text,
+        "banner_colour": banner_colour,
+        "hide_disabled_flags": hide_disabled_flags,
+        "use_mv_v2_evaluation": use_mv_v2_evaluation,
+        "hide_sensitive_data": hide_sensitive_data,
+    }
+
+    # When
+    response = client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.ENVIRONMENT.name
+        ).count()
+        == 1
+    )
+    assert response.json()["banner_text"] == banner_text
+    assert response.json()["banner_colour"] == banner_colour
+    assert response.json()["hide_disabled_flags"] == hide_disabled_flags
+    assert response.json()["hide_sensitive_data"] == hide_sensitive_data
+    assert response.json()["use_mv_v2_evaluation"] == use_mv_v2_evaluation
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_document(environment, project, client, feature, segment):
+    # Given
+
+    # and some sample data to make sure we're testing all of the document
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        operator=EQUAL, property="property", value="value", rule=segment_rule
+    )
+
+    # and the relevant URL to get an environment document
+    url = reverse(
+        "api-v1:environments:environment-get-document", args=[environment.api_key]
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
+    identity, client, trait, environment
+):
+    # Given
+    trait_key_one = trait.trait_key
+    trait_key_two = "trait-key-two"
+
+    identity_two = Identity.objects.create(
+        environment=environment, identifier="identity-two"
+    )
+
+    Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key_two,
+        string_value="blah",
+        value_type=STRING,
+    )
+    Trait.objects.create(
+        identity=identity_two,
+        trait_key=trait_key_one,
+        string_value="blah",
+        value_type=STRING,
+    )
+
+    url = reverse(
+        "api-v1:environments:environment-trait-keys", args=[environment.api_key]
+    )
+
+    # When
+    res = client.get(url)
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+    # and - only distinct keys are returned
+    assert len(res.json().get("keys")) == 2
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
+    environment, client, identity, trait
+):
+    # Given
+    trait_to_delete = trait.trait_key
+    trait_to_persist = "trait-key-to-persist"
+    Trait.objects.create(
+        identity=identity,
+        trait_key=trait_to_persist,
+        value_type=STRING,
+        string_value="blah",
+    )
+
+    url = reverse(
+        "api-v1:environments:environment-delete-traits", args=[environment.api_key]
+    )
+
+    # When
+    client.post(url, data={"key": trait_to_delete})
+
+    # Then
+    assert not Trait.objects.filter(
+        identity=identity, trait_key=trait_to_delete
+    ).exists()
+
+    # and
+    assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_user_can_list_environment_permission(client, environment):
+    # Given
+    url = reverse("api-v1:environments:environment-permissions")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        len(response.json()) == 6
+    )  # hard code how many permissions we expect there to be
+
+
+def test_environment_my_permissions_reruns_400_for_master_api_key(
+    master_api_key_client, environment
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-my-permissions", args=[environment.api_key]
+    )
+
+    # When
+    response = master_api_key_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "This endpoint can only be used with a user and not Master API Key"
+    )

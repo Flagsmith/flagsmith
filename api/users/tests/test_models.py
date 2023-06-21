@@ -287,3 +287,89 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
     # Then
     # extra group did not cause any errors and the user is removed from the group
     assert user_permission_group not in admin_user.permission_groups.all()
+
+
+@pytest.mark.django_db
+def test_delete_user():
+    # create a couple of users
+    email1 = "test1@example.com"
+    email2 = "test2@example.com"
+    email3 = "test3@example.com"
+    user1 = FFAdminUser.objects.create(email=email1)
+    user2 = FFAdminUser.objects.create(email=email2)
+    user3 = FFAdminUser.objects.create(email=email3)
+
+    # crete some organizations
+    org1 = Organisation.objects.create(name="org1")
+    org2 = Organisation.objects.create(name="org2")
+    org3 = Organisation.objects.create(name="org3")
+
+    # add the test user 1 to all the organizations
+    org1.users.add(user1)
+    org2.users.add(user1)
+    org3.users.add(user1)
+
+    # add test user 2 to org2 and user 3 to to org1
+    org2.users.add(user2)
+    org1.users.add(user3)
+
+    # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
+
+    # Delete user2
+    user2.delete(delete_orphan_organisations=True)
+    assert not FFAdminUser.objects.filter(email=email2).exists()
+
+    # All organisations remain since user 2 has org2 as only organization and it has 2 users
+    assert Organisation.objects.filter(name="org3").count() == 1
+    assert Organisation.objects.filter(name="org1").count() == 1
+    assert Organisation.objects.filter(name="org2").count() == 1
+
+    # Delete user1
+    user1.delete(delete_orphan_organisations=True)
+    assert not FFAdminUser.objects.filter(email=email1).exists()
+
+    # organization org3 and org2 are deleted since its only user is user1
+    assert Organisation.objects.filter(name="org3").count() == 0
+    assert Organisation.objects.filter(name="org2").count() == 0
+
+    # org1 remain
+    assert Organisation.objects.filter(name="org1").count() == 1
+
+    # user3 remain
+    assert FFAdminUser.objects.filter(email=email3).exists()
+
+    # Delete user3
+    user3.delete(delete_orphan_organisations=False)
+    assert not FFAdminUser.objects.filter(email=email3).exists()
+    assert Organisation.objects.filter(name="org1").count() == 1
+
+
+def test_user_create_calls_pipedrive_tracking(mocker, db, settings):
+    # Given
+    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+
+    # When
+    FFAdminUser.objects.create(email="test@example.com")
+
+    # Then
+    mocked_create_pipedrive_lead.delay.assert_called()
+
+
+def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
+    mocker, db, settings
+):
+    # Given
+    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+    settings.PIPEDRIVE_IGNORE_DOMAINS = ["example.com"]
+
+    # When
+    FFAdminUser.objects.create(email="test@example.com")
+
+    # Then
+    mocked_create_pipedrive_lead.delay.assert_not_called()
+
+
+def test_user_email_domain_property():
+    assert FFAdminUser(email="test@example.com").email_domain == "example.com"

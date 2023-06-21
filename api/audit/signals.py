@@ -1,28 +1,20 @@
 import logging
 
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from audit.decorators import handle_skipped_signals
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
-from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
-from sse import (
-    send_environment_update_message_for_environment,
-    send_environment_update_message_for_project,
-)
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)
-@handle_skipped_signals
 def call_webhooks(sender, instance, **kwargs):
     data = AuditLogSerializer(instance=instance).data
 
@@ -75,7 +67,6 @@ def _track_event_async(instance, integration_client):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-@handle_skipped_signals
 def send_audit_log_event_to_datadog(sender, instance, **kwargs):
     data_dog_config = _get_integration_config(instance, "data_dog_config")
 
@@ -90,9 +81,7 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-@handle_skipped_signals
 def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
-
     new_relic_config = _get_integration_config(instance, "new_relic_config")
     if not new_relic_config:
         return
@@ -107,9 +96,7 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-@handle_skipped_signals
 def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
-
     dynatrace_config = _get_integration_config(instance, "dynatrace_config")
     if not dynatrace_config:
         return
@@ -123,28 +110,7 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=AuditLog)
-@handle_skipped_signals
-def send_environments_to_dynamodb(sender, instance, **kwargs):
-    environments_filter = (
-        Q(id=instance.environment_id)
-        if instance.environment_id
-        else Q(project=instance.project)
-    )
-    Environment.write_environments_to_dynamodb(environments_filter)
-
-
-@receiver(post_save, sender=AuditLog)
-@handle_skipped_signals
-def trigger_environment_update_messages(sender, instance, **kwargs):
-    if instance.environment_id:
-        send_environment_update_message_for_environment(instance.environment)
-    elif instance.project_id:
-        send_environment_update_message_for_project(instance.project)
-
-
-@receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-@handle_skipped_signals
 def send_audit_log_event_to_slack(sender, instance, **kwargs):
     slack_project_config = _get_integration_config(instance, "slack_config")
     if not slack_project_config:

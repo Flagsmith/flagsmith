@@ -1,132 +1,125 @@
-import React, { Component } from 'react';
-import AccountStore from '../stores/account-store';
-import AppLoader from '../../web/components/AppLoader';
+import React, { Component } from 'react'
+import AccountStore from 'common/stores/account-store'
+import AppLoader from 'components/AppLoader'
 
 const AccountProvider = class extends Component {
-    static displayName = 'AccountProvider'
+  static displayName = 'AccountProvider'
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {
-            isLoading: AccountStore.isLoading,
-            organisation: AccountStore.getOrganisation(),
-            organisations: AccountStore.getOrganisations(),
-            user: AccountStore.getUser(),
-        };
+  constructor(props, context) {
+    super(props, context)
+    this.state = {
+      isLoading: AccountStore.isLoading,
+      organisation: AccountStore.getOrganisation(),
+      organisations: AccountStore.getOrganisations(),
+      user: AccountStore.getUser(),
     }
+  }
 
-    componentDidMount() {
-        ES6Component(this);
-        this.listenTo(AccountStore, 'change', () => {
-            this.setState({
-                isLoading: AccountStore.isLoading,
-                isSaving: AccountStore.isSaving,
-                organisation: AccountStore.getOrganisation(),
-                organisations: AccountStore.getOrganisations(),
-                user: AccountStore.getUser(),
-                error: AccountStore.error,
-            });
-        });
+  componentDidMount() {
+    ES6Component(this)
+    this.listenTo(AccountStore, 'change', () => {
+      this.setState({
+        error: AccountStore.error,
+        isLoading: AccountStore.isLoading,
+        isSaving: AccountStore.isSaving,
+        organisation: AccountStore.getOrganisation(),
+        organisations: AccountStore.getOrganisations(),
+        user: AccountStore.getUser(),
+      })
+    })
 
-        this.listenTo(AccountStore, 'loaded', () => {
-            this.props.onLogin && this.props.onLogin();
-        });
+    this.listenTo(AccountStore, 'loaded', () => {
+      this.props.onLogin && this.props.onLogin()
+    })
 
-        this.listenTo(AccountStore, 'saved', () => {
-            this.props.onSave && this.props.onSave(AccountStore.savedId);
-        });
+    this.listenTo(AccountStore, 'saved', () => {
+      this.props.onSave && this.props.onSave(AccountStore.savedId)
+    })
 
-        this.listenTo(AccountStore, 'logout', () => {
-            this.setState({
-                isLoading: false,
-                isSaving: false,
-                organisation: AccountStore.getOrganisation(),
-                user: AccountStore.getUser(),
-            });
-            this.props.onLogout && this.props.onLogout();
-        });
-        this.listenTo(AccountStore, 'no-user', () => {
-            this.setState({
-                isSaving: false,
-                isLoading: false,
-                organisation: AccountStore.getOrganisation(),
-                user: AccountStore.getUser(),
-            });
-            this.props.onNoUser && this.props.onNoUser();
-        });
-        this.listenTo(AccountStore, 'problem', () => {
-            this.setState({
-                isLoading: AccountStore.isLoading,
-                isSaving: AccountStore.isSaving,
-                error: AccountStore.error,
-            });
-        });
-        this.listenTo(AccountStore, 'removed', () => {
-            this.props.onRemove && this.props.onRemove();
-            if (this.props.onLogin) {
-                this.setState({
-                    isLoading: false,
-                    isSaving: false,
-                    organisation: AccountStore.getOrganisation(),
-                    user: AccountStore.getUser(),
-                });
-            }
-        });
+    this.listenTo(AccountStore, 'logout', () => {
+      this.setState({
+        isLoading: false,
+        isSaving: false,
+        organisation: AccountStore.getOrganisation(),
+        user: AccountStore.getUser(),
+      })
+      this.props.onLogout && this.props.onLogout()
+    })
+    this.listenTo(AccountStore, 'no-user', () => {
+      this.setState({
+        isLoading: false,
+        isSaving: false,
+        organisation: AccountStore.getOrganisation(),
+        user: AccountStore.getUser(),
+      })
+      this.props.onNoUser && this.props.onNoUser()
+    })
+    this.listenTo(AccountStore, 'problem', () => {
+      this.setState({
+        error: AccountStore.error,
+        isLoading: AccountStore.isLoading,
+        isSaving: AccountStore.isSaving,
+      })
+    })
+    this.listenTo(AccountStore, 'removed', () => {
+      this.props.onRemove && this.props.onRemove()
+      if (this.props.onLogin) {
+        this.setState({
+          isLoading: false,
+          isSaving: false,
+          organisation: AccountStore.getOrganisation(),
+          user: AccountStore.getUser(),
+        })
+      }
+    })
+  }
+
+  login = (details) => {
+    AppActions.login(details)
+  }
+  register = (details, isInvite) => {
+    AppActions.register(details, isInvite)
+  }
+
+  render() {
+    const { error, isLoading, isSaving, organisation, organisations, user } =
+      this.state
+    if (isLoading) {
+      return <AppLoader />
     }
-
-
-    login = (details) => {
-        AppActions.login(details);
-    };
-
-    loginDemo = () => {
-        AppActions.login(Project.demoAccount);
-    };
-
-    register = (details, isInvite) => {
-        AppActions.register(details, isInvite);
-    };
-
-    render() {
-        const { isLoading, isSaving, user, organisation, organisations, error } = this.state;
-        if (isLoading) {
-            return (
-                <AppLoader/>
-            );
-        }
-        return (
-            this.props.children({
-                isLoading,
-                isSaving,
-                user,
-                organisation,
-                organisations,
-                error,
-            }, {
-                loginDemo: this.loginDemo,
-                login: this.login,
-                register: this.register,
-                enableTwoFactor: AppActions.enableTwoFactor,
-                confirmTwoFactor: AppActions.confirmTwoFactor,
-                twoFactorLogin: AppActions.twoFactorLogin,
-                disableTwoFactor: AppActions.disableTwoFactor,
-                selectOrganisation: AppActions.selectOrganisation,
-                createOrganisation: AppActions.createOrganisation,
-                editOrganisation: AppActions.editOrganisation,
-                acceptInvite: AppActions.acceptInvite,
-                deleteOrganisation: AppActions.deleteOrganisation,
-            })
-        );
-    }
-};
+    return this.props.children(
+      {
+        error,
+        isLoading,
+        isSaving,
+        organisation,
+        organisations,
+        user,
+      },
+      {
+        acceptInvite: AppActions.acceptInvite,
+        confirmTwoFactor: AppActions.confirmTwoFactor,
+        createOrganisation: AppActions.createOrganisation,
+        deleteOrganisation: AppActions.deleteOrganisation,
+        disableTwoFactor: AppActions.disableTwoFactor,
+        editOrganisation: AppActions.editOrganisation,
+        enableTwoFactor: AppActions.enableTwoFactor,
+        login: this.login,
+        register: this.register,
+        selectOrganisation: AppActions.selectOrganisation,
+        twoFactorLogin: AppActions.twoFactorLogin,
+      },
+    )
+  }
+}
 
 AccountProvider.propTypes = {
-    onRemove: OptionalFunc,
-    onNoUser: OptionalFunc,
-    onSave: OptionalFunc,
-    onLogin: OptionalFunc,
-    onLogout: OptionalFunc,
-    children: OptionalNode,
-};
+  children: OptionalFunc,
+  onLogin: OptionalFunc,
+  onLogout: OptionalFunc,
+  onNoUser: OptionalFunc,
+  onRemove: OptionalFunc,
+  onSave: OptionalFunc,
+}
 
-module.exports = AccountProvider;
+module.exports = AccountProvider

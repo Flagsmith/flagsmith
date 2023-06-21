@@ -1,6 +1,7 @@
+import pytest
 from core.constants import FLOAT
-from django.test import TransactionTestCase
 from django.utils import timezone
+from rest_framework.test import APITestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -32,7 +33,7 @@ from .helpers import (
 )
 
 
-class IdentityTestCase(TransactionTestCase):
+class IdentityTestCase(APITestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
@@ -100,63 +101,6 @@ class IdentityTestCase(TransactionTestCase):
         self.assertEqual(len(flags), 2)
         self.assertIn(fs_environment_anticipated, flags)
         self.assertIn(fs_identity_anticipated, flags)
-
-    def test_get_all_feature_states_exclude_disabled(self):
-        # Given
-        # a project with hide_disabled_flags enabled
-        hide_disabled_flags_project = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
-
-        # with a single environment
-        environment = Environment.objects.create(
-            name="Test Environment 2", project=hide_disabled_flags_project
-        )
-
-        # 2 features, both defaulted to True
-        feature = Feature.objects.create(
-            name="Test Feature",
-            project=hide_disabled_flags_project,
-            default_enabled=True,
-        )
-        feature_2 = Feature.objects.create(
-            name="Test Feature 2",
-            project=hide_disabled_flags_project,
-            default_enabled=True,
-        )
-
-        # and an identity
-        identity = Identity.objects.create(
-            identifier="test-identity-1",
-            environment=environment,
-        )
-
-        # which has an overridden feature state for both features
-        FeatureState.objects.create(
-            feature=feature,
-            environment=environment,
-            enabled=True,
-            identity=identity,
-        )
-        disabled_flag = FeatureState.objects.create(
-            feature=feature_2,
-            environment=environment,
-            enabled=False,
-            identity=identity,
-        )
-
-        # When
-        # we get flags for the identity
-        identity_flags = identity.get_all_feature_states()
-
-        # Then
-        # we only get a single flag returned
-        assert len(identity_flags) == 1
-
-        # which is for the feature that has not been disabled for the identity
-        assert identity_flags[0].feature != disabled_flag.feature
 
     def test_create_trait_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(
@@ -843,6 +787,53 @@ class IdentityTestCase(TransactionTestCase):
         # the segment is returned
         assert len(segments) == 1 and segments[0] == segment
 
+    def test_get_segments_with_overrides_only_only_returns_segments_overridden_in_environment(
+        self,
+    ):
+        # Given
+        segment_1 = Segment.objects.create(name="Segment 1", project=self.project)
+        segment_2 = Segment.objects.create(name="Segment 2", project=self.project)
+
+        condition_property = "foo"
+        condition_value = "bar"
+        for segment in [segment_1, segment_2]:
+            rule = SegmentRule.objects.create(
+                segment=segment, type=SegmentRule.ALL_RULE
+            )
+            Condition.objects.create(
+                operator=EQUAL,
+                property=condition_property,
+                value=condition_value,
+                rule=rule,
+            )
+
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature, segment=segment_1, environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=self.environment,
+            feature_segment=feature_segment,
+        )
+
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        Trait.objects.create(
+            identity=identity,
+            trait_key=condition_property,
+            value_type=STRING,
+            string_value=condition_value,
+        )
+
+        # When
+        identity_segments = identity.get_segments(overrides_only=True)
+
+        # Then
+        assert len(identity_segments) == 1
+        assert identity_segments[0] == segment_1
+
     def test_get_all_feature_states_does_not_return_null_versions(self):
         # Given
         feature = Feature.objects.create(name="test_feature", project=self.project)
@@ -881,3 +872,62 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
         identity.update_traits(trait_data_items)
 
     # Then - We only expect 1 query(for reading all the traits) should have been made
+
+
+@pytest.mark.parametrize(
+    "environment_value, project_value, disabled_flag_returned",
+    (
+        (True, True, False),
+        (True, False, False),
+        (False, True, True),
+        (False, False, True),
+        (None, True, False),
+        (None, False, True),
+    ),
+)
+def test_get_all_feature_hide_disabled_flags(
+    project,
+    environment,
+    identity,
+    environment_value,
+    project_value,
+    disabled_flag_returned,
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
+
+    environment.hide_disabled_flags = environment_value
+    environment.save()
+
+    # 2 features, both defaulted to True
+    feature_one = Feature.objects.create(
+        name="Test Feature one",
+        project=project,
+        default_enabled=True,
+    )
+    feature_two = Feature.objects.create(
+        name="Test Feature two",
+        project=project,
+        default_enabled=True,
+    )
+    # with one disabled
+    FeatureState.objects.create(
+        feature=feature_one,
+        environment=environment,
+        enabled=False,
+        identity=identity,
+    )
+    # and one enabled overridden feature state
+    FeatureState.objects.create(
+        feature=feature_two,
+        environment=environment,
+        enabled=False,
+        identity=identity,
+    )
+    # When
+    # we get flags for the identity
+    identity_flags = identity.get_all_feature_states()
+
+    # Then
+    assert bool(identity_flags) == disabled_flag_returned

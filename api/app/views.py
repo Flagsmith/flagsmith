@@ -36,21 +36,24 @@ def project_overrides(request):
     It gets loaded as a script tag in the head of the browser when the frontend application starts up.
     """
     config_mapping_dict = {
+        "amplitude": "AMPLITUDE_API_KEY",
         "api": "API_URL",
         "assetURL": "ASSET_URL",
-        "maintenance": "MAINTENANCE_MODE",
-        "preventSignup": "PREVENT_SIGNUP",
-        "disableInflux": "DISABLE_INFLUXDB_FEATURES",
-        "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
+        "crispChat": "CRISP_CHAT_API_KEY",
+        "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
+        "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
+        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
         "ga": "GOOGLE_ANALYTICS_API_KEY",
-        "linkedin_api_key": "LINKEDIN_API_KEY",
-        "crispChat": "CRISP_CHAT_API_KEY",
-        "mixpanel": "MIXPANEL_API_KEY",
-        "sentry": "SENTRY_API_KEY",
-        "amplitude": "AMPLITUDE_API_KEY",
+        "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
+        "linkedin_api_key": "LINKEDIN_API_KEY",
+        "maintenance": "MAINTENANCE_MODE",
+        "mixpanel": "MIXPANEL_API_KEY",
+        "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
+        "preventSignup": "PREVENT_SIGNUP",
+        "sentry": "SENTRY_API_KEY",
     }
 
     override_data = {

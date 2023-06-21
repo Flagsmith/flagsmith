@@ -1,8 +1,11 @@
 import json
+import typing
 from unittest.case import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth import login
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -284,17 +287,19 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         )
         data = {"name": "New Test Group"}
 
-        responses = [
-            client.post(self.list_url, data=data),
+        create_response = client.post(self.list_url, data=data)
+
+        _404_responses = [
             client.put(self._detail_url(group.id)),
             client.get(self._detail_url(group.id)),
             client.delete(self._detail_url(group.id)),
         ]
 
+        assert create_response.status_code == status.HTTP_403_FORBIDDEN
         assert all(
             [
-                response.status_code == status.HTTP_403_FORBIDDEN
-                for response in responses
+                response.status_code == status.HTTP_404_NOT_FOUND
+                for response in _404_responses
             ]
         )
         assert UserPermissionGroup.objects.filter(name=group_name).exists()
@@ -433,3 +438,81 @@ def test_user_permission_group_can_update_external_id(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["external_id"] == external_id
+
+
+def test_users_in_organisation_have_last_login(
+    admin_client, organisation, rf, mocker, admin_user
+):
+    # Given
+    req = rf.get("/")
+    req.session = mocker.MagicMock()
+
+    # let's log the user in to generate `last_login`
+    login(req, admin_user, backend="django.contrib.auth.backends.ModelBackend")
+    url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.id]
+    )
+
+    # When
+    res = admin_client.get(url)
+
+    # Then
+    assert res.json()[0]["last_login"] is not None
+    assert res.status_code == status.HTTP_200_OK
+
+
+def test_retrieve_user_permission_group_includes_group_admin(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    group_admin_user = FFAdminUser.objects.create(email="groupadminuser@example.com")
+    group_admin_user.permission_groups.add(user_permission_group)
+    group_admin_user.make_group_admin(user_permission_group.id)
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, user_permission_group.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    users = response_json["users"]
+
+    assert (
+        next(filter(lambda u: u["id"] == admin_user.id, users))["group_admin"] is False
+    )
+    assert (
+        next(filter(lambda u: u["id"] == group_admin_user.id, users))["group_admin"]
+        is True
+    )
+
+
+def test_group_admin_can_retrieve_group(
+    organisation: Organisation,
+    django_user_model: typing.Type[AbstractUser],
+    api_client: APIClient,
+):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation)
+    group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="Test group"
+    )
+    user.add_to_group(group, group_admin=True)
+
+    api_client.force_authenticate(user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

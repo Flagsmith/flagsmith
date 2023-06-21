@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from organisations.invites.models import Invite, InviteLink
-from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser
 
 
@@ -96,11 +96,15 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
 
 
 def test_join_organisation_with_permission_groups(
-    test_user, test_user_client, organisation, user_permission_group
+    test_user, test_user_client, organisation, user_permission_group, subscription
 ):
     # Given
     invite = Invite.objects.create(email=test_user.email, organisation=organisation)
     invite.permission_groups.add(user_permission_group)
+
+    # update subscription to add another seat
+    subscription.max_seats = 2
+    subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
 
@@ -118,9 +122,13 @@ def test_join_organisation_with_permission_groups(
 
 
 def test_create_invite_with_permission_groups(
-    admin_client, organisation, user_permission_group, admin_user
+    admin_client, organisation, user_permission_group, admin_user, subscription
 ):
     # Given
+    # update subscription to add another seat
+    subscription.max_seats = 2
+    subscription.save()
+
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
         args=[organisation.pk],
@@ -138,6 +146,35 @@ def test_create_invite_with_permission_groups(
     invite = Invite.objects.get(email=email)
     assert invite.permission_groups.first() == user_permission_group
     assert invite.invited_by == admin_user
+
+
+def test_create_invite_returns_400_if_seats_are_over(
+    admin_client,
+    organisation,
+    user_permission_group,
+    admin_user,
+    subscription,
+    settings,
+):
+    # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+    url = reverse(
+        "api-v1:organisations:organisation-invites-list",
+        args=[organisation.pk],
+    )
+    email = "test@example.com"
+    data = {"email": email, "permission_groups": [user_permission_group.id]}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "Please Upgrade your plan to add additional seats/users"
+    )
 
 
 def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):
@@ -188,24 +225,27 @@ def test_update_invite_returns_405(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
-    test_user_client, organisation, admin_user, mocker, invite_object, url
+def test_join_organisation_returns_400_if_exceeds_plan_limit(
+    test_user_client,
+    organisation,
+    admin_user,
+    invite_object,
+    url,
+    subscription,
+    settings,
 ):
     # Given
-    mocked_send_org_over_limit_alert = mocker.patch(
-        "organisations.invites.views.send_org_over_limit_alert"
-    )
-    Subscription.objects.create(organisation=organisation, max_seats=1)
-
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
 
     # When
     response = test_user_client.post(url)
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
-    mocked_send_org_over_limit_alert.delay.assert_called_once_with(
-        args=(organisation.id,)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "Please Upgrade your plan to add additional seats/users"
     )
 
 

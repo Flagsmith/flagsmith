@@ -23,6 +23,7 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
@@ -63,14 +64,12 @@ class OrganisationList(ListView):
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
-            if filter_plan == "free":
-                queryset = queryset.filter(subscription__isnull=True)
-            else:
-                queryset = queryset.filter(subscription__plan__icontains=filter_plan)
+            queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
-        sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
-        sort_direction = self.request.GET.get(
-            "sort_direction", DEFAULT_ORGANISATION_SORT_DIRECTION
+        sort_field = self.request.GET.get("sort_field") or DEFAULT_ORGANISATION_SORT
+        sort_direction = (
+            self.request.GET.get("sort_direction")
+            or DEFAULT_ORGANISATION_SORT_DIRECTION
         )
         queryset = (
             queryset.order_by(sort_field)
@@ -83,7 +82,7 @@ class OrganisationList(ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        data["search"] = self.request.GET.get("search")
+        data["search"] = self.request.GET.get("search", "")
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
@@ -130,13 +129,19 @@ def organisation_info(request, organisation_id):
         "max_api_calls": subscription_metadata.api_calls,
         "max_seats": subscription_metadata.seats,
         "max_projects": subscription_metadata.projects,
+        "chargebee_email": subscription_metadata.chargebee_email,
         "identity_count_dict": identity_count_dict,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
-        event_list, labels = get_event_list_for_organisation(organisation_id)
+        date_range = request.GET.get("date_range", "30d")
+        context["date_range"] = date_range
+
+        event_list, labels = get_event_list_for_organisation(
+            organisation_id, date_range
+        )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
         context["identities"] = mark_safe(json.dumps(event_list["identities"]))
@@ -215,4 +220,10 @@ def download_org_data(request, organisation_id):
 @staff_member_required()
 def trigger_update_organisation_subscription_information_caches(request):
     update_organisation_subscription_information_caches.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def trigger_update_chargebee_caches(request):
+    update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))

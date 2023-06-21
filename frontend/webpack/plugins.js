@@ -11,10 +11,14 @@ module.exports = [
 
     new webpack.DefinePlugin({
         E2E: process.env.E2E,
+        SENTRY_RELEASE_VERSION: true,
     }),
     // // Fixes warning in moment-with-locales.min.js
     // // Module not found: Error: Can't resolve './locale' in ...
-    new webpack.IgnorePlugin(/\.\/locale$/),
+    new webpack.IgnorePlugin({
+        resourceRegExp: /^\.\/locale$/,
+        contextRegExp: /moment$/,
+    }),
     //
     // Copy static content
     new CopyWebpackPlugin({

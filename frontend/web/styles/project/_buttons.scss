@@ -121,7 +121,7 @@ a, .btn, button{
         color: $bt-brand-secondary-faint;
         line-height: 37px;
         &:hover {
-            background-color: white !important;
+            background-color: white;
         }
 
         &-danger {
@@ -203,21 +203,6 @@ a, .btn, button{
         }
     }
 
-
-    &--anchor {
-        box-shadow: none;
-        background: white;
-        padding: 0px 10px;
-        height: 34px;
-        line-height: 34px;
-        &:hover {
-            box-shadow: none;
-            background: white;
-            color: $bt-link-color-hover;
-        }
-        color: $bt-link-color;
-    }
-
     &--condensed {
         padding: 0px 0px;
     }
@@ -287,7 +272,7 @@ a, .btn, button{
             height: 24px;
         }
         margin-top: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         &--github {
             background-color: $github;
             &:hover {

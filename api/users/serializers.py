@@ -57,7 +57,7 @@ class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
 
-    default_fields = ("id", "email", "first_name", "last_name")
+    default_fields = ("id", "email", "first_name", "last_name", "last_login")
     organisation_users_fields = ("role", "date_joined")
 
     class Meta:
@@ -88,16 +88,44 @@ class UserIdsSerializer(serializers.Serializer):
         return data
 
 
-class UserPermissionGroupSerializerList(serializers.ModelSerializer):
+class UserPermissionGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPermissionGroup
         fields = ("id", "name", "users", "is_default", "external_id")
         read_only_fields = ("id",)
 
 
-class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
+class MyUserPermissionGroupsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPermissionGroup
+        fields = ("id", "name")
+        read_only_fields = ("id", "name")
+
+
+class ListUserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FFAdminUser
+        fields = ("id", "email", "first_name", "last_name", "last_login")
+
+
+class ListUserPermissionGroupSerializer(UserPermissionGroupSerializer):
+    users = ListUserPermissionGroupMembershipSerializer(many=True, read_only=True)
+
+
+class UserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    group_admin = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FFAdminUser
+        fields = ("id", "email", "first_name", "last_name", "last_login", "group_admin")
+
+    def get_group_admin(self, instance: FFAdminUser) -> bool:
+        return instance.id in self.context.get("group_admins", [])
+
+
+class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     # TODO: remove users from here and just add a summary of number of users
-    users = UserListSerializer(many=True, read_only=True)
+    users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):

@@ -1,21 +1,22 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
+import Constants from 'common/constants'
 
 const ComingSoon = class extends Component {
-    static displayName = 'ComingSoon'
+  static displayName = 'ComingSoon'
 
-    componentDidMount() {
-        API.trackPage(Constants.pages.COMING_SOON);
-    }
+  componentDidMount() {
+    API.trackPage(Constants.pages.COMING_SOON)
+  }
 
-    render() {
-        return (
-            <div className="app-container container">
-                <h3>Coming Soon</h3>
-            </div>
-        );
-    }
-};
+  render() {
+    return (
+      <div className='app-container container'>
+        <h3>Coming Soon</h3>
+      </div>
+    )
+  }
+}
 
-ComingSoon.propTypes = {};
+ComingSoon.propTypes = {}
 
-module.exports = ComingSoon;
+module.exports = ComingSoon

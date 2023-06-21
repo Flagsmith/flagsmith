@@ -42,7 +42,10 @@
                 </tbody>
             </table>
 
-            <h2>Subscription</h2>
+            <h2>
+                Subscription
+                {%if chargebee_email%} - <a href="mailto:{{ chargebee_email }}">{{ chargebee_email }}</a>{% endif %}
+            </h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
                     <thead class="thead-dark">
@@ -152,6 +155,16 @@
             <div>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
                 <div class="container">
+                    <form action="{% url 'sales_dashboard:organisation_info' organisation.id %}" method="get" class="form-inline float-right">
+                        <label for="date-range">Days History: </label>
+                          <select name="date_range" id="date-range" class="custom-select m-1">
+                            <option value="30d" {% if date_range == "30d" %}selected{% endif %}>30d</option>
+                            <option value="90d" {% if date_range == "90d" %}selected{% endif %}>90d</option>
+                            <option value="180d" {% if date_range == "180d" %}selected{% endif %}>180d</option>
+                            <option value="365d" {% if date_range == "365d" %}selected{% endif %}>365d</option>
+                          </select>
+                          <button type="submit" class="btn btn-primary m-1">Apply</button>
+                        </form>
                     <canvas id="examChart"></canvas>
                 </div>
             </div>

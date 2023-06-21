@@ -1,18 +1,28 @@
-import { t } from 'testcafe';
 import {
     addSegmentOverride,
     addSegmentOverrideConfig,
     assertTextContent,
     byId,
-    click, closeModal, createFeature, createRemoteConfig,
-    createSegment, createTrait, deleteFeature, getLogger, gotoFeature,
+    click,
+    createFeature,
+    createRemoteConfig,
+    createSegment,
+    createTrait,
+    deleteFeature,
+    getLogger,
+    gotoFeature,
     gotoFeatures,
-    gotoSegments, goToUser,
+    gotoSegments,
+    goToUser,
     log,
-    login, saveFeature, saveFeatureSegments, setSegmentOverrideIndex,
-    setText, viewFeature,
-    waitForElementVisible,
+    login,
+    logResults,
+    saveFeatureSegments,
+    setSegmentOverrideIndex,
+    setText,
+    viewFeature,
     waitAndRefresh,
+    waitForElementVisible,
 } from '../helpers.cafe';
 
 const email = 'nightwatch@solidstategroup.com';
@@ -133,9 +143,6 @@ test('Segments Test', async () => {
     await waitForElementVisible(byId('user-feature-switch-1-on'));
 }).after(async (t) => {
     console.log('Start of Segments Requests');
-    console.log(JSON.stringify(logger.requests, null, 2));
-    console.log('End of Segments Requests');
-    console.log('Start of Segments Errors');
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+    await logResults(logger.requests);
     console.log('End of Segments Errors');
 });

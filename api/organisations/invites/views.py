@@ -20,6 +20,7 @@ from organisations.invites.serializers import (
     InviteLinkSerializer,
     InviteListSerializer,
 )
+from organisations.models import Organisation
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
 )
@@ -27,22 +28,21 @@ from organisations.serializers import (
     InviteSerializer,
     OrganisationSerializerFull,
 )
-from organisations.tasks import send_org_over_limit_alert
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
 from users.exceptions import InvalidInviteError
 
 
 @api_view(["POST"])
 def join_organisation_from_email(request, hash):
     invite = get_object_or_404(Invite, hash=hash)
-
     try:
         request.user.join_organisation_from_invite_email(invite)
+
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
-
-    if invite.organisation.over_plan_seats_limit():
-        send_org_over_limit_alert.delay(args=(invite.organisation.id,))
 
     return Response(
         OrganisationSerializerFull(
@@ -63,8 +63,6 @@ def join_organisation_from_link(request, hash):
         raise InviteExpiredError()
 
     request.user.join_organisation_from_invite_link(invite)
-    if invite.organisation.over_plan_seats_limit():
-        send_org_over_limit_alert.delay(args=(invite.organisation.id,))
 
     return Response(
         OrganisationSerializerFull(
@@ -80,8 +78,8 @@ class InviteLinkViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
+    permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
     serializer_class = InviteLinkSerializer
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     pagination_class = None
 
     def get_queryset(self):
@@ -102,7 +100,7 @@ class InviteViewSet(
     GenericViewSet,
     RetrieveModelMixin,
 ):
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
+    permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
     throttle_scope = "invite"
 
     def get_serializer_class(self):
@@ -127,6 +125,16 @@ class InviteViewSet(
         return Response(status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
+        organisation = Organisation.objects.get(id=self.kwargs.get("organisation_pk"))
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and organisation.num_seats >= subscription_metadata.seats
+            and not organisation.subscription.can_auto_upgrade_seats
+        ):
+            raise SubscriptionDoesNotSupportSeatUpgrade()
+
         serializer.save(
             organisation_id=self.kwargs.get("organisation_pk"),
             invited_by=self.request.user,

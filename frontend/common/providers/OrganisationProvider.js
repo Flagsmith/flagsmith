@@ -1,79 +1,75 @@
-import { Component } from 'react';
-import OrganisationStore from '../stores/organisation-store';
-import AccountStore from '../stores/account-store';
+import { Component } from 'react'
+import OrganisationStore from 'common/stores/organisation-store'
+import AccountStore from 'common/stores/account-store'
+import UserGroupStore from 'common/stores/user-group-store'
 
 const OrganisationProvider = class extends Component {
-    static displayName = 'OrganisationProvider'
+  static displayName = 'OrganisationProvider'
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {
-            isLoading: OrganisationStore.isLoading,
-            projects: OrganisationStore.getProjects(),
-            project: OrganisationStore.getProject(),
-            users: OrganisationStore.getUsers(),
-            invites: OrganisationStore.getInvites(),
-            name: AccountStore.getOrganisation() && AccountStore.getOrganisation().name,
-            subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
-            usage: OrganisationStore.getUsage(),
-        };
-        ES6Component(this);
-        this.listenTo(OrganisationStore, 'change', () => {
-            this.setState({
-                isSaving: OrganisationStore.isSaving,
-                isLoading: OrganisationStore.isLoading,
-                projects: OrganisationStore.getProjects(this.props.id),
-                project: OrganisationStore.getProject(),
-                users: OrganisationStore.getUsers(),
-                invites: OrganisationStore.getInvites(),
-                inviteLinks: OrganisationStore.getInviteLinks(),
-                subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
-                usage: OrganisationStore.getUsage(),
-                influx_data: OrganisationStore.getInflux(),
-            });
-        });
-        this.listenTo(OrganisationStore, 'saved', () => {
-            this.props.onSave && this.props.onSave(OrganisationStore.savedId);
-        });
+  constructor(props, context) {
+    super(props, context)
+    this.state = {
+      groups: UserGroupStore.getGroups(),
+      invites: OrganisationStore.getInvites(),
+      isLoading: OrganisationStore.isLoading,
+      name:
+        AccountStore.getOrganisation() && AccountStore.getOrganisation().name,
+      project: OrganisationStore.getProject(),
+      projects: OrganisationStore.getProjects(),
+      subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
+      users: OrganisationStore.getUsers(),
     }
+    ES6Component(this)
+    this.listenTo(OrganisationStore, 'change', () => {
+      this.setState({
+        groups: UserGroupStore.getGroups(),
+        inviteLinks: OrganisationStore.getInviteLinks(),
+        invites: OrganisationStore.getInvites(),
+        isLoading: OrganisationStore.isLoading,
+        isSaving: OrganisationStore.isSaving,
+        project: OrganisationStore.getProject(),
+        projects: OrganisationStore.getProjects(this.props.id),
+        subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
+        users: OrganisationStore.getUsers(),
+      })
+    })
+    this.listenTo(OrganisationStore, 'saved', () => {
+      this.props.onSave && this.props.onSave(OrganisationStore.savedId)
+    })
+  }
 
-    createProject = (name) => {
-        AppActions.createProject(name);
-    };
+  createProject = (name) => {
+    AppActions.createProject(name)
+  }
 
-    selectProject = (id) => {
-        AppActions.getProject(id);
-    };
+  selectProject = (id) => {
+    AppActions.getProject(id)
+  }
 
-    render() {
-        return (
-            this.props.children(
-                {
-                    ...{
-                        isSaving: OrganisationStore.isSaving,
-                        isLoading: OrganisationStore.isLoading,
-                        projects: OrganisationStore.getProjects(this.props.id),
-                        project: OrganisationStore.getProject(),
-                        subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
-                        users: OrganisationStore.getUsers(),
-                        invites: OrganisationStore.getInvites(),
-                        inviteLinks: OrganisationStore.getInviteLinks(),
-                        usage: OrganisationStore.getUsage(),
-                        influx_data: OrganisationStore.getInflux(),
-                    },
-                    invalidateInviteLink: AppActions.invalidateInviteLink,
-                    createProject: this.createProject,
-                    selectProject: this.selectProject,
-                },
-            )
-        );
-    }
-};
+  render() {
+    return this.props.children({
+      ...{
+        groups: UserGroupStore.getGroups(),
+        inviteLinks: OrganisationStore.getInviteLinks(),
+        invites: OrganisationStore.getInvites(),
+        isLoading: OrganisationStore.isLoading,
+        isSaving: OrganisationStore.isSaving,
+        project: OrganisationStore.getProject(),
+        projects: OrganisationStore.getProjects(this.props.id),
+        subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
+        users: OrganisationStore.getUsers(),
+      },
+      createProject: this.createProject,
+      invalidateInviteLink: AppActions.invalidateInviteLink,
+      selectProject: this.selectProject,
+    })
+  }
+}
 
 OrganisationProvider.propTypes = {
-    id: RequiredString,
-    onSave: OptionalFunc,
-    children: OptionalNode,
-};
+  children: OptionalFunc,
+  id: OptionalString,
+  onSave: OptionalFunc,
+}
 
-module.exports = OrganisationProvider;
+module.exports = OrganisationProvider

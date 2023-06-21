@@ -1,16 +1,14 @@
 import logging
 
+from core.permissions import HasMasterAPIKey
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from audit.models import (
-    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -18,6 +16,7 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.models import FeatureSegment
+from projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +32,19 @@ logger = logging.getLogger(__name__)
     ),
 )
 class FeatureSegmentViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.ModelViewSet,
 ):
+    permission_classes = [IsAuthenticated | HasMasterAPIKey]
+
     def get_queryset(self):
-        permitted_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
+        if hasattr(self.request, "master_api_key"):
+            permitted_projects = Project.objects.filter(
+                organisation_id=self.request.master_api_key.organisation_id
+            )
+        else:
+            permitted_projects = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
         queryset = FeatureSegment.objects.filter(
             feature__project__in=permitted_projects
         )
@@ -63,45 +67,27 @@ class FeatureSegmentViewSet(
 
         return FeatureSegmentListSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "update_priorities":
-            # update the serializer kwargs to ensure docs here are correct
-            kwargs = {**kwargs, "many": True, "partial": True}
-        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
-    def perform_destroy(self, instance):
-        # feature state <-> feature segment relationship is incorrectly modelled as a
-        # foreign key instead of one to one, so we need to grab the first feature state
-        feature_state = instance.feature_states.first()
-        message = SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-            instance.feature.name,
-            instance.segment.name,
-        )
-
-        if feature_state:
-            audit_log_record = AuditLog.create_record(
-                obj=feature_state,
-                obj_type=RelatedObjectType.FEATURE_STATE,
-                log_message=message,
-                author=self.request.user,
-                project=instance.feature.project,
-                environment=instance.environment,
-                persist=False,
-            )
-            instance.delete()
-            audit_log_record.save()
-        else:
-            logger.warning(
-                "FeatureSegment %d has no feature state. Deleting without AuditLog.",
-                instance.id,
-            )
-            instance.delete()
-
+    @swagger_auto_schema(
+        methods=["POST"],
+        request_body=FeatureSegmentChangePrioritiesSerializer(many=True),
+        responses={200: FeatureSegmentListSerializer(many=True)},
+    )
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        updated_instances = serializer.save()
+        feature_segments = serializer.save()
         return Response(
-            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
+            FeatureSegmentListSerializer(instance=feature_segments, many=True).data
         )
+
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        feature_segment = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(feature_segment)
+        return Response(serializer.data)

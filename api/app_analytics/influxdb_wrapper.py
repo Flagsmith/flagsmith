@@ -9,6 +9,9 @@ from sentry_sdk import capture_exception
 from urllib3 import Retry
 from urllib3.exceptions import HTTPError
 
+from .dataclasses import FeatureEvaluationData, UsageData
+from .influxdb_schema import FeatureEvaluationDataSchema, UsageDataSchema
+
 logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
@@ -96,7 +99,7 @@ class InfluxDBWrapper:
             return []
 
 
-def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
+def get_events_for_organisation(organisation_id: id, date_range: str = "30d") -> int:
     """
     Query influx db for usage for given organisation id
 
@@ -104,9 +107,13 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
     :return: a number of request counts for organisation
     """
     result = InfluxDBWrapper.influx_query_manager(
-        filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
-        |> filter(fn: (r) => r["_field"] == "request_count") \
-        |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
+        filters=build_filter_string(
+            [
+                'r._measurement == "api_call"',
+                'r["_field"] == "request_count"',
+                f'r["organisation_id"] == "{organisation_id}"',
+            ]
+        ),
         drop_columns=(
             "organisation",
             "project",
@@ -126,7 +133,7 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
     return total
 
 
-def get_event_list_for_organisation(organisation_id: int):
+def get_event_list_for_organisation(organisation_id: int, date_range: str = "30d"):
     """
     Query influx db for usage for given organisation id
 
@@ -138,28 +145,47 @@ def get_event_list_for_organisation(organisation_id: int):
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
+        date_range=date_range,
     )
     dataset = defaultdict(list)
     labels = []
     for result in results:
         for record in result.records:
             dataset[record["resource"]].append(record["_value"])
-            if len(labels) != 31:
+            required_records = int(date_range[:-1]) + 1
+            if len(labels) != required_records:
                 labels.append(record.values["_time"].strftime("%Y-%m-%d"))
     return dataset, labels
 
 
-def get_multiple_event_list_for_organisation(organisation_id: int):
+def get_multiple_event_list_for_organisation(
+    organisation_id: int,
+    project_id: int = None,
+    environment_id: int = None,
+):
     """
     Query influx db for usage for given organisation id
 
     :param organisation_id: an id of the organisation to get usage for
+    :param project_id: optionally filter by project id
+    :param environment_id: optionally filter by an environment id
 
     :return: a number of requests for flags, traits, identities, environment-document
     """
+
+    filters = [
+        'r._measurement == "api_call"',
+        f'r["organisation_id"] == "{organisation_id}"',
+    ]
+
+    if project_id:
+        filters.append(f'r["project_id"] == "{project_id}"')
+
+    if environment_id:
+        filters.append(f'r["environment_id"] == "{environment_id}"')
+
     results = InfluxDBWrapper.influx_query_manager(
-        filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
-                  |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
+        filters=build_filter_string(filters),
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     if not results:
@@ -172,6 +198,15 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
             dataset[i][record.values["resource"].capitalize()] = record.values["_value"]
             dataset[i]["name"] = record.values["_time"].strftime("%Y-%m-%d")
     return dataset
+
+
+def get_usage_data(
+    organisation_id: int, project_id: int = None, environment_id=None
+) -> typing.List[UsageData]:
+    events_list = get_multiple_event_list_for_organisation(
+        organisation_id, project_id, environment_id
+    )
+    return UsageDataSchema(many=True).load(events_list)
 
 
 def get_multiple_event_list_for_feature(
@@ -228,6 +263,15 @@ def get_multiple_event_list_for_feature(
     return dataset
 
 
+def get_feature_evaluation_data(
+    feature_name: str, environment_id: int, period: str = "30d"
+) -> typing.List[FeatureEvaluationData]:
+    data = get_multiple_event_list_for_feature(
+        feature_name=feature_name, environment_id=environment_id, period=period
+    )
+    return FeatureEvaluationDataSchema(many=True).load(data)
+
+
 def get_top_organisations(date_range: str, limit: str = ""):
     """
     Query influx db top used organisations
@@ -268,3 +312,9 @@ def get_top_organisations(date_range: str, limit: str = ""):
                 )
 
     return dataset
+
+
+def build_filter_string(filter_expressions: typing.List[str]) -> str:
+    return "|> ".join(
+        ["", *[f"filter(fn: (r) => {exp})" for exp in filter_expressions]]
+    )

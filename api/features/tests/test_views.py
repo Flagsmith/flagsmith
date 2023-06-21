@@ -1,23 +1,24 @@
 import json
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from unittest import TestCase, mock
 
 import pytest
 import pytz
+from app_analytics.dataclasses import FeatureEvaluationData
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from audit.models import (
+from audit.constants import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
 )
+from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import (
     Feature,
     FeatureSegment,
@@ -152,6 +153,7 @@ class ProjectFeatureTestCase(TestCase):
             "email": user_3.email,
             "first_name": user_3.first_name,
             "last_name": user_3.last_name,
+            "last_login": None,
         }
 
     def test_audit_log_created_when_feature_state_created_for_identity(self):
@@ -249,20 +251,14 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
+                log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+                % (
+                    feature.name,
+                    identity.identifier,
+                )
             ).count()
             == 1
         )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
 
     def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
         # Given - set up data
@@ -609,40 +605,210 @@ class SDKFeatureStatesTestCase(APITestCase):
             self.environment.updated_at.timestamp()
         )
 
-    def test_get_flags_exclude_disabled(self):
 
-        # Given
-        # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
+@pytest.mark.parametrize(
+    "environment_value, project_value, disabled_flag_returned",
+    (
+        (True, True, False),
+        (True, False, False),
+        (False, True, True),
+        (False, False, True),
+        (None, True, False),
+        (None, False, True),
+    ),
+)
+def test_get_flags_hide_disabled_flags(
+    environment_value,
+    project_value,
+    disabled_flag_returned,
+    project,
+    environment,
+    api_client,
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
 
-        # and a set of features and environments for that project
-        other_environment = Environment.objects.create(
-            name="Test Environment 2", project=project_flag_disabled
-        )
-        disabled_flag = Feature.objects.create(
-            name="Flag 1", project=project_flag_disabled
-        )
-        enabled_flag = Feature.objects.create(
-            name="Flag 2", project=project_flag_disabled, default_enabled=True
-        )
+    environment.hide_disabled_flags = environment_value
+    environment.save()
 
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
+    Feature.objects.create(name="disabled_flag", project=project, default_enabled=False)
+    Feature.objects.create(name="enabled_flag", project=project, default_enabled=True)
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
+    url = reverse("api-v1:flags")
 
-        # disabled flags are not returned
-        for flag in response_json:
-            assert flag["feature"]["id"] != disabled_flag.id
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
 
-        # but enabled ones are
-        assert response_json[0]["feature"]["id"] == enabled_flag.id
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == (2 if disabled_flag_returned else 1)
+
+
+def test_get_flags_hide_sensitive_data(api_client, environment, feature):
+    # Given
+    environment.hide_sensitive_data = True
+    environment.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+    feature_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    # Check that the sensitive fields are None
+    for flag in response.json():
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+
+def test_get_flags__server_key_only_feature__return_expected(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.json()
+
+
+def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
+    api_client: APIClient,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
+    # Given
+    url = reverse(
+        "api-v1:features:get-feature-state-by-uuid", args=[feature_state.uuid]
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(feature_state.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_deleted_features_are_not_listed(client, project, environment, feature):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    feature.delete()
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_get_feature_evaluation_data(project, feature, environment, mocker, client):
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-evaluation-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}"
+    mocked_get_feature_evaluation_data = mocker.patch(
+        "features.views.get_feature_evaluation_data", autospec=True
+    )
+    mocked_get_feature_evaluation_data.return_value = [
+        FeatureEvaluationData(count=10, day=date.today()),
+        FeatureEvaluationData(count=10, day=date.today() - timedelta(days=1)),
+    ]
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 2
+    assert response.json()[0] == {"day": str(date.today()), "count": 10}
+    assert response.json()[1] == {
+        "day": str(date.today() - timedelta(days=1)),
+        "count": 10,
+    }
+    mocked_get_feature_evaluation_data.assert_called_with(
+        feature=feature, period=30, environment_id=environment.id
+    )
+
+
+def test_create_segment_override(admin_client, feature, segment, environment):
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    created_override = FeatureState.objects.filter(
+        feature=feature, environment=environment, feature_segment__segment=segment
+    ).first()
+    assert created_override is not None
+    assert created_override.enabled is enabled
+    assert created_override.get_feature_state_value() == string_value

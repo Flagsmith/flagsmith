@@ -220,6 +220,11 @@ class InfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
 
 
+class InfluxDataQuerySerializer(serializers.Serializer):
+    project_id = serializers.IntegerField(required=False)
+    environment_id = serializers.IntegerField(required=False)
+
+
 class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
     plan_id = serializers.CharField(write_only=True)
     subscription_id = serializers.CharField(write_only=True)
@@ -238,3 +243,5 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     max_projects = serializers.IntegerField(source="projects", allow_null=True)
 
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
+
+    chargebee_email = serializers.EmailField()

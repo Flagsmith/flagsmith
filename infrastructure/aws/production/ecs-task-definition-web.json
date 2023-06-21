@@ -125,11 +125,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0005"
+                    "value": "0.0001"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.1"
+                    "value": "0.02"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -162,6 +162,14 @@
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime.flagsmith.com"
+                },
+                {
+                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
+                    "value": "True"
+                },
+                {
+                    "name": "AUTO_SEAT_UPGRADE_PLANS",
+                    "value": "scale-up,scale-up-v2,scale-up-annual-v2"
                 }
             ],
             "secrets": [

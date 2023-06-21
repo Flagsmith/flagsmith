@@ -99,22 +99,25 @@ class SegmentPermissionsTestCase(TestCase):
         # Then
         assert not result
 
-    def test_project_user_has_no_object_permission(self):
+    def test_project_user_has_object_permission(self):
         # Given
         mock_request.user = self.project_user
 
         # When
-        results = []
-        for action in ("retrieve", "destroy", "update"):
+        for action, expected_result in (
+            ("retrieve", True),
+            ("destroy", False),
+            ("update", False),
+            ("partial_update", False),
+        ):
             mock_view.action = action
-            results.append(
+            # Then
+            assert (
                 segment_permissions.has_object_permission(
                     mock_request, mock_view, self.segment
                 )
+                == expected_result
             )
-
-        # Then
-        assert all(not result for result in results)
 
     def test_environment_admin_can_get_segments_for_an_identity(self):
         # Given

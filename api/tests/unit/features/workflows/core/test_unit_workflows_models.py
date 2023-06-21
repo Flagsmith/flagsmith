@@ -4,17 +4,25 @@ import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
 
-from audit.models import (
+from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
-    AuditLog,
+    FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
 )
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from features.models import FeatureState
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
+    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
-from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
+from features.workflows.core.models import (
+    ChangeRequest,
+    ChangeRequestApproval,
+    ChangeRequestGroupAssignment,
+)
 from users.models import FFAdminUser
 
 
@@ -22,6 +30,8 @@ def test_change_request_approve_by_required_approver(
     change_request_no_required_approvals, mocker
 ):
     # Given
+    mocked_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+
     user = FFAdminUser.objects.create(email="approver@example.com")
     approval = ChangeRequestApproval.objects.create(
         user=user, change_request=change_request_no_required_approvals
@@ -37,6 +47,21 @@ def test_change_request_approve_by_required_approver(
     approval.refresh_from_db()
     assert approval.approved_at == now
     assert approval.user == user
+
+    # 2 emails are sent:
+    assert mocked_send_mail.call_count == 2
+    assignee_email_call_args, author_email_call_args = mocked_send_mail.call_args_list
+
+    #  1 to the assignee that they are required to approve the CR (done when the ChangeRequestApproval
+    #  model object is created above)
+    assert assignee_email_call_args.kwargs["recipient_list"] == [user.email]
+    assert author_email_call_args.kwargs["fail_silently"] is True
+
+    #  1 to the author that it has been approved
+    assert author_email_call_args.kwargs["recipient_list"] == [
+        change_request_no_required_approvals.user.email
+    ]
+    assert author_email_call_args.kwargs["fail_silently"] is True
 
 
 def test_change_request_approve_by_new_approver_when_no_approvals_exist(
@@ -149,7 +174,7 @@ def test_approving_a_change_request_creates_audit_logs(
     user = django_user_model.objects.create(email="approver@example.com")
 
     # When
-    approval = ChangeRequestApproval.objects.create(
+    ChangeRequestApproval.objects.create(
         change_request=change_request_no_required_approvals,
         user=user,
         approved_at=timezone.now(),
@@ -159,7 +184,7 @@ def test_approving_a_change_request_creates_audit_logs(
     log = CHANGE_REQUEST_APPROVED_MESSAGE % change_request_no_required_approvals.title
     assert (
         AuditLog.objects.filter(
-            related_object_id=approval.id,
+            related_object_id=change_request_no_required_approvals.id,
             author=user,
             log=log,
         ).count()
@@ -425,31 +450,38 @@ def test_change_request_email_subject(change_request_no_required_approvals):
     )
 
 
-def test_schedule_audit_log_creation_task_for_feature_state_going_live_does_nothing_if_not_scheduled_for_future(
-    settings, change_request_no_required_approvals, mocker
+def test_committing_cr_after_live_from_creates_correct_audit_log_for_related_feature_states(
+    settings, change_request_no_required_approvals, mocker, admin_user
 ):
     # Given
-    settings.EDGE_ENABLED = True
     mock_create_feature_state_went_live_audit_log = mocker.patch(
         "features.workflows.core.models.create_feature_state_went_live_audit_log"
     )
 
-    now = timezone.now()
-
     assert change_request_no_required_approvals.feature_states.exists()
-    assert not change_request_no_required_approvals.feature_states.filter(
-        live_from__gt=now
-    ).exists()
 
     # When
-    change_request_no_required_approvals.schedule_audit_log_creation_task_for_feature_state_going_live()
+    change_request_no_required_approvals.commit(committed_by=admin_user)
 
     # Then
     mock_create_feature_state_went_live_audit_log.delay.assert_not_called()
+    for feature_state in change_request_no_required_approvals.feature_states.all():
+        log = FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE % (
+            feature_state.feature.name,
+            feature_state.change_request.title,
+        )
+        assert (
+            AuditLog.objects.filter(
+                related_object_id=feature_state.id,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                log=log,
+            ).count()
+            == 1
+        )
 
 
-def test_schedule_audit_log_creation_task_for_feature_state_going_live_schedules_tasks_correctly(
-    settings, change_request_no_required_approvals, mocker
+def test_committing_cr_after_before_from_schedules_tasks_correctly(
+    settings, change_request_no_required_approvals, mocker, admin_user
 ):
     # Given
     mock_create_feature_state_went_live_audit_log = mocker.patch(
@@ -461,10 +493,108 @@ def test_schedule_audit_log_creation_task_for_feature_state_going_live_schedules
     change_request_no_required_approvals.feature_states.all().update(live_from=tomorrow)
 
     # When
-    change_request_no_required_approvals.schedule_audit_log_creation_task_for_feature_state_going_live()
+    change_request_no_required_approvals.commit(committed_by=admin_user)
 
     # Then
     mock_create_feature_state_went_live_audit_log.delay.assert_called_once_with(
         delay_until=tomorrow,
         args=(change_request_no_required_approvals.feature_states.all().first().id,),
+    )
+
+
+def test_cannot_delete_committed_change_request_with_live_feature_states(
+    project, environment, feature, admin_user
+):
+    # Given
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    with pytest.raises(ChangeRequestDeletionError):
+        change_request.delete()
+
+    # Then
+    assert change_request.deleted_at is None
+
+
+@pytest.mark.freeze_time()
+def test_committing_scheduled_change_requests_results_in_correct_versions(
+    environment, feature, admin_user, freezer
+):
+    # Given
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+    three_hours_from_now = now + timedelta(hours=3)
+
+    scheduled_cr_1 = ChangeRequest.objects.create(
+        title="scheduled_cr_1", environment=environment, user=admin_user
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        live_from=one_hour_from_now,
+        version=None,
+        change_request=scheduled_cr_1,
+    )
+
+    scheduled_cr_2 = ChangeRequest.objects.create(
+        title="scheduled_cr_2", environment=environment, user=admin_user
+    )
+    cr_2_fs = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        live_from=two_hours_from_now,
+        version=None,
+        change_request=scheduled_cr_2,
+    )
+
+    # When
+    # we commit the change requests in the 'wrong' order
+    scheduled_cr_2.commit(admin_user)
+    scheduled_cr_1.commit(admin_user)
+
+    # and move time on to after the feature states from both CRs should have gone live
+    freezer.move_to(three_hours_from_now)
+
+    # Then
+    # the feature state in the latest scheduled cr should be the one that is returned
+    feature_states = FeatureState.get_environment_flags_list(
+        environment_id=environment.id
+    )
+    assert len(feature_states) == 1
+    assert feature_states[0] == cr_2_fs
+
+
+def test_change_request_group_assignment_sends_notification_emails_to_group_users(
+    change_request, user_permission_group, settings, mocker
+):
+    # Given
+    change_request_group_assignment = ChangeRequestGroupAssignment(
+        change_request=change_request, group=user_permission_group
+    )
+
+    workflows_logic_tasks_module_mock = mocker.MagicMock()
+
+    mocked_importlib = mocker.patch("features.workflows.core.models.importlib")
+    mocked_importlib.import_module.return_value = workflows_logic_tasks_module_mock
+
+    settings.WORKFLOWS_LOGIC_INSTALLED = True
+
+    # When
+    change_request_group_assignment.save()
+
+    # Then
+    workflows_logic_tasks_module_mock.notify_group_of_change_request_assignment.delay.assert_called_once_with(
+        kwargs={
+            "change_request_group_assignment_id": change_request_group_assignment.id
+        }
     )

@@ -2,9 +2,11 @@ import logging
 import typing
 from functools import reduce
 
+from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
+from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
@@ -18,17 +20,10 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
-from audit.models import (
-    FEATURE_CREATED_MESSAGE,
-    FEATURE_DELETED_MESSAGE,
-    FEATURE_UPDATED_MESSAGE,
-    IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -44,6 +39,7 @@ from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
 from .permissions import (
+    CreateSegmentOverridePermissions,
     EnvironmentFeatureStatePermissions,
     FeaturePermissions,
     FeatureStatePermissions,
@@ -53,6 +49,8 @@ from .permissions import (
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
+    CreateSegmentOverrideFeatureStateSerializer,
+    FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -62,8 +60,10 @@ from .serializers import (
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
+    GetUsageDataQuerySerializer,
     ListCreateFeatureSerializer,
     ProjectFeatureSerializer,
+    SDKFeatureStateSerializer,
     SDKFeatureStatesQuerySerializer,
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
@@ -140,23 +140,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        instance = serializer.save(
+        serializer.save(
             project_id=int(self.kwargs.get("project_pk")), user=self.request.user
         )
-        feature_states = list(
-            instance.feature_states.filter(identity=None, feature_segment=None)
-        )
-        self._create_audit_log("CREATE", instance, feature_states)
 
     def perform_update(self, serializer):
-        instance = serializer.save(project_id=self.kwargs.get("project_pk"))
-        self._create_audit_log("UPDATE", instance)
+        serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):
         feature_states = list(
             instance.feature_states.filter(identity=None, feature_segment=None)
         )
-        self._create_audit_log("DELETE", instance, feature_states)
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
@@ -169,6 +163,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 ),
                 user=self.request.user,
             )
+        if self.action == "list" and "environment" in self.request.query_params:
+            environment_id = self.request.query_params["environment"]
+            context["overrides_data"] = Feature.get_overrides_data(environment_id)
+
         return context
 
     @swagger_auto_schema(
@@ -201,6 +199,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
         responses={200: FeatureInfluxDataSerializer()},
+        deprecated=True,
+        operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):
@@ -215,55 +215,30 @@ class FeatureViewSet(viewsets.ModelViewSet):
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        query_serializer=GetUsageDataQuerySerializer(),
+        responses={200: FeatureEvaluationDataSerializer()},
+    )
+    @action(detail=True, methods=["GET"], url_path="evaluation-data")
+    def get_evaluation_data(self, request, pk, project_pk):
+        feature = get_object_or_404(Feature, pk=pk)
+
+        query_serializer = GetUsageDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        usage_data = get_feature_evaluation_data(
+            feature=feature, **query_serializer.data
+        )
+        serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
+
+        return Response(serializer.data)
+
     def _trigger_feature_state_change_webhooks(
         self, feature_states: typing.List[FeatureState]
     ):
         for feature_state in feature_states:
             trigger_feature_state_change_webhooks(
                 feature_state, WebhookEventType.FLAG_DELETED
-            )
-
-    def _create_audit_log(
-        self,
-        action_type: str,
-        feature: Feature,
-        feature_states: typing.List[FeatureState] = None,
-    ):
-        assert action_type in ("CREATE", "UPDATE", "DELETE")
-        feature_states = feature_states or []
-        message = {
-            "CREATE": FEATURE_CREATED_MESSAGE,
-            "UPDATE": FEATURE_UPDATED_MESSAGE,
-            "DELETE": FEATURE_DELETED_MESSAGE,
-        }.get(action_type) % feature.name
-
-        # TODO: optimise these creates to use bulk create again but for now, we need to
-        #  ensure the post_save signals on the AuditLog model class are triggered
-
-        author = None if self.request.user.is_anonymous else self.request.user
-        master_api_key = (
-            self.request.master_api_key if self.request.user.is_anonymous else None
-        )
-        AuditLog.objects.create(
-            author=author,
-            project=feature.project,
-            related_object_type=RelatedObjectType.FEATURE.name,
-            related_object_id=feature.id,
-            log=message,
-            master_api_key=master_api_key,
-        )
-        for feature_state in feature_states:
-            # for each of these, we skip sending the environments to dynamodb since
-            # we have already sent all the environments for the project audit log above
-            AuditLog.objects.create(
-                author=author,
-                project=feature.project,
-                environment=feature_state.environment,
-                related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                related_object_id=feature_state.id,
-                log=message,
-                skip_signals="send_environments_to_dynamodb",
-                master_api_key=master_api_key,
             )
 
     def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
@@ -467,28 +442,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        feature_state = get_object_or_404(self.get_queryset(), pk=kwargs.get("pk"))
-        res = super(BaseFeatureStateViewSet, self).destroy(request, *args, **kwargs)
-        if res.status_code == status.HTTP_204_NO_CONTENT:
-            self._create_deleted_feature_state_audit_log(feature_state)
-        return res
-
-    def _create_deleted_feature_state_audit_log(self, feature_state):
-        message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
-            feature_state.feature.name,
-            feature_state.identity.identifier,
-        )
-
-        AuditLog.objects.create(
-            author=getattr(self.request, "user", None),
-            related_object_id=feature_state.id,
-            related_object_type=RelatedObjectType.FEATURE_STATE.name,
-            environment=feature_state.environment,
-            project=feature_state.environment.project,
-            log=message,
-        )
-
     def partial_update(self, request, *args, **kwargs):
         """
         Override partial_update as overridden update method assumes partial True for all requests.
@@ -553,7 +506,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
             many=True,
-            context={"request": request, "identity": identity},
+            context={
+                "request": request,
+                "identity": identity,
+                "environment_api_key": identity.environment.api_key,
+            },
         )
 
         return Response(serializer.data)
@@ -588,8 +545,26 @@ class SimpleFeatureStateViewSet(
             raise NotFound("Environment not found.")
 
 
+@swagger_auto_schema(
+    responses={200: WritableNestedFeatureStateSerializer()}, method="get"
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated | HasMasterAPIKey])
+def get_feature_state_by_uuid(request, uuid):
+    if getattr(request, "master_api_key", None):
+        accessible_projects = request.master_api_key.organisation.projects.all()
+    else:
+        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+    qs = FeatureState.objects.filter(
+        feature__project__in=accessible_projects
+    ).select_related("feature_state_value")
+    feature_state = get_object_or_404(qs, uuid=uuid)
+    serializer = WritableNestedFeatureStateSerializer(instance=feature_state)
+    return Response(serializer.data)
+
+
 class SDKFeatureStates(GenericAPIView):
-    serializer_class = FeatureStateSerializerFull
+    serializer_class = SDKFeatureStateSerializer
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
@@ -618,7 +593,6 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-
             feature_states = FeatureState.get_environment_flags_list(
                 environment_id=request.environment.id,
                 feature_name=request.GET["feature"],
@@ -652,10 +626,15 @@ class SDKFeatureStates(GenericAPIView):
 
     @property
     def _additional_filters(self) -> Q:
-        exclude_hide_disabled = Q(
-            feature__project__hide_disabled_flags=True, enabled=False
-        )
-        return Q(feature_segment=None, identity=None) & ~exclude_hide_disabled
+        filters = Q(feature_segment=None, identity=None)
+
+        if self.request.environment.get_hide_disabled_flags() is True:
+            return filters & Q(enabled=True)
+
+        if self.request.originated_from is RequestOrigin.CLIENT:
+            return filters & Q(feature__is_server_key_only=False)
+
+        return filters
 
     def _get_flags_from_cache(self, environment):
         data = flags_cache.get(environment.api_key)
@@ -720,3 +699,24 @@ def organisation_has_got_feature(request, organisation):
         organisation.has_requested_features = True
         organisation.save()
         return True
+
+
+@swagger_auto_schema(
+    method="POST",
+    request_body=CreateSegmentOverrideFeatureStateSerializer(),
+    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+)
+@permission_classes([CreateSegmentOverridePermissions()])
+@api_view(["POST"])
+def create_segment_override(
+    request: Request, environment_api_key: str, feature_pk: int
+):
+    environment = get_object_or_404(Environment, api_key=environment_api_key)
+    feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
+
+    serializer = CreateSegmentOverrideFeatureStateSerializer(
+        data=request.data, context={"environment": environment, "feature": feature}
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save(environment=environment, feature=feature)
+    return Response(serializer.data, status=201)

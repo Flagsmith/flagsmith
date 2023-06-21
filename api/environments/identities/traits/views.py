@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
-from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -22,7 +21,10 @@ from environments.identities.traits.serializers import (
     TraitSerializerBasic,
     TraitSerializerFull,
 )
-from environments.permissions.constants import MANAGE_IDENTITIES
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -33,27 +35,9 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
-from sse import send_identity_update_messages
-from sse.decorators import generate_identity_update_message
 from util.views import SDKAPIView
 
-generate_identity_message_decorator_trait_view = generate_identity_update_message(
-    lambda req: (req.environment, req.identity.identifier)
-)
 
-
-@method_decorator(
-    generate_identity_message_decorator_trait_view,
-    name="create",
-)
-@method_decorator(
-    generate_identity_message_decorator_trait_view,
-    name="destroy",
-)
-@method_decorator(
-    generate_identity_message_decorator_trait_view,
-    name="update",
-)
 class TraitViewSet(viewsets.ModelViewSet):
     serializer_class = TraitSerializer
 
@@ -87,8 +71,8 @@ class TraitViewSet(viewsets.ModelViewSet):
                     "update": MANAGE_IDENTITIES,
                     "partial_update": MANAGE_IDENTITIES,
                     "destroy": MANAGE_IDENTITIES,
-                    "list": MANAGE_IDENTITIES,
-                    "retrieve": MANAGE_IDENTITIES,
+                    "list": VIEW_IDENTITIES,
+                    "retrieve": VIEW_IDENTITIES,
                 },
                 get_environment_from_object_callable=lambda t: t.identity.environment,
             ),
@@ -191,13 +175,6 @@ class SDKTraitsDeprecated(SDKAPIView):
             )
 
 
-@method_decorator(generate_identity_update_message(), name="create")
-@method_decorator(
-    generate_identity_update_message(
-        lambda req: (req.environment, req.data["identifier"])
-    ),
-    name="increment_value",
-)
 class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
@@ -295,10 +272,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     )
                 )
 
-            send_identity_update_messages(
-                request.environment,
-                [trait["identity"]["identifier"] for trait in traits],
-            )
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:

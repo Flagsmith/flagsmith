@@ -1,8 +1,13 @@
+import typing
+
+from django.db.models import Model
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from environments.models import Environment
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
 
@@ -55,7 +60,7 @@ def test_audit_log_can_be_filtered_by_project(
     )
     AuditLog.objects.create(project=project)
     AuditLog.objects.create(project=project, environment=environment)
-    AuditLog.objects.create(project=another_project, environment=environment)
+    AuditLog.objects.create(project=another_project)
 
     url = reverse("api-v1:audit-list")
 
@@ -87,3 +92,47 @@ def test_audit_log_can_be_filtered_by_is_system_event(
     assert response.json()["count"] == 1
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["is_system_event"] is True
+
+
+def test_regular_user_cannot_list_audit_log(
+    project: Project,
+    environment: Environment,
+    organisation: Organisation,
+    django_user_model: typing.Type[Model],
+    api_client: APIClient,
+):
+    # Given
+    AuditLog.objects.create(environment=environment)
+    url = reverse("api-v1:audit-list")
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation)
+    api_client.force_authenticate(user)
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 0
+
+
+def test_admin_user_cannot_list_audit_log_of_another_organisation(
+    api_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    django_user_model: typing.Type[Model],
+):
+    # Given
+    another_organisation = Organisation.objects.create(name="another organisation")
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(another_organisation, role=OrganisationRole.ADMIN)
+
+    AuditLog.objects.create(project=project)
+    url = reverse("api-v1:audit-list")
+
+    api_client.force_authenticate(user)
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.json()["count"] == 0

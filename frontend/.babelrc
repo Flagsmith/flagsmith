@@ -1,20 +1,30 @@
 {
   "presets": [
     "@babel/preset-react",
+    "@babel/preset-typescript",
     [
       "@babel/preset-env",
       {
         "targets": {
-          "browsers": [
-            "last 2 versions"
-          ]
+          "esmodules": true,
+          "browsers": ["last 2 versions"]
         },
         "modules": false
       }
     ]
   ],
   "plugins": [
-    "react-hot-loader/babel",
+    [
+      "module-resolver",
+      {
+        "root": ["."],
+        "alias": {
+          "common": "./common",
+          "components": "./web/components",
+          "project": "./web/project"
+        }
+      }
+    ],
     "@babel/plugin-proposal-class-properties",
     "babel-plugin-transform-object-rest-spread",
     "@babel/plugin-transform-modules-commonjs"

@@ -1,11 +1,15 @@
-module.exports = (envId, { LIB_NAME, TRAIT_NAME, FEATURE_NAME, FEATURE_NAME_ALT }, USER_ID) => `
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME },
+  USER_ID,
+) => `
 // Option 1: Identify clientside
 //Home Page
 import flagsmith from '${LIB_NAME}/isomorphic';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 export default function HomePage() {
-  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']]); // only causes re-render if specified flag values / traits change
+  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change
   const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
 
@@ -47,4 +51,4 @@ MyApp.getInitialProps = async () => {
   await flagsmith.setTrait('${TRAIT_NAME}', 22); // Will hydrate the app with the user's flags, re-evaluating segments
   return { flagsmithState: flagsmith.getState() }
 }
-`;
+`

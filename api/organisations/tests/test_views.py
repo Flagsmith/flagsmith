@@ -32,7 +32,11 @@ from organisations.subscriptions.constants import (
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 from util.tests import Helper
 
 User = get_user_model()
@@ -362,15 +366,19 @@ class OrganisationTestCase(TestCase):
 
         influx_org = settings.INFLUXDB_ORG
         read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
-        query = (
-            f'from(bucket:"{read_bucket}") '
-            f"|> range(start: -30d, stop: now()) "
-            f'|> filter(fn:(r) => r._measurement == "api_call")         '
-            f'|> filter(fn: (r) => r["_field"] == "request_count")         '
-            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id", '
-            f'"environment", "environment_id"])'
-            f"|> sum()"
+        expected_query = (
+            (
+                f'from(bucket:"{read_bucket}") '
+                f"|> range(start: -30d, stop: now()) "
+                f'|> filter(fn:(r) => r._measurement == "api_call")         '
+                f'|> filter(fn: (r) => r["_field"] == "request_count")         '
+                f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
+                f'|> drop(columns: ["organisation", "project", "project_id", '
+                f'"environment", "environment_id"])'
+                f"|> sum()"
+            )
+            .replace(" ", "")
+            .replace("\n", "")
         )
 
         # When
@@ -378,9 +386,11 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(
-            org=influx_org, query=query
-        )
+        mock_influxdb_client.query_api.return_value.query.assert_called_once()
+
+        call = mock_influxdb_client.query_api.return_value.query.mock_calls[0]
+        assert call[2]["org"] == influx_org
+        assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
     @override_settings(ENABLE_CHARGEBEE=True)
     @mock.patch("organisations.serializers.get_subscription_data_from_hosted_page")
@@ -464,9 +474,9 @@ class OrganisationTestCase(TestCase):
         organisation = Organisation.objects.create(name="Test organisation")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
-        subscription = Subscription.objects.create(
-            subscription_id="sub-id", organisation=organisation
-        )
+        subscription = Subscription.objects.get(organisation=organisation)
+        subscription.subscription_id = "sub-id"
+        subscription.save()
 
         url = reverse(
             "api-v1:organisations:organisation-get-hosted-page-url-for-subscription-upgrade",
@@ -499,7 +509,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 1
+        assert len(response.json()) == 2
 
     def test_get_my_permissions_for_non_admin(self):
         # Given
@@ -561,12 +571,14 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription_id = "subscription-id"
         self.old_plan_id = "old-plan-id"
         self.old_max_seats = 1
-        self.subscription = Subscription.objects.create(
+
+        Subscription.objects.filter(organisation=self.organisation).update(
             organisation=self.organisation,
             subscription_id=self.subscription_id,
             plan=self.old_plan_id,
             max_seats=self.old_max_seats,
         )
+        self.subscription = Subscription.objects.get(organisation=self.organisation)
 
     @mock.patch("organisations.models.get_plan_meta_data")
     def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
@@ -788,6 +800,7 @@ def test_get_subscription_metadata(
     expected_seats = 10
     expected_projects = 5
     expected_api_calls = 100
+    expected_chargebee_email = "test@example.com"
 
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata",
@@ -795,6 +808,7 @@ def test_get_subscription_metadata(
             seats=expected_seats,
             projects=expected_projects,
             api_calls=expected_api_calls,
+            chargebee_email=expected_chargebee_email,
         ),
     )
 
@@ -813,6 +827,7 @@ def test_get_subscription_metadata(
         "max_projects": expected_projects,
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
+        "chargebee_email": expected_chargebee_email,
     }
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -867,6 +882,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
         "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
+        "chargebee_email": None,
     }
 
 
@@ -901,3 +917,233 @@ def test_can_invite_user_with_permission_groups(
     # and
     invite = Invite.objects.get(email=invited_email)
     assert user_permission_group in invite.permission_groups.all()
+
+
+@pytest.mark.parametrize(
+    "query_string, expected_filter_args",
+    (
+        ("", {}),
+        ("project_id=1", {"project_id": 1}),
+        ("project_id=1&environment_id=1", {"project_id": 1, "environment_id": 1}),
+        ("environment_id=1", {"environment_id": 1}),
+    ),
+)
+def test_organisation_get_influx_data(
+    mocker, admin_client, organisation, query_string, expected_filter_args
+):
+    # Given
+    base_url = reverse(
+        "api-v1:organisations:organisation-get-influx-data", args=[organisation.id]
+    )
+    url = f"{base_url}?{query_string}"
+    mock_get_multiple_event_list_for_organisation = mocker.patch(
+        "organisations.views.get_multiple_event_list_for_organisation"
+    )
+    mock_get_multiple_event_list_for_organisation.return_value = []
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_multiple_event_list_for_organisation.assert_called_once_with(
+        str(organisation.id), **expected_filter_args
+    )
+    assert response.json() == {"events_list": []}
+
+
+def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database(
+    admin_client, admin_user, organisation, subscription
+):
+    """
+    Test to verify workaround for bug in django-softdelete as per issue here:
+    https://github.com/scoursen/django-softdelete/issues/99
+    """
+
+    # Given
+    # another organisation
+    another_organisation = Organisation.objects.create(name="another org")
+    admin_user.add_organisation(another_organisation)
+
+    url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert Subscription.objects.filter(organisation=another_organisation).exists()
+
+
+def test_make_user_group_admin_user_does_not_belong_to_group(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_make_user_group_admin_success(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        UserPermissionGroupMembership.objects.get(
+            ffadminuser=another_user,
+            userpermissiongroup=user_permission_group,
+        ).group_admin
+        is True
+    )
+
+
+def test_remove_user_as_group_admin_user_does_not_belong_to_group(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_remove_user_as_group_admin_success(
+    admin_client, admin_user, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    another_user.make_group_admin(user_permission_group.id)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        UserPermissionGroupMembership.objects.get(
+            ffadminuser=another_user,
+            userpermissiongroup=user_permission_group,
+        ).group_admin
+        is False
+    )
+
+
+def test_list_user_groups_as_group_admin(organisation, api_client):
+    # Given
+    user1 = FFAdminUser.objects.create(email="user1@example.com")
+    user2 = FFAdminUser.objects.create(email="user2@example.com")
+
+    user1.add_organisation(organisation)
+    user2.add_organisation(organisation)
+
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_1, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user2, userpermissiongroup=user_permission_group_2, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_2
+    )
+
+    api_client.force_authenticate(user1)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == user_permission_group_1.id
+
+
+def test_list_my_groups(organisation, api_client):
+    # Given
+    user1 = FFAdminUser.objects.create(email="user1@example.com")
+    user2 = FFAdminUser.objects.create(email="user2@example.com")
+
+    user1.add_organisation(organisation)
+    user2.add_organisation(organisation)
+
+    # Group 1 with user 1 in it only
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_1
+    )
+
+    # Group 2 with user 2 in it only
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user2, userpermissiongroup=user_permission_group_2
+    )
+
+    api_client.force_authenticate(user1)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-my-groups", args=[organisation.id]
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0] == {
+        "id": user_permission_group_1.id,
+        "name": user_permission_group_1.name,
+    }

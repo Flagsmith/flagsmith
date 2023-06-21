@@ -4,12 +4,12 @@ from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 
-from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from segments.models import Segment
 
 
 class Identity(models.Model):
@@ -19,7 +19,6 @@ class Identity(models.Model):
         Environment, related_name="identities", on_delete=models.CASCADE
     )
 
-    dynamo_wrapper = DynamoIdentityWrapper()
     objects = IdentityManager()
 
     class Meta:
@@ -37,7 +36,18 @@ class Identity(models.Model):
     def natural_key(self):
         return self.identifier, self.environment.api_key
 
-    def get_all_feature_states(self, traits: typing.List[Trait] = None):
+    @property
+    def composite_key(self):
+        return f"{self.environment.api_key}_{self.identifier}"
+
+    def get_hash_key(self, use_mv_v2_evaluation: bool = False) -> str:
+        return self.composite_key if use_mv_v2_evaluation else str(self.id)
+
+    def get_all_feature_states(
+        self,
+        traits: list[Trait] | None = None,
+        additional_filters: Q | None = None,
+    ) -> list[FeatureState]:
         """
         Get all feature states for an identity. This method returns a single flag for
         each feature in the identity's environment's project. The flag returned is the
@@ -50,7 +60,7 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits)
+        segments = self.get_segments(traits=traits, overrides_only=True)
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
@@ -74,6 +84,9 @@ class Identity(models.Model):
                 | environment_default_query
             )
         )
+
+        if additional_filters:
+            full_query &= additional_filters
 
         select_related_args = [
             "feature",
@@ -107,22 +120,35 @@ class Identity(models.Model):
                 if flag > current_flag:
                     identity_flags[flag.feature_id] = flag
 
-        if self.environment.project.hide_disabled_flags:
-            # filter out any flags that are disabled if configured on the project
-            # Note: done here instead of the DB because of CH1245
+        if self.environment.get_hide_disabled_flags() is True:
+            # filter out any flags that are disabled
             return [value for value in identity_flags.values() if value.enabled]
 
         return list(identity_flags.values())
 
-    def get_segments(self, traits: typing.List[Trait] = None):
-        segments = []
+    def get_segments(
+        self, traits: typing.List[Trait] = None, overrides_only: bool = False
+    ) -> typing.List[Segment]:
+        """
+        Get the list of segments this identity is a part of.
+
+        :param traits: override the identity's traits when evaluating segments
+        :param overrides_only: only retrieve the segments which have a valid override in the environment
+        :return: List of matching segments
+        """
+        matching_segments = []
         traits = self.identity_traits.all() if traits is None else traits
 
-        for segment in self.environment.project.get_segments_from_cache():
-            if segment.does_identity_match(self, traits=traits):
-                segments.append(segment)
+        if overrides_only:
+            all_segments = self.environment.get_segments_from_cache()
+        else:
+            all_segments = self.environment.project.get_segments_from_cache()
 
-        return segments
+        for segment in all_segments:
+            if segment.does_identity_match(self, traits=traits):
+                matching_segments.append(segment)
+
+        return matching_segments
 
     def get_all_user_traits(self):
         # this is pointless, we should probably replace all uses with the below code

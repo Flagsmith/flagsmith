@@ -3,16 +3,23 @@
 textarea {
 	width: 100%;
 	height:40px;
+	min-height:40px;
 	outline: none;
 	border: 1px solid $input-border-color;
 	border-radius: 8px;
 	padding-top: 8px;
 	text-indent: 10px;
+	&.borderless {
+		border-left: none !important;
+		border-top: none !important;
+		border-right: none !important;
+		border-radius: 0;
+	}
 	&::placeholder{
 		color:$input-placeholder-color-dark !important;
 	}
 	&:focus {
-		border-color: $bt-input-border-active !important;
+		border-color: $bt-input-border-active;
 	}
 }
 
@@ -191,5 +198,37 @@ textarea {
 		border-color: $panel-bg-dark;
 		color: $dark-color;
 		background-color: $panel-bg-dark;
+	}
+}
+
+.dark {
+
+	.MuiFormControl-root > div{
+		&:hover:before {
+			border-color: $bt-input-border-dark !important;
+		}
+		&:before {
+			border-color: $bt-input-border-dark;
+		}
+		&:before {
+			border-color: $bt-input-border-dark;
+		}
+	}
+	.MuiInputBase-input {
+		color: $body-text-dark;
+	}
+	.MuiChip-root {
+		color: $dark-highlight-color;
+		background: $panel-bg-dark;
+
+		&:hover {
+			background: $panel-bg-dark;
+			svg {
+				color: $dark-color;
+			}
+		}
+		svg {
+			color: $panel-bg-darker;
+		}
 	}
 }

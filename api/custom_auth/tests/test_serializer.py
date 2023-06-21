@@ -19,7 +19,6 @@ def test_CustomUserCreateSerializer_converts_email_to_lower_case(db):
 
 
 def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
-
     # Given
     FFAdminUser.objects.create(email="testuser@mail.com")
     serializer = CustomUserCreateSerializer(data=user_dict)
@@ -32,7 +31,6 @@ def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
 def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(
     db, settings, mocker, rf
 ):
-
     # Given
     settings.AUTH_CONTROLLER_INSTALLED = True
 

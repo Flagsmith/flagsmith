@@ -15,6 +15,16 @@ export const waitForElementVisible = async (selector) => {
     return t.expect(Selector(selector).visible).ok();
 };
 
+export const logResults = async (requests)=> {
+    console.log(JSON.stringify(requests.filter((v)=>{
+        if (!v.response || (v.response.statusCode >= 200 && v.response.statusCode < 300)) {
+            return false
+        }
+        return true
+    }), null, 2));
+    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+}
+
 export const waitForElementNotExist = async (selector) => {
     console.log(`Waiting element not visible ${selector}`);
     return t.expect(Selector(selector).exists).notOk('', { timeout: 10000 });
@@ -47,7 +57,7 @@ export const createTrait = async (index, id, value) => {
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
-    await t.wait(500);
+    await t.wait(2000);
     await t.eval(() => location.reload(true));
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;

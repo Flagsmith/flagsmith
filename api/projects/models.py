@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.models import AbstractBaseExportableModel
+import re
+
+from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_SAVE,
+    AFTER_UPDATE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -15,11 +23,13 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
+from projects.tasks import write_environments_to_dynamodb
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class Project(LifecycleModelMixin, AbstractBaseExportableModel):
+class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
@@ -40,6 +50,15 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
     enable_realtime_updates = models.BooleanField(
         default=False,
         help_text="Enable this to trigger a realtime(sse) event whenever the value of a flag changes",
+    )
+    only_allow_lower_case_feature_names = models.BooleanField(
+        default=True, help_text="Used by UI to validate feature names"
+    )
+    feature_name_regex = models.CharField(
+        null=True,
+        blank=True,
+        max_length=255,
+        help_text="Used for validating feature names",
     )
 
     objects = ProjectManager()
@@ -77,11 +96,34 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
             and settings.EDGE_RELEASE_DATETIME < timezone.now()
         )
 
+    @hook(AFTER_SAVE)
+    def clear_environments_cache(self):
+        environment_cache.delete_many(
+            list(self.environments.values_list("api_key", flat=True))
+        )
+
+    @hook(AFTER_UPDATE)
+    def write_to_dynamo(self):
+        write_environments_to_dynamodb.delay(kwargs={"project_id": self.id})
+
     @property
     def is_edge_project_by_default(self) -> bool:
         return bool(
             settings.EDGE_RELEASE_DATETIME
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
+        )
+
+    def is_feature_name_valid(self, feature_name: str) -> bool:
+        """
+        Validate the feature name based on the feature_name_regex attribute.
+
+        Since we always want to evaluate the regex against the whole string, we're wrapping the
+        attribute value in ^(...)$. Note that ^(...)$ and ^^(...)$$ are equivalent (in case the
+        attribute already has the boundaries defined)
+        """
+        return (
+            not self.feature_name_regex
+            or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
 
 

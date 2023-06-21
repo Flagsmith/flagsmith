@@ -1,9 +1,21 @@
+from app_analytics.views import (
+    get_usage_data_total_count_view,
+    get_usage_data_view,
+)
 from django.conf.urls import include, url
+from django.urls import path
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
+from audit.views import OrganisationAuditLogViewSet
+from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import OrganisationWebhookViewSet
-from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
+from users.views import (
+    FFAdminUserViewSet,
+    UserPermissionGroupViewSet,
+    make_user_group_admin,
+    remove_user_as_group_admin,
+)
 
 from . import views
 from .invites.views import InviteLinkViewSet, InviteViewSet
@@ -18,6 +30,11 @@ router.register(r"", views.OrganisationViewSet, basename="organisation")
 organisations_router = routers.NestedSimpleRouter(router, r"", lookup="organisation")
 organisations_router.register(
     r"invites", InviteViewSet, basename="organisation-invites"
+)
+organisations_router.register(
+    r"metadata-model-fields",
+    MetaDataModelFieldViewSet,
+    basename="metadata-model-fields",
 )
 organisations_router.register(
     r"invite-links", InviteLinkViewSet, basename="organisation-invite-links"
@@ -44,10 +61,33 @@ organisations_router.register(
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
 )
+organisations_router.register(
+    "audit", OrganisationAuditLogViewSet, basename="audit-log"
+)
 
 app_name = "organisations"
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(organisations_router.urls)),
+    path(
+        "<int:organisation_pk>/usage-data/",
+        get_usage_data_view,
+        name="usage-data",
+    ),
+    path(
+        "<int:organisation_pk>/usage-data/total-count/",
+        get_usage_data_total_count_view,
+        name="usage-data-total-count",
+    ),
+    path(
+        "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/make-admin",
+        make_user_group_admin,
+        name="make-user-group-admin",
+    ),
+    path(
+        "<int:organisation_pk>/groups/<int:group_pk>/users/<int:user_pk>/remove-admin",
+        remove_user_as_group_admin,
+        name="remove-user-group-admin",
+    ),
 ]

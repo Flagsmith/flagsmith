@@ -1,32 +1,48 @@
-import React from 'react';
-import SparklesIcon from './svg/SparklesIcon';
+import React from 'react'
+import SparklesIcon from './svg/SparklesIcon'
 
-
+let prom
 class _Headway extends React.Component {
-    componentDidMount() {
-        try {
+  state = {
+    ready: false,
+  }
+  componentDidMount() {
+    try {
+      if (Project.headway) {
+        if (!prom) {
+          prom = Utils.loadScriptPromise('https://cdn.headwayapp.co/widget.js')
+        }
+        prom.then(() => {
+          this.setState({ ready: true }, () => {
             Headway.init({
-                enabled: true,
-                selector: '#headway',
-                account: 'yErY2x',
-            });
-        } catch (e) {}
-    }
+              account: Project.headway,
+              enabled: true,
+              selector: '#headway',
+            })
+          })
+        })
+      }
+    } catch (e) {}
+  }
 
-    render() {
-        return (
-            <Row className={this.props.className}>
-                <Row onClick={() => {
-                    Headway.show();
-                }}
-                >
-                    <SparklesIcon />
-                    Updates
-                </Row>
-                <span id="headway"/>
-            </Row>
-        );
+  render() {
+    if (!Project.headway || !this.state.ready) {
+      return null
     }
+    return (
+      <Row className={this.props.className}>
+        <Row
+          onClick={() => {
+            Headway.show()
+          }}
+        >
+          <SparklesIcon />
+          Updates
+        </Row>
+        <span id='headway' />
+      </Row>
+    )
+  }
 }
 
-export default _Headway;
+export default _Headway

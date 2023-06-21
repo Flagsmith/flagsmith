@@ -9,10 +9,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from users.serializers import (
-    UserListSerializer,
-    UserPermissionGroupSerializerList,
-)
+from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -35,6 +32,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             "use_edge_identities",
             "prevent_flag_defaults",
             "enable_realtime_updates",
+            "only_allow_lower_case_feature_names",
+            "feature_name_regex",
         )
 
     def get_migration_status(self, obj: Project) -> str:
@@ -82,4 +81,4 @@ class CreateUpdateUserPermissionGroupProjectPermissionSerializer(
 class ListUserPermissionGroupProjectPermissionSerializer(
     CreateUpdateUserPermissionGroupProjectPermissionSerializer
 ):
-    group = UserPermissionGroupSerializerList()
+    group = UserPermissionGroupSerializer()

@@ -2,36 +2,38 @@ import logging
 import traceback
 import typing
 
-from django.db import transaction
 from django.utils import timezone
 
-from task_processor.models import Task, TaskResult, TaskRun
+from task_processor.models import (
+    RecurringTask,
+    RecurringTaskRun,
+    Task,
+    TaskResult,
+    TaskRun,
+)
 
 logger = logging.getLogger(__name__)
 
 
-@transaction.atomic
 def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     if num_tasks < 1:
         raise ValueError("Number of tasks to process must be at least one")
 
-    tasks = (
-        Task.objects.select_for_update(skip_locked=True)
-        .filter(num_failures__lt=3, scheduled_for__lte=timezone.now(), completed=False)
-        .order_by("scheduled_for")[:num_tasks]
-    )
+    tasks = Task.objects.get_tasks_to_process(num_tasks)
+
     if tasks:
         executed_tasks = []
         task_runs = []
 
         for task in tasks:
-            executed_task, task_run = _run_task(task)
-            executed_tasks.append(executed_task)
+            task, task_run = _run_task(task)
+
+            executed_tasks.append(task)
             task_runs.append(task_run)
 
         if executed_tasks:
             Task.objects.bulk_update(
-                executed_tasks, fields=["completed", "num_failures"]
+                executed_tasks, fields=["completed", "num_failures", "is_locked"]
             )
 
         if task_runs:
@@ -43,25 +45,52 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     return []
 
 
-def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
-    if task.task_runs.filter(result=TaskResult.SUCCESS).exists():
-        # This should never happen due to the use of select_for_update above, but it's
-        # best to guard against it rather than try and execute the task twice.
-        logger.warning(
-            "Task has already been processed successfully, not processing again."
-        )
-        return
+def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
+    if num_tasks < 1:
+        raise ValueError("Number of tasks to process must be at least one")
 
-    task_run = TaskRun(started_at=timezone.now(), task=task)
+    # NOTE: We will probably see a lot of delay in the execution of recurring tasks
+    # if the tasks take longer then `run_every` to execute. This is not
+    # a problem for now, but we should be mindful of this limitation
+    tasks = RecurringTask.objects.get_tasks_to_process(num_tasks)
+    if tasks:
+        task_runs = []
+        executed_tasks = []
+
+        for task in tasks:
+            # Remove the task if it's not registered anymore
+            if not task.is_task_registered:
+                task.delete()
+                continue
+
+            if task.should_execute:
+                task, task_run = _run_task(task)
+                executed_tasks.append(task)
+                task_runs.append(task_run)
+
+        if executed_tasks:
+            RecurringTask.objects.bulk_update(executed_tasks, fields=["is_locked"])
+
+        if task_runs:
+            RecurringTaskRun.objects.bulk_create(task_runs)
+
+        return task_runs
+
+    logger.debug("No tasks to process.")
+    return []
+
+
+def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
+    task_run = task.task_runs.model(started_at=timezone.now(), task=task)
 
     try:
         task.run()
         task_run.result = TaskResult.SUCCESS
 
         task_run.finished_at = timezone.now()
-        task.completed = True
+        task.mark_success()
     except Exception:
-        task.num_failures += 1
+        task.mark_failure()
 
         task_run.result = TaskResult.FAILURE
         task_run.error_details = str(traceback.format_exc())

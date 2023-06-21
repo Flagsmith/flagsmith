@@ -9,11 +9,12 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const base = require('../webpack.config');
 
 module.exports = {
+    ...base,
     devtool: 'source-map',
     mode: 'production',
-
     entry: {
         main: './web/main.js',
     },
@@ -24,11 +25,6 @@ module.exports = {
                 extractComments: true,
             }),
         ],
-    },
-    externals: {
-        // require('jquery') is external and available
-        //  on the global var jQuery
-        'jquery': 'jQuery',
     },
     output: {
         path: path.join(__dirname, '../../api/static'),

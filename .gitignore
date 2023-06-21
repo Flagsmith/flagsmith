@@ -8,13 +8,14 @@ venv
 checkstyle.txt
 .python-version
 .env*
+!.env-local
+!.env-ci
 .direnv
 .envrc
 .tool-versions
 .elasticbeanstalk/
 
 # These get baked into the docker container on build
-src/CI_COMMIT_REF_NAME
 src/CI_COMMIT_SHA
 src/IMAGE_TAG
 

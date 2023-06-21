@@ -40,4 +40,18 @@
 	&.light {
 		color: white;
 	}
+	&--sm {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-radius: 16px;
+		font-size: 11px;
+		padding: 3px 8px;
+		margin-right: 5px;
+		.chip-svg-icon {
+			display: block;
+			width: 12px;
+			margin-right: 5px;
+		}
+	}
 }

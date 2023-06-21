@@ -7,6 +7,7 @@ from environments.identities.traits.views import TraitViewSet
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -51,32 +52,8 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_trait_view_post_calls_send_identity_update_message_correctly(
-    environment, admin_client, identity, mocker
-):
-    # Given
-    send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message", autospec=True
-    )
-    url = reverse(
-        "api-v1:environments:identities-traits-list",
-        args=(environment.api_key, identity.id),
-    )
-
-    # When
-    admin_client.post(
-        url, data={"trait_key": "foo", "value_type": "unicode", "string_value": "foo"}
-    )
-    send_identity_update_message.assert_called_once_with(
-        environment, identity.identifier
-    )
-
-
 def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):
     # Given
-    send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message", autospec=True
-    )
     url = reverse(
         "api-v1:environments:identities-traits-detail",
         args=(environment.api_key, identity.id, trait.id),
@@ -91,10 +68,6 @@ def test_trait_view_delete_trait(environment, admin_client, identity, trait, moc
     # and
     assert not Trait.objects.filter(pk=trait.id).exists()
 
-    send_identity_update_message.assert_called_once_with(
-        environment, identity.identifier
-    )
-
 
 def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):
     # Given
@@ -103,9 +76,6 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
         args=(environment.api_key, identity.id, trait.id),
     )
     new_value = "updated"
-    send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message", autospec=True
-    )
 
     # When
     response = admin_client.patch(url, data={"string_value": new_value})
@@ -113,9 +83,6 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["string_value"] == new_value
-    send_identity_update_message.assert_called_once_with(
-        environment, identity.identifier
-    )
 
 
 def test_edge_identity_view_set_get_permissions():
@@ -130,8 +97,8 @@ def test_edge_identity_view_set_get_permissions():
     assert isinstance(permissions[1], NestedEnvironmentPermissions)
 
     assert permissions[1].action_permission_map == {
-        "list": MANAGE_IDENTITIES,
-        "retrieve": MANAGE_IDENTITIES,
+        "list": VIEW_IDENTITIES,
+        "retrieve": VIEW_IDENTITIES,
         "create": MANAGE_IDENTITIES,
         "update": MANAGE_IDENTITIES,
         "partial_update": MANAGE_IDENTITIES,

@@ -1,13 +1,14 @@
 import logging
+import os
 import typing
-from datetime import datetime
+from datetime import datetime, timedelta
 from inspect import getmodule
 from threading import Thread
 
 from django.conf import settings
 from django.utils import timezone
 
-from task_processor.models import Task
+from task_processor.models import RecurringTask, Task
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
 
@@ -21,7 +22,6 @@ def register_task_handler(task_name: str = None):
         task_name = task_name or f.__name__
         task_module = getmodule(f).__name__.rsplit(".")[-1]
         task_identifier = f"{task_module}.{task_name}"
-
         register_task(task_identifier, f)
 
         def delay(
@@ -41,7 +41,6 @@ def register_task_handler(task_name: str = None):
                 return
 
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
-                logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
                 logger.debug("Running task '%s' in separate thread", task_identifier)
@@ -66,5 +65,37 @@ def register_task_handler(task_name: str = None):
         f.task_identifier = task_identifier
 
         return f
+
+    return decorator
+
+
+def register_recurring_task(
+    run_every: timedelta,
+    task_name: str = None,
+    args: typing.Tuple = (),
+    kwargs: typing.Dict = None,
+):
+    if not os.environ.get("RUN_BY_PROCESSOR"):
+        # Do not register recurring tasks if not invoked by task processor
+        return lambda f: f
+
+    def decorator(f: typing.Callable):
+        nonlocal task_name
+
+        task_name = task_name or f.__name__
+        task_module = getmodule(f).__name__.rsplit(".")[-1]
+        task_identifier = f"{task_module}.{task_name}"
+
+        register_task(task_identifier, f)
+
+        task, _ = RecurringTask.objects.update_or_create(
+            task_identifier=task_identifier,
+            run_every=run_every,
+            defaults={
+                "serialized_args": RecurringTask.serialize_data(args or tuple()),
+                "serialized_kwargs": RecurringTask.serialize_data(kwargs or dict()),
+            },
+        )
+        return task
 
     return decorator

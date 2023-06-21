@@ -15,7 +15,7 @@ class SegmentPermissions(IsAuthenticated):
         if not project_pk:
             return False
 
-        project = Project.objects.get(pk=project_pk)
+        project = Project.objects.select_related("organisation").get(pk=project_pk)
 
         if request.user.has_project_permission("MANAGE_SEGMENTS", project):
             return True
@@ -34,7 +34,7 @@ class SegmentPermissions(IsAuthenticated):
             return False
 
         return request.user.has_project_permission("MANAGE_SEGMENTS", obj.project) or (
-            view.action == "detail"
+            view.action == "retrieve"
             and request.user.has_project_permission("VIEW_PROJECT", obj.project)
         )
 
@@ -57,5 +57,8 @@ class MasterAPIKeySegmentPermissions(BasePermission):
     def has_object_permission(
         self, request: HttpRequest, view: str, obj: Segment
     ) -> bool:
-        master_api_key = request.master_api_key
-        return master_api_key.organisation_id == obj.project.organisation_id
+        master_api_key = getattr(request, "master_api_key", None)
+        return (
+            master_api_key
+            and master_api_key.organisation_id == obj.project.organisation_id
+        )

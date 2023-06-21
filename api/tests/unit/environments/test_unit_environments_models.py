@@ -2,12 +2,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from core.request_origin import RequestOrigin
-from django.db.models import Q
 from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
-from environments.models import Environment, Webhook
+from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
+from segments.models import Segment
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ def test_write_environments_to_dynamodb_with_environment(
 
     # When
     Environment.write_environments_to_dynamodb(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
     # Then
@@ -64,7 +64,7 @@ def test_write_environments_to_dynamodb_project(
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(Q(project=dynamo_enabled_project))
+    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
@@ -85,7 +85,7 @@ def test_write_environments_to_dynamodb_with_environment_and_project(
 
     # When
     Environment.write_environments_to_dynamodb(
-        Q(id=dynamo_enabled_project_environment_one.id)
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
     # Then
@@ -256,4 +256,115 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
     # Then
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
     assert feature_state.enabled is False
-    assert feature_state.get_feature_state_value() is None
+    assert not feature_state.get_feature_state_value()
+
+
+def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):
+    assert environment.get_segments_from_cache() == []
+
+
+def test_get_segments_returns_only_segments_that_have_an_override(
+    environment, segment, segment_featurestate, mocker, monkeypatch
+):
+    # Given
+    mock_environment_segments_cache = mocker.MagicMock()
+    mock_environment_segments_cache.get.return_value = None
+
+    monkeypatch.setattr(
+        "environments.models.environment_segments_cache",
+        mock_environment_segments_cache,
+    )
+
+    Segment.objects.create(project=environment.project, name="another segment")
+
+    # When
+    segments = environment.get_segments_from_cache()
+
+    # Then
+    assert segments == [segment]
+
+    mock_environment_segments_cache.set.assert_called_once_with(
+        environment.id, segments
+    )
+
+
+def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(
+    environment,
+    segment,
+    segment_featurestate,
+    mocker,
+    monkeypatch,
+    django_assert_num_queries,
+):
+    # Given
+    mock_environment_segments_cache = mocker.MagicMock()
+    mock_environment_segments_cache.get.return_value = [segment]
+
+    monkeypatch.setattr(
+        "environments.models.environment_segments_cache",
+        mock_environment_segments_cache,
+    )
+
+    # When
+    with django_assert_num_queries(0):
+        segments = environment.get_segments_from_cache()
+
+    # Then
+    assert segments == [segment_featurestate.feature_segment.segment]
+
+    mock_environment_segments_cache.set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "environment_value, project_value, expected_result",
+    (
+        (True, True, True),
+        (True, False, True),
+        (False, True, False),
+        (False, False, False),
+        (None, True, True),
+        (None, False, False),
+    ),
+)
+def test_get_hide_disabled_flags(
+    project, environment, environment_value, project_value, expected_result
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
+
+    environment.hide_disabled_flags = environment_value
+    environment.save()
+
+    # Then
+    assert environment.get_hide_disabled_flags() is expected_result
+
+
+def test_saving_environment_api_key_calls_put_item_with_correct_arguments_if_enabled(
+    dynamo_enabled_project_environment_one, mocker
+):
+    # Given
+    mocked_environment_api_key_wrapper = mocker.patch(
+        "environments.models.environment_api_key_wrapper", autospec=True
+    )
+    # When
+    api_key = EnvironmentAPIKey.objects.create(
+        name="Some key", environment=dynamo_enabled_project_environment_one
+    )
+
+    # Then
+    mocked_environment_api_key_wrapper.write_api_key.assert_called_with(api_key)
+
+
+def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(
+    environment, mocker
+):
+    # Given
+    mocked_environment_api_key_wrapper = mocker.patch(
+        "environments.models.environment_api_key_wrapper", autospec=True
+    )
+    # When
+    EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+
+    # Then
+    mocked_environment_api_key_wrapper.write_api_key.assert_not_called()

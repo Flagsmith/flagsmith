@@ -8,6 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
+const base = require('../webpack.config');
 
 const extraPlugins = [
     // Clear out build folder
@@ -24,6 +25,7 @@ const extraPlugins = [
 
 
 module.exports = {
+    ...base,
     devtool: process.env.E2E ? false : 'source-map',
     mode: 'production',
     entry: {
@@ -35,13 +37,7 @@ module.exports = {
                 parallel: true,
                 extractComments: true,
             }),
-
         ],
-    },
-    externals: {
-        // require('jquery') is external and available
-        //  on the global var jQuery
-        'jquery': 'jQuery',
     },
     output: {
         path: path.join(__dirname, '../public/static'),

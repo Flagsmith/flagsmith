@@ -147,3 +147,25 @@
 .justify-content-end {
     justify-content: flex-end;
 }
+
+.widget-container {
+    padding: 10px;
+}
+
+.bg-primary {
+    background: $bt-brand-primary !important;
+}
+.dark {
+
+    .bg-primary {
+        background: $bt-brand-primary-dark !important;
+    }
+
+}
+
+.link-unstyled {
+    text-decoration: none;
+    &:hover {
+        text-decoration: none;
+    }
+}

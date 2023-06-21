@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
 import json
-import logging
 import os
 import sys
 import warnings
@@ -67,6 +66,8 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
+USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -103,6 +104,7 @@ INSTALLED_APPS = [
     "custom_auth",
     "admin_sso",
     "api",
+    "core",
     "corsheaders",
     "users",
     "organisations",
@@ -153,23 +155,40 @@ INSTALLED_APPS = [
     "django_filters",
     "import_export",
     "task_processor",
+    "softdelete",
+    "metadata",
+    "app_analytics",
 ]
-
-if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
-    INSTALLED_APPS.append("app_analytics")
 
 SITE_ID = 1
 
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 
+DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
+NUM_DB_REPLICAS = 0
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
             env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-        )
+        ),
     }
+    REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
+    REPLICA_DATABASE_URLS = env.list(
+        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    )
+    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
+    for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
+        DATABASES[f"replica_{i}"] = dj_database_url.parse(
+            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+
+    if "ANALYTICS_DATABASE_URL" in os.environ:
+        DATABASES["analytics"] = dj_database_url.parse(
+            env("ANALYTICS_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+        DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -183,6 +202,21 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+    if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
+        DATABASES["analytics"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["DJANGO_DB_NAME_ANALYTICS"],
+            "USER": os.environ["DJANGO_DB_USER_ANALYTICS"],
+            "PASSWORD": os.environ["DJANGO_DB_PASSWORD_ANALYTICS"],
+            "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
+            "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        }
+
+        DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -192,8 +226,8 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
-        "signup": "10/min",
+        "login": LOGIN_THROTTLE_RATE,
+        "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -246,6 +280,12 @@ if GOOGLE_ANALYTICS_KEY:
 
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+
+if USE_POSTGRES_FOR_ANALYTICS:
+    if INFLUXDB_TOKEN:
+        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
+
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
@@ -358,14 +398,19 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
-if EMAIL_BACKEND == "sgbackend.SendGridBackend":
-    SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
-    if not SENDGRID_API_KEY:
-        logging.info(
-            "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
-        )
-elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
+
+# NOTE: Use `sgbackend.SendGridBackend` as default
+# if `SENDGRID_API_KEY` is set in order to maintain backwards compatibility
+DEFAULT_EMAIL_BACKEND = (
+    "sgbackend.SendGridBackend"
+    if SENDGRID_API_KEY
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default=DEFAULT_EMAIL_BACKEND)
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_HOST = env("EMAIL_HOST", default="localhost")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
@@ -477,8 +522,17 @@ if ENABLE_DB_LOGGING:
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
-ENVIRONMENT_CACHE_LOCATION = "environment-objects"
 CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
+
+ENVIRONMENT_CACHE_SECONDS = env.int("ENVIRONMENT_CACHE_SECONDS", default=60)
+ENVIRONMENT_CACHE_BACKEND = env.str(
+    "ENVIRONMENT_CACHE_BACKEND",
+    default="django.core.cache.backends.locmem.LocMemCache",
+)
+ENVIRONMENT_CACHE_NAME = "environment-objects"
+ENVIRONMENT_CACHE_LOCATION = env.str(
+    "ENVIRONMENT_CACHE_LOCATION", default=ENVIRONMENT_CACHE_NAME
+)
 
 GET_FLAGS_ENDPOINT_CACHE_SECONDS = env.int(
     "GET_FLAGS_ENDPOINT_CACHE_SECONDS", default=0
@@ -509,6 +563,16 @@ GET_IDENTITIES_ENDPOINT_CACHE_LOCATION = env.str(
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
+ENVIRONMENT_SEGMENTS_CACHE_NAME = "environment-segments"
+ENVIRONMENT_SEGMENTS_CACHE_SECONDS = env.int("CACHE_ENVIRONMENT_SEGMENTS_SECONDS", 0)
+ENVIRONMENT_SEGMENTS_CACHE_LOCATION = env(
+    "ENVIRONMENT_SEGMENTS_CACHE_LOCATION", "environment-segments"
+)
+ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
+    "CACHE_ENVIRONMENT_SEGMENTS_BACKEND",
+    "django.core.cache.backends.locmem.LocMemCache",
+)
+
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
 ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
 
@@ -517,9 +581,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "unique-snowflake",
     },
-    ENVIRONMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    ENVIRONMENT_CACHE_NAME: {
+        "BACKEND": ENVIRONMENT_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_CACHE_LOCATION,
+        "TIMEOUT": ENVIRONMENT_CACHE_SECONDS,
     },
     FLAGS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -546,6 +611,11 @@ CACHES = {
     GET_IDENTITIES_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_IDENTITIES_ENDPOINT_CACHE_BACKEND,
         "LOCATION": GET_IDENTITIES_ENDPOINT_CACHE_LOCATION,
+    },
+    ENVIRONMENT_SEGMENTS_CACHE_NAME: {
+        "BACKEND": ENVIRONMENT_SEGMENTS_CACHE_BACKEND,
+        "LOCATION": ENVIRONMENT_SEGMENTS_CACHE_LOCATION,
+        "TIMEOUT": ENVIRONMENT_SEGMENTS_CACHE_SECONDS,
     },
 }
 
@@ -584,6 +654,7 @@ DJOSER = {
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
+        "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
     },
     "EMAIL": {
@@ -663,16 +734,21 @@ API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
-DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
+DISABLE_ANALYTICS_FEATURES = env.bool(
+    "DISABLE_INFLUXDB_FEATURES", default=False
+) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
+HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
 LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -766,3 +842,46 @@ SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+
+# use a separate boolean setting so that we add it to the API containers in environments
+# where we're running the task processor, so we avoid creating unnecessary tasks
+ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
+PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
+PIPEDRIVE_BASE_API_URL = env.str(
+    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
+)
+PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
+    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
+)
+PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
+    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
+)
+PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
+    "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY", None
+)
+PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
+    "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
+)
+PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
+PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
+PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
+    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
+)
+
+# List of plan ids that support seat upgrades
+AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
+
+
+SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
+
+# prevent django-softdelete from performing whole table deletes!
+SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
+
+# Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
+SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
+
+# Controls the app domain used in emails (currently invites and change requests).
+# If set, domain stored with `django.contrib.sites` is disregarded.
+DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
+# Used when no Django site is specified.
+DEFAULT_DOMAIN = "app.flagsmith.com"

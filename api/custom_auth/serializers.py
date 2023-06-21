@@ -1,10 +1,11 @@
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserDeleteSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
 from organisations.invites.models import Invite
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser
 
 from .constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
@@ -27,6 +28,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             "marketing_consent_given",
         )
         read_only_fields = ("is_active",)
+        write_only_fields = ("sign_up_type",)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -58,3 +60,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
         return super(CustomUserCreateSerializer, self).save(**kwargs)
+
+
+class CustomUserDelete(UserDeleteSerializer):
+    delete_orphan_organisations = serializers.BooleanField(
+        default=DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE, required=False
+    )

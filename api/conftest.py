@@ -1,5 +1,9 @@
+import typing
+
 import pytest
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
@@ -9,6 +13,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
@@ -16,12 +21,19 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.workflows.core.models import ChangeRequest
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -31,6 +43,11 @@ trait_value = "value1"
 @pytest.fixture()
 def test_user(django_user_model):
     return django_user_model.objects.create(email="user@example.com")
+
+
+@pytest.fixture()
+def auth_token(test_user):
+    return Token.objects.create(user=test_user)
 
 
 @pytest.fixture()
@@ -71,27 +88,34 @@ def user_permission_group(organisation, admin_user):
 
 @pytest.fixture()
 def subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation, subscription_id="subscription_id", plan="test-plan"
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def xero_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="subscription_id",
-        payment_method=XERO,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = XERO
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def chargebee_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="cb-subscription",
-        payment_method=CHARGEBEE,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = CHARGEBEE
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
@@ -110,6 +134,11 @@ def segment(project):
 
 
 @pytest.fixture()
+def segment_rule(segment):
+    return SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+
+@pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
 
@@ -117,6 +146,13 @@ def environment(project):
 @pytest.fixture()
 def identity(environment):
     return Identity.objects.create(identifier="test_identity", environment=environment)
+
+
+@pytest.fixture()
+def identity_featurestate(identity, feature):
+    return FeatureState.objects.create(
+        identity=identity, feature=feature, environment=identity.environment
+    )
 
 
 @pytest.fixture()
@@ -177,11 +213,28 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def change_request_feature_state(feature, environment, change_request):
-    fs = FeatureState.objects.filter(environment=environment, feature=feature).first()
-    fs.change_request = change_request
-    fs.save()
-    return fs
+def feature_state(feature: Feature, environment: Environment) -> FeatureState:
+    return FeatureState.objects.get(environment=environment, feature=feature)
+
+
+@pytest.fixture()
+def feature_state_with_value(environment: Environment) -> FeatureState:
+    feature = Feature.objects.create(
+        name="feature_with_value",
+        initial_value="foo",
+        default_enabled=True,
+        project=environment.project,
+    )
+    return FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment=None, identity=None
+    )
+
+
+@pytest.fixture()
+def change_request_feature_state(feature, environment, change_request, feature_state):
+    feature_state.change_request = change_request
+    feature_state.save()
+    return feature_state
 
 
 @pytest.fixture()
@@ -226,9 +279,11 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation):
-    _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
-    return key
+def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
+    master_api_key, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation
+    )
+    return master_api_key, key
 
 
 @pytest.fixture()
@@ -236,7 +291,7 @@ def master_api_key_client(master_api_key):
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
     return api_client
 
 
@@ -248,6 +303,11 @@ def view_environment_permission():
 @pytest.fixture()
 def manage_identities_permission():
     return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
+
+
+@pytest.fixture()
+def view_identities_permission():
+    return PermissionModel.objects.get(key=VIEW_IDENTITIES)
 
 
 @pytest.fixture()
@@ -265,3 +325,80 @@ def user_environment_permission(test_user, environment):
 @pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
+
+
+@pytest.fixture(autouse=True)
+def task_processor_synchronously(settings):
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+
+@pytest.fixture()
+def a_metadata_field(organisation):
+    return MetadataField.objects.create(name="a", type="int", organisation=organisation)
+
+
+@pytest.fixture()
+def b_metadata_field(organisation):
+    return MetadataField.objects.create(name="b", type="str", organisation=organisation)
+
+
+@pytest.fixture()
+def required_a_environment_metadata_field(
+    organisation,
+    a_metadata_field,
+    environment,
+    project,
+    project_content_type,
+):
+    environment_type = ContentType.objects.get_for_model(environment)
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=environment_type,
+    )
+
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type, object_id=project.id, model_field=model_field
+    )
+    return model_field
+
+
+@pytest.fixture()
+def optional_b_environment_metadata_field(organisation, b_metadata_field, environment):
+    environment_type = ContentType.objects.get_for_model(environment)
+
+    return MetadataModelField.objects.create(
+        field=b_metadata_field,
+        content_type=environment_type,
+    )
+
+
+@pytest.fixture()
+def environment_metadata_a(environment, required_a_environment_metadata_field):
+    environment_type = ContentType.objects.get_for_model(environment)
+    return Metadata.objects.create(
+        object_id=environment.id,
+        content_type=environment_type,
+        model_field=required_a_environment_metadata_field,
+        field_value="10",
+    )
+
+
+@pytest.fixture()
+def environment_metadata_b(environment, optional_b_environment_metadata_field):
+    environment_type = ContentType.objects.get_for_model(environment)
+    return Metadata.objects.create(
+        object_id=environment.id,
+        content_type=environment_type,
+        model_field=optional_b_environment_metadata_field,
+        field_value="10",
+    )
+
+
+@pytest.fixture()
+def environment_content_type():
+    return ContentType.objects.get_for_model(Environment)
+
+
+@pytest.fixture()
+def project_content_type():
+    return ContentType.objects.get_for_model(Project)

@@ -16,13 +16,15 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     mocker,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     sync_identity_document_features = mocker.patch(
-        "edge_api.identities.views.sync_identity_document_features"
+        "edge_api.identities.models.sync_identity_document_features"
     )
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -32,7 +34,9 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     # When
     response = admin_client.get(url)
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
     sync_identity_document_features.delay.assert_not_called()
@@ -43,14 +47,16 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_featur
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     mocker,
 ):
     # Given
     sync_identity_document_features = mocker.patch(
-        "edge_api.identities.views.sync_identity_document_features"
+        "edge_api.identities.models.sync_identity_document_features"
     )
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     deleted_feature_id = 9999
     # First, let's add a feature to the identity that is not in the environment
@@ -75,7 +81,9 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_featur
     response = admin_client.get(url)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
     # And deleted feature is not part of the response
@@ -94,11 +102,13 @@ def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -109,7 +119,9 @@ def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
     # When
     response = admin_client.get(url)
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 1
     assert response.json()[0]["feature"] == feature
@@ -119,10 +131,10 @@ def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_ex
     admin_client,
     environment,
     environment_api_key,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
 
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
@@ -140,10 +152,12 @@ def test_edge_identities_featurestate_detail(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -154,7 +168,9 @@ def test_edge_identities_featurestate_detail(
     response = admin_client.get(url)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["featurestate_uuid"] == featurestate_uuid
 
@@ -164,14 +180,16 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     mocker,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     sync_identity_document_features = mocker.patch(
-        "edge_api.identities.views.sync_identity_document_features"
+        "edge_api.identities.models.sync_identity_document_features"
     )
     # let's add a feature to the identity that is not in the environment
     deleted_feature_id = 9999
@@ -197,7 +215,9 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     response = admin_client.get(url)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
@@ -208,10 +228,12 @@ def test_edge_identities_featurestate_delete(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -223,11 +245,13 @@ def test_edge_identities_featurestate_delete(
 
     # Then
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
 
     # Next, let's verify that deleted feature state
     # is not part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert not list(
         filter(
@@ -243,10 +267,12 @@ def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_no
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = "some_random_uuid"
     url = reverse(
@@ -265,11 +291,13 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -290,7 +318,9 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     )
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -299,13 +329,13 @@ def test_edge_identities_create_featurestate(
     environment,
     environment_api_key,
     identity_document_without_fs,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     feature_name,
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
     identity_uuid = identity_document_without_fs["identity_uuid"]
@@ -333,8 +363,10 @@ def test_edge_identities_create_featurestate(
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -360,7 +392,7 @@ def test_edge_identities_create_mv_featurestate(
     environment,
     environment_api_key,
     identity_document_without_fs,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     mv_option_50_percent,
     mv_option_value,
@@ -368,7 +400,7 @@ def test_edge_identities_create_mv_featurestate(
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
     identity_uuid = identity_document_without_fs["identity_uuid"]
@@ -400,8 +432,10 @@ def test_edge_identities_create_mv_featurestate(
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == mv_option_value
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -437,12 +471,14 @@ def test_edge_identities_update_featurestate(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -470,8 +506,10 @@ def test_edge_identities_update_featurestate(
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -496,11 +534,13 @@ def test_edge_identities_patch_returns_405(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
 
@@ -519,14 +559,16 @@ def test_edge_identities_update_mv_featurestate(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     mv_option_50_percent,
     mv_option_value,
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][2]["featurestate_uuid"]
     url = reverse(
@@ -563,8 +605,10 @@ def test_edge_identities_update_mv_featurestate(
         == new_mv_allocation
     )
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -608,13 +652,12 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     environment,
     environment_api_key,
     identity_document_without_fs,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     mv_option_50_percent,
 ):
-
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
     identity_uuid = identity_document_without_fs["identity_uuid"]
@@ -647,7 +690,9 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
+        identity_uuid
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["multivariate_feature_state_values"]
@@ -663,14 +708,16 @@ def test_edge_identities_with_identifier_create_featurestate(
     environment,
     environment_api_key,
     identity_document_without_fs,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     feature_name,
     lazy_feature,
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item.return_value = identity_document_without_fs
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = (
+        identity_document_without_fs
+    )
     identity_identifier = identity_document_without_fs["identifier"]
     url = reverse(
         "api-v1:environments:edge-identities-with-identifier-featurestates",
@@ -696,10 +743,10 @@ def test_edge_identities_with_identifier_create_featurestate(
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
 
-    dynamo_wrapper_mock.get_item.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(
         f"{environment_api_key}_{identity_identifier}"
     )
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -726,12 +773,12 @@ def test_edge_identities_with_identifier_delete_featurestate(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     lazy_feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
     url = reverse(
         "api-v1:environments:edge-identities-with-identifier-featurestates",
@@ -745,13 +792,13 @@ def test_edge_identities_with_identifier_delete_featurestate(
     )
 
     # Then
-    dynamo_wrapper_mock.get_item.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(
         f"{environment_api_key}_{identifier}"
     )
 
     # Next, let's verify that deleted feature state
     # is not part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
     assert not list(
         filter(
@@ -767,12 +814,12 @@ def test_edge_identities_with_identifier_update_featurestate(
     environment,
     environment_api_key,
     identity_document,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     feature,
     webhook_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item.return_value = identity_document
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
     url = reverse(
         "api-v1:environments:edge-identities-with-identifier-featurestates",
@@ -797,10 +844,10 @@ def test_edge_identities_with_identifier_update_featurestate(
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
-    dynamo_wrapper_mock.get_item.assert_called_with(
+    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(
         f"{environment_api_key}_{identifier}"
     )
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
     assert name == "put_item"
 
     # Next, let's verify that the document that we put
@@ -831,7 +878,7 @@ def test_get_all_feature_states_for_an_identity(
     environment,
     environment_api_key,
     identity_document_without_fs,
-    dynamo_wrapper_mock,
+    edge_identity_dynamo_wrapper_mock,
     project,
     feature,
     feature_name,
@@ -850,10 +897,12 @@ def test_get_all_feature_states_for_an_identity(
         nonlocal segment_ids_responses
         return segment_ids_responses.pop(0)
 
-    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
     )
-    dynamo_wrapper_mock.get_segment_ids.side_effect = get_segment_ids_side_effect
+    edge_identity_dynamo_wrapper_mock.get_segment_ids.side_effect = (
+        get_segment_ids_side_effect
+    )
 
     # First, let's verify that, without any overrides, the endpoint gives us the
     # environment default feature state

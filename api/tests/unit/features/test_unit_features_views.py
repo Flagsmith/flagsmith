@@ -7,14 +7,16 @@ from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
+from audit.constants import FEATURE_DELETED_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
+from segments.models import Segment
 from users.models import FFAdminUser
 
 
@@ -349,7 +351,49 @@ def test_should_delete_feature_states_when_feature_deleted(
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
-def test_audit_log_created_when_feature_created(client, project):
+def test_create_feature_returns_201_if_name_matches_regex(client, project):
+    # Given
+    project.feature_name_regex = "^[a-z_]{18}$"
+    project.save()
+
+    # feature name that has 18 characters
+    feature_name = "valid_feature_name"
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+
+    # When
+    response = client.post(url, data=data)
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_feature_returns_400_if_name_does_not_matches_regex(client, project):
+    # Given
+    project.feature_name_regex = "^[a-z]{18}$"
+    project.save()
+
+    # feature name longer than 18 characters
+    feature_name = "not_a_valid_feature_name"
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+
+    # When
+    response = client.post(url, data=data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["name"][0]
+        == f"Feature name must match regex: {project.feature_name_regex}"
+    )
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_audit_log_created_when_feature_created(client, project, environment):
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
@@ -422,11 +466,13 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
     assert AuditLog.objects.get(
         related_object_type=RelatedObjectType.FEATURE.name,
         related_object_id=feature.id,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     )
     # and audit logs exists for all feature states for that feature
     assert AuditLog.objects.filter(
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         related_object_id__in=feature_states_ids,
+        log=FEATURE_DELETED_MESSAGE % feature.name,
     ).count() == len(feature_states_ids)
 
 
@@ -490,12 +536,14 @@ def test_add_owners_adds_owner(client, project):
         "email": user_1.email,
         "first_name": user_1.first_name,
         "last_name": user_1.last_name,
+        "last_login": None,
     }
     assert json_response["owners"][1] == {
         "id": user_2.id,
         "email": user_2.email,
         "first_name": user_2.first_name,
         "last_name": user_2.last_name,
+        "last_login": None,
     }
 
 
@@ -570,3 +618,162 @@ def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, proj
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_feature_state_value_triggers_dynamo_rebuild(
+    client, project, environment, feature, feature_state, settings, mocker
+):
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    mock_dynamo_environment_wrapper = mocker.patch(
+        "environments.models.environment_wrapper"
+    )
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps({"feature_state_value": "new value"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    mock_dynamo_environment_wrapper.write_environments.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_segment_overrides_creates_correct_audit_log_messages(
+    client, feature, segment, environment
+):
+    # Given
+    another_segment = Segment.objects.create(
+        name="Another segment", project=segment.project
+    )
+
+    feature_segments_url = reverse("api-v1:features:feature-segment-list")
+    feature_states_url = reverse("api-v1:features:featurestates-list")
+
+    # When
+    # we create 2 segment overrides for the feature
+    for _segment in (segment, another_segment):
+        feature_segment_response = client.post(
+            feature_segments_url,
+            data={
+                "feature": feature.id,
+                "segment": _segment.id,
+                "environment": environment.id,
+            },
+        )
+        assert feature_segment_response.status_code == status.HTTP_201_CREATED
+        feature_segment_id = feature_segment_response.json()["id"]
+        feature_state_response = client.post(
+            feature_states_url,
+            data={
+                "feature": feature.id,
+                "feature_segment": feature_segment_id,
+                "environment": environment.id,
+                "enabled": True,
+            },
+        )
+        assert feature_state_response.status_code == status.HTTP_201_CREATED
+
+    # Then
+    assert AuditLog.objects.count() == 2
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{segment.name}'"
+        ).count()
+        == 1
+    )
+    assert (
+        AuditLog.objects.filter(
+            log=f"Flag state / Remote config value updated for feature "
+            f"'{feature.name}' and segment '{another_segment.name}'"
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_list_features_provides_information_on_number_of_overrides(
+    feature,
+    segment,
+    segment_featurestate,
+    identity,
+    identity_featurestate,
+    project,
+    environment,
+    client,
+):
+    # Given
+    url = "%s?environment=%d" % (
+        reverse("api-v1:projects:project-features-list", args=[project.id]),
+        environment.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["num_segment_overrides"] == 1
+    assert response_json["results"][0]["num_identity_overrides"] == 1
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
+    dynamo_enabled_project, dynamo_enabled_project_environment_one, client
+):
+    # Given
+    feature = Feature.objects.create(
+        name="test_feature", project=dynamo_enabled_project
+    )
+    segment = Segment.objects.create(
+        name="test_segment", project=dynamo_enabled_project
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=dynamo_enabled_project_environment_one,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=dynamo_enabled_project_environment_one,
+        feature_segment=feature_segment,
+    )
+    url = "%s?environment=%d" % (
+        reverse(
+            "api-v1:projects:project-features-list", args=[dynamo_enabled_project.id]
+        ),
+        dynamo_enabled_project_environment_one.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["num_segment_overrides"] == 1
+    assert response_json["results"][0]["num_identity_overrides"] is None
