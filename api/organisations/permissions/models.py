@@ -15,6 +15,14 @@ class UserOrganisationPermission(AbstractBasePermissionModel):
     )
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "organisation"],
+                name="unique_user_organisation_permission",
+            )
+        ]
+
 
 class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(
@@ -23,6 +31,14 @@ class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
         related_query_name="grouppermission",
     )
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "organisation"],
+                name="unique_group_organisation_permission",
+            )
+        ]
 
 
 class OrganisationPermissionModel(PermissionModel):
