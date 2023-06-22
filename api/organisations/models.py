@@ -118,7 +118,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
                 and self.num_seats >= subscription_metadata.seats
                 and not self.subscription.can_auto_upgrade_seats
             )
-        return self.num_seats >= MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats >= self.subscription.max_seats
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
