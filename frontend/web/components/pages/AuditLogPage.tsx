@@ -23,9 +23,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>
