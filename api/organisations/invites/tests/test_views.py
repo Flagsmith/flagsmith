@@ -22,6 +22,10 @@ class InviteLinkViewSetTestCase(APITestCase):
         )
         self.client.force_authenticate(user=self.organisation_admin)
 
+    def set_subscription_max_seats(self):
+        self.organisation.subscription.max_seats = 2
+        self.organisation.subscription.save()
+
     def test_create_invite_link(self):
         # Given
         url = reverse(
@@ -50,6 +54,9 @@ class InviteLinkViewSetTestCase(APITestCase):
         for role in OrganisationRole:
             InviteLink.objects.create(organisation=self.organisation, role=role.name)
 
+        # update subscription to add another seat
+        self.set_subscription_max_seats()
+
         # When
         response = self.client.get(url)
 
@@ -62,7 +69,40 @@ class InviteLinkViewSetTestCase(APITestCase):
         for invite_link in response_json:
             assert all(attr in invite_link for attr in expected_attributes)
 
+    def test_get_invite_links_for_organisation_returns_400(self):
+        # Given
+        url = reverse(
+            "api-v1:organisations:organisation-invite-links-list",
+            args=[self.organisation.pk],
+        )
+
+        for role in OrganisationRole:
+            InviteLink.objects.create(organisation=self.organisation, role=role.name)
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_delete_invite_link_for_organisation(self):
+        # Given
+        invite = InviteLink.objects.create(organisation=self.organisation)
+        url = reverse(
+            "api-v1:organisations:organisation-invite-links-detail",
+            args=[self.organisation.pk, invite.pk],
+        )
+
+        # update subscription to add another seat
+        self.set_subscription_max_seats()
+
+        # When
+        response = self.client.delete(url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_delete_invite_link_for_organisation_return_400(self):
         # Given
         invite = InviteLink.objects.create(organisation=self.organisation)
         url = reverse(
@@ -74,7 +114,7 @@ class InviteLinkViewSetTestCase(APITestCase):
         response = self.client.delete(url)
 
         # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_update_invite_link_returns_405(invite_link, admin_client, organisation):
