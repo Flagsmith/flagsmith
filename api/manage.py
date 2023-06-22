@@ -2,6 +2,7 @@
 import os
 import sys
 
+from django.conf import settings
 from opentelemetry import trace as OpenTelemetry
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
@@ -30,7 +31,7 @@ if __name__ == "__main__":
     tracer_provider.add_span_processor(
         BatchSpanProcessor(
             OTLPSpanExporter(
-                endpoint="https://pmo76761.live.dynatrace.com/api/v2/otlp/v1/traces",
+                endpoint=settings.OPENTELEMETRY_ENDPOINT_URL,
                 headers={"Authorization": "Api-Token XXX"},
             )
         )

@@ -885,3 +885,12 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+# OpenTelemetry
+OPENTELEMETRY_ENDPOINT_URL = env.str("OPENTELEMETRY_ENDPOINT_URL", None)
+OPENTELEMETRY_ENDPOINT_AUTH_HEADER_KEY = env.str(
+    "OPENTELEMETRY_ENDPOINT_AUTH_HEADER_KEY", None
+)
+OPENTELEMETRY_ENDPOINT_AUTH_HEADER_VALUE = env.str(
+    "OPENTELEMETRY_ENDPOINT_AUTH_HEADER_VALUE", None
+)
