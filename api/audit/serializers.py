@@ -31,5 +31,7 @@ class AuditLogsQueryParamSerializer(serializers.Serializer):
     environments = serializers.ListField(
         child=serializers.IntegerField(min_value=0), required=False
     )
-    is_system_event = serializers.BooleanField(required=False)
+    is_system_event = serializers.BooleanField(
+        required=False, allow_null=True, default=None
+    )
     search = serializers.CharField(max_length=256, required=False)
