@@ -59,32 +59,30 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
 
   return data?.totals ? (
     <div className='mt-4'>
-      {Utils.getFlagsmithHasFeature('usage_filter') && (
-        <Row className='mb-5'>
-          <strong>Project</strong>
-          <div className='mx-2' style={{ width: 200 }}>
-            <ProjectFilter
-              showAll
-              organisationId={organisationId}
-              onChange={setProject}
-              value={project}
-            />
-          </div>
-          {project && (
-            <>
-              <strong className='ml-2'>Environment</strong>
-              <div className='ml-2' style={{ width: 200 }}>
-                <EnvironmentFilter
-                  showAll
-                  projectId={project}
-                  onChange={setEnvironment}
-                  value={environment}
-                />
-              </div>
-            </>
-          )}
-        </Row>
-      )}
+      <Row className='mb-5'>
+        <strong>Project</strong>
+        <div className='mx-2' style={{ width: 200 }}>
+          <ProjectFilter
+            showAll
+            organisationId={organisationId}
+            onChange={setProject}
+            value={project}
+          />
+        </div>
+        {project && (
+          <>
+            <strong className='ml-2'>Environment</strong>
+            <div className='ml-2' style={{ width: 200 }}>
+              <EnvironmentFilter
+                showAll
+                projectId={project}
+                onChange={setEnvironment}
+                value={environment}
+              />
+            </div>
+          </>
+        )}
+      </Row>
 
       <div className='row'>
         <LegendItem

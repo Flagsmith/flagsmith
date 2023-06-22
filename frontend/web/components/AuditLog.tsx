@@ -96,9 +96,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>

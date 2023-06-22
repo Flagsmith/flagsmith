@@ -222,139 +222,128 @@ const ProjectSettingsPage = class extends Component {
                           </div>
                         </div>
                       </FormGroup>
-                      {Utils.getFlagsmithHasFeature('case_sensitive_flags') && (
-                        <FormGroup className='mt-4'>
-                          <h3>Case sensitive features</h3>
-                          <div className='row'>
-                            <div className='col-md-10'>
-                              <p>
-                                By default, features are lower case in order to
-                                prevent human error. Enabling this will allow
-                                you to use upper case characters when creating
-                                features.
-                              </p>
-                            </div>
-                            <div className='col-md-2 text-right'>
-                              <Switch
-                                data-test='js-flag-case-sensitivity'
-                                disabled={isSaving}
-                                onChange={() =>
-                                  this.toggleCaseSensitivity(
-                                    project,
-                                    editProject,
-                                  )
-                                }
-                                checked={
-                                  !project.only_allow_lower_case_feature_names
-                                }
-                              />
-                            </div>
+                      <FormGroup className='mt-4'>
+                        <h3>Case sensitive features</h3>
+                        <div className='row'>
+                          <div className='col-md-10'>
+                            <p>
+                              By default, features are lower case in order to
+                              prevent human error. Enabling this will allow you
+                              to use upper case characters when creating
+                              features.
+                            </p>
                           </div>
-                        </FormGroup>
-                      )}
-                      {Utils.getFlagsmithHasFeature('feature_name_regex') && (
-                        <FormGroup className='mt-4'>
-                          <h3>Feature name RegEx</h3>
-                          <div className='row'>
-                            <div className='col-md-10'>
-                              <p>
-                                This allows you to define a regular expression
-                                that all feature names must adhere to.
-                              </p>
-                            </div>
-                            <div className='col-md-2 text-right'>
-                              <Switch
-                                data-test='js-flag-case-sensitivity'
-                                disabled={isSaving}
-                                onChange={() =>
-                                  this.toggleFeatureValidation(
-                                    project,
-                                    editProject,
-                                  )
-                                }
-                                checked={featureRegexEnabled}
-                              />
-                            </div>
-                          </div>
-                          {featureRegexEnabled && (
-                            <InputGroup
-                              title='Feature Name RegEx'
-                              component={
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault()
-                                    if (regexValid) {
-                                      this.updateFeatureNameRegex(
-                                        project,
-                                        editProject,
-                                      )
-                                    }
-                                  }}
-                                >
-                                  <Row>
-                                    <Input
-                                      ref={(e) => (this.input = e)}
-                                      value={this.state.feature_name_regex}
-                                      inputClassName='input input--wide'
-                                      name='feature-name-regex'
-                                      onClick={this.forceSelectionRange}
-                                      onKeyUp={this.forceSelectionRange}
-                                      showSuccess
-                                      onChange={(e) => {
-                                        let newRegex =
-                                          Utils.safeParseEventValue(e).replace(
-                                            '$',
-                                            '',
-                                          )
-                                        if (!newRegex.startsWith('^')) {
-                                          newRegex = `^${newRegex}`
-                                        }
-                                        if (!newRegex.endsWith('$')) {
-                                          newRegex = `${newRegex}$`
-                                        }
-                                        this.setState({
-                                          feature_name_regex: newRegex,
-                                        })
-                                      }}
-                                      isValid={regexValid}
-                                      type='text'
-                                      placeholder='Regular Expression'
-                                    />
-                                    <Button
-                                      className='ml-2'
-                                      disabled={!regexValid || isLoading}
-                                    >
-                                      Save
-                                    </Button>
-                                    <ButtonLink
-                                      type='button'
-                                      onClick={() => {
-                                        openModal(
-                                          <span>RegEx Tester</span>,
-                                          <RegexTester
-                                            regex={
-                                              this.state.feature_name_regex
-                                            }
-                                            onChange={(feature_name_regex) =>
-                                              this.setState({
-                                                feature_name_regex,
-                                              })
-                                            }
-                                          />,
-                                        )
-                                      }}
-                                      className='ml-2'
-                                      disabled={!regexValid || isLoading}
-                                    >
-                                      Test RegEx
-                                    </ButtonLink>
-                                  </Row>
-                                </form>
+                          <div className='col-md-2 text-right'>
+                            <Switch
+                              data-test='js-flag-case-sensitivity'
+                              disabled={isSaving}
+                              onChange={() =>
+                                this.toggleCaseSensitivity(project, editProject)
+                              }
+                              checked={
+                                !project.only_allow_lower_case_feature_names
                               }
                             />
-                          )}
-                        </FormGroup>
-                      )}
+                          </div>
+                        </div>
+                      </FormGroup>
+                      <FormGroup className='mt-4'>
+                        <h3>Feature name RegEx</h3>
+                        <div className='row'>
+                          <div className='col-md-10'>
+                            <p>
+                              This allows you to define a regular expression
+                              that all feature names must adhere to.
+                            </p>
+                          </div>
+                          <div className='col-md-2 text-right'>
+                            <Switch
+                              data-test='js-flag-case-sensitivity'
+                              disabled={isSaving}
+                              onChange={() =>
+                                this.toggleFeatureValidation(
+                                  project,
+                                  editProject,
+                                )
+                              }
+                              checked={featureRegexEnabled}
+                            />
+                          </div>
+                        </div>
+                        {featureRegexEnabled && (
+                          <InputGroup
+                            title='Feature Name RegEx'
+                            component={
+                              <form
+                                onSubmit={(e) => {
+                                  e.preventDefault()
+                                  if (regexValid) {
+                                    this.updateFeatureNameRegex(
+                                      project,
+                                      editProject,
+                                    )
+                                  }
+                                }}
+                              >
+                                <Row>
+                                  <Input
+                                    ref={(e) => (this.input = e)}
+                                    value={this.state.feature_name_regex}
+                                    inputClassName='input input--wide'
+                                    name='feature-name-regex'
+                                    onClick={this.forceSelectionRange}
+                                    onKeyUp={this.forceSelectionRange}
+                                    showSuccess
+                                    onChange={(e) => {
+                                      let newRegex = Utils.safeParseEventValue(
+                                        e,
+                                      ).replace('$', '')
+                                      if (!newRegex.startsWith('^')) {
+                                        newRegex = `^${newRegex}`
+                                      }
+                                      if (!newRegex.endsWith('$')) {
+                                        newRegex = `${newRegex}$`
+                                      }
+                                      this.setState({
+                                        feature_name_regex: newRegex,
+                                      })
+                                    }}
+                                    isValid={regexValid}
+                                    type='text'
+                                    placeholder='Regular Expression'
+                                  />
+                                  <Button
+                                    className='ml-2'
+                                    disabled={!regexValid || isLoading}
+                                  >
+                                    Save
+                                  </Button>
+                                  <ButtonLink
+                                    type='button'
+                                    onClick={() => {
+                                      openModal(
+                                        <span>RegEx Tester</span>,
+                                        <RegexTester
+                                          regex={this.state.feature_name_regex}
+                                          onChange={(feature_name_regex) =>
+                                            this.setState({
+                                              feature_name_regex,
+                                            })
+                                          }
+                                        />,
+                                      )
+                                    }}
+                                    className='ml-2'
+                                    disabled={!regexValid || isLoading}
+                                  >
+                                    Test RegEx
+                                  </ButtonLink>
+                                </Row>
+                              </form>
+                            }
+                          />
+                        )}
+                      </FormGroup>
                       {!Utils.getIsEdge() &&
                         this.props.hasFeature('edge_identities') && (
                           <FormGroup className='mt-4'>
@@ -393,30 +382,28 @@ const ProjectSettingsPage = class extends Component {
                             </div>
                           </FormGroup>
                         )}
-                      {Utils.getFlagsmithHasFeature('delete_project') && (
-                        <FormGroup className='mt-4'>
-                          <h3>Delete Project</h3>
-                          <div className='row'>
-                            <div className='col-md-10'>
-                              <p>This project will be permanently deleted.</p>
-                            </div>
-                            <div className='col-md-2 text-right'>
-                              <Button
-                                onClick={() =>
-                                  this.confirmRemove(project, () => {
-                                    deleteProject(
-                                      this.props.match.params.projectId,
-                                    )
-                                  })
-                                }
-                                className='btn btn--with-icon ml-auto btn--remove'
-                              >
-                                <RemoveIcon />
-                              </Button>
-                            </div>
+                      <FormGroup className='mt-4'>
+                        <h3>Delete Project</h3>
+                        <div className='row'>
+                          <div className='col-md-10'>
+                            <p>This project will be permanently deleted.</p>
                           </div>
-                        </FormGroup>
-                      )}
+                          <div className='col-md-2 text-right'>
+                            <Button
+                              onClick={() =>
+                                this.confirmRemove(project, () => {
+                                  deleteProject(
+                                    this.props.match.params.projectId,
+                                  )
+                                })
+                              }
+                              className='btn btn--with-icon ml-auto btn--remove'
+                            >
+                              <RemoveIcon />
+                            </Button>
+                          </div>
+                        </div>
+                      </FormGroup>
                     </TabItem>
                     <TabItem
                       data-test='js-sdk-settings'
