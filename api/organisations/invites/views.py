@@ -58,9 +58,8 @@ def join_organisation_from_link(request, hash):
         raise PermissionDenied("Invite links are disabled.")
 
     invite = get_object_or_404(InviteLink, hash=hash)
-    organisation = Organisation.objects.get(id=invite.organisation.id)
 
-    if organisation.seats_at_limit_and_can_not_auto_autoupgrade():
+    if invite.organisation.seats_at_limit_and_can_not_auto_autoupgrade():
         raise SubscriptionDoesNotSupportSeatUpgrade()
 
     if invite.is_expired:

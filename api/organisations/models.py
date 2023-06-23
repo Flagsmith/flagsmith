@@ -110,7 +110,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         self.alerted_over_plan_limit = False
         self.save()
 
-    def seats_at_limit_and_can_not_auto_autoupgrade(self):
+    def seats_at_limit_and_cannot_autoupgrade(self):
         if self.has_subscription():
             subscription_metadata = self.subscription.get_subscription_metadata()
             return (
