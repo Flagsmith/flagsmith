@@ -164,11 +164,30 @@ the event that it cannot receive a response from our API.
 
 ### Cache
 
-By default, Flagsmith will cache all flags returned by the API (to permanent storage), and in case of a failed response, fall back on the cached values. The cache can be turned off or on using:
+By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage), and in case of a failed response,
+fall back on the cached values. The cache can be turned off or on using:
 
 ```swift
-    // set cache on / off (defaults to on)
+    // set cache on / off (defaults to off)
     Flagsmith.shared.useCache = true
+```
+
+You can also set a TTL for the cache (in seconds), and request that Flagsmith skip calling the API if a valid cache is
+present
+
+```swift
+    // set skip API on / off (defaults to off)
+    Flagsmith.shared.skipAPI = false
+
+    // set cache TTL in seconds (defaults to 0, i.e. infinite)
+    Flagsmith.shared.cacheTTL = 0
+```
+
+If more customisation is required, you can override the cache implemention with your own subclass of URLCache, using:
+
+```swift
+    // set custom cache to use (defaults to shared URLCache)
+    Flagsmith.shared.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 ```
 
 ## Override default configuration
