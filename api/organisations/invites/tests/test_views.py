@@ -22,8 +22,8 @@ class InviteLinkViewSetTestCase(APITestCase):
         )
         self.client.force_authenticate(user=self.organisation_admin)
 
-    def set_subscription_max_seats(self):
-        self.organisation.subscription.max_seats = 2
+    def set_subscription_max_seats(self, max_seats):
+        self.organisation.subscription.max_seats = max_seats
         self.organisation.subscription.save()
 
     def test_create_invite_link(self):
@@ -55,7 +55,7 @@ class InviteLinkViewSetTestCase(APITestCase):
             InviteLink.objects.create(organisation=self.organisation, role=role.name)
 
         # update subscription to add another seat
-        self.set_subscription_max_seats()
+        self.set_subscription_max_seats(2)
 
         # When
         response = self.client.get(url)
@@ -94,7 +94,7 @@ class InviteLinkViewSetTestCase(APITestCase):
         )
 
         # update subscription to add another seat
-        self.set_subscription_max_seats()
+        self.set_subscription_max_seats(2)
 
         # When
         response = self.client.delete(url)
