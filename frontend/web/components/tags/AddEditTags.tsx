@@ -155,7 +155,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     projectAdminPermission,
                     Constants.projectPermissions('Admin'),
                     <Button
-                      theme='text'
+                      theme='outline'
                       disabled={!projectAdminPermission}
                       onClick={() => {
                         setTab('CREATE')

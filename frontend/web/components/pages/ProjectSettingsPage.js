@@ -190,6 +190,7 @@ const ProjectSettingsPage = class extends Component {
                               <Button
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
+                                size='small'
                               >
                                 {isSaving ? 'Updating' : 'Update Name'}
                               </Button>

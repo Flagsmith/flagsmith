@@ -332,6 +332,7 @@ const OrganisationSettingsPage = class extends Component {
                                     <Button
                                       disabled={this.saveDisabled()}
                                       className='float-right'
+                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
@@ -742,6 +743,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                           <Button
                                                             className='btn-secondary'
+                                                            size='small'
                                                             style={{
                                                               width: 180,
                                                             }}
@@ -770,6 +772,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           <Button
                                                             className='ml-4'
                                                             type='button'
+                                                            size='small'
                                                             onClick={() => {
                                                               openConfirm(
                                                                 'Regenerate Invite Link',

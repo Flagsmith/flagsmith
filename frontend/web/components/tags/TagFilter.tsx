@@ -88,9 +88,9 @@ const TagFilter: FC<TagFilterType> = ({
                 }
                 onClearAll && onClearAll()
               }}
-              style={{ marginBottom: 10 }}
               className='mr-2'
-              theme="text"
+              theme='outline'
+              size='xSmall'
             >
               Clear Filters
             </Button>

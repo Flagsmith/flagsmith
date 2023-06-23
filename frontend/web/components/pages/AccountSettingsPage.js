@@ -315,6 +315,7 @@ class TheComponent extends Component {
                         <Button
                           onClick={this.invalidateToken}
                           className='btn btn-danger'
+                          size='small'
                         >
                           Invalidate
                         </Button>

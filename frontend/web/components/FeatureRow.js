@@ -111,10 +111,10 @@ class TheComponent extends Component {
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
           }
           style={{
-            flexDirection: this.props.isCompareEnv ? 'column' : 'row',
             overflow: 'hidden',
             ...(this.props.style || {}),
           }}
+          className={this.props.isCompareEnv ? 'column' : null}
         >
           <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
             <Switch

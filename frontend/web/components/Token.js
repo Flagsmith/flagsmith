@@ -44,6 +44,7 @@ class Token extends Component {
           <Button
             style={{ width: 80 }}
             className='ml-2 mr-4'
+            size='small'
             onClick={() => this.setState({ showToken: !this.state.showToken })}
           >
             {this.state.showToken ? 'Hide' : 'Show'}

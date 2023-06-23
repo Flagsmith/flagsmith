@@ -497,9 +497,12 @@ $animation-timing-function: ease-in-out;
          fill: $aside-logo;
         }
     }
+    .align-self-end {
+        align-self: auto !important;
+      }
 }
 
-@include media-breakpoint-down(xs) {
+@include media-breakpoint-down(sm) {
     .aside {
         &__projects-sidebar {
             position: relative;

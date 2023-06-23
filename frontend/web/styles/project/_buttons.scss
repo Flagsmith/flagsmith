@@ -80,20 +80,6 @@ button.btn {
   white-space: nowrap;
   color: white;
   // Project button, to remove with project select bar
-
-  &-lg {
-    line-height: 56px;
-  }
-  
-  &-sm {
-    line-height: 40px;
-  }
-  &-xsm {
-    padding: 0 12px;
-    line-height: 32px;
-    font-size: 12px;
-    border-radius: 8px;
-  }
   &:hover,
   &:focus {
     background-color: $btn-hover-bg;
@@ -135,6 +121,7 @@ button.btn {
     background: white;
     border: 1px solid $primary !important;
     color: $primary;
+    line-height: 46px;
 
     &:hover,
     &:focus {
@@ -281,6 +268,19 @@ button.btn {
       }
     }
   }
+  &-lg {
+    line-height: 56px;
+  }
+
+  &-sm {
+    line-height: 40px;
+  }
+  &-xsm {
+    padding: 0 12px;
+    line-height: 32px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
 }
 
 .btn-link {
@@ -307,6 +307,9 @@ button.btn {
   }
   &:active {
     background: transparent;
+  }
+  &.dark-link {
+    color: $text-icon-dark;
   }
 }
 

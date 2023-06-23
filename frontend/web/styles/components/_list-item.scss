@@ -10,6 +10,7 @@
   transition: all .2s ease-in;
   .btn-link {
     color: $bt-link-color;
+    font-weight: bold;
     &:hover {
       color: $bt-link-color-hover;
     }

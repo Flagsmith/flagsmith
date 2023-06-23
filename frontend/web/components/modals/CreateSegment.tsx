@@ -418,7 +418,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <Row className='justify-content-end'>
             {condensed && (
               <Button
-                theme='text'
+                theme='secondary'
                 type='button'
                 onClick={onCancel}
                 className='mr-4'

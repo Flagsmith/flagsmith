@@ -46,3 +46,21 @@ $btn-danger-active: #ac2646;
 
 $modal-md: 600px;
 $modal-lg: 900px;
+
+//Breakpoints
+$grid-breakpoints: (
+  xs: 0,
+  sm: 544px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1200px
+);
+
+$container-max-widths: (
+  sm: 576px,
+  md: 720px,
+  lg: 940px,
+  xl: 1140px,
+  xxl: 1140px
+);
