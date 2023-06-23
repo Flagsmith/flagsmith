@@ -156,16 +156,16 @@ You can define default flag values when initialising the SDK. This ensures that 
 the event that it cannot receive a response from our API.
 
 ```swift
-    // set default flags
+// set default flags
 Flagsmith.shared.defaultFlags = [Flag(featureName: "feature_a", enabled: false),
-                                     Flag(featureName: "font_size", intValue:12, enabled: true),
-                                     Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
+                                    Flag(featureName: "font_size", intValue:12, enabled: true),
+                                    Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
 ```
 
 ### Cache
 
-By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage), and in case of a failed response,
-fall back on the cached values. The cache can be turned off or on using:
+By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage),
+and in case of a failed response, fall back on the cached values. The cache can be turned off or on using:
 
 ```swift
 // set cache on / off (defaults to off)
