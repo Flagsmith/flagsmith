@@ -45,9 +45,7 @@ const ModalDefault: FC<ModalDefault> = ({
     >
       <div className='modal-header'>
         <h5 className='modal-title'>{title}</h5>
-        <Button onClick={onDismissClick} theme='text'>
-          <span className='fa fa-times text-dark' />
-        </Button>
+        <span onClick={onDismissClick} className='icon close ion-md-close' />
       </div>
       <ModalBody>{children}</ModalBody>
     </Modal>

@@ -400,6 +400,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <PaymentModal
                                                   viewOnly={false}
                                                 />,
+                                                'modal-lg',
                                               )
                                             }
                                           }}
@@ -414,6 +415,7 @@ const OrganisationSettingsPage = class extends Component {
                                             openModal(
                                               'Payment Plans',
                                               <PaymentModal viewOnly={false} />,
+                                              'modal-lg',
                                             )
                                           }
                                         >
@@ -636,6 +638,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     false
                                                                   }
                                                                 />,
+                                                                'modal-lg',
                                                               )
                                                             }
                                                           >
@@ -965,7 +968,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           }}
                                                           onClick={onEditClick}
                                                         >
-                                                          <Button theme="text">
+                                                          <Button theme='text'>
                                                             Edit Permissions
                                                           </Button>
                                                         </div>
@@ -1090,7 +1093,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                 id,
                                                               )
                                                             }
-                                                            theme="text"
+                                                            theme='text'
                                                           >
                                                             Resend
                                                           </Button>

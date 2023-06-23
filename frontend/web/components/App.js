@@ -349,6 +349,7 @@ const App = class extends Component {
                                           openModal(
                                             'Payment plans',
                                             <PaymentModal viewOnly={false} />,
+                                            'modal-lg',
                                           )
                                         }}
                                       >

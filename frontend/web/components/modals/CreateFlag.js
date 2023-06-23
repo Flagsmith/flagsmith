@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose } from 'components/modals/base/ModalDefault';
+import { setInterceptClose } from 'components/modals/base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -351,13 +351,13 @@ const CreateFlag = class extends Component {
       <div className='text-center'>
         There has been no activity for this flag within the past month. Find out
         about Flag Analytics{' '}
-        <a
+        <Button
+          theme='text'
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          rel='noreferrer'
         >
           here
-        </a>
+        </Button>
         .
       </div>
     )

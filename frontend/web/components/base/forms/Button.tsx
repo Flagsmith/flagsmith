@@ -4,7 +4,7 @@ import Icon, { IconName } from 'components/Icon'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
-  outline: 'btn btn--outline',
+  outline: 'btn--outline',
   primary: 'btn-primary',
   project: 'btn-project',
   secondary: 'btn-secondary',
@@ -16,6 +16,7 @@ export const sizeClassNames = {
   default: '',
   large: 'btn-lg',
   small: 'btn-sm',
+  xSmall: 'btn-xsm',
 }
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -42,7 +43,7 @@ export const Button: FC<ButtonType> = ({
 }) => {
   return href ? (
     <a
-      className={themeClassNames[theme]}
+      className={cn(className, themeClassNames[theme])}
       target={target}
       href={href}
       rel='noreferrer'

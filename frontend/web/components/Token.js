@@ -32,7 +32,7 @@ class Token extends Component {
           <Button
             theme='outline'
             style={{ width: 80 }}
-            className='btn-secondary ml-2 mr-4'
+            className='ml-2 mr-4'
             onClick={() => {
               navigator.clipboard.writeText(this.props.token)
               toast('Copied')
