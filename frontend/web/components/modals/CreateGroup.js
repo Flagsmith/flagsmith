@@ -126,7 +126,7 @@ const CreateGroup = class extends Component {
   }
 
   save = () => {
-    const { external_id, is_default, name, users } = this.state
+    const { external_id, name, users } = this.state
 
     this.setState({
       externalIdEdited: false,

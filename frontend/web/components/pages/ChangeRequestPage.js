@@ -15,6 +15,9 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import InfoMessage from 'components/InfoMessage'
 import Permission from 'common/providers/Permission'
 import JSONReference from 'components/JSONReference'
+import MyGroupsSelect from 'components/MyGroupsSelect'
+import { getMyGroups } from 'common/services/useMyGroup'
+import { getStore } from 'common/store'
 
 const labelWidth = 200
 
@@ -26,7 +29,10 @@ const ChangeRequestsPage = class extends Component {
   }
 
   getApprovals = (users, approvals) =>
-    users.filter((v) => approvals.includes(v.id))
+    users?.filter((v) => approvals?.includes(v.group))
+
+  getGroupApprovals = (groups, approvals) =>
+      groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   constructor(props, context) {
     super(props, context)
@@ -47,7 +53,11 @@ const ChangeRequestsPage = class extends Component {
       this.props.match.params.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
-    AppActions.getGroups(AccountStore.getOrganisation().id)
+    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
+      (res) => {
+        this.setState({ groups: res?.data?.results || [] })
+      },
+    )
   }
 
   removeOwner = (id, isUser = true) => {
@@ -207,7 +217,7 @@ const ChangeRequestsPage = class extends Component {
       )
     }
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
-    const orgGroups = UserGroupStore && UserGroupStore.groups
+    const orgGroups = this.state.groups || []
     const ownerUsers =
       changeRequest &&
       this.getApprovals(
@@ -216,10 +226,7 @@ const ChangeRequestsPage = class extends Component {
       )
     const ownerGroups =
       changeRequest &&
-      this.getApprovals(
-        orgGroups,
-        changeRequest.group_assignments.map((v) => v.group),
-      )
+      this.getGroupApprovals(orgGroups, changeRequest.group_assignments)
     const featureId =
       changeRequest &&
       changeRequest.feature_states[0] &&
@@ -443,7 +450,7 @@ const ChangeRequestsPage = class extends Component {
                                 </span>
                               </Row>
                               <Row className='mt-2'>
-                                {ownerGroups.length !== 0 &&
+                                {!!ownerGroups?.length &&
                                   ownerGroups.map((g) => (
                                     <Row
                                       key={g.id}
@@ -471,10 +478,11 @@ const ChangeRequestsPage = class extends Component {
                                   Add group
                                 </Button>
                               </Row>
-                              <GroupSelect
+                              <MyGroupsSelect
+                                orgId={AccountStore.getOrganisation().id}
                                 groups={orgGroups}
-                                selectedGroups={
-                                  ownerGroups && ownerGroups.map((v) => v.group)
+                                value={
+                                  ownerGroups && ownerGroups.map((v) => v.id)
                                 }
                                 onAdd={this.addOwner}
                                 onRemove={this.removeOwner}

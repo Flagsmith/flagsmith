@@ -231,6 +231,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         add_single_seat(self.subscription_id)
 
+    def get_api_call_overage(self):
+        subscription_info = self.organisation.subscription_information_cache
+        return subscription_info.allowed_30d_api_calls - subscription_info.api_calls_30d
+
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     name = models.CharField(max_length=100)
@@ -261,3 +265,5 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
+
+    chargebee_email = models.EmailField(blank=True, max_length=254, null=True)

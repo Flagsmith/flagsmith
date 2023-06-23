@@ -366,7 +366,7 @@ const App = class extends Component {
                                                 totalApiCalls,
                                               )}/${Format.shortenNumber(
                                                 organisation.subscription
-                                                  .max_api_calls,
+                                                  ?.max_api_calls,
                                               )} requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade'}
