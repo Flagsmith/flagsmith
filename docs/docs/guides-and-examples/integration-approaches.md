@@ -19,6 +19,9 @@ either store a GUID alongside that record, or compute a 2-way hash of the user a
 Note that this only relates to _Client Side Keys_. _Server Side Keys_, on the other hand, should be considered secret
 and stored appropriately.
 
+You can also prevent client-side SDKS from
+[setting Traits](/advanced-use/system-administration#preventing-client-sdks-from-setting-traits).
+
 ### Segment and Targeting rules are not leaked to the client
 
 If flags are evaluated within the client-side SDKs (Web Browser, Mobile App), the entire set of rules for targeting
