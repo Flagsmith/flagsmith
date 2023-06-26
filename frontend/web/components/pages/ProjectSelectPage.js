@@ -71,7 +71,6 @@ const ProjectSelectPage = class extends Component {
                           permission,
                           Constants.environmentPermissions('Create Project'),
                           <Button
-                            iconRight={'plus'}
                             disabled={!permission}
                             className='float-right btn__md-full mb-md-0 mb-3'
                             onClick={this.newProject}
@@ -156,7 +155,6 @@ const ProjectSelectPage = class extends Component {
                                       'Create Project',
                                     ),
                                     <Button
-                                      iconRight={'plus'}
                                       disabled={!permission}
                                       onClick={this.newProject}
                                       data-test='create-first-project-btn'

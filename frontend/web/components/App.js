@@ -524,8 +524,7 @@ const App = class extends Component {
                                               >
                                                 <Flex className='text-center'>
                                                   <Button>
-                                                    Create Organisation{' '}
-                                                    <span className='ion-md-add' />
+                                                    Create Organisation
                                                   </Button>
                                                 </Flex>
                                               </Link>
