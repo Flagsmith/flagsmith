@@ -27,7 +27,10 @@ const ModalDefault: FC<ModalDefault> = ({
 }) => {
   const onDismissClick = async () => {
     if (interceptClose) {
-      await interceptClose()
+      const shouldClose = await interceptClose()
+      if (!shouldClose) {
+        return
+      }
       interceptClose = null
     }
     if (onDismiss) {

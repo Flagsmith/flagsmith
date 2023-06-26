@@ -20,14 +20,14 @@ export const ModalBody = _ModalBody
 
 const withModal = (
   WrappedComponent: JSXElementConstructor<any>,
-  closePointer = 'closeModal',
+  { closePointer = 'closeModal', shouldInterceptClose = false } = {},
 ) => {
   return (props: ModalProps) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [isOpen, setIsOpen] = useState(true)
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const toggle = useCallback(() => {
-      if (interceptClose) {
+      if (interceptClose && shouldInterceptClose) {
         interceptClose().then(() => {
           setIsOpen(false)
         })
@@ -47,8 +47,8 @@ const withModal = (
 }
 
 const _Confirm = withModal(Confirm)
-const _ModalDefault2 = withModal(ModalDefault, 'closeModal2')
-const _ModalDefault = withModal(ModalDefault)
+const _ModalDefault2 = withModal(ModalDefault, { closePointer: 'closeModal2' })
+const _ModalDefault = withModal(ModalDefault, { shouldInterceptClose: true })
 
 export const openConfirm = (global.openConfirm = (
   title: string,
