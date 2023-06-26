@@ -14,8 +14,8 @@ interface ModalDefault {
   sideModal?: boolean
 }
 
-export let interceptClose: (() => Promise<any>) | null = null
-export const setInterceptClose = (promise: () => Promise<any>) => {
+export let interceptClose: (() => Promise<boolean>) | null = null
+export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
   interceptClose = promise
 }
 
