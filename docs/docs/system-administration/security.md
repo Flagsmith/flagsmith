@@ -22,7 +22,8 @@ retrace the events and values that flags, identities and segments have taken ove
 You can view the Audit Log within the Flagsmith application, and filter it in order to find the information you are
 after.
 
-You can also stream your Audit Logs into your own infrastructure using [Audit Log Web Hooks](#audit-log-webhooks).
+You can also stream your Audit Logs into your own infrastructure using
+[Audit Log Web Hooks](/system-administration/webhooks#audit-log-web-hooks).
 
 ## Environment Banners
 
