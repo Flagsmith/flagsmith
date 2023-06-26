@@ -12,7 +12,7 @@ import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
-import Button, { ButtonLink } from './base/forms/Button'
+import Button from './base/forms/Button'
 import InfoMessage from './InfoMessage'
 import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
@@ -357,12 +357,13 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <p>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
-        <ButtonLink
+        <Button
+          theme='text'
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
         >
           Learn about User Roles.
-        </ButtonLink>
+        </Button>
       </p>
       <Tabs value={tab} onChange={setTab}>
         <TabItem tabLabel='Users'>

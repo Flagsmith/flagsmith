@@ -190,6 +190,7 @@ const ProjectSettingsPage = class extends Component {
                               <Button
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
+                                size='small'
                               >
                                 {isSaving ? 'Updating' : 'Update Name'}
                               </Button>
@@ -318,7 +319,8 @@ const ProjectSettingsPage = class extends Component {
                                   >
                                     Save
                                   </Button>
-                                  <ButtonLink
+                                  <Button
+                                    theme='text'
                                     type='button'
                                     onClick={() => {
                                       openModal(
@@ -337,7 +339,7 @@ const ProjectSettingsPage = class extends Component {
                                     disabled={!regexValid || isLoading}
                                   >
                                     Test RegEx
-                                  </ButtonLink>
+                                  </Button>
                                 </Row>
                               </form>
                             }

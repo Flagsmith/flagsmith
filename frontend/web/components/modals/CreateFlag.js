@@ -21,14 +21,13 @@ import AddEditTags from 'components/tags/AddEditTags'
 import FlagOwners from 'components/FlagOwners'
 import ChangeRequestModal from './ChangeRequestModal'
 import Feature from 'components/Feature'
-import { ButtonOutline } from 'components/base/forms/Button'
-import { setInterceptClose } from 'project/modals'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
+import { setInterceptClose } from 'components/modals/base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -349,13 +348,13 @@ const CreateFlag = class extends Component {
       <div className='text-center'>
         There has been no activity for this flag within the past month. Find out
         about Flag Analytics{' '}
-        <a
+        <Button
+          theme='text'
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          rel='noreferrer'
         >
           here
-        </a>
+        </Button>
         .
       </div>
     )
@@ -530,22 +529,22 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
 
-        {!identity && Utils.getFlagsmithHasFeature("is_server_key_only") && (
-            <FormGroup className='mb-4 mr-3 ml-3'>
-              <InputGroup
-                  component={
-                    <Switch
-                        checked={this.state.is_server_key_only}
-                        onChange={(is_server_key_only) =>
-                            this.setState({ is_server_key_only, settingsChanged: true })
-                        }
-                    />
+        {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
+          <FormGroup className='mb-4 mr-3 ml-3'>
+            <InputGroup
+              component={
+                <Switch
+                  checked={this.state.is_server_key_only}
+                  onChange={(is_server_key_only) =>
+                    this.setState({ is_server_key_only, settingsChanged: true })
                   }
-                  type='text'
-                  title='Server-side only'
-                  tooltip='Prevent this feature from being accessed with client-side SDKs.'
-              />
-            </FormGroup>
+                />
+              }
+              type='text'
+              title='Server-side only'
+              tooltip='Prevent this feature from being accessed with client-side SDKs.'
+            />
+          </FormGroup>
         )}
 
         {!identity && isEdit && (
@@ -934,7 +933,8 @@ const CreateFlag = class extends Component {
                                             {!is4Eyes && (
                                               <>
                                                 {canSchedule ? (
-                                                  <ButtonOutline
+                                                  <Button
+                                                    theme='outline'
                                                     onClick={() =>
                                                       saveFeatureValue(true)
                                                     }
@@ -956,11 +956,12 @@ const CreateFlag = class extends Component {
                                                       : existingChangeRequest
                                                       ? 'Update Change Request'
                                                       : 'Schedule Update'}
-                                                  </ButtonOutline>
+                                                  </Button>
                                                 ) : (
                                                   <Tooltip
                                                     title={
-                                                      <ButtonOutline
+                                                      <Button
+                                                        theme='outline'
                                                         disabled
                                                         className='mr-2'
                                                         type='button'
@@ -974,7 +975,7 @@ const CreateFlag = class extends Component {
                                                           : existingChangeRequest
                                                           ? 'Update Change Request'
                                                           : 'Schedule Update'}
-                                                      </ButtonOutline>
+                                                      </Button>
                                                     }
                                                   >
                                                     {
@@ -1335,7 +1336,7 @@ const CreateFlag = class extends Component {
                                               <a
                                                 target='_blank'
                                                 href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                className='ml-2 btn btn-link btn--link'
+                                                className='ml-2 btn btn-link'
                                                 onClick={() => {}}
                                                 rel='noreferrer'
                                               >

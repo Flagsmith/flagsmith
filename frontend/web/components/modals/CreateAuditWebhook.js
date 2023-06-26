@@ -156,14 +156,14 @@ const CreateAuditWebhook = class extends Component {
             <FormGroup className='mb-4 ml-1'>
               <div>
                 <label>Example Payload </label>
-                <a
-                  className='link-dark ml-2'
+                <Button
+                  theme='text'
+                  className='ml-2'
                   href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                   target='_blank'
-                  rel='noreferrer'
                 >
                   View docs
-                </a>
+                </Button>
                 <Highlight
                   forceExpanded
                   style={{ marginBottom: 10 }}

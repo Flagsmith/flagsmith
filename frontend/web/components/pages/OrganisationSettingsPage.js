@@ -179,8 +179,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -193,8 +192,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -335,6 +333,7 @@ const OrganisationSettingsPage = class extends Component {
                                     <Button
                                       disabled={this.saveDisabled()}
                                       className='float-right'
+                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
@@ -409,8 +408,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <PaymentModal
                                                   viewOnly={false}
                                                 />,
-                                                null,
-                                                { large: true },
+                                                'modal-lg',
                                               )
                                             }
                                           }}
@@ -425,8 +423,7 @@ const OrganisationSettingsPage = class extends Component {
                                             openModal(
                                               'Payment Plans',
                                               <PaymentModal viewOnly={false} />,
-                                              null,
-                                              { large: true },
+                                              'modal-lg',
                                             )
                                           }
                                         >
@@ -549,12 +546,13 @@ const OrganisationSettingsPage = class extends Component {
                               as a user or an administrator and then set
                               permission in your Project and Environment
                               settings.{' '}
-                              <ButtonLink
+                              <Button
+                                theme='text'
                                 href='https://docs.flagsmith.com/system-administration/rbac'
                                 target='_blank'
                               >
                                 Learn about User Roles.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             <div>
                               <div>
@@ -643,8 +641,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     false
                                                                   }
                                                                 />,
-                                                                null,
-                                                                { large: true },
+                                                                'modal-lg',
                                                               )
                                                             }
                                                           >
@@ -748,6 +745,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                           <Button
                                                             className='btn-secondary'
+                                                            size='small'
                                                             style={{
                                                               width: 180,
                                                             }}
@@ -776,6 +774,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           <Button
                                                             className='ml-4'
                                                             type='button'
+                                                            size='small'
                                                             onClick={() => {
                                                               openConfirm(
                                                                 'Regenerate Invite Link',
@@ -806,12 +805,13 @@ const OrganisationSettingsPage = class extends Component {
                                                   standard user, once they have
                                                   joined you can edit their role
                                                   from the team members panel.{' '}
-                                                  <ButtonLink
+                                                  <Button
+                                                    theme='text'
                                                     target='_blank'
                                                     href='https://docs.flagsmith.com/system-administration/rbac'
                                                   >
                                                     Learn about User Roles.
-                                                  </ButtonLink>
+                                                  </Button>
                                                 </p>
                                                 <div className='text-right mt-2'>
                                                   {error && (
@@ -973,7 +973,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           }}
                                                           onClick={onEditClick}
                                                         >
-                                                          <Button className='btn--link'>
+                                                          <Button theme='text'>
                                                             Edit Permissions
                                                           </Button>
                                                         </div>
@@ -1090,7 +1090,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         {link ? (
                                                           ' '
                                                         ) : (
-                                                          <button
+                                                          <Button
                                                             id='resend-invite'
                                                             type='button'
                                                             onClick={() =>
@@ -1098,10 +1098,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                 id,
                                                               )
                                                             }
-                                                            className='btn btn--link'
+                                                            theme='text'
                                                           >
                                                             Resend
-                                                          </button>
+                                                          </Button>
                                                         )}
                                                       </Column>
                                                       <Column>
@@ -1147,11 +1147,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    null,
-                                                    {
-                                                      className:
-                                                        'side-modal fade create-feature-modal in',
-                                                    },
+                                                    'side-modal fade create-feature-modal',
                                                   )
                                                 }
                                                 type='button'
@@ -1199,9 +1195,12 @@ const OrganisationSettingsPage = class extends Component {
                               Audit webhooks let you know when audit logs occur,
                               you can configure 1 or more audit webhooks per
                               organisation.{' '}
-                              <ButtonLink href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'>
+                              <Button
+                                theme='text'
+                                href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
+                              >
                                 Learn about Audit Webhooks.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             {webhooksLoading && !webhooks ? (
                               <Loader />
@@ -1234,7 +1233,9 @@ const OrganisationSettingsPage = class extends Component {
                                     key={webhook.id}
                                   >
                                     <div>
-                                      <ButtonLink>{webhook.url}</ButtonLink>
+                                      <Button theme='text'>
+                                        {webhook.url}
+                                      </Button>
                                       <div className='list-item-footer faint'>
                                         Created{' '}
                                         {moment(webhook.created_date).format(

@@ -161,14 +161,15 @@ const CreateWebhook = class extends Component {
             </Flex>
             <FormGroup className='mb-4 ml-1'>
               <div>
-                <label>Example Payload</label>
-                <ButtonLink
+                <label>Example Payload </label>
+                <Button
+                  theme='text'
                   className='ml-1'
                   href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
                   target='_blank'
                 >
                   View docs
-                </ButtonLink>
+                </Button>
                 <Highlight
                   forceExpanded
                   style={{ marginBottom: 10 }}

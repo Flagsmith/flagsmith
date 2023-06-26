@@ -5,7 +5,7 @@ import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
-import { setInterceptClose } from 'project/modals'
+import { setInterceptClose } from './base/ModalDefault';
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
