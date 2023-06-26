@@ -13,7 +13,7 @@ interface ModalDefault {
 }
 
 export let interceptClose: (() => Promise<boolean>) | null = null
-export const setInterceptClose = (promise: () => Promise<any>) => {
+export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
   interceptClose = promise
 }
 const ModalDefault: FC<ModalDefault> = ({

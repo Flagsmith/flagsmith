@@ -8,7 +8,7 @@ import {
 import { JSXElementConstructor, ReactNode, useCallback, useState } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import Confirm from './ModalConfirm'
-import ModalDefault, { interceptClose } from './ModalDefault'
+import ModalDefault, { interceptClose, setInterceptClose } from './ModalDefault'
 import Alert from './ModalAlert'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
@@ -31,6 +31,7 @@ const withModal = (
         interceptClose().then((result) => {
           if (result) {
             setIsOpen(false)
+            setInterceptClose(null)
           }
         })
       } else {
