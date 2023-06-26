@@ -1,6 +1,7 @@
 import cn from 'classnames'
 import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
+import Constants from 'common/constants'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -21,6 +22,8 @@ export const sizeClassNames = {
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconRight?: IconName
+  iconRightColour?: keyof typeof Constants.colours
+  iconLeftColour?: keyof typeof Constants.colours
   iconLeft?: IconName
   href?: string
   target?: HTMLAttributeAnchorTarget
@@ -33,7 +36,9 @@ export const Button: FC<ButtonType> = ({
   className,
   href,
   iconLeft,
+  iconLeftColour,
   iconRight,
+  iconRightColour,
   onMouseUp,
   size = 'default',
   target,
@@ -62,10 +67,24 @@ export const Button: FC<ButtonType> = ({
         sizeClassNames[size],
       )}
     >
-      {!!iconLeft && <Icon className='mr-1' name={iconLeft} />}
+      {!!iconLeft && (
+        <Icon
+          fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
+          className='mr-1'
+          name={iconLeft}
+        />
+      )}
       {children}
 
-      {!!iconRight && <Icon className='ml-2' name={iconRight} />}
+      {!!iconRight && (
+        <Icon
+          fill={
+            iconRightColour ? Constants.colours[iconRightColour] : undefined
+          }
+          className='ml-2'
+          name={iconRight}
+        />
+      )}
     </button>
   )
 }

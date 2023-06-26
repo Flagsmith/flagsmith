@@ -97,7 +97,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         onBack={() => setTab('SELECT')}
         showBack={tab !== 'SELECT'}
         onClose={toggle}
-        className='inline-modal--tags'
+        className='inline-modal--tags pb-0'
       >
         {tab === 'SELECT' && !noTags && (
           <div>
@@ -150,21 +150,24 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   </div>
                 ))}
               {!readOnly && (
-                <div className='text-center mb-2 mt-3'>
+                <div className='text-center mt-3'>
                   {Utils.renderWithPermission(
                     projectAdminPermission,
                     Constants.projectPermissions('Admin'),
-                    <Button
-                      theme='outline'
-                      disabled={!projectAdminPermission}
-                      onClick={() => {
-                        setTab('CREATE')
-                        setFilter('')
-                      }}
-                      type='button'
-                    >
-                      Create a New Tag <span className='ml-3 icon ion-md-add' />
-                    </Button>,
+                    <div className='mx-2'>
+                      <Button
+                        className='full-width'
+                        disabled={!projectAdminPermission}
+                        onClick={() => {
+                          setTab('CREATE')
+                          setFilter('')
+                        }}
+                        type='button'
+                      >
+                        Create New Tag
+                      </Button>
+                      ,
+                    </div>,
                   )}
                 </div>
               )}
