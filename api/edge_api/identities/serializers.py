@@ -50,7 +50,10 @@ class EdgeIdentitySerializer(serializers.Serializer):
 
 
 class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
-    def to_internal_value(self, data) -> EngineMultivariateFeatureOptionModel:
+    def to_internal_value(
+        self,
+        data: typing.Any,
+    ) -> EngineMultivariateFeatureOptionModel:
         data = super().to_internal_value(data)
         return map_mv_option_to_engine(MultivariateFeatureOption.objects.get(id=data))
 
