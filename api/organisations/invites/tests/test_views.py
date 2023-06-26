@@ -69,7 +69,7 @@ class InviteLinkViewSetTestCase(APITestCase):
         for invite_link in response_json:
             assert all(attr in invite_link for attr in expected_attributes)
 
-    def test_get_invite_links_for_organisation_returns_400(self):
+    def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(self):
         # Given
         url = reverse(
             "api-v1:organisations:organisation-invite-links-list",
@@ -102,7 +102,7 @@ class InviteLinkViewSetTestCase(APITestCase):
         # Then
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_delete_invite_link_for_organisation_return_400(self):
+    def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(self):
         # Given
         invite = InviteLink.objects.create(organisation=self.organisation)
         url = reverse(

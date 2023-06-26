@@ -59,7 +59,10 @@ def join_organisation_from_link(request, hash):
 
     invite = get_object_or_404(InviteLink, hash=hash)
 
-    if invite.organisation.seats_at_limit_and_cannot_autoupgrade():
+    if (
+        invite.organisation.over_plan_seats_limit(additional_seats=1)
+        and not invite.organisation.is_auto_seat_upgrade_available()
+    ):
         raise SubscriptionDoesNotSupportSeatUpgrade()
 
     if invite.is_expired:
@@ -90,7 +93,10 @@ class InviteLinkViewSet(
         user = self.request.user
         organisation = Organisation.objects.get(id=organisation_pk)
 
-        if organisation.seats_at_limit_and_cannot_autoupgrade():
+        if (
+            organisation.over_plan_seats_limit(additional_seats=1)
+            and not organisation.is_auto_seat_upgrade_available()
+        ):
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
         return InviteLink.objects.filter(
