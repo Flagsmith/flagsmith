@@ -161,7 +161,7 @@ def map_environment_to_engine(
     project: "Project" = environment.project
     organisation: "Organisation" = project.organisation
 
-    # Read relationships.
+    # Read relationships - grab all the data needed from the ORM here.
     project_segments: List["Segment"] = project.segments.all()
     project_segment_rules_by_segment_id: Dict[
         int,
@@ -319,7 +319,7 @@ def map_environment_api_key_to_engine(
 def map_identity_to_engine(identity: "Identity") -> IdentityModel:
     environment_api_key = identity.environment.api_key
 
-    # Read relationships.
+    # Read relationships - grab all the data needed from the ORM here.
     identity_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
         identity.identity_features.all(),
     )
