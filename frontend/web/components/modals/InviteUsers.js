@@ -147,7 +147,7 @@ const InviteUsers = class extends Component {
                 to individual projects.{' '}
                 <ButtonLink
                   target='_blank'
-                  href='https://docs.flagsmith.com/advanced-use/permissions'
+                  href='https://docs.flagsmith.com/system-administration/rbac'
                 >
                   Learn about User Roles.
                 </ButtonLink>

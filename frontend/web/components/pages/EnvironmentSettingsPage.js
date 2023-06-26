@@ -365,7 +365,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   information on the excluded fields see
                                   documentation{' '}
                                   <ButtonLink
-                                    href='https://docs.flagsmith.com/advanced-use/system-administration#hide-sensitive-data'
+                                    href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
                                     target='_blank'
                                   >
                                     here.
@@ -732,7 +732,7 @@ const EnvironmentSettingsPage = class extends Component {
                               changed. You can configure 1 or more Feature
                               Webhooks per Environment.{' '}
                               <ButtonLink
-                                href='https://docs.flagsmith.com/advanced-use/system-administration#web-hooks'
+                                href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
                                 target='_blank'
                               >
                                 Learn about Feature Webhooks.

@@ -375,12 +375,10 @@ const OrganisationSettingsPage = class extends Component {
                                           : 'Free'}
                                       </h3>
                                       {!!chargebee_email && (
-                                      <p>
-                                        Management Email:{' '}
-                                        <strong>
-                                          {chargebee_email}
-                                        </strong>
-                                      </p>
+                                        <p>
+                                          Management Email:{' '}
+                                          <strong>{chargebee_email}</strong>
+                                        </p>
                                       )}
                                     </div>
                                     <div>
@@ -498,28 +496,28 @@ const OrganisationSettingsPage = class extends Component {
                             </FormGroup>
                           )}
                           <FormGroup className='mt-4'>
-                                <h3>Delete Organisation</h3>
-                              <div className='row'>
-                                <div className='col-md-10'>
+                            <h3>Delete Organisation</h3>
+                            <div className='row'>
+                              <div className='col-md-10'>
                                 <p>
                                   This organisation will be permanently deleted,
                                   along with all projects and features.
                                 </p>
                               </div>
-                                <div className='col-md-2 text-right'>
-                              <Button
-                                id='delete-org-btn'
-                                onClick={() =>
-                                  this.confirmRemove(organisation, () => {
-                                    deleteOrganisation()
-                                  })
-                                }
-                                className='btn btn--with-icon ml-auto btn--remove'
-                              >
-                                <RemoveIcon />
-                              </Button>
-                                </div>
+                              <div className='col-md-2 text-right'>
+                                <Button
+                                  id='delete-org-btn'
+                                  onClick={() =>
+                                    this.confirmRemove(organisation, () => {
+                                      deleteOrganisation()
+                                    })
+                                  }
+                                  className='btn btn--with-icon ml-auto btn--remove'
+                                >
+                                  <RemoveIcon />
+                                </Button>
                               </div>
+                            </div>
                           </FormGroup>
                         </TabItem>
 
@@ -552,7 +550,7 @@ const OrganisationSettingsPage = class extends Component {
                               permission in your Project and Environment
                               settings.{' '}
                               <ButtonLink
-                                href='https://docs.flagsmith.com/advanced-use/permissions'
+                                href='https://docs.flagsmith.com/system-administration/rbac'
                                 target='_blank'
                               >
                                 Learn about User Roles.
@@ -810,7 +808,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   from the team members panel.{' '}
                                                   <ButtonLink
                                                     target='_blank'
-                                                    href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    href='https://docs.flagsmith.com/system-administration/rbac'
                                                   >
                                                     Learn about User Roles.
                                                   </ButtonLink>
@@ -1201,7 +1199,7 @@ const OrganisationSettingsPage = class extends Component {
                               Audit webhooks let you know when audit logs occur,
                               you can configure 1 or more audit webhooks per
                               organisation.{' '}
-                              <ButtonLink href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'>
+                              <ButtonLink href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'>
                                 Learn about Audit Webhooks.
                               </ButtonLink>
                             </p>

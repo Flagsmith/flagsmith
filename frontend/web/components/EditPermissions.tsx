@@ -358,7 +358,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <ButtonLink
-          href='https://docs.flagsmith.com/advanced-use/permissions'
+          href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
         >
           Learn about User Roles.
