@@ -28,8 +28,10 @@ const withModal = (
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const toggle = useCallback(() => {
       if (interceptClose && shouldInterceptClose) {
-        interceptClose().then(() => {
-          setIsOpen(false)
+        interceptClose().then((result) => {
+          if (result) {
+            setIsOpen(false)
+          }
         })
       } else {
         setIsOpen(false)

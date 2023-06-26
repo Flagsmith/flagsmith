@@ -12,7 +12,7 @@ interface ModalDefault {
   className?: string
 }
 
-export let interceptClose: (() => Promise<any>) | null = null
+export let interceptClose: (() => Promise<boolean>) | null = null
 export const setInterceptClose = (promise: () => Promise<any>) => {
   interceptClose = promise
 }
