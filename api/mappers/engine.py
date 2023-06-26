@@ -33,7 +33,6 @@ if TYPE_CHECKING:  # pragma: no cover
         MultivariateFeatureStateValue,
     )
     from integrations.common.models import EnvironmentIntegrationModel
-    from integrations.dynatrace.models import DynatraceConfiguration
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
@@ -80,18 +79,7 @@ def map_integration_to_engine(
     return IntegrationModel(
         api_key=integration.api_key,
         base_url=integration.base_url,
-    )
-
-
-def map_dynatrace_integation_to_engine(
-    integration: Optional["DynatraceConfiguration"],
-) -> Optional[IntegrationModel]:
-    if not integration:
-        return None
-    return IntegrationModel(
-        api_key=integration.api_key,
-        base_url=integration.base_url,
-        entity_selector=integration.entity_selector,
+        entity_selector=getattr(integration, "entity_selector", None),
     )
 
 
@@ -203,14 +191,12 @@ def map_environment_to_engine(
         attr_name: getattr(environment, attr_name, None)
         for attr_name in (
             "amplitude_config",
+            "dynatrace_config",
             "heap_config",
             "mixpanel_config",
             "segment_config",
         )
     }
-    dynatrace_config: Optional["DynatraceConfiguration"] = getattr(
-        environment, "dynatrace_config", None
-    )
     webhook_config: Optional["WebhookConfiguration"] = getattr(
         environment, "webhook_config", None
     )
@@ -272,8 +258,8 @@ def map_environment_to_engine(
     amplitude_config_model = map_integration_to_engine(
         integration_configs.pop("amplitude_config"),
     )
-    dynatrace_config_model = map_dynatrace_integation_to_engine(
-        dynatrace_config,
+    dynatrace_config_model = map_integration_to_engine(
+        integration_configs.pop("dynatrace_config"),
     )
     heap_config_model = map_integration_to_engine(
         integration_configs.pop("heap_config"),

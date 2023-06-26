@@ -137,7 +137,7 @@ def test_map_integration_to_engine__none__return_expected() -> None:
     assert result is None
 
 
-def test_map_dynatrace_integration_to_engine__return_expected() -> None:
+def test_map_integration_to_engine__dynatrace__return_expected() -> None:
     # Given
     base_url = "http://someurl"
     api_key = "test"
@@ -155,18 +155,10 @@ def test_map_dynatrace_integration_to_engine__return_expected() -> None:
     )
 
     # When
-    result = engine.map_dynatrace_integation_to_engine(integration)
+    result = engine.map_integration_to_engine(integration)
 
     # Then
     assert result == expected_result
-
-
-def test_map_dynatrace_integration_to_engine__none__return_expected() -> None:
-    # When
-    result = engine.map_dynatrace_integation_to_engine(None)
-
-    # Then
-    assert result is None
 
 
 def test_map_webhook_config_to_engine__return_expected() -> None:
