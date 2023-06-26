@@ -25,7 +25,7 @@ const TagValues: FC<TagValuesType> = ({ onAdd, projectId, value }) => {
           ),
       )}
       {!!onAdd && (
-        <Button onClick={onAdd} type='button' className='btn--outline'>
+        <Button onClick={onAdd} type='button' theme='outline'>
           Add Tag
         </Button>
       )}

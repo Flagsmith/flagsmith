@@ -342,7 +342,11 @@ const EnvironmentSettingsPage = class extends Component {
                                   }
                                 />
                               </div>
-                              <Button onClick={this.saveEnv} className='ml-2'>
+                              <Button
+                                onClick={this.saveEnv}
+                                className='ml-2'
+                                size='small'
+                              >
                                 Save
                               </Button>
                             </Row>
@@ -408,6 +412,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       openModal(
                                         'Payment plans',
                                         <PaymentModal viewOnly={false} />,
+                                        'modal-lg',
                                       )
                                     }}
                                   >
@@ -695,6 +700,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   toast('Copied')
                                 }}
                                 className='ml-2'
+                                size='small'
                               >
                                 Copy
                               </Button>

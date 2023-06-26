@@ -165,7 +165,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                               setShowCreateSegment(true)
                               setSegmentEditId(v.segment)
                             }}
-                            className='ml-2'
+                            className='ml-2 dark-link'
                           >
                             Edit Segment
                           </Button>
@@ -175,7 +175,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             disabled={!permission}
                             target='_blank'
                             href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='ml-2'
+                            className='ml-2 dark-link'
                           >
                             Edit Segment
                             <ion className={'ion ml-1 ion-md-open'} />

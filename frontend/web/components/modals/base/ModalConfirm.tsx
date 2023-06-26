@@ -1,4 +1,4 @@
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap'
+import { Modal, ModalBody, ModalFooter } from 'reactstrap'
 import Button from 'components/base/forms/Button'
 import { FC, ReactNode } from 'react'
 
@@ -39,7 +39,10 @@ const Confirm: FC<Confirm> = ({
 
   return (
     <Modal unmountOnClose isOpen={isOpen} toggle={no}>
-      <ModalHeader toggle={no}>{title}</ModalHeader>
+      <div className='modal-header'>
+        <h5 className='modal-title'>{title}</h5>
+        <span onClick={no} className='icon close ion-md-close' />
+      </div>
       <ModalBody>{children}</ModalBody>
       <ModalFooter>
         <Button
@@ -55,7 +58,7 @@ const Confirm: FC<Confirm> = ({
             theme='danger'
             id='confirm-btn-yes'
             disabled={disabled || disabledYes}
-            iconRight='plus'
+            iconRight='fas fa-trash'
             onClick={yes}
           >
             {yesText}

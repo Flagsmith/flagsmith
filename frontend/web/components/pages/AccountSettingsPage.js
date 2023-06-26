@@ -308,6 +308,7 @@ class TheComponent extends Component {
                         <Button
                           onClick={this.invalidateToken}
                           className='btn btn-danger'
+                          size='small'
                         >
                           Invalidate
                         </Button>
@@ -421,6 +422,7 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
+                                'modal-lg',
                               )
                             }}
                           >

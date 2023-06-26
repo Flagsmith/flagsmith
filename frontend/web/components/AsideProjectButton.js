@@ -15,7 +15,9 @@ const AsideProjectButton = class extends PureComponent {
       >
         <div className='flex-row justify-content-center'>
           <div className='flex-column'>
-            <Button theme='project'>{this.props.projectLetter}</Button>
+            <Button theme='project' className={this.props.className}>
+              {this.props.projectLetter}
+            </Button>
           </div>
           <div className='flex-column'>
             <p className={`aside__projects-item-title ${this.props.className}`}>

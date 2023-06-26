@@ -5,9 +5,6 @@ $github: #eeefee;
 
 .dark {
   .btn {
-    &.btn-link {
-      background: transparent;
-    }
     &.btn-secondary {
       color: $header-color-dark !important;
       background-color: $button-bg-dark !important;
@@ -19,9 +16,6 @@ $github: #eeefee;
     &:disabled:hover {
       background: $button-bg-dark-hover;
     }
-
-    color: $btn-color-dark;
-
     &:hover {
       box-shadow: none;
     }
@@ -59,17 +53,13 @@ $github: #eeefee;
         }
       }
     }
-    .btn-link {
-      color: $bt-link-color-dark;
+    &.btn-link {
       background-color: transparent;
       &:hover,
       &:active,
       &:focus {
         background-color: transparent;
         color: $dark-highlight-color;
-      }
-      &-primary {
-        color: $bt-brand-primary;
       }
     }
     &__oauth {
@@ -79,11 +69,92 @@ $github: #eeefee;
       }
     }
   }
+
+  .btn-link {
+    color: $primary;
+  }
 }
+
 .btn,
 button.btn {
   white-space: nowrap;
+  color: white;
   // Project button, to remove with project select bar
+  &:hover,
+  &:focus {
+    background-color: $btn-hover-bg;
+  }
+  &:focus-visible {
+    box-shadow: none;
+  }
+
+  &.btn:active {
+    background-color: $btn-active-bg;
+  }
+
+  &-link {
+    color: $primary;
+    &:hover,
+    &:focus {
+      background: transparent;
+    }
+    &.btn:active {
+      color: $link-color;
+      background: transparent;
+    }
+  }
+
+  &-danger {
+    color: white;
+    &:hover,
+    &:focus {
+      color: white;
+      background-color: $btn-danger-hover;
+    }
+    &.btn:active {
+      color: white;
+      background-color: $btn-danger-active;
+    }
+  }
+
+  &--outline {
+    background: white;
+    border: 1px solid $primary !important;
+    color: $primary;
+    line-height: 46px;
+
+    &:hover,
+    &:focus {
+      background-color: $btn-outline-hover-bg;
+      color: $primary;
+    }
+    &.btn:active {
+      background-color: $btn-outline-active-bg;
+      color: $primary;
+    }
+
+    &-danger {
+      border-color: $alert-danger-bg !important;
+      color: $alert-danger-bg !important;
+    }
+  }
+
+  &-secondary {
+    color: $text-icon-dark;
+    background-color: $btn-secondary-bg;
+
+    &:hover,
+    &:focus {
+      background-color: $btn-secondary-hover-bg;
+      color: $text-icon-dark;
+    }
+
+    &.btn:active {
+      background-color: $btn-secondary-active-bg;
+      color: $text-icon-dark;
+    }
+  }
+
   &--transparent {
     background-color: transparent;
     justify-content: center;
@@ -99,21 +170,6 @@ button.btn {
     &:hover {
       background-color: rgba(0, 0, 0, 0.1);
       box-shadow: none;
-    }
-  }
-
-  &--outline {
-    background: white;
-    border: 2px solid $bt-brand-secondary-faint !important;
-    color: $bt-brand-secondary-faint;
-    line-height: 37px;
-    &:hover {
-      background-color: white;
-    }
-
-    &-danger {
-      border-color: $alert-danger-bg !important;
-      color: $alert-danger-bg !important;
     }
   }
 
@@ -153,7 +209,6 @@ button.btn {
     margin-left: 5px;
 
     &--small {
-      top: 3px;
       position: relative;
       height: 20px;
     }
@@ -213,6 +268,19 @@ button.btn {
       }
     }
   }
+  &-lg {
+    line-height: 56px;
+  }
+
+  &-sm {
+    line-height: 40px;
+  }
+  &-xsm {
+    padding: 0 12px;
+    line-height: 32px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
 }
 
 .btn-link {
@@ -225,10 +293,9 @@ button.btn {
   border: none;
   box-shadow: none;
   padding: 0;
-  height: 25px;
+  line-height: 22px;
   font-size: 16px;
   text-transform: inherit;
-  line-height: 0px;
   font-weight: 400;
   &:hover,
   &:focus {
@@ -237,6 +304,12 @@ button.btn {
     text-decoration: underline;
     border: none;
     box-shadow: none;
+  }
+  &:active {
+    background: transparent;
+  }
+  &.dark-link {
+    color: $text-icon-dark;
   }
 }
 

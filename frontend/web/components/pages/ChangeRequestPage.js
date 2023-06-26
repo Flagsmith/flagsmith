@@ -133,7 +133,7 @@ const ChangeRequestsPage = class extends Component {
         }}
         flagId={environmentFlag.id}
       />,
-      'side-modal fade show create-feature-modal',
+      'side-modal fade create-feature-modal',
     )
   }
 
@@ -322,7 +322,7 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid'
               >
-                <div className='row'>
+                <Row>
                   <Flex className='mb-2 ml-3'>
                     <Row>
                       <Flex>
@@ -342,7 +342,11 @@ const ChangeRequestsPage = class extends Component {
                   <div className='mr-4'>
                     {(!committedBy || !committedBy.id || isScheduled) && (
                       <Row>
-                        <Button onClick={this.deleteChangeRequest} size='sm'>
+                        <Button
+                          theme='danger'
+                          onClick={this.deleteChangeRequest}
+                          size='small'
+                        >
                           Delete
                         </Button>
                         <Button
@@ -350,13 +354,14 @@ const ChangeRequestsPage = class extends Component {
                             this.editChangeRequest(projectFlag, environmentFlag)
                           }
                           className='ml-2'
+                          size='small'
                         >
                           Edit
                         </Button>
                       </Row>
                     )}
                   </div>
-                </div>
+                </Row>
                 <div className='row'>
                   <div className='col-md-12'>
                     {isScheduled && (
@@ -413,7 +418,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  theme="text"
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showUsers: true })
                                   }
@@ -470,7 +475,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  theme="text"
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showGroups: true })
                                   }

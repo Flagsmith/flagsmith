@@ -41,12 +41,7 @@ class Integration extends Component {
               <div className='subtitle mt-2'>
                 {description}{' '}
                 {docs && (
-                  <Button
-                    theme='text'
-                    href={docs}
-                    target='_blank'
-                    rel='noreferrer'
-                  >
+                  <Button theme='text' href={docs} target='_blank'>
                     View docs
                   </Button>
                 )}

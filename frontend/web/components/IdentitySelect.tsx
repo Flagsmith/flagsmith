@@ -6,6 +6,7 @@ import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 import { components } from 'react-select'
 import Utils from 'common/utils/utils'
+import Button from './base/forms/Button'
 
 type IdentitySelectType = {
   value: Identity['id'] | null | undefined
