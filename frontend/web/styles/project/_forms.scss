@@ -59,12 +59,12 @@
     height:$input-height;
     &.invalid {
         input.input {
-            border-color: $brand-danger !important;
+            border-color: $danger !important;
         }
     }
     &.success {
         input.input {
-            border-color: $brand-success !important;
+            border-color: $success !important;
         }
     }
 

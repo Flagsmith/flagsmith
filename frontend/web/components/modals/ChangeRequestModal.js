@@ -141,14 +141,15 @@ const ChangeRequestModal = class extends Component {
                         />
                       </Flex>
 
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         className='ml-2'
                         onClick={() => {
                           this.setState({ live_from: null })
                         }}
                       >
                         Clear
-                      </ButtonLink>
+                      </Button>
                     </Row>
                   }
                 />
@@ -182,7 +183,7 @@ const ChangeRequestModal = class extends Component {
                                 </Row>
                               ))}
                               <Button
-                                className='btn--link btn--link-primary'
+                                theme="text"
                                 onClick={() =>
                                   this.setState({ showUsers: true })
                                 }
@@ -210,7 +211,7 @@ const ChangeRequestModal = class extends Component {
                                 </Row>
                               ))}
                               <Button
-                                className='btn--link btn--link-primary'
+                                theme="text"
                                 onClick={() =>
                                   this.setState({ showGroups: true })
                                 }

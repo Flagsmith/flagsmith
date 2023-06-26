@@ -1,10 +1,6 @@
 import { PureComponent } from 'react'
 import Select from 'react-select'
-import Button, {
-  ButtonLink,
-  ButtonOutline,
-  ButtonProject,
-} from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
@@ -36,9 +32,6 @@ window.Column = require('../components/base/grid/Column')
 window.InputGroup = InputGroup
 window.Input = Input
 window.Button = Button
-window.ButtonOutline = ButtonOutline
-window.ButtonLink = ButtonLink
-window.ButtonProject = ButtonProject
 window.FormGroup = require('../components/base/grid/FormGroup')
 window.Panel = require('../components/base/grid/Panel')
 window.FormGroup = require('../components/base/grid/FormGroup')

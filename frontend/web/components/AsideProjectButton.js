@@ -1,5 +1,6 @@
 import { PureComponent } from 'react'
 import Format from 'common/utils/format'
+import Button from './base/forms/Button'
 
 const AsideProjectButton = class extends PureComponent {
   static displayName = 'AsideProjectButton'
@@ -14,9 +15,9 @@ const AsideProjectButton = class extends PureComponent {
       >
         <div className='flex-row justify-content-center'>
           <div className='flex-column'>
-            <ButtonProject className={this.props.className}>
+            <Button theme='project' className={this.props.className}>
               {this.props.projectLetter}
-            </ButtonProject>
+            </Button>
           </div>
           <div className='flex-column'>
             <p className={`aside__projects-item-title ${this.props.className}`}>

@@ -140,12 +140,13 @@ class ServerSideSDKKeys extends Component {
             <p>
               Flags can be evaluated locally within your own Server environments
               using our{' '}
-              <a
+              <Button
+                theme='text'
                 href='https://docs.flagsmith.com/clients/overview'
                 target='__blank'
               >
                 Server-side Environment Keys
-              </a>
+              </Button>
               .
             </p>
             <p>

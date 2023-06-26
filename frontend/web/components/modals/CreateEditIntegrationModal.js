@@ -171,7 +171,7 @@ const CreateEditIntegration = class extends Component {
               <div>
                 <label htmlFor={field.label.replace(/ /g, '')}>
                   {this.props.readOnly ? (
-                    <ButtonLink>{field.label}</ButtonLink>
+                    <Button theme='text'>{field.label}</Button>
                   ) : (
                     field.label
                   )}

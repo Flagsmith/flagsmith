@@ -19,7 +19,9 @@ const ProjectSelect = class extends Component {
         {({ projects }) => (
           <>
             {
-              <div className={`fade ${projects && !!projects.length && 'in'}`}>
+              <div
+                className={`fade ${projects && !!projects.length && 'show'}`}
+              >
                 {projects &&
                   !!projects.length &&
                   projects.map((project) =>

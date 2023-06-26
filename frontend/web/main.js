@@ -12,9 +12,9 @@ import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
 
 window.Utils = Utils
-window.openModal = require('./project/modals').openModal
-window.openModal2 = require('./project/modals').openModal2
-window.openConfirm = require('./project/modals').openConfirm
+window.openModal = require('./components/modals/base/Modal').openModal
+window.openModal2 = require('./components/modals/base/Modal').openModal2
+window.openConfirm = require('./components/modals/base/Modal').openConfirm
 
 const rootElement = document.getElementById('app')
 

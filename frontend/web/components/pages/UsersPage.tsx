@@ -15,7 +15,7 @@ import { Identity } from 'common/types/responses'
 import CreateUserModal from 'components/modals/CreateUser'
 import RemoveIcon from 'components/RemoveIcon'
 import PanelSearch from 'components/PanelSearch'
-import Button, { ButtonLink } from 'components/base/forms/Button' // we need this to make JSX compile
+import Button from 'components/base/forms/Button' // we need this to make JSX compile
 import JSONReference from 'components/JSONReference' // we need this to make JSX compile
 import Utils from 'common/utils/utils'
 
@@ -84,8 +84,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
     openModal(
       'New Users',
       <CreateUserModal environmentId={environmentId} />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -101,12 +100,13 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   View and manage features states for individual users. This
                   will override individual default feature settings for your
                   selected environment.{' '}
-                  <ButtonLink
+                  <Button
+                    theme='text'
                     target='_blank'
                     href='https://docs.flagsmith.com/basic-features/managing-identities'
                   >
                     Learn more.
-                  </ButtonLink>
+                  </Button>
                 </p>
               </div>
             </Flex>
@@ -211,10 +211,10 @@ const UsersPage: FC<UsersPageType> = (props) => {
                             props.match.params.environmentId
                           }/users/${encodeURIComponent(identifier)}/${id}`}
                         >
-                          <ButtonLink>
+                          <Button theme='text'>
                             {identifier}
                             <span className='ion-ios-arrow-forward ml-3' />
-                          </ButtonLink>
+                          </Button>
                         </Link>
                       </Flex>
                       <Column>

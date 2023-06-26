@@ -28,15 +28,9 @@ class InlineModal extends PureComponent {
       <div className='relative'>
         {this.props.isOpen && (
           <div
-            className={cx(
-              'inline-modal',
-              'mt-2',
-              'px-2',
-              'pb-2',
-              this.props.className,
-            )}
+            className={cx('inline-modal', 'mt-2', 'px-2', this.props.className)}
           >
-            <div className='inline-modal__title mb-2'>
+            <div className='inline-modal__title'>
               <Row space>
                 <div>
                   {this.props.showBack && (

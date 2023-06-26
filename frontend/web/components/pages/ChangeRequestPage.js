@@ -117,7 +117,6 @@ const ChangeRequestsPage = class extends Component {
       'Edit Change Request',
       <CreateFlagModal
         isEdit
-        router={this.context.router}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}
@@ -134,8 +133,7 @@ const ChangeRequestsPage = class extends Component {
         }}
         flagId={environmentFlag.id}
       />,
-      null,
-      { className: 'side-modal fade create-feature-modal' },
+      'side-modal fade create-feature-modal',
     )
   }
 
@@ -324,7 +322,7 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid'
               >
-                <div className='row'>
+                <Row>
                   <Flex className='mb-2 ml-3'>
                     <Row>
                       <Flex>
@@ -345,8 +343,9 @@ const ChangeRequestsPage = class extends Component {
                     {(!committedBy || !committedBy.id || isScheduled) && (
                       <Row>
                         <Button
+                          theme='danger'
                           onClick={this.deleteChangeRequest}
-                          className='btn btn--small btn-danger'
+                          size='small'
                         >
                           Delete
                         </Button>
@@ -354,14 +353,15 @@ const ChangeRequestsPage = class extends Component {
                           onClick={() =>
                             this.editChangeRequest(projectFlag, environmentFlag)
                           }
-                          className='btn btn--small ml-2'
+                          className='ml-2'
+                          size='small'
                         >
                           Edit
                         </Button>
                       </Row>
                     )}
                   </div>
-                </div>
+                </Row>
                 <div className='row'>
                   <div className='col-md-12'>
                     {isScheduled && (
@@ -418,7 +418,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  className='btn--link btn--link-primary'
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showUsers: true })
                                   }
@@ -475,7 +475,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  className='btn--link btn--link-primary'
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showGroups: true })
                                   }
@@ -519,7 +519,7 @@ const ChangeRequestsPage = class extends Component {
 
                         <a
                           target='_blank'
-                          className='btn--link btn--link-primary'
+                          className='btn-link'
                           href={`/project/${
                             this.props.match.params.projectId
                           }/environment/${

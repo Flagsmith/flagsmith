@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Button from '../base/forms/Button'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -69,27 +70,26 @@ const ChangeRequestsPage = class extends Component {
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
                     with our{' '}
-                    <a
-                      href='#'
+                    <Button
+                      theme='text'
                       onClick={() => {
                         openModal(
                           'Payment plans',
                           <PaymentModal viewOnly={false} />,
-                          null,
-                          { large: true },
+                          'modal-lg',
                         )
                       }}
                     >
                       Start-up plan
-                    </a>
+                    </Button>
                     . Find out more{' '}
-                    <a
+                    <Button
+                      theme='text'
                       href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'
                       target='_blank'
-                      rel='noreferrer'
                     >
                       here
-                    </a>
+                    </Button>
                     .
                   </InfoMessage>
                 </div>
@@ -153,7 +153,7 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-ios-timer' />
                             <div>
-                              <ButtonLink>{title}</ButtonLink>
+                              <Button theme='text'>{title}</Button>
                               <div className='list-item-footer faint'>
                                 Created at{' '}
                                 {moment(created_at).format(

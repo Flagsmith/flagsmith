@@ -6,8 +6,14 @@ declare global {
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
-    footer?: ReactNode,
-    other?: { className: string; onClose?: () => void },
+    className?: string,
+    onClose?: () => void,
+  ) => void
+  const openModal2: (
+    title: ReactNode,
+    body?: ReactNode,
+    className?: string,
+    onClose?: () => void,
   ) => void
   const openConfirm: (
     header: ReactNode,

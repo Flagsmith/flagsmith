@@ -61,7 +61,7 @@
         padding-right: 0 !important;
     }
 
-    &.in {
+    &.show {
         @include box-shadow();
         transform: scaleY(1);
         height: auto;

@@ -244,7 +244,7 @@ const Aside = class extends Component {
                     </div>
                     {
                       <React.Fragment>
-                        <div className='aside__main-content'>
+                        <div className='aside__main-content px-0'>
                           <div className='pl-4 pr-4 pt-4'>
                             <Row>
                               <h1 className='aside__project-title'>

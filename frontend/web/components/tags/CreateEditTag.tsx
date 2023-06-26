@@ -117,15 +117,19 @@ const CreateEditTag: FC<CreateEditTagType> = ({
             Utils.renderWithPermission(
               permission,
               Constants.projectPermissions('Admin'),
-              <Button
-                onClick={save}
-                type='button'
-                disabled={
-                  tagsSaving || !tag?.color || !tag?.label || !permission
-                }
-              >
-                {isEdit ? 'Save Tag' : 'Create Tag'}
-              </Button>,
+              <div className='mx-2'>
+                <Button
+                  className='full-width'
+                  onClick={save}
+                  type='button'
+                  disabled={
+                    tagsSaving || !tag?.color || !tag?.label || !permission
+                  }
+                >
+                  Save Tag
+                </Button>
+                ,
+              </div>,
             )
           }
         </Permission>

@@ -29,7 +29,7 @@
   transition-delay:         $delay;
 }
 .invalid .value-editor .hljs{
-  border: 2px solid $brand-danger;
+  border: 2px solid $danger;
 }
 .value-editor {
   position: relative;
@@ -148,7 +148,6 @@
 .btn--docs {
   background: transparent!important;
   border-width: 1px !important;
-  border-color: $bt-brand-primary !important;
   box-shadow: none !important;
   &:hover {
     color: $bt-brand-primary;

@@ -1,12 +1,12 @@
 import React, { FC } from 'react'
 import { Res, Segment } from 'common/types/responses'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import { ButtonOutline } from './base/forms/Button'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests' // we need this to make JSX compile
 import { components } from 'react-select'
 import { SelectProps } from '@material-ui/core/Select/Select'
 import Utils from 'common/utils/utils'
+import Button from './base/forms/Button'
 
 type SegmentSelectType = {
   projectId: string
@@ -53,14 +53,15 @@ const SegmentSelect: FC<SegmentSelectType> = ({
                 {props.children}
                 {!!data?.next && (
                   <div className='text-center mb-4'>
-                    <ButtonOutline
+                    <Button
+                      theme='outline'
                       onClick={() => {
                         loadMore()
                       }}
                       disabled={isLoading}
                     >
                       Load More
-                    </ButtonOutline>
+                    </Button>
                   </div>
                 )}
               </React.Fragment>
