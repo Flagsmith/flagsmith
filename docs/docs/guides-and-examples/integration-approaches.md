@@ -20,7 +20,7 @@ Note that this only relates to _Client Side Keys_. _Server Side Keys_, on the ot
 and stored appropriately.
 
 You can also prevent client-side SDKS from
-[setting Traits](/advanced-use/system-administration#preventing-client-sdks-from-setting-traits).
+[setting Traits](/system-administration/security#preventing-client-sdks-from-setting-traits).
 
 ### Segment and Targeting rules are not leaked to the client
 
@@ -84,8 +84,8 @@ by hand. However, it's pretty simple!
 1. When a server starts up, get the Flags from the Flagsmith API. They will now be in memory within the server runtime.
 2. If you have caching infrastructure available (for example, memcache, redis etc), you can then store the flags for
    that environment within your caching infrastructure.
-3. You can set up a [Web Hook](/advanced-use/system-administration.md#web-hooks) within Flagsmith that sends flag change
-   events to your server infrastructure.
+3. You can set up a [Web Hook](/system-administration/webhooks) within Flagsmith that sends flag change events to your
+   server infrastructure.
 4. Write an API endpoint within your infrastructure that receives flag change events and stores them in your local
    cache.
 5. You can now rely on your local cache to get up to date flags.
