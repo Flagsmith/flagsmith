@@ -89,6 +89,7 @@ export const openModal = (global.openModal = (
   )
 })
 
+//This is used when we show modals on top of modals, the UI pattern should be avoided if possible
 export const openModal2 = (global.openModal2 = (
   title: string,
   body: ReactNode,
