@@ -1,6 +1,7 @@
 import { Modal, ModalBody } from 'reactstrap'
 import React, { FC, ReactNode } from 'react'
 import Button from 'components/base/forms/Button'
+import ModalHeader from './ModalHeader'
 
 interface ModalDefault {
   title: ReactNode
@@ -10,8 +11,6 @@ interface ModalDefault {
   zIndex?: number
   children: ReactNode
   className?: string
-
-  sideModal?: boolean
 }
 
 export let interceptClose: (() => Promise<boolean>) | null = null
@@ -27,7 +26,6 @@ const ModalDefault: FC<ModalDefault> = ({
   onDismiss,
   title,
   toggle,
-  zIndex,
 }) => {
   const onDismissClick = async () => {
     if (interceptClose) {
@@ -44,7 +42,6 @@ const ModalDefault: FC<ModalDefault> = ({
   }
   return (
     <Modal
-      zIndex={zIndex}
       className={
         !className?.includes('side-modal') ? 'modal-dialog-centered' : undefined
       }
@@ -54,11 +51,8 @@ const ModalDefault: FC<ModalDefault> = ({
       isOpen={isOpen}
       toggle={onDismissClick}
     >
-      <div className='modal-header'>
-        <h5 className='modal-title'>{title}</h5>
-        <span onClick={onDismissClick} className='icon close ion-md-close' />
-      </div>
-      <ModalBody>{children}</ModalBody>
+      <ModalHeader onDismissClick={onDismissClick}>{title}</ModalHeader>
+      <ModalBody className='text-body'>{children}</ModalBody>
     </Modal>
   )
 }

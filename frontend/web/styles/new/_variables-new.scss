@@ -6,11 +6,33 @@ $primary: #6837fc;
 $danger: #ef4d56;
 $text-icon-dark: #1a2634;
 $link-color: $primary;
+$basic-alpha-16: rgba(101, 109, 123, 0.16);
+$basic-alpha-24: rgba(101, 109, 123, 0.24);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
   // add any additional color below
 );
+
+//todo: replace with bootstrap 5.3 dark mode theme
+$dark-bg-100: rgba(45, 52, 67, 1);
+$dark-bg-500: rgba(15, 20, 37, 1);
+
+//Hr
+$hr-border-color: $basic-alpha-16;
+$hr-opacity: 1;
+//todo: replace with bootstrap 5.3 dark mode theme
+.dark hr {
+  border-color: $dark-bg-500;
+}
+
+//Text
+$body-color: rgba(101, 109, 123, 1);
+.dark {
+  .text-body {
+    color: rgba(157, 164, 174, 1) !important;
+  }
+}
 
 //Buttons
 $btn-height: 48px;
@@ -32,8 +54,8 @@ $btn-disabled-opacity: 0.32;
 $btn-hover-bg: #4e25db;
 $btn-active-bg: #3919b7;
 $btn-secondary-bg: #656d7b14;
-$btn-secondary-hover-bg: rgba(101, 109, 123, 0.16);
-$btn-secondary-active-bg: rgba(101, 109, 123, 0.24);
+$btn-secondary-hover-bg: $basic-alpha-16;
+$btn-secondary-active-bg: $basic-alpha-24;
 $btn-outline-hover-bg: rgba(149, 108, 255, 0.08);
 $btn-outline-active-bg: rgba(149, 108, 255, 0.16);
 $btn-danger-hover: #cd384d;
@@ -43,12 +65,18 @@ $btn-danger-active: #ac2646;
 }
 
 //Modal
-
+$modal-content-color: $body-color;
 $modal-md: 600px;
 $modal-lg: 900px;
 $modal-border-radius: 18px;
 $modal-footer-border-width:0;
-
+$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
+$modal-header-padding-x: $spacer*1.5;
+$modal-header-padding-y: $spacer;
+$modal-header-border-width:0;
+$modal-body-padding-y: $spacer*1.5;
+$modal-body-padding-x: $spacer*1.5;
+$modal-footer-margin-between:0;
 //Breakpoints
 $grid-breakpoints: (
   xs: 0,

@@ -4,8 +4,6 @@ $font-family: "OpenSans", sans-serif;
 $font-family-header: 'OpenSans', sans-serif;
 
 
-
-
 $dark-bg-0: #232533;
 $dark-bg-2: #1a1c26;
 $dark-bg-5: #1a1c26;
@@ -18,7 +16,7 @@ $dark-highlight2: $dark-bg-20;
 $dark-highlight3: #f18e7f;
 
 $dark-highlight-color: #e1e1e1;
-$dark-color: #747484;
+$dark-color: rgba(157, 164, 174, 1);
 
 
 $button-bg-dark: $dark-bg-0;
@@ -218,16 +216,6 @@ $tablet-landscape: 1024px;
 $input-padding-x: .75rem !default;
 $input-padding-y: 1rem !default;
 
-//MODALS
-$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
-$modal-header-background: $bt-brand-faint-alt;
-$modal-header-background-dark: $panel-heading-bg-dark;
-$side-modal-header-background: white;
-$side-modal-header-background-dark: $panel-heading-bg-dark;
-
-$modal-header-color: $header-color;
-$modal-header-color-dark: $header-color-dark;
-$modal-header-border-width: 0;
 $border-radius-default: 8px;
 //TRANSITIONS
 $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);

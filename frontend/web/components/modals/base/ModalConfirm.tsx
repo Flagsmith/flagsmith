@@ -1,19 +1,19 @@
 import { Modal, ModalBody, ModalFooter } from 'reactstrap'
 import Button from 'components/base/forms/Button'
-import { FC, ReactNode } from 'react'
+import React, { FC, ReactNode } from 'react'
+import ModalHeader from './ModalHeader'
 
 interface Confirm {
+  title: ReactNode
+  isOpen: boolean
+  isDanger?: boolean
+  onYes?: () => void
+  onNo?: () => void
+  noText?: string
   disabled?: boolean
   disabledYes?: boolean
-  isDanger?: boolean
-  isOpen: boolean
-  noText?: string
-  onNo?: () => void
-  onYes?: () => void
-  title: ReactNode
-  toggle: () => void
   yesText?: string
-  zIndex?: number
+  toggle: () => void
 }
 
 const Confirm: FC<Confirm> = ({
@@ -28,7 +28,6 @@ const Confirm: FC<Confirm> = ({
   title,
   toggle,
   yesText = 'OK',
-  zIndex,
 }) => {
   const no = () => {
     onNo?.()
@@ -43,19 +42,17 @@ const Confirm: FC<Confirm> = ({
     <Modal
       className='modal-dialog-centered'
       unmountOnClose
-      zIndex={zIndex}
       isOpen={isOpen}
       toggle={no}
     >
-      <div className='modal-header'>
-        <h5 className='modal-title'>{title}</h5>
-        <span onClick={no} className='icon close ion-md-close' />
-      </div>
-      <ModalBody>{children}</ModalBody>
+      <ModalHeader onDismissClick={no}>{title}</ModalHeader>
+      <ModalBody className='text-body'>{children}</ModalBody>
+      <hr className='my-0 py-0' />
       <ModalFooter>
         <Button
           theme='secondary'
           id='confirm-btn-no'
+          className='mr-2'
           disabled={disabled}
           onClick={no}
         >

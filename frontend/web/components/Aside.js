@@ -92,7 +92,7 @@ const Aside = class extends Component {
 
   newProject = () => {
     openModal(
-      'Create  Project',
+      'Create Project',
       <CreateProjectModal
         onSave={({ environmentId, projectId }) => {
           AppActions.getProject(projectId)

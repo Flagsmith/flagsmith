@@ -29,33 +29,41 @@ const ConfirmRemoveFeature = class extends Component {
       <ProjectProvider>
         {() => (
           <form id='confirm-remove-feature-modal' onSubmit={this.submit}>
-            {identity ? (
-              <p>
-                This will reset <strong>{projectFlag.name}</strong> for to the
-                environment defaults for the user <strong>{identity}</strong>
-              </p>
-            ) : (
-              <p>
-                This will remove <strong>{projectFlag.name}</strong> for{' '}
-                <strong>all environments</strong>. You should ensure that you do
-                not contain any references to this feature in your applications
-                before proceeding.
-              </p>
-            )}
+            <div className='modal-body'>
+              <>
+                {identity ? (
+                  <p>
+                    This will reset <strong>{projectFlag.name}</strong> for to
+                    the environment defaults for the user{' '}
+                    <strong>{identity}</strong>
+                  </p>
+                ) : (
+                  <p>
+                    This will remove <strong>{projectFlag.name}</strong> for{' '}
+                    <strong>all environments</strong>. You should ensure that
+                    you do not contain any references to this feature in your
+                    applications before proceeding.
+                  </p>
+                )}
 
-            <InputGroup
-              inputProps={{
-                className: 'full-width',
-                name: 'confirm-feature-name',
-              }}
-              title='Please type the feature name to confirm'
-              placeholder='feature_name'
-              onChange={(e) =>
-                this.setState({ challenge: Utils.safeParseEventValue(e) })
-              }
-            />
+                <InputGroup
+                  className='mb-0'
+                  inputProps={{
+                    className: 'full-width',
+                    name: 'confirm-feature-name',
+                  }}
+                  title='Please type the feature name to confirm'
+                  placeholder='feature_name'
+                  onChange={(e) =>
+                    this.setState({ challenge: Utils.safeParseEventValue(e) })
+                  }
+                />
+              </>
+            </div>
 
-            <FormGroup className='text-right mt-2'>
+
+            <hr className='my-0 py-0' />
+            <div className='modal-footer'>
               <Button
                 id='confirm-remove-feature-btn'
                 disabled={this.state.challenge != projectFlag.name}
@@ -63,7 +71,7 @@ const ConfirmRemoveFeature = class extends Component {
               >
                 Confirm changes
               </Button>
-            </FormGroup>
+            </div>
           </form>
         )}
       </ProjectProvider>

@@ -47,6 +47,7 @@ class TheComponent extends Component {
         projectFlag={projectFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
