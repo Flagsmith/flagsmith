@@ -179,7 +179,6 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -192,7 +191,6 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -1149,7 +1147,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    'side-modal fade create-feature-modal',
+                                                    'side-modal',
                                                   )
                                                 }
                                                 type='button'

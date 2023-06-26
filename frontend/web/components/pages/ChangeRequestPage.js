@@ -133,7 +133,7 @@ const ChangeRequestsPage = class extends Component {
         }}
         flagId={environmentFlag.id}
       />,
-      'side-modal fade create-feature-modal',
+      'side-modal create-feature-modal',
     )
   }
 

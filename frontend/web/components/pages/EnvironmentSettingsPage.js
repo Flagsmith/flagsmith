@@ -125,7 +125,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -140,7 +139,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 

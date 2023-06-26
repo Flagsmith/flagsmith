@@ -93,7 +93,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      'fade side-modal create-segment-modal',
+      'side-modal create-segment-modal',
     )
   }
 
@@ -161,7 +161,7 @@ const UserPage = class extends Component {
         }}
         environmentFlag={environmentFlag}
       />,
-      'side-modal fade create-feature-modal overflow-y-auto',
+      'side-modal create-feature-modal overflow-y-auto',
       () => {
         history.replaceState({}, null, `${document.location.pathname}`)
       },

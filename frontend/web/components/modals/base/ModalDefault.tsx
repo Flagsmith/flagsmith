@@ -7,15 +7,18 @@ interface ModalDefault {
   isOpen: boolean
   onDismiss: () => void
   toggle: () => void
-
+  zIndex?: number
   children: ReactNode
   className?: string
+
+  sideModal?: boolean
 }
 
 export let interceptClose: (() => Promise<any>) | null = null
 export const setInterceptClose = (promise: () => Promise<any>) => {
   interceptClose = promise
 }
+
 const ModalDefault: FC<ModalDefault> = ({
   children,
   className,
@@ -24,10 +27,14 @@ const ModalDefault: FC<ModalDefault> = ({
   onDismiss,
   title,
   toggle,
+  zIndex,
 }) => {
   const onDismissClick = async () => {
     if (interceptClose) {
-      await interceptClose()
+      const shouldClose = await interceptClose()
+      if (!shouldClose) {
+        return
+      }
       interceptClose = null
     }
     if (onDismiss) {
@@ -37,6 +44,10 @@ const ModalDefault: FC<ModalDefault> = ({
   }
   return (
     <Modal
+      zIndex={zIndex}
+      className={
+        !className?.includes('side-modal') ? 'modal-dialog-centered' : undefined
+      }
       onClosed={onClosed}
       modalClassName={className}
       unmountOnClose

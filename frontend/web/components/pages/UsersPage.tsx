@@ -81,11 +81,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
   }
 
   const newUser = () => {
-    openModal(
-      'New Users',
-      <CreateUserModal environmentId={environmentId} />,
-      'alert fade expand',
-    )
+    openModal('New Users', <CreateUserModal environmentId={environmentId} />)
   }
 
   return (

@@ -85,7 +85,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      'fade side-modal create-new-segment-modal',
+      'side-modal create-new-segment-modal',
     )
   }
   const confirmRemove = (segment: Segment, cb?: () => void) => {
@@ -122,7 +122,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      'fade side-modal create-segment-modal',
+      'side-modal create-segment-modal',
       () => {
         history.replaceState({}, '', `${document.location.pathname}`)
       },

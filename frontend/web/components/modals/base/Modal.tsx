@@ -21,13 +21,14 @@ export const ModalBody = _ModalBody
 const withModal = (
   WrappedComponent: JSXElementConstructor<any>,
   closePointer = 'closeModal',
+  shouldInterceptClose = false,
 ) => {
   return (props: ModalProps) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [isOpen, setIsOpen] = useState(true)
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const toggle = useCallback(() => {
-      if (interceptClose) {
+      if (interceptClose && shouldInterceptClose) {
         interceptClose().then(() => {
           setIsOpen(false)
         })
@@ -48,7 +49,7 @@ const withModal = (
 
 const _Confirm = withModal(Confirm)
 const _ModalDefault2 = withModal(ModalDefault, 'closeModal2')
-const _ModalDefault = withModal(ModalDefault)
+const _ModalDefault = withModal(ModalDefault, 'closeModal', true)
 
 export const openConfirm = (global.openConfirm = (
   title: string,
@@ -60,7 +61,7 @@ export const openConfirm = (global.openConfirm = (
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     unmountComponentAtNode(document.getElementById('confirm')!)
   render(
-    <_Confirm isOpen onNo={onNo} onYes={onYes} title={title}>
+    <_Confirm zIndex={1052} isOpen onNo={onNo} onYes={onYes} title={title}>
       {body}
     </_Confirm>,
     document.getElementById('confirm'),
@@ -82,6 +83,7 @@ export const openModal = (global.openModal = (
       className={className}
       onClosed={onClose}
       title={title}
+      zIndex={1050}
     >
       {body}
     </_ModalDefault>,
@@ -105,6 +107,7 @@ export const openModal2 = (global.openModal2 = (
       className={className}
       onClosed={onClose}
       title={title}
+      zIndex={1051}
     >
       {body}
     </_ModalDefault2>,

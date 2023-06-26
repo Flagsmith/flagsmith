@@ -3,16 +3,17 @@ import Button from 'components/base/forms/Button'
 import { FC, ReactNode } from 'react'
 
 interface Confirm {
-  title: ReactNode
-  isOpen: boolean
-  isDanger?: boolean
-  onYes?: () => void
-  onNo?: () => void
-  noText?: string
   disabled?: boolean
   disabledYes?: boolean
-  yesText?: string
+  isDanger?: boolean
+  isOpen: boolean
+  noText?: string
+  onNo?: () => void
+  onYes?: () => void
+  title: ReactNode
   toggle: () => void
+  yesText?: string
+  zIndex?: number
 }
 
 const Confirm: FC<Confirm> = ({
@@ -27,6 +28,7 @@ const Confirm: FC<Confirm> = ({
   title,
   toggle,
   yesText = 'OK',
+  zIndex,
 }) => {
   const no = () => {
     onNo?.()
@@ -38,7 +40,13 @@ const Confirm: FC<Confirm> = ({
   }
 
   return (
-    <Modal unmountOnClose isOpen={isOpen} toggle={no}>
+    <Modal
+      className='modal-dialog-centered'
+      unmountOnClose
+      zIndex={zIndex}
+      isOpen={isOpen}
+      toggle={no}
+    >
       <div className='modal-header'>
         <h5 className='modal-title'>{title}</h5>
         <span onClick={no} className='icon close ion-md-close' />

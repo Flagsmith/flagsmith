@@ -43,7 +43,7 @@ export const Button: FC<ButtonType> = ({
   size = 'default',
   target,
   theme = 'primary',
-  type = 'submit',
+  type = 'button',
   ...rest
 }) => {
   return href ? (

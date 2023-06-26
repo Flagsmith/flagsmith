@@ -100,8 +100,6 @@ const HomePage = class extends React.Component {
           toast('Please check your email to reset your password.')
         }}
       />,
-      null,
-      'alert fade expand',
     )
   }
 

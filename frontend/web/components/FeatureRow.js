@@ -73,7 +73,7 @@ class TheComponent extends Component {
         environmentFlag={environmentFlag}
         flagId={environmentFlag.id}
       />,
-      'side-modal fade create-feature-modal',
+      'side-modal create-feature-modal',
       () => {
         history.replaceState({}, null, `${document.location.pathname}`)
       },
