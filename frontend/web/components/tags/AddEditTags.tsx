@@ -162,8 +162,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
                         setFilter('')
                       }}
                       type='button'
+                      iconRight='plus'
                     >
-                      Create a New Tag <span className='ml-3 icon ion-md-add' />
+                      Create a New Tag
                     </Button>,
                   )}
                 </div>
