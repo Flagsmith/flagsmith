@@ -279,7 +279,6 @@ def test_map_feature_state_to_engine__segment_multivariate__return_expected(
     assert result == expected_result
 
 
-@pytest.mark.xfail(reason="https://github.com/Flagsmith/flagsmith/issues/2295")
 def test_map_environment_to_engine__return_expected(
     environment: Environment,
     feature: "Feature",
@@ -381,10 +380,6 @@ def test_map_environment_to_engine__return_expected(
     ]
 
     # Then
-    assert (
-        result.project.segments[0].feature_states
-        == expected_result.project.segments[0].feature_states
-    )
     assert result == expected_result
     assert (
         different_environment_segment_feature_state.uuid
