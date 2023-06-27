@@ -5,6 +5,7 @@
 $primary: #6837fc;
 $danger: #ef4d56;
 $text-icon-dark: #1a2634;
+$body-bg: #fff;
 $link-color: $primary;
 $theme-colors: (
   primary: $primary,
@@ -64,3 +65,32 @@ $container-max-widths: (
   xl: 1140px,
   xxl: 1140px
 );
+
+//Typography
+$font-family-base: 'OpenSans', sans-serif;
+$font-size-sm: 0.825rem;
+$line-height-base: 1.375;
+$line-height-sm: 20px;
+$line-height-lg: 24px;
+$line-height-xlg: 28px;
+$line-height-xsm: 18px;
+$line-height-xxsm: 24px;
+$body-color: $text-icon-dark;
+$font-sizes: (
+  small: 14px,
+  caption: 13px,
+  captionSmall: 12px,
+  captionXSmall: 11px,
+);
+$h1-font-size: 42px;
+$h1-line-height: 46px;
+$h2-font-size: 34px;
+$h2-line-height: 40px;
+$h3-font-size: 30px;
+$h3-line-height: 40px;
+$h4-font-size: 24px;
+$h4-line-height: 32px;
+$h5-font-size: 20px;
+$h5-line-height: 30px;
+$h6-font-size: 16px;
+$h6-line-height: 24px;
