@@ -191,14 +191,6 @@ body, html {
   height: 100%;
 }
 
-body {
-  background: $body-bg;
-  font-family: $font-family;
-  font-weight: 400;
-  color: $body-text;
-}
-
-
 body.dark {
   background-color: $body-bg-dark;
   a {

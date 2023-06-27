@@ -68,8 +68,8 @@ class CompareEnvironments extends Component {
   render() {
     return (
       <div>
-        <h3>Compare Feature Values</h3>
-        <p>
+        <h5>Compare Feature Values</h5>
+        <p className='fs-small lh-sm'>
           Compare a feature's value across all of your environments. Select an
           environment to compare against others.
         </p>

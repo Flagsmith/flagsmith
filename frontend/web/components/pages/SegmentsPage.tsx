@@ -164,9 +164,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row>
-                  <Flex>
-                    <h3>Segments</h3>
+                <Row className='justify-content-between'>
+                  <Flex style={{ maxWidth: '700px' }}>
+                    <h4>Segments</h4>
                     <p>
                       Create and manage groups of users with similar traits.
                       Segments can be used to override features within the
@@ -187,7 +187,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         'Manage segments',
                         <Button
                           disabled={hasNoOperators || !manageSegmentsPermission}
-                          className='btn-lg btn-primary'
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'
                           onClick={newSegment}
@@ -293,10 +292,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   />
                 </FormGroup>
 
-                <div className='mt-2'>
+                <p>
                   Segments require you to identitfy users, setting traits will
                   add users to segments.
-                </div>
+                </p>
                 <FormGroup className='mt-4'>
                   <CodeHelp
                     title='Using segments'

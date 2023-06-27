@@ -5,7 +5,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
-import Button from '../base/forms/Button'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -62,7 +61,7 @@ const ChangeRequestsPage = class extends Component {
         className='app-container container'
       >
         <Flex>
-          <h3>Scheduled Changes</h3>
+          <h4>Scheduled Changes</h4>
           {
             <div>
               {!hasSchedulePlan ? (
