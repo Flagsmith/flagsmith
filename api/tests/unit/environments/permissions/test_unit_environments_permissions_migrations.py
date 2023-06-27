@@ -235,10 +235,11 @@ def test_add_view_identity_permissions_does_nothing_if_user_does_not_have_manage
     reason="Skip migration tests to speed up tests where necessary",
 )
 def test_merge_duplicate_permissions_migration(migrator):
-    # Given - the migration state is at 0016 (before the migration we want to test)
+    # Given - the migration state is at 0005 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("environment_permissions", "0005_add_view_identity_permissions")
     )
+
     # Next, fetch model classes we are going to use
     Organisation = old_state.apps.get_model("organisations", "Organisation")
     Project = old_state.apps.get_model("projects", "Project")
@@ -258,14 +259,17 @@ def test_merge_duplicate_permissions_migration(migrator):
     organisation = Organisation.objects.create(name="Test Organisation")
     project = Project.objects.create(name="Test project", organisation=organisation)
     environment = Environment.objects.create(name="Test environment", project=project)
+
     test_user = UserModel.objects.create(email="test_user@mail.com")
     admin_user = UserModel.objects.create(email="admin_user@mail.com")
+
     user_permission_group = UserPermissionGroup.objects.create(
         name="Test User Permission Group", organisation=organisation
     )
     non_duplicate_permission = UserEnvironmentPermission.objects.create(
         user=admin_user, environment=environment
     )
+
     # Now - Let's create duplicate permissions
     first_permission = UserEnvironmentPermission.objects.create(
         user=test_user, environment=environment
@@ -308,6 +312,7 @@ def test_merge_duplicate_permissions_migration(migrator):
     NewUserPermissionGroupEnvironmentPermission = new_state.apps.get_model(
         "environment_permissions", "UserPermissionGroupEnvironmentPermission"
     )
+
     # Then - we expect the duplicate permissions to be merged
     merged_permission = NewUserEnvironmentPermission.objects.get(
         user_id=test_user.id, environment_id=environment.id

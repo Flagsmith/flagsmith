@@ -36,10 +36,10 @@ def merge_duplicate_permissions(
     ).values(*duplicate_for)
 
     for duplicate in duplicates:
-        # find all duplicate permissions for a given user and project
+        # Fetch those duplicate objects
         duplicate_permissions = PermissionModel.objects.filter(**duplicate)
 
-        # let's move all the perms to the first object
+        # move all the permissions to the first object
         merged_permission = duplicate_permissions[0]
         for duplicate_permission in duplicate_permissions[1:]:
             if getattr(duplicate_permission, "admin", False):

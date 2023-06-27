@@ -79,7 +79,7 @@ def test_merge_duplicate_permissions_migration(migrator):
     old_state = migrator.apply_initial_migration(
         ("organisation_permissions", "0002_add_related_query_name")
     )
-    # Next, fetch model classes we are going to use
+    # fetch model classes we are going to use
     Organisation = old_state.apps.get_model("organisations", "Organisation")
 
     UserModel = old_state.apps.get_model("users", "FFAdminUser")
@@ -101,14 +101,17 @@ def test_merge_duplicate_permissions_migration(migrator):
     )
 
     organisation = Organisation.objects.create(name="Test Organisation")
+
     test_user = UserModel.objects.create(email="test_user@mail.com")
     admin_user = UserModel.objects.create(email="admin_user@mail.com")
+
     user_permission_group = UserPermissionGroup.objects.create(
         name="Test User Permission Group", organisation=organisation
     )
     non_duplicate_permission = UserOrganisationPermission.objects.create(
         user=admin_user, organisation=organisation
     )
+
     # Now - Let's create duplicate permissions
     first_permission = UserOrganisationPermission.objects.create(
         user=test_user, organisation=organisation
@@ -143,6 +146,7 @@ def test_merge_duplicate_permissions_migration(migrator):
     NewUserPermissionGroupOrganisationPermission = new_state.apps.get_model(
         "organisation_permissions", "UserPermissionGroupOrganisationPermission"
     )
+
     # Then - we expect the duplicate permissions to be merged
     merged_permission = NewUserOrganisationPermission.objects.get(
         user_id=test_user.id, organisation_id=organisation.id
