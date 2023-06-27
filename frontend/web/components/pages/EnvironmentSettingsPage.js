@@ -367,7 +367,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   documentation{' '}
                                   <Button
                                     theme='text'
-                                    href='https://docs.flagsmith.com/advanced-use/system-administration#hide-sensitive-data'
+                                    href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
                                     target='_blank'
                                   >
                                     here.
@@ -736,7 +736,7 @@ const EnvironmentSettingsPage = class extends Component {
                               Webhooks per Environment.{' '}
                               <Button
                                 theme='text'
-                                href='https://docs.flagsmith.com/advanced-use/system-administration#web-hooks'
+                                href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
                                 target='_blank'
                               >
                                 Learn about Feature Webhooks.

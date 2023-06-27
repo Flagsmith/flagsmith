@@ -149,7 +149,7 @@ const InviteUsers = class extends Component {
                 <Button
                   theme='text'
                   target='_blank'
-                  href='https://docs.flagsmith.com/advanced-use/permissions'
+                  href='https://docs.flagsmith.com/system-administration/rbac'
                 >
                   Learn about User Roles.
                 </Button>

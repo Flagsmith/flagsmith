@@ -14,4 +14,4 @@ this.
 
 LDAP Authentication is available in our [Enterprise Edition](/deployment/configuration/enterprise-edition.md). Please
 contact us if this is of interest. We also support sync-ing of LDAP groups into
-[Flagsmith RBAC groups](/advanced-use/permissions.md#groups)).
+[Flagsmith RBAC groups](/system-administration/rbac).
