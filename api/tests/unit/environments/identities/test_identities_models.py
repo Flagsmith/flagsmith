@@ -52,7 +52,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
 
 
 def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
-    environment, identity
+    identity: Identity,
 ):
     assert (
         identity.get_hash_key(use_identity_composite_key_for_hashing=True)
@@ -61,7 +61,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
 
 
 def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
-    environment, identity
+    identity: Identity,
 ):
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
         identity.id
