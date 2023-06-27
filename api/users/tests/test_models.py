@@ -133,11 +133,10 @@ class FFAdminUserTestCase(TestCase):
     def test_has_organisation_permission_is_true_when_user_has_permission(self):
         # Given
         self.user.add_organisation(self.organisation)
-
+        user_organisation_permission = UserOrganisationPermission.objects.create(
+            user=self.user, organisation=self.organisation
+        )
         for permission_key, _ in ORGANISATION_PERMISSIONS:
-            user_organisation_permission = UserOrganisationPermission.objects.create(
-                user=self.user, organisation=self.organisation
-            )
             user_organisation_permission.permissions.through.objects.create(
                 permissionmodel_id=permission_key,
                 userorganisationpermission=user_organisation_permission,

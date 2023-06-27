@@ -99,10 +99,10 @@ def user_has_organisation_permission(
 def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
-    model_class = type(object_)
-    base_filter = get_base_permission_filter(user, model_class)
+    ModelClass = type(object_)
+    base_filter = get_base_permission_filter(user, ModelClass)
     filter_ = base_filter & Q(id=object_.id)
-    return type(model_class).objects.filter(filter_).exists()
+    return ModelClass.objects.filter(filter_).exists()
 
 
 def get_base_permission_filter(

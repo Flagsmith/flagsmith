@@ -248,9 +248,9 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
     def test_project_admin_has_permission(self):
         # Given
-        UserProjectPermission.objects.create(
-            user=self.user, admin=True, project=self.project
-        )
+        self.user_project_permission.admin = True
+        self.user_project_permission.save()
+
         mock_request.user = self.user
         actions = ["list", "create"]
         mock_view.detail = False
@@ -266,9 +266,9 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
     def test_project_admin_has_object_permission(self):
         # Given
-        UserProjectPermission.objects.create(
-            user=self.user, admin=True, project=self.project
-        )
+        self.user_project_permission.admin = True
+        self.user_project_permission.save()
+
         mock_request.user = self.user
         actions = ["update", "destroy"]
         mock_view.detail = True

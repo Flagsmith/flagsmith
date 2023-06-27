@@ -56,7 +56,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
 
 
 def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(
-    admin_user,
+    django_user_model,
     environment,
     user_project_permission,
     user_environment_permission,
@@ -64,6 +64,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     user_environment_permission_group,
 ):
     # Given
+    user = django_user_model.objects.create(username="test_user")
     # First, let's give the user admin permission
     user_project_permission.admin = True
     user_project_permission.save()
@@ -79,4 +80,4 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     user_environment_permission_group.save()
 
     # Then - the user should not be admin of the environment
-    assert is_user_environment_admin(admin_user, environment) is False
+    assert is_user_environment_admin(user, environment) is False

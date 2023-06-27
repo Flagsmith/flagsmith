@@ -32,10 +32,6 @@ class SegmentPermissionsTestCase(TestCase):
 
         mock_request.query_params = {}
 
-        UserProjectPermission.objects.create(
-            user=self.project_admin, admin=True, project=self.project
-        )
-
         self.project_user = FFAdminUser.objects.create(email="user@test.com")
 
         user_project_permissions = UserProjectPermission.objects.create(
