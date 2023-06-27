@@ -65,7 +65,7 @@ const TryIt = class extends Component {
       <Panel icon='ion-md-code' title='Try it out'>
         <div>
           <div className='text-center'>
-            <p className='text-basic'>{this.props.title}</p>
+            <p>{this.props.title}</p>
             <div>
               <Button
                 id='try-it-btn'

@@ -203,7 +203,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Prevent flag defaults</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p className='text-basic-small'>
+                            <p className='fs-small lh-sm'>
                               By default, when you create a feature with a value
                               and enabled state it acts as a default for your
                               other environments. Enabling this setting forces
@@ -227,7 +227,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Case sensitive features</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p className='text-basic-small'>
+                            <p className='fs-small lh-sm'>
                               By default, features are lower case in order to
                               prevent human error. Enabling this will allow you
                               to use upper case characters when creating
@@ -252,7 +252,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Feature name RegEx</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p className='text-basic-small'>
+                            <p className='fs-small lh-sm'>
                               This allows you to define a regular expression
                               that all feature names must adhere to.
                             </p>
@@ -352,7 +352,7 @@ const ProjectSettingsPage = class extends Component {
                             <h5>Global Edge API Opt in</h5>
                             <div className='row'>
                               <div className='col-md-10'>
-                                <p className='text-basic-small'>
+                                <p className='fs-small lh-sm'>
                                   Migrate your project onto our Global Edge API.
                                   Existing Core API endpoints will continue to
                                   work whilst the migration takes place. Find
@@ -388,7 +388,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Delete Project</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p className='text-basic-small'>
+                            <p className='fs-small lh-sm'>
                               This project will be permanently deleted.
                             </p>
                           </div>
@@ -420,7 +420,7 @@ const ProjectSettingsPage = class extends Component {
                             <h5>Hide disabled flags from SDKs</h5>
                             <div className='row'>
                               <div className='col-md-10'>
-                                <p className='text-basic-small'>
+                                <p className='fs-small lh-sm'>
                                   To prevent letting your users know about your
                                   upcoming features and to cut down on payload,
                                   enabling this will prevent the API from

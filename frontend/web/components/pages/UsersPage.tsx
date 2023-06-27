@@ -96,7 +96,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
             <Flex>
               <div style={{ maxWidth: '700px' }}>
                 <h4>Users</h4>
-                <p className='text-basic'>
+                <p>
                   View and manage features states for individual users. This
                   will override individual default feature settings for your
                   selected environment.{' '}

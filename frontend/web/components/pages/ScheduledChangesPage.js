@@ -95,7 +95,7 @@ const ChangeRequestsPage = class extends Component {
                 </div>
               ) : (
                 <>
-                  <p className='text-basic'>
+                  <p>
                     Manage feature state changes that have been scheduled to go
                     live.
                   </p>

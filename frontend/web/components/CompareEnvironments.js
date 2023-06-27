@@ -115,7 +115,7 @@ class CompareEnvironments extends Component {
     return (
       <div>
         <h5>Compare Environments</h5>
-        <p className='text-basic-small'>
+        <p className='fs-small lh-sm'>
           Compare feature flag changes across environments.
         </p>
         <Row>

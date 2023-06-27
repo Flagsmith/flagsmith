@@ -354,14 +354,13 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <h5>Manage Users and Permissions</h5>
-      <p className='text-basic-small'>
+      <p className='fs-small lh-sm'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/advanced-use/permissions'
           target='_blank'
-          className='small-link'
         >
           Learn about User Roles.
         </Button>

@@ -39,7 +39,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
       <div>
         <div>
           <h3>Audit Log</h3>
-          <p className='text-basic'>
+          <p>
             View all activity that occured generically across the project and
             specific to this environment.
           </p>

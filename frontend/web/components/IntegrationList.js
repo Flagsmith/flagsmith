@@ -38,7 +38,7 @@ class Integration extends Component {
             <Flex>
               <img width={180} className='mr-4' src={image} />
 
-              <div className='text-basic mt-2'>
+              <div className='subtitle mt-2'>
                 {description}{' '}
                 {docs && (
                   <Button theme='text' href={docs} target='_blank'>

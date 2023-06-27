@@ -203,7 +203,7 @@ export default class AdminAPIKeys extends PureComponent {
         />
         <Column className='mt-4 ml-0'>
           <h5 className='mb-0'>Terraform API Keys</h5>
-          <p className='mb-4 text-basic-small'>
+          <p className='mb-4 fs-small lh-sm'>
             Terraform API keys are used to authenticate with the Admin API.{' '}
             <Button
               theme='text'

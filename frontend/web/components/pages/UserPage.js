@@ -288,7 +288,7 @@ const UserPage = class extends Component {
                               {(identity && identity.identity.identifier) ||
                                 this.props.match.params.id}
                             </h4>
-                            <p className='text-basic'>
+                            <p>
                               View and manage feature states and traits for this
                               user. This will override any feature states you
                               have for your current environment for this user
@@ -879,7 +879,7 @@ const UserPage = class extends Component {
                                         icon='ion-ios-person'
                                         title='Traits'
                                       >
-                                        <div className='text-center text-basic-small'>
+                                        <div className='text-center fs-small lh-sm'>
                                           This user has no traits.
                                           <FormGroup className='text-center mb-0 mt-2'>
                                             {Utils.renderWithPermission(

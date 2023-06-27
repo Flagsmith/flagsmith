@@ -167,7 +167,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 <Row className='justify-content-between'>
                   <Flex style={{ maxWidth: '700px' }}>
                     <h4>Segments</h4>
-                    <p className='text-basic'>
+                    <p>
                       Create and manage groups of users with similar traits.
                       Segments can be used to override features within the
                       features page for any environment.{' '}
@@ -292,7 +292,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   />
                 </FormGroup>
 
-                <p className='mt-2 text-basic'>
+                <p>
                   Segments require you to identitfy users, setting traits will
                   add users to segments.
                 </p>

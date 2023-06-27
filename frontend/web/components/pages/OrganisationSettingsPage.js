@@ -343,7 +343,7 @@ const OrganisationSettingsPage = class extends Component {
                                   <Row space className='mt-4'>
                                     <h5 className='m-b-0'>Organisation ID</h5>
                                   </Row>
-                                  <p className='text-basic-small'>
+                                  <p className='fs-small lh-sm'>
                                     {organisation.id}
                                   </p>
                                 </div>
@@ -357,7 +357,7 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </div>
                                     <div className='plan__details flex flex-1'>
-                                      <p className='text-basic-small m-b-0'>
+                                      <p className='fs-small lh-sm m-b-0'>
                                         Your plan
                                       </p>
                                       <h5 className='m-b-0'>
@@ -461,7 +461,7 @@ const OrganisationSettingsPage = class extends Component {
                                   />
                                 )}
                               </Row>
-                              <p className='text-basic-small'>
+                              <p className='fs-small lh-sm'>
                                 Enabling this setting forces users within the
                                 organisation to setup 2 factor security.
                               </p>
@@ -474,7 +474,7 @@ const OrganisationSettingsPage = class extends Component {
                               <h5>Admin Settings</h5>
                               <div className='row'>
                                 <div className='col-md-10'>
-                                  <p className='text-basic-small'>
+                                  <p className='fs-small lh-sm'>
                                     Only allow organisation admins to create
                                     projects
                                   </p>
@@ -498,7 +498,7 @@ const OrganisationSettingsPage = class extends Component {
                             <h5>Delete Organisation</h5>
                             <div className='row'>
                               <div className='col-md-10'>
-                                <p className='text-basic-small'>
+                                <p className='fs-small lh-sm'>
                                   This organisation will be permanently deleted,
                                   along with all projects and features.
                                 </p>
@@ -542,7 +542,7 @@ const OrganisationSettingsPage = class extends Component {
 
                           <FormGroup className='mt-4'>
                             <h5>Manage Users and Permissions</h5>
-                            <p className='text-basic-small'>
+                            <p className='fs-small lh-sm'>
                               Flagsmith lets you manage fine-grained permissions
                               for your projects and environments, invite members
                               as a user or an administrator and then set
@@ -552,7 +552,6 @@ const OrganisationSettingsPage = class extends Component {
                                 theme='text'
                                 href='https://docs.flagsmith.com/advanced-use/permissions'
                                 target='_blank'
-                                className='small-link'
                               >
                                 Learn about User Roles.
                               </Button>
@@ -803,7 +802,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                   </Row>
                                                 </div>
-                                                <p className='mt-3 text-basic-small'>
+                                                <p className='mt-3 fs-small lh-sm'>
                                                   Anyone with link can join as a
                                                   standard user, once they have
                                                   joined you can edit their role
@@ -812,7 +811,6 @@ const OrganisationSettingsPage = class extends Component {
                                                     theme='text'
                                                     target='_blank'
                                                     href='https://docs.flagsmith.com/advanced-use/permissions'
-                                                    className='small-link'
                                                   >
                                                     Learn about User Roles.
                                                   </Button>
@@ -1159,7 +1157,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 Create Group
                                               </Button>
                                             </Row>
-                                            <p className='text-basic-small'>
+                                            <p className='fs-small lh-sm'>
                                               Groups allow you to manage
                                               permissions for viewing and
                                               editing projects, features and
@@ -1192,14 +1190,13 @@ const OrganisationSettingsPage = class extends Component {
                             <Column className='mb-3 ml-0'>
                               <h5 className='m-b-0'>Audit Webhooks</h5>
 
-                              <p className='text-basic-small mb-4'>
+                              <p className='fs-small lh-sm mb-4'>
                                 Audit webhooks let you know when audit logs
                                 occur, you can configure 1 or more audit
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
                                   href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
-                                  className='small-link'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
@@ -1270,7 +1267,7 @@ const OrganisationSettingsPage = class extends Component {
                                 renderNoResults={
                                   <Panel
                                     icon='ion-md-cloud'
-                                    className='text-basic-small'
+                                    className='fs-small lh-sm'
                                     title={
                                       <Tooltip
                                         title={

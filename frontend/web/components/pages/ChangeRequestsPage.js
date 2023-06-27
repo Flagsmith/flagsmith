@@ -72,9 +72,7 @@ const ChangeRequestsPage = class extends Component {
       >
         <Flex>
           <h4>Change Requests</h4>
-          <p className='text-basic'>
-            View and manage proposed feature state changes.
-          </p>
+          <p>View and manage proposed feature state changes.</p>
           {!has4EyesPermission ? (
             <div className='mt-2'>
               <InfoMessage>

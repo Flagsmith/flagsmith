@@ -899,7 +899,7 @@ const CreateFlag = class extends Component {
                                         </>
                                       )}
                                     </Panel>
-                                    <p className='text-right mt-4 text-basic-small'>
+                                    <p className='text-right mt-4 fs-small lh-sm'>
                                       {is4Eyes
                                         ? 'This will create a change request for the environment'
                                         : 'This will update the feature value for the environment'}{' '}
@@ -1133,7 +1133,7 @@ const CreateFlag = class extends Component {
                                           </Panel>
                                           {!this.state.showCreateSegment && (
                                             <div>
-                                              <p className='text-right mt-4 text-basic-small'>
+                                              <p className='text-right mt-4 fs-small lh-sm'>
                                                 {is4Eyes &&
                                                 is4EyesSegmentOverrides
                                                   ? 'This will create a change request for the environment'
@@ -1428,7 +1428,7 @@ const CreateFlag = class extends Component {
                                     {isEdit && (
                                       <div className='text-right mr-3'>
                                         {createFeature ? (
-                                          <p className='text-right text-basic-small'>
+                                          <p className='text-right fs-small lh-sm'>
                                             This will save the above settings{' '}
                                             <strong>all environments</strong>.
                                           </p>

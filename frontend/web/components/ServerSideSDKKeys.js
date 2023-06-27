@@ -137,20 +137,20 @@ class ServerSideSDKKeys extends Component {
         <Row className='mb-3' space>
           <div className='col-md-8 pl-0'>
             <h5 className='m-b-0'>Server-side Environment Keys</h5>
-            <p className='text-basic-small'>
+            <p className='fs-small lh-sm'>
               Flags can be evaluated locally within your own Server environments
               using our{' '}
               <Button
                 theme='text'
                 href='https://docs.flagsmith.com/clients/overview'
                 target='__blank'
-                className='small-link'
+                className='small'
               >
                 Server-side Environment Keys
               </Button>
               .
             </p>
-            <p className='text-basic-small'>
+            <p className='fs-small lh-sm'>
               Server-side SDKs should be initialised with a Server-side
               Environment Key.
             </p>

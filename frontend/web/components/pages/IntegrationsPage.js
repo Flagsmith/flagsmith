@@ -39,7 +39,7 @@ const ProjectSettingsPage = class extends Component {
             ) : (
               <div>
                 <h4>Integrations</h4>
-                <p className='text-basic'>
+                <p>
                   Enhance Flagsmith with your favourite tools. Have any products
                   you want to see us integrate with? Message us and we will be
                   right with you.
