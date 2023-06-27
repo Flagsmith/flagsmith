@@ -21,7 +21,7 @@ def test_add_change_request_permissions_adds_correct_permissions_if_user_has_upd
 ):
     # Given
     old_state = migrator.apply_initial_migration(
-        ("environment_permissions", "0005_add_view_identity_permissions")
+        ("environment_permissions", "0003_add_manage_identities_permission")
     )
     user_model = old_state.apps.get_model("users", "FFAdminUser")
     user_environment_permission_model = old_state.apps.get_model(
@@ -50,7 +50,6 @@ def test_add_change_request_permissions_adds_correct_permissions_if_user_has_upd
     new_state = migrator.apply_tested_migration(
         ("environment_permissions", "0004_add_change_request_permissions")
     )
-
     # Then
     new_user_environment_permission_model = new_state.apps.get_model(
         "environment_permissions", "UserEnvironmentPermission"
