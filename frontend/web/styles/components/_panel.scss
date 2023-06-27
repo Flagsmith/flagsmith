@@ -63,7 +63,8 @@
 			color: $panel-heading-color;
 			font-family: $font-family-header;
 			.subtitle {
-				color: $body-text-faint;
+				color: $text-icon-dark;
+				font-weight: 400;
 				text-transform: none;
 			}
 		}
@@ -162,6 +163,9 @@
 			}
 			.title {
 				color: $header-color-dark;
+				.subtitle {
+					color: white;
+				}
 			}
 			color: $header-color-dark;
 

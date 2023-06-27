@@ -1,6 +1,55 @@
-h1,h2,h3,h4,h5,h6{
-    color: $header-color;
-    font-family: $font-family-header;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $text-icon-dark;
+  font-family: $font-family;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: $h1-font-size;
+  line-height: $h1-line-height;
+}
+
+h2 {
+  font-size: $h2-font-size;
+  line-height: $h2-line-height;
+}
+
+
+h3 {
+  font-size: $h3-font-size;
+  line-height: $h3-line-height;
+}
+
+h4 {
+  font-size: $h4-font-size;
+  line-height: $h4-line-height;
+}
+
+h5 {
+  font-size: $h4-font-size;
+  line-height: $h4-line-height;
+}
+
+h6 {
+  font-size: $h4-font-size;
+  line-height: $h4-line-height;
+}
+
+.ln {
+  &-xlg {
+    line-height: $line-height-xlg;
+  }
+  &-xsm {
+    line-height: $line-height-xsm;
+  }
+  &-xxsm {
+    line-height: $line-height-xxsm;
+  }
 }
 
 a {

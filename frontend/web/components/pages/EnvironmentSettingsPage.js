@@ -300,8 +300,8 @@ const EnvironmentSettingsPage = class extends Component {
                         <div>
                           <Row space>
                             <div className='col-md-8 pl-0'>
-                              <h3 className='m-b-0'>Environment Banner</h3>
-                              <p className='mb-0'>
+                              <h5 className='m-b-0'>Environment Banner</h5>
+                              <p className='fs-small lh-sm mb-0'>
                                 This will show a banner whenever you view its
                                 pages, this is generally used to warn people
                                 that they are viewing and editing a sensitive
@@ -360,8 +360,8 @@ const EnvironmentSettingsPage = class extends Component {
                           <div>
                             <Row space style={{ marginTop: '1.5rem' }}>
                               <div className='col-md-8 pl-0'>
-                                <h3 className='m-b-0'>Hide sensitive data</h3>
-                                <p>
+                                <h5 className='m-b-0'>Hide sensitive data</h5>
+                                <p className='fs-small lh-sm'>
                                   Exclude sensitive data from endpoints
                                   returning flags and identity information to
                                   the SDKs or via our REST API. For full
@@ -403,9 +403,9 @@ const EnvironmentSettingsPage = class extends Component {
                         <FormGroup className='mt-4'>
                           <Row space>
                             <div className='col-md-8 pl-0'>
-                              <h3 className='m-b-0'>Change Requests</h3>
+                              <h5 className='m-b-0'>Change Requests</h5>
                               {!has4EyesPermission ? (
-                                <p>
+                                <p className='fs-small lh-sm'>
                                   View and manage your feature changes with a
                                   Change Request flow with our{' '}
                                   <Button
@@ -431,7 +431,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   .
                                 </p>
                               ) : (
-                                <p>
+                                <p className='fs-small lh-sm'>
                                   Require a minimum number of people to approve
                                   changes to features.{' '}
                                   <Button
@@ -523,8 +523,8 @@ const EnvironmentSettingsPage = class extends Component {
                         <FormGroup className='mt-4'>
                           <Row className='mt-4' space>
                             <div className='col-md-8 pl-0'>
-                              <h3>Delete Environment</h3>
-                              <p>
+                              <h5>Delete Environment</h5>
+                              <p className='fs-small lh-sm'>
                                 This environment will be permanently deleted.
                               </p>
                             </div>
@@ -568,10 +568,10 @@ const EnvironmentSettingsPage = class extends Component {
                             ) && (
                               <Row className='mb-4' space>
                                 <div className='col-md-8 pl-0'>
-                                  <h3 className='m-b-0'>
+                                  <h5 className='m-b-0'>
                                     Hide disabled flags from SDKs
-                                  </h3>
-                                  <p className='mb-0'>
+                                  </h5>
+                                  <p className='mb-0  fs-small lh-sm'>
                                     To prevent letting your users know about
                                     your upcoming features and to cut down on
                                     payload, enabling this will prevent the API
@@ -610,10 +610,10 @@ const EnvironmentSettingsPage = class extends Component {
                             )}
                             <Row className='mt-4' space>
                               <div className='col-md-8 pl-0'>
-                                <h3 className='m-b-0'>
+                                <h5 className='m-b-0'>
                                   Allow client SDKs to set user traits
-                                </h3>
-                                <p>
+                                </h5>
+                                <p className='fs-small lh-sm'>
                                   Disabling this option will prevent client SDKs
                                   from using the client key from setting traits.
                                 </p>
@@ -638,10 +638,10 @@ const EnvironmentSettingsPage = class extends Component {
                                 <>
                                   <Row className='mt-4' space>
                                     <div className='col-md-8 pl-0'>
-                                      <h3 className='m-b-0'>
+                                      <h5 className='m-b-0'>
                                         Use Consistent Hashing
-                                      </h3>
-                                      <p>
+                                      </h5>
+                                      <p className='fs-small lh-sm'>
                                         Enabling this setting will ensure that
                                         multivariate and percentage split
                                         evaluations made by the API are
@@ -669,7 +669,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       </div>
                                     </div>
                                   </Row>
-                                  <span className='text-danger'>
+                                  <p className='text-danger  fs-small lh-sm'>
                                     Warning: Toggling this setting will mean
                                     that some users will start receiving
                                     different values for multivariate flags and
@@ -677,7 +677,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     override via the API / remote evaluation.
                                     Values received in local evaluation mode
                                     will not change.
-                                  </span>
+                                  </p>
                                 </>
                               )}
                             </Row>
@@ -687,7 +687,7 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                     <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
                       <FormGroup className='mt-4'>
-                        <h3>Client-side Environment Key</h3>
+                        <h5>Client-side Environment Key</h5>
                         <div className='row'>
                           <div className='col-md-6'>
                             <Row>
@@ -737,8 +737,8 @@ const EnvironmentSettingsPage = class extends Component {
                       <FormGroup className='mt-4'>
                         <Row className='mb-3' space>
                           <div className='col-md-8 pl-0'>
-                            <h3 className='m-b-0'>Feature Webhooks</h3>
-                            <p>
+                            <h5 className='m-b-0'>Feature Webhooks</h5>
+                            <p className='fs-small lh-sm'>
                               Feature webhooks let you know when features have
                               changed. You can configure 1 or more Feature
                               Webhooks per Environment.{' '}
@@ -820,6 +820,7 @@ const EnvironmentSettingsPage = class extends Component {
                               <Panel
                                 id='users-list'
                                 icon='ion-md-cloud'
+                                className='fs-small lh-sm'
                                 title={
                                   <Tooltip
                                     title={
