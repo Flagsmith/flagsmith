@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 db_column="use_mv_v2_evaluation",
                 default=True,
-                help_text="Enable this to have consistent multivariate and percentage split evaluations across all SDKs(in local and server side mode)",
+                help_text="Enable this to have consistent multivariate and percentage split evaluations across all SDKs (in local and server side mode)",
             ),
         ),
         migrations.AlterField(
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 db_column="use_mv_v2_evaluation",
                 default=True,
-                help_text="Enable this to have consistent multivariate and percentage split evaluations across all SDKs(in local and server side mode)",
+                help_text="Enable this to have consistent multivariate and percentage split evaluations across all SDKs (in local and server side mode)",
             ),
         ),
         migrations.RenameField(
