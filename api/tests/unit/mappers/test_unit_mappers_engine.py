@@ -51,12 +51,21 @@ def segment_multivariate_feature_state(
         project=project,
         feature=multivariate_feature,
     )
-    FeatureSegment.objects.create(
+    feature_segment = FeatureSegment.objects.create(
         feature=multivariate_feature,
         segment=segment,
         environment=environment,
     )
-    return multivariate_feature.feature_states.first()
+    feature_state = FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=multivariate_feature,
+        environment=environment,
+    )
+    feature_state.multivariate_feature_state_values.create(
+        multivariate_feature_option=multivariate_feature.multivariate_options.first(),
+        percentage_allocation=100,
+    )
+    return feature_state
 
 
 @pytest.fixture
@@ -219,13 +228,13 @@ def test_map_feature_state_to_engine__return_expected(
     assert result == expected_result
 
 
-def test_map_feature_state_to_engine__segment_multivariate__return_expected(
+def test_map_feature_state_to_engine__feature_segment__return_expected(
     segment_multivariate_feature_state: FeatureState,
     multivariate_feature: "Feature",
 ) -> None:
     # Given
-    mv_fs_values = list(
-        segment_multivariate_feature_state.multivariate_feature_state_values.all()
+    mv_fs_value = (
+        segment_multivariate_feature_state.multivariate_feature_state_values.get()
     )
     expected_result = FeatureStateModel(
         feature=FeatureModel(
@@ -235,36 +244,20 @@ def test_map_feature_state_to_engine__segment_multivariate__return_expected(
         ),
         enabled=False,
         django_id=segment_multivariate_feature_state.id,
-        feature_segment=None,
+        feature_segment=FeatureSegmentModel(
+            priority=segment_multivariate_feature_state.feature_segment.priority,
+        ),
         featurestate_uuid=segment_multivariate_feature_state.uuid,
         feature_state_value="control",
         multivariate_feature_state_values=[
             MultivariateFeatureStateValueModel(
                 multivariate_feature_option=MultivariateFeatureOptionModel(
-                    value="multivariate option for 30% of users.",
-                    id=mv_fs_values[0].multivariate_feature_option.id,
+                    value=mv_fs_value.multivariate_feature_option.value,
+                    id=mv_fs_value.multivariate_feature_option.id,
                 ),
-                percentage_allocation=30.0,
-                id=mv_fs_values[0].id,
-                mv_fs_value_uuid=mv_fs_values[0].uuid,
-            ),
-            MultivariateFeatureStateValueModel(
-                multivariate_feature_option=MultivariateFeatureOptionModel(
-                    value="multivariate option for 30% of users.",
-                    id=mv_fs_values[1].multivariate_feature_option.id,
-                ),
-                percentage_allocation=30.0,
-                id=mv_fs_values[1].id,
-                mv_fs_value_uuid=mv_fs_values[1].uuid,
-            ),
-            MultivariateFeatureStateValueModel(
-                multivariate_feature_option=MultivariateFeatureOptionModel(
-                    value="multivariate option for 40% of users.",
-                    id=mv_fs_values[2].multivariate_feature_option.id,
-                ),
-                percentage_allocation=40.0,
-                id=mv_fs_values[2].id,
-                mv_fs_value_uuid=mv_fs_values[2].uuid,
+                percentage_allocation=mv_fs_value.percentage_allocation,
+                id=mv_fs_value.id,
+                mv_fs_value_uuid=mv_fs_value.uuid,
             ),
         ],
     )
@@ -272,7 +265,7 @@ def test_map_feature_state_to_engine__segment_multivariate__return_expected(
     # When
     result = engine.map_feature_state_to_engine(
         segment_multivariate_feature_state,
-        mv_fs_values,
+        [mv_fs_value],
     )
 
     # Then
