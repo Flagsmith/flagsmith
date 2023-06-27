@@ -39,9 +39,14 @@ urlpatterns = [
         name="download-org-data",
     ),
     path(
-        "update-organisation-subscription-information-caches",
-        views.trigger_update_organisation_subscription_information_caches,
-        name="update-organisation-subscription-information-caches",
+        "update-organisation-subscription-information-influx-caches",
+        views.trigger_update_organisation_subscription_information_influx_caches,
+        name="update-organisation-subscription-information-influx-caches",
+    ),
+    path(
+        "update-organisation-subscription-information-chargebee-caches",
+        views.trigger_update_organisation_subscription_information_chargebee_caches,
+        name="update-organisation-subscription-information-chargebee-caches",
     ),
     path(
         "update-chargebee-cache",

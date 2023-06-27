@@ -13,7 +13,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches():
+def update_caches(update_influx=False):
     """
     Update the cache objects for all active organisations in the database.
     """
@@ -30,14 +30,17 @@ def update_caches():
         for org in organisations
     }
 
-    _update_caches_with_influx_data(organisation_info_cache_dict)
-    _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
+    if update_influx:
+        _update_caches_with_influx_data(organisation_info_cache_dict)
+    else:
+        _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
 
     to_update = []
     to_create = []
 
     for subscription_info_cache in organisation_info_cache_dict.values():
         subscription_info_cache.updated_at = timezone.now()
+        print("DEBUG: subscription_info_cache:", subscription_info_cache)
         if subscription_info_cache.id:
             to_update.append(subscription_info_cache)
         else:
@@ -56,6 +59,22 @@ def update_caches():
             "updated_at",
         ],
     )
+
+
+def update_chargebee_data_caches():
+    """
+    Update the chargebee data cache objects for all active organisations in the database.
+    """
+
+    update_caches()
+
+
+def update_influx_data_caches():
+    """
+    Update the influx data cache objects for all active organisations in the database.
+    """
+
+    update_caches(update_influx=True)
 
 
 def _update_caches_with_influx_data(

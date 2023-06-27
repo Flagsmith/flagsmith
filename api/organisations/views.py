@@ -9,6 +9,7 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from django.contrib.sites.shortcuts import get_current_site
+from django.utils import timezone
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
@@ -24,6 +25,7 @@ from organisations.exceptions import (
 )
 from organisations.models import (
     OrganisationRole,
+    OrganisationSubscriptionInformationCache,
     OrganisationWebhook,
     Subscription,
 )
@@ -51,6 +53,8 @@ from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
+
+from .chargebee import get_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -278,11 +282,37 @@ def chargebee_webhook(request):
             )
             logger.error(error_message)
             return Response(status=status.HTTP_200_OK)
+        existing_organisation_subscription_information_cache = (
+            OrganisationSubscriptionInformationCache.objects.filter(
+                organisation_id=existing_subscription.id
+            ).exists()
+        )
 
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
+            if existing_organisation_subscription_information_cache:
+                metadata = get_subscription_metadata(
+                    existing_subscription.subscription_id
+                )
+                OrganisationSubscriptionInformationCache.objects.filter(
+                    organisation_id=existing_subscription.id
+                ).update(allowed_30d_api_calls=metadata.seats)
+                OrganisationSubscriptionInformationCache.objects.filter(
+                    organisation_id=existing_subscription.id
+                ).update(allowed_seats=metadata.api_calls)
+            else:
+                OrganisationSubscriptionInformationCache.objects.create(
+                    updated_at=timezone.now(),
+                    api_calls_24h=0,
+                    api_calls_7d=0,
+                    api_calls_30d=0,
+                    allowed_seats=1,
+                    allowed_30d_api_calls=50000,
+                    organisation_id=existing_subscription.id,
+                )
+
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
                 datetime.fromtimestamp(subscription_data.get("current_term_end")),

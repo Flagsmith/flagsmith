@@ -20,7 +20,6 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_plan_meta_data,
     get_portal_url,
-    get_subscription_metadata,
 )
 from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
@@ -210,7 +209,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
-            metadata = get_subscription_metadata(self.subscription_id)
+            metadata = BaseSubscriptionMetadata(
+                seats=self.organisation.subscription_information_cache.allowed_seats,
+                api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
+            )
+
         elif self.payment_method == XERO and self.subscription_id:
             metadata = XeroSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls, projects=None

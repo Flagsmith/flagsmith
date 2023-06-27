@@ -32,7 +32,8 @@ from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
 from organisations.tasks import (
-    update_organisation_subscription_information_caches,
+    update_organisation_subscription_information_chargebee_caches,
+    update_organisation_subscription_information_influx_caches,
 )
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
@@ -218,8 +219,14 @@ def download_org_data(request, organisation_id):
 
 
 @staff_member_required()
-def trigger_update_organisation_subscription_information_caches(request):
-    update_organisation_subscription_information_caches.delay()
+def trigger_update_organisation_subscription_information_influx_caches(request):
+    update_organisation_subscription_information_influx_caches.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def trigger_update_organisation_subscription_information_chargebee_caches(request):
+    update_organisation_subscription_information_chargebee_caches.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
