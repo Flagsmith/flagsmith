@@ -112,7 +112,7 @@ class Environment(
         default=True,
         help_text=(
             "Enable this to have consistent multivariate and percentage split evaluations "
-            "across all SDKs(in local and server side mode)"
+            "across all SDKs (in local and server side mode)"
         ),
         db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
     )
