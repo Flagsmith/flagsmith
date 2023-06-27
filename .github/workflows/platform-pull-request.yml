@@ -42,11 +42,13 @@ jobs:
           slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: local
 
-      - name: Output API logs
+      - name: Output API container status and logs
         if: failure()
         env:
           API_CONTAINER_ID: ${{ steps.run-local-api.outputs.containerId }}
-        run: docker logs $API_CONTAINER_ID
+        run: |
+          docker inspect $API_CONTAINER_ID | jq '.[0].State'
+          docker logs $API_CONTAINER_ID
 
   run-e2e-tests-docker-unified:
     if: github.event.pull_request.draft == false
