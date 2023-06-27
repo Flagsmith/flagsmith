@@ -114,11 +114,9 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
 
 def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
     # Given
-    mocker.patch(
-        "organisations.models.Subscription.max_seats",
-        new_callable=mocker.PropertyMock,
-        return_value=0,
-    )
+    organisation.subscription.max_seats = 0
+    organisation.subscription.save()
+
     mocked_get_subscription_metadata = mocker.patch(
         "organisations.models.Subscription.get_subscription_metadata",
         autospec=True,
