@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from mappers import dynamodb
+from util.mappers import dynamodb
 
 if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock import MockerFixture
@@ -33,10 +33,10 @@ def test_map_environment_to_environment_document__call_expected(
         "dynatrace_config": None,
         "feature_states": [
             {
-                "django_id": Decimal("1"),
+                "django_id": Decimal(feature_state.pk),
                 "enabled": False,
                 "feature": {
-                    "id": Decimal("1"),
+                    "id": Decimal(feature_state.feature.pk),
                     "name": "Test Feature1",
                     "type": "STANDARD",
                 },
@@ -49,17 +49,17 @@ def test_map_environment_to_environment_document__call_expected(
         "heap_config": None,
         "hide_disabled_flags": None,
         "hide_sensitive_data": False,
-        "id": Decimal("1"),
+        "id": Decimal(environment.pk),
         "mixpanel_config": None,
         "name": "Test Environment",
         "project": {
             "enable_realtime_updates": False,
             "hide_disabled_flags": False,
-            "id": Decimal("1"),
+            "id": Decimal(environment.project.pk),
             "name": "Test Project",
             "organisation": {
                 "feature_analytics": False,
-                "id": Decimal("1"),
+                "id": Decimal(environment.project.organisation.pk),
                 "name": "Test Org",
                 "persist_trait_data": True,
                 "stop_serving_flags": False,
@@ -70,7 +70,7 @@ def test_map_environment_to_environment_document__call_expected(
         "rudderstack_config": None,
         "segment_config": None,
         "updated_at": expected_updated_at,
-        "use_mv_v2_evaluation": True,
+        "use_identity_composite_key_for_hashing": True,
         "webhook_config": None,
     }
 
@@ -94,7 +94,7 @@ def test_map_environment_api_key_to_environment_api_key_document__call_expected(
         "client_api_key": expected_client_api_key,
         "created_at": expected_created_at,
         "expires_at": None,
-        "id": Decimal("1"),
+        "id": Decimal(environment_api_key.pk),
         "key": expected_key,
         "name": "Test API Key",
     }
@@ -119,7 +119,7 @@ def test_map_identity_to_identity_document__call_expected(
     assert result == {
         "composite_key": expected_composite_key,
         "created_date": expected_created_date,
-        "django_id": Decimal("1"),
+        "django_id": Decimal(identity.pk),
         "environment_api_key": expected_environment_api_key,
         "identifier": "test_identity",
         "identity_features": [],
