@@ -45,7 +45,7 @@ def merge_duplicate_permissions(
             for permission in duplicate_permission.permissions.all():
                 merged_permission.permissions.add(permission)
 
-            if duplicate_permission.admin:
+            if getattr(merged_permission, "admin", False):
                 merged_permission.admin = True
 
             merged_permission.save()

@@ -6,15 +6,15 @@ from util.migrations import merge_duplicate_permissions
 
 
 def merge_duplicate_project_permissions(apps, schema_editor):
-    UserProjectPermission = apps.get_model(
+    UserEnvironmentPermission = apps.get_model(
         "environment_permissions", "UserEnvironmentPermission"
     )
-    UserPermissionGroupProjectPermission = apps.get_model(
+    UserPermissionGroupEnvironmentPermission = apps.get_model(
         "environment_permissions", "UserPermissionGroupEnvironmentPermission"
     )
-    merge_duplicate_permissions(UserProjectPermission, ["user", "environment"])
+    merge_duplicate_permissions(UserEnvironmentPermission, ["user", "environment"])
     merge_duplicate_permissions(
-        UserPermissionGroupProjectPermission, ["group", "environment"]
+        UserPermissionGroupEnvironmentPermission, ["group", "environment"]
     )
 
 
