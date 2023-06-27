@@ -144,7 +144,6 @@ class ServerSideSDKKeys extends Component {
                 theme='text'
                 href='https://docs.flagsmith.com/clients/overview'
                 target='__blank'
-                className='small'
               >
                 Server-side Environment Keys
               </Button>

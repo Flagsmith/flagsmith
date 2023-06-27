@@ -298,7 +298,6 @@ class TheComponent extends Component {
                           theme='text'
                           href='https://api.flagsmith.com/api/v1/docs/'
                           target='_blank'
-                          className='small'
                         >
                           here
                         </Button>
