@@ -38,7 +38,7 @@ analytics-python
 django-lifecycle
 drf-writable-nested
 django-filter
-flagsmith-flag-engine
+flagsmith-flag-engine @ git+https://github.com/Flagsmith/flagsmith-engine.git@2186-consistent-percentage-split-evaluation
 boto3
 slack_sdk
 rudder-sdk-python

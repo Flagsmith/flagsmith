@@ -51,23 +51,18 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     assert identity_feature_state.get_feature_state_value() == "v2"
 
 
-def test_get_hash_key_with_use_mv_v2_evaluation_enabled(identity):
-    # Given
-    use_mv_v2_evaluation = True
-
-    # When
-    hash_key = identity.get_hash_key(use_mv_v2_evaluation)
-
-    # Then
-    assert hash_key == f"{identity.environment.api_key}_{identity.identifier}"
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
+    environment, identity
+):
+    assert (
+        identity.get_hash_key(use_identity_composite_key_for_hashing=True)
+        == f"{identity.environment.api_key}_{identity.identifier}"
+    )
 
 
-def test_get_hash_key_with_use_mv_v2_evaluation_disabled(identity):
-    # Given
-    use_mv_v2_evaluation = False
-
-    # When
-    hash_key = identity.get_hash_key(use_mv_v2_evaluation)
-
-    # Then
-    assert hash_key == str(identity.id)
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
+    environment, identity
+):
+    assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
+        identity.id
+    )

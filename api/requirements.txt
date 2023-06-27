@@ -139,7 +139,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==3.5.0
+flagsmith-flag-engine @ git+https://github.com/Flagsmith/flagsmith-engine.git@2186-consistent-percentage-split-evaluation
     # via -r requirements.in
 google-api-core==1.23.0
     # via

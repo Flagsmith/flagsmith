@@ -108,12 +108,13 @@ class Environment(
             " will override the project `hide_disabled_flags`"
         ),
     )
-    use_mv_v2_evaluation = models.BooleanField(
+    use_identity_composite_key_for_hashing = models.BooleanField(
         default=True,
         help_text=(
-            "Enable this to have consistent multivariate evaluations across all SDKs(in"
-            " local and server side mode)"
+            "Enable this to have consistent multivariate and percentage split evaluations "
+            "across all SDKs(in local and server side mode)"
         ),
+        db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
     )
     hide_sensitive_data = models.BooleanField(
         default=False,
