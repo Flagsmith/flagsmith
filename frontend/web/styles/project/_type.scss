@@ -78,6 +78,15 @@ h6 {
   }
 }
 
+.dark {
+  .text-basic,
+  .text-basic-small .text-secondary,
+  .text-secondary-small.text-caption,
+  .text-caption-small {
+    color: white;
+  }
+}
+
 .text a {
   text-decoration: none;
 }
