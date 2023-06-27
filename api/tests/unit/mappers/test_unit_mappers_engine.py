@@ -75,8 +75,8 @@ def versioned_segment_feature_state(
     environment: Environment,
     segment_featurestate: FeatureState,
 ) -> FeatureState:
-    earlier_live_from = datetime.fromisoformat("2023-06-10T15:12:18.00000")
-    later_live_from = datetime.fromisoformat("2023-06-11T15:12:18.00000")
+    earlier_live_from = datetime.fromisoformat("2023-06-10T15:12:18")
+    later_live_from = datetime.fromisoformat("2023-06-11T15:12:18")
     segment_featurestate.live_from = earlier_live_from
     segment_featurestate.save()
     return FeatureState.objects.create(
