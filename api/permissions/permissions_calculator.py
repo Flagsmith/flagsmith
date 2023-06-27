@@ -135,8 +135,13 @@ def get_environment_permission_data(
     )
 
 
-def get_user_permission_data(user_permission: UserPermissionType) -> UserPermissionData:
+def get_user_permission_data(
+    user_permission: UserPermissionType = None,
+) -> UserPermissionData:
     user_permission_data = UserPermissionData()
+    if not user_permission:
+        return user_permission_data
+
     user_permission_data.permissions.update(
         permission.key
         for permission in user_permission.permissions.all()
@@ -180,10 +185,10 @@ class _OrganisationPermissionService:
     user_id: int
 
     @property
-    def user_permission(self) -> UserOrganisationPermission:
-        return UserOrganisationPermission.objects.get(
+    def user_permission(self) -> typing.Optional[UserOrganisationPermission]:
+        return UserOrganisationPermission.objects.filter(
             user=self.user_id, organisation_id=self.organisation_id
-        )
+        ).first()
 
     @property
     def group_qs(self) -> GroupPermissionQs:
@@ -198,10 +203,10 @@ class _EnvironmentPermissionService:
     user_id: int
 
     @property
-    def user_permission(self) -> UserEnvironmentPermission:
-        return UserEnvironmentPermission.objects.get(
+    def user_permission(self) -> typing.Optional[UserEnvironmentPermission]:
+        return UserEnvironmentPermission.objects.filter(
             user_id=self.user_id, environment_id=self.environment_id
-        )
+        ).first()
 
     @property
     def group_qs(self) -> GroupPermissionQs:
@@ -216,10 +221,10 @@ class _ProjectPermissionService:
     user_id: int
 
     @property
-    def user_permission(self) -> UserProjectPermission:
-        return UserProjectPermission.objects.get(
+    def user_permission(self) -> typing.Optional[UserProjectPermission]:
+        return UserProjectPermission.objects.filter(
             project_id=self.project_id, user_id=self.user_id
-        )
+        ).first()
 
     @property
     def group_qs(self) -> GroupPermissionQs:
