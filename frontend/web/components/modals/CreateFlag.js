@@ -21,14 +21,13 @@ import AddEditTags from 'components/tags/AddEditTags'
 import FlagOwners from 'components/FlagOwners'
 import ChangeRequestModal from './ChangeRequestModal'
 import Feature from 'components/Feature'
-import { ButtonOutline } from 'components/base/forms/Button'
-import { setInterceptClose } from 'project/modals'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
+import { setInterceptClose } from 'components/modals/base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -195,10 +194,7 @@ const CreateFlag = class extends Component {
   }
 
   getFeatureUsage = () => {
-    if (
-      Utils.getFlagsmithHasFeature('flag_analytics') &&
-      this.props.environmentFlag
-    ) {
+    if (this.props.environmentFlag) {
       AppActions.getFeatureUsage(
         this.props.projectId,
         this.props.environmentFlag.environment,
@@ -352,13 +348,13 @@ const CreateFlag = class extends Component {
       <div className='text-center'>
         There has been no activity for this flag within the past month. Find out
         about Flag Analytics{' '}
-        <a
+        <Button
+          theme='text'
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          rel='noreferrer'
         >
           here
-        </a>
+        </Button>
         .
       </div>
     )
@@ -458,9 +454,7 @@ const CreateFlag = class extends Component {
     const is4EyesSegmentOverrides =
       is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides') //
     const project = ProjectStore.model
-    const caseSensitive =
-      Utils.getFlagsmithHasFeature('case_sensitive_flags') &&
-      project?.only_allow_lower_case_feature_names
+    const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
     const controlValue = Utils.calculateControl(multivariate_options)
     const invalid =
@@ -535,22 +529,22 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
 
-        {!identity && Utils.getFlagsmithHasFeature("is_server_key_only") && (
-            <FormGroup className='mb-4 mr-3 ml-3'>
-              <InputGroup
-                  component={
-                    <Switch
-                        checked={this.state.is_server_key_only}
-                        onChange={(is_server_key_only) =>
-                            this.setState({ is_server_key_only, settingsChanged: true })
-                        }
-                    />
+        {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
+          <FormGroup className='mb-4 mr-3 ml-3'>
+            <InputGroup
+              component={
+                <Switch
+                  checked={this.state.is_server_key_only}
+                  onChange={(is_server_key_only) =>
+                    this.setState({ is_server_key_only, settingsChanged: true })
                   }
-                  type='text'
-                  title='Server-side only'
-                  tooltip='Prevent this feature from being accessed with client-side SDKs.'
-              />
-            </FormGroup>
+                />
+              }
+              type='text'
+              title='Server-side only'
+              tooltip='Prevent this feature from being accessed with client-side SDKs.'
+            />
+          </FormGroup>
         )}
 
         {!identity && isEdit && (
@@ -905,7 +899,7 @@ const CreateFlag = class extends Component {
                                         </>
                                       )}
                                     </Panel>
-                                    <p className='text-right mt-4'>
+                                    <p className='text-right mt-4 fs-small lh-sm'>
                                       {is4Eyes
                                         ? 'This will create a change request for the environment'
                                         : 'This will update the feature value for the environment'}{' '}
@@ -939,7 +933,8 @@ const CreateFlag = class extends Component {
                                             {!is4Eyes && (
                                               <>
                                                 {canSchedule ? (
-                                                  <ButtonOutline
+                                                  <Button
+                                                    theme='outline'
                                                     onClick={() =>
                                                       saveFeatureValue(true)
                                                     }
@@ -961,11 +956,12 @@ const CreateFlag = class extends Component {
                                                       : existingChangeRequest
                                                       ? 'Update Change Request'
                                                       : 'Schedule Update'}
-                                                  </ButtonOutline>
+                                                  </Button>
                                                 ) : (
                                                   <Tooltip
                                                     title={
-                                                      <ButtonOutline
+                                                      <Button
+                                                        theme='outline'
                                                         disabled
                                                         className='mr-2'
                                                         type='button'
@@ -979,7 +975,7 @@ const CreateFlag = class extends Component {
                                                           : existingChangeRequest
                                                           ? 'Update Change Request'
                                                           : 'Schedule Update'}
-                                                      </ButtonOutline>
+                                                      </Button>
                                                     }
                                                   >
                                                     {
@@ -1137,7 +1133,7 @@ const CreateFlag = class extends Component {
                                           </Panel>
                                           {!this.state.showCreateSegment && (
                                             <div>
-                                              <p className='text-right mt-4'>
+                                              <p className='text-right mt-4 fs-small lh-sm'>
                                                 {is4Eyes &&
                                                 is4EyesSegmentOverrides
                                                   ? 'This will create a change request for the environment'
@@ -1340,7 +1336,7 @@ const CreateFlag = class extends Component {
                                               <a
                                                 target='_blank'
                                                 href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                className='ml-2 btn btn-link btn--link'
+                                                className='ml-2 btn btn-link'
                                                 onClick={() => {}}
                                                 rel='noreferrer'
                                               >
@@ -1381,9 +1377,6 @@ const CreateFlag = class extends Component {
                                   )}
                                 {!existingChangeRequest &&
                                   !Project.disableAnalytics &&
-                                  Utils.getFlagsmithHasFeature(
-                                    'flag_analytics',
-                                  ) &&
                                   this.props.flagId && (
                                     <TabItem
                                       data-test='analytics'
@@ -1435,7 +1428,7 @@ const CreateFlag = class extends Component {
                                     {isEdit && (
                                       <div className='text-right mr-3'>
                                         {createFeature ? (
-                                          <p className='text-right'>
+                                          <p className='text-right fs-small lh-sm'>
                                             This will save the above settings{' '}
                                             <strong>all environments</strong>.
                                           </p>

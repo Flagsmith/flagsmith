@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 const CreateGroup = require('./modals/CreateGroup')
-import Button, { ButtonLink } from './base/forms/Button'
+import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import { UserGroup } from 'common/types/responses'
 import {
@@ -73,8 +73,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               openModal(
                 'Edit Group',
                 <CreateGroup isEdit orgId={orgId} group={group} />,
-                null,
-                { className: 'side-modal fade create-feature-modal in' },
+                'side-modal fade create-feature-modal',
               )
             }
           }
@@ -87,7 +86,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
             >
               <Flex onClick={_onClick}>
                 <div>
-                  <ButtonLink>{name}</ButtonLink>
+                  <Button theme='text'>{name}</Button>
                 </div>
                 <div className='list-item-footer faint'>
                   {users.length}
@@ -97,8 +96,8 @@ const UserGroupsList: FC<UserGroupsListType> = ({
 
               {onEditPermissions && isAdmin && (
                 <Button
+                  theme="text"
                   onClick={() => onEditPermissions(group)}
-                  className='btn--link'
                 >
                   Edit Permissions
                 </Button>

@@ -2,8 +2,6 @@
 
 Managing larger numbers of flags is made easier using some of the tools built into Flagsmith.
 
-![Image](/img/flag-settings.png)
-
 ## Tagging
 
 You can create tags within Flagsmith and tag Flags in order to organise them. Tags can also be used to filter the list

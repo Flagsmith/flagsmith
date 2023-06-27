@@ -179,8 +179,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -193,8 +192,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -284,6 +282,7 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const { chargebee_email } = subscriptionMeta || {}
                   const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
@@ -313,7 +312,7 @@ const OrganisationSettingsPage = class extends Component {
                                 >
                                   <h5>Organisation Name</h5>
                                   <Row>
-                                    <Column className='m-l-0'>
+                                    <Column className='ml-0'>
                                       <Input
                                         ref={(e) => (this.input = e)}
                                         data-test='organisation-name'
@@ -334,6 +333,7 @@ const OrganisationSettingsPage = class extends Component {
                                     <Button
                                       disabled={this.saveDisabled()}
                                       className='float-right'
+                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
@@ -341,9 +341,11 @@ const OrganisationSettingsPage = class extends Component {
                                 </form>
                                 <div>
                                   <Row space className='mt-4'>
-                                    <h3 className='m-b-0'>Organisation ID</h3>
+                                    <h5 className='m-b-0'>Organisation ID</h5>
                                   </Row>
-                                  <p>{organisation.id}</p>
+                                  <p className='fs-small lh-sm'>
+                                    {organisation.id}
+                                  </p>
                                 </div>
                                 {paymentsEnabled && (
                                   <div className='plan plan--current flex-row m-t-2'>
@@ -355,10 +357,10 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </div>
                                     <div className='plan__details flex flex-1'>
-                                      <p className='text-small m-b-0'>
+                                      <p className='fs-small lh-sm m-b-0'>
                                         Your plan
                                       </p>
-                                      <h3 className='m-b-0'>
+                                      <h5 className='m-b-0'>
                                         {Utils.getPlanName(
                                           _.get(
                                             organisation,
@@ -372,7 +374,13 @@ const OrganisationSettingsPage = class extends Component {
                                               ),
                                             )
                                           : 'Free'}
-                                      </h3>
+                                      </h5>
+                                      {!!chargebee_email && (
+                                        <p>
+                                          Management Email:{' '}
+                                          <strong>{chargebee_email}</strong>
+                                        </p>
+                                      )}
                                     </div>
                                     <div>
                                       {organisation.subscription && (
@@ -402,8 +410,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <PaymentModal
                                                   viewOnly={false}
                                                 />,
-                                                null,
-                                                { large: true },
+                                                'modal-lg',
                                               )
                                             }
                                           }}
@@ -418,8 +425,7 @@ const OrganisationSettingsPage = class extends Component {
                                             openModal(
                                               'Payment Plans',
                                               <PaymentModal viewOnly={false} />,
-                                              null,
-                                              { large: true },
+                                              'modal-lg',
                                             )
                                           }
                                         >
@@ -435,7 +441,7 @@ const OrganisationSettingsPage = class extends Component {
                           {Utils.getFlagsmithHasFeature('force_2fa') && (
                             <div>
                               <Row space className='mt-4'>
-                                <h3 className='m-b-0'>Enforce 2FA</h3>
+                                <h5 className='m-b-0'>Enforce 2FA</h5>
                                 {!force2faPermission ? (
                                   <Tooltip
                                     title={
@@ -455,7 +461,7 @@ const OrganisationSettingsPage = class extends Component {
                                   />
                                 )}
                               </Row>
-                              <p>
+                              <p className='fs-small lh-sm'>
                                 Enabling this setting forces users within the
                                 organisation to setup 2 factor security.
                               </p>
@@ -465,10 +471,10 @@ const OrganisationSettingsPage = class extends Component {
                             'restrict_project_create_to_admin',
                           ) && (
                             <FormGroup className='mt-4'>
-                              <h3>Admin Settings</h3>
+                              <h5>Admin Settings</h5>
                               <div className='row'>
                                 <div className='col-md-10'>
-                                  <p>
+                                  <p className='fs-small lh-sm'>
                                     Only allow organisation admins to create
                                     projects
                                   </p>
@@ -488,35 +494,30 @@ const OrganisationSettingsPage = class extends Component {
                               </div>
                             </FormGroup>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'delete_organisation',
-                          ) && (
-                            <FormGroup className='mt-4'>
-                              <h3>Delete Organisation</h3>
-                              <div className='row'>
-                                <div className='col-md-10'>
-                                  <p>
-                                    This organisation will be permanently
-                                    deleted, along with all projects and
-                                    features.
-                                  </p>
-                                </div>
-                                <div className='col-md-2 text-right'>
-                                  <Button
-                                    id='delete-org-btn'
-                                    onClick={() =>
-                                      this.confirmRemove(organisation, () => {
-                                        deleteOrganisation()
-                                      })
-                                    }
-                                    className='btn btn--with-icon ml-auto btn--remove'
-                                  >
-                                    <RemoveIcon />
-                                  </Button>
-                                </div>
+                          <FormGroup className='mt-4'>
+                            <h5>Delete Organisation</h5>
+                            <div className='row'>
+                              <div className='col-md-10'>
+                                <p className='fs-small lh-sm'>
+                                  This organisation will be permanently deleted,
+                                  along with all projects and features.
+                                </p>
                               </div>
-                            </FormGroup>
-                          )}
+                              <div className='col-md-2 text-right'>
+                                <Button
+                                  id='delete-org-btn'
+                                  onClick={() =>
+                                    this.confirmRemove(organisation, () => {
+                                      deleteOrganisation()
+                                    })
+                                  }
+                                  className='btn btn--with-icon ml-auto btn--remove'
+                                >
+                                  <RemoveIcon />
+                                </Button>
+                              </div>
+                            </div>
+                          </FormGroup>
                         </TabItem>
 
                         <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
@@ -540,19 +541,20 @@ const OrganisationSettingsPage = class extends Component {
                           />
 
                           <FormGroup className='mt-4'>
-                            <h3>Manage Users and Permissions</h3>
-                            <p>
+                            <h5>Manage Users and Permissions</h5>
+                            <p className='fs-small lh-sm'>
                               Flagsmith lets you manage fine-grained permissions
                               for your projects and environments, invite members
                               as a user or an administrator and then set
                               permission in your Project and Environment
                               settings.{' '}
-                              <ButtonLink
-                                href='https://docs.flagsmith.com/advanced-use/permissions'
+                              <Button
+                                theme='text'
+                                href='https://docs.flagsmith.com/system-administration/rbac'
                                 target='_blank'
                               >
                                 Learn about User Roles.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             <div>
                               <div>
@@ -567,9 +569,9 @@ const OrganisationSettingsPage = class extends Component {
                                       <Tabs inline transparent uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
-                                            <h3 className='m-b-0'>
+                                            <h5 className='m-b-0'>
                                               Team Members
-                                            </h3>
+                                            </h5>
                                             <Button
                                               disabled={
                                                 needsUpgradeForAdditionalSeats
@@ -641,8 +643,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     false
                                                                   }
                                                                 />,
-                                                                null,
-                                                                { large: true },
+                                                                'modal-lg',
                                                               )
                                                             }
                                                           >
@@ -746,6 +747,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                           <Button
                                                             className='btn-secondary'
+                                                            size='small'
                                                             style={{
                                                               width: 180,
                                                             }}
@@ -774,6 +776,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           <Button
                                                             className='ml-4'
                                                             type='button'
+                                                            size='small'
                                                             onClick={() => {
                                                               openConfirm(
                                                                 'Regenerate Invite Link',
@@ -799,17 +802,18 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                   </Row>
                                                 </div>
-                                                <p className='mt-3'>
+                                                <p className='mt-3 fs-small lh-sm'>
                                                   Anyone with link can join as a
                                                   standard user, once they have
                                                   joined you can edit their role
                                                   from the team members panel.{' '}
-                                                  <ButtonLink
+                                                  <Button
+                                                    theme='text'
                                                     target='_blank'
-                                                    href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    href='https://docs.flagsmith.com/system-administration/rbac'
                                                   >
                                                     Learn about User Roles.
-                                                  </ButtonLink>
+                                                  </Button>
                                                 </p>
                                                 <div className='text-right mt-2'>
                                                   {error && (
@@ -971,7 +975,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           }}
                                                           onClick={onEditClick}
                                                         >
-                                                          <Button className='btn--link'>
+                                                          <Button theme='text'>
                                                             Edit Permissions
                                                           </Button>
                                                         </div>
@@ -1002,11 +1006,11 @@ const OrganisationSettingsPage = class extends Component {
                                                             id,
                                                             Format.userDisplayName(
                                                               {
+                                                                email,
                                                                 firstName:
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
-                                                                email,
                                                               },
                                                             ),
                                                             email,
@@ -1088,7 +1092,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         {link ? (
                                                           ' '
                                                         ) : (
-                                                          <button
+                                                          <Button
                                                             id='resend-invite'
                                                             type='button'
                                                             onClick={() =>
@@ -1096,10 +1100,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                 id,
                                                               )
                                                             }
-                                                            className='btn btn--link'
+                                                            theme='text'
                                                           >
                                                             Resend
-                                                          </button>
+                                                          </Button>
                                                         )}
                                                       </Column>
                                                       <Column>
@@ -1133,9 +1137,9 @@ const OrganisationSettingsPage = class extends Component {
                                         <TabItem tabLabel='Groups'>
                                           <div>
                                             <Row space className='mt-4'>
-                                              <h3 className='m-b-0'>
+                                              <h5 className='m-b-0'>
                                                 User Groups
-                                              </h3>
+                                              </h5>
                                               <Button
                                                 className='mr-2'
                                                 id='btn-invite'
@@ -1145,11 +1149,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    null,
-                                                    {
-                                                      className:
-                                                        'side-modal fade create-feature-modal in',
-                                                    },
+                                                    'side-modal fade create-feature-modal',
                                                   )
                                                 }
                                                 type='button'
@@ -1157,7 +1157,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 Create Group
                                               </Button>
                                             </Row>
-                                            <p>
+                                            <p className='fs-small lh-sm'>
                                               Groups allow you to manage
                                               permissions for viewing and
                                               editing projects, features and
@@ -1187,20 +1187,23 @@ const OrganisationSettingsPage = class extends Component {
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
-                            <Row className='mb-3' space>
-                              <h3 className='m-b-0'>Audit Webhooks</h3>
+                            <Column className='mb-3 ml-0'>
+                              <h5 className='m-b-0'>Audit Webhooks</h5>
+                              <p className='fs-small lh-sm mb-4'>
+                                Audit webhooks let you know when audit logs
+                                occur, you can configure 1 or more audit
+                                webhooks per organisation.{' '}
+                                <Button
+                                  theme='text'
+                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                >
+                                  Learn about Audit Webhooks.
+                                </Button>
+                              </p>
                               <Button onClick={this.createWebhook}>
                                 Create audit webhook
                               </Button>
-                            </Row>
-                            <p>
-                              Audit webhooks let you know when audit logs occur,
-                              you can configure 1 or more audit webhooks per
-                              organisation.{' '}
-                              <ButtonLink href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'>
-                                Learn about Audit Webhooks.
-                              </ButtonLink>
-                            </p>
+                            </Column>
                             {webhooksLoading && !webhooks ? (
                               <Loader />
                             ) : (
@@ -1232,7 +1235,9 @@ const OrganisationSettingsPage = class extends Component {
                                     key={webhook.id}
                                   >
                                     <div>
-                                      <ButtonLink>{webhook.url}</ButtonLink>
+                                      <Button theme='text'>
+                                        {webhook.url}
+                                      </Button>
                                       <div className='list-item-footer faint'>
                                         Created{' '}
                                         {moment(webhook.created_date).format(
@@ -1260,6 +1265,7 @@ const OrganisationSettingsPage = class extends Component {
                                 renderNoResults={
                                   <Panel
                                     icon='ion-md-cloud'
+                                    className='fs-small lh-sm'
                                     title={
                                       <Tooltip
                                         title={
@@ -1286,21 +1292,17 @@ const OrganisationSettingsPage = class extends Component {
                             )}
                           </FormGroup>
                         </TabItem>
-                        {Utils.getFlagsmithHasFeature('usage_chart') &&
-                          !Project.disableAnalytics && (
-                            <TabItem
-                              tabLabel='Usage'
-                              tabIcon='ion-md-analytics'
-                            >
-                              {this.state.tab === 4 && (
-                                <OrganisationUsage
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                />
-                              )}
-                            </TabItem>
-                          )}
+                        {!Project.disableAnalytics && (
+                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                            {this.state.tab === 4 && (
+                              <OrganisationUsage
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                              />
+                            )}
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )

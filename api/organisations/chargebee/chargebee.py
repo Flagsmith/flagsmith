@@ -111,12 +111,14 @@ def get_subscription_metadata(
         return None
 
     with suppress(ChargebeeAPIError):
-        subscription = chargebee.Subscription.retrieve(subscription_id).subscription
+        chargebee_result = chargebee.Subscription.retrieve(subscription_id)
+        subscription = chargebee_result.subscription
         addons = subscription.addons or []
 
         chargebee_cache = ChargebeeCache()
         plan_metadata = chargebee_cache.plans[subscription.plan_id]
         subscription_metadata = plan_metadata
+        subscription_metadata.chargebee_email = chargebee_result.customer.email
 
         for addon in addons:
             quantity = getattr(addon, "quantity", None) or 1

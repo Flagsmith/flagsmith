@@ -42,7 +42,7 @@ const OrganisationSelect = class extends Component {
                           this.props.onChange &&
                             this.props.onChange(organisation)
                         }}
-                        className='btn btn-link btn-sm edit'
+                        className='btn btn-link text-nowrap btn-sm edit'
                         to='/organisation-settings'
                       >
                         <span

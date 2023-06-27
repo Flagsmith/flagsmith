@@ -135,14 +135,15 @@ export default class Rule extends PureComponent {
           <div>
             <Row noWrap>
               {isLastRule && !this.props.readOnly ? (
-                <ButtonOutline
+                <Button
+                  theme='outline'
                   className='ml-2'
                   data-test={`${this.props['data-test']}-or`}
                   type='button'
                   onClick={this.addRule}
                 >
                   Or
-                </ButtonOutline>
+                </Button>
               ) : (
                 <div style={{ width: 64 }} />
               )}
@@ -153,7 +154,7 @@ export default class Rule extends PureComponent {
                   type='button'
                   id='remove-feature'
                   onClick={() => this.removeRule(i)}
-                  className='btn btn--with-icon btn--condensed reveal--child btn--remove'
+                  className='btn btn--with-icon p-0 reveal--child btn--remove'
                 >
                   <RemoveIcon />
                 </button>

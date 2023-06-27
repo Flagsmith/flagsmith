@@ -91,7 +91,7 @@ multivariate tests with zero latency impact.
 We do not require you to run any infrastructure whatsoever to run our platform. There are no relays, proxies, caches or
 CDNs in between your client request and our API.
 
-We do have an [Edge Proxy](/advanced-use/edge-proxy.md) if required, but it is entirely optional.
+We do have an [Edge Proxy](/system-administration/edge-proxy) if required, but it is entirely optional.
 
 ### Bring your own CDN or DNS if you wish
 
