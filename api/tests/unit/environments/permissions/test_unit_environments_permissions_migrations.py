@@ -265,16 +265,16 @@ def test_merge_duplicate_permissions_migration(migrator):
         name="Test User Permission Group", organisation=organisation
     )
     non_duplicate_permission = UserEnvironmentPermission.objects.create(
-        user_id=admin_user.id, environment_id=environment.id
+        user=admin_user, environment=environment
     )
     # Now - Let's create duplicate permissions
     first_permission = UserEnvironmentPermission.objects.create(
-        user_id=test_user.id, environment=environment
+        user=test_user, environment=environment
     )
     first_permission.permissions.add(UPDATE_FEATURE_STATE)
 
     second_permission = UserEnvironmentPermission.objects.create(
-        user_id=test_user.id, environment_id=environment.id
+        user=test_user, environment=environment
     )
     second_permission.permissions.add(UPDATE_FEATURE_STATE)
     second_permission.permissions.add(APPROVE_CHANGE_REQUEST)

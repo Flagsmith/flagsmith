@@ -42,13 +42,12 @@ def merge_duplicate_permissions(
         # let's move all the perms to the first object
         merged_permission = duplicate_permissions[0]
         for duplicate_permission in duplicate_permissions[1:]:
+            if getattr(duplicate_permission, "admin", False):
+                merged_permission.admin = True
+                merged_permission.save()
+
             for permission in duplicate_permission.permissions.all():
                 merged_permission.permissions.add(permission)
-
-            if getattr(merged_permission, "admin", False):
-                merged_permission.admin = True
-
-            merged_permission.save()
 
             # delete the duplicate permission
             duplicate_permission.delete()
