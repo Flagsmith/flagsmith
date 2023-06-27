@@ -12,11 +12,12 @@ class EnvironmentManager(SoftDeleteManager):
             .select_related(
                 "project",
                 "project__organisation",
-                "mixpanel_config",
-                "segment_config",
                 "amplitude_config",
-                "heap_config",
                 "dynatrace_config",
+                "heap_config",
+                "mixpanel_config",
+                "rudderstack_config",
+                "segment_config",
             )
             .prefetch_related(
                 Prefetch(
