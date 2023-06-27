@@ -3,6 +3,10 @@ h1,h2,h3,h4,h5,h6{
     font-family: $font-family-header;
 }
 
+a {
+    text-decoration: none;
+}
+
 .dark {
     h1,h2,h3,h4,h5,h6 {
         color: $header-color-dark;
@@ -87,4 +91,8 @@ p{
     &--on {
         color: $bt-brand-primary;
     }
+}
+
+label {
+    margin-bottom: $spacer/2;
 }

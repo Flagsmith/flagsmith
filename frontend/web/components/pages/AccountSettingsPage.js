@@ -26,9 +26,6 @@ class TheComponent extends Component {
       ...AccountStore.getUser(),
     }
   }
-
-  componentDidMount() {}
-
   save = (e) => {
     Utils.preventDefault(e)
     const {
@@ -269,29 +266,22 @@ class TheComponent extends Component {
                           checked={flagsmith.getTrait('json_inspect')}
                         />
                       </Row>
-                      {Utils.getFlagsmithHasFeature('delete_account') && (
-                        <Row className='mt-4' space>
-                          <div className='col-md-8 pl-0'>
-                            <h5>Delete Account</h5>
-                            <p>
-                              Your account data will be permanently deleted.
-                            </p>
-                          </div>
-                          <Button
-                            id='delete-user-btn'
-                            data-test='delete-user-btn'
-                            onClick={() =>
-                              this.confirmDeleteAccount(
-                                lastUserOrganisations,
-                                id,
-                              )
-                            }
-                            className='btn btn--with-icon ml-auto btn--remove'
-                          >
-                            <RemoveIcon />
-                          </Button>
-                        </Row>
-                      )}
+                      <Row className='mt-4' space>
+                        <div className='col-md-8 pl-0'>
+                          <h5>Delete Account</h5>
+                          <p>Your account data will be permanently deleted.</p>
+                        </div>
+                        <Button
+                          id='delete-user-btn'
+                          data-test='delete-user-btn'
+                          onClick={() =>
+                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                          }
+                          className='btn btn--with-icon ml-auto btn--remove'
+                        >
+                          <RemoveIcon />
+                        </Button>
+                      </Row>
                     </div>
                   </div>
                 </TabItem>
@@ -302,9 +292,13 @@ class TheComponent extends Component {
                       <p>
                         You can use this token to integrate with our RESTful
                         API, the documentation can be found{' '}
-                        <a href='https://api.flagsmith.com/api/v1/docs/'>
+                        <Button
+                          theme='text'
+                          href='https://api.flagsmith.com/api/v1/docs/'
+                          target='_blank'
+                        >
                           here
-                        </a>
+                        </Button>
                         .
                       </p>
                     </div>
@@ -314,6 +308,7 @@ class TheComponent extends Component {
                         <Button
                           onClick={this.invalidateToken}
                           className='btn btn-danger'
+                          size='small'
                         >
                           Invalidate
                         </Button>
@@ -427,8 +422,7 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
-                                null,
-                                { large: true },
+                                'modal-lg',
                               )
                             }}
                           >

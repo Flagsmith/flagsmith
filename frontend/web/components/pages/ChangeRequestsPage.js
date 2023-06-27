@@ -78,27 +78,27 @@ const ChangeRequestsPage = class extends Component {
               <InfoMessage>
                 View and manage your feature changes with a Change Request flow
                 with our{' '}
-                <a
-                  href='#'
+                <Button
+                  theme='text'
                   onClick={() => {
                     openModal(
                       'Payment plans',
                       <PaymentModal viewOnly={false} />,
-                      null,
-                      { large: true },
+                      'modal-lg',
                     )
                   }}
                 >
                   Scale-up plan
-                </a>
+                </Button>
                 . Find out more{' '}
-                <a
+                <Button
+                  theme='text'
                   href='https://docs.flagsmith.com/advanced-use/change-requests'
                   target='_blank'
                   rel='noreferrer'
                 >
                   here
-                </a>
+                </Button>
                 .
               </InfoMessage>
             </div>
@@ -192,12 +192,12 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
                             <div>
-                              <ButtonLink>
+                              <Button theme='text'>
                                 {title}
                                 {isScheduled && (
                                   <span className='ml-1 mr-4 ion ion-md-time' />
                                 )}
-                              </ButtonLink>
+                              </Button>
                               <div className='list-item-footer faint'>
                                 Created at{' '}
                                 {moment(created_at).format(
@@ -272,7 +272,7 @@ const ChangeRequestsPage = class extends Component {
                           <Row className='list-item clickable'>
                             <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
                             <div>
-                              <ButtonLink>{title}</ButtonLink>
+                              <Button theme='text'>{title}</Button>
                               <div className='list-item-footer faint'>
                                 Live from{' '}
                                 {moment(created_at).format(

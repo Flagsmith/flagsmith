@@ -3,7 +3,6 @@ import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
-import { useGetProjectAuditLogsQuery } from 'common/services/useProjectAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
@@ -47,15 +46,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
     data: projectAuditLog,
     isError,
     isFetching,
-  } = useGetProjectAuditLogsQuery({
-    id: props.projectId,
-    params: {
-      environments,
-      page,
-      page_size: props.pageSize,
-      project: props.projectId,
-      search,
-    },
+  } = useGetAuditLogsQuery({
+    environments,
+    page,
+    page_size: props.pageSize,
+    project: props.projectId,
+    search,
   })
 
   useEffect(() => {
@@ -100,9 +96,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>

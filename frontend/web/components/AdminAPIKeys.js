@@ -87,7 +87,8 @@ export class CreateAPIKey extends PureComponent {
                   <Button
                     disabled={!this.state.expiry_date}
                     onClick={() => this.setState({ expiry_date: null })}
-                    className='btn-danger'
+                    theme='secondary'
+                    size='small'
                   >
                     Clear
                   </Button>
@@ -117,6 +118,7 @@ export class CreateAPIKey extends PureComponent {
                 data-test='create-feature-btn'
                 id='create-feature-btn'
                 disabled={this.state.isSaving || !this.state.name}
+                size='small'
               >
                 {this.state.isSaving ? 'Creating' : 'Create'}
               </Button>
@@ -206,13 +208,13 @@ export default class AdminAPIKeys extends PureComponent {
           </Button>
           <p>
             Terraform API keys are used to authenticate with the Admin API.{' '}
-            <a
+            <Button
+              theme='text'
               href='https://docs.flagsmith.com/advanced-use/system-administration#terraform-api-keys-for-organisations'
               target='_blank'
-              rel='noreferrer'
             >
               Learn about Terraform Keys.
-            </a>
+            </Button>
           </p>
         </Row>
         {this.state.isLoading && (

@@ -93,38 +93,21 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      null,
-      { className: 'fade side-modal create-segment-modal' },
+      'fade side-modal create-segment-modal',
     )
   }
 
   getActualFlags = () => {
     const { environmentId, id } = this.props.match.params
-    if (Utils.getFlagsmithHasFeature('use_admin_identity_featurestates')) {
-      const url = `${
-        Project.api
-      }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
-      _data
-        .get(url)
-        .then((res) => {
-          this.setState({ actualFlags: _.keyBy(res, (v) => v.feature.name) })
-        })
-        .catch(() => {})
-    } else {
-      const url = `${Utils.getSDKEndpoint()}identities/?identifier=${
-        this.props.match.params.identity
-      }`
-      fetch(url, {
-        headers: { 'X-Environment-Key': this.props.match.params.environmentId },
+    const url = `${
+      Project.api
+    }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
+    _data
+      .get(url)
+      .then((res) => {
+        this.setState({ actualFlags: _.keyBy(res, (v) => v.feature.name) })
       })
-        .then((res) => res.json())
-        .then((res) => {
-          this.setState({
-            actualFlags: _.keyBy(res.flags, (v) => v.feature.name),
-          })
-        })
-        .catch(() => {})
-    }
+      .catch(() => {})
   }
 
   onTraitSaved = () => {
@@ -178,12 +161,9 @@ const UserPage = class extends Component {
         }}
         environmentFlag={environmentFlag}
       />,
-      null,
-      {
-        className: 'side-modal fade create-feature-modal overflow-y-auto',
-        onClose: () => {
-          history.replaceState({}, null, `${document.location.pathname}`)
-        },
+      'side-modal fade create-feature-modal overflow-y-auto',
+      () => {
+        history.replaceState({}, null, `${document.location.pathname}`)
       },
     )
   }
@@ -533,9 +513,12 @@ const UserPage = class extends Component {
                                           className='flex flex-1'
                                         >
                                           <Row>
-                                            <ButtonLink className='mr-2'>
+                                            <Button
+                                              theme='text'
+                                              className='mr-2'
+                                            >
                                               {name}
-                                            </ButtonLink>
+                                            </Button>
                                             <TagValues
                                               projectId={`${projectId}`}
                                               value={projectFlag.tags}
@@ -848,12 +831,13 @@ const UserPage = class extends Component {
                                           className='flex flex-1'
                                         >
                                           <Row>
-                                            <ButtonLink
+                                            <Button
+                                              theme='text'
                                               className={`js-trait-key-${i}`}
                                               href='#'
                                             >
                                               {trait_key}
-                                            </ButtonLink>
+                                            </Button>
                                           </Row>
                                         </div>
                                         <Row>
@@ -954,7 +938,8 @@ const UserPage = class extends Component {
                                           >
                                             <div className='flex flex-1'>
                                               <Row>
-                                                <ButtonLink
+                                                <Button
+                                                  theme='text'
                                                   onClick={() =>
                                                     this.editSegment(
                                                       segments[i],
@@ -967,7 +952,7 @@ const UserPage = class extends Component {
                                                   >
                                                     {name}
                                                   </span>
-                                                </ButtonLink>
+                                                </Button>
                                               </Row>
                                               <div className='list-item-footer faint mt-2'>
                                                 {description ? (

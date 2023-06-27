@@ -10,8 +10,8 @@ const Message = class extends React.Component {
   render() {
     const className = cn({
       'alert alert-warning fade': true,
-      'in': !this.props.isRemoving,
       'removing out': this.props.isRemoving,
+      'show': !this.props.isRemoving,
       'toast-message': true,
     })
 

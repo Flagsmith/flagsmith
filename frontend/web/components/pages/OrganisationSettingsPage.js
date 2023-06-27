@@ -179,8 +179,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -193,8 +192,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'alert fade expand',
     )
   }
 
@@ -284,6 +282,7 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const { chargebee_email } = subscriptionMeta || {}
                   const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
@@ -334,6 +333,7 @@ const OrganisationSettingsPage = class extends Component {
                                     <Button
                                       disabled={this.saveDisabled()}
                                       className='float-right'
+                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
@@ -373,6 +373,14 @@ const OrganisationSettingsPage = class extends Component {
                                             )
                                           : 'Free'}
                                       </h3>
+                                      {!!chargebee_email && (
+                                      <p>
+                                        Management Email:{' '}
+                                        <strong>
+                                          {chargebee_email}
+                                        </strong>
+                                      </p>
+                                      )}
                                     </div>
                                     <div>
                                       {organisation.subscription && (
@@ -402,8 +410,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <PaymentModal
                                                   viewOnly={false}
                                                 />,
-                                                null,
-                                                { large: true },
+                                                'modal-lg',
                                               )
                                             }
                                           }}
@@ -418,8 +425,7 @@ const OrganisationSettingsPage = class extends Component {
                                             openModal(
                                               'Payment Plans',
                                               <PaymentModal viewOnly={false} />,
-                                              null,
-                                              { large: true },
+                                              'modal-lg',
                                             )
                                           }
                                         >
@@ -488,35 +494,30 @@ const OrganisationSettingsPage = class extends Component {
                               </div>
                             </FormGroup>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'delete_organisation',
-                          ) && (
-                            <FormGroup className='mt-4'>
-                              <h3>Delete Organisation</h3>
+                          <FormGroup className='mt-4'>
+                                <h3>Delete Organisation</h3>
                               <div className='row'>
                                 <div className='col-md-10'>
-                                  <p>
-                                    This organisation will be permanently
-                                    deleted, along with all projects and
-                                    features.
-                                  </p>
-                                </div>
+                                <p>
+                                  This organisation will be permanently deleted,
+                                  along with all projects and features.
+                                </p>
+                              </div>
                                 <div className='col-md-2 text-right'>
-                                  <Button
-                                    id='delete-org-btn'
-                                    onClick={() =>
-                                      this.confirmRemove(organisation, () => {
-                                        deleteOrganisation()
-                                      })
-                                    }
-                                    className='btn btn--with-icon ml-auto btn--remove'
-                                  >
-                                    <RemoveIcon />
-                                  </Button>
+                              <Button
+                                id='delete-org-btn'
+                                onClick={() =>
+                                  this.confirmRemove(organisation, () => {
+                                    deleteOrganisation()
+                                  })
+                                }
+                                className='btn btn--with-icon ml-auto btn--remove'
+                              >
+                                <RemoveIcon />
+                              </Button>
                                 </div>
                               </div>
-                            </FormGroup>
-                          )}
+                          </FormGroup>
                         </TabItem>
 
                         <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
@@ -547,12 +548,13 @@ const OrganisationSettingsPage = class extends Component {
                               as a user or an administrator and then set
                               permission in your Project and Environment
                               settings.{' '}
-                              <ButtonLink
+                              <Button
+                                theme='text'
                                 href='https://docs.flagsmith.com/advanced-use/permissions'
                                 target='_blank'
                               >
                                 Learn about User Roles.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             <div>
                               <div>
@@ -641,8 +643,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     false
                                                                   }
                                                                 />,
-                                                                null,
-                                                                { large: true },
+                                                                'modal-lg',
                                                               )
                                                             }
                                                           >
@@ -746,6 +747,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                           <Button
                                                             className='btn-secondary'
+                                                            size='small'
                                                             style={{
                                                               width: 180,
                                                             }}
@@ -774,6 +776,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           <Button
                                                             className='ml-4'
                                                             type='button'
+                                                            size='small'
                                                             onClick={() => {
                                                               openConfirm(
                                                                 'Regenerate Invite Link',
@@ -804,12 +807,13 @@ const OrganisationSettingsPage = class extends Component {
                                                   standard user, once they have
                                                   joined you can edit their role
                                                   from the team members panel.{' '}
-                                                  <ButtonLink
+                                                  <Button
+                                                    theme='text'
                                                     target='_blank'
                                                     href='https://docs.flagsmith.com/advanced-use/permissions'
                                                   >
                                                     Learn about User Roles.
-                                                  </ButtonLink>
+                                                  </Button>
                                                 </p>
                                                 <div className='text-right mt-2'>
                                                   {error && (
@@ -971,7 +975,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           }}
                                                           onClick={onEditClick}
                                                         >
-                                                          <Button className='btn--link'>
+                                                          <Button theme='text'>
                                                             Edit Permissions
                                                           </Button>
                                                         </div>
@@ -1002,11 +1006,11 @@ const OrganisationSettingsPage = class extends Component {
                                                             id,
                                                             Format.userDisplayName(
                                                               {
+                                                                email,
                                                                 firstName:
                                                                   first_name,
                                                                 lastName:
                                                                   last_name,
-                                                                email,
                                                               },
                                                             ),
                                                             email,
@@ -1088,7 +1092,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         {link ? (
                                                           ' '
                                                         ) : (
-                                                          <button
+                                                          <Button
                                                             id='resend-invite'
                                                             type='button'
                                                             onClick={() =>
@@ -1096,10 +1100,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                 id,
                                                               )
                                                             }
-                                                            className='btn btn--link'
+                                                            theme='text'
                                                           >
                                                             Resend
-                                                          </button>
+                                                          </Button>
                                                         )}
                                                       </Column>
                                                       <Column>
@@ -1145,11 +1149,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    null,
-                                                    {
-                                                      className:
-                                                        'side-modal fade create-feature-modal in',
-                                                    },
+                                                    'side-modal fade create-feature-modal',
                                                   )
                                                 }
                                                 type='button'
@@ -1197,9 +1197,12 @@ const OrganisationSettingsPage = class extends Component {
                               Audit webhooks let you know when audit logs occur,
                               you can configure 1 or more audit webhooks per
                               organisation.{' '}
-                              <ButtonLink href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'>
+                              <Button
+                                theme='text'
+                                href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                              >
                                 Learn about Audit Webhooks.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             {webhooksLoading && !webhooks ? (
                               <Loader />
@@ -1232,7 +1235,9 @@ const OrganisationSettingsPage = class extends Component {
                                     key={webhook.id}
                                   >
                                     <div>
-                                      <ButtonLink>{webhook.url}</ButtonLink>
+                                      <Button theme='text'>
+                                        {webhook.url}
+                                      </Button>
                                       <div className='list-item-footer faint'>
                                         Created{' '}
                                         {moment(webhook.created_date).format(
@@ -1286,21 +1291,17 @@ const OrganisationSettingsPage = class extends Component {
                             )}
                           </FormGroup>
                         </TabItem>
-                        {Utils.getFlagsmithHasFeature('usage_chart') &&
-                          !Project.disableAnalytics && (
-                            <TabItem
-                              tabLabel='Usage'
-                              tabIcon='ion-md-analytics'
-                            >
-                              {this.state.tab === 4 && (
-                                <OrganisationUsage
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                />
-                              )}
-                            </TabItem>
-                          )}
+                        {!Project.disableAnalytics && (
+                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                            {this.state.tab === 4 && (
+                              <OrganisationUsage
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                              />
+                            )}
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )

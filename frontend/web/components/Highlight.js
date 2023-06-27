@@ -184,9 +184,9 @@ class Highlight extends React.Component {
         </pre>
         {this.state.expandable && (
           <div className='expand text-center mt-2'>
-            <ButtonLink
+            <Button
+              theme='text'
               onClick={() => this.setState({ expanded: !this.state.expanded })}
-              className='btn--link-primary'
             >
               {this.state.expanded ? 'Hide' : 'Show More'}
               <span
@@ -196,7 +196,7 @@ class Highlight extends React.Component {
                     : 'ion-ios-arrow-down'
                 }`}
               />
-            </ButtonLink>
+            </Button>
           </div>
         )}
       </div>

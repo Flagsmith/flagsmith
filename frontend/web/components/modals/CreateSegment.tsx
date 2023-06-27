@@ -20,7 +20,7 @@ import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
-import Button, { ButtonLink, ButtonOutline } from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import InfoMessage from 'components/InfoMessage'
 import Input from 'components/base/forms/Input'
@@ -255,9 +255,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
               style={{ marginTop: 20 }}
               className='text-center'
             >
-              <ButtonOutline data-test='add-rule' type='button'>
+              <Button theme='outline' data-test='add-rule' type='button'>
                 Add AND Condition
-              </ButtonOutline>
+              </Button>
             </div>
           )}
           {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
@@ -269,13 +269,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
               {Utils.getFlagsmithValue('not_operator') ? (
                 <Tooltip
                   title={
-                    <ButtonOutline
+                    <Button
+                      theme='outline'
                       className='ml-2 btn--outline-danger'
                       data-test='add-rule'
                       type='button'
                     >
                       Add AND NOT Condition
-                    </ButtonOutline>
+                    </Button>
                   }
                 >
                   {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(
@@ -283,13 +284,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   )}`}
                 </Tooltip>
               ) : (
-                <ButtonOutline
+                <Button
+                  theme='outline'
                   className='ml-2 btn--outline-danger'
                   data-test='add-rule'
                   type='button'
                 >
                   Add AND NOT Condition
-                </ButtonOutline>
+                </Button>
               )}
             </div>
           )}
@@ -415,9 +417,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <div className='text-right'>
           <Row className='justify-content-end'>
             {condensed && (
-              <ButtonLink type='button' onClick={onCancel} className='mr-4'>
+              <Button
+                theme='secondary'
+                type='button'
+                onClick={onCancel}
+                className='mr-4'
+              >
                 Cancel
-              </ButtonLink>
+              </Button>
             )}
             {isEdit ? (
               <Button
