@@ -24,10 +24,8 @@ from .rbac_wrapper import (
     get_roles_permission_data_for_project,
 )
 
-UserPermissionQs = QuerySet[
-    typing.Union[
-        UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
-    ]
+UserPermissionType = typing.Union[
+    UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
 ]
 
 GroupPermissionQs = QuerySet[
@@ -108,20 +106,20 @@ class PermissionData:
 
 
 def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
-    project_permission_qs_svc = _ProjectPermissionQsService(project_id, user_id)
+    project_permission_svc = _ProjectPermissionService(project_id, user_id)
     return PermissionData(
-        user=get_user_permission_data(project_permission_qs_svc.user_qs),
-        groups=get_groups_permission_data(project_permission_qs_svc.group_qs),
+        groups=get_groups_permission_data(project_permission_svc.group_qs),
+        user=get_user_permission_data(project_permission_svc.user_permission),
         roles=get_roles_permission_data_for_project(project_id, user_id),
     )
 
 
 def get_organisation_permission_data(organisation_id: int, user) -> PermissionData:
-    org_permission_qs_svc = _OrganisationPermissionQsService(organisation_id, user.id)
+    org_permission_svc = _OrganisationPermissionService(organisation_id, user.id)
     return PermissionData(
         is_organisation_admin=user.is_organisation_admin(organisation_id),
-        user=get_user_permission_data(org_permission_qs_svc.user_qs),
-        groups=get_groups_permission_data(org_permission_qs_svc.group_qs),
+        groups=get_groups_permission_data(org_permission_svc.group_qs),
+        user=get_user_permission_data(org_permission_svc.user_permission),
         roles=get_roles_permission_data_for_organisation(organisation_id, user.id),
     )
 
@@ -129,30 +127,22 @@ def get_organisation_permission_data(organisation_id: int, user) -> PermissionDa
 def get_environment_permission_data(
     environment_id: int, user_id: int
 ) -> PermissionData:
-    environment_permission_qs_svc = _EnvironmentPermissionQsService(
-        environment_id, user_id
-    )
+    environment_permission_svc = _EnvironmentPermissionService(environment_id, user_id)
     return PermissionData(
-        user=get_user_permission_data(environment_permission_qs_svc.user_qs),
-        groups=get_groups_permission_data(environment_permission_qs_svc.group_qs),
+        groups=get_groups_permission_data(environment_permission_svc.group_qs),
+        user=get_user_permission_data(environment_permission_svc.user_permission),
         roles=get_roles_permission_data_for_environment(environment_id, user_id),
     )
 
 
-def get_user_permission_data(
-    user_permission_qs: UserPermissionQs,
-) -> UserPermissionData:
+def get_user_permission_data(user_permission: UserPermissionType) -> UserPermissionData:
     user_permission_data = UserPermissionData()
-
-    for user_permission in user_permission_qs.prefetch_related("permissions"):
-        if getattr(user_permission, "admin", False):
-            user_permission_data.admin = True
-
-        user_permission_data.permissions.update(
-            permission.key
-            for permission in user_permission.permissions.all()
-            if permission.key
-        )
+    user_permission_data.permissions.update(
+        permission.key
+        for permission in user_permission.permissions.all()
+        if permission.key
+    )
+    user_permission_data.admin = getattr(user_permission, "admin", False)
 
     return user_permission_data
 
@@ -171,8 +161,7 @@ def get_groups_permission_data(
         group_data = GroupData(id=group.id, name=group.name)
         group_permission_data_object = GroupPermissionData(group=group_data)
 
-        if getattr(group_permission, "admin", False):
-            group_permission_data_object.admin = True
+        group_permission_data_object.admin = getattr(group_permission, "admin", False)
 
         group_permission_data_object.permissions.update(
             permission.key
@@ -186,13 +175,13 @@ def get_groups_permission_data(
 
 
 @dataclass
-class _OrganisationPermissionQsService:
+class _OrganisationPermissionService:
     organisation_id: int
     user_id: int
 
     @property
-    def user_qs(self) -> UserPermissionQs:
-        return UserOrganisationPermission.objects.filter(
+    def user_permission(self) -> UserOrganisationPermission:
+        return UserOrganisationPermission.objects.get(
             user=self.user_id, organisation_id=self.organisation_id
         )
 
@@ -204,13 +193,13 @@ class _OrganisationPermissionQsService:
 
 
 @dataclass
-class _EnvironmentPermissionQsService:
+class _EnvironmentPermissionService:
     environment_id: int
     user_id: int
 
     @property
-    def user_qs(self) -> UserPermissionQs:
-        return UserEnvironmentPermission.objects.filter(
+    def user_permission(self) -> UserEnvironmentPermission:
+        return UserEnvironmentPermission.objects.get(
             user_id=self.user_id, environment_id=self.environment_id
         )
 
@@ -222,13 +211,13 @@ class _EnvironmentPermissionQsService:
 
 
 @dataclass
-class _ProjectPermissionQsService:
+class _ProjectPermissionService:
     project_id: int
     user_id: int
 
     @property
-    def user_qs(self) -> UserPermissionQs:
-        return UserProjectPermission.objects.filter(
+    def user_permission(self) -> UserProjectPermission:
+        return UserProjectPermission.objects.get(
             project_id=self.project_id, user_id=self.user_id
         )
 
