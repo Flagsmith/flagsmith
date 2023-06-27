@@ -252,7 +252,7 @@ class TheComponent extends Component {
                       <Row>
                         <Flex>
                           <h5>Show JSON References</h5>
-                          <p>
+                          <p className='text-basic-small'>
                             Enabling this will allow you to inspect the JSON of
                             entities such as features within the platform.
                           </p>
@@ -269,7 +269,9 @@ class TheComponent extends Component {
                       <Row className='mt-4' space>
                         <div className='col-md-8 pl-0'>
                           <h5>Delete Account</h5>
-                          <p>Your account data will be permanently deleted.</p>
+                          <p className='text-basic-small'>
+                            Your account data will be permanently deleted.
+                          </p>
                         </div>
                         <Button
                           id='delete-user-btn'
@@ -289,13 +291,14 @@ class TheComponent extends Component {
                   <div className='mt-4'>
                     <div className='col-md-12'>
                       <h5>API Token</h5>
-                      <p>
+                      <p className='text-basic-small'>
                         You can use this token to integrate with our RESTful
                         API, the documentation can be found{' '}
                         <Button
                           theme='text'
                           href='https://api.flagsmith.com/api/v1/docs/'
                           target='_blank'
+                          className='small-link'
                         >
                           here
                         </Button>
@@ -405,7 +408,7 @@ class TheComponent extends Component {
                     )}
                     <div>
                       <h5>Two-Factor Authentication</h5>
-                      <p>
+                      <p className='text-basic-small'>
                         Increase your account's security by enabling Two-Factor
                         Authentication (2FA).
                       </p>

@@ -178,8 +178,8 @@ const FeaturesPage = class extends Component {
                       <div>
                         <Row>
                           <Flex>
-                            <h3>Features</h3>
-                            <p>
+                            <h4>Features</h4>
+                            <p className='text-basic'>
                               View and manage{' '}
                               <Tooltip
                                 title={

@@ -312,7 +312,7 @@ const OrganisationSettingsPage = class extends Component {
                                 >
                                   <h5>Organisation Name</h5>
                                   <Row>
-                                    <Column className='m-l-0'>
+                                    <Column className='ml-0'>
                                       <Input
                                         ref={(e) => (this.input = e)}
                                         data-test='organisation-name'
@@ -341,9 +341,11 @@ const OrganisationSettingsPage = class extends Component {
                                 </form>
                                 <div>
                                   <Row space className='mt-4'>
-                                    <h3 className='m-b-0'>Organisation ID</h3>
+                                    <h5 className='m-b-0'>Organisation ID</h5>
                                   </Row>
-                                  <p>{organisation.id}</p>
+                                  <p className='text-basic-small'>
+                                    {organisation.id}
+                                  </p>
                                 </div>
                                 {paymentsEnabled && (
                                   <div className='plan plan--current flex-row m-t-2'>
@@ -355,10 +357,10 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </div>
                                     <div className='plan__details flex flex-1'>
-                                      <p className='text-small m-b-0'>
+                                      <p className='text-basic-small m-b-0'>
                                         Your plan
                                       </p>
-                                      <h3 className='m-b-0'>
+                                      <h5 className='m-b-0'>
                                         {Utils.getPlanName(
                                           _.get(
                                             organisation,
@@ -372,14 +374,12 @@ const OrganisationSettingsPage = class extends Component {
                                               ),
                                             )
                                           : 'Free'}
-                                      </h3>
+                                      </h5>
                                       {!!chargebee_email && (
-                                      <p>
-                                        Management Email:{' '}
-                                        <strong>
-                                          {chargebee_email}
-                                        </strong>
-                                      </p>
+                                        <p>
+                                          Management Email:{' '}
+                                          <strong>{chargebee_email}</strong>
+                                        </p>
                                       )}
                                     </div>
                                     <div>
@@ -441,7 +441,7 @@ const OrganisationSettingsPage = class extends Component {
                           {Utils.getFlagsmithHasFeature('force_2fa') && (
                             <div>
                               <Row space className='mt-4'>
-                                <h3 className='m-b-0'>Enforce 2FA</h3>
+                                <h5 className='m-b-0'>Enforce 2FA</h5>
                                 {!force2faPermission ? (
                                   <Tooltip
                                     title={
@@ -461,7 +461,7 @@ const OrganisationSettingsPage = class extends Component {
                                   />
                                 )}
                               </Row>
-                              <p>
+                              <p className='text-basic-small'>
                                 Enabling this setting forces users within the
                                 organisation to setup 2 factor security.
                               </p>
@@ -471,10 +471,10 @@ const OrganisationSettingsPage = class extends Component {
                             'restrict_project_create_to_admin',
                           ) && (
                             <FormGroup className='mt-4'>
-                              <h3>Admin Settings</h3>
+                              <h5>Admin Settings</h5>
                               <div className='row'>
                                 <div className='col-md-10'>
-                                  <p>
+                                  <p className='text-basic-small'>
                                     Only allow organisation admins to create
                                     projects
                                   </p>
@@ -495,28 +495,28 @@ const OrganisationSettingsPage = class extends Component {
                             </FormGroup>
                           )}
                           <FormGroup className='mt-4'>
-                                <h3>Delete Organisation</h3>
-                              <div className='row'>
-                                <div className='col-md-10'>
-                                <p>
+                            <h5>Delete Organisation</h5>
+                            <div className='row'>
+                              <div className='col-md-10'>
+                                <p className='text-basic-small'>
                                   This organisation will be permanently deleted,
                                   along with all projects and features.
                                 </p>
                               </div>
-                                <div className='col-md-2 text-right'>
-                              <Button
-                                id='delete-org-btn'
-                                onClick={() =>
-                                  this.confirmRemove(organisation, () => {
-                                    deleteOrganisation()
-                                  })
-                                }
-                                className='btn btn--with-icon ml-auto btn--remove'
-                              >
-                                <RemoveIcon />
-                              </Button>
-                                </div>
+                              <div className='col-md-2 text-right'>
+                                <Button
+                                  id='delete-org-btn'
+                                  onClick={() =>
+                                    this.confirmRemove(organisation, () => {
+                                      deleteOrganisation()
+                                    })
+                                  }
+                                  className='btn btn--with-icon ml-auto btn--remove'
+                                >
+                                  <RemoveIcon />
+                                </Button>
                               </div>
+                            </div>
                           </FormGroup>
                         </TabItem>
 
@@ -541,8 +541,8 @@ const OrganisationSettingsPage = class extends Component {
                           />
 
                           <FormGroup className='mt-4'>
-                            <h3>Manage Users and Permissions</h3>
-                            <p>
+                            <h5>Manage Users and Permissions</h5>
+                            <p className='text-basic-small'>
                               Flagsmith lets you manage fine-grained permissions
                               for your projects and environments, invite members
                               as a user or an administrator and then set
@@ -552,6 +552,7 @@ const OrganisationSettingsPage = class extends Component {
                                 theme='text'
                                 href='https://docs.flagsmith.com/advanced-use/permissions'
                                 target='_blank'
+                                className='small-link'
                               >
                                 Learn about User Roles.
                               </Button>
@@ -569,9 +570,9 @@ const OrganisationSettingsPage = class extends Component {
                                       <Tabs inline transparent uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
-                                            <h3 className='m-b-0'>
+                                            <h5 className='m-b-0'>
                                               Team Members
-                                            </h3>
+                                            </h5>
                                             <Button
                                               disabled={
                                                 needsUpgradeForAdditionalSeats
@@ -802,7 +803,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                   </Row>
                                                 </div>
-                                                <p className='mt-3'>
+                                                <p className='mt-3 text-basic-small'>
                                                   Anyone with link can join as a
                                                   standard user, once they have
                                                   joined you can edit their role
@@ -811,6 +812,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     theme='text'
                                                     target='_blank'
                                                     href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    className='small-link'
                                                   >
                                                     Learn about User Roles.
                                                   </Button>
@@ -1137,9 +1139,9 @@ const OrganisationSettingsPage = class extends Component {
                                         <TabItem tabLabel='Groups'>
                                           <div>
                                             <Row space className='mt-4'>
-                                              <h3 className='m-b-0'>
+                                              <h5 className='m-b-0'>
                                                 User Groups
-                                              </h3>
+                                              </h5>
                                               <Button
                                                 className='mr-2'
                                                 id='btn-invite'
@@ -1157,7 +1159,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 Create Group
                                               </Button>
                                             </Row>
-                                            <p>
+                                            <p className='text-basic-small'>
                                               Groups allow you to manage
                                               permissions for viewing and
                                               editing projects, features and
@@ -1187,23 +1189,26 @@ const OrganisationSettingsPage = class extends Component {
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
-                            <Row className='mb-3' space>
-                              <h3 className='m-b-0'>Audit Webhooks</h3>
+                            <Column className='mb-3 ml-0'>
+                              <h5 className='m-b-0'>Audit Webhooks</h5>
+
+                              <p className='text-basic-small mb-4'>
+                                Audit webhooks let you know when audit logs
+                                occur, you can configure 1 or more audit
+                                webhooks per organisation.{' '}
+                                <Button
+                                  theme='text'
+                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  className='small-link'
+                                >
+                                  Learn about Audit Webhooks.
+                                </Button>
+                              </p>
                               <Button onClick={this.createWebhook}>
                                 Create audit webhook
                               </Button>
-                            </Row>
-                            <p>
-                              Audit webhooks let you know when audit logs occur,
-                              you can configure 1 or more audit webhooks per
-                              organisation.{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
-                              >
-                                Learn about Audit Webhooks.
-                              </Button>
-                            </p>
+                            </Column>
+
                             {webhooksLoading && !webhooks ? (
                               <Loader />
                             ) : (
@@ -1265,6 +1270,7 @@ const OrganisationSettingsPage = class extends Component {
                                 renderNoResults={
                                   <Panel
                                     icon='ion-md-cloud'
+                                    className='text-basic-small'
                                     title={
                                       <Tooltip
                                         title={

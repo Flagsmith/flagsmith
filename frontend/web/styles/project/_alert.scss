@@ -25,11 +25,10 @@
 .alert {
     border-radius: $default-border-radius;
     .title {
-        font-size: 16px;
-        font-weight: bold;
+        font-size: 14px;
         margin-bottom: 5px;
         .ion {
-            font-size: 18px;
+            font-size: 16px;
         }
     }
 }
@@ -39,6 +38,7 @@
     color: white;
     border-color: transparent;
     border-left: 5px solid $bt-brand-primary;
+    font-size: 14px;
     a {
         color: white;
         text-decoration: underline;

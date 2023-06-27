@@ -284,11 +284,11 @@ const UserPage = class extends Component {
                       <div className='container'>
                         <div className='row'>
                           <div className='col-md-12'>
-                            <h3>
+                            <h4>
                               {(identity && identity.identity.identifier) ||
                                 this.props.match.params.id}
-                            </h3>
-                            <p>
+                            </h4>
+                            <p className='text-basic'>
                               View and manage feature states and traits for this
                               user. This will override any feature states you
                               have for your current environment for this user
@@ -879,7 +879,7 @@ const UserPage = class extends Component {
                                         icon='ion-ios-person'
                                         title='Traits'
                                       >
-                                        <div className='text-center'>
+                                        <div className='text-center text-basic-small'>
                                           This user has no traits.
                                           <FormGroup className='text-center mb-0 mt-2'>
                                             {Utils.renderWithPermission(
@@ -976,7 +976,7 @@ const UserPage = class extends Component {
                                             icon='ion-ios-globe'
                                             title='Segments'
                                           >
-                                            <div>
+                                            <div className='text-caption'>
                                               This user is not a member of any
                                               segments.
                                             </div>

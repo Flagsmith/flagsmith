@@ -53,8 +53,10 @@ const CreateEnvironmentPage = class extends Component {
               <div>
                 {permission ? (
                   <div>
-                    <h3>Create Environment</h3>
-                    <p>{Constants.strings.ENVIRONMENT_DESCRIPTION}</p>
+                    <h4>Create Environment</h4>
+                    <p className='text-basic'>
+                      {Constants.strings.ENVIRONMENT_DESCRIPTION}
+                    </p>
                     <ProjectProvider
                       id={this.props.match.params.projectId}
                       onSave={this.onSave}

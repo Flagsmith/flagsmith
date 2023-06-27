@@ -312,6 +312,9 @@ button.btn {
     color: $text-icon-dark;
     font-weight: bold;
   }
+  &.small-link{
+    font-size: 14px;
+  }
 }
 
 $remove-btn-size: 24px;

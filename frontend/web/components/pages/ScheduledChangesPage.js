@@ -62,7 +62,7 @@ const ChangeRequestsPage = class extends Component {
         className='app-container container'
       >
         <Flex>
-          <h3>Scheduled Changes</h3>
+          <h4>Scheduled Changes</h4>
           {
             <div>
               {!hasSchedulePlan ? (
@@ -95,7 +95,7 @@ const ChangeRequestsPage = class extends Component {
                 </div>
               ) : (
                 <>
-                  <p>
+                  <p className='text-basic'>
                     Manage feature state changes that have been scheduled to go
                     live.
                   </p>

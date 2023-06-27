@@ -165,7 +165,7 @@ const ProjectSettingsPage = class extends Component {
                     <TabItem tabLabel='General' tabIcon='ion-md-settings'>
                       <div className='mt-4'>
                         <JSONReference title='Project' json={project} />
-                        <h3>Project Name</h3>
+                        <label>Project Name</label>
                         <FormGroup>
                           <form onSubmit={saveProject}>
                             <Row>
@@ -183,7 +183,7 @@ const ProjectSettingsPage = class extends Component {
                                   }
                                   isValid={name && name.length}
                                   type='text'
-                                  title={<h3>Project Name</h3>}
+                                  title={<label>Project Name</label>}
                                   placeholder='My Project Name'
                                 />
                               </Column>
@@ -200,10 +200,10 @@ const ProjectSettingsPage = class extends Component {
                       </div>
 
                       <FormGroup className='mt-4'>
-                        <h3>Prevent flag defaults</h3>
+                        <h5>Prevent flag defaults</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p>
+                            <p className='text-basic-small'>
                               By default, when you create a feature with a value
                               and enabled state it acts as a default for your
                               other environments. Enabling this setting forces
@@ -224,10 +224,10 @@ const ProjectSettingsPage = class extends Component {
                         </div>
                       </FormGroup>
                       <FormGroup className='mt-4'>
-                        <h3>Case sensitive features</h3>
+                        <h5>Case sensitive features</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p>
+                            <p className='text-basic-small'>
                               By default, features are lower case in order to
                               prevent human error. Enabling this will allow you
                               to use upper case characters when creating
@@ -249,10 +249,10 @@ const ProjectSettingsPage = class extends Component {
                         </div>
                       </FormGroup>
                       <FormGroup className='mt-4'>
-                        <h3>Feature name RegEx</h3>
+                        <h5>Feature name RegEx</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p>
+                            <p className='text-basic-small'>
                               This allows you to define a regular expression
                               that all feature names must adhere to.
                             </p>
@@ -349,10 +349,10 @@ const ProjectSettingsPage = class extends Component {
                       {!Utils.getIsEdge() &&
                         this.props.hasFeature('edge_identities') && (
                           <FormGroup className='mt-4'>
-                            <h3>Global Edge API Opt in</h3>
+                            <h5>Global Edge API Opt in</h5>
                             <div className='row'>
                               <div className='col-md-10'>
-                                <p>
+                                <p className='text-basic-small'>
                                   Migrate your project onto our Global Edge API.
                                   Existing Core API endpoints will continue to
                                   work whilst the migration takes place. Find
@@ -385,10 +385,12 @@ const ProjectSettingsPage = class extends Component {
                           </FormGroup>
                         )}
                       <FormGroup className='mt-4'>
-                        <h3>Delete Project</h3>
+                        <h5>Delete Project</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p>This project will be permanently deleted.</p>
+                            <p className='text-basic-small'>
+                              This project will be permanently deleted.
+                            </p>
                           </div>
                           <div className='col-md-2 text-right'>
                             <Button
@@ -415,10 +417,10 @@ const ProjectSettingsPage = class extends Component {
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4'>
-                            <h3>Hide disabled flags from SDKs</h3>
+                            <h5>Hide disabled flags from SDKs</h5>
                             <div className='row'>
                               <div className='col-md-10'>
-                                <p>
+                                <p className='text-basic-small'>
                                   To prevent letting your users know about your
                                   upcoming features and to cut down on payload,
                                   enabling this will prevent the API from
