@@ -8,7 +8,7 @@ import {
 import { JSXElementConstructor, ReactNode, useCallback, useState } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import Confirm from './ModalConfirm'
-import ModalDefault, { interceptClose } from './ModalDefault'
+import ModalDefault, { interceptClose, setInterceptClose } from './ModalDefault'
 import Alert from './ModalAlert'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
@@ -20,16 +20,19 @@ export const ModalBody = _ModalBody
 
 const withModal = (
   WrappedComponent: JSXElementConstructor<any>,
-  closePointer = 'closeModal',
+  { closePointer = 'closeModal', shouldInterceptClose = false } = {},
 ) => {
   return (props: ModalProps) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [isOpen, setIsOpen] = useState(true)
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const toggle = useCallback(() => {
-      if (interceptClose) {
-        interceptClose().then(() => {
-          setIsOpen(false)
+      if (interceptClose && shouldInterceptClose) {
+        interceptClose().then((result) => {
+          if (result) {
+            setIsOpen(false)
+            setInterceptClose(null)
+          }
         })
       } else {
         setIsOpen(false)
@@ -47,8 +50,8 @@ const withModal = (
 }
 
 const _Confirm = withModal(Confirm)
-const _ModalDefault2 = withModal(ModalDefault, 'closeModal2')
-const _ModalDefault = withModal(ModalDefault)
+const _ModalDefault2 = withModal(ModalDefault, { closePointer: 'closeModal2' })
+const _ModalDefault = withModal(ModalDefault, { shouldInterceptClose: true })
 
 export const openConfirm = (global.openConfirm = (
   title: string,

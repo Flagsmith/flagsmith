@@ -12,8 +12,8 @@ interface ModalDefault {
   className?: string
 }
 
-export let interceptClose: (() => Promise<any>) | null = null
-export const setInterceptClose = (promise: () => Promise<any>) => {
+export let interceptClose: (() => Promise<boolean>) | null = null
+export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
   interceptClose = promise
 }
 const ModalDefault: FC<ModalDefault> = ({
@@ -27,7 +27,10 @@ const ModalDefault: FC<ModalDefault> = ({
 }) => {
   const onDismissClick = async () => {
     if (interceptClose) {
-      await interceptClose()
+      const shouldClose = await interceptClose()
+      if (!shouldClose) {
+        return
+      }
       interceptClose = null
     }
     if (onDismiss) {

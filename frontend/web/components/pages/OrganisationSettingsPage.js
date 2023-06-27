@@ -550,7 +550,7 @@ const OrganisationSettingsPage = class extends Component {
                               settings.{' '}
                               <Button
                                 theme='text'
-                                href='https://docs.flagsmith.com/advanced-use/permissions'
+                                href='https://docs.flagsmith.com/system-administration/rbac'
                                 target='_blank'
                               >
                                 Learn about User Roles.
@@ -810,7 +810,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   <Button
                                                     theme='text'
                                                     target='_blank'
-                                                    href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    href='https://docs.flagsmith.com/system-administration/rbac'
                                                   >
                                                     Learn about User Roles.
                                                   </Button>

@@ -359,7 +359,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         environments.{' '}
         <Button
           theme='text'
-          href='https://docs.flagsmith.com/advanced-use/permissions'
+          href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
         >
           Learn about User Roles.
