@@ -25,10 +25,10 @@
 .alert {
     border-radius: $default-border-radius;
     .title {
-        font-size: 14px;
+        font-size: $font-size-sm;
         margin-bottom: 5px;
         .ion {
-            font-size: 16px;
+            font-size: $font-size-base
         }
     }
 }
