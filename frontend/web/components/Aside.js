@@ -114,9 +114,7 @@ const Aside = class extends Component {
         ProjectStore.model.environments[0] &&
         ProjectStore.model.environments[0].api_key)
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
-    const hasRbacPermission =
-      Utils.getPlansPermission('AUDIT') ||
-      !Utils.getFlagsmithHasFeature('scaleup_audit')
+    const hasRbacPermission = Utils.getPlansPermission('AUDIT')
     const changeRequest =
       environment &&
       Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
@@ -246,7 +244,7 @@ const Aside = class extends Component {
                     </div>
                     {
                       <React.Fragment>
-                        <div className='aside__main-content'>
+                        <div className='aside__main-content px-0'>
                           <div className='pl-4 pr-4 pt-4'>
                             <Row>
                               <h1 className='aside__project-title'>
@@ -318,25 +316,20 @@ const Aside = class extends Component {
                             <SegmentsIcon className='aside__nav-item--icon' />
                             Segments
                           </NavLink>
-
-                          {Utils.getFlagsmithHasFeature(
-                            'compare_environments',
-                          ) && (
-                            <NavLink
-                              id='integrations-link'
-                              activeClassName='active'
-                              className='aside__nav-item'
-                              to={`/project/${project.id}/environment/${environmentId}/compare`}
-                              exact
-                            >
-                              <span className='icon ion-md-git-pull-request aside__nav-item--icon' />
-                              Compare
-                            </NavLink>
-                          )}
+                          <NavLink
+                            id='integrations-link'
+                            activeClassName='active'
+                            className='aside__nav-item'
+                            to={`/project/${project.id}/environment/${environmentId}/compare`}
+                            exact
+                          >
+                            <span className='icon ion-md-git-pull-request aside__nav-item--icon' />
+                            Compare
+                          </NavLink>
 
                           <Permission
                             level='project'
-                            permission='ADMIN'
+                            permission='VIEW_AUDIT_LOG'
                             id={this.props.projectId}
                           >
                             {({ permission }) =>
@@ -391,18 +384,6 @@ const Aside = class extends Component {
                                 )
                               }
                             </Permission>
-                          )}
-                          {!!Utils.getFlagsmithHasFeature('beta_features') && (
-                            <NavLink
-                              id='integrations-link'
-                              activeClassName='active'
-                              className='aside__nav-item'
-                              to={`/project/${this.props.projectId}/beta-features`}
-                              exact
-                            >
-                              <i className='icon mr-2 ion-ios-flask aside__nav-item--icon' />
-                              Beta Features
-                            </NavLink>
                           )}
                           <Permission
                             level='project'

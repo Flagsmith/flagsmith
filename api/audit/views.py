@@ -6,7 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 
 from app.pagination import CustomPagination
 from audit.models import AuditLog
-from audit.permissions import OrganisationAuditLogPermissions
+from audit.permissions import (
+    OrganisationAuditLogPermissions,
+    ProjectAuditLogPermissions,
+)
 from audit.serializers import AuditLogSerializer, AuditLogsQueryParamSerializer
 from organisations.models import OrganisationRole
 
@@ -25,13 +28,13 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
-        project_id = serializer.data.get("project")
-        environment_ids = serializer.data.get("environments")
 
-        if project_id:
+        if project_id := serializer.data.get("project"):
             q = q & Q(project__id=project_id)
-        if environment_ids:
+        if environment_ids := serializer.data.get("environments"):
             q = q & Q(environment__id__in=environment_ids)
+        if is_system_event := serializer.data.get("is_system_event") is not None:
+            q = q & Q(is_system_event=is_system_event)
 
         search = serializer.data.get("search")
         if search:
@@ -58,3 +61,10 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
 
     def _get_base_filters(self) -> Q:
         return Q(project__organisation__id=self.kwargs["organisation_pk"])
+
+
+class ProjectAuditLogViewSet(_BaseAuditLogViewSet):
+    permission_classes = [IsAuthenticated, ProjectAuditLogPermissions]
+
+    def _get_base_filters(self) -> Q:
+        return Q(project__id=self.kwargs["project_pk"])

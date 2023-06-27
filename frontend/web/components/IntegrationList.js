@@ -41,9 +41,9 @@ class Integration extends Component {
               <div className='subtitle mt-2'>
                 {description}{' '}
                 {docs && (
-                  <a href={docs} target='_blank' rel='noreferrer'>
+                  <Button theme='text' href={docs} target='_blank'>
                     View docs
-                  </a>
+                  </Button>
                 )}
               </div>
             </Flex>
@@ -83,7 +83,7 @@ class Integration extends Component {
                     this.remove(integration)
                     return false
                   }}
-                  className='btn btn--with-icon btn--condensed reveal--child btn--remove'
+                  className='btn btn--with-icon p-0 reveal--child btn--remove'
                   type='submit'
                 >
                   <RemoveIcon />

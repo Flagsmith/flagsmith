@@ -8,10 +8,22 @@ export const auditLogService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       getAuditLogs: builder.query<Res['auditLogs'], Req['getAuditLogs']>({
-        providesTags: [{ id: 'LIST', type: 'AuditLog' }],
-        query: (params) => ({
-          url: `audit/?${Utils.toParam(params)}`,
-        }),
+        providesTags: (_, _2, q) => [
+          { id: `LIST-${q.project}`, type: 'AuditLog' },
+        ],
+        query: (params) => {
+          if (params.project) {
+            const { project, ...rest } = params
+            return {
+              url: `projects/${project}/audit/?${Utils.toParam({
+                ...rest,
+              })}`,
+            }
+          }
+          return {
+            url: `audit/?${Utils.toParam(params)}`,
+          }
+        },
       }),
       // END OF ENDPOINTS
     }),

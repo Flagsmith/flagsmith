@@ -69,6 +69,7 @@
               <th>24h</th>
               <th>7d</th>
               <th>30d</th>
+              <th>Overage</th>
             </tr>
           </thead>
           <tbody>
@@ -90,6 +91,7 @@
               <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
               <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
               <td><span class="{% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}badge badge-danger{% endif %}">{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</span></td>
+              <td>{% if org.subscription.get_api_call_overage > 0 %}<span class="badge badge-danger">{{org.subscription.get_api_call_overage}}</span>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

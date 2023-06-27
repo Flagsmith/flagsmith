@@ -210,11 +210,12 @@ const controller = {
   },
   invalidateInviteLink: (link) => {
     const id = AccountStore.getOrganisation().id
+    const role = link.role
     data
       .delete(`${Project.api}organisations/${id}/invite-links/${link.id}/`)
       .then(() =>
         data.post(`${Project.api}organisations/${id}/invite-links/`, {
-          role: 'ADMIN',
+          role: role,
         }),
       )
       .then(() =>

@@ -208,6 +208,10 @@ export default {
       'React Native': 'javascript',
     },
   },
+  colours: {
+    primary: '#6837fc',
+    white: '#ffffff',
+  },
   defaultRule: {
     operator: 'EQUAL',
     property: '',

@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -211,8 +213,21 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def feature_state(feature, environment):
-    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+def feature_state(feature: Feature, environment: Environment) -> FeatureState:
+    return FeatureState.objects.get(environment=environment, feature=feature)
+
+
+@pytest.fixture()
+def feature_state_with_value(environment: Environment) -> FeatureState:
+    feature = Feature.objects.create(
+        name="feature_with_value",
+        initial_value="foo",
+        default_enabled=True,
+        project=environment.project,
+    )
+    return FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment=None, identity=None
+    )
 
 
 @pytest.fixture()
@@ -264,7 +279,7 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation):
+def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation
     )
