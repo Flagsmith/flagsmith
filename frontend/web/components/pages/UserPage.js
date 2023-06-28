@@ -677,6 +677,7 @@ const UserPage = class extends Component {
                                                   ),
                                                 ),
                                                 <Button
+                                                  size='small'
                                                   disabled={!permission}
                                                   onClick={() =>
                                                     this.confirmRemove(
