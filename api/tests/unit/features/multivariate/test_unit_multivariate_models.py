@@ -42,7 +42,7 @@ def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(
     # clear MultivariateFeatureOption().feature populated by `AFTER_CREATE` hook
     mvfo.refresh_from_db()
 
-    mvfo.feature.delete()
+    feature.delete()
 
     history_instance = MagicMock()
 
