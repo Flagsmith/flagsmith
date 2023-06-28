@@ -525,14 +525,14 @@ const UserPage = class extends Component {
                                             />
                                           </Row>
                                           {hasUserOverride ? (
-                                            <Row className='chip'>
+                                            <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
                                               <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
                                               data-test={`feature-override-${i}`}
-                                              className='flex-row chip'
+                                              className='flex-row mt-1 chip'
                                             >
                                               <Row>
                                                 <Flex>
@@ -570,7 +570,7 @@ const UserPage = class extends Component {
                                             isMultiVariateOverride ? (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
@@ -588,7 +588,7 @@ const UserPage = class extends Component {
                                             ) : (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
