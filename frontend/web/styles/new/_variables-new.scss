@@ -4,8 +4,8 @@
 
 $primary: #6837fc;
 $primary400: #906af6;
-$primary600:#4e25db;
-$primary700:#3919b7;
+$primary600: #4e25db;
+$primary700: #3919b7;
 $danger: #ef4d56;
 $text-icon-dark: #1a2634;
 $link-color: $primary;
@@ -15,12 +15,18 @@ $theme-colors: (
   // add any additional color below
 );
 
+//Body
+$border-radius-sm: 4px;
+$border-radius: 6px;
+$border-radius-lg: 8px;
+
+
 //Buttons
 $btn-height: 48px;
 $btn-line-height: 48px;
 $btn-padding-y: 0;
 $btn-font-weight: 700;
-$btn-border-radius: 6px;
+$btn-border-radius: $border-radius;
 $btn-font-size: 16px;
 $btn-padding-x: 20px; // todo, $spacer PR should change this to $spacer*5
 $btn-padding-y-sm: 0;
@@ -29,8 +35,8 @@ $btn-font-size-sm: 14px;
 $btn-padding-y-lg: 0;
 $btn-padding-x-lg: 24px;
 $btn-font-size-lg: 18px;
-$btn-border-radius-sm: 6px;
-$btn-border-radius-lg: 8px;
+$btn-border-radius-sm: $border-radius;
+$btn-border-radius-lg: $border-radius-lg;
 $btn-disabled-opacity: 0.32;
 $btn-hover-bg: $primary600;
 $btn-hover-bg-dark: $primary400;
@@ -50,7 +56,6 @@ $btn-danger-active: #ac2646;
 $btn-border-width: 0;
 
 //Modal
-
 $modal-md: 600px;
 $modal-lg: 900px;
 
