@@ -12,8 +12,8 @@ from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
-from mappers import map_engine_identity_to_identity_document
 from users.models import FFAdminUser
+from util.mappers import map_engine_identity_to_identity_document
 
 from .audit import generate_change_dict
 from .tasks import generate_audit_log_records, sync_identity_document_features

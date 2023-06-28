@@ -6,11 +6,11 @@ from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
-from mappers import (
+from segments.models import Segment
+from util.mappers import (
     map_environment_to_environment_document,
     map_identity_to_identity_document,
 )
-from segments.models import Segment
 
 
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
 
 from pydantic import BaseModel
 
-from mappers.engine import (
+from util.mappers.engine import (
     map_environment_api_key_to_engine,
     map_environment_to_engine,
     map_identity_to_engine,

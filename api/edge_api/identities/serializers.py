@@ -24,7 +24,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
-from mappers import map_feature_to_engine, map_mv_option_to_engine
+from util.mappers import map_feature_to_engine, map_mv_option_to_engine
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 from .models import EdgeIdentity

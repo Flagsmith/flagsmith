@@ -8,7 +8,7 @@ from environments.identities.serializers import (
 )
 from features.feature_types import STANDARD
 from features.models import FeatureState
-from mappers import map_identity_to_identity_document
+from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 

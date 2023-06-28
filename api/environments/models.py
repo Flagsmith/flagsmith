@@ -41,9 +41,9 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
-from mappers import map_environment_to_environment_document
 from metadata.models import Metadata
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)

@@ -11,8 +11,8 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
-from mappers import map_identity_to_identity_document
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
 

@@ -1,6 +1,8 @@
 from environments.dynamodb import DynamoEnvironmentAPIKeyWrapper
 from environments.models import EnvironmentAPIKey
-from mappers import map_environment_api_key_to_environment_api_key_document
+from util.mappers import (
+    map_environment_api_key_to_environment_api_key_document,
+)
 
 
 def test_write_api_keys_calls_internal_methods_correctly(

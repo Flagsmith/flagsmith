@@ -6,8 +6,8 @@ from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
-from mappers import map_environment_to_environment_document
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
 
 
 @pytest.mark.parametrize(

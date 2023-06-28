@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.models import Environment
-from mappers import map_environment_to_environment_document
+from util.mappers import map_environment_to_environment_document
 
 
 def test_write_environments_calls_internal_methods_with_correct_arguments(

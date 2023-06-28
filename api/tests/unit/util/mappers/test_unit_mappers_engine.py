@@ -30,8 +30,8 @@ from features.models import FeatureSegment, FeatureState
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.webhook.models import WebhookConfiguration
-from mappers import engine
 from segments.models import Segment, SegmentRule
+from util.mappers import engine
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities import Identity, Trait
