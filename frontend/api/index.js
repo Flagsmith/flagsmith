@@ -17,7 +17,7 @@ const isDev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 8080
 
 // Setup Pipedrive Client
-const pipedriveDefaultClient = pipedrive.ApiClient.instance
+const pipedriveDefaultClient = new pipedrive.ApiClient()
 const pipedrivePersonsApi = new pipedrive.PersonsApi()
 const pipedriveLeadsApi = new pipedrive.LeadsApi()
 const pipedriveNotesApi = new pipedrive.NotesApi()
@@ -247,98 +247,102 @@ app.post('/api/event', (req, res) => {
   }
 })
 
-app.post('/api/webflow/contact-us', (req, res) => {
-  // Post to Slack
-  //if (process.env.SLACK_TOKEN && postToSlack) {
-  if (process.env.SLACK_TOKEN) {
-    formMessage = 'New Contact Us form!\r\n\r\n'
-    formMessage += 'Name: ' + req.body.data.name + '\r\n'
-    formMessage += 'Email: ' + req.body.data.email + '\r\n'
-    formMessage += 'Phone: ' + req.body.data.phone + '\r\n'
-    formMessage += 'Message: ' + req.body.data.message + '\r\n'
+app.post('/api/webflow/webhook', (req, res) => {
+  if (req.body.name === 'Contact Form') {
+    // Post to Slack
+    //if (process.env.SLACK_TOKEN && postToSlack) {
+    if (process.env.SLACK_TOKEN) {
+      formMessage = 'New Contact Us form!\r\n\r\n'
+      formMessage += 'Name: ' + req.body.data.name + '\r\n'
+      formMessage += 'Email: ' + req.body.data.email + '\r\n'
+      formMessage += 'Phone: ' + req.body.data.phone + '\r\n'
+      formMessage += 'Message: ' + req.body.data.message + '\r\n'
 
-    slackClient(formMessage, 'bentestslack').finally(() => {
-      console.log('Contact us form sent to Slack:\r\n' + formMessage)
-    })
-  }
+      slackClient(formMessage, 'bentestslack').finally(() => {
+        console.log('Contact us form sent to Slack:\r\n' + formMessage)
+      })
+    }
 
-  // Post to Pipedrive
-  if (postToSlack) {
-    const newPerson = pipedrive.NewPerson.constructFromObject({
-      name: request.body.input_1,
-      email: [
-        {
-          value: request.body.input_2,
-          primary: 'true',
-        },
-      ],
-      phone: [
-        {
-          label: 'work',
-          value: request.body.input_3,
-          primary: 'true',
-        },
-      ],
-    })
-
-    pipedrivePersonsApi.addPerson(newPerson).then(
-      (personData) => {
-        console.log(
-          `pipedrivePersonsApi called successfully. Returned data: ${personData}`,
-        )
-
-        const newLead = pipedrive.AddLeadRequest.constructFromObject({
-          title: `${personData.data.primary_email}`,
-          person_id: personData.data.id,
-          f001193d9249bb49d631d7c2c516ab72f9ebd204: 'Website Contact Us Form',
-        })
-
-        console.log('Adding Lead.')
-        pipedriveLeadsApi.addLead(newLead).then(
-          (leadData) => {
-            console.log(
-              `pipedriveLeadsApi called successfully. Returned data: ${leadData}`,
-            )
-
-            const newNote = pipedrive.AddNoteRequest.constructFromObject({
-              lead_id: leadData.data.id,
-              content: `From Website Contact Us Form: ${
-                request.body.input_5 != null
-                  ? request.body.input_5
-                  : 'No note supplied'
-              }`,
-            })
-
-            console.log('Adding Note.')
-            pipedriveNotesApi.addNote(newNote).then(
-              (noteData) => {
-                console.log(
-                  `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
-                )
-                response.status(200).json({
-                  body: noteData,
-                })
-              },
-              (error) => {
-                console.log('pipedriveNotesApi called error')
-                response.status(200).json({
-                  body: error,
-                })
-              },
-            )
+    // Post to Pipedrive
+    if (postToSlack && false) {
+      const newPerson = pipedrive.NewPerson.constructFromObject({
+        name: request.body.input_1,
+        email: [
+          {
+            value: request.body.input_2,
+            primary: 'true',
           },
-          (error) => {
-            console.log('pipedriveLeadsApi called error')
+        ],
+        phone: [
+          {
+            label: 'work',
+            value: request.body.input_3,
+            primary: 'true',
           },
-        )
-      },
-      (error) => {
-        console.log('pipedrivePersonsApi called error. Returned data:')
-        response.status(200).json({
-          body: personData,
-        })
-      },
-    )
+        ],
+      })
+
+      pipedrivePersonsApi.addPerson(newPerson).then(
+        (personData) => {
+          console.log(
+            `pipedrivePersonsApi called successfully. Returned data: ${personData}`,
+          )
+
+          const newLead = pipedrive.AddLeadRequest.constructFromObject({
+            title: `${personData.data.primary_email}`,
+            person_id: personData.data.id,
+            f001193d9249bb49d631d7c2c516ab72f9ebd204: 'Website Contact Us Form',
+          })
+
+          console.log('Adding Lead.')
+          pipedriveLeadsApi.addLead(newLead).then(
+            (leadData) => {
+              console.log(
+                `pipedriveLeadsApi called successfully. Returned data: ${leadData}`,
+              )
+
+              const newNote = pipedrive.AddNoteRequest.constructFromObject({
+                lead_id: leadData.data.id,
+                content: `From Website Contact Us Form: ${
+                  request.body.input_5 != null
+                    ? request.body.input_5
+                    : 'No note supplied'
+                }`,
+              })
+
+              console.log('Adding Note.')
+              pipedriveNotesApi.addNote(newNote).then(
+                (noteData) => {
+                  console.log(
+                    `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
+                  )
+                  response.status(200).json({
+                    body: noteData,
+                  })
+                },
+                (error) => {
+                  console.log('pipedriveNotesApi called error')
+                  response.status(200).json({
+                    body: error,
+                  })
+                },
+              )
+            },
+            (error) => {
+              console.log('pipedriveLeadsApi called error')
+            },
+          )
+        },
+        (error) => {
+          console.log('pipedrivePersonsApi called error. Returned data:')
+          response.status(200).json({
+            body: personData,
+          })
+        },
+      )
+    }
+  } else if (req.body.name === 'Subscribe Form') {
+    console.log('Todo: process Subscribe form')
   }
 
   res.status(200).json({})
