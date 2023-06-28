@@ -20,11 +20,11 @@
           <div class='float-left'>
             <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-influx-caches' %}">
               {% csrf_token %}
-              <input type="submit" value="Update subscription information influx caches" class="btn btn-primary m-1">
+              <input type="submit" value="Update subscription information caches from influx" class="btn btn-primary m-1">
             </form>
             <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-chargebee-caches' %}">
               {% csrf_token %}
-              <input type="submit" value="Update subscription information chargebee caches" class="btn btn-primary m-1">
+              <input type="submit" value="Update subscription information caches from chargebee" class="btn btn-primary m-1">
             </form>
             <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
           </div>

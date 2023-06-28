@@ -25,6 +25,7 @@ from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
@@ -202,14 +203,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
-
         if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
-            metadata = BaseSubscriptionMetadata(
+            metadata = ChargebeeObjMetadata(
                 seats=self.organisation.subscription_information_cache.allowed_seats,
                 api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
             )

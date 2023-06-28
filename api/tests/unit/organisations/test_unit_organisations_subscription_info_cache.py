@@ -1,5 +1,8 @@
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.subscription_info_cache import update_influx_data_caches
+from organisations.subscription_info_cache import (
+    update_chargebee_data_caches,
+    update_influx_data_caches,
+)
 from task_processor.task_run_method import TaskRunMethod
 
 
@@ -25,6 +28,7 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
 
     # When
     update_influx_data_caches()
+    update_chargebee_data_caches()
 
     # Then
     assert organisation.subscription_information_cache.updated_at
