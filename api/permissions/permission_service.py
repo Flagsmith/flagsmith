@@ -88,6 +88,9 @@ def user_has_organisation_permission(
     if is_user_organisation_admin(user, organisation):
         return True
 
+    # NOTE: since we store organisation admin slightly differently
+    # compared to project and environment `get_base_permission_filter`
+    # with allow_admin=True will not work for organisation
     base_filter = get_base_permission_filter(
         user, Organisation, permission_key, allow_admin=False
     )

@@ -5,7 +5,7 @@ from django.db import migrations
 from util.migrations import merge_duplicate_permissions
 
 
-def merge_duplicate_project_permissions(apps, schema_editor):
+def merge_duplicate_environment_permissions(apps, schema_editor):
     UserEnvironmentPermission = apps.get_model(
         "environment_permissions", "UserEnvironmentPermission"
     )
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            merge_duplicate_project_permissions,
+            merge_duplicate_environment_permissions,
             reverse_code=migrations.RunPython.noop,
         )
     ]
