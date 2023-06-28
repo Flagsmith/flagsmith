@@ -196,6 +196,10 @@ def test_revert_feature_state_versioning_migrations(migrator):
     assert NewFeatureState.objects.filter(id=v2.id).exists()
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_fix_feature_type_migration(migrator):
     # Given
     old_state = migrator.apply_initial_migration(
