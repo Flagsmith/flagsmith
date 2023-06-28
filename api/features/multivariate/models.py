@@ -9,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
@@ -16,6 +17,7 @@ from django_lifecycle import (
 
 from audit.related_object_type import RelatedObjectType
 from features.feature_states.models import AbstractBaseFeatureValueModel
+from features.feature_types import MULTIVARIATE, STANDARD
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -58,6 +60,17 @@ class MultivariateFeatureOption(
                 multivariate_feature_option=self,
                 percentage_allocation=self.default_percentage_allocation,
             )
+
+    @hook(AFTER_CREATE, when="feature.type", is_not="MULTIVARIATE")
+    def make_feature_multivariate(self):
+        self.feature.type = MULTIVARIATE
+        self.feature.save()
+
+    @hook(AFTER_DELETE)
+    def make_feature_standard(self):
+        if self.feature.multivariate_options.count() == 0:
+            self.feature.type = STANDARD
+            self.feature.save()
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Multivariate option added to feature '{self.feature.name}'."
