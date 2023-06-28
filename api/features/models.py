@@ -445,11 +445,18 @@ class FeatureState(
                 )
             return True
 
-        if self.feature_segment_id:
+        if (
+            self.feature_segment_id
+            and self.feature_segment_id != other.feature_segment_id
+        ):
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
             return not (
-                other.identity_id or self.feature_segment < other.feature_segment
+                other.identity_id
+                or (
+                    other.feature_segment_id
+                    and self.feature_segment < other.feature_segment
+                )
             )
 
         if self.type == other.type:
@@ -594,7 +601,13 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
-        identity_hash_key = identity.get_hash_key() if identity else None
+        identity_hash_key = (
+            identity.get_hash_key(
+                use_mv_v2_evaluation=identity.environment.use_mv_v2_evaluation
+            )
+            if identity
+            else None
+        )
         return self.get_feature_state_value_by_hash_key(identity_hash_key)
 
     def get_feature_state_value_defaults(self) -> dict:

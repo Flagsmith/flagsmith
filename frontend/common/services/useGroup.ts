@@ -57,8 +57,9 @@ export async function getGroups(
   data: Req['getGroups'],
   options?: Parameters<typeof groupService.endpoints.getGroups.initiate>[1],
 ) {
-  store.dispatch(groupService.endpoints.getGroups.initiate(data, options))
-  return Promise.all(store.dispatch(groupService.util.getRunningQueriesThunk()))
+  return store.dispatch(
+    groupService.endpoints.getGroups.initiate(data, options),
+  )
 }
 
 export async function createGroupAdmin(
@@ -68,10 +69,9 @@ export async function createGroupAdmin(
     typeof groupService.endpoints.createGroupAdmin.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     groupService.endpoints.createGroupAdmin.initiate(data, options),
   )
-  return Promise.all(store.dispatch(groupService.util.getRunningQueriesThunk()))
 }
 export async function deleteGroupAdmin(
   store: any,
@@ -80,18 +80,18 @@ export async function deleteGroupAdmin(
     typeof groupService.endpoints.deleteGroupAdmin.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     groupService.endpoints.deleteGroupAdmin.initiate(data, options),
   )
-  return Promise.all(store.dispatch(groupService.util.getRunningQueriesThunk()))
 }
 export async function deleteGroup(
   store: any,
   data: Req['deleteGroup'],
   options?: Parameters<typeof groupService.endpoints.deleteGroup.initiate>[1],
 ) {
-  store.dispatch(groupService.endpoints.deleteGroup.initiate(data, options))
-  return Promise.all(store.dispatch(groupService.util.getRunningQueriesThunk()))
+  return store.dispatch(
+    groupService.endpoints.deleteGroup.initiate(data, options),
+  )
 }
 export async function getGroup(
   store: any,

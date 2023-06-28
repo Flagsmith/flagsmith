@@ -273,3 +273,39 @@ def test_feature_segment_update_priorities_when_changes(
             "master_api_key_id": mocked_request.master_api_key.id,
         }
     )
+
+
+def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(
+    feature, segment, feature_segment, environment
+):
+    # Given
+    v1_segment_override = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+    v2_segment_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=2,
+    )
+
+    # Then
+    assert v2_segment_override > v1_segment_override
+
+
+def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(
+    feature, segment, feature_segment, environment
+):
+    # Given
+    segment_override = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+    environment_default = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # Then
+    assert segment_override > environment_default
