@@ -114,7 +114,7 @@
   overflow-x: auto;
   padding: 0.5em;
   background: $bt-code-background;
-  border-radius: 10px;
+  border-radius: $border-radius;
   &.no-pad {
     margin-bottom: 0;
   }
@@ -161,7 +161,7 @@
 }
 
 .btn.hljs-copy {
-  border-radius: 15px;
+  border-radius: $border-radius;
   opacity: 0;
   position: absolute;
   bottom:45px;
@@ -196,7 +196,7 @@
   font-size: .8em;
   padding-left: 10px;
   padding-right: 10px;
-  border-radius: $border-radius-default;
+  border-radius: $border-radius;
   margin-right: 5px;
   margin-bottom: $input-padding-y/2;
   .hljs-description {

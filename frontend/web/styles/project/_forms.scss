@@ -75,7 +75,7 @@
         &:focus {
             border:1px solid $bt-input-border-active;
         }
-        border-radius: $border-radius-default;
+        border-radius: $border-radius;
         color:$body-text;
         text-indent: 15px;
         height:100%;
@@ -105,7 +105,7 @@ label, .icon-primary {
     }
 }
 .hljs, .hljs-header, .value-editor pre {
-    border-radius: $default-border-radius;
+    border-radius: $border-radius;
 }
 
 .control-label {
@@ -140,14 +140,8 @@ label, .icon-primary {
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: .25rem;
+    border-radius: $border-radius-sm;
     transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.badge-pill {
-    padding-right: .6em;
-    padding-left: .6em;
-    border-radius: 10rem;
 }
 
 .badge-info {

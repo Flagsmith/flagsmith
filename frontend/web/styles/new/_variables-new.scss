@@ -22,8 +22,11 @@ $border-radius-lg: 8px;
 
 
 //Buttons
-$btn-height: 48px;
 $btn-line-height: 48px;
+$btn-line-height-lg: 54px;
+$btn-line-height-sm: 38px;
+$btn-line-height-xsm: 30px;
+
 $btn-padding-y: 0;
 $btn-font-weight: 700;
 $btn-border-radius: $border-radius;
@@ -53,7 +56,7 @@ $btn-outline-focus-bg-dark: rgba(149, 108, 255, 0.08);
 $btn-outline-active-bg: rgba(149, 108, 255, 0.16);
 $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
-$btn-border-width: 0;
+$btn-border-width: 1;
 
 //Modal
 $modal-md: 600px;
@@ -87,12 +90,18 @@ $line-height-xlg: 28px;
 $line-height-xsm: 18px;
 $line-height-xxsm: 24px;
 $body-color: $text-icon-dark;
+
+$font-sm: 14px;
+$font-caption: 13px;
+$font-caption-sm: 12px;
+$font-caption-xs: 11px;
 $font-sizes: (
-  small: 14px,
-  caption: 13px,
-  captionSmall: 12px,
-  captionXSmall: 11px,
+  small: $font-sm,
+  caption: $font-caption,
+  captionSmall: $font-caption-sm,
+  captionXSmall: $font-caption-xs,
 );
+
 $h1-font-size: 42px;
 $h1-line-height: 46px;
 $h2-font-size: 34px;

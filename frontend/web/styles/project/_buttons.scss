@@ -50,8 +50,16 @@ button.btn {
     background: white;
     border: 1px solid $primary !important;
     color: $primary;
-    line-height: 46px;
-
+    line-height: $btn-line-height -2;
+    &.btn-sm {
+      line-height: $btn-line-height-sm -2;
+    }
+    &.btn-xsm {
+      line-height: $btn-line-height-xsm -2;
+    }
+    &.btn-lg {
+      line-height: $btn-line-height-lg -2;
+    }
     &:hover,
     &:focus {
       background-color: $btn-outline-hover-bg;
@@ -149,7 +157,7 @@ button.btn {
     &:last-child {
       margin-right: 0;
     }
-    border-radius: $border-radius-default;
+    border-radius: $border-radius;
     color: #000 !important;
     font-weight: bold;
     text-align: left;
@@ -198,16 +206,16 @@ button.btn {
     }
   }
   &-lg {
-    line-height: 56px;
+    line-height: $btn-line-height-lg;
   }
 
   &-sm {
-    line-height: 40px;
+    line-height: $btn-line-height-sm;
   }
   &-xsm {
     padding: 0 12px;
-    line-height: 32px;
-    font-size: 12px;
+    line-height: $btn-line-height-xsm;
+    font-size: $font-caption-sm;
     border-radius: $border-radius-sm;
   }
 }
