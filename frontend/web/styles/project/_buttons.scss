@@ -50,15 +50,15 @@ button.btn {
     background: white;
     border: 1px solid $primary !important;
     color: $primary;
-    line-height: $btn-line-height -2;
+    line-height: calc($btn-line-height - 2px);
     &.btn-sm {
-      line-height: $btn-line-height-sm -2;
+      line-height: calc($btn-line-height-sm - 2px);
     }
     &.btn-xsm {
-      line-height: $btn-line-height-xsm -2;
+      line-height: calc($btn-line-height-xsm - 2px);
     }
     &.btn-lg {
-      line-height: $btn-line-height-lg -2;
+      line-height: calc($btn-line-height-lg - 2px);
     }
     &:hover,
     &:focus {
