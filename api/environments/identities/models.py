@@ -62,6 +62,8 @@ class Identity(models.Model):
         """
         segments = self.get_segments(traits=traits, overrides_only=True)
 
+        # TODO: rewrite this to use v2 versioning
+
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
         overridden_for_identity_query = Q(identity=self)

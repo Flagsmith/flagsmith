@@ -529,7 +529,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from > timezone.now()
+        return self.live_from is not None and self.live_from > timezone.now()
 
     def clone(
         self,
