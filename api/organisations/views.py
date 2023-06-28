@@ -183,9 +183,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             raise SubscriptionNotFound()
 
         subscription_details = organisation.subscription.get_subscription_metadata()
-        print("DEBUG: subscription_details:", subscription_details)
         serializer = self.get_serializer(instance=subscription_details)
-        print("DEBUG: serializer:", serializer.data)
 
         return Response(serializer.data)
 

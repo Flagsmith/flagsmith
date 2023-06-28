@@ -40,7 +40,6 @@ def update_caches(update_influx=False):
 
     for subscription_info_cache in organisation_info_cache_dict.values():
         subscription_info_cache.updated_at = timezone.now()
-        print("DEBUG: subscription_info_cache:", subscription_info_cache)
         if subscription_info_cache.id:
             to_update.append(subscription_info_cache)
         else:
