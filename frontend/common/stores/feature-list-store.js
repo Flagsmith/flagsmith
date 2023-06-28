@@ -141,49 +141,63 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-
-    Promise.all(
-      (flag.multivariate_options || []).map((v, i) => {
-        const originalMV = v.id
-          ? originalFlag.multivariate_options.find((m) => m.id === v.id)
-          : null
-        const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
-        const mvData = {
-          ...v,
-          default_percentage_allocation: 0,
-          feature: flag.id,
-        }
-        return (
-          originalMV
-            ? data.put(`${url}${originalMV.id}/`, mvData)
-            : data.post(url, mvData)
-        ).then((res) => {
-          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-          flag.multivariate_options[i] = res
-          return {
+    const oldType = originalFlag?.multivariate_options?.length
+      ? 'MULTIVARIATE'
+      : 'STANDARD'
+    const newType = flag?.multivariate_options?.multivariate_options?.length
+      ? 'MULTIVARIATE'
+      : 'STANDARD'
+    let updateFeaturePromise = Promise.resolve()
+    if (newType !== oldType) {
+      updateFeaturePromise = data.put(
+        `${Project.api}projects/${projectId}/features/${originalFlag.id}/`,
+        { ...originalFlag, type: newType },
+      )
+    }
+    updateFeaturePromise.then(() => {
+      Promise.all(
+        (flag.multivariate_options || []).map((v, i) => {
+          const originalMV = v.id
+            ? originalFlag.multivariate_options.find((m) => m.id === v.id)
+            : null
+          const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
+          const mvData = {
             ...v,
-            id: res.id,
+            default_percentage_allocation: 0,
+            feature: flag.id,
+          }
+          return (
+            originalMV
+              ? data.put(`${url}${originalMV.id}/`, mvData)
+              : data.post(url, mvData)
+          ).then((res) => {
+            // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
+            flag.multivariate_options[i] = res
+            return {
+              ...v,
+              id: res.id,
+            }
+          })
+        }),
+      )
+        .then(() => {
+          const deletedMv = originalFlag.multivariate_options.filter(
+            (v) => !flag.multivariate_options.find((x) => v.id === x.id),
+          )
+          return Promise.all(
+            deletedMv.map((v) =>
+              data.delete(
+                `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`,
+              ),
+            ),
+          )
+        })
+        .then(() => {
+          if (onComplete) {
+            onComplete(flag)
           }
         })
-      }),
-    )
-      .then(() => {
-        const deletedMv = originalFlag.multivariate_options.filter(
-          (v) => !flag.multivariate_options.find((x) => v.id === x.id),
-        )
-        return Promise.all(
-          deletedMv.map((v) =>
-            data.delete(
-              `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`,
-            ),
-          ),
-        )
-      })
-      .then(() => {
-        if (onComplete) {
-          onComplete(flag)
-        }
-      })
+    })
   },
   editFeatureState: (
     projectId,
