@@ -71,3 +71,17 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
         identity_document_without_fs["composite_key"]
     )
+
+
+def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_client):
+    # Given
+    api_key = "not-valid"
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-list", args=[api_key]
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND

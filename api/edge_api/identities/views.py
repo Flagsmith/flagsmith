@@ -4,6 +4,7 @@ import typing
 
 import marshmallow
 from boto3.dynamodb.conditions import Key
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
@@ -149,7 +150,9 @@ class EdgeIdentityViewSet(
         """
         Get environment object from URL parameters in request.
         """
-        return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
+        return get_object_or_404(
+            Environment, api_key=self.kwargs["environment_api_key"]
+        )
 
     def perform_destroy(self, instance):
         EdgeIdentity.dynamo_wrapper.delete_item(instance["composite_key"])
