@@ -18,9 +18,9 @@ const port = process.env.PORT || 8080
 
 // Setup Pipedrive Client
 const pipedriveDefaultClient = new pipedrive.ApiClient()
-const pipedrivePersonsApi = new pipedrive.PersonsApi()
-const pipedriveLeadsApi = new pipedrive.LeadsApi()
-const pipedriveNotesApi = new pipedrive.NotesApi()
+const pipedrivePersonsApi = new pipedrive.PersonsApi(pipedriveDefaultClient)
+const pipedriveLeadsApi = new pipedrive.LeadsApi(pipedriveDefaultClient)
+const pipedriveNotesApi = new pipedrive.NotesApi(pipedriveDefaultClient)
 const pipedriveApiToken = pipedriveDefaultClient.authentications.api_key
 pipedriveApiToken.apiKey = process.env.PIPEDRIVE_API_KEY
 
@@ -250,8 +250,7 @@ app.post('/api/event', (req, res) => {
 app.post('/api/webflow/webhook', (req, res) => {
   if (req.body.name === 'Contact Form') {
     // Post to Slack
-    //if (process.env.SLACK_TOKEN && postToSlack) {
-    if (process.env.SLACK_TOKEN) {
+    if (process.env.SLACK_TOKEN && postToSlack) {
       formMessage = 'New Contact Us form!\r\n\r\n'
       formMessage += 'Name: ' + req.body.data.name + '\r\n'
       formMessage += 'Email: ' + req.body.data.email + '\r\n'
@@ -264,19 +263,19 @@ app.post('/api/webflow/webhook', (req, res) => {
     }
 
     // Post to Pipedrive
-    if (postToSlack && false) {
+    if (postToSlack) {
       const newPerson = pipedrive.NewPerson.constructFromObject({
-        name: request.body.input_1,
+        name: req.body.data.name,
         email: [
           {
-            value: request.body.input_2,
+            value: req.body.data.email,
             primary: 'true',
           },
         ],
         phone: [
           {
             label: 'work',
-            value: request.body.input_3,
+            value: req.body.data.phone,
             primary: 'true',
           },
         ],
@@ -304,8 +303,8 @@ app.post('/api/webflow/webhook', (req, res) => {
               const newNote = pipedrive.AddNoteRequest.constructFromObject({
                 lead_id: leadData.data.id,
                 content: `From Website Contact Us Form: ${
-                  request.body.input_5 != null
-                    ? request.body.input_5
+                  req.body.data.message != null
+                    ? req.body.data.message
                     : 'No note supplied'
                 }`,
               })
