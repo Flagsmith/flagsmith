@@ -812,12 +812,13 @@ const OrganisationSettingsPage = class extends Component {
                                                     have joined you can edit
                                                     their role from the team
                                                     members panel.{' '}
-                                                    <ButtonLink
+                                                    <Button
+                                                      theme='text'
                                                       target='_blank'
                                                       href='https://docs.flagsmith.com/advanced-use/permissions'
                                                     >
                                                       Learn about User Roles.
-                                                    </ButtonLink>
+                                                    </Button>
                                                   </p>
                                                   <div className='text-right mt-2'>
                                                     {error && (
