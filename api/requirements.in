@@ -38,7 +38,7 @@ analytics-python
 django-lifecycle
 drf-writable-nested
 django-filter
-flagsmith-flag-engine
+flagsmith-flag-engine>=4
 boto3
 slack_sdk
 rudder-sdk-python
@@ -52,3 +52,5 @@ pymemcache
 google-re2
 django-softdelete
 simplejson
+pydantic
+pyngo
