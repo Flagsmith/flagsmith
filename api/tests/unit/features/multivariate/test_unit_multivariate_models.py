@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import FeatureSegment, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -38,6 +39,11 @@ def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(
 ):
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
+    # Since the `AFTER_CREATE` hook on MultivariateFeatureOption mutates
+    # mvfo.feature directly, we need to make sure that we have the latest
+    # changes in order for the `AFTER_DELETE` hook to behave correctly.
+    mvfo.refresh_from_db()
+
     feature.delete()
 
     history_instance = MagicMock()
@@ -119,3 +125,38 @@ def test_multivariate_feature_state_value_get_update_log_message_segment_overrid
         msg
         == f"Multivariate value changed for feature '{multivariate_feature.name}' and segment '{segment.name}'."
     )
+
+
+def test_deleting_last_mv_option_of_mulitvariate_feature_converts_it_into_standard(
+    multivariate_feature,
+):
+    # Given
+    assert multivariate_feature.type == MULTIVARIATE
+    mv_options = multivariate_feature.multivariate_options.all()
+
+    # First, let's delete the first mv option
+    mv_options[0].delete()
+
+    # Then - the feature should still be multivariate
+    multivariate_feature.refresh_from_db()
+    assert multivariate_feature.type == MULTIVARIATE
+
+    # Next, let's delete the mv options
+    for mv_option in mv_options:
+        mv_option.delete()
+
+    # Then
+    multivariate_feature.refresh_from_db()
+    assert multivariate_feature.type == STANDARD
+
+
+def test_adding_mv_option_to_standard_feature_converts_it_into_multivariate(feature):
+    # Given
+    assert feature.type == STANDARD
+
+    # When
+    MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
+
+    # Then
+    feature.refresh_from_db()
+    assert feature.type == MULTIVARIATE

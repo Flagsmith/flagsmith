@@ -444,7 +444,7 @@ def test_edge_identities_create_mv_featurestate(
     actual_feature_state = args[0]["identity_features"][0]
 
     assert actual_feature_state["feature"] == {
-        "type": "STANDARD",
+        "type": "MULTIVARIATE",
         "name": feature_name,
         "id": feature,
     }
