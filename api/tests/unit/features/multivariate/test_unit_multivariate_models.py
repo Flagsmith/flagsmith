@@ -39,7 +39,9 @@ def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(
 ):
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
-    # clear MultivariateFeatureOption().feature populated by `AFTER_CREATE` hook
+    # Since the `AFTER_CREATE` hook on MultivariateFeatureOption mutates
+    # mvfo.feature directly, we need to make sure that we have the latest
+    # changes in order for the `AFTER_DELETE` hook to behave correctly.
     mvfo.refresh_from_db()
 
     feature.delete()
