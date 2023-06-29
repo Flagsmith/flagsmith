@@ -4,7 +4,6 @@ import random
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from flag_engine.api.document_builders import build_identity_document
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
@@ -13,6 +12,7 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
 
@@ -169,7 +169,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     # Given
     Segment.objects.create(name="Non matching segment", project=project)
     expected_segment_ids = [identity_matching_segment.id]
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     identity_uuid = identity_document["identity_uuid"]
 
     edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
