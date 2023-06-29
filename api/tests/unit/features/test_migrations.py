@@ -4,6 +4,8 @@ import pytest
 from django.conf import settings
 from django.utils import timezone
 
+from features.feature_types import MULTIVARIATE, STANDARD
+
 
 @pytest.mark.skipif(
     settings.SKIP_MIGRATION_TESTS is True,
@@ -192,3 +194,50 @@ def test_revert_feature_state_versioning_migrations(migrator):
     assert not NewFeatureState.objects.filter(id=v1.id).exists()
     assert not NewFeatureState.objects.filter(id=v3.id).exists()
     assert NewFeatureState.objects.filter(id=v2.id).exists()
+
+
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_fix_feature_type_migration(migrator):
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("features", "0058_alter_boolean_values")
+    )
+
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Project = old_state.apps.get_model("projects", "Project")
+    Feature = old_state.apps.get_model("features", "Feature")
+    MultivariateFeatureOption = old_state.apps.get_model(
+        "multivariate", "MultivariateFeatureOption"
+    )
+
+    organisation = Organisation.objects.create(name="test org")
+    project = Project.objects.create(
+        name="test project", organisation_id=organisation.id
+    )
+    standard_feature = Feature.objects.create(
+        name="test_feature", project_id=project.id
+    )
+    mv_feature = Feature.objects.create(
+        name="mv_feature", project_id=project.id, type=MULTIVARIATE
+    )
+    standard_feature_with_mv_option = Feature.objects.create(
+        name="standard_feature_with_mv_option", project_id=project.id
+    )
+    MultivariateFeatureOption.objects.create(
+        feature_id=standard_feature_with_mv_option.id
+    )
+
+    # When
+    new_state = migrator.apply_tested_migration(("features", "0059_fix_feature_type"))
+
+    # Then
+    NewFeature = new_state.apps.get_model("features", "Feature")
+    assert (
+        NewFeature.objects.get(id=standard_feature_with_mv_option.id).type
+        == MULTIVARIATE
+    )
+    assert NewFeature.objects.get(id=standard_feature.id).type == STANDARD
+    assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
