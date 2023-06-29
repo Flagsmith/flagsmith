@@ -612,7 +612,7 @@ class FeatureState(
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
         identity_hash_key = (
             identity.get_hash_key(
-                use_mv_v2_evaluation=identity.environment.use_mv_v2_evaluation
+                identity.environment.use_identity_composite_key_for_hashing
             )
             if identity
             else None
