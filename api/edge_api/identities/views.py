@@ -7,10 +7,7 @@ from boto3.dynamodb.conditions import Key
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
+from flag_engine.identities.builders import build_identity_model
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
@@ -56,6 +53,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
+from util.mappers import map_engine_identity_to_identity_document
 
 from .exceptions import TraitPersistenceError
 from .models import EdgeIdentity
@@ -184,7 +182,9 @@ class EdgeIdentityViewSet(
             ) from validation_error
         _, traits_updated = identity.update_traits([trait])
         if traits_updated:
-            EdgeIdentity.dynamo_wrapper.put_item(build_identity_dict(identity))
+            EdgeIdentity.dynamo_wrapper.put_item(
+                map_engine_identity_to_identity_document(identity)
+            )
 
         data = trait.dict()
         return Response(data, status=status.HTTP_200_OK)
