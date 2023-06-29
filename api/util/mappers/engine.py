@@ -194,6 +194,7 @@ def map_environment_to_engine(
             "dynatrace_config",
             "heap_config",
             "mixpanel_config",
+            "rudderstack_config",
             "segment_config",
         )
     }
@@ -267,6 +268,9 @@ def map_environment_to_engine(
     mixpanel_config_model = map_integration_to_engine(
         integration_configs.pop("mixpanel_config"),
     )
+    rudderstack_config_model = map_integration_to_engine(
+        integration_configs.pop("rudderstack_config"),
+    )
     segment_config_model = map_integration_to_engine(
         integration_configs.pop("segment_config"),
     )
@@ -295,6 +299,7 @@ def map_environment_to_engine(
         dynatrace_config=dynatrace_config_model,
         heap_config=heap_config_model,
         mixpanel_config=mixpanel_config_model,
+        rudderstack_config=rudderstack_config_model,
         segment_config=segment_config_model,
         webhook_config=webhook_config_model,
     )

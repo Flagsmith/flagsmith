@@ -357,13 +357,14 @@ def test_map_environment_to_engine__return_expected(
         updated_at=environment.updated_at,
         use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
         hide_sensitive_data=environment.hide_sensitive_data,
-        amplitude_config=None,
-        segment_config=None,
-        mixpanel_config=None,
-        heap_config=None,
-        dynatrace_config=None,
-        webhook_config=None,
         hide_disabled_flags=environment.hide_disabled_flags,
+        amplitude_config=None,
+        dynatrace_config=None,
+        heap_config=None,
+        mixpanel_config=None,
+        rudderstack_config=None,
+        segment_config=None,
+        webhook_config=None,
     )
 
     # When
