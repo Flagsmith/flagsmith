@@ -10,9 +10,6 @@ from django.db.models import Count, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-from api.organisations.subscriptions.exceptions import (
-    SubscriptionDoesNotSupportSeatUpgrade,
-)
 from environments.models import Environment
 from environments.permissions.models import (
     UserEnvironmentPermission,
@@ -26,6 +23,9 @@ from organisations.models import (
 from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
+)
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
 )
 from projects.models import (
     Project,

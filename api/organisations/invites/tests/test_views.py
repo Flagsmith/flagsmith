@@ -275,6 +275,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     settings,
 ):
     # Given
+    settings.ENABLE_CHARGEBEE = True
     settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
 
