@@ -262,6 +262,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
             - User is an admin for the organisation the project belongs to
         """
+
         user_permission_query = Q()
         group_permission_query = Q()
         for permission in permissions:

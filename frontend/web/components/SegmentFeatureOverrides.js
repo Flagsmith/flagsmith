@@ -158,7 +158,8 @@ const SegmentOverride = ConfigProvider(
               {!!controlValue &&
                 (!multivariateOptions || !multivariateOptions.length) && (
                   <div className='mt-2 mb-3 text-right'>
-                    <ButtonLink
+                    <Button
+                      theme='text'
                       className='text-primary'
                       onClick={() => {
                         this.setState({ changed: true })
@@ -172,7 +173,7 @@ const SegmentOverride = ConfigProvider(
                       <div className='text-primary text-small'>
                         Copy from Environment Value
                       </div>
-                    </ButtonLink>
+                    </Button>
                   </div>
                 )}
 

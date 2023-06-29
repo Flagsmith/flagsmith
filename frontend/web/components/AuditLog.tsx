@@ -43,7 +43,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   const hasHadResults = useRef(false)
 
   const {
-    data: auditLog,
+    data: projectAuditLog,
     isError,
     isFetching,
   } = useGetAuditLogsQuery({
@@ -59,7 +59,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
     //eslint-disable-next-line
   }, [])
 
-  if (auditLog?.results) {
+  if (projectAuditLog?.results) {
     hasHadResults.current = true
   }
 
@@ -96,9 +96,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>
@@ -117,13 +115,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
       isLoading={isFetching}
       className='no-pad'
       icon='ion-md-browsers'
-      items={auditLog?.results}
+      items={projectAuditLog?.results}
       filter={envFilter}
       search={searchInput}
       onChange={(e: InputEvent) => {
         setSearchInput(Utils.safeParseEventValue(e))
       }}
-      paging={{ ...(auditLog || {}), page, pageSize: props.pageSize }}
+      paging={{ ...(projectAuditLog || {}), page, pageSize: props.pageSize }}
       nextPage={() => {
         setPage(page + 1)
       }}
@@ -147,7 +145,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         <JSONReference
           className='mt-4 ml-2'
           title={'Audit'}
-          json={auditLog?.results}
+          json={projectAuditLog?.results}
         />
       )}
       renderNoResults={

@@ -86,5 +86,8 @@ export type Req = {
   }>
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }
+  getMyGroups: PagedRequest<{
+    orgId: string
+  }>
   // END OF TYPES
 }

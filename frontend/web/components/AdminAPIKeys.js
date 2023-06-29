@@ -87,7 +87,8 @@ export class CreateAPIKey extends PureComponent {
                   <Button
                     disabled={!this.state.expiry_date}
                     onClick={() => this.setState({ expiry_date: null })}
-                    className='btn-danger'
+                    theme='secondary'
+                    size='small'
                   >
                     Clear
                   </Button>
@@ -117,6 +118,7 @@ export class CreateAPIKey extends PureComponent {
                 data-test='create-feature-btn'
                 id='create-feature-btn'
                 disabled={this.state.isSaving || !this.state.name}
+                size='small'
               >
                 {this.state.isSaving ? 'Creating' : 'Create'}
               </Button>
@@ -199,22 +201,22 @@ export default class AdminAPIKeys extends PureComponent {
           title={'Terraform API Keys'}
           json={apiKeys}
         />
-        <Row space className='mt-4'>
-          <h3>Terraform API Keys</h3>
+        <Column className='mt-4 ml-0'>
+          <h5 className='mb-0'>Terraform API Keys</h5>
+          <p className='mb-4 fs-small lh-sm'>
+            Terraform API keys are used to authenticate with the Admin API.{' '}
+            <Button
+              theme='text'
+              href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
+              target='_blank'
+            >
+              Learn about Terraform Keys.
+            </Button>
+          </p>
           <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
             Create Terraform API Key
           </Button>
-          <p>
-            Terraform API keys are used to authenticate with the Admin API.{' '}
-            <a
-              href='https://docs.flagsmith.com/advanced-use/system-administration#terraform-api-keys-for-organisations'
-              target='_blank'
-              rel='noreferrer'
-            >
-              Learn about Terraform Keys.
-            </a>
-          </p>
-        </Row>
+        </Column>
         {this.state.isLoading && (
           <div className='text-center'>
             <Loader />

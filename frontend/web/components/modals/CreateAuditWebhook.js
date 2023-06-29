@@ -93,7 +93,7 @@ const CreateAuditWebhook = class extends Component {
                   <a
                     className='text-info'
                     target='_blank'
-                    href='https://docs.flagsmith.com/advanced-use/system-administration#validating-signature'
+                    href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
                     rel='noreferrer'
                   >
                     More info
@@ -156,14 +156,14 @@ const CreateAuditWebhook = class extends Component {
             <FormGroup className='mb-4 ml-1'>
               <div>
                 <label>Example Payload </label>
-                <a
-                  className='link-dark ml-2'
-                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks'
+                <Button
+                  theme='text'
+                  className='ml-2'
+                  href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                   target='_blank'
-                  rel='noreferrer'
                 >
                   View docs
-                </a>
+                </Button>
                 <Highlight
                   forceExpanded
                   style={{ marginBottom: 10 }}

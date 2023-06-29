@@ -11,7 +11,7 @@ import {
 } from 'common/services/useSegment'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
-import Button, { ButtonLink } from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import PanelSearch from 'components/PanelSearch'
@@ -36,13 +36,13 @@ const HowToUseSegmentsMessage = () => (
     <p className='alert alert-info'>
       In order to use segments, please set the segment_operators remote config
       value.{' '}
-      <a
+      <Button
+        theme='text'
         target='_blank'
         href='https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith'
-        rel='noreferrer'
       >
         Learn about self hosting
-      </a>
+      </Button>
       .
     </p>
   </div>
@@ -85,8 +85,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      null,
-      { className: 'fade side-modal create-new-segment-modal' },
+      'fade side-modal create-new-segment-modal',
     )
   }
   const confirmRemove = (segment: Segment, cb?: () => void) => {
@@ -123,12 +122,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      null,
-      {
-        className: 'fade side-modal create-segment-modal',
-        onClose: () => {
-          history.replaceState({}, '', `${document.location.pathname}`)
-        },
+      'fade side-modal create-segment-modal',
+      () => {
+        history.replaceState({}, '', `${document.location.pathname}`)
       },
     )
   }
@@ -168,19 +164,20 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row>
-                  <Flex>
-                    <h3>Segments</h3>
+                <Row className='justify-content-between'>
+                  <Flex style={{ maxWidth: '700px' }}>
+                    <h4>Segments</h4>
                     <p>
                       Create and manage groups of users with similar traits.
                       Segments can be used to override features within the
                       features page for any environment.{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         target='_blank'
                         href='https://docs.flagsmith.com/basic-features/managing-segments'
                       >
                         Learn about Segments.
-                      </ButtonLink>
+                      </Button>
                     </p>
                   </Flex>
                   <FormGroup className='float-right'>
@@ -190,7 +187,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         'Manage segments',
                         <Button
                           disabled={hasNoOperators || !manageSegmentsPermission}
-                          className='btn-lg btn-primary'
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'
                           onClick={newSegment}
@@ -245,7 +241,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                             }
                           >
                             <Row>
-                              <ButtonLink>
+                              <Button theme='text'>
                                 <span data-test={`segment-${i}-name`}>
                                   {name}
                                   {feature && (
@@ -255,7 +251,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                     </div>
                                   )}
                                 </span>
-                              </ButtonLink>
+                              </Button>
                             </Row>
                             <div className='list-item-footer faint'>
                               {description || 'No description'}
@@ -296,10 +292,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   />
                 </FormGroup>
 
-                <div className='mt-2'>
+                <p>
                   Segments require you to identitfy users, setting traits will
                   add users to segments.
-                </div>
+                </p>
                 <FormGroup className='mt-4'>
                   <CodeHelp
                     title='Using segments'
@@ -314,20 +310,22 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   <Panel icon='ion-ios-globe' title='1. creating a segment'>
                     <p>
                       You can create a segment that targets{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
                         target='_blank'
                       >
                         User Traits
-                      </ButtonLink>
+                      </Button>
                       . As user's traits are updated they will automatically be
                       added to the segments based on the rules you create.{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         href='https://docs.flagsmith.com/basic-features/managing-segments'
                         target='_blank'
                       >
                         Check out the documentation on Segments
-                      </ButtonLink>
+                      </Button>
                       .
                     </p>
                   </Panel>

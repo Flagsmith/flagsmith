@@ -6,8 +6,8 @@ import { Environment } from 'common/types/responses'
 import Format from 'common/utils/format'
 import { sortBy } from 'lodash'
 import PanelSearch from './PanelSearch'
-import { ButtonOutline } from './base/forms/Button'
 import Input from './base/forms/Input'
+import Button from './base/forms/Button'
 
 type OrgProjectSelectType = {
   organisationId?: string | null
@@ -111,7 +111,8 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               }}
               value={projectId}
             />
-            <ButtonOutline
+            <Button
+              theme='outline'
               style={{ width: 80 }}
               className='btn-secondary ml-2 mr-4'
               onClick={() => {
@@ -119,7 +120,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               }}
             >
               Copy
-            </ButtonOutline>
+            </Button>
           </Row>
           <Row>
             <span style={{ width: 150 }} className='mr-2 text-left'>
@@ -132,7 +133,8 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               }}
               value={environmentId}
             />
-            <ButtonOutline
+            <Button
+              theme='outline'
               style={{ width: 80 }}
               className='btn-secondary ml-2 mr-4'
               onClick={() => {
@@ -140,7 +142,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               }}
             >
               Copy
-            </ButtonOutline>
+            </Button>
           </Row>
         </div>
       ) : (

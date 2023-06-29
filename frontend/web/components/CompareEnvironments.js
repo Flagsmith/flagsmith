@@ -114,8 +114,10 @@ class CompareEnvironments extends Component {
   render() {
     return (
       <div>
-        <h3>Compare Environments</h3>
-        <p>Compare feature flag changes across environments.</p>
+        <h5>Compare Environments</h5>
+        <p className='fs-small lh-sm'>
+          Compare feature flag changes across environments.
+        </p>
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>

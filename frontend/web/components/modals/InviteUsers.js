@@ -129,7 +129,8 @@ const InviteUsers = class extends Component {
               ))}
 
               <div className='text-center mt-2'>
-                <ButtonLink
+                <Button
+                  theme='text'
                   id='btn-add-invite'
                   disabled={isSaving || !this.isValid()}
                   type='button'
@@ -139,18 +140,19 @@ const InviteUsers = class extends Component {
                 >
                   {isSaving ? 'Sending' : 'Invite additional member'}
                   <span className='pl-2 icon ion-ios-add' />
-                </ButtonLink>
+                </Button>
               </div>
 
               <p className='mt-3'>
                 Users without administrator privileges will need to be invited
                 to individual projects.{' '}
-                <ButtonLink
+                <Button
+                  theme='text'
                   target='_blank'
-                  href='https://docs.flagsmith.com/advanced-use/permissions'
+                  href='https://docs.flagsmith.com/system-administration/rbac'
                 >
                   Learn about User Roles.
-                </ButtonLink>
+                </Button>
               </p>
               <div className='text-right mt-2'>
                 {error && <Error error={error} />}

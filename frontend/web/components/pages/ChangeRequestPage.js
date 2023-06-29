@@ -15,6 +15,9 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import InfoMessage from 'components/InfoMessage'
 import Permission from 'common/providers/Permission'
 import JSONReference from 'components/JSONReference'
+import MyGroupsSelect from 'components/MyGroupsSelect'
+import { getMyGroups } from 'common/services/useMyGroup'
+import { getStore } from 'common/store'
 
 const labelWidth = 200
 
@@ -26,7 +29,10 @@ const ChangeRequestsPage = class extends Component {
   }
 
   getApprovals = (users, approvals) =>
-    users.filter((v) => approvals.includes(v.id))
+    users?.filter((v) => approvals?.includes(v.group))
+
+  getGroupApprovals = (groups, approvals) =>
+      groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   constructor(props, context) {
     super(props, context)
@@ -47,7 +53,11 @@ const ChangeRequestsPage = class extends Component {
       this.props.match.params.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
-    AppActions.getGroups(AccountStore.getOrganisation().id)
+    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
+      (res) => {
+        this.setState({ groups: res?.data?.results || [] })
+      },
+    )
   }
 
   removeOwner = (id, isUser = true) => {
@@ -107,7 +117,6 @@ const ChangeRequestsPage = class extends Component {
       'Edit Change Request',
       <CreateFlagModal
         isEdit
-        router={this.context.router}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}
@@ -124,8 +133,7 @@ const ChangeRequestsPage = class extends Component {
         }}
         flagId={environmentFlag.id}
       />,
-      null,
-      { className: 'side-modal fade create-feature-modal' },
+      'side-modal fade create-feature-modal',
     )
   }
 
@@ -209,7 +217,7 @@ const ChangeRequestsPage = class extends Component {
       )
     }
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
-    const orgGroups = UserGroupStore && UserGroupStore.groups
+    const orgGroups = this.state.groups || []
     const ownerUsers =
       changeRequest &&
       this.getApprovals(
@@ -218,10 +226,7 @@ const ChangeRequestsPage = class extends Component {
       )
     const ownerGroups =
       changeRequest &&
-      this.getApprovals(
-        orgGroups,
-        changeRequest.group_assignments.map((v) => v.group),
-      )
+      this.getGroupApprovals(orgGroups, changeRequest.group_assignments)
     const featureId =
       changeRequest &&
       changeRequest.feature_states[0] &&
@@ -317,7 +322,7 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid'
               >
-                <div className='row'>
+                <Row>
                   <Flex className='mb-2 ml-3'>
                     <Row>
                       <Flex>
@@ -338,8 +343,9 @@ const ChangeRequestsPage = class extends Component {
                     {(!committedBy || !committedBy.id || isScheduled) && (
                       <Row>
                         <Button
+                          theme='danger'
                           onClick={this.deleteChangeRequest}
-                          className='btn btn--small btn-danger'
+                          size='small'
                         >
                           Delete
                         </Button>
@@ -347,14 +353,15 @@ const ChangeRequestsPage = class extends Component {
                           onClick={() =>
                             this.editChangeRequest(projectFlag, environmentFlag)
                           }
-                          className='btn btn--small ml-2'
+                          className='ml-2'
+                          size='small'
                         >
                           Edit
                         </Button>
                       </Row>
                     )}
                   </div>
-                </div>
+                </Row>
                 <div className='row'>
                   <div className='col-md-12'>
                     {isScheduled && (
@@ -411,7 +418,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  className='btn--link btn--link-primary'
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showUsers: true })
                                   }
@@ -448,7 +455,7 @@ const ChangeRequestsPage = class extends Component {
                                 </span>
                               </Row>
                               <Row className='mt-2'>
-                                {ownerGroups.length !== 0 &&
+                                {!!ownerGroups?.length &&
                                   ownerGroups.map((g) => (
                                     <Row
                                       key={g.id}
@@ -468,7 +475,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                   ))}
                                 <Button
-                                  className='btn--link btn--link-primary'
+                                  theme='text'
                                   onClick={() =>
                                     this.setState({ showGroups: true })
                                   }
@@ -476,10 +483,11 @@ const ChangeRequestsPage = class extends Component {
                                   Add group
                                 </Button>
                               </Row>
-                              <GroupSelect
+                              <MyGroupsSelect
+                                orgId={AccountStore.getOrganisation().id}
                                 groups={orgGroups}
-                                selectedGroups={
-                                  ownerGroups && ownerGroups.map((v) => v.group)
+                                value={
+                                  ownerGroups && ownerGroups.map((v) => v.id)
                                 }
                                 onAdd={this.addOwner}
                                 onRemove={this.removeOwner}
@@ -511,7 +519,7 @@ const ChangeRequestsPage = class extends Component {
 
                         <a
                           target='_blank'
-                          className='btn--link btn--link-primary'
+                          className='btn-link'
                           href={`/project/${
                             this.props.match.params.projectId
                           }/environment/${
