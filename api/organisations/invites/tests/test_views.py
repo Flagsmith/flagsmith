@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
@@ -71,6 +72,7 @@ class InviteLinkViewSetTestCase(APITestCase):
 
     def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(self):
         # Given
+        settings.ENABLE_CHARGEBEE = True
         url = reverse(
             "api-v1:organisations:organisation-invite-links-list",
             args=[self.organisation.pk],
@@ -87,6 +89,7 @@ class InviteLinkViewSetTestCase(APITestCase):
 
     def test_delete_invite_link_for_organisation(self):
         # Given
+        settings.ENABLE_CHARGEBEE = True
         invite = InviteLink.objects.create(organisation=self.organisation)
         url = reverse(
             "api-v1:organisations:organisation-invite-links-detail",
@@ -104,6 +107,7 @@ class InviteLinkViewSetTestCase(APITestCase):
 
     def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(self):
         # Given
+        settings.ENABLE_CHARGEBEE = True
         invite = InviteLink.objects.create(organisation=self.organisation)
         url = reverse(
             "api-v1:organisations:organisation-invite-links-detail",
