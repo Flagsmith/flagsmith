@@ -264,6 +264,8 @@ app.post('/api/webflow/webhook', (req, res) => {
 
     // Post to Pipedrive
     if (postToSlack) {
+      console.log('Contact Us Form - Creating Pipedrive Lead')
+
       const newPerson = pipedrive.NewPerson.constructFromObject({
         name: req.body.data.name,
         email: [
@@ -280,6 +282,8 @@ app.post('/api/webflow/webhook', (req, res) => {
           },
         ],
       })
+
+      console.log('Contact Us Form - Person Created')
 
       pipedrivePersonsApi.addPerson(newPerson).then(
         (personData) => {
@@ -315,9 +319,6 @@ app.post('/api/webflow/webhook', (req, res) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
-                  res.status(200).json({
-                    body: noteData,
-                  })
                 },
                 (error) => {
                   console.log('pipedriveNotesApi called error')
@@ -326,6 +327,8 @@ app.post('/api/webflow/webhook', (req, res) => {
                   })
                 },
               )
+
+              res.status(200).json({})
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
@@ -343,8 +346,6 @@ app.post('/api/webflow/webhook', (req, res) => {
   } else if (req.body.name === 'Subscribe Form') {
     console.log('Todo: process Subscribe form')
   }
-
-  res.status(200).json({})
 })
 
 // Catch all to render index template
