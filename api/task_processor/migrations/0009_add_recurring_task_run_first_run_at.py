@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('task_processor', '0006_auto_20230221_0802'),
+        ('task_processor', '0008_add_get_task_to_process_function'),
     ]
 
     operations = [
