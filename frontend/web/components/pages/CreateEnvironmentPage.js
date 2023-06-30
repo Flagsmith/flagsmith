@@ -112,8 +112,7 @@ const CreateEnvironmentPage = class extends Component {
                                     ref={(e) => (this.input = e)}
                                     value={this.state.description}
                                     inputProps={{
-                                      className: 'input--wide',
-                                      style: { minHeight: 100 },
+                                      className: 'input--wide textarea-lg',
                                     }}
                                     onChange={(e) =>
                                       this.setState({

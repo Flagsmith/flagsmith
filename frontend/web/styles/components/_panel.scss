@@ -84,19 +84,6 @@
 		}
 	}
 
-	input[type="text"] {
-		opacity: 0.5;
-		&:focus {
-			opacity: 1;
-		}
-		outline: none;
-		border: none;
-		border-radius: $border-radius;
-		//padding: 2px 10px 2px 30px;
-		font-weight: normal;
-		//color: $panel-heading-color;
-	}
-
 	.icon {
 		color:$panel-icon-color;
 		&.text-white {
