@@ -24,6 +24,9 @@ from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
 from projects.models import (
     Project,
     UserPermissionGroupProjectPermission,
@@ -170,13 +173,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
-        subscription_metadata = organisation.subscription.get_subscription_metadata()
 
-        if (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and invite.organisation.num_seats >= subscription_metadata.seats
+        if settings.ENABLE_CHARGEBEE and organisation.over_plan_seats_limit(
+            additional_seats=1
         ):
-            organisation.subscription.add_single_seat()
+            if organisation.is_auto_seat_upgrade_available():
+                organisation.subscription.add_single_seat()
+            else:
+                raise SubscriptionDoesNotSupportSeatUpgrade()
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
