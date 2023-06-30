@@ -319,32 +319,40 @@ app.post('/api/webflow/webhook', (req, res) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
+
+                  return res.status(200).json({})
                 },
                 (error) => {
                   console.log('pipedriveNotesApi called error')
-                  res.status(200).json({
+                  return res.status(200).json({
                     body: error,
                   })
                 },
               )
-
-              res.status(200).json({})
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
+              return res.status(200).json({
+                body: error,
+              })
             },
           )
         },
         (error) => {
           console.log('pipedrivePersonsApi called error. Returned data:')
-          res.status(200).json({
-            body: personData,
+          return res.status(200).json({
+            body: error,
           })
         },
       )
+    } else {
+      return res.status(200).json({})
     }
   } else if (req.body.name === 'Subscribe Form') {
     console.log('Todo: process Subscribe form')
+    return res.status(200).json({})
+  } else {
+    return res.status(200).json({})
   }
 })
 
