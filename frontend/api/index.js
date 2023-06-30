@@ -257,7 +257,7 @@ app.post('/api/webflow/webhook', (req, res) => {
       formMessage += 'Phone: ' + req.body.data.phone + '\r\n'
       formMessage += 'Message: ' + req.body.data.message + '\r\n'
 
-      slackClient(formMessage, 'bentestslack').finally(() => {
+      slackClient(formMessage, 'contact-sales').finally(() => {
         console.log('Contact us form sent to Slack:\r\n' + formMessage)
       })
     }
@@ -315,13 +315,13 @@ app.post('/api/webflow/webhook', (req, res) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
-                  response.status(200).json({
+                  res.status(200).json({
                     body: noteData,
                   })
                 },
                 (error) => {
                   console.log('pipedriveNotesApi called error')
-                  response.status(200).json({
+                  res.status(200).json({
                     body: error,
                   })
                 },
@@ -334,7 +334,7 @@ app.post('/api/webflow/webhook', (req, res) => {
         },
         (error) => {
           console.log('pipedrivePersonsApi called error. Returned data:')
-          response.status(200).json({
+          res.status(200).json({
             body: personData,
           })
         },
