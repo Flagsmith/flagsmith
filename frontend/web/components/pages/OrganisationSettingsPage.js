@@ -74,19 +74,19 @@ const OrganisationSettingsPage = class extends Component {
 
   deleteInvite = (id) => {
     openConfirm(
-      <h3>Delete Invite</h3>,
-      <p>Are you sure you want to delete this invite?</p>,
+      'Delete Invite',
+      <div>Are you sure you want to delete this invite?</div>,
       () => AppActions.deleteInvite(id),
     )
   }
 
   deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Remove User</h3>,
-      <p>
+      'Remove User',
+      <div>
         Are you sure you want to remove the user{' '}
         <strong>{userDisplayName}</strong> from the organisation?
-      </p>,
+      </div>,
       () => AppActions.deleteUser(id),
     )
   }

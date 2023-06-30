@@ -170,7 +170,7 @@ export default class AdminAPIKeys extends PureComponent {
 
   remove = (v) => {
     openConfirm(
-      <div>Are you sure?</div>,
+      'Are you sure?',
       <div>
         This will revoke the API key <strong>{v.name}</strong> ({v.prefix}
         *****************). This change cannot be reversed.

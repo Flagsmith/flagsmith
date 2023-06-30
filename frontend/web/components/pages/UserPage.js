@@ -213,12 +213,12 @@ const UserPage = class extends Component {
 
   removeTrait = (id, trait_key) => {
     openConfirm(
-      <h3>Delete Trait</h3>,
-      <p>
+      'Delete Trait',
+      <div>
         {'Are you sure you want to delete trait '}
         <strong>{trait_key}</strong>
         {' from this user?'}
-      </p>,
+      </div>,
       () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,

@@ -100,11 +100,11 @@ class ServerSideSDKKeys extends Component {
 
   remove = (id, name) => {
     openConfirm(
-      <h3>Delete Server-side Environment Keys</h3>,
-      <p>
+      'Delete Server-side Environment Keys',
+      <div>
         The key <strong>{name}</strong> will be permanently deleted, are you
         sure?
-      </p>,
+      </div>,
       () => {
         this.setState({ isSaving: true })
         _data

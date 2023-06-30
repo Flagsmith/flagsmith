@@ -150,15 +150,15 @@ const ChangeRequestsPage = class extends Component {
     const scheduledDate = moment(changeRequest.feature_states[0].live_from)
 
     openConfirm(
-      <h3>{isScheduled ? 'Schedule' : 'Publish'} Change Request</h3>,
-      <p>
+      `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
+      <div>
         Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
         change request
         {isScheduled
           ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
           : ''}
         ? This will adjust the feature for your environment.
-      </p>,
+      </div>,
       () => {
         AppActions.actionChangeRequest(
           this.props.match.params.id,

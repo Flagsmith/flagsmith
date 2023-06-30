@@ -70,7 +70,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
 
   const removeIdentity = (id: string, identifier: string) => {
     openConfirm(
-      "Delete User",
+      'Delete User',
       <div>
         {'Are you sure you want to delete '}
         <strong>{identifier}</strong>

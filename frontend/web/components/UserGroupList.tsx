@@ -37,12 +37,12 @@ const UserGroupsList: FC<UserGroupsListType> = ({
 
   const removeGroup = (id: number, name: string) => {
     openConfirm(
-      <h3>Delete Group</h3>,
-      <p>
+      'Delete Group',
+      <div>
         {'Are you sure you want to delete '}
         <strong>{name}</strong>
         {'?'}
-      </p>,
+      </div>,
       () => deleteGroup({ id, orgId }),
     )
   }
@@ -95,10 +95,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               </Flex>
 
               {onEditPermissions && isAdmin && (
-                <Button
-                  theme="text"
-                  onClick={() => onEditPermissions(group)}
-                >
+                <Button theme='text' onClick={() => onEditPermissions(group)}>
                   Edit Permissions
                 </Button>
               )}
