@@ -6,6 +6,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
+from environments.sdk.serializers_mixins import (
+    HideSensitiveFieldsSerializerMixin,
+)
 from users.serializers import UserIdsSerializer, UserListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -45,6 +48,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
 
@@ -106,6 +110,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "project",
             "num_segment_overrides",
             "num_identity_overrides",
+            "is_server_key_only",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -225,6 +230,15 @@ class FeatureSerializer(serializers.ModelSerializer):
         writeonly_fields = ("initial_value", "default_enabled")
 
 
+class SDKFeatureSerializer(HideSensitiveFieldsSerializerMixin, FeatureSerializer):
+    sensitive_fields = (
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    )
+
+
 class FeatureStateSerializerFull(serializers.ModelSerializer):
     feature = FeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()
@@ -243,6 +257,18 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
 
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
+
+
+class SDKFeatureStateSerializer(
+    HideSensitiveFieldsSerializerMixin, FeatureStateSerializerFull
+):
+    feature = SDKFeatureSerializer()
+    sensitive_fields = (
+        "id",
+        "environment",
+        "identity",
+        "feature_segment",
+    )
 
 
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):

@@ -14,8 +14,12 @@ from environments.models import Webhook
 from webhooks.webhooks import WebhookEventType
 
 
+@pytest.mark.parametrize(
+    "new_enabled_state, new_value",
+    ((True, "foo"), (False, "foo"), (True, None), (False, None)),
+)
 def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
-    mocker, environment, feature, identity, admin_user
+    mocker, environment, feature, identity, admin_user, new_value, new_enabled_state
 ):
     # Given
     mock_call_environment_webhooks = mocker.patch(
@@ -31,8 +35,6 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     )
 
     now_isoformat = timezone.now().isoformat()
-    new_enabled_state = True
-    new_value = "foo"
 
     # When
     call_environment_webhook_for_feature_state_change(
@@ -54,12 +56,12 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        new_enabled_state,
-        new_value,
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=new_enabled_state,
+        value=new_value,
     )
     data = call_args[0][1]
     assert data["new_state"] == mock_feature_state_data
@@ -107,12 +109,12 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        previous_enabled_state,
-        previous_value,
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=previous_enabled_state,
+        value=previous_value,
     )
     data = call_args[0][1]
     assert data["previous_state"] == mock_feature_state_data
@@ -120,8 +122,26 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["timestamp"] == now_isoformat
 
 
+@pytest.mark.parametrize(
+    "previous_enabled_state, previous_value, new_enabled_state, new_value",
+    (
+        (True, None, True, "foo"),
+        (True, "foo", False, "foo"),
+        (True, "foo", True, "bar"),
+        (True, None, False, None),
+        (False, None, True, None),
+    ),
+)
 def test_call_environment_webhook_for_feature_state_change_with_both_states(
-    mocker, environment, feature, identity, admin_user
+    mocker,
+    environment,
+    feature,
+    identity,
+    admin_user,
+    previous_enabled_state,
+    previous_value,
+    new_enabled_state,
+    new_value,
 ):
     # Given
     mock_call_environment_webhooks = mocker.patch(
@@ -137,11 +157,6 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     )
 
     now_isoformat = timezone.now().isoformat()
-    previous_enabled_state = False
-    previous_value = "foo"
-
-    new_enabled_state = True
-    new_value = "bar"
 
     # When
     call_environment_webhook_for_feature_state_change(
@@ -167,23 +182,23 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     assert mock_generate_webhook_feature_state_data.call_count == 2
     mock_generate_data_calls = mock_generate_webhook_feature_state_data.call_args_list
 
-    assert mock_generate_data_calls[0][0] == (
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        previous_enabled_state,
-        previous_value,
-    )
+    assert mock_generate_data_calls[0][1] == {
+        "feature": feature,
+        "environment": environment,
+        "identity_id": identity.id,
+        "identity_identifier": identity.identifier,
+        "enabled": previous_enabled_state,
+        "value": previous_value,
+    }
 
-    assert mock_generate_data_calls[1][0] == (
-        feature,
-        environment,
-        identity.id,
-        identity.identifier,
-        new_enabled_state,
-        new_value,
-    )
+    assert mock_generate_data_calls[1][1] == {
+        "feature": feature,
+        "environment": environment,
+        "identity_id": identity.id,
+        "identity_identifier": identity.identifier,
+        "enabled": new_enabled_state,
+        "value": new_value,
+    }
 
     data = call_args[0][1]
     assert data["previous_state"] == mock_feature_state_data

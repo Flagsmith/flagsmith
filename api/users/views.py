@@ -3,7 +3,7 @@ from contextlib import suppress
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
+    MANAGE_USER_GROUPS,
     NestedIsOrganisationAdminPermission,
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
@@ -30,7 +31,9 @@ from users.models import (
     UserPermissionGroupMembership,
 )
 from users.serializers import (
+    ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
+    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
@@ -144,11 +147,31 @@ def password_reset_redirect(request, uidb64, token):
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
-    serializer_class = UserPermissionGroupSerializerDetail
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
-        return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
+        organisation = Organisation.objects.get(id=organisation_pk)
+
+        qs = UserPermissionGroup.objects.filter(organisation=organisation)
+        if not self.request.user.has_organisation_permission(
+            organisation, MANAGE_USER_GROUPS
+        ):
+            q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if self.action != "my_groups":
+                # my-groups returns a very cut down set of data, we can safely allow all users
+                # of the groups to retrieve them in this case, otherwise they must be a group
+                # admin.
+                q = q & Q(userpermissiongroupmembership__group_admin=True)
+            qs = qs.filter(q)
+
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return UserPermissionGroupSerializerDetail
+        elif self.action == "my_groups":
+            return MyUserPermissionGroupsSerializer
+        return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -204,6 +227,13 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+    @action(detail=False, methods=["GET"], url_path="my-groups")
+    def my_groups(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
 
 
 @permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])

@@ -7,4 +7,4 @@ var traitList = new List<Trait> { new Trait(${TRAIT_NAME}, 42) };
 
 # Identify a user, set their traits and retrieve the flags
 var flags = _flagsmithClient.GetIdentityFlags(${userId}, traitList).Result;
-`;
+`

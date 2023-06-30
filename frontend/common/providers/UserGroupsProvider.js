@@ -1,44 +1,42 @@
-import React from 'react';
-import UserGroupsStore from 'common/stores/user-group-store';
+import React from 'react'
+import UserGroupsStore from 'common/stores/user-group-store'
 
 const UserGroupProvider = class extends React.Component {
-    static displayName = 'UserGroupProvider'
+  static displayName = 'UserGroupProvider'
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {
-            isLoading: !UserGroupsStore.model,
-            userGroups: UserGroupsStore.model,
-            userGroupsPaging: UserGroupsStore.paging,
-        };
-        ES6Component(this);
+  constructor(props, context) {
+    super(props, context)
+    this.state = {
+      isLoading: !UserGroupsStore.model,
+      userGroups: UserGroupsStore.model,
+      userGroupsPaging: UserGroupsStore.paging,
     }
+    ES6Component(this)
+  }
 
-    componentDidMount() {
-        this.listenTo(UserGroupsStore, 'change', () => {
-            this.setState({
-                isSaving: UserGroupsStore.isSaving,
-                isLoading: UserGroupsStore.isLoading,
-                userGroups: UserGroupsStore.model,
-                userGroupsPaging: UserGroupsStore.paging,
-            });
-        });
+  componentDidMount() {
+    this.listenTo(UserGroupsStore, 'change', () => {
+      this.setState({
+        isLoading: UserGroupsStore.isLoading,
+        isSaving: UserGroupsStore.isSaving,
+        userGroups: UserGroupsStore.model,
+        userGroupsPaging: UserGroupsStore.paging,
+      })
+    })
 
-        this.listenTo(UserGroupsStore, 'saved', () => {
-            this.props.onSave && this.props.onSave();
-        });
-    }
+    this.listenTo(UserGroupsStore, 'saved', () => {
+      this.props.onSave && this.props.onSave()
+    })
+  }
 
-    render() {
-        return (
-            this.props.children({ ...this.state })
-        );
-    }
-};
+  render() {
+    return this.props.children({ ...this.state })
+  }
+}
 
 UserGroupProvider.propTypes = {
-    onSave: OptionalFunc,
-    children: OptionalFunc,
-};
+  children: OptionalFunc,
+  onSave: OptionalFunc,
+}
 
-module.exports = UserGroupProvider;
+module.exports = UserGroupProvider

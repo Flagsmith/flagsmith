@@ -13,7 +13,9 @@
                 "--sleepintervalms",
                 "700",
                 "--numthreads",
-                "25"
+                "25",
+                "--graceperiodms",
+                "20000"
             ],
             "essential": true,
             "environment": [
@@ -120,6 +122,10 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                },
+                {
+                    "name": "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID",
+                    "value": "d828a3a0-bf34-11ed-b08d-b12d3497f5c4"
                 }
             ],
             "secrets": [
@@ -146,10 +152,6 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
-                },
-                {
-                    "name": "MAILERLITE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:MAILERLITE_API_KEY::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",

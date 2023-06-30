@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.utils import timezone
@@ -29,6 +30,17 @@ def test_task_run():
 
     # Then
     assert result == my_callable(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "input, expected_output",
+    (
+        ({"value": Decimal("10")}, '{"value": 10}'),
+        ({"value": Decimal("10.12345")}, '{"value": 10.12345}'),
+    ),
+)
+def test_serialize_data_handles_decimal_objects(input, expected_output):
+    assert Task.serialize_data(input) == expected_output
 
 
 @pytest.mark.parametrize(

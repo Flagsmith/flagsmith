@@ -1,5 +1,4 @@
 from functools import wraps
-from typing import List
 
 from django.conf import settings
 
@@ -44,13 +43,3 @@ def send_environment_update_message_for_environment(environment):
     tasks.send_environment_update_message.delay(
         args=(environment.api_key, environment.updated_at.isoformat())
     )
-
-
-@_sse_enabled()
-def send_identity_update_message(environment, identifier: str):
-    tasks.send_identity_update_message.delay(args=(environment.api_key, identifier))
-
-
-@_sse_enabled()
-def send_identity_update_messages(environment, identifiers: List[str]):
-    tasks.send_identity_update_messages.delay(args=(environment.api_key, identifiers))

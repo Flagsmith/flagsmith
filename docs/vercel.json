@@ -1,0 +1,232 @@
+{
+    "redirects": [
+        {
+            "source": "/managing-identities/",
+            "destination": "/basic-features/managing-identities"
+        },
+        {
+            "source": "/system-administration/",
+            "destination": "/system-administration/security"
+        },
+        {
+            "source": "/contributing",
+            "destination": "/platform/contributing"
+        },
+        {
+            "source": "/overview/",
+            "destination": "/basic-features/overview"
+        },
+        {
+            "source": "/ab-testing/",
+            "destination": "/advanced-use/ab-testing"
+        },
+        {
+            "source": "/permissions/",
+            "destination": "/system-administration/rbac"
+        },
+        {
+            "source": "/audit-logs/",
+            "destination": "/system-administration/security#audit-logs"
+        },
+        {
+            "source": "/managing-features/",
+            "destination": "/basic-features/managing-features"
+        },
+        {
+            "source": "/deployment-overview/",
+            "destination": "/deployment/overview"
+        },
+        {
+            "source": "/hosted-service/",
+            "destination": "/basic-features/overview"
+        },
+        {
+            "source": "/flag-analytics/",
+            "destination": "/advanced-use/flag-analytics"
+        },
+        {
+            "source": "/staged-feature-rollouts/",
+            "destination": "/guides-and-examples/staged-feature-rollouts"
+        },
+        {
+            "source": "/advanced-use/staged-feature-rollouts/",
+            "destination": "/guides-and-examples/staged-feature-rollouts"
+        },
+        {
+            "source": "/self-hosting/",
+            "destination": "/basic-features/overview"
+        },
+        {
+            "source": "/clients/rust/test/integration_test.rs",
+            "destination": "/clients/rust"
+        },
+        {
+            "source": "/api/",
+            "destination": "/clients/rest"
+        },
+        {
+            "source": "/managing-segments",
+            "destination": "/basic-features/managing-segments"
+        },
+        {
+            "source": "/architecture/",
+            "destination": "/basic-features/overview"
+        },
+        {
+            "source": "/releases/",
+            "destination": "/platform/releases"
+        },
+        {
+            "source": "/contributing/",
+            "destination": "/platform/contributing"
+        },
+        {
+            "source": "/kubernetes",
+            "destination": "/deployment/hosting/kubernetes"
+        },
+        {
+            "source": "/managing-identities",
+            "destination": "/basic-features/managing-identities"
+        },
+        {
+            "source": "/integration-approaches/",
+            "destination": "/guides-and-examples/integration-approaches"
+        },
+        {
+            "source": "/advanced-use/integration-approaches/",
+            "destination": "/guides-and-examples/integration-approaches"
+        },
+        {
+            "source": "/advanced-use/integration-approaches",
+            "destination": "/guides-and-examples/integration-approaches"
+        },
+        {
+            "source": "/advanced-use/migrating-from-self-hosted-to-cloud",
+            "destination": "/deployment/migrating-from-self-hosted-to-cloud"
+        },
+        {
+            "source": "/advanced-use/staged-feature-rollouts/",
+            "destination": "/guides-and-examples/staged-feature-rollouts"
+        },
+        {
+            "source": "/managing-segments/",
+            "destination": "/basic-features/managing-segments"
+        },
+        {
+            "source": "/clients/02-3rd-party",
+            "destination": "/clients/3rd-party"
+        },
+        {
+            "source": "/advanced-use/api/",
+            "destination": "/clients/rest"
+        },
+        {
+            "source": "/advanced-use/api",
+            "destination": "/clients/rest"
+        },
+        {
+            "source": "/advanced-use/audit-logs/",
+            "destination": "/system-administration/security#audit-logs"
+        },
+        {
+            "source": "/advanced-use/audit-logs",
+            "destination": "/system-administration/security#audit-logs"
+        },
+        {
+            "source": "/clients/python",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/java",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/dotnet",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/node",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/ruby",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/php",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/go",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/rust",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/clients/elixir",
+            "destination": "/clients/server-side"
+        },
+        {
+            "source": "/deployment/migrating-from-self-hosted-to-cloud",
+            "destination": "/deployment/importing-and-exporting"
+        },
+        {
+            "source": "/deployment/locally-api",
+            "destination": "/deployment/hosting/locally-api"
+        },
+        {
+            "source": "/deployment/locally-frontend",
+            "destination": "/deployment/hosting/locally-frontend"
+        },
+        {
+            "source": "/deployment/docker",
+            "destination": "/deployment/hosting/docker"
+        },
+        {
+            "source": "/deployment/kubernetes",
+            "destination": "/deployment/hosting/kubernetes"
+        },
+        {
+            "source": "/deployment/openshift",
+            "destination": "/deployment/hosting/openshift"
+        },
+        {
+            "source": "/deployment/aws",
+            "destination": "/deployment/hosting/aws"
+        },
+        {
+            "source": "/deployment/google-cloud",
+            "destination": "/deployment/hosting/google-cloud"
+        },
+        {
+            "source": "/deployment/enterprise-edition",
+            "destination": "/deployment/configuration/enterprise-edition"
+        },
+        {
+            "source": "/deployment/authentication",
+            "destination": "/deployment/configuration/authentication"
+        },
+        {
+            "source": "/deployment/sizing-and-scaling",
+            "destination": "/deployment/configuration/sizing-and-scaling"
+        },
+        {
+            "source": "/deployment/troubleshooting",
+            "destination": "/deployment/configuration/troubleshooting"
+        },
+        {
+            "source": "/deployment/django-admin",
+            "destination": "/deployment/configuration/django-admin"
+        },
+        {
+            "source": "/deployment/importing-and-exporting",
+            "destination": "/deployment/configuration/importing-and-exporting"
+        },
+        {
+            "source": "/deployment/task-processor",
+            "destination": "/deployment/configuration/task-processor"
+        }
+    ]
+}

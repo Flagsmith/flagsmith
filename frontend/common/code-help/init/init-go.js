@@ -9,4 +9,4 @@ client := flagsmith.NewClient('${envId}', flagsmith.WithContext(ctx))
 flags, _ := client.GetEnvironmentFlags()
 isEnabled, _ := flags.IsFeatureEnabled("${customFeature || FEATURE_NAME}")
 featureValue, _ := flags.GetFeatureValue("${customFeature || FEATURE_NAME_ALT}")
-`;
+`

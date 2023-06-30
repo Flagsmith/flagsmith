@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.urls import path
 from rest_framework_nested import routers
 
+from audit.views import ProjectAuditLogViewSet
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
@@ -42,6 +43,11 @@ projects_router.register(
     r"integrations/new-relic",
     NewRelicConfigurationViewSet,
     basename="integrations-new-relic",
+)
+projects_router.register(
+    "audit",
+    ProjectAuditLogViewSet,
+    basename="project-audit",
 )
 
 nested_features_router = routers.NestedSimpleRouter(

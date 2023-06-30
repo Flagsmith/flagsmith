@@ -1,18 +1,20 @@
-const globalThis = typeof window === 'undefined' ? global : window;
+const globalThis = typeof window === 'undefined' ? global : window
 module.exports = global.Project = {
-    api: 'http://localhost:8000/api/v1/',
-    flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',
-    flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
-    flagsmith: 'ENktaJnfLVbLifybz34JmX',
-    debug: false,
-    env: 'dev', // This is used for Sentry tracking
-    maintenance: false, // trigger maintenance mode
-    demoAccount: {
-        email: 'kyle+bullet-train@solidstategroup.com',
-        password: 'demo_account',
-    },
-    chargebee: {
-        site: 'flagsmith-test',
-    },
-    ...(globalThis.projectOverrides || {}),
-};
+  api: 'http://localhost:8000/api/v1/',
+  chargebee: {
+    site: 'flagsmith-test',
+  },
+
+  debug: false,
+
+  env: 'dev',
+
+  flagsmith: 'ENktaJnfLVbLifybz34JmX',
+
+  flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',
+
+  flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
+  // This is used for Sentry tracking
+  maintenance: false,
+  ...(globalThis.projectOverrides || {}),
+}

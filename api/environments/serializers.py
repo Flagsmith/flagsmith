@@ -34,6 +34,8 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
 
 
 class EnvironmentSerializerLight(serializers.ModelSerializer):
+    use_mv_v2_evaluation = serializers.SerializerMethodField()
+
     class Meta:
         model = Environment
         fields = (
@@ -48,7 +50,19 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "banner_colour",
             "hide_disabled_flags",
             "use_mv_v2_evaluation",
+            "use_identity_composite_key_for_hashing",
+            "hide_sensitive_data",
         )
+
+    def get_use_mv_v2_evaluation(self, instance: Environment) -> bool:
+        """
+        To avoid breaking the API, we return this field as well.
+
+        Warning: this will still mean that sending the `use_mv_v2_evaluation` field
+        (e.g. in a PUT request) will not behave as expected but, since this is a minor
+        issue, I think we can ignore.
+        """
+        return instance.use_identity_composite_key_for_hashing
 
 
 class EnvironmentSerializerWithMetadata(

@@ -1,40 +1,43 @@
-import React, { Component } from 'react';
-import ConfigProvider from 'common/providers/ConfigProvider';
+import React, { Component } from 'react'
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 const ProjectSelect = class extends Component {
-    static displayName = 'ProjectSelect'
+  static displayName = 'ProjectSelect'
 
-    static contextTypes = {
-        router: propTypes.object.isRequired,
-    };
+  static contextTypes = {
+    router: propTypes.object.isRequired,
+  }
 
-    constructor(props, context) {
-        super(props, context);
-        this.state = {};
-    }
+  constructor(props, context) {
+    super(props, context)
+    this.state = {}
+  }
 
-    render() {
-        return (
-            <OrganisationProvider id={this.props.id}>
-                {({ isLoading, projects }) => (
-                    <>
-                        {
-                            <div className={`fade ${projects && !!projects.length && 'in'}`}>
-                                {projects && !!projects.length
-                                    && projects.map(project => this.props.renderRow(project,
-                                        () => {
-                                            this.props.onChange && this.props.onChange(project);
-                                        }))
-                                }
-                            </div>
-                        }
-                    </>
-                )}
-            </OrganisationProvider>
-        );
-    }
-};
+  render() {
+    return (
+      <OrganisationProvider id={this.props.id}>
+        {({ projects }) => (
+          <>
+            {
+              <div
+                className={`fade ${projects && !!projects.length && 'show'}`}
+              >
+                {projects &&
+                  !!projects.length &&
+                  projects.map((project) =>
+                    this.props.renderRow(project, () => {
+                      this.props.onChange && this.props.onChange(project)
+                    }),
+                  )}
+              </div>
+            }
+          </>
+        )}
+      </OrganisationProvider>
+    )
+  }
+}
 
-ProjectSelect.propTypes = {};
+ProjectSelect.propTypes = {}
 
-module.exports = ConfigProvider(ProjectSelect);
+module.exports = ConfigProvider(ProjectSelect)

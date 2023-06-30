@@ -1,4 +1,8 @@
-module.exports = (envId, { LIB_NAME, TRAIT_NAME, USER_ID, FEATURE_NAME, FEATURE_NAME_ALT }) => `
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME, USER_ID },
+  userId,
+) => `
 // Home Page
 import flagsmith from '${LIB_NAME}';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
@@ -9,10 +13,8 @@ export default function HomePage() {
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   
   const identify = () => {
-    flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
+    flagsmith.identify('${
+      userId || USER_ID
+    }', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
   };
-  
-  return (
-    &lt;>{...}&lt;/>
-  );
-}`;
+}`

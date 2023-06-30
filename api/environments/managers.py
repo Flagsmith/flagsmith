@@ -8,15 +8,17 @@ from features.multivariate.models import MultivariateFeatureStateValue
 class EnvironmentManager(SoftDeleteManager):
     def filter_for_document_builder(self, *args, **kwargs):
         return (
-            super(EnvironmentManager, self)
+            super()
             .select_related(
                 "project",
                 "project__organisation",
-                "mixpanel_config",
-                "segment_config",
                 "amplitude_config",
-                "heap_config",
                 "dynatrace_config",
+                "heap_config",
+                "mixpanel_config",
+                "rudderstack_config",
+                "segment_config",
+                "webhook_config",
             )
             .prefetch_related(
                 Prefetch(

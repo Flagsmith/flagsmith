@@ -1,47 +1,48 @@
-import React from 'react';
-import SparklesIcon from './svg/SparklesIcon';
+import React from 'react'
+import SparklesIcon from './svg/SparklesIcon'
 
-let prom;
+let prom
 class _Headway extends React.Component {
-    state = {
-        ready:false
-    }
-    componentDidMount() {
-        try {
-          if(Project.headway){
-              if(!prom) {
-                  prom =  Utils.loadScriptPromise("https://cdn.headwayapp.co/widget.js")
-              }
-              prom.then(()=>{
-                  this.setState({ready:true},()=>{
-                      Headway.init({
-                          enabled: true,
-                          selector: '#headway',
-                          account: Project.headway,
-                      });
-                  })
-              })
-          }
-        } catch (e) {}
-    }
-
-    render() {
-        if(!Project.headway || !this.state.ready){
-            return null
+  state = {
+    ready: false,
+  }
+  componentDidMount() {
+    try {
+      if (Project.headway) {
+        if (!prom) {
+          prom = Utils.loadScriptPromise('https://cdn.headwayapp.co/widget.js')
         }
-        return (
-            <Row className={this.props.className}>
-                <Row onClick={() => {
-                    Headway.show();
-                }}
-                >
-                    <SparklesIcon />
-                    Updates
-                </Row>
-                <span id="headway"/>
-            </Row>
-        );
+        prom.then(() => {
+          this.setState({ ready: true }, () => {
+            Headway.init({
+              account: Project.headway,
+              enabled: true,
+              selector: '#headway',
+            })
+          })
+        })
+      }
+    } catch (e) {}
+  }
+
+  render() {
+    if (!Project.headway || !this.state.ready) {
+      return null
     }
+    return (
+      <Row className={this.props.className}>
+        <Row
+          onClick={() => {
+            Headway.show()
+          }}
+        >
+          <SparklesIcon />
+          Updates
+        </Row>
+        <span id='headway' />
+      </Row>
+    )
+  }
 }
 
-export default _Headway;
+export default _Headway

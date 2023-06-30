@@ -1,4 +1,8 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_NAME_ALT, NPM_NODE_CLIENT }, customFeature) => `import Flagsmith from "${NPM_NODE_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_NODE_CLIENT },
+  customFeature,
+) => `import Flagsmith from "${NPM_NODE_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
 const ${LIB_NAME} = new Flagsmith({
     environmentKey: '${envId}'
@@ -10,5 +14,7 @@ const flags = await flagsmith.getEnvironmentFlags();
 var isEnabled = flags.isFeatureEnabled("${customFeature || FEATURE_NAME}")
 
 // Or, use the value of a feature
-var featureValue = flags.getFeatureValue('${customFeature || FEATURE_NAME_ALT}');
-`;
+var featureValue = flags.getFeatureValue('${
+  customFeature || FEATURE_NAME_ALT
+}');
+`

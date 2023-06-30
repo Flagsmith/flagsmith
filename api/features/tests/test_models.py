@@ -592,6 +592,9 @@ def test_get_feature_state_value_for_multivariate_features(
     mock_mv_feature_state_value = mock.MagicMock(value=value)
     mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
 
+    environment.use_identity_composite_key_for_hashing = False
+    environment.save()
+
     feature_state = FeatureState.objects.get(
         environment=environment,
         feature=multivariate_feature,
@@ -607,3 +610,29 @@ def test_get_feature_state_value_for_multivariate_features(
     assert feature_state_value == value
     # and the correct call is made to get the multivariate feature state value
     mock_get_mv_feature_state_value.assert_called_once_with(str(identity.id))
+
+
+@mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
+def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(
+    mock_get_mv_feature_state_value, environment, multivariate_feature, identity
+):
+    # Given
+    value = "value"
+    mock_mv_feature_state_value = mock.MagicMock(value=value)
+    mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
+
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When
+    feature_state_value = feature_state.get_feature_state_value(identity=identity)
+
+    # Then
+    # the correct value is returned
+    assert feature_state_value == value
+    # and the correct call is made to get the multivariate feature state value
+    mock_get_mv_feature_state_value.assert_called_once_with(identity.composite_key)

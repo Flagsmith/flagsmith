@@ -1,16 +1,18 @@
-import React from 'react';
-import Constants from 'common/constants';
+import Button from 'components/base/forms/Button'
+import React from 'react'
 
-export default function AddVariationButton({ onClick, disabled }) {
-    return (
-        <div className="text-center">
-            <button
-              disabled={disabled}
-              data-test="add-variation" type="button" onClick={onClick}
-              className="btn btn--outline "
-            >
-                Add Variation
-            </button>
-        </div>
-    );
+export default function AddVariationButton({ disabled, onClick }) {
+  return (
+    <div className='text-center'>
+      <Button
+        disabled={disabled}
+        data-test='add-variation'
+        type='button'
+        onClick={onClick}
+        theme='outline'
+      >
+        Add Variation
+      </Button>
+    </div>
+  )
 }

@@ -20,5 +20,7 @@ let traits = vec![Trait {
     },
 }];
 // The method below triggers a network request
-let identity_flags = flagsmith.get_identity_flags("${userId || USER_ID}", Some(traits)).unwrap();
-`;
+let identity_flags = flagsmith.get_identity_flags("${
+  userId || USER_ID
+}", Some(traits)).unwrap();
+`

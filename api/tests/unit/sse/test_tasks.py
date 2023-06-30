@@ -7,8 +7,6 @@ from sse.tasks import (
     get_auth_header,
     send_environment_update_message,
     send_environment_update_message_for_project,
-    send_identity_update_message,
-    send_identity_update_messages,
 )
 
 
@@ -68,49 +66,6 @@ def test_send_environment_update_message_make_correct_request(mocker, settings):
         f"{base_url}/sse/environments/{environment_key}/queue-change",
         headers={"Authorization": f"Token {token}"},
         json={"updated_at": updated_at},
-    )
-
-
-def test_send_identity_update_message_make_correct_request(mocker, settings):
-    # Given
-    base_url = "http://localhost:8000"
-    token = "token"
-    identifier = "test_identity"
-    environment_key = "test_environment"
-
-    settings.SSE_SERVER_BASE_URL = base_url
-    settings.SSE_AUTHENTICATION_TOKEN = token
-    mocked_requests = mocker.patch("sse.tasks.requests")
-
-    # When
-    send_identity_update_message(environment_key, identifier)
-
-    # Then
-    mocked_requests.post.assert_called_once_with(
-        f"{base_url}/sse/environments/{environment_key}/identities/queue-change",
-        headers={"Authorization": f"Token {token}"},
-        json={"identifier": identifier},
-    )
-
-
-def test_send_identity_update_messages_calls_singular_function_correctly(
-    settings, mocker
-):
-    # Given
-    environment_key = "test_environment"
-    identifiers = ["test_identity_1", "test_identity_2"]
-
-    mocked_send_identity_update_message = mocker.patch(
-        "sse.tasks.send_identity_update_message"
-    )
-
-    # When
-    send_identity_update_messages(environment_key, identifiers)
-
-    # Then
-    mocked_send_identity_update_message.has_calls(
-        mocker.call(environment_key, identifiers[0]),
-        mocker.call(environment_key, identifiers[1]),
     )
 
 

@@ -1,19 +1,17 @@
-const ReactDispatcher = require('flux-react-dispatcher');
+const ReactDispatcher = require('flux-react-dispatcher')
 
-const Dispatcher = new ReactDispatcher();
+const Dispatcher = new ReactDispatcher()
 
 const theDispatcher = Object.assign(Dispatcher, {
-    handleViewAction(action) {
+  handleViewAction(action) {
+    const payload = {
+      action,
+      source: 'VIEW_ACTION',
+    }
 
-        const payload = {
-            source: 'VIEW_ACTION',
-            action,
-        };
+    this.dispatch(payload)
+  },
+})
 
-        this.dispatch(payload);
-    },
-
-});
-
-window.Dispatcher = Dispatcher;
-module.exports = theDispatcher;
+window.Dispatcher = Dispatcher
+module.exports = theDispatcher

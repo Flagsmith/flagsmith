@@ -21,7 +21,6 @@ from django_lifecycle import (
     LifecycleModel,
     hook,
 )
-from flag_engine.api.document_builders import build_environment_document
 from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject
 
@@ -44,6 +43,7 @@ from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from metadata.models import Metadata
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -108,12 +108,17 @@ class Environment(
             " will override the project `hide_disabled_flags`"
         ),
     )
-    use_mv_v2_evaluation = models.BooleanField(
+    use_identity_composite_key_for_hashing = models.BooleanField(
         default=True,
         help_text=(
-            "Enable this to have consistent multivariate evaluations across all SDKs(in"
-            " local and server side mode)"
+            "Enable this to have consistent multivariate and percentage split evaluations "
+            "across all SDKs (in local and server side mode)"
         ),
+        db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
+    )
+    hide_sensitive_data = models.BooleanField(
+        default=False,
+        help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
     objects = EnvironmentManager()
@@ -221,7 +226,6 @@ class Environment(
         environments = list(
             cls.objects.filter_for_document_builder(environments_filter)
         )
-
         if not environments:
             return
 
@@ -285,7 +289,10 @@ class Environment(
         return segments
 
     @classmethod
-    def get_environment_document(cls, api_key: str) -> dict:
+    def get_environment_document(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
@@ -303,7 +310,10 @@ class Environment(
         return self.project.hide_disabled_flags
 
     @classmethod
-    def _get_environment_document_from_cache(cls, api_key: str) -> dict:
+    def _get_environment_document_from_cache(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         environment_document = environment_document_cache.get(api_key)
         if not environment_document:
             environment_document = cls._get_environment_document_from_db(api_key)
@@ -311,9 +321,12 @@ class Environment(
         return environment_document
 
     @classmethod
-    def _get_environment_document_from_db(cls, api_key: str) -> dict:
+    def _get_environment_document_from_db(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return build_environment_document(environment)
+        return map_environment_to_environment_document(environment)
 
     def _get_environment(self):
         return self

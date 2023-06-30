@@ -64,8 +64,13 @@
 
 
 .disable-transitions {
+    .modal-dialog {
+        transition: none;
+        transform: none !important;
+    }
     .fade {
         transition: none!important;
+        opacity: 1;
     }
 }
 
@@ -167,5 +172,6 @@
     text-decoration: none;
     &:hover {
         text-decoration: none;
+        color: $bt-brand-primary-dark
     }
 }

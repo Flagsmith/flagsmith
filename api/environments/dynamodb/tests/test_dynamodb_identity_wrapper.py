@@ -1,16 +1,16 @@
 import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.api.document_builders import (
-    build_environment_document,
-    build_identity_document,
-)
 from flag_engine.identities.builders import build_identity_model
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from segments.models import Segment
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_identity_to_identity_document,
+)
 
 
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
@@ -172,7 +172,7 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
 
-    expected_identity_document = build_identity_document(identity)
+    expected_identity_document = map_identity_to_identity_document(identity)
     identities = Identity.objects.filter(id=identity.id)
 
     # When
@@ -256,14 +256,14 @@ def test_get_segment_ids_returns_correct_segment_ids(
     # Given - two segments (one that matches the identity and one that does not)
     Segment.objects.create(name="Non matching segment", project=project)
 
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_get_item_from_uuid = mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
     )
     identity_uuid = identity_document["identity_uuid"]
 
-    environment_document = build_environment_document(environment)
+    environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
     )
@@ -284,7 +284,7 @@ def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(
     project, environment, identity, mocker
 ):
     # Given
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
@@ -325,14 +325,14 @@ def test_get_segment_ids_throws_value_error_if_arguments_not_valid():
 def test_get_segment_ids_with_identity_model(identity, environment, mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     identity_model = build_identity_model(identity_document)
 
     mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
     )
 
-    environment_document = build_environment_document(environment)
+    environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
     )

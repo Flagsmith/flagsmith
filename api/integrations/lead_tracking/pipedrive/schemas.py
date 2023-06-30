@@ -1,5 +1,7 @@
-from marshmallow import EXCLUDE, fields
+from marshmallow import EXCLUDE, fields, validate
 from marshmallow.schema import Schema
+
+from integrations.lead_tracking.pipedrive.constants import MARKETING_STATUSES
 
 
 class BaseSchema(Schema):
@@ -41,3 +43,10 @@ class BasePipedriveCustomFieldSchema(BaseSchema):
 class PipedrivePersonSchema(BaseSchema):
     name = fields.Str()
     id = fields.Int()
+    marketing_status = fields.Str(validate=validate.OneOf(MARKETING_STATUSES))
+
+
+class PipedriveLeadLabelSchema(BaseSchema):
+    id = fields.Str()
+    name = fields.Str()
+    color = fields.Str()

@@ -137,7 +137,8 @@ def test_edge_identity_id_property(django_id, identity_uuid, expected_id, mocker
 def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_model):
     # Given
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
@@ -159,14 +160,15 @@ def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_mod
 def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_model):
     # Given
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
     # When
     found_by_feature_state_uuid = (
         edge_identity_model.get_feature_state_by_featurestate_uuid(
-            feature_state_model.featurestate_uuid
+            str(feature_state_model.featurestate_uuid)
         )
     )
 
@@ -178,7 +180,8 @@ def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_mode
 def test_edge_identity_remove_feature_state(edge_identity_model):
     # Given
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
@@ -199,7 +202,8 @@ def test_edge_identity_remove_feature_state_if_no_matching_feature_state(
 ):
     # Given
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
 
     # When
@@ -221,7 +225,8 @@ def test_edge_identity_synchronise_features(mocker, edge_identity_model):
     )
 
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
@@ -267,7 +272,8 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_ad
     )
 
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
@@ -306,7 +312,8 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_re
     )
 
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"), enabled=True
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
@@ -365,7 +372,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     )
 
     feature_state_model = FeatureStateModel(
-        FeatureModel(id=1, name="test_feature", type="STANDARD"),
+        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
         enabled=initial_enabled,
     )
     feature_state_model.set_value(initial_value)
@@ -378,7 +385,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     mocked_generate_audit_log_records.reset_mock()
 
     feature_override = edge_identity_model.get_feature_state_by_featurestate_uuid(
-        feature_state_model.featurestate_uuid
+        str(feature_state_model.featurestate_uuid)
     )
     feature_override.enabled = new_enabled
     feature_override.set_value(new_value)

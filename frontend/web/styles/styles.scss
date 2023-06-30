@@ -191,14 +191,6 @@ body, html {
   height: 100%;
 }
 
-body {
-  background: $body-bg;
-  font-family: $font-family;
-  font-weight: 400;
-  color: $body-text;
-}
-
-
 body.dark {
   background-color: $body-bg-dark;
   a {
@@ -246,7 +238,7 @@ hr {
 }
 
 .form-group {
-  margin-bottom: $input-padding-y * 1.5;
+  margin-bottom: 1.5rem;
 }
 
 .header-icon {
@@ -324,6 +316,6 @@ hr {
   }
 }
 
-.flag-select__menu {
+.react-select__menu {
   z-index: 3 !important;
 }
