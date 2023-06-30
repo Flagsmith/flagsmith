@@ -34,8 +34,9 @@ const InvitePage = class extends Component {
                   <div>
                     <h3 className='pt-5'>Oops</h3>
                     <p>
-                      We could not validate your invite, please check the invite
-                      URL and email address you have entered is correct.
+                      {error.detail === 'Not found.'
+                        ? 'We could not validate your invite, please check the invite URL and email address you have entered is correct.'
+                        : error.detail}
                     </p>
                   </div>
                 ) : (

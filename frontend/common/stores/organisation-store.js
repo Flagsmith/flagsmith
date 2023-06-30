@@ -178,6 +178,9 @@ const controller = {
                   store.loaded()
                 }
               })
+              .catch((e) => {
+                API.ajaxHandler(store, e)
+              })
           }
 
           return Promise.all(
