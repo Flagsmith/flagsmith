@@ -50,30 +50,35 @@ const Tag: FC<TagType> = ({
   }
 
   return (
-    <div
-      onClick={() => onClick?.(tag as TTag)}
-      onMouseEnter={toggleHover}
-      onMouseLeave={toggleHover}
-      style={{
-        backgroundColor: hover
-          ? `${color(getColor()).darken(0.1)}`
-          : getColor(),
-      }}
-      className={cx('tag', { hideNames: hideNames, selected }, className)}
-    >
-      <div>
-        {tag.label ? (
-          <Row space>
-            {hideNames ? '' : tag.label}
-            {selected && <span className='icon ion-md-checkmark' />}
-          </Row>
-        ) : (
-          <div className='text-center'>
-            {selected && <span className='icon ion-md-checkmark' />}
+    <Tooltip
+      title={
+        <div
+          onClick={() => onClick?.(tag as TTag)}
+          onMouseEnter={toggleHover}
+          onMouseLeave={toggleHover}
+          style={{
+            backgroundColor: hover
+              ? `${color(getColor()).darken(0.1)}`
+              : getColor(),
+          }}
+          className={cx('tag', { hideNames: true, selected }, className)}
+        >
+          <div>
+            {tag.label ? (
+              <Row space>
+                {selected && <span className='icon ion-md-checkmark' />}
+              </Row>
+            ) : (
+              <div className='text-center'>
+                {selected && <span className='icon ion-md-checkmark' />}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      }
+    >
+      {tag.label}
+    </Tooltip>
   )
 }
 
