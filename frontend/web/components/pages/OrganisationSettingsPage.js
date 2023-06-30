@@ -263,6 +263,9 @@ const OrganisationSettingsPage = class extends Component {
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
     const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
+    const verifySeatsLimit = Utils.getFlagsmithHasFeature(
+      'verify_seats_limit_for_invite_links',
+    )
 
     return (
       <div className='app-container container'>
@@ -289,7 +292,8 @@ const OrganisationSettingsPage = class extends Component {
                   const overSeats =
                     paymentsEnabled && organisation.num_seats > max_seats
                   const needsUpgradeForAdditionalSeats =
-                    (!autoSeats && overSeats) || (!autoSeats && usedSeats)
+                    (overSeats && (!verifySeatsLimit || !autoSeats)) ||
+                    (!autoSeats && usedSeats)
                   return (
                     <div>
                       <Tabs
@@ -609,7 +613,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 for your plan.{' '}
                                                 {usedSeats && (
                                                   <>
-                                                    {!autoSeats && overSeats ? (
+                                                    {overSeats &&
+                                                    (!verifySeatsLimit ||
+                                                      !autoSeats) ? (
                                                       <strong>
                                                         If you wish to invite
                                                         any additional members,
@@ -664,11 +670,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                               </InfoMessage>
                                             )}
-                                            {Utils.getFlagsmithHasFeature(
-                                              'verify_seats_limit_for_invite_links',
-                                            ) &&
-                                              !needsUpgradeForAdditionalSeats &&
-                                              inviteLinks && (
+                                            {inviteLinks &&
+                                              (!verifySeatsLimit ||
+                                                !needsUpgradeForAdditionalSeats) && (
                                                 <form
                                                   onSubmit={(e) => {
                                                     e.preventDefault()

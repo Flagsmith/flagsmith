@@ -11,7 +11,10 @@ const controller = {
     return data
       .post(`${Project.api}users/join/link/${id}/`)
       .catch((error) => {
-        if (error.status === 400) {
+        if (
+          Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
+          error.status === 400
+        ) {
           API.ajaxHandler(store, error)
           return
         }
