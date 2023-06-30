@@ -7,7 +7,7 @@ from app_analytics.analytics_db_service import (
 from app_analytics.tasks import track_feature_evaluation
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.fields import IntegerField
