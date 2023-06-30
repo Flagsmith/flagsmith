@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import ModalHR from './ModalHR'
 
 const ConfirmRemoveFeature = class extends Component {
   static displayName = 'ConfirmRemoveFeature'
@@ -61,13 +62,15 @@ const ConfirmRemoveFeature = class extends Component {
               </>
             </div>
 
-
-            <hr className='my-0 py-0' />
+            <ModalHR />
             <div className='modal-footer'>
+              <Button className="mr-2" theme='secondary' onClick={closeModal}>
+                Cancel
+              </Button>
               <Button
                 id='confirm-remove-feature-btn'
                 disabled={this.state.challenge != projectFlag.name}
-                className='btn btn-primary'
+                theme='primary'
               >
                 Confirm changes
               </Button>

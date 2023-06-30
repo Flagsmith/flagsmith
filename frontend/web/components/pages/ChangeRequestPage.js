@@ -32,7 +32,7 @@ const ChangeRequestsPage = class extends Component {
     users?.filter((v) => approvals?.includes(v.group))
 
   getGroupApprovals = (groups, approvals) =>
-      groups.filter((v) => approvals.find((a) => a.group === v.id))
+    groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   constructor(props, context) {
     super(props, context)
@@ -97,8 +97,8 @@ const ChangeRequestsPage = class extends Component {
 
   deleteChangeRequest = () => {
     openConfirm(
-      <h3>Delete Change Request</h3>,
-      <p>Are you sure you want to delete this change request?</p>,
+      'Delete Change Request',
+      <div>Are you sure you want to delete this change request?</div>,
       () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.context.router.history.replace(

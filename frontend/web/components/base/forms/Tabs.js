@@ -1,3 +1,5 @@
+import ModalHR from 'components/modals/ModalHR'
+
 const classNames = require('classnames')
 /**
  * Created by kylejohnson on 30/07/2016.
@@ -61,6 +63,7 @@ const Tabs = class extends React.Component {
             }}
           />
         </div>
+        <ModalHR />
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i

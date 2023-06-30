@@ -52,7 +52,7 @@ const ModalDefault: FC<ModalDefault> = ({
       toggle={onDismissClick}
     >
       <ModalHeader onDismissClick={onDismissClick}>{title}</ModalHeader>
-      <ModalBody className='text-body'>{children}</ModalBody>
+      <ModalBody>{children}</ModalBody>
     </Modal>
   )
 }

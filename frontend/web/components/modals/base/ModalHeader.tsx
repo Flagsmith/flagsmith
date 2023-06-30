@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react'
-import ModalClose from './ModalClose' // we need this to make JSX compile
+import ModalClose from './ModalClose'
+import ModalHR from 'components/modals/ModalHR'; // we need this to make JSX compile
 
 type ModalHeaderType = {
   children: ReactNode
@@ -13,7 +14,7 @@ const ModalHeader: FC<ModalHeaderType> = ({ children, onDismissClick }) => {
         <h5 className='modal-title'>{children}</h5>
         <ModalClose onClick={onDismissClick} />
       </div>
-      <hr className='py-0 my-0' />
+      <ModalHR/>
     </>
   )
 }

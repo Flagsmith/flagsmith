@@ -2,6 +2,7 @@ import { Modal, ModalBody, ModalFooter } from 'reactstrap'
 import Button from 'components/base/forms/Button'
 import React, { FC, ReactNode } from 'react'
 import ModalHeader from './ModalHeader'
+import ModalHR from 'components/modals/ModalHR'
 
 interface Confirm {
   title: ReactNode
@@ -46,8 +47,8 @@ const Confirm: FC<Confirm> = ({
       toggle={no}
     >
       <ModalHeader onDismissClick={no}>{title}</ModalHeader>
-      <ModalBody className='text-body'>{children}</ModalBody>
-      <hr className='my-0 py-0' />
+      <ModalBody>{children}</ModalBody>
+      <ModalHR />
       <ModalFooter>
         <Button
           theme='secondary'

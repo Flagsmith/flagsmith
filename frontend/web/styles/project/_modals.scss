@@ -33,12 +33,13 @@
 $side-width: 66%;
 .dark {
     .inline-modal {
-        background: $dark-bg-100;
+        background: $modal-bg-dark;
         box-shadow:rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
     }
     .modal-content {
         box-shadow:rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
-        background: $dark-bg-100;
+        background: $modal-bg-dark;
+        color: $modal-content-color-dark;
     }
 }
 

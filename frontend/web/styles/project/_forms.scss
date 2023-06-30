@@ -111,15 +111,18 @@
   margin-bottom: 1rem;
 }
 
+label {
+  margin-bottom: $spacer/2;
+}
 label,
 .icon-primary {
-  color: $header-color;
+  color: $text-icon-dark;
   font-weight: 500;
 }
 .dark {
   label,
   .icon-primary {
-    color: $header-color-dark;
+    color: $white;
   }
 }
 

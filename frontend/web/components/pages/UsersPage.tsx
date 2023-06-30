@@ -70,12 +70,12 @@ const UsersPage: FC<UsersPageType> = (props) => {
 
   const removeIdentity = (id: string, identifier: string) => {
     openConfirm(
-      <h3>Delete User</h3>,
-      <p>
+      "Delete User",
+      <div>
         {'Are you sure you want to delete '}
         <strong>{identifier}</strong>
         {'?'}
-      </p>,
+      </div>,
       () => deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
     )
   }
