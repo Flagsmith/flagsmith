@@ -98,7 +98,6 @@ def get_feature_by_uuid(request, uuid):
 )
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
-    filterset_fields = ["is_archived"]
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -111,6 +110,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Feature.objects.none()
+
         if self.request.user.is_anonymous:
             accessible_projects = (
                 self.request.master_api_key.organisation.projects.all()
@@ -315,6 +317,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         """
         Override queryset to filter based on provided URL parameters.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         environment_api_key = self.kwargs["environment_api_key"]
 
         try:
@@ -496,6 +501,9 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
 
     @action(methods=["GET"], detail=False)

@@ -60,6 +60,9 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         Override queryset to filter based on the parent identity.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return Trait.objects.none()
+
         return Trait.objects.filter(identity=self.identity)
 
     def get_permissions(self):

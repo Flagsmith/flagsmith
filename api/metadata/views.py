@@ -35,6 +35,9 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
     serializer_class = MetadataFieldSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return MetadataField.objects.none()
+
         queryset = MetadataField.objects.filter(organisation__users=self.request.user)
         if self.action == "list":
             serializer = MetadataFieldQuerySerializer(data=self.request.query_params)

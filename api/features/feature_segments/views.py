@@ -37,6 +37,9 @@ class FeatureSegmentViewSet(
     permission_classes = [IsAuthenticated | HasMasterAPIKey]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureSegment.objects.none()
+
         if hasattr(self.request, "master_api_key"):
             permitted_projects = Project.objects.filter(
                 organisation_id=self.request.master_api_key.organisation_id

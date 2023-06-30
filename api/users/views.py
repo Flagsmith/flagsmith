@@ -149,6 +149,9 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserPermissionGroup.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -175,7 +178,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.detail is True:
+        if not getattr(self, "swagger_fake_view", False) and self.detail is True:
             with suppress(ValueError):
                 context["group_admins"] = UserPermissionGroupMembership.objects.filter(
                     userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True

@@ -26,6 +26,7 @@ from projects.exceptions import (
     TooManyIdentitiesError,
 )
 from projects.models import (
+    Project,
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
@@ -72,6 +73,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Project.objects.none()
+
         if hasattr(self.request, "master_api_key"):
             queryset = self.request.master_api_key.organisation.projects.all()
         else:
@@ -183,6 +187,9 @@ class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsProjectAdmin]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
         if not self.kwargs.get("project_pk"):
             raise ValidationError("Missing project pk.")
 

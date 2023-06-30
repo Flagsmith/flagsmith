@@ -23,6 +23,7 @@ from organisations.exceptions import (
     SubscriptionNotFound,
 )
 from organisations.models import (
+    Organisation,
     OrganisationRole,
     OrganisationWebhook,
     Subscription,
@@ -86,6 +87,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Organisation.objects.none()
         return self.request.user.organisations.all()
 
     def get_throttles(self):
@@ -299,6 +302,9 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixi
     webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return OrganisationWebhook.objects.none()
+
         if "organisation_pk" not in self.kwargs:
             raise ValidationError("Missing required path parameter 'organisation_pk'")
 

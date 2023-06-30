@@ -50,6 +50,9 @@ class SegmentViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Segment.objects.none()
+
         if hasattr(self.request, "master_api_key"):
             permitted_projects = self.request.master_api_key.organisation.projects.all()
         else:
