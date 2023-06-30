@@ -292,8 +292,12 @@ def chargebee_webhook(request):
                 organisation_id=existing_subscription.id,
                 defaults={
                     "updated_at": timezone.now(),
-                    "allowed_30d_api_calls": metadata.max_api_calls,
-                    "allowed_seats": metadata.max_seats,
+                    "allowed_30d_api_calls": metadata.get("max_api_calls")
+                    if metadata is not None
+                    else 50000,
+                    "allowed_seats": metadata.get("max_seats")
+                    if metadata is not None
+                    else 1,
                     "organisation_id": existing_subscription.id,
                 },
             )

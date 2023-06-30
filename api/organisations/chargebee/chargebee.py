@@ -131,12 +131,17 @@ def get_subscription_metadata(
 def get_max_seats_and_max_api_calls(
     suscription_data,
 ) -> typing.Optional[ChargebeeObjMetadata]:
-    plan_metadata = get_plan_meta_data(suscription_data.get("plan_id"))
-    subscription_metadata = plan_metadata
-    return {
-        "max_seats": get_max_seats_for_plan(subscription_metadata),
-        "max_api_calls": get_max_api_calls_for_plan(subscription_metadata),
-    }
+    if not (suscription_data.get("id") and suscription_data.get("id").strip() != ""):
+        logger.warning("Subscription id is empty or None")
+        return None
+
+    with suppress(ChargebeeAPIError):
+        plan_metadata = get_plan_meta_data(suscription_data.get("plan_id"))
+        subscription_metadata = plan_metadata
+        return {
+            "max_seats": get_max_seats_for_plan(subscription_metadata),
+            "max_api_calls": get_max_api_calls_for_plan(subscription_metadata),
+        }
 
 
 def cancel_subscription(subscription_id: str):
