@@ -320,11 +320,11 @@ app.post('/api/webflow/webhook', (req, res) => {
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
 
-                  res.status(200).json({})
+                  return res.status(200).json({})
                 },
                 (error) => {
                   console.log('pipedriveNotesApi called error')
-                  res.status(200).json({
+                  return res.status(200).json({
                     body: error,
                   })
                 },
@@ -332,7 +332,7 @@ app.post('/api/webflow/webhook', (req, res) => {
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
-              res.status(200).json({
+              return res.status(200).json({
                 body: error,
               })
             },
@@ -340,7 +340,7 @@ app.post('/api/webflow/webhook', (req, res) => {
         },
         (error) => {
           console.log('pipedrivePersonsApi called error. Returned data:')
-          res.status(200).json({
+          return res.status(200).json({
             body: error,
           })
         },
@@ -348,7 +348,10 @@ app.post('/api/webflow/webhook', (req, res) => {
     }
   } else if (req.body.name === 'Subscribe Form') {
     console.log('Todo: process Subscribe form')
+    return res.status(200).json({})
   }
+
+  return res.status(200).json({})
 })
 
 // Catch all to render index template
