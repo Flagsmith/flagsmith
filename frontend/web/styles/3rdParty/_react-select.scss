@@ -12,7 +12,7 @@
   &__control {
     background: $input-bg-dark;
     height: $input-height !important;
-    border-radius: $border-radius-default !important;
+    border-radius: $border-radius !important;
     &--is-focused {
       border-color: $bt-brand-primary !important;
       box-shadow: 0 0 0 1px $bt-brand-primary !important;

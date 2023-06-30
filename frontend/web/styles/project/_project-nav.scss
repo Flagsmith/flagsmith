@@ -139,20 +139,20 @@
             display: inline-block;
             background: linear-gradient(#5e5e5e, #4c4c4c);
             padding: 2px 5px;
-            border-radius: 4px 0 0 4px;
+            border-radius: $border-radius-sm 0 0 $border-radius-sm;
         }
 
         .success {
             display: inline-block;
             background: linear-gradient(#5bc870, #4e9c4e);
-            border-radius: 0 4px 4px 0;
+            border-radius: 0 $border-radius-sm $border-radius-sm 0;
             padding: 2px 5px;
         }
 
         .error {
             display: inline-block;
             background: linear-gradient(#dab32a, #cca417);
-            border-radius: 0 4px 4px 0;
+            border-radius: 0 $border-radius-sm $border-radius-sm 0;
             padding: 2px 5px;
         }
     }

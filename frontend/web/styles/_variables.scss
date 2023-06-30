@@ -3,9 +3,6 @@
 $font-family: "OpenSans", sans-serif;
 $font-family-header: 'OpenSans', sans-serif;
 
-
-
-
 $dark-bg-0: #232533;
 $dark-bg-2: #1a1c26;
 $dark-bg-5: #1a1c26;
@@ -163,11 +160,8 @@ $btn-color-dark: #d9d9d9;
 
 //Nav
 
-// BORDER RADIUS
-$default-border-radius: 8px;
-
 // INPUT
-$input-border-radius: 8px;
+$input-border-radius: $border-radius;
 $input-height: 40px;
 $input-line-height: 25px;
 $input-font-size: inherit;
@@ -228,7 +222,6 @@ $side-modal-header-background-dark: $panel-heading-bg-dark;
 $modal-header-color: $header-color;
 $modal-header-color-dark: $header-color-dark;
 $modal-header-border-width: 0;
-$border-radius-default: 8px;
 //TRANSITIONS
 $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
 //Hero
