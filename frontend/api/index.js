@@ -332,13 +332,16 @@ app.post('/api/webflow/webhook', (req, res) => {
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
+              res.status(200).json({
+                body: error,
+              })
             },
           )
         },
         (error) => {
           console.log('pipedrivePersonsApi called error. Returned data:')
           res.status(200).json({
-            body: personData,
+            body: error,
           })
         },
       )
