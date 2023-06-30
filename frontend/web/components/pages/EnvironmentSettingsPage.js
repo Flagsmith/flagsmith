@@ -269,8 +269,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       : env.description
                                   }
                                   inputProps={{
-                                    className: 'input--wide',
-                                    style: { minHeight: 100 },
+                                    className: 'input--wide textarea-lg',
                                   }}
                                   onChange={(e) =>
                                     this.setState({
@@ -708,7 +707,6 @@ const EnvironmentSettingsPage = class extends Component {
                                   toast('Copied')
                                 }}
                                 className='ml-2'
-                                size='small'
                               >
                                 Copy
                               </Button>

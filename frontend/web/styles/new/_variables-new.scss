@@ -7,11 +7,14 @@ $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
 $danger: #ef4d56;
+$success: #27ab95;
 $text-icon-dark: #1a2634;
+$text-icon-light-grey: #9da4ae;
 $link-color: $primary;
 $theme-colors: (
   primary: $primary,
   danger: $danger,
+  success: $success,
   // add any additional color below
 );
 
@@ -19,7 +22,6 @@ $theme-colors: (
 $border-radius-sm: 4px;
 $border-radius: 6px;
 $border-radius-lg: 8px;
-
 
 //Buttons
 $btn-line-height-xsm: 32px;
@@ -90,7 +92,6 @@ $line-height-xlg: 28px;
 $line-height-xsm: 18px;
 $line-height-xxsm: 24px;
 $body-color: $text-icon-dark;
-
 $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
@@ -114,3 +115,27 @@ $h5-font-size: 20px;
 $h5-line-height: 30px;
 $h6-font-size: 16px;
 $h6-line-height: 24px;
+
+//Input
+$input-bg: #fff;
+$input-bg-alt: #f7f7f7;
+$input-border-radius: $border-radius;
+$input-height: 48px;
+$input-height-sm: 40px;
+$input-height-xsm: 32px;
+$input-height-lg: 56px;
+$input-line-height: 24px;
+$input-font-size: $font-size-base;
+$input-font-weight: 500;
+$input-border-color: rgba(101, 109, 123, 0.16);
+$input-placeholder-color: $text-icon-light-grey;
+$input-padding: 12px 16px 12px 12px;
+$input-padding-sm: 8px 14px 8px 12px;
+$input-padding-xsm: 6px 12px;
+$input-padding-lg: 16px 20px 16px 12px;
+$textarea-height: 120px;
+$textarea-height-sm: 100px;
+$textarea-height-xsm: 86px;
+$textarea-height-lg: 128px;
+$input-border-highlight-color: $primary400;
+$input-placeholder-color-dark: $text-icon-light-grey;

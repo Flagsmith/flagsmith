@@ -333,7 +333,6 @@ const OrganisationSettingsPage = class extends Component {
                                     <Button
                                       disabled={this.saveDisabled()}
                                       className='float-right'
-                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
