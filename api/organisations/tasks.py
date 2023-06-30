@@ -6,6 +6,8 @@ from organisations.subscriptions.subscription_service import (
 from task_processor.decorators import register_task_handler
 from users.models import FFAdminUser
 
+from .subscriptions.constants import SubscriptionCacheEntity
+
 ALERT_EMAIL_MESSAGE = (
     "Organisation %s has used %d seats which is over their plan limit of %d (plan: %s)"
 )
@@ -31,9 +33,9 @@ def send_org_over_limit_alert(organisation_id):
 
 @register_task_handler()
 def update_organisation_subscription_information_influx_caches():
-    subscription_info_cache.update_influx_data_caches()
+    subscription_info_cache.update_caches(SubscriptionCacheEntity.INFLUX)
 
 
 @register_task_handler()
 def update_organisation_subscription_information_chargebee_caches():
-    subscription_info_cache.update_chargebee_data_caches()
+    subscription_info_cache.update_caches(SubscriptionCacheEntity.CHARGEBEE)

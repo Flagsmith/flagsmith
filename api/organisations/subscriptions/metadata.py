@@ -44,7 +44,7 @@ class BaseSubscriptionMetadata:
             % (
                 self.payment_source.title()
                 if self.payment_source is not None
-                else "no title",
+                else "unknown payment source",
                 self.seats,
                 self.api_calls,
                 str(self.projects) if self.projects is not None else "no limit",

@@ -54,7 +54,7 @@ from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
-from .chargebee import get_subscription_metadata
+from .chargebee import get_max_seats_and_max_api_calls
 
 logger = logging.getLogger(__name__)
 
@@ -283,36 +283,20 @@ def chargebee_webhook(request):
             )
             logger.error(error_message)
             return Response(status=status.HTTP_200_OK)
-        existing_organisation_subscription_information_cache = (
-            OrganisationSubscriptionInformationCache.objects.filter(
-                organisation_id=existing_subscription.id
-            ).exists()
-        )
-
+        metadata = get_max_seats_and_max_api_calls(subscription_data)
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
-            if existing_organisation_subscription_information_cache:
-                metadata = get_subscription_metadata(
-                    existing_subscription.subscription_id
-                )
-                OrganisationSubscriptionInformationCache.objects.filter(
-                    organisation_id=existing_subscription.id
-                ).update(allowed_30d_api_calls=metadata.seats)
-                OrganisationSubscriptionInformationCache.objects.filter(
-                    organisation_id=existing_subscription.id
-                ).update(allowed_seats=metadata.api_calls)
-            else:
-                OrganisationSubscriptionInformationCache.objects.create(
-                    updated_at=timezone.now(),
-                    api_calls_24h=0,
-                    api_calls_7d=0,
-                    api_calls_30d=0,
-                    allowed_seats=1,
-                    allowed_30d_api_calls=50000,
-                    organisation_id=existing_subscription.id,
-                )
+            OrganisationSubscriptionInformationCache.objects.update_or_create(
+                organisation_id=existing_subscription.id,
+                defaults={
+                    "updated_at": timezone.now(),
+                    "allowed_30d_api_calls": metadata.max_api_calls,
+                    "allowed_seats": metadata.max_seats,
+                    "organisation_id": existing_subscription.id,
+                },
+            )
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(

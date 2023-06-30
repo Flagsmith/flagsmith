@@ -1,3 +1,5 @@
+from enum import Enum
+
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 MAX_SEATS_IN_FREE_PLAN = 1
@@ -22,3 +24,9 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
     projects=MAX_PROJECTS_IN_FREE_PLAN,
 )
 FREE_PLAN_ID = "free"
+
+
+class SubscriptionCacheEntity(Enum):
+    INFLUX = "INFLUX"
+    CHARGEBEE = "CHARGEBEE"
+    INFLUX_AND_CHARGEBEE = "INFLUX_AND_CHARGEBEE"

@@ -6,16 +6,16 @@ from django.utils import timezone
 
 from .chargebee import get_subscription_metadata
 from .models import Organisation, OrganisationSubscriptionInformationCache
-from .subscriptions.constants import CHARGEBEE
+from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
 
 OrganisationSubscriptionInformationCacheDict = typing.Dict[
     int, OrganisationSubscriptionInformationCache
 ]
 
 
-def update_caches(update_influx=False):
+def update_caches(update_cache_entity: SubscriptionCacheEntity):
     """
-    Update the cache objects for all active organisations in the database.
+    Update the cache objects for an update_cache_entity in the database.
     """
 
     organisations = Organisation.objects.select_related(
@@ -30,10 +30,13 @@ def update_caches(update_influx=False):
         for org in organisations
     }
 
-    if update_influx:
+    if update_cache_entity.value == "INFLUX":
         _update_caches_with_influx_data(organisation_info_cache_dict)
-    else:
+    elif update_cache_entity.value == "CHARGEBEE":
         _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
+    elif update_cache_entity.value == "INFLUX_AND_CHARGEBEE":
+        _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
+        _update_caches_with_influx_data(organisation_info_cache_dict)
 
     to_update = []
     to_create = []
@@ -58,22 +61,6 @@ def update_caches(update_influx=False):
             "updated_at",
         ],
     )
-
-
-def update_chargebee_data_caches():
-    """
-    Update the chargebee data cache objects for all active organisations in the database.
-    """
-
-    update_caches()
-
-
-def update_influx_data_caches():
-    """
-    Update the influx data cache objects for all active organisations in the database.
-    """
-
-    update_caches(update_influx=True)
 
 
 def _update_caches_with_influx_data(
