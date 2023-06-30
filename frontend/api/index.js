@@ -263,7 +263,7 @@ app.post('/api/webflow/webhook', (req, res) => {
     }
 
     // Post to Pipedrive
-    if (postToSlack || true) {
+    if (postToSlack) {
       console.log('Contact Us Form - Creating Pipedrive Lead')
 
       const newPerson = pipedrive.NewPerson.constructFromObject({
