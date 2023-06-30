@@ -178,7 +178,7 @@ const FeaturesPage = class extends Component {
                       <div>
                         <Row>
                           <Flex>
-                            <h3>Features</h3>
+                            <h4>Features</h4>
                             <p>
                               View and manage{' '}
                               <Tooltip

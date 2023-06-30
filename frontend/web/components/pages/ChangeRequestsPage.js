@@ -71,7 +71,7 @@ const ChangeRequestsPage = class extends Component {
         className='app-container container'
       >
         <Flex>
-          <h3>Change Requests</h3>
+          <h4>Change Requests</h4>
           <p>View and manage proposed feature state changes.</p>
           {!has4EyesPermission ? (
             <div className='mt-2'>

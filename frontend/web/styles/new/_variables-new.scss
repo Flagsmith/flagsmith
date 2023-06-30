@@ -3,43 +3,40 @@
 @import '~bootstrap/scss/variables';
 
 $primary: #6837fc;
+$primary400: #906af6;
+$primary600: #4e25db;
+$primary700: #3919b7;
 $danger: #ef4d56;
+$success: #27ab95;
 $text-icon-dark: #1a2634;
+$text-icon-light-grey: #9da4ae;
 $link-color: $primary;
 $basic-alpha-16: rgba(101, 109, 123, 0.16);
 $basic-alpha-24: rgba(101, 109, 123, 0.24);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
+  success: $success,
   // add any additional color below
 );
-
-//todo: replace with bootstrap 5.3 dark mode theme
 $dark-bg-100: rgba(45, 52, 67, 1);
 $dark-bg-500: rgba(15, 20, 37, 1);
 
-//Hr
-$hr-border-color: $basic-alpha-16;
-$hr-opacity: 1;
-//todo: replace with bootstrap 5.3 dark mode theme
-.dark hr {
-  border-color: $dark-bg-500;
-}
 
-//Text
-$body-color: rgba(101, 109, 123, 1);
-.dark {
-  .text-body {
-    color: rgba(157, 164, 174, 1) !important;
-  }
-}
+//Body
+$border-radius-sm: 4px;
+$border-radius: 6px;
+$border-radius-lg: 8px;
 
 //Buttons
-$btn-height: 48px;
+$btn-line-height-xsm: 32px;
+$btn-line-height-sm: 40px;
 $btn-line-height: 48px;
+$btn-line-height-lg: 54px;
+
 $btn-padding-y: 0;
 $btn-font-weight: 700;
-$btn-border-radius: 12px;
+$btn-border-radius: $border-radius;
 $btn-font-size: 16px;
 $btn-padding-x: 20px; // todo, $spacer PR should change this to $spacer*5
 $btn-padding-y-sm: 0;
@@ -48,20 +45,32 @@ $btn-font-size-sm: 14px;
 $btn-padding-y-lg: 0;
 $btn-padding-x-lg: 24px;
 $btn-font-size-lg: 18px;
-$btn-border-radius-sm: 10px;
-$btn-border-radius-lg: 14px;
+$btn-border-radius-sm: $border-radius;
+$btn-border-radius-lg: $border-radius-lg;
 $btn-disabled-opacity: 0.32;
-$btn-hover-bg: #4e25db;
-$btn-active-bg: #3919b7;
-$btn-secondary-bg: #656d7b14;
+$btn-hover-bg: $primary600;
+$btn-hover-bg-dark: $primary400;
+$btn-active-bg: $primary700;
+$btn-secondary-bg: rgba(101, 109, 123, 0.08);
+$btn-secondary-bg-dark: rgba(255, 255, 255, 0.08);
+$btn-secondary-hover-bg: rgba(101, 109, 123, 0.16);
+$btn-secondary-hover-bg-dark: rgba(255, 255, 255, 0.16);
+$btn-secondary-active-bg: rgba(101, 109, 123, 0.24);
+$btn-secondary-active-bg-dark: rgba(255, 255, 255, 0.24);
+$btn-outline-hover-bg: rgba(149, 108, 255, 0.08);
 $btn-secondary-hover-bg: $basic-alpha-16;
 $btn-secondary-active-bg: $basic-alpha-24;
-$btn-outline-hover-bg: rgba(149, 108, 255, 0.08);
 $btn-outline-active-bg: rgba(149, 108, 255, 0.16);
 $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
-.btn {
-  border-width: 0;
+$btn-border-width: 0;
+
+//HR
+$hr-border-color: $basic-alpha-16;
+$hr-opacity: 1;
+//todo: replace with bootstrap 5.3 dark mode theme
+.dark hr {
+  border-color: $dark-bg-500;
 }
 
 //Modal
@@ -84,7 +93,7 @@ $grid-breakpoints: (
   md: 768px,
   lg: 992px,
   xl: 1200px,
-  xxl: 1200px
+  xxl: 1201px,
 );
 
 $container-max-widths: (
@@ -92,5 +101,63 @@ $container-max-widths: (
   md: 720px,
   lg: 940px,
   xl: 1140px,
-  xxl: 1140px
+  xxl: 1141px,
 );
+
+//Typography
+$font-family-base: 'OpenSans', sans-serif;
+$font-size-sm: 0.825rem;
+$line-height-base: 1.375;
+$line-height-sm: 20px;
+$line-height-lg: 24px;
+$line-height-xlg: 28px;
+$line-height-xsm: 18px;
+$line-height-xxsm: 24px;
+$body-color: $text-icon-dark;
+$font-sm: 14px;
+$font-caption: 13px;
+$font-caption-sm: 12px;
+$font-caption-xs: 11px;
+$font-sizes: (
+  small: $font-sm,
+  caption: $font-caption,
+  captionSmall: $font-caption-sm,
+  captionXSmall: $font-caption-xs,
+);
+
+$h1-font-size: 42px;
+$h1-line-height: 46px;
+$h2-font-size: 34px;
+$h2-line-height: 40px;
+$h3-font-size: 30px;
+$h3-line-height: 40px;
+$h4-font-size: 24px;
+$h4-line-height: 32px;
+$h5-font-size: 20px;
+$h5-line-height: 30px;
+$h6-font-size: 16px;
+$h6-line-height: 24px;
+
+//Input
+$input-bg: #fff;
+$input-bg-alt: #f7f7f7;
+$input-border-radius: $border-radius;
+$input-height: 48px;
+$input-height-sm: 40px;
+$input-height-xsm: 32px;
+$input-height-lg: 56px;
+$input-line-height: 24px;
+$input-font-size: $font-size-base;
+$input-font-weight: 500;
+$input-border-color: rgba(101, 109, 123, 0.16);
+$input-placeholder-color: $text-icon-light-grey;
+$input-padding: 12px 16px 12px 12px;
+$input-padding-sm: 8px 14px 8px 12px;
+$input-padding-xsm: 6px 12px;
+$input-padding-lg: 16px 20px 16px 12px;
+$textarea-height: 120px;
+$textarea-height-sm: 100px;
+$textarea-height-xsm: 86px;
+$textarea-height-lg: 128px;
+$input-border-highlight-color: $primary400;
+$input-placeholder-color-dark: $text-icon-light-grey;

@@ -85,6 +85,15 @@ class InviteLinkViewSet(
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
+        organisation = Organisation.objects.get(id=organisation_pk)
+
+        if (
+            settings.ENABLE_CHARGEBEE
+            and organisation.over_plan_seats_limit(additional_seats=1)
+            and not organisation.is_auto_seat_upgrade_available()
+        ):
+            raise SubscriptionDoesNotSupportSeatUpgrade()
+
         return InviteLink.objects.filter(
             organisation__in=user.organisations.all()
         ).filter(organisation__pk=organisation_pk)

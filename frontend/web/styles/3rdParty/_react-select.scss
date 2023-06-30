@@ -12,7 +12,7 @@
   &__control {
     background: $input-bg-dark;
     height: $input-height !important;
-    border-radius: $border-radius-default !important;
+    border-radius: $border-radius !important;
     &--is-focused {
       border-color: $bt-brand-primary !important;
       box-shadow: 0 0 0 1px $bt-brand-primary !important;
@@ -68,14 +68,8 @@
   .react-select {
     &__control {
       border: none;
-      height: 24px !important;
-      min-height: 24px !important;
-    }
-    &__value-container {
-      margin-top: -7px;
-    }
-    &__indicator {
-      margin-top: -6px;
+      height: 40px !important;
+      min-height: 40px !important;
     }
     &__indicator-separator {
       display: none;

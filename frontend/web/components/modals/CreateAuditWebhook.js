@@ -93,7 +93,7 @@ const CreateAuditWebhook = class extends Component {
                   <a
                     className='text-info'
                     target='_blank'
-                    href='https://docs.flagsmith.com/advanced-use/system-administration#validating-signature'
+                    href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
                     rel='noreferrer'
                   >
                     More info
@@ -159,7 +159,7 @@ const CreateAuditWebhook = class extends Component {
                 <Button
                   theme='text'
                   className='ml-2'
-                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks'
+                  href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                   target='_blank'
                 >
                   View docs
