@@ -349,9 +349,9 @@ app.post('/api/webflow/webhook', (req, res) => {
   } else if (req.body.name === 'Subscribe Form') {
     console.log('Todo: process Subscribe form')
     return res.status(200).json({})
+  } else {
+    return res.status(200).json({})
   }
-
-  return res.status(200).json({})
 })
 
 // Catch all to render index template
