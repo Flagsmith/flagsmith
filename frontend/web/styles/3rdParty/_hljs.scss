@@ -282,17 +282,19 @@
 
 code.txt {
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 500;
     background: transparent !important;
     border: 1px solid $input-border-color;
     font-family: "OpenSans", sans-serif;
-    color: $body-color;
+    color: $text-icon-dark;
   &.empty {
-    color: rgba(46, 46, 46, 0.25) !important;
+    font-weight: normal;
+    color: $input-placeholder-color;
   }
   &:focus, &:focus.empty {
-    color: $body-color !important;
-    border-color: $bt-input-border-active;
+    font-weight: 500;
+    color: $text-icon-dark;
+    border-color: $primary;
   }
  }
 

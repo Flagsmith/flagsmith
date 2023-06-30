@@ -88,7 +88,6 @@ export class CreateAPIKey extends PureComponent {
                     disabled={!this.state.expiry_date}
                     onClick={() => this.setState({ expiry_date: null })}
                     theme='secondary'
-                    size='small'
                   >
                     Clear
                   </Button>
@@ -118,7 +117,6 @@ export class CreateAPIKey extends PureComponent {
                 data-test='create-feature-btn'
                 id='create-feature-btn'
                 disabled={this.state.isSaving || !this.state.name}
-                size='small'
               >
                 {this.state.isSaving ? 'Creating' : 'Create'}
               </Button>
