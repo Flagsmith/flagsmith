@@ -174,8 +174,6 @@ def test_v2_versioning(
     )
 
     # and that it is overridden by the segment override for the identity
-    # TODO:
-    #  - identities logic is still not using versioning, needs updating.
     identity_flags_response_json_after_publish = get_identity_flags_response_json(
         num_expected_flags=2
     )

@@ -1,6 +1,6 @@
 import typing
 
-from django.db.models import Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
 from environments.models import Environment
@@ -21,6 +21,10 @@ def get_environment_flags_list(
     environment: Environment,
     feature_name: str = None,
     additional_filters: Q = None,
+    additional_select_related_args: typing.Iterable[str] = None,
+    additional_prefetch_related_args: typing.Iterable[
+        typing.Union[str, Prefetch]
+    ] = None,
 ) -> typing.List["FeatureState"]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
@@ -35,9 +39,19 @@ def get_environment_flags_list(
         environment, feature_name, additional_filters
     )
 
-    feature_states = FeatureState.objects.select_related(
-        "feature", "feature_state_value", "environment_feature_version"
-    ).filter(qs_filter)
+    additional_select_related_args = additional_select_related_args or tuple()
+    additional_prefetch_related_args = additional_prefetch_related_args or tuple()
+
+    feature_states = (
+        FeatureState.objects.select_related(
+            "feature",
+            "feature_state_value",
+            "environment_feature_version",
+            *additional_select_related_args,
+        )
+        .prefetch_related(*additional_prefetch_related_args)
+        .filter(qs_filter)
+    )
 
     # Build up a dictionary in the form
     # {(feature_id, feature_segment_id, identity_id): feature_state}
@@ -65,6 +79,7 @@ def _build_environment_flags_qs_filter(
             live_from__isnull=False,
             live_from__lte=timezone.now(),
             version__isnull=False,
+            environment_feature_version__isnull=True,
         )
 
     if feature_name:

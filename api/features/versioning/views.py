@@ -83,6 +83,9 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             Environment, pk=self.kwargs["environment_pk"]
         )
         self.feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
+        self.environment_feature_version = get_object_or_404(
+            EnvironmentFeatureVersion, sha=self.kwargs["environment_feature_version_pk"]
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -91,7 +94,15 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         return context
 
     def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
-        serializer.save(feature=self.feature, environment=self.environment)
+        serializer.save(
+            feature=self.feature,
+            environment=self.environment,
+            environment_feature_version=self.environment_feature_version,
+        )
 
     def perform_update(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
-        serializer.save(feature=self.feature, environment=self.environment)
+        serializer.save(
+            feature=self.feature,
+            environment=self.environment,
+            environment_feature_version=self.environment_feature_version,
+        )

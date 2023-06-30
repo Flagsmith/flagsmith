@@ -125,7 +125,7 @@ def identity_with_traits_matching_segment(
 ) -> int:
     trait_data = {
         "trait_key": segment_condition_property,
-        "trait_value": segment_condition_value,
+        "string_value": segment_condition_value,
     }
     url = reverse(
         "api-v1:environments:identities-traits-list",

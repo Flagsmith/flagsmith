@@ -62,8 +62,6 @@ class Identity(models.Model):
         """
         segments = self.get_segments(traits=traits, overrides_only=True)
 
-        # TODO: rewrite this to use v2 versioning
-
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
         overridden_for_identity_query = Q(identity=self)
@@ -72,20 +70,21 @@ class Identity(models.Model):
             feature_segment__environment=self.environment,
         )
         environment_default_query = Q(identity=None, feature_segment=None)
-        only_live_versions_query = Q(
-            live_from__lte=timezone.now(), version__isnull=False
-        )
 
         # define the full query
-        full_query = (
-            only_live_versions_query
-            & belongs_to_environment_query
-            & (
-                overridden_for_identity_query
-                | overridden_for_segment_query
-                | environment_default_query
-            )
+        full_query = belongs_to_environment_query & (
+            overridden_for_identity_query
+            | overridden_for_segment_query
+            | environment_default_query
         )
+
+        if self.environment.use_v2_feature_versioning:
+            full_query &= Q(
+                environment_feature_version__live_from__isnull=False,
+                environment_feature_version__live_from__lte=timezone.now(),
+            )
+        else:
+            full_query &= Q(live_from__lte=timezone.now(), version__isnull=False)
 
         if additional_filters:
             full_query &= additional_filters
