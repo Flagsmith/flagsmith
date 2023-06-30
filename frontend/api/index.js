@@ -327,6 +327,8 @@ app.post('/api/webflow/webhook', (req, res) => {
                   })
                 },
               )
+
+              res.status(200).json({})
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
@@ -344,8 +346,6 @@ app.post('/api/webflow/webhook', (req, res) => {
   } else if (req.body.name === 'Subscribe Form') {
     console.log('Todo: process Subscribe form')
   }
-
-  res.status(200).json({})
 })
 
 // Catch all to render index template
