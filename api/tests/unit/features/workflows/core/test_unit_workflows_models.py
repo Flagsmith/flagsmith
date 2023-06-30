@@ -568,7 +568,7 @@ def test_committing_scheduled_change_requests_results_in_correct_versions(
 
     # Then
     # the feature state in the latest scheduled cr should be the one that is returned
-    feature_states = get_environment_flags_list(environment_id=environment.id)
+    feature_states = get_environment_flags_list(environment=environment)
     assert len(feature_states) == 1
     assert feature_states[0] == cr_2_fs
 

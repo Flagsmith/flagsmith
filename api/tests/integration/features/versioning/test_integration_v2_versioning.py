@@ -47,14 +47,11 @@ def test_v2_versioning(
 
     def verify_consistent_responses(num_expected_flags: int):
         nonlocal get_environment_flags_response_v1_json, get_identity_flags_response_v1_json
-        assert (
-            get_environment_flags_response_json(num_expected_flags)
-            == get_environment_flags_response_v1_json
-        )
-        assert (
-            get_identity_flags_response_json(num_expected_flags)
-            == get_identity_flags_response_v1_json
-        )
+        new_flags_response = get_environment_flags_response_json(num_expected_flags)
+        new_identities_response = get_identity_flags_response_json(num_expected_flags)
+
+        assert new_flags_response == get_environment_flags_response_v1_json
+        assert new_identities_response == get_identity_flags_response_v1_json
 
     # Next, let's update the environment to use v2 versioning
     environment_update_url = reverse(
@@ -179,9 +176,6 @@ def test_v2_versioning(
     # and that it is overridden by the segment override for the identity
     # TODO:
     #  - identities logic is still not using versioning, needs updating.
-    #  - verify the logic is correct since the identity is still receiving v2-value
-    #  feature state. I would have expected the verify_consistent_responses call
-    #  before we publish to fail given this information.
     identity_flags_response_json_after_publish = get_identity_flags_response_json(
         num_expected_flags=2
     )

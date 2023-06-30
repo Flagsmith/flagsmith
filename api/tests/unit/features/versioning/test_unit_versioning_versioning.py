@@ -23,7 +23,7 @@ def test_get_environment_flags_queryset_returns_only_latest_versions(
     feature_state_v1.clone(env=environment, as_draft=True)  # draft feature state
 
     # When
-    feature_states = get_environment_flags_queryset(environment_id=environment.id)
+    feature_states = get_environment_flags_queryset(environment=environment)
 
     # Then
     assert feature_states.count() == 1
@@ -41,7 +41,8 @@ def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_que
     Feature.objects.create(default_enabled=True, name="enabled_flag", project=project)
 
     # When
-    feature_states = get_environment_flags_queryset(environment_id=environment.id)
+    feature_states = get_environment_flags_queryset(environment=environment)
+
     # Then
     assert feature_states.count() == 2
 
@@ -54,7 +55,7 @@ def test_get_environment_flags_queryset_filter_using_feature_name(environment, p
 
     # When
     feature_states = get_environment_flags_queryset(
-        environment_id=environment.id, feature_name=flag_1_name
+        environment=environment, feature_name=flag_1_name
     )
 
     # Then
@@ -90,7 +91,7 @@ def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
 
     # When
     environment_feature_states = get_environment_flags_list(
-        environment_id=environment.id,
+        environment=environment,
         additional_filters=Q(feature_segment=None, identity=None),
     )
 
