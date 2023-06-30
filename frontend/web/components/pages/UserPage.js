@@ -180,6 +180,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -196,6 +197,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
