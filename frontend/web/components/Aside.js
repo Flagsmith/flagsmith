@@ -101,6 +101,7 @@ const Aside = class extends Component {
           )
         }}
       />,
+      'p-0',
     )
   }
 
