@@ -319,6 +319,8 @@ app.post('/api/webflow/webhook', (req, res) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
+
+                  res.status(200).json({})
                 },
                 (error) => {
                   console.log('pipedriveNotesApi called error')
@@ -327,8 +329,6 @@ app.post('/api/webflow/webhook', (req, res) => {
                   })
                 },
               )
-
-              res.status(200).json({})
             },
             (error) => {
               console.log('pipedriveLeadsApi called error')
