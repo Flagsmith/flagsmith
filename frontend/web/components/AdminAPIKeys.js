@@ -4,6 +4,8 @@ import data from 'common/data/base/_data'
 import InfoMessage from './InfoMessage'
 import Token from './Token'
 import JSONReference from './JSONReference'
+import ModalHR from './modals/ModalHR'
+import Button from './base/forms/Button'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -37,92 +39,97 @@ export class CreateAPIKey extends PureComponent {
   render() {
     return (
       <div>
-        {!this.state.key && (
-          <div>
-            <Flex className='mb-4 mr-3'>
-              <div>
-                <label>Name</label>
-              </div>
-              <Input
-                value={this.state.name}
-                onChange={(e) =>
-                  this.setState({ name: Utils.safeParseEventValue(e) })
-                }
-                isValid={!!this.state.name}
-                type='text'
-                inputClassName='input--wide'
-                placeholder='e.g. Admin API Key'
-              />
-            </Flex>
-            <Flex className='mb-4 mr-3'>
-              <div>
-                <label>Expiry (Leave empty for no expiry)</label>
-              </div>
-              <Row>
-                <Flex>
-                  <DatePicker
-                    minDate={new Date()}
-                    onChange={(e) => {
-                      this.setState({
-                        expiry_date: e.toISOString(),
-                      })
-                    }}
-                    showTimeInput
-                    selected={
-                      this.state.expiry_date
-                        ? moment(this.state.expiry_date)._d
-                        : null
-                    }
-                    value={
-                      this.state.expiry_date
-                        ? `${moment(this.state.expiry_date).format(
-                            'Do MMM YYYY hh:mma',
-                          )}`
-                        : 'Never'
-                    }
-                  />
-                </Flex>
-
-                <div className='ml-2'>
-                  <Button
-                    disabled={!this.state.expiry_date}
-                    onClick={() => this.setState({ expiry_date: null })}
-                    theme='secondary'
-                  >
-                    Clear
-                  </Button>
+        <div className='modal-body'>
+          {!this.state.key && (
+            <div>
+              <Flex className='mb-4'>
+                <div>
+                  <label>Name</label>
                 </div>
-              </Row>
-            </Flex>
-          </div>
-        )}
+                <Input
+                  value={this.state.name}
+                  onChange={(e) =>
+                    this.setState({ name: Utils.safeParseEventValue(e) })
+                  }
+                  isValid={!!this.state.name}
+                  type='text'
+                  inputClassName='input--wide'
+                  placeholder='e.g. Admin API Key'
+                />
+              </Flex>
+              <Flex>
+                <div>
+                  <label>Expiry (Leave empty for no expiry)</label>
+                </div>
+                <Row>
+                  <Flex>
+                    <DatePicker
+                      minDate={new Date()}
+                      onChange={(e) => {
+                        this.setState({
+                          expiry_date: e.toISOString(),
+                        })
+                      }}
+                      showTimeInput
+                      selected={
+                        this.state.expiry_date
+                          ? moment(this.state.expiry_date)._d
+                          : null
+                      }
+                      value={
+                        this.state.expiry_date
+                          ? `${moment(this.state.expiry_date).format(
+                              'Do MMM YYYY hh:mma',
+                            )}`
+                          : 'Never'
+                      }
+                    />
+                  </Flex>
 
-        {this.state.key && (
-          <div className='mb-4'>
-            <InfoMessage>
-              Please keep a note of your API key once it's created, we do not
-              store it.
-            </InfoMessage>
+                  <div className='ml-2'>
+                    <Button
+                      disabled={!this.state.expiry_date}
+                      onClick={() => this.setState({ expiry_date: null })}
+                      theme='text'
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </Row>
+              </Flex>
+            </div>
+          )}
 
-            <Token show style={{ width: '435px' }} token={this.state.key} />
-          </div>
-        )}
-        <div className='container'>
-          <div className='text-right'>
-            {this.state.key ? (
-              <div />
-            ) : (
+          {this.state.key && (
+            <div className='mb-4'>
+              <InfoMessage>
+                Please keep a note of your API key once it's created, we do not
+                store it.
+              </InfoMessage>
+
+              <Token show style={{ width: '435px' }} token={this.state.key} />
+            </div>
+          )}
+        </div>
+
+        {this.state.key ? (
+          <div />
+        ) : (
+          <>
+            <ModalHR />
+            <div className='modal-footer'>
+              <Button onClick={closeModal} theme='secondary' className='mr-2'>
+                Cancel
+              </Button>
               <Button
                 onClick={this.submit}
-                data-test='create-feature-btn'
-                id='create-feature-btn'
                 disabled={this.state.isSaving || !this.state.name}
               >
                 {this.state.isSaving ? 'Creating' : 'Create'}
               </Button>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     )
   }
@@ -150,6 +157,7 @@ export default class AdminAPIKeys extends PureComponent {
           this.fetch()
         }}
       />,
+      'p-0',
     )
   }
 

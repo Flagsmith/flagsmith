@@ -81,7 +81,11 @@ const UsersPage: FC<UsersPageType> = (props) => {
   }
 
   const newUser = () => {
-    openModal('New Users', <CreateUserModal environmentId={environmentId} />)
+    openModal(
+      'New Identities',
+      <CreateUserModal environmentId={environmentId} />,
+      'p-0',
+    )
   }
 
   return (
@@ -114,7 +118,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   id='show-create-feature-btn'
                   onClick={newUser}
                 >
-                  Create Users
+                  Create Identities
                 </Button>
               </FormGroup>
             ) : (
@@ -127,7 +131,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     id='show-create-feature-btn'
                     onClick={newUser}
                   >
-                    Create Users
+                    Create Identities
                   </Button>
                 }
                 place='right'

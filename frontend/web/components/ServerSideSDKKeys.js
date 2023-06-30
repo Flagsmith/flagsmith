@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
+import ModalHR from './modals/ModalHR'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -26,30 +27,33 @@ class CreateServerSideKeyModal extends Component {
     return (
       <div>
         <form onSubmit={this.onSubmit}>
-          <div className='mb-2'>
-            This will create a Server-side Environment Key for the environment{' '}
-            <strong>
-              {ProjectStore.getEnvironment(this.props.environmentId).name}
-            </strong>
-            .
-          </div>
-          <InputGroup
-            title='Key Name'
-            placeholder='New Key'
-            className='mb-2'
-            id='jsTokenName'
-            inputProps={{
-              className: 'full-width modal-input',
-            }}
-            onChange={(e) =>
-              this.setState({ name: Utils.safeParseEventValue(e) })
-            }
-          />
-          <div className='text-right'>
-            <Button
-              disabled={!this.state.name || this.state.isSaving}
+          <div className='modal-body'>
+            <div className='mb-2'>
+              This will create a Server-side Environment Key for the environment{' '}
+              <strong>
+                {ProjectStore.getEnvironment(this.props.environmentId).name}
+              </strong>
+              .
+            </div>
+            <InputGroup
+              title='Key Name'
+              placeholder='New Key'
               className='mb-2'
-            >
+              id='jsTokenName'
+              inputProps={{
+                className: 'full-width modal-input',
+              }}
+              onChange={(e) =>
+                this.setState({ name: Utils.safeParseEventValue(e) })
+              }
+            />
+          </div>
+          <ModalHR />
+          <div className='modal-footer'>
+            <Button onClick={closeModal} theme='secondary' className={'mr-2'}>
+              Cancel
+            </Button>
+            <Button disabled={!this.state.name || this.state.isSaving}>
               Create
             </Button>
           </div>
@@ -95,6 +99,7 @@ class ServerSideSDKKeys extends Component {
             })
         }}
       />,
+      'p-0',
     )
   }
 

@@ -60,6 +60,7 @@ const OrganisationSettingsPage = class extends Component {
     openModal(
       'Remove Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -216,6 +217,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
+      'p-0',
     )
   }
 
@@ -233,6 +235,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0',
     )
   }
 
@@ -579,6 +582,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
+                                                  'p-0',
                                                 )
                                               }
                                               type='button'
