@@ -58,7 +58,7 @@ const OrganisationSettingsPage = class extends Component {
 
   confirmRemove = (organisation, cb) => {
     openModal(
-      'Remove Organisation',
+      'Delete Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
       'p-0',
     )
@@ -202,6 +202,7 @@ const OrganisationSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 

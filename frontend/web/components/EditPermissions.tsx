@@ -290,7 +290,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       <ModalHR />
 
       <div className='modal-footer'>
-        <Button className="mr-2" onClick={closeModal} theme='secondary'>
+        <Button className='mr-2' onClick={closeModal} theme='secondary'>
           Cancel
         </Button>
         <Button

@@ -146,6 +146,7 @@ const CreateAuditWebhook = class extends Component {
                       className='mt-3'
                       data-test='create-feature-btn'
                       id='create-feature-btn'
+                      type='submit'
                       disabled={isSaving || !url}
                     >
                       {isSaving ? 'Creating' : 'Create Webhook'}

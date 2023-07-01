@@ -57,8 +57,8 @@ export const Button: FC<ButtonType> = ({
     </a>
   ) : (
     <button
-      type={type}
       {...rest}
+      type={type}
       onMouseUp={onMouseUp}
       className={cn(
         { btn: true },

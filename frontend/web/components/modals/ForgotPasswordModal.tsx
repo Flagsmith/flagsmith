@@ -5,7 +5,6 @@ import Utils from 'common/utils/utils'
 import Project from 'common/project'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
-import ModalHR from './ModalHR'
 
 type ForgotPasswordModalType = {
   initialValue?: string

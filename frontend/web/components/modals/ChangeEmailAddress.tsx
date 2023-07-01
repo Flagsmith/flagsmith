@@ -2,6 +2,10 @@ import React, { FC, useEffect, useState } from 'react'
 import AccountProvider from 'common/providers/AccountProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useUpdateUserEmailMutation } from 'common/services/useUserEmail'
+import Utils from 'common/utils/utils'
+import InputGroup from 'components/base/forms/InputGroup'
+import Button from 'components/base/forms/Button'
+import ModalHR from './ModalHR'
 
 type ChangeEmailAddressType = {
   onComplete?: () => void
@@ -40,7 +44,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
 
   return (
     <AccountProvider onSave={close}>
-      {({ error }) => (
+      {({ error }: { error?: Record<string, string> }) => (
         <form
           onSubmit={(e) => {
             Utils.preventDefault(e)
@@ -50,44 +54,51 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
             })
           }}
         >
-          <InputGroup
-            title='New Email Address'
-            inputProps={{
-              className: 'full-width',
-              error: error && error.email,
-              name: 'EmailAddress',
-            }}
-            value={email}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setEmail(Utils.safeParseEventValue(event))
-            }}
-            isValid={email && email.length}
-            type='email'
-            name='email'
-            id='email'
-            placeholder='E.g. email123@email.com'
-          />
-          <InputGroup
-            title='Confirm Password'
-            inputProps={{
-              className: 'full-width',
-              name: 'newPassword',
-            }}
-            value={password}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setPassword(Utils.safeParseEventValue(event))
-            }}
-            type='password'
-            name='password'
-          />
-          {isError && (
-            <div className='alert alert-danger'>
-              {updateError.data.current_password
-                ? updateError.data.current_password[0]
-                : 'An error occurred attempting to update your email address. Please verify that the email address you have provided is not already being used.'}
-            </div>
-          )}
-          <div className='text-right'>
+          <div className='modal-body'>
+            <InputGroup
+              title='New Email Address'
+              inputProps={{
+                className: 'full-width',
+                error: error && error.email,
+                name: 'EmailAddress',
+              }}
+              value={email}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setEmail(Utils.safeParseEventValue(event))
+              }}
+              isValid={email && email.length}
+              type='email'
+              name='email'
+              id='email'
+              placeholder='E.g. email123@email.com'
+            />
+            <InputGroup
+              title='Confirm Password'
+              className='mb-0'
+              inputProps={{
+                className: 'full-width',
+                name: 'newPassword',
+              }}
+              value={password}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setPassword(Utils.safeParseEventValue(event))
+              }}
+              type='password'
+              name='password'
+            />
+            {isError && (
+              <div className='alert alert-danger'>
+                {updateError.data.current_password
+                  ? updateError.data.current_password[0]
+                  : 'An error occurred attempting to update your email address. Please verify that the email address you have provided is not already being used.'}
+              </div>
+            )}
+          </div>
+          <ModalHR />
+          <div className='modal-footer'>
+            <Button theme='secondary' className='mr-2' onClick={closeModal}>
+              Cancel
+            </Button>
             <Button
               type='submit'
               id='save-changes'
@@ -96,7 +107,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
                 updating || (password.length === 0 && email.length === 0)
               }
             >
-              {updating ? 'Saving' : 'Save Changes'}
+              {updating ? 'Saving' : 'Save'}
             </Button>
           </div>
         </form>

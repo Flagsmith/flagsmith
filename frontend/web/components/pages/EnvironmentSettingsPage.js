@@ -61,6 +61,7 @@ const EnvironmentSettingsPage = class extends Component {
     openModal(
       'Remove Environment',
       <ConfirmRemoveEnvironment environment={environment} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -286,6 +287,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 <Button
                                   id='save-env-btn'
                                   className='float-right mb-4'
+                                  type='submit'
                                   disabled={this.saveDisabled()}
                                 >
                                   {isSaving ? 'Updating' : 'Update'}

@@ -55,8 +55,9 @@ const ProjectSettingsPage = class extends Component {
 
   confirmRemove = (project, cb) => {
     openModal(
-      'Remove Project',
+      'Delete Project',
       <ConfirmRemoveProject project={project} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -73,6 +74,7 @@ const ProjectSettingsPage = class extends Component {
           })
         }}
       />,
+      'p-0',
     )
   }
 

@@ -1,6 +1,5 @@
 import { Modal, ModalBody } from 'reactstrap'
 import React, { FC, ReactNode } from 'react'
-import Button from 'components/base/forms/Button'
 import ModalHeader from './ModalHeader'
 
 interface ModalDefault {

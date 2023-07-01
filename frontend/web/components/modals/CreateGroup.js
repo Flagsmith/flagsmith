@@ -75,7 +75,7 @@ const CreateGroup = class extends Component {
     ) {
       return new Promise((resolve) => {
         openConfirm(
-          'Are you sure',
+          'Are you sure?',
           'Closing this will discard your unsaved changes.',
           () => resolve(true),
           () => resolve(false),
@@ -410,6 +410,7 @@ const CreateGroup = class extends Component {
                         </>
                       ) : (
                         <Button
+                          type='submit'
                           data-test='create-feature-btn'
                           id='create-feature-btn'
                           disabled={isSaving || !name}

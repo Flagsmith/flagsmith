@@ -141,7 +141,7 @@ const CreateTrait = class extends Component {
                     Cancel
                   </Button>
                   <Button
-                    id='update-trait-btn'
+                    id={isEdit ? 'update-trait-btn' : 'create-trait-btn'}
                     type='submit'
                     disabled={isSaving || !trait_key}
                   >

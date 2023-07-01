@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import { setInterceptClose } from './base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -131,7 +131,7 @@ const CreateFlag = class extends Component {
           this.state.settingsChanged
         ) {
           openConfirm(
-            'Are you sure',
+            'Are you sure?',
             'Closing this will discard your unsaved changes.',
             () => resolve(true),
             () => resolve(false),
@@ -840,7 +840,7 @@ const CreateFlag = class extends Component {
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
                         return (
-                          <div className="px-3" id='create-feature-modal'>
+                          <div className='px-3' id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <Tabs
                                 value={this.state.tab}
