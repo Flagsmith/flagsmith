@@ -89,6 +89,7 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
           )}
           <div className='text-right'>
             <Button
+              type='submit'
               id='save-changes'
               data-tests='save-changes'
               disabled={

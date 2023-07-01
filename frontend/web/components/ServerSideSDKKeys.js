@@ -53,7 +53,10 @@ class CreateServerSideKeyModal extends Component {
             <Button onClick={closeModal} theme='secondary' className={'mr-2'}>
               Cancel
             </Button>
-            <Button disabled={!this.state.name || this.state.isSaving}>
+            <Button
+              type='submit'
+              disabled={!this.state.name || this.state.isSaving}
+            >
               Create
             </Button>
           </div>

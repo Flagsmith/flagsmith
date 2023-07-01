@@ -48,7 +48,7 @@ const ConfirmRemoveEnvironment = class extends Component {
               <Button
                 id='confirm-delete-env-btn'
                 disabled={this.state.challenge != environment.name}
-                className='btn btn-primary'
+                type='submit'
               >
                 Confirm changes
               </Button>

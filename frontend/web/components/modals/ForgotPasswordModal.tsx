@@ -53,7 +53,11 @@ const ForgotPasswordModal: FC<ForgotPasswordModalType> = ({
         <ErrorMessage>{error}</ErrorMessage>
       </div>
       <div className='modal-footer pt-0'>
-        <Button disabled={!Utils.isValidEmail(email)} onClick={handleSubmit}>
+        <Button
+          type='submit'
+          disabled={!Utils.isValidEmail(email)}
+          onClick={handleSubmit}
+        >
           Send
         </Button>
       </div>

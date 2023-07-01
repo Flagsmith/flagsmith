@@ -49,7 +49,7 @@ const ConfirmRemoveTrait = class extends Component {
               <Button
                 id='confirm-remove-trait-btn'
                 disabled={this.state.challenge !== trait_key}
-                className='btn btn-primary'
+                type='submit'
               >
                 Confirm
               </Button>

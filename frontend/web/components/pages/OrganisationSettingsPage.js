@@ -336,6 +336,7 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </Column>
                                     <Button
+                                      type='submit'
                                       disabled={this.saveDisabled()}
                                       className='float-right'
                                     >

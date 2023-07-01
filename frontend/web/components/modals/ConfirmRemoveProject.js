@@ -47,7 +47,7 @@ const ConfirmRemoveProject = class extends Component {
             <FormGroup className='text-right'>
               <Button
                 disabled={this.state.challenge != project.name}
-                className='btn btn-primary'
+                type='submit'
               >
                 Confirm changes
               </Button>

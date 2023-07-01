@@ -44,9 +44,9 @@ const ConfirmHideFlags = class extends Component {
 
         <FormGroup className='text-right'>
           <Button
+            type='submit'
             data-test='js-confirm'
             disabled={this.state.challenge != project.name}
-            className='btn btn-primary'
           >
             Confirm changes
           </Button>

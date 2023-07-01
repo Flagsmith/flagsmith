@@ -47,7 +47,7 @@ const CreateAuditWebhook = class extends Component {
           <Button
             id='confirm-remove-feature-btn'
             disabled={this.state.challenge != url}
-            className='btn btn-primary'
+            type='submit'
           >
             Confirm changes
           </Button>

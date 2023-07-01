@@ -103,6 +103,7 @@ const CreateProject = class extends Component {
                     Cancel
                   </Button>
                   <Button
+                    type='submit'
                     data-test='create-project-btn'
                     id='create-project-btn'
                     disabled={isSaving || !name}

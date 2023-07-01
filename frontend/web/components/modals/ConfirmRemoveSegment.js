@@ -52,7 +52,7 @@ const ConfirmRemoveSegment = class extends Component {
               <Button
                 id='confirm-remove-segment-btn'
                 disabled={this.state.challenge != segment.name}
-                className='btn btn-primary'
+                type='submit'
               >
                 Confirm changes
               </Button>

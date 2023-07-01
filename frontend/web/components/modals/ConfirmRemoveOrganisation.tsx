@@ -52,6 +52,7 @@ const ConfirmRemoveOrganisation: FC<ConfirmRemoveOrganisationType> = ({
             </Button>
             <Button
               id='confirm-del-org-btn'
+              type='submit'
               disabled={challenge != organisation.name}
             >
               Confirm changes

@@ -56,6 +56,7 @@ const ConfirmRemoveFeature = class extends Component {
 
             <FormGroup className='text-right'>
               <Button
+                type='submit'
                 id='confirm-remove-feature-btn'
                 disabled={this.state.challenge != url}
                 className='mt-3'

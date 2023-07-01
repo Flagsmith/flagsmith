@@ -188,6 +188,7 @@ const ProjectSettingsPage = class extends Component {
                                 />
                               </Column>
                               <Button
+                                type='submit'
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
                               >
@@ -314,6 +315,7 @@ const ProjectSettingsPage = class extends Component {
                                   />
                                   <Button
                                     className='ml-2'
+                                    type='submit'
                                     disabled={!regexValid || isLoading}
                                   >
                                     Save

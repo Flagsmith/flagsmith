@@ -64,11 +64,12 @@ const ConfirmRemoveFeature = class extends Component {
 
             <ModalHR />
             <div className='modal-footer'>
-              <Button className="mr-2" theme='secondary' onClick={closeModal}>
+              <Button className='mr-2' theme='secondary' onClick={closeModal}>
                 Cancel
               </Button>
               <Button
                 id='confirm-remove-feature-btn'
+                type='submit'
                 disabled={this.state.challenge != projectFlag.name}
                 theme='primary'
               >
