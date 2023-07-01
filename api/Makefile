@@ -68,22 +68,22 @@ docker-build:
 
 .PHONY: test
 test:
-	pytest $(opts)
+	peotry run pytest $(opts)
 
 .PHONY: django-migrations
 django-make-migrations:
-	python manage.py waitfordb
-	python manage.py makemigrations $(opts)
+	poetry run python manage.py waitfordb
+	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-migrate
 django-migrate:
-	python manage.py waitfordb
-	python manage.py migrate
+	poetry run python manage.py waitfordb
+	poetry run python manage.py migrate
 
 .PHONY: django-collect-static
 django-collect-static:
-	python manage.py collectstatic --noinput
+	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
 serve:
-	gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
+	poetry run gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
