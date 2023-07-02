@@ -99,6 +99,8 @@ influxdb-client = "^1.36.1"
 django-ordered-model = "^3.7.4"
 django-ses = "^3.4.1"
 django-axes = "^6.0.1"
+pydantic = "^1.10.9"
+pyngo = "^1.6.0"
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
