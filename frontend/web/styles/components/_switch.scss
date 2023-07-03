@@ -37,9 +37,11 @@
   }
   &:disabled {
     opacity: $btn-disabled-opacity;
-    .rc-switch-checked {
-      opacity: $btn-disabled-opacity;
-    }
+    background-color: $switch-disabled-bg;
+  }
+  &-checked:disabled {
+    opacity: $btn-disabled-opacity;
+    background-color: $primary;
   }
 }
 
@@ -102,10 +104,18 @@
     &:hover {
       background-color: $switch-hover-bg-dark;
     }
+    &:disabled {
+      opacity: $switch-disabled-opacity-dark;
+      background-color: $switch-disabled-bg-dark;
+    }
     &-checked {
       background-color: $primary;
       &:hover {
         background-color: $switch-checked-hover-bg;
+      }
+      &:disabled {
+        opacity: $switch-disabled-opacity-dark;
+        background-color: $primary;
       }
     }
   }
