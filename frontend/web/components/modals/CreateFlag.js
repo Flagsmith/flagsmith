@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import { setInterceptClose } from './base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'

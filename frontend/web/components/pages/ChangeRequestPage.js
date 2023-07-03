@@ -32,7 +32,7 @@ const ChangeRequestsPage = class extends Component {
     users?.filter((v) => approvals?.includes(v.group))
 
   getGroupApprovals = (groups, approvals) =>
-      groups.filter((v) => approvals.find((a) => a.group === v.id))
+    groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   constructor(props, context) {
     super(props, context)

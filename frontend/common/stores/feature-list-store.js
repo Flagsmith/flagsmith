@@ -6,6 +6,7 @@ const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const OrganisationStore = require('./organisation-store')
 const data = require('../data/base/_data')
+const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 
 let createdFirstFeature = false
@@ -210,48 +211,56 @@ const controller = {
         }
         if (!v.id) {
           const featureFlagId = v.feature
-          return data
-            .post(
-              `${Project.api}environments/${environmentId}/features/${featureFlagId}/create-segment-override/`,
-              {
-                enabled: !!v.enabled,
-                feature_segment: {
-                  segment: v.segment,
-                },
-                feature_state_value: {
-                  boolean_value:
-                    v.feature_segment_value.feature_state_value.boolean_value,
-                  integer_value:
-                    v.feature_segment_value.feature_state_value.integer_value,
-                  string_value:
-                    v.feature_segment_value.feature_state_value.string_value,
-                  type: v.feature_segment_value.feature_state_value.type,
-                },
+          return createSegmentOverride(
+            getStore(),
+            {
+              environmentId,
+              featureId: featureFlagId,
+              enabled: !!v.enabled,
+              feature_segment: {
+                segment: v.segment,
               },
-            )
-            .then((segmentOverride) => {
-              const {
-                feature_segment,
-                feature_state_value,
-                ...restSegmentOverride
-              } = segmentOverride
-              const newValue = {
-                ...feature_segment,
-                enabled: segmentOverrides[i].enabled,
-                environment: segmentOverride.environment,
+              feature_state_value: {
+                boolean_value:
+                  v.feature_segment_value.feature_state_value.boolean_value,
+                integer_value:
+                  v.feature_segment_value.feature_state_value.integer_value,
+                string_value:
+                  v.feature_segment_value.feature_state_value.string_value,
+                type: v.feature_segment_value.feature_state_value.type,
+              },
+            },
+            { forceRefetch: true },
+          ).then((segmentOverride) => {
+            const newValue = {
+              id: segmentOverride.data.feature_segment.id,
+              segment: segmentOverride.data.feature_segment.segment,
+              priority: segmentOverride.data.feature_segment.priority,
+              uuid: segmentOverride.data.feature_segment.uuid,
+              environment: segmentOverride.data.environment,
+              feature: featureFlagId,
+              feature_segment_value: {
+                id: segmentOverride.data.id,
+                environment: segmentOverride.data.environment,
+                enabled: segmentOverride.data.enabled,
                 feature: featureFlagId,
-                feature_segment_value: {
-                  ...restSegmentOverride,
-                  environment: segmentOverride.environment,
-                  feature: featureFlagId,
-                  feature_state_value,
-                },
-                multivariate_options: segmentOverrides[i].multivariate_options,
-                segment_name: v.segment_name,
-                value: segmentOverrides[i].value,
-              }
-              segmentOverrides[i] = newValue
-            })
+                feature_state_value: segmentOverride.data.feature_state_value,
+                deleted_at: segmentOverride.data.deleted_at,
+                uuid: segmentOverride.data.uuid,
+                created_at: segmentOverride.data.created_at,
+                updated_at: segmentOverride.data.updated_at,
+                version: segmentOverride.data.version,
+                live_from: segmentOverride.data.live_from,
+                environment: segmentOverride.data.environment,
+                identity: segmentOverride.data.identity,
+                change_request: segmentOverride.data.change_request,
+              },
+              multivariate_options: segmentOverrides[i].multivariate_options,
+              segment_name: v.segment_name,
+              value: segmentOverrides[i].value,
+            }
+            segmentOverrides[i] = newValue
+          })
         }
         return Promise.resolve()
       })
@@ -308,49 +317,46 @@ const controller = {
         )
       }
 
-      const segmentOverridesRequest = console.log(
-        'DEBUG: segmentOverrides:',
-        segmentOverrides,
-      )
-      mode === 'SEGMENT' && segmentOverrides
-        ? (segmentOverrides.length
-            ? data.post(
-                `${Project.api}features/feature-segments/update-priorities/`,
-                segmentOverrides.map((override, index) => ({
-                  id: override.id,
-                  priority: index,
-                })),
-              )
-            : Promise.resolve([])
-          ).then(() =>
-            Promise.all(
-              segmentOverrides.map((override) =>
-                data.put(
-                  `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
-                  {
-                    ...override.feature_segment_value,
-                    enabled: override.enabled,
-                    feature_state_value: Utils.valueToFeatureState(
-                      override.value,
-                    ),
-                    multivariate_feature_state_values:
-                      override.multivariate_options &&
-                      override.multivariate_options.map((o) => {
-                        if (o.multivariate_feature_option) return o
-                        return {
-                          multivariate_feature_option:
-                            environmentFlag.multivariate_feature_state_values[
-                              o.multivariate_feature_option_index
-                            ].multivariate_feature_option,
-                          percentage_allocation: o.percentage_allocation,
-                        }
-                      }),
-                  },
+      const segmentOverridesRequest =
+        mode === 'SEGMENT' && segmentOverrides
+          ? (segmentOverrides.length
+              ? data.post(
+                  `${Project.api}features/feature-segments/update-priorities/`,
+                  segmentOverrides.map((override, index) => ({
+                    id: override.id,
+                    priority: index,
+                  })),
+                )
+              : Promise.resolve([])
+            ).then(() =>
+              Promise.all(
+                segmentOverrides.map((override) =>
+                  data.put(
+                    `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
+                    {
+                      ...override.feature_segment_value,
+                      enabled: override.enabled,
+                      feature_state_value: Utils.valueToFeatureState(
+                        override.value,
+                      ),
+                      multivariate_feature_state_values:
+                        override.multivariate_options &&
+                        override.multivariate_options.map((o) => {
+                          if (o.multivariate_feature_option) return o
+                          return {
+                            multivariate_feature_option:
+                              environmentFlag.multivariate_feature_state_values[
+                                o.multivariate_feature_option_index
+                              ].multivariate_feature_option,
+                            percentage_allocation: o.percentage_allocation,
+                          }
+                        }),
+                    },
+                  ),
                 ),
               ),
-            ),
-          )
-        : Promise.resolve()
+            )
+          : Promise.resolve()
 
       Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
         if (store.model) {

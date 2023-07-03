@@ -203,7 +203,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Prevent flag defaults</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p  className='fs-small lh-sm'>
+                            <p className='fs-small lh-sm'>
                               By default, when you create a feature with a value
                               and enabled state it acts as a default for your
                               other environments. Enabling this setting forces
@@ -227,7 +227,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Case sensitive features</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p  className='fs-small lh-sm'>
+                            <p className='fs-small lh-sm'>
                               By default, features are lower case in order to
                               prevent human error. Enabling this will allow you
                               to use upper case characters when creating

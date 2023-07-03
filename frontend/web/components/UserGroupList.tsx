@@ -95,10 +95,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               </Flex>
 
               {onEditPermissions && isAdmin && (
-                <Button
-                  theme="text"
-                  onClick={() => onEditPermissions(group)}
-                >
+                <Button theme='text' onClick={() => onEditPermissions(group)}>
                   Edit Permissions
                 </Button>
               )}

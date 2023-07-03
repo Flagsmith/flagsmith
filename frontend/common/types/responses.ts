@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+import { type } from 'common/data/base/_data'
 import UserGroupList from 'components/UserGroupList'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {
@@ -91,6 +92,12 @@ export type UserPermission = {
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
+}
+export type FeatureStateValue = {
+  boolean_value: boolean
+  integer_value: number
+  string_value: string
+  type: string
 }
 
 export type AuditLogItem = {
@@ -284,5 +291,29 @@ export type Res = {
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
+  createSegmentOverride: {
+    id: number
+    segment: number
+    priority: number
+    uuid: string
+    environment: number
+    feature: number
+    feature_segment_value: {
+      id: number
+      environment: number
+      enabled: boolean
+      feature: number
+      feature_state_value: featureStateValue
+      deleted_at: string
+      uuid: string
+      created_at: string
+      updated_at: string
+      version: number
+      live_from: string
+      identity: string
+      change_request: string
+    }
+    value: string
+  }
   // END OF TYPES
 }
