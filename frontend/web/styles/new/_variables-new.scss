@@ -10,6 +10,9 @@ $danger: #ef4d56;
 $success: #27ab95;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: #9da4ae;
+$bg-light300: #eff1f4;
+$bg-dark200: #202839;
+$bg-dark300: #121827;
 $link-color: $primary;
 $theme-colors: (
   primary: $primary,
@@ -139,3 +142,20 @@ $textarea-height-xsm: 86px;
 $textarea-height-lg: 128px;
 $input-border-highlight-color: $primary400;
 $input-placeholder-color-dark: $text-icon-light-grey;
+
+//Switch
+$switch-height: 24px;
+$switch-width: 41px;
+$switch-border-radius: 100px;
+$switch-bg: rgba(101, 109, 123, 0.16);
+$switch-bg-dark: rgba(255, 255, 255, 0.16);
+$switch-hover-bg: rgba(101, 109, 123, 0.48);
+$switch-hover-bg-dark: rgba(255, 255, 255, 0.48);
+$switch-checked-hover-bg: $primary600;
+$switcher-width: 18px;
+$switch-dark-mode-height: 40px;
+$switch-dark-mode-width: 72px;
+$switch-dark-mode-bg: $bg-light300;
+$switch-dark-mode-bg-dark: $bg-dark300;
+$switcher-checked-dark-mode-bg: $bg-dark200;
+$switcher-dark-mode-width: 32px;
