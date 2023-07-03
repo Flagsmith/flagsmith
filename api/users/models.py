@@ -192,11 +192,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 "Must provide exactly one of organisation or organisation_id"
             )
 
-        role = (
-            self.get_organisation_role(organisation)
-            if organisation
-            else self.get_user_organisation_by_id(organisation_id)
-        )
+        if organisation:
+            role = self.get_organisation_role(organisation)
+        else:
+            user_organisation = self.get_user_organisation_by_id(organisation_id)
+            role = getattr(user_organisation, "role", None)
+
         return role and role == OrganisationRole.ADMIN.name
 
     def get_admin_organisations(self):

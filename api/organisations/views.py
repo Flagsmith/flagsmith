@@ -29,6 +29,7 @@ from organisations.models import (
 )
 from organisations.permissions.models import OrganisationPermissionModel
 from organisations.permissions.permissions import (
+    IsOrganisationAdmin,
     NestedOrganisationEntityPermission,
     OrganisationPermission,
 )
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 
 class OrganisationViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, OrganisationPermission)
+    actions_not_requiring_admin = ("create", "retrieve", "my_permission", "permissions")
 
     def get_serializer_class(self):
         if self.action == "remove_users":
@@ -78,6 +80,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         elif self.action == "get_subscription_metadata":
             return SubscriptionDetailsSerializer
         return OrganisationSerializerFull
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.action not in self.actions_not_requiring_admin:
+            permissions.append(IsOrganisationAdmin())
+        return permissions
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
