@@ -45,6 +45,10 @@ from organisations.serializers import (
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
+from organisations.subscriptions.constants import (
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+)
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -294,10 +298,10 @@ def chargebee_webhook(request):
                     "updated_at": timezone.now(),
                     "allowed_30d_api_calls": metadata.get("max_api_calls")
                     if metadata is not None
-                    else 50000,
+                    else MAX_API_CALLS_IN_FREE_PLAN,
                     "allowed_seats": metadata.get("max_seats")
                     if metadata is not None
-                    else 1,
+                    else MAX_SEATS_IN_FREE_PLAN,
                     "organisation_id": existing_subscription.id,
                 },
             )
