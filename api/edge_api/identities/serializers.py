@@ -2,19 +2,20 @@ import copy
 import typing
 
 from django.utils import timezone
+from flag_engine.features.models import FeatureModel as EngineFeatureModel
 from flag_engine.features.models import (
     FeatureStateModel as EngineFeatureStateModel,
 )
 from flag_engine.features.models import (
+    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
+)
+from flag_engine.features.models import (
     MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
 )
-from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
-from flag_engine.identities.builders import build_identity_dict
 from flag_engine.identities.models import IdentityModel as EngineIdentity
-from flag_engine.utils.exceptions import (
-    DuplicateFeatureState,
-    InvalidPercentageAllocation,
-)
+from flag_engine.utils.exceptions import DuplicateFeatureState
+from pydantic import ValidationError as PydanticValidationError
+from pyngo import drf_error_details
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -22,12 +23,15 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
+from util.mappers import (
+    map_engine_identity_to_identity_document,
+    map_feature_to_engine,
+    map_mv_option_to_engine,
+)
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 from .models import EdgeIdentity
 from .tasks import call_environment_webhook_for_feature_state_change
-
-engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
 class EdgeIdentitySerializer(serializers.Serializer):
@@ -44,14 +48,19 @@ class EdgeIdentitySerializer(serializers.Serializer):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
-        EdgeIdentity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
+        EdgeIdentity.dynamo_wrapper.put_item(
+            map_engine_identity_to_identity_document(self.instance)
+        )
         return self.instance
 
 
 class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
-    def to_internal_value(self, data):
+    def to_internal_value(
+        self,
+        data: typing.Any,
+    ) -> EngineMultivariateFeatureOptionModel:
         data = super().to_internal_value(data)
-        return MultivariateFeatureOption.objects.get(id=data)
+        return map_mv_option_to_engine(MultivariateFeatureOption.objects.get(id=data))
 
     def to_representation(self, obj):
         return obj.id
@@ -97,16 +106,18 @@ class EdgeFeatureField(serializers.Field):
     def to_representation(self, obj: Feature) -> int:
         return obj.id
 
-    def to_internal_value(self, data: typing.Union[int, str]) -> Feature:
+    def to_internal_value(self, data: typing.Union[int, str]) -> EngineFeatureModel:
         if isinstance(data, int):
-            return Feature.objects.get(id=data)
+            return map_feature_to_engine(Feature.objects.get(id=data))
 
         environment = Environment.objects.get(
             api_key=self.context["view"].kwargs["environment_api_key"]
         )
-        return Feature.objects.get(
-            name=data,
-            project=environment.project,
+        return map_feature_to_engine(
+            Feature.objects.get(
+                name=data,
+                project=environment.project,
+            )
         )
 
     class Meta:
@@ -134,12 +145,15 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         request = self.context["request"]
 
         identity: EdgeIdentity = view.identity
-        feature_state_value = self.validated_data.pop("feature_state_value", None)
+        feature_state_value = self.validated_data.get("feature_state_value", None)
 
         previous_state = copy.deepcopy(self.instance)
 
         if not self.instance:
-            self.instance = EngineFeatureStateModel(**self.validated_data)
+            try:
+                self.instance = EngineFeatureStateModel.parse_obj(self.validated_data)
+            except PydanticValidationError as exc:
+                raise ValidationError(drf_error_details(exc))
             try:
                 identity.add_feature_override(self.instance)
             except DuplicateFeatureState as e:
@@ -156,18 +170,10 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             self.instance.multivariate_feature_state_values,
         )
 
-        try:
-            identity.save(
-                user=request.user,
-                master_api_key=getattr(request, "master_api_key", None),
-            )
-        except InvalidPercentageAllocation as e:
-            raise serializers.ValidationError(
-                {
-                    "multivariate_feature_state_values": "Total percentage allocation "
-                    "for feature must be less than 100 percent"
-                }
-            ) from e
+        identity.save(
+            user=request.user,
+            master_api_key=getattr(request, "master_api_key", None),
+        )
 
         new_value = self.instance.get_value(identity.id)
         previous_value = (

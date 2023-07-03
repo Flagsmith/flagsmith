@@ -284,10 +284,10 @@ const UserPage = class extends Component {
                       <div className='container'>
                         <div className='row'>
                           <div className='col-md-12'>
-                            <h3>
+                            <h4>
                               {(identity && identity.identity.identifier) ||
                                 this.props.match.params.id}
-                            </h3>
+                            </h4>
                             <p>
                               View and manage feature states and traits for this
                               user. This will override any feature states you
@@ -525,14 +525,14 @@ const UserPage = class extends Component {
                                             />
                                           </Row>
                                           {hasUserOverride ? (
-                                            <Row className='chip'>
+                                            <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
                                               <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
                                               data-test={`feature-override-${i}`}
-                                              className='flex-row chip'
+                                              className='flex-row mt-1 chip'
                                             >
                                               <Row>
                                                 <Flex>
@@ -570,7 +570,7 @@ const UserPage = class extends Component {
                                             isMultiVariateOverride ? (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
@@ -588,7 +588,7 @@ const UserPage = class extends Component {
                                             ) : (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
@@ -677,6 +677,7 @@ const UserPage = class extends Component {
                                                   ),
                                                 ),
                                                 <Button
+                                                  size='small'
                                                   disabled={!permission}
                                                   onClick={() =>
                                                     this.confirmRemove(
@@ -879,7 +880,7 @@ const UserPage = class extends Component {
                                         icon='ion-ios-person'
                                         title='Traits'
                                       >
-                                        <div className='text-center'>
+                                        <div className='text-center  fs-small lh-sm'>
                                           This user has no traits.
                                           <FormGroup className='text-center mb-0 mt-2'>
                                             {Utils.renderWithPermission(
@@ -976,7 +977,7 @@ const UserPage = class extends Component {
                                             icon='ion-ios-globe'
                                             title='Segments'
                                           >
-                                            <div>
+                                            <div className='fs-caption lh-xsm'>
                                               This user is not a member of any
                                               segments.
                                             </div>

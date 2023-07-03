@@ -232,6 +232,10 @@ REST_FRAMEWORK = {
         "invite": "10/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_RENDERER_CLASSES": [
+        "util.renderers.PydanticJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

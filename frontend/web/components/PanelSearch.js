@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { FixedSizeList as List } from 'react-window'
 import Popover from './base/Popover'
+import Input from './base/forms/Input'
 
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
@@ -231,7 +232,7 @@ const PanelSearch = class extends Component {
                     </div>
                   )}
                   <Row onClick={() => this.input.focus()}>
-                    <input
+                    <Input
                       ref={(c) => (this.input = c)}
                       onBlur={this.props.onBlur}
                       onChange={(e) => {
@@ -245,10 +246,8 @@ const PanelSearch = class extends Component {
                       type='text'
                       value={search}
                       className='pl-4'
-                    />
-                    <span
-                      style={{ marginLeft: 10, position: 'absolute' }}
-                      className='icon ion-ios-search'
+                      size='small'
+                      search
                     />
                   </Row>
                 </Row>

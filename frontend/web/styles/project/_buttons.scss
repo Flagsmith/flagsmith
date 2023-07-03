@@ -3,77 +3,6 @@
 $google: #c53d23;
 $github: #eeefee;
 
-.dark {
-  .btn {
-    &.btn-secondary {
-      color: $header-color-dark !important;
-      background-color: $button-bg-dark !important;
-      &:hover {
-        background-color: $button-bg-dark-hover !important;
-      }
-    }
-    &:hover,
-    &:disabled:hover {
-      background: $button-bg-dark-hover;
-    }
-    &:hover {
-      box-shadow: none;
-    }
-
-    &--outline {
-      background: $body-bg-dark;
-      border-color: $dark-highlight !important;
-      color: $dark-highlight-color;
-
-      &:hover {
-        background-color: darken($body-bg-dark, 2);
-      }
-
-      &-danger {
-        border-color: $alert-danger-bg !important;
-        color: $alert-danger-bg !important;
-      }
-    }
-    &--with-icon {
-      background: none !important;
-
-      &.primary {
-        color: $dark-highlight-color;
-
-        path {
-          fill: $dark-highlight-color;
-        }
-      }
-      &:hover,
-      &:focus {
-        background: none !important;
-        color: $dark-highlight3 !important;
-        path {
-          fill: $dark-highlight3 !important;
-        }
-      }
-    }
-    &.btn-link {
-      background-color: transparent;
-      &:hover,
-      &:active,
-      &:focus {
-        background-color: transparent;
-        color: $dark-highlight-color;
-      }
-    }
-    &__oauth {
-      color: $header-color-dark !important;
-      svg path {
-        fill: $header-color-dark !important;
-      }
-    }
-  }
-
-  .btn-link {
-    color: $primary;
-  }
-}
 
 .btn,
 button.btn {
@@ -121,8 +50,16 @@ button.btn {
     background: white;
     border: 1px solid $primary !important;
     color: $primary;
-    line-height: 46px;
-
+    line-height: calc($btn-line-height - 2px);
+    &.btn-sm {
+      line-height: calc($btn-line-height-sm - 2px);
+    }
+    &.btn-xsm {
+      line-height: calc($btn-line-height-xsm - 2px);
+    }
+    &.btn-lg {
+      line-height: calc($btn-line-height-lg - 2px);
+    }
     &:hover,
     &:focus {
       background-color: $btn-outline-hover-bg;
@@ -220,7 +157,7 @@ button.btn {
     &:last-child {
       margin-right: 0;
     }
-    border-radius: $border-radius-default;
+    border-radius: $border-radius;
     color: #000 !important;
     font-weight: bold;
     text-align: left;
@@ -269,17 +206,17 @@ button.btn {
     }
   }
   &-lg {
-    line-height: 56px;
+    line-height: $btn-line-height-lg;
   }
 
   &-sm {
-    line-height: 40px;
+    line-height: $btn-line-height-sm;
   }
   &-xsm {
     padding: 0 12px;
-    line-height: 32px;
-    font-size: 12px;
-    border-radius: 8px;
+    line-height: $btn-line-height-xsm;
+    font-size: $font-caption-sm;
+    border-radius: $border-radius-sm;
   }
 }
 
@@ -293,8 +230,7 @@ button.btn {
   border: none;
   box-shadow: none;
   padding: 0;
-  line-height: 22px;
-  font-size: 16px;
+  line-height: $line-height-base;
   text-transform: inherit;
   font-weight: 500;
   &:hover,
@@ -349,5 +285,88 @@ $add-btn-size: 34px;
     &__oauth {
       margin-right: 12px;
     }
+  }
+}
+
+.dark {
+  .btn {
+    &:hover,
+    &:focus {
+      background-color: $btn-hover-bg-dark;
+    }
+    &:active {
+      background-color: $primary;
+    }
+
+    &.btn-secondary {
+      color: white;
+      background-color: $btn-secondary-bg-dark;
+      &:hover,
+      &:focus {
+        background-color: $btn-secondary-hover-bg-dark;
+      }
+      &:active {
+        color: white;
+        background-color: $btn-secondary-active-bg-dark;
+      }
+    }
+
+    &--outline {
+      background: transparent;
+      border-color: $primary400;
+      color: $primary400;
+
+      &:hover {
+        color: $primary400;
+        border-color: $primary400;
+        background-color: $btn-outline-hover-bg-dark;
+      }
+      &:focus {
+        background-color: $btn-outline-focus-bg-dark;
+      }
+
+      &-danger {
+        border-color: $alert-danger-bg !important;
+        color: $alert-danger-bg !important;
+      }
+    }
+    &--with-icon {
+      background: none !important;
+
+      &.primary {
+        color: $dark-highlight-color;
+
+        path {
+          fill: $dark-highlight-color;
+        }
+      }
+      &:hover,
+      &:focus {
+        background: none !important;
+        color: $dark-highlight3 !important;
+        path {
+          fill: $dark-highlight3 !important;
+        }
+      }
+    }
+    &.btn-link {
+      background-color: transparent;
+      &:hover,
+      &:active,
+      &:focus {
+        background-color: transparent;
+        color: $dark-highlight-color;
+      }
+    }
+    &__oauth {
+      color: $header-color-dark !important;
+      svg path {
+        fill: $header-color-dark !important;
+      }
+    }
+  }
+
+  .btn-link {
+    color: $primary;
   }
 }

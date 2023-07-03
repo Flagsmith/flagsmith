@@ -23,13 +23,12 @@
     }
 }
 .alert {
-    border-radius: $default-border-radius;
+    border-radius: $border-radius;
     .title {
-        font-size: 16px;
-        font-weight: bold;
+        font-size: $font-size-sm;
         margin-bottom: 5px;
         .ion {
-            font-size: 18px;
+            font-size: $font-size-base
         }
     }
 }

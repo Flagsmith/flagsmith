@@ -1,6 +1,6 @@
 .tag {
     line-height: 18px;
-    border-radius: $border-radius-default;
+    border-radius: $border-radius;
     color: white;
     font-weight: bold;
     transition: all 300ms;
@@ -44,10 +44,12 @@
 .tag-values {
     .tag {
         margin-right: 0.5em;
-        padding-bottom: 0.5em !important;
-        padding-top: 0.5em !important;
-        padding-left: 1.5em !important;
-        padding-right: 1.5em !important;
+        padding-bottom: 0 !important;
+        padding-top: 0 !important;
+        height: 21px;
+        width: 42px;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
         .icon {
             display: none;
         }

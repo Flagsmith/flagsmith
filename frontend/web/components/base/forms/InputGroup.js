@@ -18,7 +18,7 @@ const InputGroup = class extends Component {
   render() {
     const { props } = this
     const id = this.props.id || Utils.GUID()
-    const { inputProps } = this.props
+    const { inputProps, size } = this.props
     return (
       <div
         className={`${this.props.className} form-group ${
@@ -108,6 +108,7 @@ const InputGroup = class extends Component {
                   type={props.type || 'text'}
                   id={id}
                   placeholder={props.placeholder}
+                  size={size}
                 />
               )}
             </div>
@@ -124,6 +125,7 @@ InputGroup.propTypes = {
   isValid: propTypes.any,
   onChange: OptionalFunc,
   placeholder: OptionalString,
+  size: OptionalString,
   title: propTypes.any,
   type: OptionalString,
   value: OptionalString,

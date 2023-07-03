@@ -1,14 +1,14 @@
 .color-block {
     width: 30px;
     height: 30px;
-    border-radius: 15px;
+    border-radius: $border-radius;
     margin-right: 1em;
     display: inline-block;
     margin-bottom: 1em;
     &--small {
         width: 10px;
         height: 10px;
-        border-radius: 5px;
+        border-radius: $border-radius-sm;
         margin-bottom: 0;
     }
     &--brand-primary {
