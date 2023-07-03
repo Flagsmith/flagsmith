@@ -1,4 +1,6 @@
 from integrations.amplitude.models import AmplitudeConfiguration
+from integrations.common.models import EnvironmentIntegrationModel
+from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from integrations.integration import identify_integrations
 from integrations.segment.models import SegmentConfiguration
 
@@ -34,11 +36,19 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     mocker, identity
 ):
     # Given
-    integration_wrapper_a = mocker.MagicMock()
-    integration_wrapper_b = mocker.MagicMock()
+    integration_wrapper_a = mocker.MagicMock(
+        autospec=AbstractBaseIdentityIntegrationWrapper
+    )
+    integration_wrapper_b = mocker.MagicMock(
+        autospec=AbstractBaseIdentityIntegrationWrapper
+    )
 
-    integration_a_config = mocker.MagicMock()
-    integration_b_config = mocker.MagicMock()
+    integration_a_config = mocker.MagicMock(
+        autospec=EnvironmentIntegrationModel, deleted=False
+    )
+    integration_b_config = mocker.MagicMock(
+        autospec=EnvironmentIntegrationModel, deleted=False
+    )
 
     identity.environment.integration_a_config = integration_a_config
     identity.environment.integration_b_config = integration_b_config
