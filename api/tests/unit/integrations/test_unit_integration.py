@@ -87,3 +87,21 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     integration_wrapper_b.return_value.identify_user_async.assert_called_with(
         data=integration_b_mocked_generate_user_data.return_value
     )
+
+
+def test_identify_integrations_does_not_call_deleted_integrations(
+    mocker, environment, identity
+):
+    # Given
+    mock_segment_wrapper = mocker.patch(
+        "integrations.segment.segment.SegmentWrapper.identify_user_async"
+    )
+
+    sc = SegmentConfiguration.objects.create(api_key="abc-123", environment=environment)
+    sc.delete()
+
+    # When
+    identify_integrations(identity, identity.get_all_feature_states())
+
+    # Then
+    mock_segment_wrapper.assert_not_called()

@@ -18,7 +18,7 @@ IDENTITY_INTEGRATIONS = [
 def identify_integrations(identity, all_feature_states, trait_models=None):
     for integration in IDENTITY_INTEGRATIONS:
         config = getattr(identity.environment, integration.get("relation_name"), None)
-        if config:
+        if config and not config.deleted:
             wrapper = integration.get("wrapper")
             wrapper_instance = wrapper(config)
             user_data = wrapper_instance.generate_user_data(
