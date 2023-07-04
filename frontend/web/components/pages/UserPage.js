@@ -128,6 +128,7 @@ const UserPage = class extends Component {
         environmentFlag={environmentFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 

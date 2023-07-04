@@ -153,6 +153,7 @@ const EnvironmentSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 

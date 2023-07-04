@@ -88,14 +88,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       'side-modal create-new-segment-modal',
     )
   }
-  const confirmRemove = (segment: Segment, cb?: () => void) => {
+  const confirmRemove = (segment: Segment, cb: () => void) => {
     openModal(
       'Remove Segment',
-      <ConfirmRemoveSegment
-        environmentId={environmentId}
-        segment={segment}
-        cb={cb}
-      />,
+      <ConfirmRemoveSegment segment={segment} cb={cb} />,
+      'p-0',
     )
   }
 

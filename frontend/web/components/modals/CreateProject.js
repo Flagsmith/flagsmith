@@ -79,6 +79,7 @@ const CreateProject = class extends Component {
                     ref={(e) => (this.input = e)}
                     data-test='projectName'
                     disabled={disableCreate}
+                    className='mb-0'
                     inputProps={{
                       className: 'full-width',
                       name: 'projectName',
