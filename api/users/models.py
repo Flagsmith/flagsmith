@@ -17,7 +17,9 @@ from organisations.models import (
     OrganisationRole,
     UserOrganisation,
 )
-
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
 from permissions.permission_service import (
     get_permitted_environments_for_user,
     get_permitted_projects_for_user,
@@ -25,18 +27,6 @@ from permissions.permission_service import (
     is_user_organisation_admin,
     is_user_project_admin,
     user_has_organisation_permission,
-
-from organisations.permissions.models import (
-    UserOrganisationPermission,
-    UserPermissionGroupOrganisationPermission,
-)
-from organisations.subscriptions.exceptions import (
-    SubscriptionDoesNotSupportSeatUpgrade,
-)
-from projects.models import (
-    Project,
-    UserPermissionGroupProjectPermission,
-    UserProjectPermission,
 )
 from projects.models import Project, UserProjectPermission
 from users.auth_type import AuthType
