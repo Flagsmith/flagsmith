@@ -29,6 +29,8 @@ from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
+from integrations.mixpanel.models import MixpanelConfiguration
+from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from util.mappers import engine
@@ -301,6 +303,18 @@ def test_map_environment_to_engine__return_expected(
         feature=feature,
         environment=environment_2,
     )
+    mixpanel_configuration = MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key="some-key",
+    )
+    webhook_configuration = WebhookConfiguration.objects.create(
+        environment=environment, url="https://my.webhook.com/webhook"
+    )
+    deleted_segment_configuration = SegmentConfiguration.objects.create(
+        environment=environment,
+        api_key="some-key",
+    )
+    deleted_segment_configuration.delete()
 
     expected_feature_model = FeatureModel(
         id=feature.id, name="Test Feature1", type="STANDARD"
@@ -361,10 +375,16 @@ def test_map_environment_to_engine__return_expected(
         amplitude_config=None,
         dynatrace_config=None,
         heap_config=None,
-        mixpanel_config=None,
+        mixpanel_config={
+            "base_url": mixpanel_configuration.base_url,
+            "api_key": mixpanel_configuration.api_key,
+        },
         rudderstack_config=None,
-        segment_config=None,
-        webhook_config=None,
+        segment_config=None,  # note: segment configuration should not appear as it was deleted
+        webhook_config={
+            "url": webhook_configuration.url,
+            "secret": webhook_configuration.secret,
+        },
     )
 
     # When
