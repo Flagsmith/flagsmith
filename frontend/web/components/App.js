@@ -462,8 +462,7 @@ const App = class extends Component {
                                       'dark_mode',
                                     )}
                                     onChange={this.toggleDarkMode}
-                                    onMarkup='Light'
-                                    offMarkup='Dark'
+                                    darkMode
                                   />
                                 </div>
                                 <div className='org-nav'>
