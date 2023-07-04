@@ -8,6 +8,7 @@ import data from 'common/data/base/_data'
 import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Icon from 'components/Icon'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -575,7 +576,6 @@ const HomePage = class extends React.Component {
                                       })
                                     }}
                                     id='mailinglist'
-                                    className='mr-2'
                                     type='checkbox'
                                     checked={this.state.marketing_consent_given}
                                   />
@@ -584,6 +584,11 @@ const HomePage = class extends React.Component {
                                     htmlFor='mailinglist'
                                     style={{ display: 'inline' }}
                                   >
+                                    <span className='checkbox mr-2'>
+                                      {this.state.marketing_consent_given && (
+                                        <Icon name='checkmark' />
+                                      )}
+                                    </span>
                                     Yes, I would like to signup for the twice
                                     monthly newsletter (optional)
                                   </label>
