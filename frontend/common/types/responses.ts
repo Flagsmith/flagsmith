@@ -93,12 +93,6 @@ export type UserPermission = {
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroup
 }
-export type FeatureStateValue = {
-  boolean_value: boolean
-  integer_value: number
-  string_value: string
-  type: string
-}
 
 export type AuditLogItem = {
   id: number
@@ -170,9 +164,9 @@ export type MultivariateFeatureStateValue = {
 }
 
 export type FeatureStateValue = {
-  boolean_value?: boolean
-  float_value?: number
-  integer_value?: boolean
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value?: boolean | null
   string_value: string
   type: string
 }
