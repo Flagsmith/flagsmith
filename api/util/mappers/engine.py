@@ -24,10 +24,12 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
+from features.models import FeatureState
+
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import Feature, FeatureSegment, FeatureState
+    from features.models import Feature, FeatureSegment
     from features.multivariate.models import (
         MultivariateFeatureOption,
         MultivariateFeatureStateValue,
@@ -171,12 +173,14 @@ def map_environment_to_engine(
         project_segments,
         environment.pk,
     )
-    environment_feature_states: List["FeatureState"] = [
-        feature_state
-        for feature_state in environment.feature_states.all()
-        if feature_state.feature_segment_id is None
-        and feature_state.identity_id is None
-    ]
+    environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
+        [
+            feature_state
+            for feature_state in environment.feature_states.all()
+            if feature_state.feature_segment_id is None
+            and feature_state.identity_id is None
+        ]
+    )
     all_environment_feature_states = (
         *environment_feature_states,
         *chain(*project_segment_feature_states_by_segment_id.values()),
