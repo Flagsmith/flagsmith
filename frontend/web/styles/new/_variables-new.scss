@@ -77,8 +77,8 @@ $tab-inactive-color: $body-text;
 $tab-active-background: white;
 $tab-inactive-background: white;
 $tab-inactive-color-dark: $body-text-dark;
-$tab-active-background-dark: $dark-bg-100;
-$tab-inactive-background-dark: $dark-bg-100;
+$tab-active-background-dark: $bg-dark100;
+$tab-inactive-background-dark: $bg-dark100;
 
 $tab-line-color: $primary;
 $tab-line-color-dark: $primary;
@@ -89,7 +89,7 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $dark-bg-500;
+  border-color: $bg-dark500;
 }
 
 //Modal
@@ -97,7 +97,7 @@ $modal-content-color: $text-icon-grey;
 $modal-content-color-dark: $text-icon-light-grey;
 $modal-md: 600px;
 $modal-lg: 900px;
-$modal-bg-dark: $dark-bg-100;
+$modal-bg-dark: $bg-dark100;
 $modal-border-radius: 18px;
 $modal-footer-border-width:0;
 $modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
@@ -162,7 +162,7 @@ $h6-line-height: 24px;
 
 //Input
 $input-bg: #fff;
-$input-bg-dark: $dark-bg-200;
+$input-bg-dark: $bg-dark200;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
