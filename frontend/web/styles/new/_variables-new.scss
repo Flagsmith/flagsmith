@@ -10,6 +10,7 @@ $danger: #ef4d56;
 $success: #27ab95;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: #9da4ae;
+$text-icon-light: #ffffff;
 $bg-light300: #eff1f4;
 $bg-dark200: #202839;
 $bg-dark300: #121827;
@@ -162,3 +163,16 @@ $switch-dark-mode-bg: $bg-light300;
 $switch-dark-mode-bg-dark: $bg-dark300;
 $switcher-checked-dark-mode-bg: $bg-dark200;
 $switcher-dark-mode-width: 32px;
+
+//Checkbox
+$checkbox-width:20px;
+$checkbox-border-color:rgba(101, 109, 123, 0.24);
+$checkbox-border-color-dark:rgba(255, 255, 255, 0.24);
+$checkbox-focus-bg:rgba(149, 108, 255, 0.08);
+$checkbox-focus-border-color:$primary400;
+$checkbox-hover-border-color:$primary;
+$checkbox-checked-hover-border-color:$primary600;
+
+
+
+
