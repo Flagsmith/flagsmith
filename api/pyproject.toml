@@ -101,6 +101,7 @@ django-ses = "^3.5.0"
 django-axes = "^5.32.0"
 pydantic = "^1.10.9"
 pyngo = "^1.6.0"
+pyotp = "~2.4.1"
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
