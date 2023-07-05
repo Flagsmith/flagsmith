@@ -55,7 +55,7 @@ def test_list_feature_states_from_simple_view_set(
     )
 
     # When
-    with django_assert_num_queries(8):
+    with django_assert_num_queries(9):
         response = admin_client.get(url)
 
     # Then

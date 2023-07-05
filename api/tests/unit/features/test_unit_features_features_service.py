@@ -40,7 +40,7 @@ def test_feature_get_overrides_data(
     fs_to_delete.delete()
 
     # When
-    overrides_data = get_overrides_data(environment.id)
+    overrides_data = get_overrides_data(environment)
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1

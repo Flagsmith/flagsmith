@@ -540,7 +540,7 @@ class SimpleFeatureStateViewSet(
             if not (environment_id := self.request.query_params.get("environment")):
                 raise ValidationError("'environment' GET parameter is required.")
 
-            environment = get_object_or_404(Environment, environment_id)
+            environment = get_object_or_404(Environment, id=environment_id)
             queryset = get_environment_flags_queryset(environment=environment)
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"

@@ -7,9 +7,6 @@ def test_create_new_environment_feature_version_clones_feature_states_from_previ
     environment, feature
 ):
     # Given
-    environment.use_v2_feature_versioning = True
-    environment.save()
-
     segment = Segment.objects.create(project=environment.project)
     feature_segment = FeatureSegment.objects.create(
         segment=segment, feature=feature, environment=environment
@@ -18,7 +15,10 @@ def test_create_new_environment_feature_version_clones_feature_states_from_previ
         environment=environment, feature=feature, feature_segment=feature_segment
     )
 
-    original_version = EnvironmentFeatureVersion.create_initial_version(
+    environment.use_v2_feature_versioning = True
+    environment.save()  # note: initial version created via lifecycle hook here
+
+    original_version = EnvironmentFeatureVersion.objects.get(
         environment=environment, feature=feature
     )
 
