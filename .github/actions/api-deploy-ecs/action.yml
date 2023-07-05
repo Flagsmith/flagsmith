@@ -58,6 +58,10 @@ inputs:
     description: The flagsmith-auth-controller git revision to use when building deployment package.
     required: false
     default: main
+  flagsmith_rbac_revision:
+    description: The flagsmith-rbac git revision to use when building deployment package.
+    required: false
+    default: main
 outputs:
   api_ecr_image_url:
     description: The image URL from ECR
@@ -107,6 +111,18 @@ runs:
         mv ./flagsmith-auth-controller/auth_controller ./api
         cat ./flagsmith-auth-controller/requirements.txt >> ./api/requirements.txt
         echo "" >> ./api/requirements.txt # add a new line so that future concatenation works
+      shell: bash
+
+    - name: Checkout RBAC module
+      uses: actions/checkout@v3
+      with:
+        repository: flagsmith/flagsmith-rbac
+        token: ${{ inputs.github_access_token }}
+        ref: ${{ inputs.flagsmith_rbac_revision }}
+        path: ./flagsmith-rbac
+
+    - name: Integrate RBAC module
+      run: mv ./flagsmith-rbac/rbac ./api
       shell: bash
 
     - name: Set ECR tag

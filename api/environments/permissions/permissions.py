@@ -8,6 +8,7 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from projects.models import Project
+from projects.permissions import CREATE_ENVIRONMENT
 
 
 class EnvironmentKeyPermissions(BasePermission):
@@ -35,9 +36,7 @@ class EnvironmentPermissions(IsAuthenticated):
                 project_id = request.data.get("project")
                 project_lookup = Q(id=project_id)
                 project = Project.objects.get(project_lookup)
-                return request.user.has_project_permission(
-                    "CREATE_ENVIRONMENT", project
-                )
+                return request.user.has_project_permission(CREATE_ENVIRONMENT, project)
             except Project.DoesNotExist:
                 return False
 

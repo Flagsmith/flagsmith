@@ -4,6 +4,7 @@ import pytest
 
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from projects.tags.permissions import TagPermissions
 from users.models import FFAdminUser
@@ -37,7 +38,7 @@ class TagPermissionsTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=self.project_user, project=self.project
         )
-        user_project_permission.add_permission("VIEW_PROJECT")
+        user_project_permission.add_permission(VIEW_PROJECT)
 
     def test_project_admin_has_permission(self):
         # Given
