@@ -840,7 +840,7 @@ const CreateFlag = class extends Component {
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
                         return (
-                          <div className='px-3' id='create-feature-modal'>
+                          <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <Tabs
                                 value={this.state.tab}
@@ -1466,7 +1466,7 @@ const CreateFlag = class extends Component {
                             ) : (
                               <div
                                 className={classNames(
-                                  !isEdit ? 'create-feature-tab' : '',
+                                  !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
                                 {Value(
@@ -1476,7 +1476,7 @@ const CreateFlag = class extends Component {
                                   project.prevent_flag_defaults,
                                 )}
                                 {!identity && (
-                                  <div className='text-right mr-3'>
+                                  <div className='text-right mr-3 mb-3'>
                                     {project.prevent_flag_defaults ? (
                                       <p className='text-right'>
                                         This will create the feature for{' '}
