@@ -18,7 +18,7 @@ jobs:
         id: release
         with:
           command: manifest
-          token: ${{secrets.RELEASE_PLEASE_GITHUB_TOKEN}}
+          token: ${{secrets.GITHUB_TOKEN_RELEASE_PLEASE}}
           default-branch: main
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
