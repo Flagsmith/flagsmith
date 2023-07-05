@@ -29,7 +29,7 @@ const ProjectSelectPage = class extends Component {
 
   newProject = () => {
     openModal(
-      'Create  Project',
+      'Create Project',
       <CreateProjectModal
         onSave={({ environmentId, projectId }) => {
           this.context.router.history.push(
@@ -37,6 +37,7 @@ const ProjectSelectPage = class extends Component {
           )
         }}
       />,
+      'p-0',
     )
   }
 

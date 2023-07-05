@@ -10,7 +10,7 @@ const Card = class extends PureComponent {
           this.props.className || ''
         }`}
       >
-        <div className='panel-content'>{this.props.children}</div>
+        <div className='panel-content py-3'>{this.props.children}</div>
       </div>
     )
   }

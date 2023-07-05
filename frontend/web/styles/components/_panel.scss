@@ -49,12 +49,12 @@
 		border-top-left-radius: 8px;
 		padding-top: 10px;
 		padding-bottom: 10px;
+		padding-left: $input-padding-x;
+		padding-right: $input-padding-x;
 		flex: 1 1 0%;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding-left: $input-padding-x;
-		padding-right: $input-padding-x;
 		background-color: $panel-heading-bg;
 		text-transform: capitalize;
 		color: $panel-heading-color;

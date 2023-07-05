@@ -169,14 +169,13 @@ button.btn {
     -ms-user-select: none;
     -moz-user-select: none;
     position: relative;
-    padding-left: 55px;
+    padding-left: $spacer*3.5;
     svg {
       position: absolute;
       left: 20px;
       height: 24px;
     }
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: $spacer;
     &--github {
       background-color: $github;
       &:hover {

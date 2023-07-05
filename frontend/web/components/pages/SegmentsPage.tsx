@@ -85,17 +85,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      'fade side-modal create-new-segment-modal',
+      'side-modal create-new-segment-modal',
     )
   }
-  const confirmRemove = (segment: Segment, cb?: () => void) => {
+  const confirmRemove = (segment: Segment, cb: () => void) => {
     openModal(
       'Remove Segment',
-      <ConfirmRemoveSegment
-        environmentId={environmentId}
-        segment={segment}
-        cb={cb}
-      />,
+      <ConfirmRemoveSegment segment={segment} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -122,7 +119,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      'fade side-modal create-segment-modal',
+      'side-modal create-segment-modal',
       () => {
         history.replaceState({}, '', `${document.location.pathname}`)
       },

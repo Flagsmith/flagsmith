@@ -61,6 +61,7 @@ const EnvironmentSettingsPage = class extends Component {
     openModal(
       'Remove Environment',
       <ConfirmRemoveEnvironment environment={environment} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -126,7 +127,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -141,7 +141,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -154,6 +153,7 @@ const EnvironmentSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 
@@ -288,6 +288,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 <Button
                                   id='save-env-btn'
                                   className='float-right mb-4'
+                                  type='submit'
                                   disabled={this.saveDisabled()}
                                 >
                                   {isSaving ? 'Updating' : 'Update'}

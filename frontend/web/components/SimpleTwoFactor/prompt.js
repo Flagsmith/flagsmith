@@ -37,7 +37,9 @@ export default class TheComponent extends PureComponent {
           />
           {error && <ErrorMessage error='Invalid pin code' />}
           <div className='text-right'>
-            <Button disabled={isLoading}>Verify Code</Button>
+            <Button type='submit' disabled={isLoading}>
+              Verify Code
+            </Button>
           </div>
         </form>
 

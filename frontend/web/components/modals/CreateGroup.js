@@ -5,7 +5,7 @@ import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
-import { setInterceptClose } from './base/ModalDefault';
+import { setInterceptClose } from './base/ModalDefault'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -75,7 +75,7 @@ const CreateGroup = class extends Component {
     ) {
       return new Promise((resolve) => {
         openConfirm(
-          'Are you sure',
+          'Are you sure?',
           'Closing this will discard your unsaved changes.',
           () => resolve(true),
           () => resolve(false),
@@ -404,16 +404,13 @@ const CreateGroup = class extends Component {
                     <div className='text-right'>
                       {isEdit ? (
                         <>
-                          <Button
-                            data-test='update-feature-btn'
-                            id='update-feature-btn'
-                            disabled={isSaving || !name}
-                          >
+                          <Button type='submit' disabled={isSaving || !name}>
                             {isSaving ? 'Updating' : 'Update Group'}
                           </Button>
                         </>
                       ) : (
                         <Button
+                          type='submit'
                           data-test='create-feature-btn'
                           id='create-feature-btn'
                           disabled={isSaving || !name}

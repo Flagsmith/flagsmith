@@ -83,6 +83,7 @@ class CreateOrganisationPage extends Component {
               />
               <div className='text-right mt-2'>
                 <Button
+                  type='submit'
                   disabled={isSaving || !this.state.name}
                   id='create-org-btn'
                 >

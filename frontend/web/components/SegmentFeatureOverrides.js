@@ -326,13 +326,13 @@ class TheComponent extends Component {
     }
     this.setState({ isLoading: true })
     openConfirm(
-      <h3>Delete Segment Override</h3>,
-      <p>
+      'Delete Segment Override',
+      <div>
         {
           'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'
         }
         <strong>{name}</strong>
-      </p>,
+      </div>,
       () => {
         this.props.value[i].toRemove = true
       },

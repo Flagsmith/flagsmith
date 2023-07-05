@@ -3,6 +3,7 @@ import Highlight from 'components/Highlight'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import ErrorMessage from 'components/ErrorMessage'
+import ModalHR from './ModalHR'
 
 const CreateTrait = class extends Component {
   static displayName = 'CreateTrait'
@@ -62,86 +63,90 @@ const CreateTrait = class extends Component {
                   this.save(createTrait, isSaving)
                 }}
               >
-                <FormGroup className='mb-3'>
-                  <InputGroup
-                    ref={(e) => (this.input = e)}
-                    inputProps={{
-                      className: 'full-width',
-                      maxLength: TRAITS_ID_MAXLENGTH,
-                      name: 'traitID',
-                      readOnly: isEdit,
-                    }}
-                    value={trait_key}
-                    onChange={(e) =>
-                      this.setState({
-                        trait_key: Format.enumeration
-                          .set(Utils.safeParseEventValue(e))
-                          .toLowerCase(),
-                      })
-                    }
-                    isValid={trait_key && trait_key.length}
-                    type='text'
-                    title={isEdit ? 'Trait ID' : 'Trait ID*'}
-                    placeholder='E.g. favourite_color'
-                  />
-                </FormGroup>
-                <FormGroup className='mb-3'>
-                  <InputGroup
-                    textarea
-                    inputProps={{ className: 'full-width', name: 'traitValue' }}
-                    value={trait_value}
-                    title='Value'
-                    onChange={(e) =>
-                      this.setState({
-                        trait_value: Utils.getTypedValue(
-                          Utils.safeParseEventValue(e),
-                        ),
-                      })
-                    }
-                    type='text'
-                    placeholder="e.g. 'big', true, 1 "
-                  />
-                </FormGroup>
+                <div className='modal-body'>
+                  <FormGroup className='mb-2'>
+                    <InputGroup
+                      ref={(e) => (this.input = e)}
+                      inputProps={{
+                        className: 'full-width',
+                        maxLength: TRAITS_ID_MAXLENGTH,
+                        name: 'traitID',
+                        readOnly: isEdit,
+                      }}
+                      value={trait_key}
+                      onChange={(e) =>
+                        this.setState({
+                          trait_key: Format.enumeration
+                            .set(Utils.safeParseEventValue(e))
+                            .toLowerCase(),
+                        })
+                      }
+                      isValid={trait_key && trait_key.length}
+                      type='text'
+                      title={isEdit ? 'Trait ID' : 'Trait ID*'}
+                      placeholder='E.g. favourite_color'
+                    />
+                  </FormGroup>
+                  <FormGroup className='mb-2'>
+                    <InputGroup
+                      textarea
+                      inputProps={{
+                        className: 'full-width',
+                        name: 'traitValue',
+                      }}
+                      value={trait_value}
+                      title='Value'
+                      onChange={(e) =>
+                        this.setState({
+                          trait_value: Utils.getTypedValue(
+                            Utils.safeParseEventValue(e),
+                          ),
+                        })
+                      }
+                      type='text'
+                      placeholder="e.g. 'big', true, 1 "
+                    />
+                  </FormGroup>
 
-                {error && <ErrorMessage error={error} />}
+                  {error && <ErrorMessage error={error} />}
 
-                <p className='text-right faint-lg'>
-                  This will {isEdit ? 'update' : 'create'} a user trait{' '}
-                  <strong>{trait_key || ''}</strong> for the user{' '}
-                  <strong>{identity}</strong> in
-                  <strong>
-                    {' '}
-                    {
-                      _.find(project.environments, {
-                        api_key: this.props.environmentId,
-                      }).name
-                    }
-                  </strong>
-                </p>
+                  <p>
+                    This will {isEdit ? 'update' : 'create'} a user trait{' '}
+                    <strong>{trait_key || ''}</strong> for the user{' '}
+                    <strong>{identity}</strong> in
+                    <strong>
+                      {' '}
+                      {
+                        _.find(project.environments, {
+                          api_key: this.props.environmentId,
+                        }).name
+                      }
+                    </strong>
+                  </p>
 
-                <FormGroup className='flag-example'>
-                  <strong>Example SDK response:</strong>
-                  <Highlight forceExpanded className='json no-pad'>
-                    {JSON.stringify({ trait_key, trait_value })}
-                  </Highlight>
-                </FormGroup>
-
-                <div className='text-right'>
-                  {isEdit ? (
-                    <Button
-                      id='update-trait-btn'
-                      disabled={isSaving || !trait_key}
-                    >
-                      {isSaving ? 'Creating' : 'Update Trait'}
-                    </Button>
-                  ) : (
-                    <Button
-                      id='create-trait-btn'
-                      disabled={isSaving || !trait_key}
-                    >
-                      {isSaving ? 'Creating' : 'Create Trait'}
-                    </Button>
-                  )}
+                  <FormGroup className='text-muted'>
+                    <label>Example SDK response:</label>
+                    <Highlight forceExpanded className='json no-pad'>
+                      {JSON.stringify({ trait_key, trait_value })}
+                    </Highlight>
+                  </FormGroup>
+                </div>
+                <ModalHR />
+                <div className='modal-footer'>
+                  <Button
+                    onClick={closeModal}
+                    theme='secondary'
+                    className='mr-2'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    id={isEdit ? 'update-trait-btn' : 'create-trait-btn'}
+                    type='submit'
+                    disabled={isSaving || !trait_key}
+                  >
+                    {isSaving ? 'Saving' : 'Save Trait'}
+                  </Button>
                 </div>
               </form>
             )}

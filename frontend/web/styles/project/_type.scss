@@ -31,13 +31,13 @@ h4 {
 }
 
 h5 {
-  font-size: $h4-font-size;
-  line-height: $h4-line-height;
+  font-size: $h5-font-size;
+  line-height: $h5-line-height;
 }
 
 h6 {
-  font-size: $h4-font-size;
-  line-height: $h4-line-height;
+  font-size: $h6-font-size;
+  line-height: $h6-line-height;
 }
 
 .ln {
@@ -57,9 +57,9 @@ a {
 }
 
 .dark {
+    color: $body-text-dark;
     h1,h2,h3,h4,h5,h6 {
         color: $header-color-dark;
-
     }
 }
 
@@ -98,17 +98,6 @@ a.dark{
     color: white;
 }
 
-p{
-    color: $p-color;
-    opacity: 0.85;
-    font-family: $font-family;
-    line-height: 1.5;
-}
-
-.dark p {
-    color: $p-color-dark;
-}
-
 .text {
     &__link {
         color: $bt-brand-primary;
@@ -140,8 +129,4 @@ p{
     &--on {
         color: $bt-brand-primary;
     }
-}
-
-label {
-    margin-bottom: $spacer/2;
 }

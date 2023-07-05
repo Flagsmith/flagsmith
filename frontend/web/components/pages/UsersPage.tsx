@@ -70,21 +70,21 @@ const UsersPage: FC<UsersPageType> = (props) => {
 
   const removeIdentity = (id: string, identifier: string) => {
     openConfirm(
-      <h3>Delete User</h3>,
-      <p>
+      'Delete User',
+      <div>
         {'Are you sure you want to delete '}
         <strong>{identifier}</strong>
         {'?'}
-      </p>,
+      </div>,
       () => deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
     )
   }
 
   const newUser = () => {
     openModal(
-      'New Users',
+      'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      'alert fade expand',
+      'p-0',
     )
   }
 
@@ -118,7 +118,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   id='show-create-feature-btn'
                   onClick={newUser}
                 >
-                  Create Users
+                  Create Identities
                 </Button>
               </FormGroup>
             ) : (
@@ -131,7 +131,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     id='show-create-feature-btn'
                     onClick={newUser}
                   >
-                    Create Users
+                    Create Identities
                   </Button>
                 }
                 place='right'

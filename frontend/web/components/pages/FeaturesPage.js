@@ -88,7 +88,7 @@ const FeaturesPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      'side-modal fade create-feature-modal',
+      'side-modal create-feature-modal',
     )
   }
 
