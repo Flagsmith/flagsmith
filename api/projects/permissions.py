@@ -13,13 +13,20 @@ from projects.models import Project
 VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
 
 # Maintain a list of permissions here
+VIEW_PROJECT = "VIEW_PROJECT"
+CREATE_ENVIRONMENT = "CREATE_ENVIRONMENT"
+DELETE_FEATURE = "DELETE_FEATURE"
+CREATE_FEATURE = "CREATE_FEATURE"
+EDIT_FEATURE = "EDIT_FEATURE"
+MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
+
 PROJECT_PERMISSIONS = [
-    ("VIEW_PROJECT", "View permission for the given project."),
-    ("CREATE_ENVIRONMENT", "Ability to create an environment in the given project."),
-    ("DELETE_FEATURE", "Ability to delete features in the given project."),
-    ("CREATE_FEATURE", "Ability to create features in the given project."),
-    ("EDIT_FEATURE", "Ability to edit features in the given project."),
-    ("MANAGE_SEGMENTS", "Ability to manage segments in the given project."),
+    (VIEW_PROJECT, "View permission for the given project."),
+    (CREATE_ENVIRONMENT, "Ability to create an environment in the given project."),
+    (DELETE_FEATURE, "Ability to delete features in the given project."),
+    (CREATE_FEATURE, "Ability to create features in the given project."),
+    (EDIT_FEATURE, "Ability to edit features in the given project."),
+    (MANAGE_SEGMENTS, "Ability to manage segments in the given project."),
     (VIEW_AUDIT_LOG, "Allows the user to view the audit logs for this organisation."),
 ]
 
@@ -56,7 +63,7 @@ class ProjectPermissions(IsAuthenticated):
             return True
 
         if view.action == "retrieve" and request.user.has_project_permission(
-            "VIEW_PROJECT", obj
+            VIEW_PROJECT, obj
         ):
             return True
 
@@ -140,7 +147,7 @@ class NestedProjectPermissions(IsAuthenticated):
     ):
         super().__init__(*args, **kwargs)
         self.action_permission_map = action_permission_map or {}
-        self.action_permission_map.setdefault("list", "VIEW_PROJECT")
+        self.action_permission_map.setdefault("list", VIEW_PROJECT)
 
         self.get_project_from_object_callable = get_project_from_object_callable
 

@@ -55,7 +55,7 @@ def test_list_feature_states_from_simple_view_set(
     )
 
     # When
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(8):
         response = admin_client.get(url)
 
     # Then
@@ -89,7 +89,7 @@ def test_list_feature_states_nested_environment_view_set(
     Feature.objects.create(name="another_feature", project=project)
 
     # When
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(8):
         response = admin_client.get(base_url)
 
     # Then

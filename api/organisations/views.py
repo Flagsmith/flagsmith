@@ -43,6 +43,7 @@ from organisations.serializers import (
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
+from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -241,13 +242,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], url_path="my-permissions")
     def my_permissions(self, request, pk):
         org = self.get_object()
-        permission_keys = request.user.get_permission_keys_for_organisation(org)
-        serializer = self.get_serializer(
-            instance={
-                "permissions": permission_keys,
-                "admin": request.user.is_organisation_admin(org),
-            }
+
+        permission_data = get_organisation_permission_data(
+            org.id,
+            user=request.user,
         )
+        serializer = UserObjectPermissionsSerializer(instance=permission_data)
+
         return Response(serializer.data)
 
 
