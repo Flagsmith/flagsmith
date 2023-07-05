@@ -1,43 +1,65 @@
 import json
 import typing
 
+import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from .types import GetResponseJSONCallable
 
-def test_v2_versioning(
-    admin_client,
-    environment,
-    environment_api_key,
-    sdk_client,
-    feature,
-    identity_with_traits_matching_segment,
-    identity_identifier,
-    mv_feature,
-    segment,
-):
-    # First, let's get a baseline for a flags response for the environment and an identity
-    # to make sure that the response before and after we enable v2 versioning is the same.
+if typing.TYPE_CHECKING:
+    from rest_framework.test import APIClient
+
+
+@pytest.fixture()
+def get_environment_flags_response_json(
+    sdk_client: "APIClient",
+) -> GetResponseJSONCallable:
     get_environment_flags_url = reverse("api-v1:flags")
-    get_identity_flags_url = "%s?identifier=%s" % (
-        reverse("api-v1:sdk-identities"),
-        identity_identifier,
-    )
 
-    def get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:
+    def _get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:
         _response = sdk_client.get(get_environment_flags_url)
         assert _response.status_code == status.HTTP_200_OK
         _response_json = _response.json()
         assert len(_response_json) == num_expected_flags
         return _response_json
 
-    def get_identity_flags_response_json(num_expected_flags: int) -> typing.Dict:
+    return _get_environment_flags_response_json
+
+
+@pytest.fixture()
+def get_identity_flags_response_json(
+    sdk_client: "APIClient", identity_identifier: str
+) -> GetResponseJSONCallable:
+    get_identity_flags_url = "%s?identifier=%s" % (
+        reverse("api-v1:sdk-identities"),
+        identity_identifier,
+    )
+
+    def _get_identity_flags_response_json(num_expected_flags: int) -> typing.Dict:
         _response = sdk_client.get(get_identity_flags_url)
         assert _response.status_code == status.HTTP_200_OK
         _response_json = _response.json()
         assert len(_response_json["flags"]) == num_expected_flags
         return _response_json
 
+    return _get_identity_flags_response_json
+
+
+def test_v2_versioning(
+    admin_client: "APIClient",
+    environment: int,
+    environment_api_key: str,
+    sdk_client: "APIClient",
+    feature: int,
+    identity_with_traits_matching_segment: int,
+    mv_feature: int,
+    segment: int,
+    get_environment_flags_response_json: GetResponseJSONCallable,
+    get_identity_flags_response_json: GetResponseJSONCallable,
+):
+    # First, let's get a baseline for a flags response for the environment and an identity
+    # to make sure that the response before and after we enable v2 versioning is the same.
     get_environment_flags_response_v1_json = get_environment_flags_response_json(
         num_expected_flags=2
     )
@@ -45,8 +67,7 @@ def test_v2_versioning(
         num_expected_flags=2
     )
 
-    def verify_consistent_responses(num_expected_flags: int):
-        nonlocal get_environment_flags_response_v1_json, get_identity_flags_response_v1_json
+    def verify_consistent_responses(num_expected_flags: int) -> None:
         new_flags_response = get_environment_flags_response_json(num_expected_flags)
         new_identities_response = get_identity_flags_response_json(num_expected_flags)
 
