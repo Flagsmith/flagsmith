@@ -148,11 +148,7 @@ const CreateWebhook = class extends Component {
                       {isSaving ? 'Creating' : 'Update Webhook'}
                     </Button>
                   ) : (
-                    <Button
-                      data-test='create-feature-btn'
-                      id='create-feature-btn'
-                      disabled={isSaving || !url}
-                    >
+                    <Button type='submit' disabled={isSaving || !url}>
                       {isSaving ? 'Creating' : 'Create Webhook'}
                     </Button>
                   )}

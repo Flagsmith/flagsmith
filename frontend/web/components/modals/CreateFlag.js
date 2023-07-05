@@ -27,7 +27,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import { setInterceptClose } from './base/ModalDefault'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -131,7 +131,7 @@ const CreateFlag = class extends Component {
           this.state.settingsChanged
         ) {
           openConfirm(
-            'Are you sure',
+            'Are you sure?',
             'Closing this will discard your unsaved changes.',
             () => resolve(true),
             () => resolve(false),
@@ -473,7 +473,7 @@ const CreateFlag = class extends Component {
     const Settings = (projectAdmin, createFeature) => (
       <>
         {!identity && this.state.tags && (
-          <FormGroup className='mb-4 mr-3 ml-3'>
+          <FormGroup className='mb-4'>
             <InputGroup
               title={identity ? 'Tags' : 'Tags (optional)'}
               tooltip={Constants.strings.TAGS_DESCRIPTION}
@@ -498,7 +498,7 @@ const CreateFlag = class extends Component {
           >
             {({ permission: projectAdmin }) =>
               projectAdmin && (
-                <FormGroup className='mb-4 mr-3 ml-3'>
+                <FormGroup className='mb-4'>
                   <FlagOwners
                     projectId={this.props.projectId}
                     id={projectFlag.id}
@@ -508,7 +508,7 @@ const CreateFlag = class extends Component {
             }
           </Permission>
         )}
-        <FormGroup className='mb-4 mr-3 ml-3'>
+        <FormGroup className='mb-4'>
           <InputGroup
             value={description}
             data-test='featureDesc'
@@ -530,7 +530,7 @@ const CreateFlag = class extends Component {
         </FormGroup>
 
         {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
-          <FormGroup className='mb-4 mr-3 ml-3'>
+          <FormGroup className='mb-4'>
             <InputGroup
               component={
                 <Switch
@@ -548,7 +548,7 @@ const CreateFlag = class extends Component {
         )}
 
         {!identity && isEdit && (
-          <FormGroup className='mb-4 mr-3 ml-3'>
+          <FormGroup className='mb-4'>
             <InputGroup
               value={description}
               component={
@@ -571,7 +571,7 @@ const CreateFlag = class extends Component {
         )}
 
         {!identity && Utils.getFlagsmithHasFeature('hide_flag') && (
-          <FormGroup className='mb-4 mr-3 ml-3'>
+          <FormGroup className='mb-4'>
             <Tooltip
               title={
                 <label className='cols-sm-2 control-label'>
@@ -601,7 +601,7 @@ const CreateFlag = class extends Component {
     const Value = (error, projectAdmin, createFeature, hideValue) => (
       <>
         {!isEdit && (
-          <FormGroup className='mb-4 mr-3 mt-2 ml-3'>
+          <FormGroup className='mb-4 mt-2'>
             <InputGroup
               ref={(e) => (this.input = e)}
               data-test='featureID'
@@ -642,7 +642,7 @@ const CreateFlag = class extends Component {
         )}
 
         {identity && description && (
-          <FormGroup className='mb-4 mt-2 mr-3 ml-3'>
+          <FormGroup className='mb-4 mt-2'>
             <InputGroup
               value={description}
               data-test='featureDesc'
@@ -840,7 +840,7 @@ const CreateFlag = class extends Component {
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
                         return (
-                          <div id='create-feature-modal'>
+                          <div className='px-3' id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <Tabs
                                 value={this.state.tab}
@@ -859,7 +859,7 @@ const CreateFlag = class extends Component {
                                     </Row>
                                   }
                                 >
-                                  <FormGroup className='mr-3 ml-3'>
+                                  <FormGroup>
                                     <Panel
                                       title={
                                         <Tooltip
@@ -1050,7 +1050,7 @@ const CreateFlag = class extends Component {
                                     }
                                   >
                                     {!identity && isEdit && (
-                                      <FormGroup className='mb-4 mr-3 ml-3'>
+                                      <FormGroup className='mb-4'>
                                         <div>
                                           <Panel
                                             icon='ion-ios-settings'
@@ -1209,7 +1209,7 @@ const CreateFlag = class extends Component {
                                       data-test='identity_overrides'
                                       tabLabel='Identity Overrides'
                                     >
-                                      <FormGroup className='mb-4 mr-3 ml-3'>
+                                      <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
                                           title={
@@ -1382,7 +1382,7 @@ const CreateFlag = class extends Component {
                                       data-test='analytics'
                                       tabLabel='Analytics'
                                     >
-                                      <FormGroup className='mb-4 mr-3 ml-3'>
+                                      <FormGroup className='mb-4'>
                                         <Panel
                                           title={
                                             !!usageData && (

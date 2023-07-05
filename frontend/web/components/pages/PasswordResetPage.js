@@ -85,7 +85,9 @@ const PasswordResetPage = class extends Component {
                     id='password2'
                   />
                   <div className='text-right'>
-                    <Button disabled={!isValid}>Set password</Button>
+                    <Button type='submit' disabled={!isValid}>
+                      Set password
+                    </Button>
                   </div>
                 </form>
               )}

@@ -183,7 +183,7 @@ const ChangeRequestModal = class extends Component {
                                 </Row>
                               ))}
                               <Button
-                                theme="text"
+                                theme='text'
                                 onClick={() =>
                                   this.setState({ showUsers: true })
                                 }
@@ -211,7 +211,7 @@ const ChangeRequestModal = class extends Component {
                                 </Row>
                               ))}
                               <Button
-                                theme="text"
+                                theme='text'
                                 onClick={() =>
                                   this.setState({ showGroups: true })
                                 }

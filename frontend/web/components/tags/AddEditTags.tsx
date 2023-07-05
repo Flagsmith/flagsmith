@@ -86,6 +86,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
     <div>
       <Row className='inline-tags mt-2'>
         <TagValues
+          hideNames={false}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
           value={value}

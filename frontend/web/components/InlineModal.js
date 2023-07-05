@@ -1,6 +1,7 @@
 import propTypes from 'prop-types'
 import React, { PureComponent } from 'react'
 import cx from 'classnames'
+import ModalClose from './modals/base/ModalClose'
 
 const enhanceWithClickOutside = require('react-click-outside')
 
@@ -44,13 +45,8 @@ class InlineModal extends PureComponent {
                   )}
                 </div>
                 <Flex className='text-center'>{this.props.title}</Flex>
-                <button
-                  type='button'
-                  onClick={this.props.onClose}
-                  className='modal-close-btn'
-                >
-                  <span className='icon ion-md-close' />
-                </button>
+
+                <ModalClose type='button' onClick={this.props.onClose} />
               </Row>
             </div>
             <div className='inline-modal__content'>{this.props.children}</div>

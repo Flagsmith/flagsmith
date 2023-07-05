@@ -214,6 +214,7 @@ class IntegrationList extends Component {
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
+        modal
         integration={integration}
         data={
           params.environment
@@ -225,6 +226,7 @@ class IntegrationList extends Component {
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
+        'p-0'
     )
   }
 
@@ -233,11 +235,13 @@ class IntegrationList extends Component {
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
+        modal
         integration={integration}
         data={data}
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
+        'p-0'
     )
   }
 

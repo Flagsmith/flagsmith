@@ -14,11 +14,9 @@ class TheComponent extends Component {
   state = {
     isLoading: true,
   }
-
   componentDidMount() {
     this.fetch()
   }
-
   fetch = () => {
     _data
       .get(

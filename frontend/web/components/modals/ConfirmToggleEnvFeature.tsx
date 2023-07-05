@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { FC } from 'react'
+import Button from 'components/base/forms/Button'
 
 type ConfirmToggleEnvFeatureType = {
   description: string
   feature: string
   featureValue: boolean
-  onToggleChange?: (value: boolean) => void
+  onToggleChange: (value: boolean) => void
 }
 
 const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
@@ -13,12 +14,11 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
   featureValue,
   onToggleChange,
 }: ConfirmToggleEnvFeatureType) => {
-  const isEnabled = featureValue
   return (
     <div id='confirm-toggle-feature-modal'>
       <p>
         This will turn <strong>{feature}</strong> to{' '}
-        {isEnabled ? (
+        {featureValue ? (
           <span className='feature--off'>
             <strong>"Off"</strong>
           </span>

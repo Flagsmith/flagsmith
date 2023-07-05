@@ -10,14 +10,16 @@ $danger: #ef4d56;
 $success: #27ab95;
 $info: #0aaddf;
 $text-icon-dark: #1a2634;
-$text-icon-grey: #656d7b;
-$text-icon-light-grey: #9da4ae;
+$text-icon-light-grey: rgba(157, 164, 174, 1);
+$text-icon-grey: rgba(101, 109, 123, 1);
 $text-icon-light: #ffffff;
 $bg-light300: #eff1f4;
 $bg-dark200: #202839;
 $bg-dark300: #121827;
 $info-alfa-8: rgba(10, 173, 223, 0.08);
 $link-color: $primary;
+$basic-alpha-16: rgba(101, 109, 123, 0.16);
+$basic-alpha-24: rgba(101, 109, 123, 0.24);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
@@ -25,8 +27,17 @@ $theme-colors: (
   info: $info,
   // add any additional color below
 );
+$bg-light300: #eff1f4;
+$bg-dark200: #202839;
+$bg-dark100: rgba(45, 52, 67, 1);
+$bg-dark300: #121827;
+$bg-dark500: rgba(15, 20, 37, 1);
+
 
 //Body
+$body-text: $text-icon-dark;
+$body-text-dark: white;
+
 $border-radius-sm: 4px;
 $border-radius: 6px;
 $border-radius-lg: 8px;
@@ -68,9 +79,41 @@ $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
 $btn-border-width: 0;
 
+//TABS
+$tab-inactive-color: $body-text;
+$tab-active-background: white;
+$tab-inactive-background: white;
+$tab-inactive-color-dark: $body-text-dark;
+$tab-active-background-dark: $bg-dark100;
+$tab-inactive-background-dark: $bg-dark100;
+
+$tab-line-color: $primary;
+$tab-line-color-dark: $primary;
+
+
+//HR
+$hr-border-color: $basic-alpha-16;
+$hr-opacity: 1;
+//todo: replace with bootstrap 5.3 dark mode theme
+.dark hr {
+  border-color: $bg-dark500;
+}
+
 //Modal
+$modal-content-color: $text-icon-grey;
+$modal-content-color-dark: $text-icon-light-grey;
 $modal-md: 600px;
 $modal-lg: 900px;
+$modal-bg-dark: $bg-dark100;
+$modal-border-radius: 18px;
+$modal-footer-border-width:0;
+$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
+$modal-header-padding-x: $spacer*1.5;
+$modal-header-padding-y: $spacer;
+$modal-header-border-width:0;
+$modal-body-padding-y: $spacer*1.5;
+$modal-body-padding-x: $spacer*1.5;
+$modal-footer-margin-between:0;
 
 //Breakpoints
 $grid-breakpoints: (
@@ -126,7 +169,9 @@ $h6-line-height: 24px;
 
 //Input
 $input-bg: #fff;
+$input-bg-dark: $bg-dark200;
 $input-bg-alt: #f7f7f7;
+$input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
 $input-height: 48px;
 $input-height-sm: 40px;
@@ -136,6 +181,7 @@ $input-line-height: 24px;
 $input-font-size: $font-size-base;
 $input-font-weight: 500;
 $input-border-color: rgba(101, 109, 123, 0.16);
+$input-border-color-dark: $btn-secondary-bg-dark;
 $input-placeholder-color: $text-icon-light-grey;
 $input-padding: 12px 16px 12px 12px;
 $input-padding-sm: 8px 14px 8px 12px;

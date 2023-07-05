@@ -452,14 +452,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
   )
 
   return (
-    <div>
+    <div className='mx-3'>
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem tabLabel='Rules'>
-            <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+            <div className='mt-4'>{Tab1}</div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='mt-4'>
               <AssociatedSegmentOverrides
                 feature={segment.feature}
                 projectId={projectId}
@@ -468,7 +468,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='mt-4'>
               <InfoMessage>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
@@ -585,7 +585,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+        <div className='mt-4'>{Tab1}</div>
       )}
     </div>
   )
