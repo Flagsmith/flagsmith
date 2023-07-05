@@ -10,6 +10,7 @@ jobs:
   run-e2e-tests:
     runs-on: ubuntu-latest
     name: Full E2E tests
+    concurrency: e2e-tests
 
     services:
       postgres:
@@ -52,6 +53,7 @@ jobs:
   run-e2e-tests-docker-unified:
     runs-on: ubuntu-latest
     name: Full E2E tests with unified image in Docker
+    concurrency: e2e-tests
 
     steps:
       - name: Cloning repo
