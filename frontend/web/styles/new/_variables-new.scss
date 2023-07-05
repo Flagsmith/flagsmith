@@ -8,17 +8,21 @@ $primary600: #4e25db;
 $primary700: #3919b7;
 $danger: #ef4d56;
 $success: #27ab95;
+$info: #0aaddf;
 $text-icon-dark: #1a2634;
+$text-icon-grey: #656d7b;
 $text-icon-light-grey: #9da4ae;
 $text-icon-light: #ffffff;
 $bg-light300: #eff1f4;
 $bg-dark200: #202839;
 $bg-dark300: #121827;
+$info-alfa-8: rgba(10, 173, 223, 0.08);
 $link-color: $primary;
 $theme-colors: (
   primary: $primary,
   danger: $danger,
   success: $success,
+  info: $info,
   // add any additional color below
 );
 
@@ -165,14 +169,17 @@ $switcher-checked-dark-mode-bg: $bg-dark200;
 $switcher-dark-mode-width: 32px;
 
 //Checkbox
-$checkbox-width:20px;
-$checkbox-border-color:rgba(101, 109, 123, 0.24);
-$checkbox-border-color-dark:rgba(255, 255, 255, 0.24);
-$checkbox-focus-bg:rgba(149, 108, 255, 0.08);
-$checkbox-focus-border-color:$primary400;
-$checkbox-hover-border-color:$primary;
-$checkbox-checked-hover-border-color:$primary600;
+$checkbox-width: 20px;
+$checkbox-border-color: rgba(101, 109, 123, 0.24);
+$checkbox-border-color-dark: rgba(255, 255, 255, 0.24);
+$checkbox-focus-bg: rgba(149, 108, 255, 0.08);
+$checkbox-focus-border-color: $primary400;
+$checkbox-hover-border-color: $primary;
+$checkbox-checked-hover-border-color: $primary600;
 
-
-
-
+//Info
+$alert-bg: $info-alfa-8;
+$alert-border-color: $info;
+$alert-color: $text-icon-grey;
+$alert-font-size: $font-sm;
+$alert-line-height:$line-height-sm
