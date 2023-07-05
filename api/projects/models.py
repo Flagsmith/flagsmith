@@ -150,6 +150,13 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
     )
     admin = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "project"], name="unique_group_project_permission"
+            )
+        ]
+
 
 class UserProjectPermission(AbstractBasePermissionModel):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -157,3 +164,10 @@ class UserProjectPermission(AbstractBasePermissionModel):
         Project, on_delete=models.CASCADE, related_query_name="userpermission"
     )
     admin = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="unique_user_project_permission"
+            )
+        ]

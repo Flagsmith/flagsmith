@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 from projects.models import Project
+from projects.permissions import VIEW_PROJECT
 
 
 class TagPermissions(BasePermission):
@@ -15,7 +16,7 @@ class TagPermissions(BasePermission):
             return True
 
         if view.action == "list" and request.user.has_project_permission(
-            "VIEW_PROJECT", project
+            VIEW_PROJECT, project
         ):
             return True
 
@@ -28,7 +29,7 @@ class TagPermissions(BasePermission):
             return True
 
         if view.action == "detail" and request.user.has_project_permission(
-            "VIEW_PROJECT", project
+            VIEW_PROJECT, project
         ):
             return True
 

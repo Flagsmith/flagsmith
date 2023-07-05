@@ -1,3 +1,11 @@
+import pytest
+from django.conf import settings
+
+
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migration_creates_default_subscription_for_organisations_without_subscription(
     migrator,
 ):

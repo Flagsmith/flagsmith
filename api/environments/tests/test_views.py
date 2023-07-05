@@ -21,6 +21,7 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
+from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from segments.models import EQUAL, Condition, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
@@ -37,9 +38,9 @@ class EnvironmentTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
         create_environment_permission = ProjectPermissionModel.objects.get(
-            key="CREATE_ENVIRONMENT"
+            key=CREATE_ENVIRONMENT
         )
-        read_project_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_project_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
 
         self.organisation = Organisation.objects.create(name="ssg")
         self.user.add_organisation(

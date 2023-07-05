@@ -10,6 +10,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
+from projects.permissions import CREATE_FEATURE, DELETE_FEATURE, VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 
 mock_view = mock.MagicMock()
@@ -77,7 +78,7 @@ class FeaturePermissionsTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=self.user, admin=False, project=self.project
         )
-        user_project_permission.set_permissions(["VIEW_PROJECT"])
+        user_project_permission.set_permissions([VIEW_PROJECT])
 
         mock_view.action = "list"
         mock_view.detail = False
@@ -139,7 +140,7 @@ class FeaturePermissionsTestCase(TestCase):
         user_group_permission = UserPermissionGroupProjectPermission.objects.create(
             group=self.group, project=self.project, admin=False
         )
-        user_group_permission.add_permission("CREATE_FEATURE")
+        user_group_permission.add_permission(CREATE_FEATURE)
         mock_view.action = "create"
         mock_view.detail = False
         mock_request.user = self.user
@@ -200,7 +201,7 @@ class FeaturePermissionsTestCase(TestCase):
         user_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project, admin=False
         )
-        user_permission.set_permissions(["VIEW_PROJECT"])
+        user_permission.set_permissions([VIEW_PROJECT])
         mock_request.user = self.user
         mock_view.action = "retrieve"
         mock_view.detail = True
@@ -308,7 +309,7 @@ class FeaturePermissionsTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project
         )
-        user_project_permission.add_permission("DELETE_FEATURE")
+        user_project_permission.add_permission(DELETE_FEATURE)
 
         mock_view.action = "destroy"
         mock_view.detail = True

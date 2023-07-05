@@ -5,20 +5,15 @@ from django.db.utils import IntegrityError
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
-from organisations.permissions.models import (
-    UserOrganisationPermission,
-    UserPermissionGroupOrganisationPermission,
-)
-from organisations.permissions.permissions import (
-    CREATE_PROJECT,
-    ORGANISATION_PERMISSIONS,
-)
+from organisations.permissions.models import UserOrganisationPermission
+from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import (
     Project,
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from users.models import FFAdminUser, UserPermissionGroup
+from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -53,9 +48,7 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        projects = self.user.get_permitted_projects(
-            ["VIEW_PROJECT", "CREATE_ENVIRONMENT"]
-        )
+        projects = self.user.get_permitted_projects(VIEW_PROJECT)
 
         # Then
         assert projects.count() == 2
@@ -68,11 +61,11 @@ class FFAdminUserTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project_1
         )
-        read_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
         user_project_permission.permissions.set([read_permission])
 
         # When
-        projects = self.user.get_permitted_projects(permissions=["VIEW_PROJECT"])
+        projects = self.user.get_permitted_projects(permission_key=VIEW_PROJECT)
 
         # Then
         assert projects.count() == 1
@@ -140,11 +133,10 @@ class FFAdminUserTestCase(TestCase):
     def test_has_organisation_permission_is_true_when_user_has_permission(self):
         # Given
         self.user.add_organisation(self.organisation)
-
+        user_organisation_permission = UserOrganisationPermission.objects.create(
+            user=self.user, organisation=self.organisation
+        )
         for permission_key, _ in ORGANISATION_PERMISSIONS:
-            user_organisation_permission = UserOrganisationPermission.objects.create(
-                user=self.user, organisation=self.organisation
-            )
             user_organisation_permission.permissions.through.objects.create(
                 permissionmodel_id=permission_key,
                 userorganisationpermission=user_organisation_permission,
@@ -171,47 +163,6 @@ class FFAdminUserTestCase(TestCase):
             )
             for permission_key, _ in ORGANISATION_PERMISSIONS
         )
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "user_permission_keys, group_permission_keys, expected_keys",
-    (
-        ([], [], set()),
-        ([CREATE_PROJECT], [], {CREATE_PROJECT}),
-        ([], [CREATE_PROJECT], {CREATE_PROJECT}),
-        ([CREATE_PROJECT], [CREATE_PROJECT], {CREATE_PROJECT}),
-    ),
-)
-def test_get_permission_keys_for_organisation(
-    user_permission_keys, group_permission_keys, expected_keys
-):
-    # Given
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test org")
-    user.add_organisation(organisation)
-    group = UserPermissionGroup.objects.create(
-        name="Test group", organisation=organisation
-    )
-    group.users.add(user)
-
-    if user_permission_keys:
-        user_permission = UserOrganisationPermission.objects.create(
-            user=user, organisation=organisation
-        )
-        user_permission.set_permissions(user_permission_keys)
-
-    if group_permission_keys:
-        group_permission = UserPermissionGroupOrganisationPermission.objects.create(
-            group=group, organisation=organisation
-        )
-        group_permission.set_permissions(group_permission_keys)
-
-    # When
-    permission_keys = user.get_permission_keys_for_organisation(organisation)
-
-    # Then
-    assert permission_keys == expected_keys
 
 
 @pytest.mark.django_db

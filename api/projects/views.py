@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
+from permissions.permissions_calculator import get_project_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -31,11 +32,11 @@ from projects.models import (
     UserProjectPermission,
 )
 from projects.permissions import (
+    VIEW_PROJECT,
     IsProjectAdmin,
     MasterAPIKeyProjectPermissions,
     ProjectPermissions,
 )
-from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
     CreateUpdateUserProjectPermissionSerializer,
@@ -76,7 +77,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queryset = self.request.master_api_key.organisation.projects.all()
         else:
             queryset = self.request.user.get_permitted_projects(
-                permissions=["VIEW_PROJECT"]
+                permission_key=VIEW_PROJECT
             )
 
         organisation_id = self.request.query_params.get("organisation")
@@ -141,12 +142,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "detail": "This endpoint can only be used with a user and not Master API Key"
                 },
             )
-        project_permissions_calculator = ProjectPermissionsCalculator(project_id=pk)
-        permission_data = (
-            project_permissions_calculator.get_user_project_permission_data(
-                user_id=request.user.id
-            )
-        )
+        permission_data = get_project_permission_data(pk, user_id=request.user.id)
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
@@ -221,15 +217,7 @@ class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet
 def get_user_project_permissions(request, **kwargs):
     user_id = kwargs["user_pk"]
 
-    project_permissions_calculator = ProjectPermissionsCalculator(kwargs["project_pk"])
-    user_permissions_data = (
-        project_permissions_calculator.get_user_project_permission_data(user_id)
-    )
-
+    permission_data = get_project_permission_data(kwargs["project_pk"], user_id=user_id)
     # TODO: expose `user` and `groups` attributes from user_permissions_data
-    return Response(
-        {
-            "admin": user_permissions_data.admin,
-            "permissions": user_permissions_data.permissions,
-        }
-    )
+    serializer = UserObjectPermissionsSerializer(instance=permission_data)
+    return Response(serializer.data)

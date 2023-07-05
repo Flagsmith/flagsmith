@@ -13,6 +13,7 @@ from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from permissions.models import PermissionModel
 from projects.models import UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 
 
 def test_user_with_manage_identities_permission_can_add_trait_for_identity(
@@ -24,7 +25,7 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(
 
     view_environment_permission = PermissionModel.objects.get(key=VIEW_ENVIRONMENT)
     manage_identities_permission = PermissionModel.objects.get(key=MANAGE_IDENTITIES)
-    view_project_permission = PermissionModel.objects.get(key="VIEW_PROJECT")
+    view_project_permission = PermissionModel.objects.get(key=VIEW_PROJECT)
 
     user_environment_permission = UserEnvironmentPermission.objects.create(
         user=user, environment=environment

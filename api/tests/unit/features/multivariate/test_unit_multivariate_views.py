@@ -6,7 +6,11 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
 from features.multivariate.views import MultivariateFeatureOptionViewSet
-from projects.permissions import NestedProjectPermissions
+from projects.permissions import (
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+    NestedProjectPermissions,
+)
 
 
 def test_multivariate_feature_options_view_set_get_permissions():
@@ -23,12 +27,12 @@ def test_multivariate_feature_options_view_set_get_permissions():
     assert len(permissions) == 1
     assert isinstance(permissions[0].op1, NestedProjectPermissions)
     assert permissions[0].op1.action_permission_map == {
-        "list": "VIEW_PROJECT",
-        "detail": "VIEW_PROJECT",
-        "create": "CREATE_FEATURE",
-        "update": "CREATE_FEATURE",
-        "partial_update": "CREATE_FEATURE",
-        "destroy": "CREATE_FEATURE",
+        "list": VIEW_PROJECT,
+        "detail": VIEW_PROJECT,
+        "create": CREATE_FEATURE,
+        "update": CREATE_FEATURE,
+        "partial_update": CREATE_FEATURE,
+        "destroy": CREATE_FEATURE,
     }
 
 

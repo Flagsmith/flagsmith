@@ -28,6 +28,7 @@ from features.models import (
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
+from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -421,7 +422,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
@@ -450,7 +451,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
@@ -485,7 +486,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
