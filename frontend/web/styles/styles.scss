@@ -130,7 +130,7 @@ bold, strong {
 .chip .feature-value-container {
   border-radius: 0;
   padding: 2px 5px;
-  border-radius: 8px;
+  border-radius: $border-radius;
 }
 
 .feature-value-container {
@@ -139,7 +139,7 @@ bold, strong {
   background: $bt-code-background;
   color: #fff;
   padding: 5px 10px;
-  border-radius: 20px;
+  border-radius: $border-radius;
   font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   font-weight: bold;

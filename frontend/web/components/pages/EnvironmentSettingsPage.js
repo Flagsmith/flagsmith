@@ -101,7 +101,8 @@ const EnvironmentSettingsPage = class extends Component {
           ? this.state.minimum_change_request_approvals
           : null,
         name: name || env.name,
-        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
+        use_identity_composite_key_for_hashing:
+          !!this.state.use_identity_composite_key_for_hashing,
       }),
     )
   }
@@ -178,7 +179,7 @@ const EnvironmentSettingsPage = class extends Component {
         allow_client_traits,
         hide_sensitive_data,
         name,
-        use_mv_v2_evaluation,
+        use_identity_composite_key_for_hashing,
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
@@ -212,7 +213,8 @@ const EnvironmentSettingsPage = class extends Component {
                     ? env.minimum_change_request_approvals
                     : null,
                   name: env.name,
-                  use_mv_v2_evaluation: !!env.use_mv_v2_evaluation,
+                  use_identity_composite_key_for_hashing:
+                    !!env.use_identity_composite_key_for_hashing,
                 })
               }, 10)
             }
@@ -267,8 +269,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       : env.description
                                   }
                                   inputProps={{
-                                    className: 'input--wide',
-                                    style: { minHeight: 100 },
+                                    className: 'input--wide textarea-lg',
                                   }}
                                   onChange={(e) =>
                                     this.setState({
@@ -631,18 +632,19 @@ const EnvironmentSettingsPage = class extends Component {
                                 </div>
                               </div>
                               {Utils.getFlagsmithHasFeature(
-                                'mv_v2_setting',
+                                'consistent_hashing_setting',
                               ) && (
                                 <>
                                   <Row className='mt-4' space>
                                     <div className='col-md-8 pl-0'>
                                       <h5 className='m-b-0'>
-                                        Use V2 Multivariate Evaluations
+                                        Use Consistent Hashing
                                       </h5>
                                       <p className='fs-small lh-sm'>
                                         Enabling this setting will ensure that
-                                        multivariate evaluations made by the API
-                                        are consistent with those made by local
+                                        multivariate and percentage split
+                                        evaluations made by the API are
+                                        consistent with those made by local
                                         evaluation mode in our server side SDKs.
                                       </p>
                                     </div>
@@ -650,10 +652,15 @@ const EnvironmentSettingsPage = class extends Component {
                                       <div>
                                         <Switch
                                           className='float-right'
-                                          checked={use_mv_v2_evaluation}
+                                          checked={
+                                            use_identity_composite_key_for_hashing
+                                          }
                                           onChange={(v) => {
                                             this.setState(
-                                              { use_mv_v2_evaluation: v },
+                                              {
+                                                use_identity_composite_key_for_hashing:
+                                                  v,
+                                              },
                                               this.saveEnv,
                                             )
                                           }}
@@ -662,13 +669,13 @@ const EnvironmentSettingsPage = class extends Component {
                                     </div>
                                   </Row>
                                   <p className='text-danger  fs-small lh-sm'>
-                                    Warning: Toggling V2 Multivariate
-                                    Evaluations will mean that some users will
-                                    start receiving different multivariate
-                                    values via the API / remote evaluation for
-                                    any existing multivariate features that you
-                                    have. Values received in local evaluation
-                                    mode will not change.
+                                    Warning: Toggling this setting will mean
+                                    that some users will start receiving
+                                    different values for multivariate flags and
+                                    flags with a percentage split segment
+                                    override via the API / remote evaluation.
+                                    Values received in local evaluation mode
+                                    will not change.
                                   </p>
                                 </>
                               )}
@@ -700,7 +707,6 @@ const EnvironmentSettingsPage = class extends Component {
                                   toast('Copied')
                                 }}
                                 className='ml-2'
-                                size='small'
                               >
                                 Copy
                               </Button>

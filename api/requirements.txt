@@ -83,6 +83,7 @@ django==3.2.19
     #   drf-nested-routers
     #   drf-yasg2
     #   opencensus-ext-django
+    #   pyngo
     #   social-auth-app-django
 django-admin-sso==3.1.0
     # via -r requirements.in
@@ -139,7 +140,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==3.5.1
+flagsmith-flag-engine==4.0.1
     # via -r requirements.in
 google-api-core==1.23.0
     # via
@@ -182,9 +183,7 @@ jmespath==1.0.1
 markupsafe==2.1.2
     # via jinja2
 marshmallow==3.14.1
-    # via
-    #   environs
-    #   flagsmith-flag-engine
+    # via environs
 monotonic==1.6
     # via
     #   analytics-python
@@ -239,6 +238,14 @@ pyasn1-modules==0.2.8
     #   oauth2client
 pycparser==2.21
     # via cffi
+pydantic==1.10.9
+    # via
+    #   -r requirements.in
+    #   flagsmith-flag-engine
+    #   pydantic-collections
+    #   pyngo
+pydantic-collections==0.4.0
+    # via flagsmith-flag-engine
 pyjwt[crypto]==2.6.0
     # via
     #   djangorestframework-simplejwt
@@ -246,6 +253,8 @@ pyjwt[crypto]==2.6.0
     #   social-auth-core
     #   twilio
 pymemcache==4.0.0
+    # via -r requirements.in
+pyngo==1.6.0
     # via -r requirements.in
 pyotp==2.4.1
     # via django-trench
@@ -349,7 +358,10 @@ sqlparse==0.4.4
 twilio==7.9.1
     # via django-trench
 typing-extensions==4.5.0
-    # via azure-core
+    # via
+    #   azure-core
+    #   pydantic
+    #   pyngo
 uritemplate==3.0.1
     # via
     #   coreapi

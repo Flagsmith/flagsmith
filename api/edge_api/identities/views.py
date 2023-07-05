@@ -2,16 +2,14 @@ import base64
 import json
 import typing
 
-import marshmallow
+import pydantic
 from boto3.dynamodb.conditions import Key
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.api.schemas import APITraitSchema
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
+from flag_engine.identities.builders import build_identity_model
+from flag_engine.identities.traits.models import TraitModel
+from pyngo import drf_error_details
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import (
@@ -55,12 +53,11 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
+from util.mappers import map_engine_identity_to_identity_document
 
 from .exceptions import TraitPersistenceError
 from .models import EdgeIdentity
 from .permissions import EdgeIdentityWithIdentifierViewPermissions
-
-trait_schema = APITraitSchema()
 
 
 @method_decorator(
@@ -162,8 +159,8 @@ class EdgeIdentityViewSet(
     )
     @action(detail=True, methods=["get"], url_path="list-traits")
     def get_traits(self, request, *args, **kwargs):
-        identity = self.get_object()
-        data = trait_schema.dump(identity["identity_traits"], many=True)
+        identity = build_identity_model(self.get_object())
+        data = [trait.dict() for trait in identity.identity_traits]
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -178,14 +175,18 @@ class EdgeIdentityViewSet(
             raise TraitPersistenceError()
         identity = build_identity_model(self.get_object())
         try:
-            trait = trait_schema.load(request.data)
-        except marshmallow.ValidationError as validation_error:
-            raise ValidationError(validation_error) from validation_error
+            trait = TraitModel(**request.data)
+        except pydantic.ValidationError as validation_error:
+            raise ValidationError(
+                drf_error_details(validation_error)
+            ) from validation_error
         _, traits_updated = identity.update_traits([trait])
         if traits_updated:
-            EdgeIdentity.dynamo_wrapper.put_item(build_identity_dict(identity))
+            EdgeIdentity.dynamo_wrapper.put_item(
+                map_engine_identity_to_identity_document(identity)
+            )
 
-        data = trait_schema.dump(trait)
+        data = trait.dict()
         return Response(data, status=status.HTTP_200_OK)
 
 

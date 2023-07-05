@@ -113,7 +113,9 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):
         environment_api_key = self.context["environment_api_key"]
 
         environment = Environment.get_from_cache(environment_api_key)
-        hash_key = identity.get_hash_key(environment.use_mv_v2_evaluation)
+        hash_key = identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        )
 
         if isinstance(instance, FeatureState):
             return instance.get_feature_state_value_by_hash_key(hash_key)

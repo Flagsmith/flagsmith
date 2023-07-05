@@ -24,6 +24,13 @@ class UserEnvironmentPermission(AbstractBasePermissionModel):
         # issues with production deployment due to multi server configuration.
         db_table = "environments_userenvironmentpermission"
 
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "environment"],
+                name="unique_user_environment_permission",
+            )
+        ]
+
 
 class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
@@ -36,3 +43,10 @@ class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_userpermissiongroupenvironmentpermission"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "environment"],
+                name="unique_group_environment_permission",
+            )
+        ]

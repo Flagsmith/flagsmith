@@ -35,6 +35,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from projects.models import Project
+from projects.permissions import VIEW_PROJECT
 from webhooks.webhooks import WebhookEventType
 
 from .features_service import get_overrides_data
@@ -88,7 +89,7 @@ def get_feature_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
         "multivariate_options", "owners", "tags"
     )
@@ -121,9 +122,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 self.request.master_api_key.organisation.projects.all()
             )
         else:
-            accessible_projects = self.request.user.get_permitted_projects(
-                ["VIEW_PROJECT"]
-            )
+            accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
@@ -559,7 +558,7 @@ def get_feature_state_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = FeatureState.objects.filter(
         feature__project__in=accessible_projects
     ).select_related("feature_state_value")

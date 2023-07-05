@@ -40,8 +40,12 @@ class Identity(models.Model):
     def composite_key(self):
         return f"{self.environment.api_key}_{self.identifier}"
 
-    def get_hash_key(self, use_mv_v2_evaluation: bool = False) -> str:
-        return self.composite_key if use_mv_v2_evaluation else str(self.id)
+    def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
+        return (
+            self.composite_key
+            if use_identity_composite_key_for_hashing
+            else str(self.id)
+        )
 
     def get_all_feature_states(
         self,

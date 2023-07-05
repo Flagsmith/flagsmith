@@ -40,10 +40,10 @@ from environments.dynamodb import (
 )
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
-from environments.mappers import map_environment_to_document
 from features.models import Feature, FeatureSegment, FeatureState
 from metadata.models import Metadata
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -108,12 +108,13 @@ class Environment(
             " will override the project `hide_disabled_flags`"
         ),
     )
-    use_mv_v2_evaluation = models.BooleanField(
+    use_identity_composite_key_for_hashing = models.BooleanField(
         default=True,
         help_text=(
-            "Enable this to have consistent multivariate evaluations across all SDKs(in"
-            " local and server side mode)"
+            "Enable this to have consistent multivariate and percentage split evaluations "
+            "across all SDKs (in local and server side mode)"
         ),
+        db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
     )
     hide_sensitive_data = models.BooleanField(
         default=False,
@@ -334,7 +335,7 @@ class Environment(
         api_key: str,
     ) -> dict[str, typing.Any]:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return map_environment_to_document(environment)
+        return map_environment_to_environment_document(environment)
 
     def _get_environment(self):
         return self

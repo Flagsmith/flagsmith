@@ -550,7 +550,7 @@ def test_get_feature_state_value_for_multivariate_features(
     mock_mv_feature_state_value = mock.MagicMock(value=value)
     mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
 
-    environment.use_mv_v2_evaluation = False
+    environment.use_identity_composite_key_for_hashing = False
     environment.save()
 
     feature_state = FeatureState.objects.get(
