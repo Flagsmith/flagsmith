@@ -403,12 +403,13 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "uuid",
             "created_at",
             "updated_at",
-            "version",
             "live_from",
             "environment",
             "identity",
             "change_request",
         )
+
+        read_only_fields = tuple(fields)
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)
