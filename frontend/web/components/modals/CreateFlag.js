@@ -840,7 +840,7 @@ const CreateFlag = class extends Component {
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
                         return (
-                          <div className='px-3' id='create-feature-modal'>
+                          <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <Tabs
                                 value={this.state.tab}
