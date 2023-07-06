@@ -485,14 +485,15 @@ class FeatureState(
             # further in the future can be lower than a feature state
             # whose live_from value is earlier.
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            return (
-                self.is_live
-                and (not other.is_live or self.is_more_recent_live_from(other))
-                or (
-                    self.live_from == other.live_from
-                    and self._is_more_recent_version(other)
-                )
-            )
+            if self.is_live:
+                if not other.is_live or self.is_more_recent_live_from(other):
+                    return True
+                elif self.live_from == other.live_from and self._is_more_recent_version(
+                    other
+                ):
+                    return True
+
+            return False
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
