@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
-from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -60,6 +60,9 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         Override queryset to filter based on the parent identity.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return Trait.objects.none()
+
         return Trait.objects.filter(identity=self.identity)
 
     def get_permissions(self):
