@@ -105,13 +105,13 @@ $side-width: 66%;
             .tab-item {
                 margin-top: 16px;
                 overflow-y: auto;
-                height: calc(100vh - 100px);
+                height: calc(100vh - 110px);
             }
         }
         .create-feature-tab {
             margin-top: 16px;
             overflow-y: auto;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 80px);
         }
     }
 
@@ -158,6 +158,7 @@ $side-width: 66%;
 .modal-open {
     position: relative;
     padding-right: 0 !important;
+    overflow: hidden;
 }
 
 .modal.modal-confirm {
