@@ -21,7 +21,10 @@ const Tabs = class extends React.Component {
           this.props.transparent ? 'tabs--transparent' : ''
         } ${this.props.inline ? 'tabs--inline' : ''}`}
       >
-        <div className='tabs-nav' style={isMobile ? { flexWrap: 'wrap' } : {}}>
+        <div
+          className='tabs-nav mx-3'
+          style={isMobile ? { flexWrap: 'wrap' } : {}}
+        >
           {children.map((child, i) => {
             const isSelected = value == i
             if (!child) {
@@ -63,14 +66,14 @@ const Tabs = class extends React.Component {
             }}
           />
         </div>
-        <ModalHR />
+        <ModalHR className='mx-3' />
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item px-3${isSelected ? ' tab-active' : ''}`}
               >
                 {child}
               </div>

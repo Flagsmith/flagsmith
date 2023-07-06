@@ -196,7 +196,7 @@ const CreateGroup = class extends Component {
                     this.save()
                   }}
                 >
-                  <FormGroup className='mb-4 mr-3 ml-3'>
+                  <FormGroup className='my-4 mx-3'>
                     <InputGroup
                       title='Group name*'
                       ref={(e) => (this.input = e)}

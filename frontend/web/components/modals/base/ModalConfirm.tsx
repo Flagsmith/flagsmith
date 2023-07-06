@@ -41,7 +41,7 @@ const Confirm: FC<Confirm> = ({
 
   return (
     <Modal
-      className='modal-dialog-centered'
+      className='modal-dialog-centered modal-sm'
       unmountOnClose
       isOpen={isOpen}
       toggle={no}
