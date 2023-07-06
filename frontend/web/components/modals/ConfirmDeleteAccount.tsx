@@ -6,6 +6,7 @@ import { useDeleteAccountMutation } from 'common/services/useAccount'
 import InputGroup from 'components/base/forms/InputGroup'
 import ModalHR from './ModalHR'
 import AppActions from 'common/dispatcher/app-actions'
+import ErrorMessage from 'components/ErrorMessage'
 
 type ConfirmDeleteAccountType = {
   lastUserOrganisations: Organisation[]
@@ -78,10 +79,10 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
             name='password'
           />
           {isError && (
-            <div className='alert alert-danger'>
-              Error deleting your account, please ensure you have entered your
-              current password.
-            </div>
+            <ErrorMessage
+              error='Error deleting your account, please ensure you have entered your
+              current password.'
+            />
           )}
         </div>
         <ModalHR />

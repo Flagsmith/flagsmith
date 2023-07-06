@@ -2,6 +2,7 @@ import React from 'react'
 import VariationValue from './VariationValue'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'
+import ErrorMessage from 'components/ErrorMessage'
 
 export default function VariationOptions({
   controlValue,
@@ -27,9 +28,7 @@ export default function VariationOptions({
   return (
     <>
       {invalid && (
-        <div className='alert alert-danger'>
-          Your variation percentage splits total to over 100%
-        </div>
+        <ErrorMessage error='Your variation percentage splits total to over 100%' />
       )}
       {!preventRemove && (
         <p>

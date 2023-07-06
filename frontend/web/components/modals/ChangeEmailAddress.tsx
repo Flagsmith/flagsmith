@@ -6,6 +6,7 @@ import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
+import ErrorMessage from 'components/ErrorMessage'
 
 type ChangeEmailAddressType = {
   onComplete?: () => void
@@ -87,11 +88,13 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
               name='password'
             />
             {isError && (
-              <div className='alert alert-danger'>
-                {updateError.data.current_password
-                  ? updateError.data.current_password[0]
-                  : 'An error occurred attempting to update your email address. Please verify that the email address you have provided is not already being used.'}
-              </div>
+              <ErrorMessage
+                error={
+                  updateError.data.current_password
+                    ? updateError.data.current_password[0]
+                    : 'An error occurred attempting to update your email address. Please verify that the email address you have provided is not already being used.'
+                }
+              />
             )}
           </div>
           <ModalHR />

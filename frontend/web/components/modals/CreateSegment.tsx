@@ -33,6 +33,7 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
 
 type PageType = {
   number: number
@@ -389,10 +390,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       </div>
 
       {isError && (
-        <div className='alert alert-danger'>
-          Error creating segment, please ensure you have entered a trait and
-          value for each rule.
-        </div>
+        <ErrorMessage
+          error='Error creating segment, please ensure you have entered a trait and
+          value for each rule.'
+        />
       )}
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (

@@ -9,6 +9,7 @@ import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
+import ErrorMessage from 'components/ErrorMessage'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -362,13 +363,14 @@ const HomePage = class extends React.Component {
                                     </div>
                                   </fieldset>
                                   {error && (
-                                    <div
-                                      id='error-alert'
-                                      className='alert mt-3 alert-danger'
-                                    >
-                                      {typeof AccountStore.error === 'string'
-                                        ? AccountStore.error
-                                        : 'Please check your details and try again'}
+                                    <div id='error-alert' className='mt-3'>
+                                      <ErrorMessage
+                                        error={
+                                          typeof AccountStore.error === 'string'
+                                            ? AccountStore.error
+                                            : 'Please check your details and try again'
+                                        }
+                                      />
                                     </div>
                                   )}
                                 </form>
@@ -455,13 +457,14 @@ const HomePage = class extends React.Component {
                           >
                             {error && (
                               <FormGroup>
-                                <div
-                                  id='error-alert'
-                                  className='alert alert-danger'
-                                >
-                                  {typeof AccountStore.error === 'string'
-                                    ? AccountStore.error
-                                    : 'Please check your details and try again'}
+                                <div id='error-alert'>
+                                  <ErrorMessage
+                                    error={
+                                      typeof AccountStore.error === 'string'
+                                        ? AccountStore.error
+                                        : 'Please check your details and try again'
+                                    }
+                                  />
                                 </div>
                               </FormGroup>
                             )}

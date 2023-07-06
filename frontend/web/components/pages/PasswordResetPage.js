@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
+import ErrorMessage from 'components/ErrorMessage'
 
 const PasswordResetPage = class extends Component {
   static contextTypes = {
@@ -95,10 +96,10 @@ const PasswordResetPage = class extends Component {
                 {error ? (
                   <div>
                     <h3 className='pt-5'>Oops</h3>
-                    <p className='alert alert-danger'>
-                      We could not reset your password with the details
-                      provided, please try again.
-                    </p>
+                    <ErrorMessage
+                      error='We could not reset your password with the details
+                      provided, please try again.'
+                    ></ErrorMessage>
                   </div>
                 ) : (
                   <div />
