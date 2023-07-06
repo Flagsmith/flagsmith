@@ -5,8 +5,8 @@ import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import AuditLog from 'components/AuditLog'
+import ProjectProvider from "common/providers/ProjectProvider";
 
-const ProjectProvider = require('common/providers/ProjectProvider')
 
 type AuditLogType = {
   router: RouterChildContext['router']
