@@ -8,7 +8,7 @@ export default class InfoMessage extends PureComponent {
   render() {
     return (
       <div className='alert alert-info flex-1'>
-        <span className='icon-info'>
+        <span className='icon-alert'>
           <Icon name='info' />
         </span>
         <div>

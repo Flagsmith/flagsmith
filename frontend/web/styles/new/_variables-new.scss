@@ -15,6 +15,7 @@ $text-icon-grey: rgba(101, 109, 123, 1);
 $text-icon-light: #ffffff;
 $link-color: $primary;
 $info-alfa-8: rgba(10, 173, 223, 0.08);
+$danger-alfa-8: rgba(255, 66, 75, 0.08);
 $basic-alpha-8: rgba(101, 109, 123, 0.08);
 $basic-alpha-16: rgba(101, 109, 123, 0.16);
 $basic-alpha-24: rgba(101, 109, 123, 0.24);
@@ -37,7 +38,6 @@ $bg-dark200: #202839;
 $bg-dark100: rgba(45, 52, 67, 1);
 $bg-dark300: #121827;
 $bg-dark500: rgba(15, 20, 37, 1);
-
 
 //Body
 $body-text: $text-icon-dark;
@@ -95,7 +95,6 @@ $tab-inactive-background-dark: $bg-dark100;
 $tab-line-color: $primary;
 $tab-line-color-dark: $primary;
 
-
 //HR
 $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
@@ -112,14 +111,14 @@ $modal-md: 620px;
 $modal-lg: 900px;
 $modal-bg-dark: $bg-dark100;
 $modal-border-radius: 18px;
-$modal-footer-border-width:0;
+$modal-footer-border-width: 0;
 $modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
-$modal-header-padding-x: $spacer*1.5;
+$modal-header-padding-x: $spacer * 1.5;
 $modal-header-padding-y: $spacer;
-$modal-header-border-width:0;
-$modal-body-padding-y: $spacer*1.5;
-$modal-body-padding-x: $spacer*1.5;
-$modal-footer-margin-between:0;
+$modal-header-border-width: 0;
+$modal-body-padding-y: $spacer * 1.5;
+$modal-body-padding-x: $spacer * 1.5;
+$modal-footer-margin-between: 0;
 
 //Breakpoints
 $grid-breakpoints: (
@@ -204,8 +203,8 @@ $input-placeholder-color-dark: $text-icon-light-grey;
 $switch-height: 24px;
 $switch-width: 41px;
 $switch-border-radius: 100px;
-$switch-bg: $basic-alpha-48;
-$switch-bg-dark: $white-alpha-16;
+$switch-bg: $basic-alpha-24;
+$switch-bg-dark: $white-alpha-24;
 $switch-hover-bg: $basic-alpha-48;
 $switch-hover-bg-dark: $white-alpha-48;
 $switch-disabled-bg: $basic-alpha-32;
@@ -229,9 +228,11 @@ $checkbox-focus-border-color: $primary400;
 $checkbox-hover-border-color: $primary;
 $checkbox-checked-hover-border-color: $primary600;
 
-//Info
-$alert-bg: $info-alfa-8;
-$alert-border-color: $info;
+//Alert
+$alert-info-bg: $info-alfa-8;
+$alert-info-border-color: $info;
+$alert-danger-bg: $danger-alfa-8;
+$alert-danger-border-color: $danger;
 $alert-color: $text-icon-grey;
 $alert-font-size: $font-sm;
-$alert-line-height:$line-height-sm
+$alert-line-height: $line-height-sm;
