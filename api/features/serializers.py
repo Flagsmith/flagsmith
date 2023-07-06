@@ -415,7 +415,6 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "uuid",
             "created_at",
             "updated_at",
-            "version",
             "live_from",
             "environment",
             "identity",
