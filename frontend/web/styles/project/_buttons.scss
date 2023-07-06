@@ -71,8 +71,16 @@ button.btn {
     }
 
     &-danger {
-      border-color: $alert-danger-bg !important;
-      color: $alert-danger-bg !important;
+      border-color: $alert-danger-border-color !important;
+      color: $danger !important;
+      &:hover,
+      &:focus {
+        background-color: $danger-alfa-8;
+      }
+      &.btn:active {
+        background-color: $danger-alfa-16;
+
+      }
     }
   }
 
