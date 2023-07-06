@@ -488,8 +488,10 @@ class FeatureState(
             return (
                 self.is_live
                 and (not other.is_live or self.is_more_recent_live_from(other))
-                or self.live_from == other.live_from
-                and self._is_more_recent_version(other)
+                or (
+                    self.live_from == other.live_from
+                    and self._is_more_recent_version(other)
+                )
             )
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
@@ -781,15 +783,7 @@ class FeatureState(
                 feature_state.identity_id,
             )
             current_feature_state = feature_states_dict.get(key)
-            # we use live_from here as a priority over the version since
-            # the version is given when change requests are committed,
-            # hence the version for a feature state that is scheduled
-            # further in the future can be lower than a feature state
-            # whose live_from value is earlier.
-            # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            if not current_feature_state or feature_state.is_more_recent_live_from(
-                current_feature_state
-            ):
+            if not current_feature_state or feature_state > current_feature_state:
                 feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
