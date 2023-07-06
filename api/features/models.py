@@ -485,10 +485,11 @@ class FeatureState(
             # further in the future can be lower than a feature state
             # whose live_from value is earlier.
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            is_more_recent_live_from = self.is_more_recent_live_from(other)
-            is_more_recent_version = self._is_more_recent_version(other)
-            return self.version is not None and (
-                is_more_recent_live_from or is_more_recent_version
+            return (
+                self.is_live
+                and (not other.is_live or self.is_more_recent_live_from(other))
+                or self.live_from == other.live_from
+                and self._is_more_recent_version(other)
             )
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
@@ -685,12 +686,12 @@ class FeatureState(
             )
 
     @hook(BEFORE_CREATE)
-    def set_live_from_for_version_1(self):
+    def set_live_from(self):
         """
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
-        if self.version == 1 and not self.live_from:
+        if self.version is not None and self.live_from is None:
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
