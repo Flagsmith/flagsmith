@@ -294,6 +294,13 @@ def test_map_environment_to_engine__return_expected(
         environment=environment,
         version=None,
     )
+    # create a non-live feature state to verify it is NOT added to
+    # the environment document
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        version=None,
+    )
     different_environment_segment_feature_state = FeatureState.objects.create(
         feature_segment=FeatureSegment.objects.create(
             feature=feature,
@@ -394,7 +401,11 @@ def test_map_environment_to_engine__return_expected(
     ]
 
     # Then
+    assert len(result.feature_states) == 1
+    assert result.feature_states[0].django_id == feature_state.id
+
     assert result == expected_result
+
     assert (
         different_environment_segment_feature_state.uuid
         not in segment_feature_state_uuids

@@ -452,7 +452,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   )
 
   return (
-    <div>
+    <div className='mx-3'>
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem tabLabel='Rules'>

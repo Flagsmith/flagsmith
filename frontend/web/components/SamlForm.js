@@ -2,6 +2,7 @@ import React from 'react'
 import data from 'common/data/base/_data'
 import ErrorMessage from './ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Icon from './Icon'
 
 const SamlForm = class extends React.Component {
   static displayName = 'SamlForm'
@@ -65,11 +66,13 @@ const SamlForm = class extends React.Component {
               this.setState({ remember })
             }}
             id='organisation'
-            className='mr-2'
             type='checkbox'
             checked={this.state.remember}
           />
           <label className='mb-0' htmlFor='organisation'>
+            <span className='checkbox mr-2'>
+              {this.state.remember && <Icon name='checkmark' />}
+            </span>
             Remember this SAML organisation
           </label>
         </Row>
