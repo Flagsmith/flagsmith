@@ -23,17 +23,25 @@
   }
 }
 
-.alert-info {
+.alert {
   border-radius: $border-radius-lg;
   line-height: $alert-line-height;
-  background-color: $alert-bg;
   color: $alert-color;
-  border-color: $alert-border-color;
   font-size: $alert-font-size;
   text-align: left;
-  .icon-info {
+  .icon-alert {
     margin-right: 0.75rem;
   }
+}
+
+.alert-danger {
+  background-color: $alert-danger-bg;
+  border-color: $alert-danger-border-color;
+}
+
+.alert-info {
+  background-color: $alert-info-bg;
+  border-color: $alert-info-border-color;
   .title {
     font-weight: 500;
     margin-bottom: 2px;
