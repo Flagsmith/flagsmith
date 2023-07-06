@@ -8,9 +8,9 @@ app_name = "deprecated"
 
 urlpatterns = [
     url(
-        r"^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)",
+        r"^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)$",
         SDKTraitsDeprecated.as_view(),
     ),
     url(r"^identities/(?P<identifier>[-\w@%.]+)/", SDKIdentitiesDeprecated.as_view()),
-    url(r"^flags/(?P<identifier>[-\w@%.]+)", SDKFeatureStates.as_view()),
+    url(r"^flags/(?P<identifier>[-\w@%.]+)$", SDKFeatureStates.as_view()),
 ]

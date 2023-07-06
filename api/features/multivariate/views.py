@@ -1,5 +1,5 @@
 from core.permissions import HasMasterAPIKey
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import get_object_or_404
@@ -43,6 +43,9 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
         ]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return MultivariateFeatureOption.objects.none()
+
         feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
         return feature.multivariate_options.all()
 

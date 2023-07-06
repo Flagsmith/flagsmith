@@ -21,6 +21,9 @@ class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserEnvironmentPermission.objects.none()
+
         if not self.kwargs.get("environment_api_key"):
             raise ValidationError("Missing environment key.")
 
@@ -52,6 +55,9 @@ class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserPermissionGroupEnvironmentPermission.objects.none()
+
         if not self.kwargs.get("environment_api_key"):
             raise ValidationError("Missing environment key.")
 

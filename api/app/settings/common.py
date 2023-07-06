@@ -123,7 +123,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg2",
+    "drf_yasg",
     "audit",
     "permissions",
     "projects.tags",

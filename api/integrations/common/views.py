@@ -15,6 +15,9 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
     model_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
         environment_api_key = self.kwargs["environment_api_key"]
 
         try:

@@ -2,8 +2,8 @@ import base64
 import json
 from collections import OrderedDict
 
-from drf_yasg2 import openapi
-from drf_yasg2.inspectors import PaginatorInspector
+from drf_yasg import openapi
+from drf_yasg.inspectors import PaginatorInspector
 from flag_engine.identities.builders import build_identity_model
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
