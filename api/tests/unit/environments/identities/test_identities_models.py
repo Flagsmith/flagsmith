@@ -31,15 +31,15 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     feature_state_v2.feature_state_value.save()
 
     # and one which isn't
-    feature_state_v3 = FeatureState.objects.create(
+    not_live_feature_state = FeatureState.objects.create(
         feature=feature,
-        version=3,
+        version=None,
         live_from=None,
         enabled=False,
         environment=environment,
     )
-    feature_state_v3.feature_state_value.string_value = "v3"
-    feature_state_v3.feature_state_value.save()
+    not_live_feature_state.feature_state_value.string_value = "v3"
+    not_live_feature_state.feature_state_value.save()
 
     # When
     identity_feature_states = identity.get_all_feature_states()

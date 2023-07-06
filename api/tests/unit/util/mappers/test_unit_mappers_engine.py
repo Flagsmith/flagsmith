@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
+import pytz
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -481,3 +482,48 @@ def test_map_identity_to_engine__return_expected(
 
     # Then
     assert result == expected_result
+
+
+def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(
+    feature, environment
+):
+    # Given
+    v1_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment
+    )
+
+    # Let's simulate an issue that we saw in production where 2 change requests operated on the same
+    # feature. One had a live_from of '2023-03-06 06:00:00.000 +0000' and a version of 16 and the
+    # other had a live_from of '2023-03-12 06:00:00.000 +0000' of 15. Based on the logic in
+    # FeatureState.__gt__(), I would expect that the feature state with the most recent live from,
+    # regardless of the fact that it's a lower version would be returned in the mapper.
+    v16_feature_state = FeatureState.objects.create(  # noqa
+        feature=feature,
+        environment=environment,
+        live_from=datetime.fromisoformat("2023-03-06 06:00:00.000").replace(
+            tzinfo=pytz.UTC
+        ),
+        version=16,
+    )
+    v15_feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        live_from=datetime.fromisoformat("2023-03-12 06:00:00.000").replace(
+            tzinfo=pytz.UTC
+        ),
+        version=15,
+    )
+
+    # we also need to make sure that the live_from value of the v1 feature state is earlier than
+    # the 2 we have set up for our simulation above.
+    v1_feature_state.live_from = datetime.fromisoformat(
+        "2023-03-01 06:00:00.000"
+    ).replace(tzinfo=pytz.UTC)
+    v1_feature_state.save()
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert len(result.feature_states) == 1
+    assert result.feature_states[0].django_id == v15_feature_state.id
