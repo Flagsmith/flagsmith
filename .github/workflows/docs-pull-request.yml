@@ -28,7 +28,8 @@ jobs:
 
       - name: npm install
         run: npm ci --include=dev --ignore-scripts
-      - name: Run docusuarus build to check for broken links etc
+      - name: Run docusaurus build to check for broken links etc
         run: |
+          npx prettier --version
           npx prettier --check docs
           npm run build
