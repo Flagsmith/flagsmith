@@ -1,7 +1,7 @@
 from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
 from djoser.views import UserViewSet
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes

@@ -3,15 +3,16 @@ import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import { Organisation } from 'common/types/responses'
 import { useDeleteAccountMutation } from 'common/services/useAccount'
+import InputGroup from 'components/base/forms/InputGroup'
+import ModalHR from './ModalHR'
+import AppActions from 'common/dispatcher/app-actions'
+import ErrorMessage from 'components/ErrorMessage'
 
 type ConfirmDeleteAccountType = {
-  lastUserOrganisations: Array<object>
-  userId: number
+  lastUserOrganisations: Organisation[]
 }
-
 const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
   lastUserOrganisations,
-  userId,
 }) => {
   const [password, setPassword] = useState<string>('')
   const [deleteUserAccount, { isError, isSuccess: updateSuccess }] =
@@ -59,33 +60,40 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
           })
         }}
       >
-        <FormGroup>
-          <ModalBody lastUserOrganisations={lastUserOrganisations} />
-        </FormGroup>
-        <InputGroup
-          title='Confirm Password'
-          inputProps={{
-            className: 'full-width',
-            name: 'currentPassword',
-          }}
-          value={password}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setPassword(Utils.safeParseEventValue(event))
-          }}
-          type='password'
-          name='password'
-        />
-        {isError && (
-          <div className='alert alert-danger'>
-            Error deleting your account, please ensure you have entered your
-            current password.
-          </div>
-        )}
-        <FormGroup className='text-right'>
-          <Button id='delete-account' data-test='delete-account'>
+        <div className='modal-body'>
+          <FormGroup>
+            <ModalBody lastUserOrganisations={lastUserOrganisations} />
+          </FormGroup>
+          <InputGroup
+            title='Confirm Password'
+            className='mb-0'
+            inputProps={{
+              className: 'full-width',
+              name: 'currentPassword',
+            }}
+            value={password}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setPassword(Utils.safeParseEventValue(event))
+            }}
+            type='password'
+            name='password'
+          />
+          {isError && (
+            <ErrorMessage
+              error='Error deleting your account, please ensure you have entered your
+              current password.'
+            />
+          )}
+        </div>
+        <ModalHR />
+        <div className='modal-footer'>
+          <Button theme='secondary' className='mr-2' onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button type='submit' id='delete-account' data-test='delete-account'>
             Delete
           </Button>
-        </FormGroup>
+        </div>
       </form>
     </div>
   )

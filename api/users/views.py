@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -149,6 +149,9 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserPermissionGroup.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -175,7 +178,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.detail is True:
+        if not getattr(self, "swagger_fake_view", False) and self.detail is True:
             with suppress(ValueError):
                 context["group_admins"] = UserPermissionGroupMembership.objects.filter(
                     userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True

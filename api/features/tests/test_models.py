@@ -448,7 +448,7 @@ class FeatureStateTest(TestCase):
         FeatureState.objects.create(
             feature=self.feature,
             enabled=False,
-            version=3,
+            version=None,
             environment=self.environment,
         )
 

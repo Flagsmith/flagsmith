@@ -179,6 +179,7 @@ const CreateEnvironmentPage = class extends Component {
                                 <Button
                                   id='create-env-btn'
                                   className='mt-3'
+                                  type='submit'
                                   disabled={isSaving || !name}
                                 >
                                   {isSaving ? 'Creating' : 'Create Environment'}
@@ -189,6 +190,7 @@ const CreateEnvironmentPage = class extends Component {
                                   title={
                                     <Button
                                       id='create-env-btn'
+                                      type='submit'
                                       disabled={isSaving || !name}
                                     >
                                       Create Environment

@@ -138,8 +138,9 @@
     color: $nav-link-color-active;
   }
   .nav-link-featured {
+    height: $switch-dark-mode-height;
     border-radius: $btn-border-radius;
-    background-color: $bt-brand-faint-alt;
+    background-color: $switch-dark-mode-bg;
     &:hover {
       background-color: $bt-brand-faint-hover;
     }
