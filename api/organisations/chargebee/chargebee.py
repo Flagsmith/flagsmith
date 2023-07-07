@@ -5,7 +5,6 @@ from datetime import datetime
 
 import chargebee
 from chargebee import APIError as ChargebeeAPIError
-from django.conf import settings
 from pytz import UTC
 
 from ..subscriptions.constants import CHARGEBEE
@@ -17,7 +16,9 @@ from .cache import ChargebeeCache
 from .constants import ADDITIONAL_SEAT_ADDON_ID
 from .metadata import ChargebeeObjMetadata
 
-chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
+# chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
+
+chargebee.configure("test_7Ft34dTBFieUg8nPJ1MIc0bqHBW1vrqu", "flagsmith-test")
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,23 @@ def get_hosted_page_url_for_subscription_upgrade(
 
 
 def get_subscription_metadata(
+    chargebee_subscription,
+    customer_email: str,
+):
+    addons = chargebee_subscription.get("addons") or []
+    chargebee_cache = ChargebeeCache()
+    subscription_metadata = chargebee_cache.plans[chargebee_subscription.get("plan_id")]
+    subscription_metadata.chargebee_email = customer_email
+
+    for addon in addons:
+        quantity = getattr(addon, "quantity", None) or 1
+        addon_metadata = chargebee_cache.addons[addon.get("id")] * quantity
+        subscription_metadata = subscription_metadata + addon_metadata
+
+    return subscription_metadata
+
+
+def get_subscription_metadata_from_id(
     subscription_id: str,
 ) -> typing.Optional[ChargebeeObjMetadata]:
     if not (subscription_id and subscription_id.strip() != ""):
@@ -112,36 +130,11 @@ def get_subscription_metadata(
 
     with suppress(ChargebeeAPIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
-        subscription = chargebee_result.subscription
-        addons = subscription.addons or []
-
-        chargebee_cache = ChargebeeCache()
-        plan_metadata = chargebee_cache.plans[subscription.plan_id]
-        subscription_metadata = plan_metadata
-        subscription_metadata.chargebee_email = chargebee_result.customer.email
-
-        for addon in addons:
-            quantity = getattr(addon, "quantity", None) or 1
-            addon_metadata = chargebee_cache.addons[addon.id] * quantity
-            subscription_metadata = subscription_metadata + addon_metadata
-
-        return subscription_metadata
-
-
-def get_max_seats_and_max_api_calls(
-    suscription_data,
-) -> typing.Optional[ChargebeeObjMetadata]:
-    if not (suscription_data.get("id") and suscription_data.get("id").strip() != ""):
-        logger.warning("Subscription id is empty or None")
-        return None
-
-    with suppress(ChargebeeAPIError):
-        plan_metadata = get_plan_meta_data(suscription_data.get("plan_id"))
-        subscription_metadata = plan_metadata
-        return {
-            "max_seats": get_max_seats_for_plan(subscription_metadata),
-            "max_api_calls": get_max_api_calls_for_plan(subscription_metadata),
-        }
+        subscription: chargebee.Subscription = chargebee.Subscription(
+            values=chargebee_result.subscription
+        )
+        customer = chargebee.Customer(values=chargebee_result.customer)
+        return get_subscription_metadata(subscription, customer.email)
 
 
 def cancel_subscription(subscription_id: str):

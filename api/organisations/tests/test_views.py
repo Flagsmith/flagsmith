@@ -566,6 +566,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription_id = "subscription-id"
         self.old_plan_id = "old-plan-id"
         self.old_max_seats = 1
+        self.plan = "startup"
 
         Subscription.objects.filter(organisation=self.organisation).update(
             organisation=self.organisation,
@@ -580,7 +581,6 @@ class ChargeBeeWebhookTestCase(TestCase):
         self, mock_get_plan_meta_data
     ):
         # Given
-        new_plan_id = "new-plan-id"
         new_max_seats = 3
         new_max_api_calls = 100
         mock_get_plan_meta_data.return_value = {
@@ -593,8 +593,9 @@ class ChargeBeeWebhookTestCase(TestCase):
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
-                    "plan_id": new_plan_id,
-                }
+                    "plan_id": self.plan,
+                },
+                "customer": {"email": self.cb_user.email},
             }
         }
 
@@ -608,7 +609,7 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # and
         self.subscription.refresh_from_db()
-        assert self.subscription.plan == new_plan_id
+        assert self.subscription.plan == self.plan
         assert self.subscription.max_seats == new_max_seats
         assert self.subscription.max_api_calls == new_max_api_calls
 
@@ -624,7 +625,9 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "status": "non_renewing",
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
-                }
+                    "plan_id": self.plan,
+                },
+                "customer": {"email": self.cb_user.email},
             }
         }
 
@@ -652,7 +655,9 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "status": "cancelled",
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
-                }
+                    "plan_id": self.plan,
+                },
+                "customer": {"email": self.cb_user.email},
             }
         }
 
@@ -681,7 +686,9 @@ class ChargeBeeWebhookTestCase(TestCase):
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
-                }
+                    "plan_id": self.plan,
+                },
+                "customer": {"email": self.cb_user.email},
             }
         }
 
@@ -702,7 +709,10 @@ class ChargeBeeWebhookTestCase(TestCase):
     ):
         # Given
         data = {
-            "content": {"subscription": {"status": "active", "id": "some-random-id"}}
+            "content": {
+                "subscription": {"status": "active", "id": "some-random-id"},
+                "customer": {"email": self.cb_user.email},
+            }
         }
 
         # When

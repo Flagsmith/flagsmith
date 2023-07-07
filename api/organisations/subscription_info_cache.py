@@ -4,7 +4,7 @@ from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
 from django.utils import timezone
 
-from .chargebee import get_subscription_metadata
+from .chargebee import get_subscription_metadata_from_id
 from .models import Organisation, OrganisationSubscriptionInformationCache
 from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
 
@@ -13,7 +13,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches(update_cache_entity: SubscriptionCacheEntity):
+def update_caches(update_cache_entity: typing.Tuple[SubscriptionCacheEntity, ...]):
     """
     Update the cache objects for an update_cache_entity in the database.
     """
@@ -30,13 +30,11 @@ def update_caches(update_cache_entity: SubscriptionCacheEntity):
         for org in organisations
     }
 
-    if update_cache_entity.value == "INFLUX":
+    if SubscriptionCacheEntity.INFLUX in update_cache_entity:
         _update_caches_with_influx_data(organisation_info_cache_dict)
-    elif update_cache_entity.value == "CHARGEBEE":
+
+    if SubscriptionCacheEntity.CHARGEBEE in update_cache_entity:
         _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
-    elif update_cache_entity.value == "INFLUX_AND_CHARGEBEE":
-        _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
-        _update_caches_with_influx_data(organisation_info_cache_dict)
 
     to_update = []
     to_create = []
@@ -104,7 +102,7 @@ def _update_caches_with_chargebee_data(
         ):
             continue
 
-        metadata = get_subscription_metadata(subscription.subscription_id)
+        metadata = get_subscription_metadata_from_id(subscription.subscription_id)
         if not metadata:
             continue
 

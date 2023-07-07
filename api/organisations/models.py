@@ -209,6 +209,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
+            # Getting the data from the subscription information cache because
+            # data is guaranteed to be up to date by using a Chargebee webhook.
             metadata = ChargebeeObjMetadata(
                 seats=self.organisation.subscription_information_cache.allowed_seats,
                 api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,

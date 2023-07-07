@@ -1,5 +1,5 @@
 from organisations.chargebee import (
-    get_subscription_metadata as get_chargebee_subscription_metadata,
+    get_subscription_metadata_from_id as get_chargebee_subscription_metadata,
 )
 from organisations.models import Organisation
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata

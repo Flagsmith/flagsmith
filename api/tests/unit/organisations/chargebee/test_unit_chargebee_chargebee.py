@@ -6,6 +6,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from chargebee import APIError
 from pytz import UTC
 
+# get_subscription_metadata,
 from organisations.chargebee import (
     add_single_seat,
     get_customer_id_from_subscription_id,
@@ -15,7 +16,7 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
-    get_subscription_metadata,
+    get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import cancel_subscription
 from organisations.chargebee.constants import ADDITIONAL_SEAT_ADDON_ID
@@ -261,7 +262,9 @@ class ChargeBeeTestCase(TestCase):
 
 
 @pytest.mark.parametrize("addon_quantity", (None, 1))
-def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
+def test_get_subscription_metadata_from_id(
+    mocker, chargebee_object_metadata, addon_quantity
+):
     # Given
     plan_id = "plan-id"
     addon_id = "addon-id"
@@ -288,7 +291,7 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
     mocked_chargebee_cache.return_value.addons = {addon_id: chargebee_object_metadata}
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
@@ -341,7 +344,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
     )
 
 
-def test_get_subscription_metadata_returns_null_if_chargebee_error(
+def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(
     mocker, chargebee_object_metadata
 ):
     # Given
@@ -353,7 +356,7 @@ def test_get_subscription_metadata_returns_null_if_chargebee_error(
     subscription_id = "foo"  # arbitrary subscription id
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
     assert subscription_metadata is None
@@ -363,14 +366,14 @@ def test_get_subscription_metadata_returns_null_if_chargebee_error(
     "subscription_id",
     [None, "", " "],
 )
-def test_get_subscription_metadata_returns_none_for_invalid_subscription_id(
+def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(
     mocker, chargebee_object_metadata, subscription_id
 ):
     # Given
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
     mocked_chargebee.Subscription.retrieve.assert_not_called()

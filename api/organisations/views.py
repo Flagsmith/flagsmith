@@ -45,10 +45,6 @@ from organisations.serializers import (
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
-from organisations.subscriptions.constants import (
-    MAX_API_CALLS_IN_FREE_PLAN,
-    MAX_SEATS_IN_FREE_PLAN,
-)
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -58,7 +54,7 @@ from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
-from .chargebee import get_max_seats_and_max_api_calls
+from .chargebee import get_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -275,6 +271,7 @@ def chargebee_webhook(request):
 
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data = request.data["content"]["subscription"]
+        customer_email = request.data["content"]["customer"]["email"]
 
         try:
             existing_subscription = Subscription.objects.get(
@@ -287,22 +284,20 @@ def chargebee_webhook(request):
             )
             logger.error(error_message)
             return Response(status=status.HTTP_200_OK)
-        metadata = get_max_seats_and_max_api_calls(subscription_data)
+        subscription_metadata = get_subscription_metadata(
+            subscription_data, customer_email
+        )
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
             OrganisationSubscriptionInformationCache.objects.update_or_create(
-                organisation_id=existing_subscription.id,
+                organisation_id=existing_subscription.organisation_id,
                 defaults={
                     "updated_at": timezone.now(),
-                    "allowed_30d_api_calls": metadata.get("max_api_calls")
-                    if metadata is not None
-                    else MAX_API_CALLS_IN_FREE_PLAN,
-                    "allowed_seats": metadata.get("max_seats")
-                    if metadata is not None
-                    else MAX_SEATS_IN_FREE_PLAN,
-                    "organisation_id": existing_subscription.id,
+                    "allowed_30d_api_calls": subscription_metadata.api_calls,
+                    "allowed_seats": subscription_metadata.seats,
+                    "organisation_id": existing_subscription.organisation_id,
                 },
             )
 

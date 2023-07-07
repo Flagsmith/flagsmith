@@ -20,12 +20,16 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
 
     chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
     mocked_get_subscription_metadata = mocker.patch(
-        "organisations.subscription_info_cache.get_subscription_metadata"
+        "organisations.subscription_info_cache.get_subscription_metadata_from_id"
     )
     mocked_get_subscription_metadata.return_value = chargebee_metadata
 
     # When
-    update_caches(SubscriptionCacheEntity.INFLUX_AND_CHARGEBEE)
+    subscription_cache_entities = (
+        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.CHARGEBEE,
+    )
+    update_caches(subscription_cache_entities)
 
     # Then
     assert organisation.subscription_information_cache.updated_at

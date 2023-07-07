@@ -29,4 +29,3 @@ FREE_PLAN_ID = "free"
 class SubscriptionCacheEntity(Enum):
     INFLUX = "INFLUX"
     CHARGEBEE = "CHARGEBEE"
-    INFLUX_AND_CHARGEBEE = "INFLUX_AND_CHARGEBEE"

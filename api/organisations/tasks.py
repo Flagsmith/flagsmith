@@ -33,9 +33,11 @@ def send_org_over_limit_alert(organisation_id):
 
 @register_task_handler()
 def update_organisation_subscription_information_influx_caches():
-    subscription_info_cache.update_caches(SubscriptionCacheEntity.INFLUX)
+    influx_cache = (SubscriptionCacheEntity.INFLUX,)
+    subscription_info_cache.update_caches(influx_cache)
 
 
 @register_task_handler()
 def update_organisation_subscription_information_chargebee_caches():
-    subscription_info_cache.update_caches(SubscriptionCacheEntity.CHARGEBEE)
+    chargebee_cache = (SubscriptionCacheEntity.CHARGEBEE,)
+    subscription_info_cache.update_caches(chargebee_cache)
