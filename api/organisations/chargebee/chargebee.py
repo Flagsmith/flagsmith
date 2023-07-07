@@ -5,6 +5,7 @@ from datetime import datetime
 
 import chargebee
 from chargebee import APIError as ChargebeeAPIError
+from django.conf import settings
 from pytz import UTC
 
 from ..subscriptions.constants import CHARGEBEE
@@ -16,9 +17,7 @@ from .cache import ChargebeeCache
 from .constants import ADDITIONAL_SEAT_ADDON_ID
 from .metadata import ChargebeeObjMetadata
 
-# chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
-
-chargebee.configure("test_7Ft34dTBFieUg8nPJ1MIc0bqHBW1vrqu", "flagsmith-test")
+chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 logger = logging.getLogger(__name__)
 
@@ -104,18 +103,41 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
+class DictToClass(object):
+    def __init__(self, my_dict):
+        for key, value in my_dict.items():
+            if isinstance(value, dict):
+                setattr(self, key, DictToClass(value))
+            elif isinstance(value, list):
+                setattr(
+                    self,
+                    key,
+                    [
+                        DictToClass(item) if isinstance(item, dict) else item
+                        for item in value
+                    ],
+                )
+            else:
+                setattr(self, key, value)
+
+
 def get_subscription_metadata(
-    chargebee_subscription,
+    chargebee_subscription_dict: typing.Union[dict, chargebee.Subscription],
     customer_email: str,
 ):
-    addons = chargebee_subscription.get("addons") or []
+    if isinstance(chargebee_subscription_dict, dict):
+        chargebee_subscription = DictToClass(chargebee_subscription_dict)
+    else:
+        chargebee_subscription = chargebee_subscription_dict
+
+    addons = chargebee_subscription.addons or []
     chargebee_cache = ChargebeeCache()
-    subscription_metadata = chargebee_cache.plans[chargebee_subscription.get("plan_id")]
+    subscription_metadata = chargebee_cache.plans[chargebee_subscription.plan_id]
     subscription_metadata.chargebee_email = customer_email
 
     for addon in addons:
         quantity = getattr(addon, "quantity", None) or 1
-        addon_metadata = chargebee_cache.addons[addon.get("id")] * quantity
+        addon_metadata = chargebee_cache.addons[addon.id] * quantity
         subscription_metadata = subscription_metadata + addon_metadata
 
     return subscription_metadata
@@ -130,10 +152,8 @@ def get_subscription_metadata_from_id(
 
     with suppress(ChargebeeAPIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
-        subscription: chargebee.Subscription = chargebee.Subscription(
-            values=chargebee_result.subscription
-        )
-        customer = chargebee.Customer(values=chargebee_result.customer)
+        subscription = chargebee_result.subscription
+        customer = chargebee_result.customer
         return get_subscription_metadata(subscription, customer.email)
 
 

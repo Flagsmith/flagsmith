@@ -37,6 +37,14 @@ from util.tests import Helper
 User = get_user_model()
 
 
+class MockSubscriptionMetadata:
+    def __init__(self, seats, api_calls, projects, chargebee_email):
+        self.seats = seats
+        self.api_calls = api_calls
+        self.projects = projects
+        self.chargebee_email = chargebee_email
+
+
 @pytest.mark.django_db
 class OrganisationTestCase(TestCase):
     post_template = '{ "name" : "%s", "webhook_notification_email": "%s" }'
@@ -577,8 +585,9 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription = Subscription.objects.get(organisation=self.organisation)
 
     @mock.patch("organisations.models.get_plan_meta_data")
+    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
-        self, mock_get_plan_meta_data
+        self, mock_get_subscription_metadata, mock_get_plan_meta_data
     ):
         # Given
         new_max_seats = 3
@@ -588,26 +597,45 @@ class ChargeBeeWebhookTestCase(TestCase):
             "api_calls": new_max_api_calls,
         }
 
+        mock_get_subscription_metadata.return_value = MockSubscriptionMetadata(
+            seats=new_max_seats,
+            api_calls=new_max_api_calls,
+            projects="no limit",
+            chargebee_email="zaballa.novak@gmail.com",
+        )
+
+        subscription_data = {
+            "status": "active",
+            "id": self.subscription_id,
+            "plan_id": self.plan,
+            "addons": [
+                {
+                    "id": "cbdemo_additionaluser",
+                    "quantity": 2,
+                    "unit_price": 0,
+                    "amount": 0,
+                    "object": "addon",
+                }
+            ],
+        }
+
+        customer_data = {"email": self.cb_user.email}
+
         data = {
             "content": {
-                "subscription": {
-                    "status": "active",
-                    "id": self.subscription_id,
-                    "plan_id": self.plan,
-                },
-                "customer": {"email": self.cb_user.email},
+                "subscription": subscription_data,
+                "customer": customer_data,
             }
         }
 
         # When
-        res = self.client.post(
+        response = self.client.post(
             self.url, data=json.dumps(data), content_type="application/json"
         )
 
         # Then
-        assert res.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK
 
-        # and
         self.subscription.refresh_from_db()
         assert self.subscription.plan == self.plan
         assert self.subscription.max_seats == new_max_seats
@@ -626,6 +654,15 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
                     "plan_id": self.plan,
+                    "addons": [
+                        {
+                            "id": "cbdemo_additionaluser",
+                            "quantity": 2,
+                            "unit_price": 0,
+                            "amount": 0,
+                            "object": "addon",
+                        }
+                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -644,8 +681,9 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert len(mail.outbox) == 1
         mocked_cancel_chargebee_subscription.assert_not_called()
 
+    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(
-        self,
+        self, mock_get_subscription_metadata
     ):
         # Given
         cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -656,6 +694,15 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
                     "plan_id": self.plan,
+                    "addons": [
+                        {
+                            "id": "cbdemo_additionaluser",
+                            "quantity": 2,
+                            "unit_price": 0,
+                            "amount": 0,
+                            "object": "addon",
+                        }
+                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -673,13 +720,21 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert len(mail.outbox) == 1
 
+    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
-        self,
+        self, mock_get_subscription_metadata
     ):
         # Given
         self.subscription.cancellation_date = datetime.now(tz=UTC) - timedelta(days=1)
         self.subscription.save()
         mail.outbox.clear()
+
+        mock_get_subscription_metadata.return_value = MockSubscriptionMetadata(
+            seats=12,
+            api_calls=0,
+            projects="no limit",
+            chargebee_email="zaballa.novak@gmail.com",
+        )
 
         data = {
             "content": {
@@ -687,6 +742,15 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "status": "active",
                     "id": self.subscription_id,
                     "plan_id": self.plan,
+                    "addons": [
+                        {
+                            "id": "cbdemo_additionaluser",
+                            "quantity": 2,
+                            "unit_price": 0,
+                            "amount": 0,
+                            "object": "addon",
+                        }
+                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -704,15 +768,34 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert not mail.outbox
 
+    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(
         self,
+        mock_get_subscription_metadata,
     ):
         # Given
         data = {
             "content": {
-                "subscription": {"status": "active", "id": "some-random-id"},
+                "subscription": {
+                    "status": "active",
+                    "id": "some-random-id",
+                    "addons": [
+                        {
+                            "id": "cbdemo_additionaluser",
+                            "quantity": 2,
+                            "unit_price": 0,
+                            "amount": 0,
+                            "object": "addon",
+                        }
+                    ],
+                },
                 "customer": {"email": self.cb_user.email},
             }
+        }
+
+        mock_get_subscription_metadata.return_value = {
+            "seats": 1,
+            "api_calls": 50000,
         }
 
         # When

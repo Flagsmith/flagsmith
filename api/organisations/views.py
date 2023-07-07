@@ -284,13 +284,13 @@ def chargebee_webhook(request):
             )
             logger.error(error_message)
             return Response(status=status.HTTP_200_OK)
-        subscription_metadata = get_subscription_metadata(
-            subscription_data, customer_email
-        )
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
+            subscription_metadata = get_subscription_metadata(
+                subscription_data, customer_email
+            )
             OrganisationSubscriptionInformationCache.objects.update_or_create(
                 organisation_id=existing_subscription.organisation_id,
                 defaults={
