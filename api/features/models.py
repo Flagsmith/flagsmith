@@ -420,7 +420,8 @@ class FeatureState(
     class Meta:
         ordering = ["id"]
 
-    def __gt__(self, other: "FeatureState") -> bool:
+    # TODO: can we simplify this so we don't need `noqa`?
+    def __gt__(self, other: "FeatureState") -> bool:  # noqa: C901
         """
         Checks if the current feature state is higher priority that the provided feature state.
 
@@ -471,11 +472,16 @@ class FeatureState(
                 # further in the future can be lower than a feature state
                 # whose live_from value is earlier.
                 # See: https://github.com/Flagsmith/flagsmith/issues/2030
-                is_more_recent_live_from = self.is_more_recent_live_from(other)
-                is_more_recent_version = self._is_more_recent_version(other)
-                return self.version is not None and (
-                    is_more_recent_live_from or is_more_recent_version
-                )
+                if self.is_live:
+                    if not other.is_live or self.is_more_recent_live_from(other):
+                        return True
+                    elif (
+                        self.live_from == other.live_from
+                        and self._is_more_recent_version(other)
+                    ):
+                        return True
+
+                return False
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -682,7 +688,7 @@ class FeatureState(
             )
 
     @hook(BEFORE_CREATE)
-    def set_live_from_for_version_1(self):
+    def set_live_from(self):
         """
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
@@ -696,7 +702,7 @@ class FeatureState(
             # FE will create the initial version.
             return
 
-        if self.version == 1 and not self.live_from:
+        if self.version is not None and self.live_from is None:
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)

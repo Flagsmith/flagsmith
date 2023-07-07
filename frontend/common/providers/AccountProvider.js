@@ -122,4 +122,4 @@ AccountProvider.propTypes = {
   onSave: OptionalFunc,
 }
 
-module.exports = AccountProvider
+export default AccountProvider

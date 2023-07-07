@@ -475,12 +475,12 @@ const App = class extends Component {
                                         id='org-menu'
                                         onClick={toggle}
                                       >
-                                        <span className='nav-link-featured relative'>
+                                        <div className='nav-link-featured relative flex-row'>
                                           {organisation
                                             ? organisation.name
                                             : ''}
                                           <span className='flex-column ion ion-ios-arrow-down' />
-                                        </span>
+                                        </div>
                                       </a>
                                     )}
                                   >

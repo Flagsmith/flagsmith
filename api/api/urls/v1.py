@@ -1,8 +1,8 @@
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf.urls import url
 from django.urls import include
-from drf_yasg2 import openapi
-from drf_yasg2.views import get_schema_view
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
 from rest_framework import authentication, permissions, routers
 
 from environments.identities.traits.views import SDKTraits
@@ -20,8 +20,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="support@flagsmith.com"),
     ),
     public=True,
-    permission_classes=(permissions.AllowAny,),
-    authentication_classes=(authentication.SessionAuthentication,),
+    permission_classes=[permissions.AllowAny],
+    authentication_classes=[authentication.SessionAuthentication],
 )
 
 traits_router = routers.DefaultRouter()

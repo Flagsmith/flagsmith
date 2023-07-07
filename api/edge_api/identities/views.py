@@ -6,7 +6,7 @@ import pydantic
 from boto3.dynamodb.conditions import Key
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from flag_engine.identities.builders import build_identity_model
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details

@@ -58,8 +58,9 @@ const OrganisationSettingsPage = class extends Component {
 
   confirmRemove = (organisation, cb) => {
     openModal(
-      'Remove Organisation',
+      'Delete Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -74,19 +75,19 @@ const OrganisationSettingsPage = class extends Component {
 
   deleteInvite = (id) => {
     openConfirm(
-      <h3>Delete Invite</h3>,
-      <p>Are you sure you want to delete this invite?</p>,
+      'Delete Invite',
+      <div>Are you sure you want to delete this invite?</div>,
       () => AppActions.deleteInvite(id),
     )
   }
 
   deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Remove User</h3>,
-      <p>
+      'Remove User',
+      <div>
         Are you sure you want to remove the user{' '}
         <strong>{userDisplayName}</strong> from the organisation?
-      </p>,
+      </div>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -179,7 +180,6 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -192,7 +192,6 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -203,6 +202,7 @@ const OrganisationSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 
@@ -218,6 +218,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
+      'p-0',
     )
   }
 
@@ -235,6 +236,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0',
     )
   }
 
@@ -335,6 +337,7 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </Column>
                                     <Button
+                                      type='submit'
                                       disabled={this.saveDisabled()}
                                       className='float-right'
                                     >
@@ -585,6 +588,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
+                                                  'p-0',
                                                 )
                                               }
                                               type='button'
@@ -1157,7 +1161,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    'side-modal fade create-feature-modal',
+                                                    'side-modal',
                                                   )
                                                 }
                                                 type='button'

@@ -43,7 +43,7 @@ export const Button: FC<ButtonType> = ({
   size = 'default',
   target,
   theme = 'primary',
-  type = 'submit',
+  type = 'button',
   ...rest
 }) => {
   return href ? (
@@ -57,8 +57,8 @@ export const Button: FC<ButtonType> = ({
     </a>
   ) : (
     <button
-      type={type}
       {...rest}
+      type={type}
       onMouseUp={onMouseUp}
       className={cn(
         { btn: true },

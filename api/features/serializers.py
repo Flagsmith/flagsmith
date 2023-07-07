@@ -400,8 +400,27 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "enabled",
             "feature_state_value",
             "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
         )
-        read_only_fields = ("id", "feature")
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+        )
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)

@@ -55,11 +55,12 @@ class TheComponent extends Component {
 
   confirmDeleteAccount = (lastUserOrganisations, id) => {
     openModal(
-      'Are you sure',
+      'Are you sure?',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
       />,
+      'p-0',
     )
   }
 
@@ -191,6 +192,7 @@ class TheComponent extends Component {
                                         AppActions.logout()
                                       }}
                                     />,
+                                    'p-0',
                                   )
                                 }
                                 id='change-email-button'

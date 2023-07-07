@@ -1,6 +1,6 @@
 import React from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import ForgotPasswordModal from 'components/ForgotPasswordModal'
+import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
 import NavIconSmall from 'components/svg/NavIconSmall'
 import SamlForm from 'components/SamlForm'
@@ -9,6 +9,7 @@ import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
+import ErrorMessage from 'components/ErrorMessage'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -101,8 +102,7 @@ const HomePage = class extends React.Component {
           toast('Please check your email to reset your password.')
         }}
       />,
-      null,
-      'alert fade expand',
+      'p-0',
     )
   }
 
@@ -301,7 +301,7 @@ const HomePage = class extends React.Component {
                                           email: Utils.safeParseEventValue(e),
                                         })
                                       }}
-                                      className='input-default full-width mb-2 '
+                                      className='input-default full-width mb-2'
                                       type='text'
                                       name='email'
                                       id='email'
@@ -363,13 +363,14 @@ const HomePage = class extends React.Component {
                                     </div>
                                   </fieldset>
                                   {error && (
-                                    <div
-                                      id='error-alert'
-                                      className='alert mt-3 alert-danger'
-                                    >
-                                      {typeof AccountStore.error === 'string'
-                                        ? AccountStore.error
-                                        : 'Please check your details and try again'}
+                                    <div id='error-alert' className='mt-3'>
+                                      <ErrorMessage
+                                        error={
+                                          typeof AccountStore.error === 'string'
+                                            ? AccountStore.error
+                                            : 'Please check your details and try again'
+                                        }
+                                      />
                                     </div>
                                   )}
                                 </form>
@@ -456,13 +457,14 @@ const HomePage = class extends React.Component {
                           >
                             {error && (
                               <FormGroup>
-                                <div
-                                  id='error-alert'
-                                  className='alert alert-danger'
-                                >
-                                  {typeof AccountStore.error === 'string'
-                                    ? AccountStore.error
-                                    : 'Please check your details and try again'}
+                                <div id='error-alert'>
+                                  <ErrorMessage
+                                    error={
+                                      typeof AccountStore.error === 'string'
+                                        ? AccountStore.error
+                                        : 'Please check your details and try again'
+                                    }
+                                  />
                                 </div>
                               </FormGroup>
                             )}
@@ -479,7 +481,7 @@ const HomePage = class extends React.Component {
                                 title='First Name'
                                 data-test='firstName'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.first_name,
                                   name: 'firstName',
                                 }}
@@ -497,7 +499,7 @@ const HomePage = class extends React.Component {
                                 title='Last Name'
                                 data-test='lastName'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.last_name,
                                   name: 'lastName',
                                 }}
@@ -521,7 +523,7 @@ const HomePage = class extends React.Component {
                                 title='Email Address'
                                 data-test='email'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.email,
                                   name: 'email',
                                 }}
@@ -548,7 +550,7 @@ const HomePage = class extends React.Component {
                                 title='Password'
                                 data-test='password'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.password,
                                   name: 'password',
                                 }}

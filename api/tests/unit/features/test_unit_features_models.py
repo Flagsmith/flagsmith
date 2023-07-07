@@ -16,33 +16,21 @@ tomorrow = now + timedelta(days=1)
 @pytest.mark.parametrize(
     "feature_state_version_generator",
     (
-        (None, None, False),
-        (2, None, True),
-        (None, 2, False),
-        (2, 3, False),
-        (3, 2, True),
+        # test the default case, this should never be true
+        (None, None, None, None, False),
+        # for the following 6 cases, ensure that we test in both directions
+        (2, now, None, None, True),
+        (None, None, 2, now, False),
+        (2, now, 3, now, False),
+        (3, now, 2, now, True),
+        (3, now, 2, yesterday, True),
+        (3, yesterday, 2, now, False),
     ),
     indirect=True,
 )
-def test_feature_state_gt_operator_for_versions(feature_state_version_generator):
+def test_feature_state_gt_operator(feature_state_version_generator):
     first, second, expected_result = feature_state_version_generator
-    assert (first > second) == expected_result
-
-
-@pytest.mark.parametrize(
-    "feature_state_live_from_generator",
-    (
-        (None, None, False),
-        (now, None, True),
-        (None, now, False),
-        (now, tomorrow, False),
-        (tomorrow, now, True),
-    ),
-    indirect=True,
-)
-def test_feature_state_gt_operator_for_live_from(feature_state_live_from_generator):
-    first, second, expected_result = feature_state_live_from_generator
-    assert (first > second) == expected_result
+    assert (first > second) is expected_result
 
 
 @pytest.mark.parametrize(
