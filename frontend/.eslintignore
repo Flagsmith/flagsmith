@@ -1,5 +1,4 @@
 .idea
-.husky
 node_modules
 reports
 public
