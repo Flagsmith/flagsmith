@@ -125,7 +125,7 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0001"
+                    "value": "0.00006"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
