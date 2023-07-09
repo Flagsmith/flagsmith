@@ -681,9 +681,8 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert len(mail.outbox) == 1
         mocked_cancel_chargebee_subscription.assert_not_called()
 
-    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(
-        self, mock_get_subscription_metadata
+        self,
     ):
         # Given
         cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -722,7 +721,8 @@ class ChargeBeeWebhookTestCase(TestCase):
 
     @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
-        self, mock_get_subscription_metadata
+        self,
+        mock_get_subscription_metadata,
     ):
         # Given
         self.subscription.cancellation_date = datetime.now(tz=UTC) - timedelta(days=1)
@@ -730,12 +730,11 @@ class ChargeBeeWebhookTestCase(TestCase):
         mail.outbox.clear()
 
         mock_get_subscription_metadata.return_value = MockSubscriptionMetadata(
-            seats=12,
-            api_calls=0,
+            seats=3,
+            api_calls=100,
             projects="no limit",
             chargebee_email="zaballa.novak@gmail.com",
         )
-
         data = {
             "content": {
                 "subscription": {
