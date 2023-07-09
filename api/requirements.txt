@@ -45,13 +45,9 @@ chargebee==2.7.7
 charset-normalizer==3.0.1
     # via requests
 coreapi==2.3.3
-    # via
-    #   -r requirements.in
-    #   drf-yasg2
+    # via -r requirements.in
 coreschema==0.0.4
-    # via
-    #   coreapi
-    #   drf-yasg2
+    # via coreapi
 cryptography==39.0.1
     # via
     #   azure-identity
@@ -64,7 +60,7 @@ defusedxml==0.7.1
     #   social-auth-core
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.19
+django==3.2.20
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -81,8 +77,9 @@ django==3.2.19
     #   djangorestframework-simplejwt
     #   djoser
     #   drf-nested-routers
-    #   drf-yasg2
+    #   drf-yasg
     #   opencensus-ext-django
+    #   pyngo
     #   social-auth-app-django
 django-admin-sso==3.1.0
     # via -r requirements.in
@@ -122,7 +119,7 @@ djangorestframework==3.12.1
     #   djangorestframework-recursive
     #   djangorestframework-simplejwt
     #   drf-nested-routers
-    #   drf-yasg2
+    #   drf-yasg
 djangorestframework-api-key==2.2.0
     # via -r requirements.in
 djangorestframework-recursive==0.1.2
@@ -135,11 +132,11 @@ drf-nested-routers==0.92.1
     # via -r requirements.in
 drf-writable-nested==0.6.2
     # via -r requirements.in
-drf-yasg2==1.19.3
+drf-yasg==1.21.6
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==3.5.1
+flagsmith-flag-engine==4.0.1
     # via -r requirements.in
 google-api-core==1.23.0
     # via
@@ -168,7 +165,7 @@ httplib2==0.19.0
 idna==3.4
     # via requests
 inflection==0.5.1
-    # via drf-yasg2
+    # via drf-yasg
 influxdb-client==1.28.0
     # via -r requirements.in
 itypes==1.2.0
@@ -182,9 +179,7 @@ jmespath==1.0.1
 markupsafe==2.1.2
     # via jinja2
 marshmallow==3.14.1
-    # via
-    #   environs
-    #   flagsmith-flag-engine
+    # via environs
 monotonic==1.6
     # via
     #   analytics-python
@@ -217,7 +212,7 @@ packaging==23.0
     # via
     #   -r requirements.in
     #   django-lifecycle
-    #   drf-yasg2
+    #   drf-yasg
 portalocker==2.4.0
     # via msal-extensions
 protobuf==3.18.3
@@ -239,6 +234,14 @@ pyasn1-modules==0.2.8
     #   oauth2client
 pycparser==2.21
     # via cffi
+pydantic==1.10.9
+    # via
+    #   -r requirements.in
+    #   flagsmith-flag-engine
+    #   pydantic-collections
+    #   pyngo
+pydantic-collections==0.4.0
+    # via flagsmith-flag-engine
 pyjwt[crypto]==2.6.0
     # via
     #   djangorestframework-simplejwt
@@ -246,6 +249,8 @@ pyjwt[crypto]==2.6.0
     #   social-auth-core
     #   twilio
 pymemcache==4.0.0
+    # via -r requirements.in
+pyngo==1.6.0
     # via -r requirements.in
 pyotp==2.4.1
     # via django-trench
@@ -267,13 +272,16 @@ python-http-client==3.3.7
     #   sendgrid
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2020.4
+pytz==2023.3
     # via
     #   django
     #   django-ses
+    #   drf-yasg
     #   google-api-core
     #   influxdb-client
     #   twilio
+pyyaml==6.0
+    # via drf-yasg
 requests==2.31.0
     # via
     #   -r requirements.in
@@ -295,8 +303,6 @@ rsa==4.7
     # via
     #   google-auth
     #   oauth2client
-ruamel-yaml==0.17.20
-    # via drf-yasg2
 rudder-sdk-python==1.0.5
     # via -r requirements.in
 rx==3.1.1
@@ -325,7 +331,6 @@ six==1.16.0
     #   azure-identity
     #   django-simple-history
     #   django-softdelete
-    #   drf-yasg2
     #   google-api-core
     #   google-api-python-client
     #   google-auth
@@ -349,11 +354,14 @@ sqlparse==0.4.4
 twilio==7.9.1
     # via django-trench
 typing-extensions==4.5.0
-    # via azure-core
+    # via
+    #   azure-core
+    #   pydantic
+    #   pyngo
 uritemplate==3.0.1
     # via
     #   coreapi
-    #   drf-yasg2
+    #   drf-yasg
     #   google-api-python-client
 urllib3==1.26.14
     # via

@@ -33,6 +33,7 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
 
 type PageType = {
   number: number
@@ -389,10 +390,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       </div>
 
       {isError && (
-        <div className='alert alert-danger'>
-          Error creating segment, please ensure you have entered a trait and
-          value for each rule.
-        </div>
+        <ErrorMessage
+          error='Error creating segment, please ensure you have entered a trait and
+          value for each rule.'
+        />
       )}
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (
@@ -456,10 +457,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem tabLabel='Rules'>
-            <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+            <div className='my-4'>{Tab1}</div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='my-4'>
               <AssociatedSegmentOverrides
                 feature={segment.feature}
                 projectId={projectId}
@@ -468,7 +469,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='my-4'>
               <InfoMessage>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
@@ -585,7 +586,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+        <div className='my-4 mx-3'>{Tab1}</div>
       )}
     </div>
   )

@@ -115,7 +115,9 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
 
 def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
     # Given
-    mocker.patch("organisations.models.MAX_SEATS_IN_FREE_PLAN", 0)
+    organisation.subscription.max_seats = 0
+    organisation.subscription.save()
+
     mocked_get_subscription_metadata = mocker.patch(
         "organisations.models.Subscription.get_subscription_metadata",
         autospec=True,
@@ -123,6 +125,23 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     # Then
     assert organisation.over_plan_seats_limit() is True
     mocked_get_subscription_metadata.assert_not_called()
+
+
+def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
+    # Given
+    plan = "Scale-Up"
+    subscription_id = "subscription-id"
+    settings.AUTO_SEAT_UPGRADE_PLANS = [plan]
+
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id, plan=plan
+    )
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.is_auto_seat_upgrade_available() is True
 
 
 class SubscriptionTestCase(TestCase):

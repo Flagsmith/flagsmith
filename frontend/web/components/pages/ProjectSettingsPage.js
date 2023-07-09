@@ -55,8 +55,9 @@ const ProjectSettingsPage = class extends Component {
 
   confirmRemove = (project, cb) => {
     openModal(
-      'Remove Project',
+      'Delete Project',
       <ConfirmRemoveProject project={project} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -73,6 +74,7 @@ const ProjectSettingsPage = class extends Component {
           })
         }}
       />,
+      'p-0',
     )
   }
 
@@ -168,13 +170,13 @@ const ProjectSettingsPage = class extends Component {
                         <label>Project Name</label>
                         <FormGroup>
                           <form onSubmit={saveProject}>
-                            <Row>
-                              <Column className='m-l-0'>
+                            <Row className='align-items-start'>
+                              <Column className='ml-0'>
                                 <Input
                                   ref={(e) => (this.input = e)}
                                   defaultValue={project.name}
                                   value={this.state.name}
-                                  inputClassName='input input--wide'
+                                  inputClassName='input--wide'
                                   name='proj-name'
                                   onChange={(e) =>
                                     this.setState({
@@ -188,9 +190,9 @@ const ProjectSettingsPage = class extends Component {
                                 />
                               </Column>
                               <Button
+                                type='submit'
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
-                                size='small'
                               >
                                 {isSaving ? 'Updating' : 'Update Name'}
                               </Button>
@@ -203,7 +205,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Prevent flag defaults</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p  className='fs-small lh-sm'>
+                            <p className='fs-small lh-sm'>
                               By default, when you create a feature with a value
                               and enabled state it acts as a default for your
                               other environments. Enabling this setting forces
@@ -227,7 +229,7 @@ const ProjectSettingsPage = class extends Component {
                         <h5>Case sensitive features</h5>
                         <div className='row'>
                           <div className='col-md-10'>
-                            <p  className='fs-small lh-sm'>
+                            <p className='fs-small lh-sm'>
                               By default, features are lower case in order to
                               prevent human error. Enabling this will allow you
                               to use upper case characters when creating
@@ -315,6 +317,7 @@ const ProjectSettingsPage = class extends Component {
                                   />
                                   <Button
                                     className='ml-2'
+                                    type='submit'
                                     disabled={!regexValid || isLoading}
                                   >
                                     Save

@@ -123,7 +123,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg2",
+    "drf_yasg",
     "audit",
     "permissions",
     "projects.tags",
@@ -232,6 +232,10 @@ REST_FRAMEWORK = {
         "invite": "10/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_RENDERER_CLASSES": [
+        "util.renderers.PydanticJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -795,6 +799,10 @@ AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not N
 if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
+
+IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
+if IS_RBAC_INSTALLED:
+    INSTALLED_APPS.append("rbac")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

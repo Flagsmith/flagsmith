@@ -1,4 +1,6 @@
 from integrations.amplitude.models import AmplitudeConfiguration
+from integrations.common.models import EnvironmentIntegrationModel
+from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from integrations.integration import identify_integrations
 from integrations.segment.models import SegmentConfiguration
 
@@ -34,11 +36,19 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     mocker, identity
 ):
     # Given
-    integration_wrapper_a = mocker.MagicMock()
-    integration_wrapper_b = mocker.MagicMock()
+    integration_wrapper_a = mocker.MagicMock(
+        autospec=AbstractBaseIdentityIntegrationWrapper
+    )
+    integration_wrapper_b = mocker.MagicMock(
+        autospec=AbstractBaseIdentityIntegrationWrapper
+    )
 
-    integration_a_config = mocker.MagicMock()
-    integration_b_config = mocker.MagicMock()
+    integration_a_config = mocker.MagicMock(
+        autospec=EnvironmentIntegrationModel, deleted=False
+    )
+    integration_b_config = mocker.MagicMock(
+        autospec=EnvironmentIntegrationModel, deleted=False
+    )
 
     identity.environment.integration_a_config = integration_a_config
     identity.environment.integration_b_config = integration_b_config
@@ -87,3 +97,21 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     integration_wrapper_b.return_value.identify_user_async.assert_called_with(
         data=integration_b_mocked_generate_user_data.return_value
     )
+
+
+def test_identify_integrations_does_not_call_deleted_integrations(
+    mocker, environment, identity
+):
+    # Given
+    mock_segment_wrapper = mocker.patch(
+        "integrations.segment.segment.SegmentWrapper.identify_user_async"
+    )
+
+    sc = SegmentConfiguration.objects.create(api_key="abc-123", environment=environment)
+    sc.delete()
+
+    # When
+    identify_integrations(identity, identity.get_all_feature_states())
+
+    # Then
+    mock_segment_wrapper.assert_not_called()

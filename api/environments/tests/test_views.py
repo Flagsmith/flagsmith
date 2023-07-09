@@ -21,6 +21,7 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
+from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from segments.models import EQUAL, Condition, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
@@ -37,9 +38,9 @@ class EnvironmentTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
         create_environment_permission = ProjectPermissionModel.objects.get(
-            key="CREATE_ENVIRONMENT"
+            key=CREATE_ENVIRONMENT
         )
-        read_project_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_project_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
 
         self.organisation = Organisation.objects.create(name="ssg")
         self.user.add_organisation(
@@ -525,6 +526,7 @@ def test_should_create_environments(
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["description"] == description
     assert response.json()["use_mv_v2_evaluation"] is True
+    assert response.json()["use_identity_composite_key_for_hashing"] is True
 
     # and user is admin
     if not is_master_api_key_client:
@@ -650,7 +652,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     banner_text = "production environment be careful"
     banner_colour = "#FF0000"
     hide_disabled_flags = True
-    use_mv_v2_evaluation = True
+    use_identity_composite_key_for_hashing = True
     hide_sensitive_data = True
 
     data = {
@@ -659,12 +661,12 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
         "banner_text": banner_text,
         "banner_colour": banner_colour,
         "hide_disabled_flags": hide_disabled_flags,
-        "use_mv_v2_evaluation": use_mv_v2_evaluation,
+        "use_identity_composite_key_for_hashing": use_identity_composite_key_for_hashing,
         "hide_sensitive_data": hide_sensitive_data,
     }
 
     # When
-    response = client.put(url, data=data)
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -678,7 +680,10 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     assert response.json()["banner_colour"] == banner_colour
     assert response.json()["hide_disabled_flags"] == hide_disabled_flags
     assert response.json()["hide_sensitive_data"] == hide_sensitive_data
-    assert response.json()["use_mv_v2_evaluation"] == use_mv_v2_evaluation
+    assert (
+        response.json()["use_identity_composite_key_for_hashing"]
+        == use_identity_composite_key_for_hashing
+    )
 
 
 @pytest.mark.parametrize(

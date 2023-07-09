@@ -10,7 +10,16 @@ const controller = {
     API.setInviteType('')
     return data
       .post(`${Project.api}users/join/link/${id}/`)
-      .catch(() => data.post(`${Project.api}users/join/${id}/`))
+      .catch((error) => {
+        if (
+          Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
+          error.status === 400
+        ) {
+          API.ajaxHandler(store, error)
+          return
+        }
+        return data.post(`${Project.api}users/join/${id}/`)
+      })
       .then((res) => {
         store.savedId = res.id
         store.model.organisations.push(res)

@@ -117,7 +117,7 @@
 }
 
 .tab-line {
-  bottom: 0px;
+  bottom: -1px;
   display: block;
   height: 2px;
   position: absolute;
@@ -130,16 +130,16 @@
 .tabs.pill {
   .btn.btn-tab {
     &:first-child {
-      border-top-left-radius: $border-radius-default;
-      border-bottom-left-radius: $border-radius-default;
+      border-top-left-radius: $border-radius;
+      border-bottom-left-radius: $border-radius;
     }
     &:last-child {
-      border-top-right-radius: $border-radius-default;
-      border-bottom-right-radius: $border-radius-default;
+      border-top-right-radius: $border-radius;
+      border-bottom-right-radius: $border-radius;
     }
   }
   .tabs-nav {
-    border-radius: $border-radius-default;
+    border-radius: $border-radius;
   }
   .tab-line {
     display: none;
@@ -147,10 +147,10 @@
 }
 .btn.btn-tab {
   &:first-child {
-    border-top-left-radius: $border-radius-default;
+    border-top-left-radius: $border-radius;
   }
   &:last-child {
-    border-top-right-radius: $border-radius-default;
+    border-top-right-radius: $border-radius;
   }
   color: $tab-inactive-color;
   &.tab-active {

@@ -79,4 +79,4 @@ ProjectProvider.propTypes = {
   onSave: OptionalFunc,
 }
 
-module.exports = ProjectProvider
+export default ProjectProvider

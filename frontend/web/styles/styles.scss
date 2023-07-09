@@ -67,21 +67,6 @@ bold, strong {
   color: $text-muted;
   font-size: 1.25em;
 }
-.dark {
-
-  .flag-example {
-    background-color: $dark-bg-0;
-
-  }
-}
-.flag-example {
-  margin-left: -15px;
-  margin-right: -15px;
-  padding: 20px;
-  background-color: $bt-brand-faint-alt;
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
 
 .striped-section {
   padding: 20px;
@@ -130,7 +115,7 @@ bold, strong {
 .chip .feature-value-container {
   border-radius: 0;
   padding: 2px 5px;
-  border-radius: 8px;
+  border-radius: $border-radius;
 }
 
 .feature-value-container {
@@ -139,7 +124,7 @@ bold, strong {
   background: $bt-code-background;
   color: #fff;
   padding: 5px 10px;
-  border-radius: 20px;
+  border-radius: $border-radius;
   font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   font-weight: bold;
@@ -231,10 +216,6 @@ input:disabled {
 
 .inline-block {
   display: inline-block;
-}
-
-hr {
-  color: $bt-brand-faint-alt;
 }
 
 .form-group {

@@ -93,7 +93,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      'fade side-modal create-segment-modal',
+      'side-modal create-segment-modal',
     )
   }
 
@@ -128,6 +128,7 @@ const UserPage = class extends Component {
         environmentFlag={environmentFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
@@ -161,7 +162,7 @@ const UserPage = class extends Component {
         }}
         environmentFlag={environmentFlag}
       />,
-      'side-modal fade create-feature-modal overflow-y-auto',
+      'side-modal create-feature-modal overflow-y-auto',
       () => {
         history.replaceState({}, null, `${document.location.pathname}`)
       },
@@ -180,6 +181,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -196,6 +198,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -213,12 +216,12 @@ const UserPage = class extends Component {
 
   removeTrait = (id, trait_key) => {
     openConfirm(
-      <h3>Delete Trait</h3>,
-      <p>
+      'Delete Trait',
+      <div>
         {'Are you sure you want to delete trait '}
         <strong>{trait_key}</strong>
         {' from this user?'}
-      </p>,
+      </div>,
       () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,
@@ -525,14 +528,14 @@ const UserPage = class extends Component {
                                             />
                                           </Row>
                                           {hasUserOverride ? (
-                                            <Row className='chip'>
+                                            <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
                                               <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
                                               data-test={`feature-override-${i}`}
-                                              className='flex-row chip'
+                                              className='flex-row mt-1 chip'
                                             >
                                               <Row>
                                                 <Flex>
@@ -570,7 +573,7 @@ const UserPage = class extends Component {
                                             isMultiVariateOverride ? (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
@@ -588,7 +591,7 @@ const UserPage = class extends Component {
                                             ) : (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
                                                 <span>
                                                   This feature is being
@@ -677,6 +680,7 @@ const UserPage = class extends Component {
                                                   ),
                                                 ),
                                                 <Button
+                                                  size='small'
                                                   disabled={!permission}
                                                   onClick={() =>
                                                     this.confirmRemove(
