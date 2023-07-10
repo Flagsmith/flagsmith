@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -e
 # Run checks in api folder
 echo "Starting pre-commit in 'api' folder:"
 cd api
@@ -8,7 +9,7 @@ pre-commit run
 # Run checks in frontend folder
 echo "Starting pre-commit in 'frontend' folder:"
 cd ../frontend
-bash .husky/pre-commit
+.husky/pre-commit
 
 # Run checks in docs folder
 echo "Starting pre-commit in 'docs' folder:"

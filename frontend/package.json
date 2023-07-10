@@ -155,8 +155,5 @@
     "ssgrtk": "^0.3.4",
     "testcafe": "^2.2.0",
     "typescript": "4.6.4"
-  },
-  "lint-staged": {
-    "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"
   }
 }
