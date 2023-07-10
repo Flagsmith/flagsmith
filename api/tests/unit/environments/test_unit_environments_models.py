@@ -1,3 +1,4 @@
+import typing
 from unittest.mock import MagicMock
 
 import pytest
@@ -6,8 +7,15 @@ from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
+from organisations.models import OrganisationRole
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
+
+if typing.TYPE_CHECKING:
+    from django.db.models import Model
+
+    from features.workflows.core.models import ChangeRequest
+    from organisations.models import Organisation
 
 
 @pytest.mark.parametrize(
@@ -368,3 +376,23 @@ def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_projec
 
     # Then
     mocked_environment_api_key_wrapper.write_api_key.assert_not_called()
+
+
+def test_delete_environment_with_committed_change_request(
+    organisation: "Organisation",
+    environment: Environment,
+    change_request: "ChangeRequest",
+    change_request_feature_state: FeatureState,
+    django_user_model: typing.Type["Model"],
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+    change_request.approve(user)
+    change_request.commit(user)
+
+    # When
+    environment.delete()
+
+    # Then
+    assert environment.deleted_at is not None
