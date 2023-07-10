@@ -1,14 +1,27 @@
 {
-    "proseWrap": "always",
+    "arrowParens": "always",
+    "bracketSpacing": true,
+    "insertPragma": false,
+    "jsxSingleQuote": true,
+    "printWidth": 80,
+    "proseWrap": "preserve",
+    "quoteProps": "preserve",
+    "requirePragma": false,
+    "semi": false,
     "singleQuote": true,
-    "printWidth": 120,
+    "tabWidth": 2,
     "trailingComma": "all",
-    "tabWidth": 4,
+    "useTabs": false,
+    "vueIndentScriptAndStyle": false,
     "overrides": [
         {
             "files": "**/*.md",
             "options": {
-                "tabWidth": 1
+                "tabWidth": 1,
+                "proseWrap": "always",
+                "singleQuote": true,
+                "printWidth": 120,
+                "trailingComma": "all"
             }
         },
         {
