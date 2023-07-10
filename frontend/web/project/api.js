@@ -44,6 +44,10 @@ global.API = {
       mixpanel.alias(id)
     }
 
+    if (typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL) {
+      dtrum.identifyUser(id)
+    }
+
     if (Project.heap) {
       heap.identify(id)
       const user = AccountStore.model
@@ -139,6 +143,10 @@ global.API = {
           orgs,
           'plan': plans && plans.join(','),
         })
+      }
+
+      if (typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL) {
+        dtrum.identifyUser(id)
       }
 
       if (Project.heap) {
