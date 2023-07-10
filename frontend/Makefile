@@ -1,3 +1,10 @@
+.EXPORT_ALL_VARIABLES:
+
+DOTENV_OVERRIDE_FILE ?= .env
+
+-include .env-local
+-include $(DOTENV_OVERRIDE_FILE)
+
 .PHONY: install
 install:
 	npm install
