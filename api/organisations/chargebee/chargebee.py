@@ -8,6 +8,8 @@ from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
 
+from organisations.utils import dict_to_class
+
 from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
@@ -103,30 +105,12 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
-class DictToClass(object):
-    def __init__(self, my_dict):
-        for key, value in my_dict.items():
-            if isinstance(value, dict):
-                setattr(self, key, DictToClass(value))
-            elif isinstance(value, list):
-                setattr(
-                    self,
-                    key,
-                    [
-                        DictToClass(item) if isinstance(item, dict) else item
-                        for item in value
-                    ],
-                )
-            else:
-                setattr(self, key, value)
-
-
 def get_subscription_metadata(
     chargebee_subscription_dict: typing.Union[dict, chargebee.Subscription],
     customer_email: str,
 ):
     if isinstance(chargebee_subscription_dict, dict):
-        chargebee_subscription = DictToClass(chargebee_subscription_dict)
+        chargebee_subscription = dict_to_class(chargebee_subscription_dict)
     else:
         chargebee_subscription = chargebee_subscription_dict
 

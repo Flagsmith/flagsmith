@@ -574,7 +574,6 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription_id = "subscription-id"
         self.old_plan_id = "old-plan-id"
         self.old_max_seats = 1
-        self.plan = "startup"
 
         Subscription.objects.filter(organisation=self.organisation).update(
             organisation=self.organisation,
@@ -590,6 +589,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self, mock_get_subscription_metadata, mock_get_plan_meta_data
     ):
         # Given
+        new_plan_id = "new-plan-id"
         new_max_seats = 3
         new_max_api_calls = 100
         mock_get_plan_meta_data.return_value = {
@@ -604,40 +604,37 @@ class ChargeBeeWebhookTestCase(TestCase):
             chargebee_email="zaballa.novak@gmail.com",
         )
 
-        subscription_data = {
-            "status": "active",
-            "id": self.subscription_id,
-            "plan_id": self.plan,
-            "addons": [
-                {
-                    "id": "cbdemo_additionaluser",
-                    "quantity": 2,
-                    "unit_price": 0,
-                    "amount": 0,
-                    "object": "addon",
-                }
-            ],
-        }
-
-        customer_data = {"email": self.cb_user.email}
-
         data = {
             "content": {
-                "subscription": subscription_data,
-                "customer": customer_data,
+                "subscription": {
+                    "status": "active",
+                    "id": self.subscription_id,
+                    "plan_id": new_plan_id,
+                    "addons": [
+                        {
+                            "id": "cbdemo_additionaluser",
+                            "quantity": 2,
+                            "unit_price": 0,
+                            "amount": 0,
+                            "object": "addon",
+                        }
+                    ],
+                },
+                "customer": {"email": self.cb_user.email},
             }
         }
 
         # When
-        response = self.client.post(
+        res = self.client.post(
             self.url, data=json.dumps(data), content_type="application/json"
         )
 
         # Then
-        assert response.status_code == status.HTTP_200_OK
+        assert res.status_code == status.HTTP_200_OK
 
+        # and
         self.subscription.refresh_from_db()
-        assert self.subscription.plan == self.plan
+        assert self.subscription.plan == new_plan_id
         assert self.subscription.max_seats == new_max_seats
         assert self.subscription.max_api_calls == new_max_api_calls
 
@@ -653,16 +650,6 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "status": "non_renewing",
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
-                    "plan_id": self.plan,
-                    "addons": [
-                        {
-                            "id": "cbdemo_additionaluser",
-                            "quantity": 2,
-                            "unit_price": 0,
-                            "amount": 0,
-                            "object": "addon",
-                        }
-                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -692,16 +679,6 @@ class ChargeBeeWebhookTestCase(TestCase):
                     "status": "cancelled",
                     "id": self.subscription_id,
                     "current_term_end": datetime.timestamp(cancellation_date),
-                    "plan_id": self.plan,
-                    "addons": [
-                        {
-                            "id": "cbdemo_additionaluser",
-                            "quantity": 2,
-                            "unit_price": 0,
-                            "amount": 0,
-                            "object": "addon",
-                        }
-                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -740,7 +717,6 @@ class ChargeBeeWebhookTestCase(TestCase):
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
-                    "plan_id": self.plan,
                     "addons": [
                         {
                             "id": "cbdemo_additionaluser",
@@ -767,34 +743,15 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert not mail.outbox
 
-    @mock.patch("organisations.views.get_subscription_metadata")
     def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(
         self,
-        mock_get_subscription_metadata,
     ):
         # Given
         data = {
             "content": {
-                "subscription": {
-                    "status": "active",
-                    "id": "some-random-id",
-                    "addons": [
-                        {
-                            "id": "cbdemo_additionaluser",
-                            "quantity": 2,
-                            "unit_price": 0,
-                            "amount": 0,
-                            "object": "addon",
-                        }
-                    ],
-                },
+                "subscription": {"status": "active", "id": "some-random-id"},
                 "customer": {"email": self.cb_user.email},
             }
-        }
-
-        mock_get_subscription_metadata.return_value = {
-            "seats": 1,
-            "api_calls": 50000,
         }
 
         # When
