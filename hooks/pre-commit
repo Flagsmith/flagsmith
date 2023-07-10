@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo "Starting pre-commit in 'api' folder:"
+cd api
+pre-commit run
+
+echo "Starting pre-commit in 'frontend' folder:"
+cd ../frontend
+bash .husky/pre-commit
+
