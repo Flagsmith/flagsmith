@@ -1,4 +1,3 @@
-import json
 import logging
 import typing
 from contextlib import suppress
@@ -107,7 +106,7 @@ def get_hosted_page_url_for_subscription_upgrade(
 def extract_subscription_metadata(
     chargebee_subscription: dict,
     customer_email: str,
-) -> typing.Optional[ChargebeeObjMetadata]:
+) -> ChargebeeObjMetadata:
     chargebee_addons = chargebee_subscription["addons"] or []
     chargebee_cache = ChargebeeCache()
     subscription_metadata: ChargebeeObjMetadata = chargebee_cache.plans[
@@ -117,7 +116,9 @@ def extract_subscription_metadata(
 
     for addon in chargebee_addons:
         quantity = getattr(addon, "quantity", None) or 1
-        addon_metadata = chargebee_cache.addons[addon["id"]] * quantity
+        addon_metadata: ChargebeeObjMetadata = (
+            chargebee_cache.addons[addon["id"]] * quantity
+        )
         subscription_metadata = subscription_metadata + addon_metadata
 
     return subscription_metadata
@@ -132,12 +133,15 @@ def get_subscription_metadata_from_id(
 
     with suppress(ChargebeeAPIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
-        subscription = chargebee_result.subscription
-        subscription = json.loads(
-            json.dumps(chargebee_result.subscription, default=lambda o: o.__dict__)
+        subscription = vars(chargebee_result.subscription)
+        # convert the addons into a list of dictionaries since vars don't do it recursively
+        subscription["addons"] = [
+            vars(addon) for addon in chargebee_result.subscription.addons
+        ]
+
+        return extract_subscription_metadata(
+            subscription, chargebee_result.customer.email
         )
-        customer = chargebee_result.customer
-        return extract_subscription_metadata(subscription, customer.email)
 
 
 def cancel_subscription(subscription_id: str):

@@ -274,15 +274,15 @@ def chargebee_webhook(request):
     """
 
     if request.data.get("content") and "subscription" in request.data.get("content"):
-        subscription_data = request.data["content"]["subscription"]
-        customer_email = request.data["content"]["customer"]["email"]
+        subscription_data: dict = request.data["content"]["subscription"]
+        customer_email: str = request.data["content"]["customer"]["email"]
 
         try:
             existing_subscription = Subscription.objects.get(
                 subscription_id=subscription_data.get("id")
             )
         except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
-            error_message = (
+            error_message: str = (
                 "Couldn't get unique subscription for ChargeBee id %s"
                 % subscription_data.get("id")
             )
@@ -308,7 +308,7 @@ def chargebee_webhook(request):
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(subscription_data.get("current_term_end", "")),
                 update_chargebee=False,
             )
 
