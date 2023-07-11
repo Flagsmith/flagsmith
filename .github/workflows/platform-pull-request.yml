@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-e2e-tests:
-    runs-on: e2e-runner
+    runs-on: e2e-runner-8c
     name: Full E2E tests
 
     services:
@@ -50,7 +50,7 @@ jobs:
         run: docker logs $API_CONTAINER_ID
 
   run-e2e-tests-docker-unified:
-    runs-on: e2e-runner
+    runs-on: e2e-runner-8c
     name: Full E2E tests with unified image in Docker
 
     steps:
