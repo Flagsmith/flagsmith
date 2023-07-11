@@ -12,6 +12,7 @@ module.exports = [
     new webpack.DefinePlugin({
         E2E: process.env.E2E,
         SENTRY_RELEASE_VERSION: true,
+        DYNATRACE_URL: !!process.env.DYNATRACE_URL && JSON.stringify(process.env.DYNATRACE_URL)
     }),
     // // Fixes warning in moment-with-locales.min.js
     // // Module not found: Error: Can't resolve './locale' in ...
