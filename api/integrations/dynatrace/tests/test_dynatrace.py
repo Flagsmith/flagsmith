@@ -72,6 +72,7 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
 
 
 def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(django_user_model):
+    # TODO
     # Given
     log = "some log data"
 
@@ -94,3 +95,4 @@ def test_dynatrace_when_generate_event_data_with_missing_environment_then_succes
     expected_event_text = f"{log} by user {author.email}"
     assert event_data["properties"]["event"] == expected_event_text
     assert event_data["properties"]["environment"] == "unknown"
+    assert event_data["properties"]["dt.event.deployment.name"] == "Flagsmith Deployment - Flag Changed"  # TODO

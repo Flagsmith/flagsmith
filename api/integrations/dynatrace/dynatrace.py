@@ -4,7 +4,10 @@ import logging
 import requests
 
 from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from features.models import Feature
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+from segments.models import Segment
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +42,7 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
         flag_properties = {
             "event": f"{log} by user {email}",
             "environment": environment_name,
+            "dt.event.deployment.name": _get_deployment_name(audit_log_record),
         }
 
         return {
@@ -46,3 +50,32 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
             "eventType": "CUSTOM_DEPLOYMENT",
             "properties": flag_properties,
         }
+
+
+def _get_deployment_name(audit_log_record: AuditLog) -> str:
+    if audit_log_record.related_object_type == RelatedObjectType.FEATURE.name:
+        if feature := (
+            Feature.objects.all_with_deleted()
+            .filter(id=audit_log_record.related_object_id)
+            .first()
+        ):
+            return f"Flagsmith Deployment - Flag Changed: {feature.name}"
+    elif audit_log_record.related_object_type == RelatedObjectType.FEATURE_STATE.name:
+        if feature := (
+            Feature.objects.all_with_deleted()
+            .filter(feature_states__id=audit_log_record.related_object_id)
+            .distinct()
+            .first()
+        ):
+            return f"Flagsmith Deployment - Flag Changed: {feature.name}"
+    elif audit_log_record.related_object_type == RelatedObjectType.SEGMENT.name:
+        if (
+            segment := Segment.objects.all_with_deleted()
+            .filter(id=audit_log_record.related_object_id)
+            .first()
+        ):
+            return f"Flagsmith Deployment - Segment Changed: {segment.name}"
+
+    # use 'Deployment' as a fallback to maintain current behaviour in
+    # the event of an issue with new functionality
+    return "Deployment"
