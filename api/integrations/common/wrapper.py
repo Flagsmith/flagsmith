@@ -18,8 +18,9 @@ class AbstractBaseEventIntegrationWrapper(ABC):
     def track_event_async(self, event: dict) -> None:
         self._track_event(event)
 
-    @abstractstaticmethod
-    def generate_event_data(*args, **kwargs) -> None:
+    @staticmethod
+    @abstractmethod
+    def generate_event_data(*args, **kwargs) -> ...:
         raise NotImplementedError()
 
 
