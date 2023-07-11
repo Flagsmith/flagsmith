@@ -39,7 +39,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
-const enableDynatrace = typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL
+export const enableDynatrace =
+  typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL
 
 flagsmith
   .init({

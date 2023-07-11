@@ -1,5 +1,6 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
+import { enableDynatrace } from 'common/stores/config-store'
 
 global.API = {
   ajaxHandler(store, res) {
@@ -44,7 +45,7 @@ global.API = {
       mixpanel.alias(id)
     }
 
-    if (typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL) {
+    if (enableDynatrace) {
       dtrum.identifyUser(id)
     }
 
@@ -145,7 +146,7 @@ global.API = {
         })
       }
 
-      if (typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL) {
+      if (enableDynatrace) {
         dtrum.identifyUser(id)
       }
 
@@ -155,7 +156,6 @@ global.API = {
         heap.addUserProperties({
           // use human-readable names
           '$first_name': user.first_name,
-
           '$last_name': user.last_name,
           'USER_ID': id,
           email: id,
