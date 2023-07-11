@@ -246,7 +246,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   )
                 }
                 renderNoResults={
-                  <div>
+                  <div className='mx-2 pt-1 pb-2'>
                     You have no users in your project
                     {search ? (
                       <span>

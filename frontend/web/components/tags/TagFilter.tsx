@@ -4,6 +4,7 @@ import { Tag as TTag } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
+import Utils from 'common/utils/utils'
 
 type TagFilterType = {
   value?: (number | string)[]
@@ -38,7 +39,7 @@ const TagFilter: FC<TagFilterType> = ({
     }
   }
   const unTagged = !!showUntagged && {
-    color: '#666',
+    color: Utils.getFlagsmithHasFeature('dark_mode') ? '#FFFFF' : '#1A2634',
     id: '',
     label: 'Untagged',
   }
@@ -48,18 +49,16 @@ const TagFilter: FC<TagFilterType> = ({
         <Row>
           <Flex>
             <Row className='tag-filter-list'>
-              {children}
               {unTagged && (
-                <div className='mr-1'>
-                  <Tag
-                    key={unTagged.id}
-                    selected={isSelected(unTagged as any)}
-                    onClick={onSelect}
-                    className='px-2 py-2'
-                    tag={unTagged as any}
-                  />
-                </div>
+                <Tag
+                  key={unTagged.id}
+                  selected={isSelected(unTagged as any)}
+                  onClick={onSelect}
+                  className='px-2 py-2'
+                  tag={unTagged as any}
+                />
               )}
+              {children}
 
               {projectTags?.map((tag) => (
                 <Tag

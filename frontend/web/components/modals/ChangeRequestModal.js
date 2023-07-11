@@ -173,7 +173,7 @@ const ChangeRequestModal = class extends Component {
                                 <Row
                                   key={u.id}
                                   onClick={() => this.removeOwner(u.id)}
-                                  className='chip chip--active'
+                                  className='chip'
                                   style={{ marginBottom: 4, marginTop: 4 }}
                                 >
                                   <span className='font-weight-bold'>
@@ -201,7 +201,7 @@ const ChangeRequestModal = class extends Component {
                                 <Row
                                   key={u.id}
                                   onClick={() => this.removeOwner(u.id, false)}
-                                  className='chip chip--active'
+                                  className='chip'
                                   style={{ marginBottom: 4, marginTop: 4 }}
                                 >
                                   <span className='font-weight-bold'>

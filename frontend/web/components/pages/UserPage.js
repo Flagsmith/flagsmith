@@ -395,7 +395,10 @@ const UserPage = class extends Component {
                                             )
                                           }}
                                           className='px-2 py-2 ml-2 mr-2'
-                                          tag={{ label: 'Archived' }}
+                                          tag={{
+                                            color: '#0AADDF',
+                                            label: 'Archived',
+                                          }}
                                         />
                                       </TagFilter>
                                     </div>
@@ -575,7 +578,7 @@ const UserPage = class extends Component {
                                                 data-test={`feature-override-${i}`}
                                                 className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by a % variation in
                                                   the environment, the control
@@ -593,7 +596,7 @@ const UserPage = class extends Component {
                                                 data-test={`feature-override-${i}`}
                                                 className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by segments and
                                                   would normally be{' '}

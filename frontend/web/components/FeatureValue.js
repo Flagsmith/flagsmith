@@ -23,17 +23,11 @@ const FeatureValue = class extends Component {
     }
     return (
       <span
-        className={`feature-value-container ${type} ${
-          this.props.className || ''
-        }`}
+        className={`chip chip--sm ${this.props.className || ''}`}
         onClick={this.props.onClick}
         data-test={this.props['data-test']}
       >
-        {type == 'string' && <span className='quot'>"</span>}
-        <span className='feature-value'>
-          {Format.truncateText(`${this.props.value}`, 20)}
-        </span>
-        {type == 'string' && <span className='quot'>"</span>}
+        {Format.truncateText(`${this.props.value}`, 20)}
       </span>
     )
   }
