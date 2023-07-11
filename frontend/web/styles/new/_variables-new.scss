@@ -7,6 +7,7 @@ $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
 $danger: #ef4d56;
+$danger400: #f57c78;
 $success: #27ab95;
 $info: #0aaddf;
 $text-icon-dark: #1a2634;
@@ -29,6 +30,7 @@ $white-alpha-16: rgba(255, 255, 255, 0.16);
 $white-alpha-24: rgba(255, 255, 255, 0.24);
 $white-alpha-32: rgba(255, 255, 255, 0.32);
 $white-alpha-48: rgba(255, 255, 255, 0.48);
+$black-alpha-32: rgba(0, 0, 0, 0.32);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
@@ -40,6 +42,7 @@ $bg-light300: #eff1f4;
 $bg-dark200: #202839;
 $bg-dark100: rgba(45, 52, 67, 1);
 $bg-dark300: #121827;
+$bg-dark400: #15192b;
 $bg-dark500: rgba(15, 20, 37, 1);
 
 //Body
@@ -181,15 +184,17 @@ $input-bg-dark: $bg-dark200;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
-$input-height: 48px;
-$input-height-sm: 40px;
-$input-height-xsm: 32px;
-$input-height-lg: 56px;
+$input-height: 50px;
+$input-height-sm: 42px;
+$input-height-xsm: 34px;
+$input-height-lg: 58px;
 $input-line-height: 24px;
 $input-font-size: $font-size-base;
 $input-font-weight: 500;
 $input-border-color: $basic-alpha-16;
-$input-border-color-dark: $btn-secondary-bg-dark;
+$input-border-color-dark: $bg-dark400;
+$input-focus-border-color-dark: $primary;
+$input-hover-border-color-dark: $white-alpha-8;
 $input-placeholder-color: $text-icon-light-grey;
 $input-padding: 12px 16px 12px 12px;
 $input-padding-sm: 8px 14px 8px 12px;

@@ -69,7 +69,8 @@ textarea {
     -webkit-user-select: none;
   }
   input.input,
-  input[type='text'] {
+  input[type='text'],
+  input[type='password'] {
     width: 100%;
     border: 1px solid $input-border-color;
     outline: none;
@@ -80,11 +81,18 @@ textarea {
     background-image: none;
     border-radius: $border-radius;
 
-    &:disabled {
-      opacity: 0.5;
-    }
     &:read-only {
       color: #777;
+    }
+    &:disabled {
+      border: 1px solid $basic-alpha-8;
+      color: $text-icon-light-grey;
+      & + .input-icon-right {
+        path {
+          fill: $text-icon-light-grey;
+          opacity: $btn-disabled-opacity;
+        }
+      }
     }
   }
 

@@ -585,9 +585,8 @@ const EnvironmentSettingsPage = class extends Component {
                                     .
                                   </p>
                                 </div>
-                                <div className='col-md-3 text-right'>
+                                <div className='col-md-3'>
                                   <Select
-                                    className={'text-left'}
                                     value={
                                       showDisabledFlagOptions.find(
                                         (v) =>
