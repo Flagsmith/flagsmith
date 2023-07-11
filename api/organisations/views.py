@@ -56,7 +56,7 @@ from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
-from .chargebee import get_subscription_metadata
+from .chargebee import extract_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -292,8 +292,9 @@ def chargebee_webhook(request):
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
-            subscription_metadata = get_subscription_metadata(
-                subscription_data, customer_email
+            subscription_metadata = extract_subscription_metadata(
+                chargebee_subscription=subscription_data,
+                customer_email=customer_email,
             )
             OrganisationSubscriptionInformationCache.objects.update_or_create(
                 organisation_id=existing_subscription.organisation_id,

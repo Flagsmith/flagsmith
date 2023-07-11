@@ -13,7 +13,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches(update_cache_entity: typing.Tuple[SubscriptionCacheEntity, ...]):
+def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):
     """
     Update the cache objects for an update_cache_entity in the database.
     """
@@ -30,10 +30,10 @@ def update_caches(update_cache_entity: typing.Tuple[SubscriptionCacheEntity, ...
         for org in organisations
     }
 
-    if SubscriptionCacheEntity.INFLUX in update_cache_entity:
+    if SubscriptionCacheEntity.INFLUX in update_cache_entities:
         _update_caches_with_influx_data(organisation_info_cache_dict)
 
-    if SubscriptionCacheEntity.CHARGEBEE in update_cache_entity:
+    if SubscriptionCacheEntity.CHARGEBEE in update_cache_entities:
         _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
 
     to_update = []

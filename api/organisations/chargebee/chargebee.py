@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 from contextlib import suppress
@@ -7,8 +8,6 @@ import chargebee
 from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
-
-from organisations.utils import dict_to_class
 
 from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
@@ -105,23 +104,20 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
-def get_subscription_metadata(
-    chargebee_subscription_dict: typing.Union[dict, chargebee.Subscription],
+def extract_subscription_metadata(
+    chargebee_subscription: dict,
     customer_email: str,
-):
-    if isinstance(chargebee_subscription_dict, dict):
-        chargebee_subscription = dict_to_class(chargebee_subscription_dict)
-    else:
-        chargebee_subscription = chargebee_subscription_dict
-
-    addons = chargebee_subscription.addons or []
+) -> typing.Optional[ChargebeeObjMetadata]:
+    chargebee_addons = chargebee_subscription["addons"] or []
     chargebee_cache = ChargebeeCache()
-    subscription_metadata = chargebee_cache.plans[chargebee_subscription.plan_id]
+    subscription_metadata: ChargebeeObjMetadata = chargebee_cache.plans[
+        chargebee_subscription["plan_id"]
+    ]
     subscription_metadata.chargebee_email = customer_email
 
-    for addon in addons:
+    for addon in chargebee_addons:
         quantity = getattr(addon, "quantity", None) or 1
-        addon_metadata = chargebee_cache.addons[addon.id] * quantity
+        addon_metadata = chargebee_cache.addons[addon["id"]] * quantity
         subscription_metadata = subscription_metadata + addon_metadata
 
     return subscription_metadata
@@ -137,8 +133,11 @@ def get_subscription_metadata_from_id(
     with suppress(ChargebeeAPIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
         subscription = chargebee_result.subscription
+        subscription = json.loads(
+            json.dumps(chargebee_result.subscription, default=lambda o: o.__dict__)
+        )
         customer = chargebee_result.customer
-        return get_subscription_metadata(subscription, customer.email)
+        return extract_subscription_metadata(subscription, customer.email)
 
 
 def cancel_subscription(subscription_id: str):

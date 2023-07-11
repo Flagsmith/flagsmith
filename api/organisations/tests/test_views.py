@@ -37,14 +37,6 @@ from util.tests import Helper
 User = get_user_model()
 
 
-class MockSubscriptionMetadata:
-    def __init__(self, seats, api_calls, projects, chargebee_email):
-        self.seats = seats
-        self.api_calls = api_calls
-        self.projects = projects
-        self.chargebee_email = chargebee_email
-
-
 @pytest.mark.django_db
 class OrganisationTestCase(TestCase):
     post_template = '{ "name" : "%s", "webhook_notification_email": "%s" }'
@@ -584,7 +576,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription = Subscription.objects.get(organisation=self.organisation)
 
     @mock.patch("organisations.models.get_plan_meta_data")
-    @mock.patch("organisations.views.get_subscription_metadata")
+    @mock.patch("organisations.views.extract_subscription_metadata")
     def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         self, mock_get_subscription_metadata, mock_get_plan_meta_data
     ):
@@ -597,7 +589,7 @@ class ChargeBeeWebhookTestCase(TestCase):
             "api_calls": new_max_api_calls,
         }
 
-        mock_get_subscription_metadata.return_value = MockSubscriptionMetadata(
+        mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
             seats=new_max_seats,
             api_calls=new_max_api_calls,
             projects="no limit",
@@ -696,7 +688,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert len(mail.outbox) == 1
 
-    @mock.patch("organisations.views.get_subscription_metadata")
+    @mock.patch("organisations.views.extract_subscription_metadata")
     def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
         self,
         mock_get_subscription_metadata,
@@ -706,7 +698,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription.save()
         mail.outbox.clear()
 
-        mock_get_subscription_metadata.return_value = MockSubscriptionMetadata(
+        mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
             seats=3,
             api_calls=100,
             projects="no limit",

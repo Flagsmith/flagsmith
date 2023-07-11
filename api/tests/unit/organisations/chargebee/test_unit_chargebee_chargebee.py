@@ -8,6 +8,7 @@ from pytz import UTC
 
 from organisations.chargebee import (
     add_single_seat,
+    extract_subscription_metadata,
     get_customer_id_from_subscription_id,
     get_hosted_page_url_for_subscription_upgrade,
     get_max_api_calls_for_plan,
@@ -15,7 +16,6 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
-    get_subscription_metadata,
     get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import cancel_subscription
@@ -299,23 +299,36 @@ def create_mocked_subscription_metadata(
 @pytest.mark.parametrize("addon_quantity", (None, 1))
 def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
     # Given
-    mocked_subscription_metadata = create_mocked_subscription_metadata(
+    status = "status"
+    plan_id = "plan-id"
+    addon_id = "addon-id"
+    subscription_id = "subscription-id"
+    customer_email = "test@example.com"
+
+    create_mocked_subscription_metadata(
         mocker, chargebee_object_metadata, addon_quantity
     )
     # When
-    subscription_metadata = get_subscription_metadata(
-        mocked_subscription_metadata["mock_subscription_response"].subscription,
-        mocked_subscription_metadata["customer_email"],
-    )
+    subscription = {
+        "status": status,
+        "id": subscription_id,
+        "plan_id": plan_id,
+        "addons": [
+            {
+                "id": addon_id,
+                "quantity": 2,
+                "unit_price": 0,
+                "amount": 0,
+            }
+        ],
+    }
+    subscription_metadata = extract_subscription_metadata(subscription, customer_email)
 
     # Then
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
-    assert (
-        subscription_metadata.chargebee_email
-        == mocked_subscription_metadata["customer_email"]
-    )
+    assert subscription_metadata.chargebee_email == customer_email
 
 
 @pytest.mark.parametrize("addon_quantity", (None, 1))
