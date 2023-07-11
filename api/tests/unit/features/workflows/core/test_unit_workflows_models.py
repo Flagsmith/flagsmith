@@ -15,7 +15,6 @@ from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
-    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 from features.workflows.core.models import (
@@ -500,29 +499,6 @@ def test_committing_cr_after_before_from_schedules_tasks_correctly(
         delay_until=tomorrow,
         args=(change_request_no_required_approvals.feature_states.all().first().id,),
     )
-
-
-def test_cannot_delete_committed_change_request_with_live_feature_states(
-    project, environment, feature, admin_user
-):
-    # Given
-    change_request = ChangeRequest.objects.create(
-        title="Test CR", environment=environment, user=admin_user
-    )
-    FeatureState.objects.create(
-        feature=feature,
-        environment=environment,
-        change_request=change_request,
-        version=None,
-    )
-    change_request.commit(admin_user)
-
-    # When
-    with pytest.raises(ChangeRequestDeletionError):
-        change_request.delete()
-
-    # Then
-    assert change_request.deleted_at is None
 
 
 @pytest.mark.freeze_time()

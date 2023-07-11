@@ -12,7 +12,3 @@ class ChangeRequestNotApprovedError(FeatureWorkflowError):
 
 class CannotApproveOwnChangeRequest(FeatureWorkflowError):
     status_code = status.HTTP_400_BAD_REQUEST
-
-
-class ChangeRequestDeletionError(FeatureWorkflowError):
-    status_code = status.HTTP_400_BAD_REQUEST
