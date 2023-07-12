@@ -42,7 +42,9 @@ bold, strong {
 .value-editor {
   &.disabled {
     code {
-      background: $input-placeholder-color !important;
+      background: $text-icon-light !important;
+      color: $text-icon-light-grey;
+      border: 1px solid $basic-alpha-8;
     }
     .select-language {
       display: none;
