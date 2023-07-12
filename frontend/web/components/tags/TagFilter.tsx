@@ -4,7 +4,6 @@ import { Tag as TTag } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
-import Utils from 'common/utils/utils'
 
 type TagFilterType = {
   value?: (number | string)[]
@@ -39,7 +38,7 @@ const TagFilter: FC<TagFilterType> = ({
     }
   }
   const unTagged = !!showUntagged && {
-    color: Utils.getFlagsmithHasFeature('dark_mode') ? '#FFFFF' : '#1A2634',
+    color: '#656D7B',
     id: '',
     label: 'Untagged',
   }
