@@ -337,7 +337,7 @@ export default class SegmentOverridesInner extends Component {
           return (
             <div>
               {originalSegmentOverrides.length > 1 && (
-                <div style={{ width: 150 }}>
+                <div style={{ width: 165 }}>
                   <Tooltip
                     title={
                       <div className='chip mt-2'>
