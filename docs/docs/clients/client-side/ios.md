@@ -183,7 +183,8 @@ Flagsmith.shared.cacheConfig.skipAPI = false
 Flagsmith.shared.cacheConfig.cacheTTL = 0
 ```
 
-If more customisation is required, you can override the cache implemention with your own subclass of [URLCache](https://developer.apple.com/documentation/foundation/urlcache), using the following code.
+If more customisation is required, you can override the cache implemention with your own subclass of
+[URLCache](https://developer.apple.com/documentation/foundation/urlcache), using the following code.
 
 ```swift
 // set custom cache to use (defaults to shared URLCache)
