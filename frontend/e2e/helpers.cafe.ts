@@ -253,6 +253,8 @@ export const createSegment = async (index:number, id:string, rules?:Rule[]) => {
                     await setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
                 }
             }
+        }
+
     // Create
     await click(byId('create-segment'));
     await waitForElementVisible(byId(`segment-${index}-name`));
