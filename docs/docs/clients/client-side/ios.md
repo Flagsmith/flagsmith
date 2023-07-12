@@ -169,7 +169,7 @@ and in case of a failed response, fall back on the cached values. The cache can 
 
 ```swift
 // set cache on / off (defaults to off)
-Flagsmith.shared.useCache = true
+Flagsmith.shared.cacheConfig.useCache = true
 ```
 
 You can also set a TTL for the cache (in seconds), and request that Flagsmith skip calling the API if a valid cache is
@@ -177,17 +177,17 @@ present
 
 ```swift
 // set skip API on / off (defaults to off)
-Flagsmith.shared.skipAPI = false
+Flagsmith.shared.cacheConfig.skipAPI = false
 
 // set cache TTL in seconds (defaults to 0, i.e. infinite)
-Flagsmith.shared.cacheTTL = 0
+Flagsmith.shared.cacheConfig.cacheTTL = 0
 ```
 
-If more customisation is required, you can override the cache implemention with your own subclass of URLCache, using:
+If more customisation is required, you can override the cache implemention with your own subclass of [URLCache](https://developer.apple.com/documentation/foundation/urlcache), using the following code.
 
 ```swift
 // set custom cache to use (defaults to shared URLCache)
-Flagsmith.shared.cache = <CUSTOM_CACHE_IMPLEMENTATION>
+Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 ```
 
 ## Override default configuration
