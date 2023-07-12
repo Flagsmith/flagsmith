@@ -1,43 +1,164 @@
-@import "../new/variables-new";
+@import '../new/variables-new';
 
-.react-select{
-
-  &--is-disabled {
-    opacity: 0.5;
-  }
-  input[type="text"] {
-    border: none !important;
+.react-select .react-select {
+  input[type='text'] {
+    border: none;
   }
   &__indicator-separator {
     display: none;
   }
-  &__control {
-    background: $input-bg-dark;
-    height: $input-height !important;
-    border-radius: $border-radius !important;
-    &--is-focused {
-      border-color: $bt-brand-primary !important;
-      box-shadow: 0 0 0 1px $bt-brand-primary !important;
+  &__input {
+    & input {
+      font-weight: 500;
+    }
+  }
+  &__placeholder {
+    font-weight: normal;
+    color: $input-placeholder-color;
+  }
+  &__indicator {
+    color: $text-icon-light-grey;
+    padding: 0px 12px 0px 8px;
+    &:hover {
+      color: $text-icon-light-grey;
+    }
+    svg {
+      width: 22px;
+      height: 22px;
     }
   }
   &__value-container {
-    padding: 0px 8px;
+    padding: 12px 0px 12px 16px;
+    div {
+      margin: 0;
+      padding: 0;
+    }
+  }
+  &__single-value {
+    margin: 0;
+    padding: 0;
+    line-height: $input-line-height;
+    & + div {
+      margin: 0;
+      padding: 0;
+    }
+    &--is-disabled {
+      color: $text-icon-light-grey;
+    }
+  }
+  &__control {
+    background: $input-bg;
+    height: $input-height;
+    border-radius: $border-radius;
+    border: 1px solid $input-border-color;
+    &:hover {
+      border: 1px solid $basic-alpha-48;
+    }
+    &--is-focused {
+      border: 1px solid $primary;
+      box-shadow: none;
+      &:hover {
+        border: 1px solid $primary;
+      }
+    }
+    &--is-disabled {
+      border: 1px solid $basic-alpha-8;
+      .react-select__indicators {
+        opacity: $btn-disabled-opacity;
+      }
+    }
+  }
+}
+.select-sm .react-select {
+  &__control {
+    height: $input-height-sm;
+  }
+  &__value-container {
+    padding: 8px 0px 8px 14px;
+  }
+  &__single-value {
+    line-height: $line-height-sm;
+  }
+  &__input {
+    line-height: $line-height-sm;
+  }
+  &__indicator {
+    padding-left: 8px;
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+.select-xsm .react-select {
+  &__control {
+    height: $input-height-xsm;
+  }
+  &__value-container {
+    padding: 6px 0px 6px 12px;
+  }
+  &__single-value {
+    line-height: $line-height-sm;
+  }
+  &__input {
+    line-height: $line-height-sm;
+  }
+  &__indicator {
+    padding-left: 6px;
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+.select-lg .react-select {
+  &__control {
+    height: $input-height-lg;
+  }
+  &__value-container {
+    padding: 16px 0px 16px 20px;
+  }
+  &__single-value {
+    line-height: $line-height-lg;
+  }
+  &__input {
+    line-height: $line-height-lg;
+  }
+  &__indicator {
+    padding-left: 12px;
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.react-select {
+  font-weight: 500;
+  line-height: $input-line-height;
+  color: $text-icon-dark;
+  &.select-xsm {
+    font-size: $font-size-sm;
   }
   &__option {
     color: $body-text !important;
     background: white !important;
+    padding: 9px 16px;
     &:hover {
-      background: $bt-brand-primary !important;
+      background: $primary !important;
       color: white !important;
     }
+  }
+  &__menu {
+    font-weight: 500;
+    margin: 3px;
+    box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15) !important;
+    background: white !important;
   }
 }
 .dark {
   .react-select {
-    &--is-disabled {
-      opacity: 0.25;
-    }
-    input[type="text"] {
+    input[type='text'] {
       color: white !important;
       border: none !important;
     }
@@ -45,39 +166,36 @@
       background: $input-bg-dark;
       border: none;
       box-shadow: none;
+      border: 1px solid $input-border-color-dark;
       &--is-focused {
-        border-color: transparent !important;
+        border: 1px solid $primary;
         box-shadow: none !important;
+      }
+      &--is-disabled {
+        border: 1px solid $black-alpha-32;
+        .react-select__indicator {
+          opacity: $btn-disabled-opacity;
+        }
       }
     }
     &__single-value {
-      color: $input-color-dark;
+      color: $text-icon-light;
+      &--is-disabled {
+        color: $text-icon-light-grey;
+      }
     }
     &__menu {
-      background: $dark-bg-0;
-      color: $input-color-dark;
+      background: $input-bg-dark !important;
+      margin: 3px;
+      color: $input-bg-dark;
+      box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.12) !important;
     }
     &__option {
-      color: white !important;;
-      background: $dark-bg-0 !important;
+      color: white !important;
+      background: $input-bg-dark !important;
       &:hover {
-        background: darken($dark-bg-0,2) !important;
+        background: $primary !important;
       }
     }
   }
-}
-.select-sm {
-  .react-select {
-    &__control {
-      border: none;
-      height: 40px !important;
-      min-height: 40px !important;
-    }
-    &__indicator-separator {
-      display: none;
-    }
-  }
-}
-.react-select__option {
-  padding: 8px 12px;
 }

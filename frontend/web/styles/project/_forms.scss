@@ -42,14 +42,27 @@
 .dark {
   .input-container {
     input.input {
-      border: 1px solid $bt-input-border-dark !important;
-      background-color: $input-bg-dark !important;
-      color: $body-text-dark;
+      border: 1px solid $input-border-color-dark;
+      background-color: $input-bg-dark;
+      color: $text-icon-light;
+      &:hover{
+        border: 1px solid $input-hover-border-color-dark;
+      }
       &:focus {
-        border: 1px solid $bt-input-border-active;
+        border: 1px solid $input-focus-border-color-dark;
       }
       &::placeholder {
-        color: $input-placeholder-color-dark !important;
+        color:$input-placeholder-color-dark;
+      }
+      &:disabled {
+        border: 1px solid $black-alpha-32;
+        color: $text-icon-light-grey;
+        & + .input-icon-right {
+          path {
+            fill: $text-icon-light-grey;
+            opacity: $btn-disabled-opacity;
+          }
+        }
       }
     }
   }
