@@ -27,9 +27,9 @@ const FeatureValue = class extends Component {
         onClick={this.props.onClick}
         data-test={this.props['data-test']}
       >
-        {type == 'string' && <span>“</span>}
+        {type == 'string' && <span>"</span>}
         {Format.truncateText(`${this.props.value}`, 20)}
-        {type == 'string' && <span>“</span>}
+        {type == 'string' && <span>"</span>}
       </span>
     )
   }
