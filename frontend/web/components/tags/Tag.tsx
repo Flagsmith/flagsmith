@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import color from 'color'
 import cx from 'classnames'
 
@@ -22,14 +22,6 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const [hover, setHover] = useState(false)
-
-  const toggleHover = () => {
-    if (onClick) {
-      setHover(!hover)
-    }
-  }
-
   const getColor = () => {
     if (selected) {
       return tag.color
@@ -54,26 +46,14 @@ const Tag: FC<TagType> = ({
       title={
         <div
           onClick={() => onClick?.(tag as TTag)}
-          onMouseEnter={toggleHover}
-          onMouseLeave={toggleHover}
           style={{
-            backgroundColor: hover
-              ? `${color(getColor()).darken(0.1)}`
-              : getColor(),
+            backgroundColor: `${color(getColor()).fade(0.92)}`,
+            border: `1px solid ${color(getColor()).fade(0.76)}`,
+            color: `${color(getColor()).darken(0.1)}`,
           }}
-          className={cx('tag', { hideNames: true, selected }, className)}
+          className={cx('chip', 'chip--sm', className)}
         >
-          <div>
-            {tag.label ? (
-              <Row space>
-                {selected && <span className='icon ion-md-checkmark' />}
-              </Row>
-            ) : (
-              <div className='text-center'>
-                {selected && <span className='icon ion-md-checkmark' />}
-              </div>
-            )}
-          </div>
+          {tag.label}
         </div>
       }
     >

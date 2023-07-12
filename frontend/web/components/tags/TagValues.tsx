@@ -23,12 +23,7 @@ const TagValues: FC<TagValuesType> = ({
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
-            <Tag
-              hideNames={hideNames}
-              onClick={onAdd}
-              className='px-2 py-2 mr-2'
-              tag={tag}
-            />
+            <Tag hideNames={hideNames} onClick={onAdd} tag={tag} />
           ),
       )}
       {!!onAdd && (

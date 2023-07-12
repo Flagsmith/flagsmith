@@ -1,57 +1,98 @@
-@import "../variables";
+@import '../variables';
 .dark {
-	.chip {
-		background-color: $dark-bg-10;
-		.chip-icon {
-			color: $input-placeholder-color-dark;
-		}
-	}
+  .chip {
+    border: 1px solid $primary-alfa-32;
+    color: $primary400;
+
+    .icon-check {
+      border: 1px solid $primary-alfa-32;
+    }
+
+    &.MuiChip-root {
+      color: $primary400;
+      .MuiChip-deleteIcon {
+        &:hover {
+          color: $primary400;
+        }
+      }
+    }
+
+    .chip-icon {
+      color: $primary400;
+    }
+  }
 }
 .chip {
-	align-self: flex-start !important;
-	background-color: #e0e0e0;
-	padding: 7px 10px;
-	border-radius: $border-radius;
-	margin-right: $input-padding-x;
-	font-size: 12px;
-	font-weight: bold;
-	color: #777;
-	.chip-icon {
-		font-size: 2em;
-		cursor: pointer;
-		margin-left: $input-padding-x;
-		width: 18px;
-		height: 18px;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		border-radius: 50%;
-		color: $input-placeholder-color;
-		background: rgba(0,0,0,.2);
-	}
-	&--active {
-		color: white;
-		background: $bt-brand-primary;
-		.chip-icon {
-			color: white;
-			background: rgba(0,0,0,.2);
-		}
-	}
-	&.light {
-		color: white;
-	}
-	&--sm {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		border-radius: $border-radius;
-		font-size: 11px;
-		padding: 3px 8px;
-		margin-right: 5px;
-		.chip-svg-icon {
-			display: block;
-			width: 12px;
-			margin-right: 5px;
-		}
-	}
+  align-self: flex-start !important;
+  background-color: $primary-alfa-8;
+  border: 1px solid $primary-alfa-24;
+  padding: 5px 12px;
+  border-radius: $border-radius;
+  margin-right: $input-padding-x;
+  font-size: $font-sm;
+  line-height: $line-height-sm;
+  font-weight: normal;
+  color: $primary600;
+  .icon-check {
+    border: 1px solid $primary-alfa-24;
+    height: 20px;
+    width: 20px;
+    border-radius: $border-radius-sm;
+    margin-right: 0.25rem;
+    svg {
+      vertical-align: baseline;
+    }
+  }
+  .chip-icon {
+    font-size: 2em;
+    cursor: pointer;
+    margin-left: 0.25rem;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: $primary;
+  }
+  &--sm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: $border-radius;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
+    height: 26px;
+    padding: 3px 8px;
+    margin-right: 5px;
+    .chip-svg-icon {
+      display: block;
+      width: 12px;
+      margin-right: 5px;
+    }
+  }
+}
+.mui-root {
+  .MuiChip-root {
+    background-color: $primary-alfa-8;
+    border: 1px solid $primary-alfa-24;
+    border-radius: $border-radius;
+    color: $primary600;
+    font-size: $font-sm;
+    line-height: $line-height-sm;
+  }
+  .MuiChip-clickable:hover,
+  .MuiChip-clickable:focus {
+    background-color: $primary-alfa-8;
+  }
+  .MuiChip-deleteIcon {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    &:hover {
+      color: $primary;
+    }
+  }
+  .MuiChip-label {
+    padding-right: 0;
+  }
 }

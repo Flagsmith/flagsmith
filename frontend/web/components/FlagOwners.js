@@ -72,7 +72,7 @@ class TheComponent extends Component {
                     <Row
                       key={u.id}
                       onClick={() => this.removeOwner(u.id)}
-                      className='chip chip--active'
+                      className='chip'
                     >
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}

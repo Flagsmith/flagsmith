@@ -1,6 +1,7 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
-import { enableDynatrace } from 'common/stores/config-store'
+
+const enableDynatrace = typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL
 
 global.API = {
   ajaxHandler(store, res) {

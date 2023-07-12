@@ -257,6 +257,7 @@ const Aside = class extends Component {
                                 <div className='text-center'>
                                   <span
                                     style={{
+                                      border: 'none',
                                       bottom: 2,
                                       left: 5,
                                       position: 'relative',

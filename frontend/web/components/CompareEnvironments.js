@@ -269,7 +269,7 @@ class CompareEnvironments extends Component {
                               })
                             }}
                             className='px-2 py-2 ml-2 mr-2'
-                            tag={{ label: 'Archived' }}
+                            tag={{ color: '#0AADDF', label: 'Archived' }}
                           />
                         </Row>
 
