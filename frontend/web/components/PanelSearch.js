@@ -190,7 +190,7 @@ const PanelSearch = class extends Component {
                   {this.props.showExactFilter && (
                     <div className='mr-2' style={{ width: 200 }}>
                       <Select
-                        className='select-sm'
+                        size='select-sm'
                         styles={{
                           control: (base) => ({
                             ...base,
