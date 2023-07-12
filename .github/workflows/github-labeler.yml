@@ -1,8 +1,7 @@
 name: Github Labeler
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  - pull_request_target
 
 jobs:
   apply-labels:
