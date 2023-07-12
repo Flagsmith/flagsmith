@@ -39,7 +39,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
-const enableDynatrace = !!window.enableDynatrace
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 flagsmith
   .init({
