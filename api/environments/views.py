@@ -188,7 +188,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         environment = self.get_object()
 
         permission_data = get_environment_permission_data(
-            environment.id, user_id=request.user.id
+            environment=environment, user=request.user
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
