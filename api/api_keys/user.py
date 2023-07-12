@@ -2,6 +2,11 @@ import typing
 
 from django.db.models import QuerySet
 
+from permissions.permission_service import (
+    get_permitted_environments_for_master_api_key,
+    get_permitted_projects_for_master_api_key,
+)
+
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from projects.models import Project
@@ -17,21 +22,22 @@ class APIKeyUser:
         return True
 
     def has_project_permission(self, permission: str, project: "Project") -> bool:
-        # TODO: Implement this
-        return True
+        return project in self.get_permitted_projects(permission)
 
     def has_environment_permission(
         self, permission: str, environment: "Environment"
     ) -> bool:
-        # TODO: Implement this
+        return environment in self.get_permitted_environments(
+            permission, environment.project
+        )
         return True
 
     def get_permitted_projects(self, permission_key: str) -> QuerySet["Project"]:
-        return None
-        # return get_permitted_projects_for_user(self, permission_key)
+        return get_permitted_projects_for_master_api_key(self, permission_key)
 
     def get_permitted_environments(
         self, permission_key: str, project: "Project"
     ) -> QuerySet["Environment"]:
-        return None
-        # return get_permitted_environments_for_user(self, project, permission_key)
+        return get_permitted_environments_for_master_api_key(
+            self, project, permission_key
+        )
