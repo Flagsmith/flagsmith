@@ -195,12 +195,30 @@ def test_environment_permissions_calculator_get_permission_data(
 
     # When
     user_permission_data = get_environment_permission_data(
-        environment.id, user_id=user.id
+        environment=environment, user=user
     )
 
     # Then
     assert user_permission_data.admin == expected_admin
     assert user_permission_data.permissions == expected_permissions
+
+
+def test_environment_permissions_calculator_returns_admin_for_project_admin(
+    environment, project, organisation, django_user_model
+):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    UserProjectPermission.objects.create(user=user, project=project, admin=True)
+
+    # When
+    user_permission_data = get_environment_permission_data(
+        environment=environment, user=user
+    )
+
+    # Then
+    assert user_permission_data.admin is True
 
 
 @pytest.mark.parametrize(
