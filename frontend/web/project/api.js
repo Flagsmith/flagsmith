@@ -1,6 +1,5 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
-import { enableDynatrace } from 'common/stores/config-store'
 
 const enableDynatrace = !!window.enableDynatrace
 

@@ -562,7 +562,6 @@ const Aside = class extends Component {
                                 Demo Broken Feature
                               </Link>
                             )}
-
                             {this.state.version && (
                               <div className='text-muted text-small text-center'>
                                 {this.state.version.tag !== 'Unknown' && (
