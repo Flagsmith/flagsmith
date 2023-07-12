@@ -1,7 +1,6 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
-
-const enableDynatrace = !!window.enableDynatrace
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 global.API = {
   ajaxHandler(store, res) {
