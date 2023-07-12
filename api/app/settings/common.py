@@ -221,6 +221,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+        "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -249,7 +250,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     # Add master api key object to request
-    "api_keys.middleware.MasterAPIKeyMiddleware",
+    # "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -800,6 +801,7 @@ AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not N
 if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
+
 
 IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:

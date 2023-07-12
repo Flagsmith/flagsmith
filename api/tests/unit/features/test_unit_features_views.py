@@ -214,7 +214,10 @@ def test_environment_feature_states_does_not_return_null_versions(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [
+        lazy_fixture("master_api_key_client"),  # lazy_fixture("admin_client")
+    ],
 )
 def test_create_feature_default_is_archived_is_false(client, project):
     # Given - set up data

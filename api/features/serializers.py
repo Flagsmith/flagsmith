@@ -129,7 +129,9 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-        if user and not user.is_anonymous:
+        from api_keys.user import APIKeyUser
+
+        if user and not isinstance(user, APIKeyUser):
             instance.owners.add(user)
         return instance
 

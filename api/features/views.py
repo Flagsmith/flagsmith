@@ -46,7 +46,6 @@ from .permissions import (
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
     MasterAPIKeyEnvironmentFeatureStatePermissions,
-    MasterAPIKeyFeaturePermissions,
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
@@ -98,7 +97,7 @@ def get_feature_by_uuid(request, uuid):
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
 class FeatureViewSet(viewsets.ModelViewSet):
-    permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
+    permission_classes = [FeaturePermissions]
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -114,12 +113,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return Feature.objects.none()
 
-        if self.request.user.is_anonymous:
-            accessible_projects = (
-                self.request.master_api_key.organisation.projects.all()
-            )
-        else:
-            accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
+        accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
