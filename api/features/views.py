@@ -6,13 +6,14 @@ from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
+from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
@@ -34,6 +35,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from projects.models import Project
+from projects.permissions import VIEW_PROJECT
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -82,7 +84,7 @@ def get_feature_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
         "multivariate_options", "owners", "tags"
     )
@@ -97,7 +99,6 @@ def get_feature_by_uuid(request, uuid):
 )
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
-    filterset_fields = ["is_archived"]
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -110,14 +111,15 @@ class FeatureViewSet(viewsets.ModelViewSet):
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Feature.objects.none()
+
         if self.request.user.is_anonymous:
             accessible_projects = (
                 self.request.master_api_key.organisation.projects.all()
             )
         else:
-            accessible_projects = self.request.user.get_permitted_projects(
-                ["VIEW_PROJECT"]
-            )
+            accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
@@ -314,6 +316,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         """
         Override queryset to filter based on provided URL parameters.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         environment_api_key = self.kwargs["environment_api_key"]
 
         try:
@@ -495,6 +500,9 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
 
     @action(methods=["GET"], detail=False)
@@ -553,7 +561,7 @@ def get_feature_state_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = FeatureState.objects.filter(
         feature__project__in=accessible_projects
     ).select_related("feature_state_value")
@@ -629,6 +637,9 @@ class SDKFeatureStates(GenericAPIView):
 
         if self.request.environment.get_hide_disabled_flags() is True:
             return filters & Q(enabled=True)
+
+        if self.request.originated_from is RequestOrigin.CLIENT:
+            return filters & Q(feature__is_server_key_only=False)
 
         return filters
 

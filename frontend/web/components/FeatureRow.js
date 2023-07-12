@@ -27,6 +27,7 @@ class TheComponent extends Component {
         environmentFlag={environmentFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
@@ -47,6 +48,7 @@ class TheComponent extends Component {
         projectFlag={projectFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
@@ -66,7 +68,6 @@ class TheComponent extends Component {
       }`,
       <CreateFlagModal
         isEdit
-        router={this.context.router}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}
@@ -74,12 +75,9 @@ class TheComponent extends Component {
         environmentFlag={environmentFlag}
         flagId={environmentFlag.id}
       />,
-      null,
-      {
-        className: 'side-modal fade create-feature-modal',
-        onClose: () => {
-          history.replaceState({}, null, `${document.location.pathname}`)
-        },
+      'side-modal create-feature-modal',
+      () => {
+        history.replaceState({}, null, `${document.location.pathname}`)
       },
     )
   }
@@ -115,10 +113,10 @@ class TheComponent extends Component {
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
           }
           style={{
-            flexDirection: this.props.isCompareEnv ? 'column' : 'row',
             overflow: 'hidden',
             ...(this.props.style || {}),
           }}
+          className={this.props.isCompareEnv ? 'column' : null}
         >
           <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
             <Switch
@@ -192,17 +190,18 @@ class TheComponent extends Component {
         >
           <div>
             <Row>
-              <ButtonLink
+              <Button
+                theme='text'
                 className={`mr-2 ${readOnly ? 'cursor-default' : ''}`}
               >
                 {name}
-              </ButtonLink>
+              </Button>
               {projectFlag.owners && !!projectFlag.owners.length ? (
                 <Tooltip
                   title={
-                    <ButtonLink>
+                    <Button theme='text'>
                       <span className='ion ion-md-person pr-2' />
-                    </ButtonLink>
+                    </Button>
                   }
                   place='right'
                 >
@@ -216,7 +215,10 @@ class TheComponent extends Component {
               {!!projectFlag.num_segment_overrides && (
                 <Tooltip
                   title={
-                    <span className='chip ml-1 chip--sm bg-primary text-white'>
+                    <span
+                      className='chip ml-1 chip--sm bg-primary text-white'
+                      style={{ border: 'none' }}
+                    >
                       <SegmentsIcon className='chip-svg-icon' />
                       <span>{projectFlag.num_segment_overrides}</span>
                     </span>
@@ -231,7 +233,10 @@ class TheComponent extends Component {
               {!!projectFlag.num_identity_overrides && (
                 <Tooltip
                   title={
-                    <span className='chip ml-1 chip--sm bg-primary text-white'>
+                    <span
+                      className='chip ml-1 chip--sm bg-primary text-white'
+                      style={{ border: 'none' }}
+                    >
                       <UsersIcon className='chip-svg-icon' />
                       <span>{projectFlag.num_identity_overrides}</span>
                     </span>

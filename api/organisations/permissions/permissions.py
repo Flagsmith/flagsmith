@@ -127,7 +127,8 @@ class UserPermissionGroupPermission(BasePermission):
             return False
 
         return (
-            (view.action == "list" and request.user.belongs_to(organisation.id))
+            view.action in ("list", "my_groups")
+            and request.user.belongs_to(organisation.id)
             or view.detail is True  # delegate to has_object_permission / get_queryset
             or request.user.has_organisation_permission(
                 organisation, MANAGE_USER_GROUPS

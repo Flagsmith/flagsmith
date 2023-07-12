@@ -29,7 +29,7 @@
   transition-delay:         $delay;
 }
 .invalid .value-editor .hljs{
-  border: 2px solid $brand-danger;
+  border: 2px solid $danger;
 }
 .value-editor {
   position: relative;
@@ -114,7 +114,7 @@
   overflow-x: auto;
   padding: 0.5em;
   background: $bt-code-background;
-  border-radius: 10px;
+  border-radius: $border-radius;
   &.no-pad {
     margin-bottom: 0;
   }
@@ -148,7 +148,6 @@
 .btn--docs {
   background: transparent!important;
   border-width: 1px !important;
-  border-color: $bt-brand-primary !important;
   box-shadow: none !important;
   &:hover {
     color: $bt-brand-primary;
@@ -162,7 +161,7 @@
 }
 
 .btn.hljs-copy {
-  border-radius: 15px;
+  border-radius: $border-radius;
   opacity: 0;
   position: absolute;
   bottom:45px;
@@ -197,7 +196,7 @@
   font-size: .8em;
   padding-left: 10px;
   padding-right: 10px;
-  border-radius: $border-radius-default;
+  border-radius: $border-radius;
   margin-right: 5px;
   margin-bottom: $input-padding-y/2;
   .hljs-description {
@@ -283,17 +282,19 @@
 
 code.txt {
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 500;
     background: transparent !important;
     border: 1px solid $input-border-color;
     font-family: "OpenSans", sans-serif;
-    color: $body-color;
+    color: $text-icon-dark;
   &.empty {
-    color: rgba(46, 46, 46, 0.25) !important;
+    font-weight: normal;
+    color: $input-placeholder-color;
   }
   &:focus, &:focus.empty {
-    color: $body-color !important;
-    border-color: $bt-input-border-active;
+    font-weight: 500;
+    color: $text-icon-dark;
+    border-color: $primary;
   }
  }
 

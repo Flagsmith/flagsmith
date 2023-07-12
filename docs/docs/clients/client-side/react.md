@@ -10,9 +10,9 @@ re-renders.
 
 Example applications for a variety of React, React Native and Next.js can be found here:
 
-- [Usage with React](https://github.com/Flagsmith/flagsmith-js-client/tree/main/examples/react)
-- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-client/tree/main/examples/react)
-- [Usage with Next.js](https://github.com/Flagsmith/flagsmith-js-client/tree/main/examples/nextjs)
+- [Usage with React](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
+- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
+- [Usage with Next.js](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/nextjs)
 
 ## Installation
 
@@ -144,6 +144,16 @@ export function MyComponent() {
 
 ## useFlagsmith API Reference
 
+This allows you to access the SDK instance that is used within the FlagsmithProvider.
+
 ```javascript
 useFlagsmith()=> IFlagsmith
+```
+
+## useFlagsmithLoading API Reference
+
+This hook allows you to access the [SDK loading state](javascript#flagsmith-loading-state).
+
+```javascript
+useFlagsmithLoading()=> LoadingState
 ```

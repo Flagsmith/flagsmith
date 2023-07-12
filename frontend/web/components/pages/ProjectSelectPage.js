@@ -3,6 +3,8 @@ import CreateProjectModal from 'components/modals/CreateProject'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
 
 const ProjectSelectPage = class extends Component {
   static displayName = 'ProjectSelectPage'
@@ -27,7 +29,7 @@ const ProjectSelectPage = class extends Component {
 
   newProject = () => {
     openModal(
-      'Create  Project',
+      'Create Project',
       <CreateProjectModal
         onSave={({ environmentId, projectId }) => {
           this.context.router.history.push(
@@ -35,6 +37,7 @@ const ProjectSelectPage = class extends Component {
           )
         }}
       />,
+      'p-0',
     )
   }
 
@@ -53,7 +56,7 @@ const ProjectSelectPage = class extends Component {
                 <div className='flex-row pl-0 pr-0'>
                   <div className='col-md-9 pl-0 pr-0'>
                     <h3>Your projects</h3>
-                    <p>
+                    <p className='fs-small lh-sm'>
                       Projects let you create and manage a set of features and
                       configure them between multiple app environments.
                     </p>
@@ -121,7 +124,7 @@ const ProjectSelectPage = class extends Component {
                       renderRow={({ environments, id, name }, i) => (
                         <Link
                           key={id}
-                          className='list-item clickable'
+                          className='list-item text-decoration-none link-unstyled clickable'
                           id={`project-select-${i}`}
                           to={`/project/${id}/environment/${
                             environments && environments[0]
@@ -131,7 +134,7 @@ const ProjectSelectPage = class extends Component {
                         >
                           <Row>
                             <Flex className='align-start'>
-                              <ButtonLink>{name}</ButtonLink>
+                              <span className='fw-bold'>{name}</span>
                             </Flex>
                             <span className='text__link icon ion-ios-arrow-forward list-item' />
                           </Row>
@@ -152,16 +155,14 @@ const ProjectSelectPage = class extends Component {
                                     Constants.environmentPermissions(
                                       'Create Project',
                                     ),
-                                    <button
+                                    <Button
                                       disabled={!permission}
                                       onClick={this.newProject}
-                                      className='btn btn-primary btn-lg'
                                       data-test='create-first-project-btn'
                                       id='create-first-project-btn'
                                     >
-                                      <span className='icon ion-ios-rocket' />{' '}
-                                      Create a project
-                                    </button>,
+                                      Create Project
+                                    </Button>,
                                   )
                                 }}
                               </Permission>

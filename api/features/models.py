@@ -112,6 +112,7 @@ class Feature(
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+    is_server_key_only = models.BooleanField(default=False)
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -463,11 +464,18 @@ class FeatureState(
                 )
             return True
 
-        if self.feature_segment_id:
+        if (
+            self.feature_segment_id
+            and self.feature_segment_id != other.feature_segment_id
+        ):
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
             return not (
-                other.identity_id or self.feature_segment < other.feature_segment
+                other.identity_id
+                or (
+                    other.feature_segment_id
+                    and self.feature_segment < other.feature_segment
+                )
             )
 
         if self.type == other.type:
@@ -477,11 +485,15 @@ class FeatureState(
             # further in the future can be lower than a feature state
             # whose live_from value is earlier.
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            is_more_recent_live_from = self.is_more_recent_live_from(other)
-            is_more_recent_version = self._is_more_recent_version(other)
-            return self.version is not None and (
-                is_more_recent_live_from or is_more_recent_version
-            )
+            if self.is_live:
+                if not other.is_live or self.is_more_recent_live_from(other):
+                    return True
+                elif self.live_from == other.live_from and self._is_more_recent_version(
+                    other
+                ):
+                    return True
+
+            return False
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -602,7 +614,13 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
-        identity_hash_key = identity.get_hash_key() if identity else None
+        identity_hash_key = (
+            identity.get_hash_key(
+                identity.environment.use_identity_composite_key_for_hashing
+            )
+            if identity
+            else None
+        )
         return self.get_feature_state_value_by_hash_key(identity_hash_key)
 
     def get_feature_state_value_defaults(self) -> dict:
@@ -671,12 +689,12 @@ class FeatureState(
             )
 
     @hook(BEFORE_CREATE)
-    def set_live_from_for_version_1(self):
+    def set_live_from(self):
         """
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
-        if self.version == 1 and not self.live_from:
+        if self.version is not None and self.live_from is None:
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
@@ -766,15 +784,7 @@ class FeatureState(
                 feature_state.identity_id,
             )
             current_feature_state = feature_states_dict.get(key)
-            # we use live_from here as a priority over the version since
-            # the version is given when change requests are committed,
-            # hence the version for a feature state that is scheduled
-            # further in the future can be lower than a feature state
-            # whose live_from value is earlier.
-            # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            if not current_feature_state or feature_state.is_more_recent_live_from(
-                current_feature_state
-            ):
+            if not current_feature_state or feature_state > current_feature_state:
                 feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
@@ -884,7 +894,7 @@ class FeatureState(
             and self.feature_segment_id is None
             and self.identity_id is None
         ):
-            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+            kwargs["skip_signals_and_hooks"] = "send_environments_to_dynamodb"
 
         return kwargs
 

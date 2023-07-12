@@ -36,7 +36,7 @@
 	}
 	width: 100%;
 	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-	border-radius: $border-radius-default;
+	border-radius: $border-radius;
 	.panel-heading {
 		h1, h2, h3, h4, h5, h6 {
 			color: $panel-heading-color;
@@ -49,12 +49,12 @@
 		border-top-left-radius: 8px;
 		padding-top: 10px;
 		padding-bottom: 10px;
+		padding-left: $input-padding-x;
+		padding-right: $input-padding-x;
 		flex: 1 1 0%;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding-left: $input-padding-x;
-		padding-right: $input-padding-x;
 		background-color: $panel-heading-bg;
 		text-transform: capitalize;
 		color: $panel-heading-color;
@@ -63,7 +63,8 @@
 			color: $panel-heading-color;
 			font-family: $font-family-header;
 			.subtitle {
-				color: $body-text-faint;
+				color: $text-icon-dark;
+				font-weight: 400;
 				text-transform: none;
 			}
 		}
@@ -73,27 +74,14 @@
 	.panel-content {
 		background-color: $panel-bg;
 		padding: $input-padding-y $input-padding-x;
-		border-bottom-left-radius: $border-radius-default !important;
-		border-bottom-right-radius: $border-radius-default !important;
+		border-bottom-left-radius: $border-radius !important;
+		border-bottom-right-radius: $border-radius !important;
 	}
 	&.panel-without-heading {
 		.panel-content {
-			border-top-left-radius: $border-radius-default !important;
-			border-top-right-radius: $border-radius-default !important;
+			border-top-left-radius: $border-radius !important;
+			border-top-right-radius: $border-radius !important;
 		}
-	}
-
-	input[type="text"] {
-		opacity: 0.5;
-		&:focus {
-			opacity: 1;
-		}
-		outline: none;
-		border: none;
-		border-radius: $border-radius-default;
-		//padding: 2px 10px 2px 30px;
-		font-weight: normal;
-		//color: $panel-heading-color;
 	}
 
 	.icon {
@@ -162,6 +150,9 @@
 			}
 			.title {
 				color: $header-color-dark;
+				.subtitle {
+					color: white;
+				}
 			}
 			color: $header-color-dark;
 

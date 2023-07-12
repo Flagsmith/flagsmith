@@ -2,10 +2,12 @@ import typing
 from collections import namedtuple
 
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.request_origin import RequestOrigin
 from django.conf import settings
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -41,6 +43,9 @@ class IdentityViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Identity.objects.none()
+
         environment = self.get_environment_from_request()
         queryset = Identity.objects.filter(environment=environment)
 
@@ -218,6 +223,7 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
             if getattr(self, "identity", None):
                 context["identity"] = self.identity
+        context["feature_states_additional_filters"] = self._get_additional_filters()
         return context
 
     @swagger_auto_schema(
@@ -254,12 +260,22 @@ class SDKIdentities(SDKAPIView):
             },
         )
 
+    def _get_additional_filters(self) -> Q | None:
+        if self.request.originated_from is RequestOrigin.CLIENT:
+            return Q(feature__is_server_key_only=False)
+        return None
+
     def _get_single_feature_state_response(
-        self, identity, feature_name, headers: typing.Dict[str, typing.Any]
-    ):
+        self,
+        identity: Identity,
+        feature_name: str,
+        headers: dict[str, typing.Any],
+    ) -> Response:
         context = self.get_serializer_context()
 
-        for feature_state in identity.get_all_feature_states():
+        for feature_state in identity.get_all_feature_states(
+            additional_filters=self._get_additional_filters(),
+        ):
             if feature_state.feature.name == feature_name:
                 serializer = SDKFeatureStateSerializer(feature_state, context=context)
                 return Response(
@@ -272,14 +288,20 @@ class SDKIdentities(SDKAPIView):
             headers=headers,
         )
 
-    def _get_all_feature_states_for_user_response(self, identity, headers):
+    def _get_all_feature_states_for_user_response(
+        self,
+        identity: Identity,
+        headers: dict[str, typing.Any],
+    ):
         """
         Get all feature states for an identity
 
         :param identity: Identity model to return feature states for
         :return: Response containing lists of both serialized flags and traits
         """
-        all_feature_states = identity.get_all_feature_states()
+        all_feature_states = identity.get_all_feature_states(
+            additional_filters=self._get_additional_filters(),
+        )
         serializer_class = self.get_serializer_class()
         serializer = serializer_class(
             {

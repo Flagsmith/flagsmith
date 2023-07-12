@@ -93,7 +93,7 @@ const CreateWebhook = class extends Component {
                   <a
                     className='text-info'
                     target='_blank'
-                    href='https://docs.flagsmith.com/advanced-use/system-administration#validating-signature'
+                    href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                     rel='noreferrer'
                   >
                     More info
@@ -148,11 +148,7 @@ const CreateWebhook = class extends Component {
                       {isSaving ? 'Creating' : 'Update Webhook'}
                     </Button>
                   ) : (
-                    <Button
-                      data-test='create-feature-btn'
-                      id='create-feature-btn'
-                      disabled={isSaving || !url}
-                    >
+                    <Button type='submit' disabled={isSaving || !url}>
                       {isSaving ? 'Creating' : 'Create Webhook'}
                     </Button>
                   )}
@@ -162,13 +158,14 @@ const CreateWebhook = class extends Component {
             <FormGroup className='mb-4 ml-1'>
               <div>
                 <label>Example Payload </label>
-                <ButtonLink
+                <Button
+                  theme='text'
                   className='ml-1'
-                  href='https://docs.flagsmith.com/advanced-use/system-administration'
+                  href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
                   target='_blank'
                 >
                   View docs
-                </ButtonLink>
+                </Button>
                 <Highlight
                   forceExpanded
                   style={{ marginBottom: 10 }}

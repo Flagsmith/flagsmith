@@ -1,14 +1,15 @@
 import React from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import ForgotPasswordModal from 'components/ForgotPasswordModal'
+import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
-import { ButtonLink } from 'components/base/forms/Button'
 import NavIconSmall from 'components/svg/NavIconSmall'
 import SamlForm from 'components/SamlForm'
 import data from 'common/data/base/_data'
 import GoogleButton from 'components/GoogleButton'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Icon from 'components/Icon'
+import ErrorMessage from 'components/ErrorMessage'
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -21,7 +22,7 @@ const HomePage = class extends React.Component {
     super(props, context)
     this.state = {
       marketing_consent_given:
-        API.getCookie('marketing_consent_given') !== 'false',
+        API.getCookie('marketing_consent_given') === 'true',
     }
   }
 
@@ -101,8 +102,7 @@ const HomePage = class extends React.Component {
           toast('Please check your email to reset your password.')
         }}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'p-0',
     )
   }
 
@@ -182,7 +182,7 @@ const HomePage = class extends React.Component {
               }
             }}
             key='single-sign-on'
-            className='btn btn__oauth btn__oauth--saml'
+            className='btn btn__oauth btn-primary btn__oauth--saml'
           >
             Single Sign-On
           </a>,
@@ -212,13 +212,14 @@ const HomePage = class extends React.Component {
                           We have a 100% free for life plan for smaller
                           projects.
                         </p>
-                        <ButtonLink
+                        <Button
+                          theme='text'
                           className='pt-3 pb-3'
                           href='https://flagsmith.com/pricing'
                           target='_blank'
                         >
                           Check out our Pricing
-                        </ButtonLink>
+                        </Button>
                       </>
                     )}
                   </>
@@ -239,9 +240,9 @@ const HomePage = class extends React.Component {
                     for an invite link.
                     <div>
                       <Link id='existing-member-btn' to={`/login${redirect}`}>
-                        <ButtonLink className='mt-2 pb-3 pt-2'>
+                        <Button theme='text' className='mt-2 pb-3 pt-2'>
                           Already a member?
-                        </ButtonLink>
+                        </Button>
                       </Link>
                     </div>
                   </Card>
@@ -300,7 +301,7 @@ const HomePage = class extends React.Component {
                                           email: Utils.safeParseEventValue(e),
                                         })
                                       }}
-                                      className='input-default full-width mb-2 '
+                                      className='input-default full-width mb-2'
                                       type='text'
                                       name='email'
                                       id='email'
@@ -334,12 +335,13 @@ const HomePage = class extends React.Component {
                                             to={`/password-recovery${redirect}`}
                                             onClick={this.showForgotPassword}
                                           >
-                                            <ButtonLink
+                                            <Button
+                                              theme='text'
                                               tabIndex={-1}
                                               type='button'
                                             >
                                               Forgot password?
-                                            </ButtonLink>
+                                            </Button>
                                           </Link>
                                         )
                                       }
@@ -361,13 +363,14 @@ const HomePage = class extends React.Component {
                                     </div>
                                   </fieldset>
                                   {error && (
-                                    <div
-                                      id='error-alert'
-                                      className='alert mt-3 alert-danger'
-                                    >
-                                      {typeof AccountStore.error === 'string'
-                                        ? AccountStore.error
-                                        : 'Please check your details and try again'}
+                                    <div id='error-alert' className='mt-3'>
+                                      <ErrorMessage
+                                        error={
+                                          typeof AccountStore.error === 'string'
+                                            ? AccountStore.error
+                                            : 'Please check your details and try again'
+                                        }
+                                      />
                                     </div>
                                   )}
                                 </form>
@@ -386,12 +389,13 @@ const HomePage = class extends React.Component {
                                 id='existing-member-btn'
                                 to={`/signup${redirect}`}
                               >
-                                <ButtonLink
+                                <Button
+                                  theme='text'
                                   data-test='jsSignup'
                                   className='ml-1'
                                 >
                                   Sign up
-                                </ButtonLink>
+                                </Button>
                               </Link>
                             </Row>
                           )}
@@ -453,13 +457,14 @@ const HomePage = class extends React.Component {
                           >
                             {error && (
                               <FormGroup>
-                                <div
-                                  id='error-alert'
-                                  className='alert alert-danger'
-                                >
-                                  {typeof AccountStore.error === 'string'
-                                    ? AccountStore.error
-                                    : 'Please check your details and try again'}
+                                <div id='error-alert'>
+                                  <ErrorMessage
+                                    error={
+                                      typeof AccountStore.error === 'string'
+                                        ? AccountStore.error
+                                        : 'Please check your details and try again'
+                                    }
+                                  />
                                 </div>
                               </FormGroup>
                             )}
@@ -476,7 +481,7 @@ const HomePage = class extends React.Component {
                                 title='First Name'
                                 data-test='firstName'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.first_name,
                                   name: 'firstName',
                                 }}
@@ -494,7 +499,7 @@ const HomePage = class extends React.Component {
                                 title='Last Name'
                                 data-test='lastName'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.last_name,
                                   name: 'lastName',
                                 }}
@@ -518,7 +523,7 @@ const HomePage = class extends React.Component {
                                 title='Email Address'
                                 data-test='email'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.email,
                                   name: 'email',
                                 }}
@@ -545,7 +550,7 @@ const HomePage = class extends React.Component {
                                 title='Password'
                                 data-test='password'
                                 inputProps={{
-                                  className: 'full-width mb-2',
+                                  className: 'full-width',
                                   error: error && error.password,
                                   name: 'password',
                                 }}
@@ -560,8 +565,7 @@ const HomePage = class extends React.Component {
                                 id='password'
                               />
                               {Utils.getFlagsmithHasFeature('mailing_list') && (
-                                <Row className='text-right'>
-                                  <Flex />
+                                <div>
                                   <input
                                     onChange={(e) => {
                                       API.setCookie(
@@ -574,14 +578,23 @@ const HomePage = class extends React.Component {
                                       })
                                     }}
                                     id='mailinglist'
-                                    className='mr-2'
                                     type='checkbox'
                                     checked={this.state.marketing_consent_given}
                                   />
-                                  <label className='mb-0' htmlFor='mailinglist'>
-                                    Join our mailing list!
+                                  <label
+                                    className='mb-0'
+                                    htmlFor='mailinglist'
+                                    style={{ display: 'inline' }}
+                                  >
+                                    <span className='checkbox mr-2'>
+                                      {this.state.marketing_consent_given && (
+                                        <Icon name='checkmark' />
+                                      )}
+                                    </span>
+                                    Yes, I would like to signup for the twice
+                                    monthly newsletter (optional)
                                   </label>
-                                </Row>
+                                </div>
                               )}
                               <div className='form-cta'>
                                 <Button
@@ -601,7 +614,9 @@ const HomePage = class extends React.Component {
                       <Row className='justify-content-center mt-2'>
                         Have an account?{' '}
                         <Link id='existing-member-btn' to={`/login${redirect}`}>
-                          <ButtonLink className='ml-1'>Log in</ButtonLink>
+                          <Button theme='text' className='ml-1'>
+                            Log in
+                          </Button>
                         </Link>
                       </Row>
                     </React.Fragment>

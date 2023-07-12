@@ -11,7 +11,7 @@ projects. The source code for the client is available on [Github](https://github
 Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can
 be found here:
 
-- [Flagsmith Framework Examples](https://github.com/flagsmith/flagsmith-js-client/tree/main/examples)
+- [Flagsmith Framework Examples](https://github.com/Flagsmith/flagsmith-js-examples/tree/main)
 
 ## Installation
 
@@ -229,24 +229,24 @@ All function and property types can be seen
 
 ### Initialisation options
 
-| Property                                                                       |                                                                                                              Description                                                                                                               | Required |                          Default Value |
-| ------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------: | -------------------------------------: |
-| `environmentID: string`                                                        |                                                                     Defines which project environment you wish to get flags for. _example ACME Project - Staging._                                                                     |  **YES** |                                   null |
-| `onChange?: (previousFlags:IFlags, params:IRetrieveInfo)=> void`               |                                     Your callback function for when the flags are retrieved `(previousFlags,{isFromServer:true/false,flagsChanged: true/false, traitsChanged:true/false})=>{...}`                                      |  **YES** |                                   null |
-| `onError?: (res:{message:string}) => void`                                     |                                                                                    Callback function on failure to retrieve flags. `(error)=>{...}`                                                                                    |          |                                   null |
-| `realtime?:boolean`                                                            |                                                                              Whether to listen for [Real Time Flag events](/advanced-use/real-time-flags)                                                                              |          |                                  false |
-| `asyncStorage?:any`                                                            | Needed for cacheFlags option, used to tell the library what implementation of AsyncStorage your app uses, i.e. ReactNative.AsyncStorage vs @react-native-community/async-storage, for web this defaults to an internal implementation. |          |                                   null |
-| `cacheFlags?: boolean`                                                         |                                      Any time flags are retrieved they will be cached, flags and identities will then be retrieved from local storage before hitting the API (see cache options)                                       |          |                                   null |
-| `cacheOptions?: {ttl?:number, skipAPI?:boolean}`                               |                                                     A ttl in ms (default to 0 which is infinite) and option to skip hitting the API in flagsmith.init if there's cache available.                                                      |          |                 {ttl:0, skipAPI:false} |
-| `enableAnalytics?: boolean`                                                    |                                                               [Enable sending flag analytics](/advanced-use/flag-analytics.md) for getValue and hasFeature evaluations.                                                                |          |                                  false |
-| `enableLogs?: boolean`                                                         |                                                                                                Enables logging for key Flagsmith events                                                                                                |          |                                   null |
-| `defaultFlags?: {flag_name: {enabled: boolean, value: string,number,boolean}}` |                                                                    Allows you define default features, these will all be overridden on first retrieval of features.                                                                    |          |                                   null |
-| `preventFetch?: boolean`                                                       |                                                                                     If you want to disable fetching flags and call getFlags later.                                                                                     |          |                                  false |
-| `state?: IState`                                                               |                                                                                   Set a predefined state, useful for SSR / isomorphic applications.                                                                                    |          |                                  false |
-| `api?: string`                                                                 |                                                                   Use this property to define where you're getting feature flags from, e.g. if you're self hosting.                                                                    |          | https://edge.api.flagsmith.com/api/v1/ |
-| `eventSourceUrl?: string`                                                      |                                                 Use this property to define where you're getting real-time flag update events (server sent events) from, e.g. if you're self hosting.                                                  |          | https://edge.api.flagsmith.com/api/v1/ |
-| `identity?: string`                                                            |                                                                           Specifying an identity will fetch flags for that identity in the initial API call.                                                                           |  **YES** |                                   null |
-| `traits?:Record<string, string or number or boolean>`                          |                                                                           Specifying traits will send the traits for that identity in the initial API call.                                                                            |  **YES** |                                   null |
+| Property                                                                                    |                                                                                                              Description                                                                                                               | Required |                          Default Value |
+| ------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------: | -------------------------------------: |
+| `environmentID: string`                                                                     |                                                                     Defines which project environment you wish to get flags for. _example ACME Project - Staging._                                                                     |  **YES** |                                   null |
+| `onChange?: (previousFlags:IFlags, params:IRetrieveInfo, loadingState:LoadingState)=> void` |                                     Your callback function for when the flags are retrieved `(previousFlags,{isFromServer:true/false,flagsChanged: true/false, traitsChanged:true/false})=>{...}`                                      |  **YES** |                                   null |
+| `onError?: (res:{message:string}) => void`                                                  |                                                                                    Callback function on failure to retrieve flags. `(error)=>{...}`                                                                                    |          |                                   null |
+| `realtime?:boolean`                                                                         |                                                                              Whether to listen for [Real Time Flag events](/advanced-use/real-time-flags)                                                                              |          |                                  false |
+| `asyncStorage?:any`                                                                         | Needed for cacheFlags option, used to tell the library what implementation of AsyncStorage your app uses, i.e. ReactNative.AsyncStorage vs @react-native-community/async-storage, for web this defaults to an internal implementation. |          |                                   null |
+| `cacheFlags?: boolean`                                                                      |                                      Any time flags are retrieved they will be cached, flags and identities will then be retrieved from local storage before hitting the API (see cache options)                                       |          |                                   null |
+| `cacheOptions?: {ttl?:number, skipAPI?:boolean}`                                            |                                                     A ttl in ms (default to 0 which is infinite) and option to skip hitting the API in flagsmith.init if there's cache available.                                                      |          |                 {ttl:0, skipAPI:false} |
+| `enableAnalytics?: boolean`                                                                 |                                                               [Enable sending flag analytics](/advanced-use/flag-analytics.md) for getValue and hasFeature evaluations.                                                                |          |                                  false |
+| `enableLogs?: boolean`                                                                      |                                                                                                Enables logging for key Flagsmith events                                                                                                |          |                                   null |
+| `defaultFlags?: {flag_name: {enabled: boolean, value: string,number,boolean}}`              |                                                                    Allows you define default features, these will all be overridden on first retrieval of features.                                                                    |          |                                   null |
+| `preventFetch?: boolean`                                                                    |                                                                                     If you want to disable fetching flags and call getFlags later.                                                                                     |          |                                  false |
+| `state?: IState`                                                                            |                                                                                   Set a predefined state, useful for SSR / isomorphic applications.                                                                                    |          |                                  false |
+| `api?: string`                                                                              |                                                                   Use this property to define where you're getting feature flags from, e.g. if you're self hosting.                                                                    |          | https://edge.api.flagsmith.com/api/v1/ |
+| `eventSourceUrl?: string`                                                                   |                                                 Use this property to define where you're getting real-time flag update events (server sent events) from, e.g. if you're self hosting.                                                  |          | https://edge.api.flagsmith.com/api/v1/ |
+| `identity?: string`                                                                         |                                                                           Specifying an identity will fetch flags for that identity in the initial API call.                                                                           |  **YES** |                                   null |
+| `traits?:Record<string, string or number or boolean>`                                       |                                                                           Specifying traits will send the traits for that identity in the initial API call.                                                                            |  **YES** |                                   null |
 
 ### Available Functions
 
@@ -287,6 +287,30 @@ const flagsmith = createFlagsmithInstance();
 const flagsmithB = createFlagsmithInstance();
 
 // now you can use flagsmith as before but in its own instance
+```
+
+## Flagsmith Loading State
+
+[Version 3.19 and above](https://github.com/Flagsmith/flagsmith-js-client/releases/tag/3.19.0) allows you to determine
+the current loading state of the SDK and whether its current data is from default flags, cache or the API. Flagsmith
+loading state can be accessed via the onChange event and the
+[`useFlagsmithLoading()`](react#useflagsmithloading-api-reference) hook in the React SDK. The expected type of Flagsmith
+loading state is as follows:
+
+```typescript
+export declare enum FlagSource {
+ 'NONE' = 'NONE',
+ 'DEFAULT_FLAGS' = 'DEFAULT_FLAGS',
+ 'CACHE' = 'CACHE',
+ 'SERVER' = 'SERVER',
+}
+
+export declare type LoadingState = {
+ error: Error | null; // Current error, resets on next attempt to fetch flags
+ isFetching: bool; // Whether there is a current request to fetch server flags
+ isLoading: bool; // Whether any flag data exists
+ source: FlagSource; //Indicates freshness of flags
+};
 ```
 
 ## JSON Feature Values
@@ -406,7 +430,7 @@ flagsmith_trait_<FEATURE_NAME> // remote config
 ```
 
 You can find an example of this integration
-[here](https://github.com/Flagsmith/flagsmith-js-client/blob/main/examples/datadog-realtime-user-monitoring/src/index.tsx).
+[here](https://github.com/Flagsmith/flagsmith-js-examples/blob/main/datadog-realtime-user-monitoring/src/index.tsx).
 
 ## Dynatrace JavaScript SDK Integration
 
@@ -529,5 +553,4 @@ The Flagsmith JavaScript client uses the [fetch](https://developer.mozilla.org/e
 API to handle REST calls. Some frameworks such as Manifest and Nuxt do not support this out of the box.
 
 In order to resolve this issue, you can provide a custom fetch implementation to the Flagsmith SDK. An example of this
-can be found
-[here](https://github.com/Flagsmith/flagsmith-js-client/blob/main/examples/nuxt/plugins/flagsmith-plugin.ts#L9).
+can be found [here](https://github.com/Flagsmith/flagsmith-js-examples/blob/main/nuxt/plugins/flagsmith-plugin.ts#L9).

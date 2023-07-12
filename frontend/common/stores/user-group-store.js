@@ -49,7 +49,9 @@ const controller = {
       getStore(),
       { orgId: `${orgId}`, page: 1 },
       { forceRefetch: true },
-    ).then(() => {
+    ).then((response) => {
+      store.groups = response.data.results
+
       store.loaded()
       store.saved()
     })
@@ -111,6 +113,9 @@ const controller = {
 }
 
 const store = Object.assign({}, BaseStore, {
+  getGroups() {
+    return store.groups
+  },
   getPaging() {
     return store.paging
   },
@@ -129,6 +134,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.CREATE_GROUP:
       controller.createGroup(action.orgId, action.data)
+      break
+    case Actions.GET_GROUPS:
+      controller.getGroups(action.orgId)
       break
     default:
   }

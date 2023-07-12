@@ -40,7 +40,7 @@ https://github.com/Flagsmith/flagsmith-dotnet-client
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-https://github.com/Flagsmith/flagsmith-nodejs-client
+https://github.com/Flagsmith/flagsmith-nodejs-client https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
@@ -363,7 +363,7 @@ $button_data = $flags.get_feature_value('secret_button')
 <TabItem value="php" label="PHP">
 
 ```php
-$flags = $flagsmith->getFlags();
+$flags = $flagsmith->getEnvironmentFlags();
 $flags->isFeatureEnabled('secret_button');
 $flags->getFeatureValue('secret_button');
 ```
@@ -405,6 +405,12 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 </Tabs>
 
 ## Get Flags for an Identity
+
+- By default, all Traits defined in the SDK will automatically be persisted against the Identity within the Flagsmith
+  API.
+- Traits passed to the SDK will be added to all the other Traits associated with that Identity.
+- This full set of Traits are then used to evaluate the Flag values for the Identity.
+- This all happens in a single request/response.
 
 <Tabs groupId="language">
 <TabItem value="py" label="Python">
@@ -758,18 +764,18 @@ changes to the Environment. In certain languages, you may be required to termina
 instance of the Flagsmith client. Languages in which this is necessary are provided below.
 
 <Tabs groupId="language">
-<TabItem value="nodejs" label = "NodeJS">
+<TabItem value="java" label = "Java">
 
-```javascript
-// available from v2.2.1
+```java
+// available from v5.0.5
 flagsmith.close();
 ```
 
 </TabItem>
-<TabItem value="java" label = "Java">
+<TabItem value="nodejs" label = "NodeJS">
 
 ```javascript
-// available from v5.0.5
+// available from v2.2.1
 flagsmith.close();
 ```
 

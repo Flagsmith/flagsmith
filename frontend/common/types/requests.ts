@@ -1,4 +1,4 @@
-import { Segment, Tag } from './responses'
+import { Account, Segment, Tag, FeatureStateValue } from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -45,6 +45,9 @@ export type Req = {
     environmentId: string
     identifiers: string[]
   }
+  featureSegment: {
+    segment: string
+  }
   getIdentities: PagedRequest<{
     environmentId: string
     pageType?: 'NEXT' | 'PREVIOUS'
@@ -65,6 +68,12 @@ export type Req = {
   }
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
   getSegment: { projectId: string; id: string }
+  updateAccount: Account
+  deleteAccount: {
+    current_password: string
+    delete_orphan_organisations: boolean
+  }
+  updateUserEmail: { current_password: string; new_email: string }
   createGroupAdmin: {
     group: number | string
     user: number | string
@@ -80,5 +89,15 @@ export type Req = {
   }>
   deleteGroup: { id: number | string; orgId: number | string }
   getGroup: { id: string; orgId: string }
+  getMyGroups: PagedRequest<{
+    orgId: string
+  }>
+  createSegmentOverride: {
+    environmentId: string
+    featureId: string
+    enabled: boolean
+    feature_segment: featureSegment
+    feature_state_value: FeatureStateValue
+  }
   // END OF TYPES
 }

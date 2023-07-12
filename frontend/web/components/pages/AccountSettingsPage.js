@@ -10,6 +10,10 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+import { updateAccount } from 'common/services/useAccount'
+import { getStore } from 'common/store'
+import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
+import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -22,9 +26,6 @@ class TheComponent extends Component {
       ...AccountStore.getUser(),
     }
   }
-
-  componentDidMount() {}
-
   save = (e) => {
     Utils.preventDefault(e)
     const {
@@ -33,23 +34,34 @@ class TheComponent extends Component {
     if (isSaving || !first_name || !last_name) {
       return
     }
-    // _data.patch(`${Project.api}auth/users/me/`, {
-    _data
-      .put(`${Project.api}auth/users/me/`, {
-        email,
-        first_name,
-        id: AccountStore.model.id,
-        last_name,
-      })
-      .then(() => {
-        toast('Your account has been updated')
-      })
-      .catch(() =>
+    this.setState({ isSaving: true })
+    updateAccount(getStore(), {
+      email,
+      first_name,
+      id: AccountStore.model.id,
+      last_name,
+    }).then((res) => {
+      this.setState({ isSaving: false })
+      if (res.error) {
         this.setState({
           error:
             'There was an error setting your account, please check your details',
-        }),
-      )
+        })
+      } else {
+        toast('Your account has been updated')
+      }
+    })
+  }
+
+  confirmDeleteAccount = (lastUserOrganisations, id) => {
+    openModal(
+      'Are you sure?',
+      <ConfirmDeleteAccount
+        userId={id}
+        lastUserOrganisations={lastUserOrganisations}
+      />,
+      'p-0',
+    )
   }
 
   invalidateToken = () => {
@@ -81,7 +93,7 @@ class TheComponent extends Component {
     ) {
       return
     }
-    // _data.post(`${Project.api}auth/users/set_password/`, {
+    this.setState({ isSaving: true })
     _data
       .post(`${Project.api}auth/users/set_password/`, {
         current_password,
@@ -89,10 +101,12 @@ class TheComponent extends Component {
         re_new_password: new_password2,
       })
       .then(() => {
+        this.setState({ isSaving: false })
         toast('Your password has been updated')
       })
       .catch(() =>
         this.setState({
+          isSaving: false,
           passwordError:
             'There was an error setting your password, please check your details.',
         }),
@@ -106,6 +120,7 @@ class TheComponent extends Component {
         email,
         error,
         first_name,
+        id,
         last_name,
         new_password1,
         new_password2,
@@ -113,9 +128,15 @@ class TheComponent extends Component {
       },
     } = this
 
+    const lastUserOrganisations =
+      this.state.organisations.length >= 1
+        ? this.state.organisations?.filter((o) => o?.num_seats == 1)
+        : []
+
     return (
       <AccountProvider>
-        {({ isSaving }) => {
+        {({}) => {
+          const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
 
@@ -140,24 +161,50 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-8'>
                       <form className='mb-4' onSubmit={this.save}>
-                        <InputGroup
-                          className='mt-2'
-                          title='Email Address'
-                          data-test='firstName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                            readOnly: true,
-                          }}
-                          value={email}
-                          onChange={(e) =>
-                            this.setState({
-                              first_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          type='text'
-                          name='Email Address'
-                        />
+                        <div className='md-8'>
+                          <InputGroup
+                            className='mt-2'
+                            title='Email Address'
+                            data-test='firstName'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                              readOnly: true,
+                            }}
+                            value={email}
+                            onChange={(e) =>
+                              this.setState({
+                                first_name: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            type='text'
+                            name='Email Address'
+                          />
+                          {Utils.getFlagsmithHasFeature('change_email') && (
+                            <div className='text-right mt-2'>
+                              <Button
+                                onClick={() =>
+                                  openModal(
+                                    'Change Email Address',
+                                    <ChangeEmailAddress
+                                      onComplete={() => {
+                                        closeModal()
+                                        AppActions.logout()
+                                      }}
+                                    />,
+                                    'p-0',
+                                  )
+                                }
+                                id='change-email-button'
+                                data-test='change-email-button'
+                                type='button'
+                                class='input-group-addon'
+                              >
+                                Change Email Address
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <InputGroup
                           className='mt-2'
                           title='First Name'
@@ -207,7 +254,7 @@ class TheComponent extends Component {
                       <Row>
                         <Flex>
                           <h5>Show JSON References</h5>
-                          <p>
+                          <p className='fs-small lh-sm'>
                             Enabling this will allow you to inspect the JSON of
                             entities such as features within the platform.
                           </p>
@@ -221,6 +268,24 @@ class TheComponent extends Component {
                           checked={flagsmith.getTrait('json_inspect')}
                         />
                       </Row>
+                      <Row className='mt-4' space>
+                        <div className='col-md-8 pl-0'>
+                          <h5>Delete Account</h5>
+                          <p className='fs-small lh-sm'>
+                            Your account data will be permanently deleted.
+                          </p>
+                        </div>
+                        <Button
+                          id='delete-user-btn'
+                          data-test='delete-user-btn'
+                          onClick={() =>
+                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                          }
+                          className='btn btn--with-icon ml-auto btn--remove'
+                        >
+                          <RemoveIcon />
+                        </Button>
+                      </Row>
                     </div>
                   </div>
                 </TabItem>
@@ -228,12 +293,16 @@ class TheComponent extends Component {
                   <div className='mt-4'>
                     <div className='col-md-12'>
                       <h5>API Token</h5>
-                      <p>
+                      <p className='fs-small lh-sm'>
                         You can use this token to integrate with our RESTful
                         API, the documentation can be found{' '}
-                        <a href='https://api.flagsmith.com/api/v1/docs/'>
+                        <Button
+                          theme='text'
+                          href='https://api.flagsmith.com/api/v1/docs/'
+                          target='_blank'
+                        >
                           here
-                        </a>
+                        </Button>
                         .
                       </p>
                     </div>
@@ -339,7 +408,7 @@ class TheComponent extends Component {
                     )}
                     <div>
                       <h5>Two-Factor Authentication</h5>
-                      <p>
+                      <p className='fs-small lh-sm'>
                         Increase your account's security by enabling Two-Factor
                         Authentication (2FA).
                       </p>
@@ -356,8 +425,7 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
-                                null,
-                                { large: true },
+                                'modal-lg',
                               )
                             }}
                           >

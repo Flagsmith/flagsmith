@@ -20,7 +20,7 @@ import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
-import Button, { ButtonLink, ButtonOutline } from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import InfoMessage from 'components/InfoMessage'
 import Input from 'components/base/forms/Input'
@@ -33,6 +33,7 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
 
 type PageType = {
   number: number
@@ -255,9 +256,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
               style={{ marginTop: 20 }}
               className='text-center'
             >
-              <ButtonOutline data-test='add-rule' type='button'>
+              <Button theme='outline' data-test='add-rule' type='button'>
                 Add AND Condition
-              </ButtonOutline>
+              </Button>
             </div>
           )}
           {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
@@ -269,13 +270,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
               {Utils.getFlagsmithValue('not_operator') ? (
                 <Tooltip
                   title={
-                    <ButtonOutline
+                    <Button
+                      theme='outline'
                       className='ml-2 btn--outline-danger'
                       data-test='add-rule'
                       type='button'
                     >
                       Add AND NOT Condition
-                    </ButtonOutline>
+                    </Button>
                   }
                 >
                   {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(
@@ -283,13 +285,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   )}`}
                 </Tooltip>
               ) : (
-                <ButtonOutline
+                <Button
+                  theme='outline'
                   className='ml-2 btn--outline-danger'
                   data-test='add-rule'
                   type='button'
                 >
                   Add AND NOT Condition
-                </ButtonOutline>
+                </Button>
               )}
             </div>
           )}
@@ -387,10 +390,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       </div>
 
       {isError && (
-        <div className='alert alert-danger'>
-          Error creating segment, please ensure you have entered a trait and
-          value for each rule.
-        </div>
+        <ErrorMessage
+          error='Error creating segment, please ensure you have entered a trait and
+          value for each rule.'
+        />
       )}
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (
@@ -415,9 +418,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <div className='text-right'>
           <Row className='justify-content-end'>
             {condensed && (
-              <ButtonLink type='button' onClick={onCancel} className='mr-4'>
+              <Button
+                theme='secondary'
+                type='button'
+                onClick={onCancel}
+                className='mr-4'
+              >
                 Cancel
-              </ButtonLink>
+              </Button>
             )}
             {isEdit ? (
               <Button
@@ -449,10 +457,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem tabLabel='Rules'>
-            <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+            <div className='my-4'>{Tab1}</div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='my-4'>
               <AssociatedSegmentOverrides
                 feature={segment.feature}
                 projectId={projectId}
@@ -461,7 +469,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='mt-4 mr-3 ml-3'>
+            <div className='my-4'>
               <InfoMessage>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
@@ -578,7 +586,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className='mt-4 mr-3 ml-3'>{Tab1}</div>
+        <div className='my-4 mx-3'>{Tab1}</div>
       )}
     </div>
   )

@@ -13,7 +13,7 @@ const EnvironmentSelect = class extends Component {
     return (
       <ProjectProvider id={this.props.projectId}>
         {({ isLoading, project }) => (
-          <div className={`fade ${isLoading ? '' : 'in'}`}>
+          <div className={`fade ${isLoading ? '' : 'show'}`}>
             {!isLoading && (
               <ul id='env-list' className='project-list list-unstyled'>
                 {project &&

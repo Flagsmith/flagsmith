@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+import { type } from 'common/data/base/_data'
 import UserGroupList from 'components/UserGroupList'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {
@@ -43,6 +44,7 @@ export type Environment = {
   project: number
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
+  hide_sensitive_data: boolean
 }
 export type Project = {
   id: number
@@ -162,9 +164,9 @@ export type MultivariateFeatureStateValue = {
 }
 
 export type FeatureStateValue = {
-  boolean_value?: boolean
-  float_value?: number
-  integer_value?: boolean
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value?: boolean | null
   string_value: string
   type: string
 }
@@ -204,6 +206,7 @@ export type ProjectFlag = {
   id: number
   initial_value: string
   is_archived: boolean
+  is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
   name: string
   num_identity_overrides: number | null
@@ -231,6 +234,20 @@ export type FeatureListProviderActions = {
     projectFlags: ProjectFlag[],
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+}
+
+export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
+
+export type SignupType = 'NO_INVITE' | 'INVITE_EMAIL' | 'INVITE_LINK'
+
+export type Account = {
+  first_name: string
+  last_name: string
+  sign_up_type: SignupType
+  id: number
+  email: string
+  auth_type: AuthType
+  is_superuser: boolean
 }
 
 export type Res = {
@@ -262,8 +279,35 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  account: Account
+  userEmail: {}
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
+  myGroups: PagedResponse<UserGroupSummary>
+  createSegmentOverride: {
+    id: number
+    segment: number
+    priority: number
+    uuid: string
+    environment: number
+    feature: number
+    feature_segment_value: {
+      id: number
+      environment: number
+      enabled: boolean
+      feature: number
+      feature_state_value: featureStateValue
+      deleted_at: string
+      uuid: string
+      created_at: string
+      updated_at: string
+      version: number
+      live_from: string
+      identity: string
+      change_request: string
+    }
+    value: string
+  }
   // END OF TYPES
 }

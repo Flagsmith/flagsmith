@@ -15,7 +15,7 @@ import { Identity } from 'common/types/responses'
 import CreateUserModal from 'components/modals/CreateUser'
 import RemoveIcon from 'components/RemoveIcon'
 import PanelSearch from 'components/PanelSearch'
-import Button, { ButtonLink } from 'components/base/forms/Button' // we need this to make JSX compile
+import Button from 'components/base/forms/Button' // we need this to make JSX compile
 import JSONReference from 'components/JSONReference' // we need this to make JSX compile
 import Utils from 'common/utils/utils'
 
@@ -65,27 +65,26 @@ const UsersPage: FC<UsersPageType> = (props) => {
   const { permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageFeaturePermission(false),
+    permission: Utils.getViewIdentitiesPermission(),
   })
 
   const removeIdentity = (id: string, identifier: string) => {
     openConfirm(
-      <h3>Delete User</h3>,
-      <p>
+      'Delete User',
+      <div>
         {'Are you sure you want to delete '}
         <strong>{identifier}</strong>
         {'?'}
-      </p>,
+      </div>,
       () => deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
     )
   }
 
   const newUser = () => {
     openModal(
-      'New Users',
+      'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      null,
-      { className: 'alert fade expand' },
+      'p-0',
     )
   }
 
@@ -95,18 +94,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
         <div>
           <Row>
             <Flex>
-              <div>
-                <h3>Users</h3>
+              <div style={{ maxWidth: '700px' }}>
+                <h4>Users</h4>
                 <p>
                   View and manage features states for individual users. This
                   will override individual default feature settings for your
                   selected environment.{' '}
-                  <ButtonLink
+                  <Button
+                    theme='text'
                     target='_blank'
                     href='https://docs.flagsmith.com/basic-features/managing-identities'
                   >
                     Learn more.
-                  </ButtonLink>
+                  </Button>
                 </p>
               </div>
             </Flex>
@@ -118,7 +118,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   id='show-create-feature-btn'
                   onClick={newUser}
                 >
-                  Create Users
+                  Create Identities
                 </Button>
               </FormGroup>
             ) : (
@@ -131,7 +131,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     id='show-create-feature-btn'
                     onClick={newUser}
                   >
-                    Create Users
+                    Create Identities
                   </Button>
                 }
                 place='right'
@@ -211,10 +211,10 @@ const UsersPage: FC<UsersPageType> = (props) => {
                             props.match.params.environmentId
                           }/users/${encodeURIComponent(identifier)}/${id}`}
                         >
-                          <ButtonLink>
+                          <Button theme='text'>
                             {identifier}
                             <span className='ion-ios-arrow-forward ml-3' />
-                          </ButtonLink>
+                          </Button>
                         </Link>
                       </Flex>
                       <Column>
@@ -246,7 +246,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   )
                 }
                 renderNoResults={
-                  <div>
+                  <div className='mx-2 pt-1 pb-2'>
                     You have no users in your project
                     {search ? (
                       <span>

@@ -6,8 +6,14 @@ declare global {
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
-    footer?: ReactNode,
-    other?: { className: string; onClose?: () => void },
+    className?: string,
+    onClose?: () => void,
+  ) => void
+  const openModal2: (
+    title: ReactNode,
+    body?: ReactNode,
+    className?: string,
+    onClose?: () => void,
   ) => void
   const openConfirm: (
     header: ReactNode,
@@ -27,6 +33,8 @@ declare global {
   const RemoveIcon: typeof Component
   const Loader: typeof Component
   const E2E: boolean
+  const DYNATRACE_URL: string | undefined
+  const dtrum: undefined | { identifyUser: (id: string) => void }
   const closeModal: () => void
   const toast: (message: string) => void
   const Tooltip: FC<{

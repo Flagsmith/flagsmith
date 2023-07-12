@@ -24,6 +24,9 @@
 
 .search-list, .List {
     overflow-x: hidden !important;
+    .column{
+        flex-direction: column !important;
+    }
 }
 
 .overflow-visible .search-list, .overflow-visible .List {

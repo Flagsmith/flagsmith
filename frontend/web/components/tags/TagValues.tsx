@@ -7,25 +7,27 @@ type TagValuesType = {
   onAdd?: () => void
   value?: number[]
   projectId: string
+
+  hideNames?: boolean
 }
 
-const TagValues: FC<TagValuesType> = ({ onAdd, projectId, value }) => {
+const TagValues: FC<TagValuesType> = ({
+  hideNames = true,
+  onAdd,
+  projectId,
+  value,
+}) => {
   const { data: tags } = useGetTagsQuery({ projectId })
   return (
     <Row className='tag-values'>
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
-            <Tag
-              hideNames
-              onClick={onAdd}
-              className='px-2 py-2 mr-2'
-              tag={tag}
-            />
+            <Tag hideNames={hideNames} onClick={onAdd} tag={tag} />
           ),
       )}
       {!!onAdd && (
-        <Button onClick={onAdd} type='button' className='btn--outline'>
+        <Button size='xSmall' onClick={onAdd} type='button' theme='outline'>
           Add Tag
         </Button>
       )}

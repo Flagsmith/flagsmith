@@ -2,8 +2,8 @@ import logging
 
 from core.permissions import HasMasterAPIKey
 from django.utils.decorators import method_decorator
-from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import get_object_or_404
@@ -15,6 +15,7 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
+from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
 from .permissions import MasterAPIKeySegmentPermissions, SegmentPermissions
@@ -50,11 +51,14 @@ class SegmentViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Segment.objects.none()
+
         if hasattr(self.request, "master_api_key"):
             permitted_projects = self.request.master_api_key.organisation.projects.all()
         else:
             permitted_projects = self.request.user.get_permitted_projects(
-                permissions=["VIEW_PROJECT"]
+                permission_key=VIEW_PROJECT
             )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
@@ -112,7 +116,7 @@ def get_segment_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Segment.objects.filter(project__in=accessible_projects)
     segment = get_object_or_404(qs, uuid=uuid)
     serializer = SegmentSerializer(instance=segment)

@@ -48,6 +48,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
 
@@ -109,6 +110,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "project",
             "num_segment_overrides",
             "num_identity_overrides",
+            "is_server_key_only",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -393,9 +395,30 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     class Meta:
         model = FeatureState
         fields = (
+            "id",
             "enabled",
             "feature_state_value",
             "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+        )
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
         )
 
     def _get_save_kwargs(self, field_name):

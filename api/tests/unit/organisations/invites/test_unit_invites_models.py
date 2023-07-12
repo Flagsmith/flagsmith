@@ -12,6 +12,7 @@ if typing.TYPE_CHECKING:
     from pytest_django.fixtures import SettingsWrapper
 
 
+@pytest.mark.django_db
 def test_cannot_create_invite_link_if_disabled(settings: "SettingsWrapper") -> None:
     # Given
     settings.DISABLE_INVITE_LINKS = True

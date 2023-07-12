@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
+import ModalHR from './modals/ModalHR'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -26,29 +27,35 @@ class CreateServerSideKeyModal extends Component {
     return (
       <div>
         <form onSubmit={this.onSubmit}>
-          <div className='mb-2'>
-            This will create a Server-side Environment Key for the environment{' '}
-            <strong>
-              {ProjectStore.getEnvironment(this.props.environmentId).name}
-            </strong>
-            .
-          </div>
-          <InputGroup
-            title='Key Name'
-            placeholder='New Key'
-            className='mb-2'
-            id='jsTokenName'
-            inputProps={{
-              className: 'full-width modal-input',
-            }}
-            onChange={(e) =>
-              this.setState({ name: Utils.safeParseEventValue(e) })
-            }
-          />
-          <div className='text-right'>
-            <Button
-              disabled={!this.state.name || this.state.isSaving}
+          <div className='modal-body'>
+            <div className='mb-2'>
+              This will create a Server-side Environment Key for the environment{' '}
+              <strong>
+                {ProjectStore.getEnvironment(this.props.environmentId).name}
+              </strong>
+              .
+            </div>
+            <InputGroup
+              title='Key Name'
+              placeholder='New Key'
               className='mb-2'
+              id='jsTokenName'
+              inputProps={{
+                className: 'full-width modal-input',
+              }}
+              onChange={(e) =>
+                this.setState({ name: Utils.safeParseEventValue(e) })
+              }
+            />
+          </div>
+          <ModalHR />
+          <div className='modal-footer'>
+            <Button onClick={closeModal} theme='secondary' className={'mr-2'}>
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              disabled={!this.state.name || this.state.isSaving}
             >
               Create
             </Button>
@@ -95,16 +102,17 @@ class ServerSideSDKKeys extends Component {
             })
         }}
       />,
+      'p-0',
     )
   }
 
   remove = (id, name) => {
     openConfirm(
-      <h3>Delete Server-side Environment Keys</h3>,
-      <p>
+      'Delete Server-side Environment Keys',
+      <div>
         The key <strong>{name}</strong> will be permanently deleted, are you
         sure?
-      </p>,
+      </div>,
       () => {
         this.setState({ isSaving: true })
         _data
@@ -136,19 +144,20 @@ class ServerSideSDKKeys extends Component {
       <FormGroup className='m-y-3'>
         <Row className='mb-3' space>
           <div className='col-md-8 pl-0'>
-            <h3 className='m-b-0'>Server-side Environment Keys</h3>
-            <p>
+            <h5 className='m-b-0'>Server-side Environment Keys</h5>
+            <p className='fs-small lh-sm'>
               Flags can be evaluated locally within your own Server environments
               using our{' '}
-              <a
+              <Button
+                theme='text'
                 href='https://docs.flagsmith.com/clients/overview'
                 target='__blank'
               >
                 Server-side Environment Keys
-              </a>
+              </Button>
               .
             </p>
-            <p>
+            <p className='fs-small lh-sm'>
               Server-side SDKs should be initialised with a Server-side
               Environment Key.
             </p>

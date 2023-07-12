@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
+import ModalHR from './ModalHR'
+import Button from 'components/base/forms/Button'
 
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
@@ -148,90 +150,95 @@ const CreateEditIntegration = class extends Component {
 
   render() {
     return (
-      <form
-        data-test='create-project-modal'
-        id='create-project-modal'
-        onSubmit={this.submit}
-      >
-        {this.props.integration.perEnvironment && (
-          <div className='mb-2'>
-            <label>Flagsmith Environment</label>
-            <EnvironmentSelect
-              readOnly={!!this.props.data || this.props.readOnly}
-              value={this.state.data.flagsmithEnvironment}
-              onChange={(environment) =>
-                this.update('flagsmithEnvironment', environment)
-              }
-            />
-          </div>
-        )}
-        {this.state.fields &&
-          this.state.fields.map((field) => (
-            <>
-              <div>
-                <label htmlFor={field.label.replace(/ /g, '')}>
-                  {this.props.readOnly ? (
-                    <ButtonLink>{field.label}</ButtonLink>
-                  ) : (
-                    field.label
-                  )}
-                </label>
-              </div>
-              {this.props.readOnly ? (
-                <div className='mb-2'>{this.state.data[field.key]}</div>
-              ) : field.options ? (
-                <div className='full-width mb-2'>
-                  <Select
-                    onChange={(v) => {
-                      this.update(field.key, v.value)
-                    }}
-                    options={field.options}
-                    value={
-                      this.state.data[field.key] &&
-                      field.options.find(
-                        (v) => v.value === this.state.data[field.key],
-                      )
-                        ? {
-                            label: field.options.find(
-                              (v) => v.value === this.state.data[field.key],
-                            ).label,
-                            value: this.state.data[field.key],
-                          }
-                        : {
-                            label: 'Please select',
-                          }
-                    }
-                  />
+      <form onSubmit={this.submit}>
+        <div className={this.props.modal ? 'modal-body' : ''}>
+          {this.props.integration.perEnvironment && (
+            <div className='mb-2'>
+              <label>Flagsmith Environment</label>
+              <EnvironmentSelect
+                readOnly={!!this.props.data || this.props.readOnly}
+                value={this.state.data.flagsmithEnvironment}
+                onChange={(environment) =>
+                  this.update('flagsmithEnvironment', environment)
+                }
+              />
+            </div>
+          )}
+          {this.state.fields &&
+            this.state.fields.map((field) => (
+              <>
+                <div>
+                  <label htmlFor={field.label.replace(/ /g, '')}>
+                    {this.props.readOnly ? (
+                      <Button theme='text'>{field.label}</Button>
+                    ) : (
+                      field.label
+                    )}
+                  </label>
                 </div>
-              ) : (
-                <Input
-                  id={field.label.replace(/ /g, '')}
-                  ref={(e) => (this.input = e)}
-                  value={this.state.data[field.key]}
-                  onChange={(e) => this.update(field.key, e)}
-                  isValid={!!this.state.data[field.key]}
-                  type='text'
-                  className='full-width mb-2'
-                />
-              )}
-            </>
-          ))}
-        {this.state.authorised && this.props.id === 'slack' && (
-          <div>
-            Can't see your channel? Enter your channel ID here (C0xxxxxx)
-            <Input
-              ref={(e) => (this.input = e)}
-              value={this.state.data.channel_id}
-              onChange={(e) => this.update('channel_id', e)}
-              isValid={!!this.state.data.channel_id}
-              type='text'
-              className='full-width mt-2'
-            />
-          </div>
-        )}
-        <ErrorMessage error={this.state.error} />
+                {this.props.readOnly ? (
+                  <div className='mb-2'>{this.state.data[field.key]}</div>
+                ) : field.options ? (
+                  <div className='full-width mb-2'>
+                    <Select
+                      onChange={(v) => {
+                        this.update(field.key, v.value)
+                      }}
+                      options={field.options}
+                      value={
+                        this.state.data[field.key] &&
+                        field.options.find(
+                          (v) => v.value === this.state.data[field.key],
+                        )
+                          ? {
+                              label: field.options.find(
+                                (v) => v.value === this.state.data[field.key],
+                              ).label,
+                              value: this.state.data[field.key],
+                            }
+                          : {
+                              label: 'Please select',
+                            }
+                      }
+                    />
+                  </div>
+                ) : (
+                  <Input
+                    id={field.label.replace(/ /g, '')}
+                    ref={(e) => (this.input = e)}
+                    value={this.state.data[field.key]}
+                    onChange={(e) => this.update(field.key, e)}
+                    isValid={!!this.state.data[field.key]}
+                    type='text'
+                    className='full-width mb-2'
+                  />
+                )}
+              </>
+            ))}
+          {this.state.authorised && this.props.id === 'slack' && (
+            <div>
+              Can't see your channel? Enter your channel ID here (C0xxxxxx)
+              <Input
+                ref={(e) => (this.input = e)}
+                value={this.state.data.channel_id}
+                onChange={(e) => this.update('channel_id', e)}
+                isValid={!!this.state.data.channel_id}
+                type='text'
+                className='full-width mt-2'
+              />
+            </div>
+          )}
+          <ErrorMessage error={this.state.error} />
+        </div>
+
+        {!!this.props.modal && <ModalHR />}
         {!this.props.readOnly && (
-          <div className='text-right'>
+          <div className={this.props.modal ? 'modal-footer' : 'text-right'}>
+            {!!this.props.modal && (
+              <Button onClick={closeModal} className='mr-2' theme='secondary'>
+                Cancel
+              </Button>
+            )}
             <Button
               disabled={
                 this.state.isLoading ||

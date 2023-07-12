@@ -5,8 +5,7 @@ import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import AuditLog from 'components/AuditLog'
-
-const ProjectProvider = require('common/providers/ProjectProvider')
+import ProjectProvider from 'common/providers/ProjectProvider'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -23,9 +22,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>
@@ -40,7 +37,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
     <div className='app-container container'>
       <div>
         <div>
-          <h3>Audit Log</h3>
+          <h4>Audit Log</h4>
           <p>
             View all activity that occured generically across the project and
             specific to this environment.

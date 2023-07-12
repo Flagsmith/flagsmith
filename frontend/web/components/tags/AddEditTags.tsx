@@ -7,10 +7,10 @@ import Constants from 'common/constants'
 import TagValues from './TagValues'
 import { useDeleteTagMutation, useGetTagsQuery } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
-import { ButtonLink } from 'components/base/forms/Button'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
+import Button from 'components/base/forms/Button'
 
 type AddEditTagsType = {
   value?: number[]
@@ -86,6 +86,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
     <div>
       <Row className='inline-tags mt-2'>
         <TagValues
+          hideNames={false}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
           value={value}
@@ -97,7 +98,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         onBack={() => setTab('SELECT')}
         showBack={tab !== 'SELECT'}
         onClose={toggle}
-        className='inline-modal--tags'
+        className='inline-modal--tags pb-0'
       >
         {tab === 'SELECT' && !noTags && (
           <div>
@@ -150,20 +151,24 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   </div>
                 ))}
               {!readOnly && (
-                <div className='text-center mb-2 mt-3'>
+                <div className='text-center mt-3'>
                   {Utils.renderWithPermission(
                     projectAdminPermission,
                     Constants.projectPermissions('Admin'),
-                    <ButtonLink
-                      disabled={!projectAdminPermission}
-                      onClick={() => {
-                        setTab('CREATE')
-                        setFilter('')
-                      }}
-                      type='button'
-                    >
-                      Create a New Tag <span className='ml-3 icon ion-md-add' />
-                    </ButtonLink>,
+                    <div className='mx-2'>
+                      <Button
+                        className='full-width'
+                        disabled={!projectAdminPermission}
+                        onClick={() => {
+                          setTab('CREATE')
+                          setFilter('')
+                        }}
+                        type='button'
+                      >
+                        Create New Tag
+                      </Button>
+                      ,
+                    </div>,
                   )}
                 </div>
               )}

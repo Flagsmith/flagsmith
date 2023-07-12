@@ -11,7 +11,7 @@ projects. The source code for the client is available on [Github](https://github
 Example applications for a variety of Javascript frameworks such as React, Vue and Angular, as well as React Native, can
 be found here:
 
-- [Flagsmith Framework Examples](https://github.com/flagsmith/flagsmith-js-client/tree/main/examples)
+- [Flagsmith Framework Examples](https://github.com/flagsmith/flagsmith-js-examples/tree/main)
 
 ## Installation
 

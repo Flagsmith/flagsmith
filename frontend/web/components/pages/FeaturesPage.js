@@ -85,12 +85,10 @@ const FeaturesPage = class extends Component {
     openModal(
       'New Feature',
       <CreateFlagModal
-        router={this.context.router}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      null,
-      { className: 'side-modal fade create-feature-modal' },
+      'side-modal create-feature-modal',
     )
   }
 
@@ -180,18 +178,22 @@ const FeaturesPage = class extends Component {
                       <div>
                         <Row>
                           <Flex>
-                            <h3>Features</h3>
+                            <h4>Features</h4>
                             <p>
                               View and manage{' '}
                               <Tooltip
-                                title={<ButtonLink>feature flags</ButtonLink>}
+                                title={
+                                  <Button theme='text'>feature flags</Button>
+                                }
                                 place='right'
                               >
                                 {Constants.strings.FEATURE_FLAG_DESCRIPTION}
                               </Tooltip>{' '}
                               and{' '}
                               <Tooltip
-                                title={<ButtonLink>remote config</ButtonLink>}
+                                title={
+                                  <Button theme='text'>remote config</Button>
+                                }
                                 place='right'
                               >
                                 {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
@@ -369,8 +371,11 @@ const FeaturesPage = class extends Component {
                                             this.filter,
                                           )
                                         }}
-                                        className='px-2 py-2 ml-2 mr-2'
-                                        tag={{ label: 'Archived' }}
+                                        className='px-2 py-2 ml-2 mr-2 chip-info'
+                                        tag={{
+                                          color: '#0AADDF',
+                                          label: 'Archived',
+                                        }}
                                       />
                                     </TagFilter>
                                   </Row>
@@ -499,7 +504,7 @@ const FeaturesPage = class extends Component {
                               created an example user for you which you can see
                               in the{' '}
                               <Link
-                                className='btn--link'
+                                className='btn-link'
                                 to={`/project/${projectId}/environment/${environmentId}/users`}
                               >
                                 Identities page
@@ -507,8 +512,8 @@ const FeaturesPage = class extends Component {
                               .
                               <p className='faint'>
                                 EXAMPLE: You're working on a new messaging
-                                feature for your app but only want to show it for that
-                                Identity.
+                                feature for your app but only want to show it
+                                for that Identity.
                               </p>
                             </p>
                           </Panel>

@@ -158,26 +158,28 @@ const SegmentOverrideInner = class Override extends React.Component {
                       Constants.projectPermissions('Manage Segments'),
                       <>
                         {v.is_feature_specific ? (
-                          <ButtonLink
+                          <Button
+                            theme='text'
                             disabled={!permission}
                             onClick={() => {
                               setShowCreateSegment(true)
                               setSegmentEditId(v.segment)
                             }}
-                            className='ml-2'
+                            className='ml-2 dark-link'
                           >
                             Edit Segment
-                          </ButtonLink>
+                          </Button>
                         ) : (
-                          <ButtonLink
+                          <Button
+                            theme='text'
                             disabled={!permission}
                             target='_blank'
                             href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='ml-2'
+                            className='ml-2 dark-link'
                           >
                             Edit Segment
                             <ion className={'ion ml-1 ion-md-open'} />
-                          </ButtonLink>
+                          </Button>
                         )}
                       </>,
                     )
@@ -234,7 +236,8 @@ const SegmentOverrideInner = class Override extends React.Component {
           {!!controlValue &&
             (!multivariateOptions || !multivariateOptions.length) && (
               <div className='mt-2 mb-3 text-right'>
-                <ButtonLink
+                <Button
+                  theme='text'
                   className='text-primary'
                   onClick={() => {
                     this.setState({ changed: true })
@@ -248,7 +251,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   <div className='text-primary text-small'>
                     Copy from Environment Value
                   </div>
-                </ButtonLink>
+                </Button>
               </div>
             )}
 
@@ -432,12 +435,12 @@ class TheComponent extends Component {
     }
     this.setState({ isLoading: true })
     openConfirm(
-      <h3>Delete Segment Override</h3>,
-      <p>
+      'Delete Segment Override',
+      <div>
         {
           'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'
         }
-      </p>,
+      </div>,
       () => {
         this.props.value[i].toRemove = true
       },

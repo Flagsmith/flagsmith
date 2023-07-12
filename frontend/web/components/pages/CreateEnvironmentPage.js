@@ -53,7 +53,7 @@ const CreateEnvironmentPage = class extends Component {
               <div>
                 {permission ? (
                   <div>
-                    <h3>Create Environment</h3>
+                    <h4>Create Environment</h4>
                     <p>{Constants.strings.ENVIRONMENT_DESCRIPTION}</p>
                     <ProjectProvider
                       id={this.props.match.params.projectId}
@@ -112,8 +112,7 @@ const CreateEnvironmentPage = class extends Component {
                                     ref={(e) => (this.input = e)}
                                     value={this.state.description}
                                     inputProps={{
-                                      className: 'input--wide',
-                                      style: { minHeight: 100 },
+                                      className: 'input--wide textarea-lg',
                                     }}
                                     onChange={(e) =>
                                       this.setState({
@@ -180,6 +179,7 @@ const CreateEnvironmentPage = class extends Component {
                                 <Button
                                   id='create-env-btn'
                                   className='mt-3'
+                                  type='submit'
                                   disabled={isSaving || !name}
                                 >
                                   {isSaving ? 'Creating' : 'Create Environment'}
@@ -190,6 +190,7 @@ const CreateEnvironmentPage = class extends Component {
                                   title={
                                     <Button
                                       id='create-env-btn'
+                                      type='submit'
                                       disabled={isSaving || !name}
                                     >
                                       Create Environment

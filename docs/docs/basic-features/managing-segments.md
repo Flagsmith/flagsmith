@@ -57,8 +57,8 @@ Overrides' drop down.
 At this point, all users who log in with an email address that contains `@flagsmith.com` will have all Beta features
 enabled.
 
-Let's say that you then partner with another company who need access to all Beta features. You can then simply modify
-the Segment rules:
+Let's say that you then partner with another company who need access to all Beta features. You can then modify the
+Segment rules:
 
 - `email_address` contains `@flagsmith.com`
 - `email_address` contains `@solidstategroup.com`
@@ -177,6 +177,25 @@ This segment rule will include all identities having `int` or `float` `userId` t
 after being divided by 2.
 
 `userId % 2 == 0`
+
+## Segment Rule Ordering
+
+Flagsmith evaluates the conditions of a Segment in the order they are defined. This can affect how things are processed
+and should be considered when creating your Segment rules.
+
+For example, let’s say I have this segment:
+
+1. Percentage Split = 10%
+2. isSubscriber = true
+
+This Segment would randomly select 10% of _all_ Identities first and then filter the subscribers. You could also define
+the Segment rules the other way around:
+
+1. isSubscriber = true
+2. Percentage Split = 10%
+
+This definition makes the isSubscriber check first, and the Split condition is second, operating purely on the pool of
+subscribed users.
 
 ## Feature Flag and Remote Config Precedence
 

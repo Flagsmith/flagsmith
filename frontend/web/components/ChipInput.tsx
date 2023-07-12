@@ -2,6 +2,7 @@ import React, { FC, FormEventHandler, useState } from 'react'
 import TheInput from 'material-ui-chip-input'
 import Utils from 'common/utils/utils'
 import { filter } from 'lodash'
+import Chip from '@material-ui/core/Chip'
 
 type ChipInputType = {
   placeholder?: string
@@ -51,6 +52,20 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
       onDelete={onDelete}
       onBeforeAdd={onSubmit}
       onChange={onChange}
+      classes={{
+        chip: 'chip',
+        root: 'mui-root',
+      }}
+      chipRenderer={({ className, handleClick, handleDelete, value }, key) => (
+        <Chip
+          key={key}
+          className={className}
+          onClick={handleClick}
+          onDelete={handleDelete}
+          label={value}
+          deleteIcon={<span className='chip-icon ion ion-ios-close' />}
+        />
+      )}
     />
   )
 }

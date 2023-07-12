@@ -21,14 +21,6 @@ with this.
 Flag Analytics can also be helpful when identifying integration issues. Occasionally errors can creep into your code
 that cause multiple needless evaluations of a flag. Again, these analytics can help isolate these situations.
 
-## SDK Support
-
-We currently support Flag Analytics with the following SDKs:
-
-- [Javascript and React/React Native](/clients/javascript/). Currently enabled in version `1.2.2` and above.
-
-We are working to build integrate Flag Analytics with our other SDKs but happy to take Pull Requests!
-
 ## How does it work?
 
 Every time a flag is evaluated within the SDK (generally a call to a method like

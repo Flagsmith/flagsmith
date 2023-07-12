@@ -3,10 +3,11 @@ name: Platform Pull Requests
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - docs/**
 
 jobs:
   run-e2e-tests:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: Full E2E tests
 
@@ -51,7 +52,6 @@ jobs:
           docker logs $API_CONTAINER_ID
 
   run-e2e-tests-docker-unified:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: Full E2E tests with unified image in Docker
 
@@ -139,59 +139,3 @@ jobs:
           context: frontend/
           push: false
           tags: flagsmith/flagsmith-frontend:testing
-
-  web-deploy-branch-production:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-production-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Production Deployment
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-
-      - name: Determine Branch
-        id: branches
-        uses: transferwise/sanitize-branch-name@v1
-
-      - name: Deploy
-        uses: ./.github/actions/vercel-preview-deploy
-        with:
-          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          alias: flagsmith-${{ steps.branches.outputs.sanitized-branch-name }}
-          deployment_description: 'Production preview deployment'
-          env: prod
-
-  web-deploy-branch-staging:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-staging-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Staging Deployment
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-
-      - name: Determine Branch
-        id: branches
-        uses: transferwise/sanitize-branch-name@v1
-
-      - name: Deploy
-        uses: ./.github/actions/vercel-preview-deploy
-        with:
-          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          alias: flagsmith-staging-${{ steps.branches.outputs.sanitized-branch-name }}
-          deployment_description: 'Staging preview deployment'
-          env: staging

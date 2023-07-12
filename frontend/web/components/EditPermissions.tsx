@@ -12,7 +12,7 @@ import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
-import Button, { ButtonLink } from './base/forms/Button'
+import Button from './base/forms/Button'
 import InfoMessage from './InfoMessage'
 import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
@@ -22,6 +22,7 @@ import { PermissionLevel } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import ModalHR from './modals/ModalHR'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -191,45 +192,45 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
   return !permissions || !entityPermissions ? (
-    <div className='text-center'>
+    <div className='modal-body text-center'>
       <Loader />
     </div>
   ) : (
     <div>
-      <div className='list-item'>
-        {level !== 'organisation' && (
-          <Row>
-            <Flex>
-              <strong>Administrator</strong>
-              <div className='list-item-footer faint'>
-                {hasRbacPermission ? (
-                  `Full View and Write permissions for the given ${Format.camelCase(
-                    level,
-                  )}.`
-                ) : (
-                  <span>
-                    Role-based access is not available on our Free Plan. Please
-                    visit{' '}
-                    <a href='https://flagsmith.com/pricing/'>
-                      our Pricing Page
-                    </a>{' '}
-                    for more information on our licensing options.
-                  </span>
-                )}
-              </div>
-            </Flex>
-            <Switch
-              disabled={!hasRbacPermission}
-              onChange={toggleAdmin}
-              checked={isAdmin}
-            />
-          </Row>
-        )}
-      </div>
-      <div className='panel--grey'>
+      <div className='modal-body'>
+        <div className='mb-2'>
+          {level !== 'organisation' && (
+            <Row>
+              <Flex>
+                <strong>Administrator</strong>
+                <div className='list-item-footer faint'>
+                  {hasRbacPermission ? (
+                    `Full View and Write permissions for the given ${Format.camelCase(
+                      level,
+                    )}.`
+                  ) : (
+                    <span>
+                      Role-based access is not available on our Free Plan.
+                      Please visit{' '}
+                      <a href='https://flagsmith.com/pricing/'>
+                        our Pricing Page
+                      </a>{' '}
+                      for more information on our licensing options.
+                    </span>
+                  )}
+                </div>
+              </Flex>
+              <Switch
+                disabled={!hasRbacPermission}
+                onChange={toggleAdmin}
+                checked={isAdmin}
+              />
+            </Row>
+          )}
+        </div>
         <PanelSearch
           title='Permissions'
-          className='no-pad'
+          className='no-pad mb-4'
           items={permissions}
           renderRow={(p: AvailablePermission) => {
             const levelUpperCase = level.toUpperCase()
@@ -260,33 +261,38 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
             )
           }}
         />
+
+        <p className='text-right mt-2'>
+          This will edit the permissions for{' '}
+          <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
+        </p>
+
+        {parentError && (
+          <InfoMessage>
+            The selected {isGroup ? 'group' : 'user'} does not have explicit
+            user permissions to view this {parentLevel}. If the user does not
+            belong to any groups with this permissions, you may have to adjust
+            their permissions in{' '}
+            <a
+              onClick={() => {
+                if (parentSettingsLink) {
+                  push(parentSettingsLink)
+                }
+                closeModal()
+              }}
+            >
+              <strong>{parentLevel} settings</strong>
+            </a>
+            .
+          </InfoMessage>
+        )}
       </div>
+      <ModalHR />
 
-      <p className='text-right mt-2'>
-        This will edit the permissions for{' '}
-        <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
-      </p>
-
-      {parentError && (
-        <InfoMessage>
-          The selected {isGroup ? 'group' : 'user'} does not have explicit user
-          permissions to view this {parentLevel}. If the user does not belong to
-          any groups with this permissions, you may have to adjust their
-          permissions in{' '}
-          <a
-            onClick={() => {
-              if (parentSettingsLink) {
-                push(parentSettingsLink)
-              }
-              closeModal()
-            }}
-          >
-            <strong>{parentLevel} settings</strong>
-          </a>
-          .
-        </InfoMessage>
-      )}
-      <div className='text-right'>
+      <div className='modal-footer'>
+        <Button className='mr-2' onClick={closeModal} theme='secondary'>
+          Cancel
+        </Button>
         <Button
           onClick={save}
           data-test='update-feature-btn'
@@ -330,6 +336,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         user={user}
         push={router.history.push}
       />,
+      'p-0',
     )
   }
 
@@ -348,21 +355,23 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         group={group}
         push={router.history.push}
       />,
+      'p-0',
     )
   }
 
   return (
     <div className='mt-4'>
-      <h3>Manage Users and Permissions</h3>
-      <p>
+      <h5>Manage Users and Permissions</h5>
+      <p className='fs-small lh-sm'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
-        <ButtonLink
-          href='https://docs.flagsmith.com/advanced-use/permissions'
+        <Button
+          theme='text'
+          href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
         >
           Learn about User Roles.
-        </ButtonLink>
+        </Button>
       </p>
       <Tabs value={tab} onChange={setTab}>
         <TabItem tabLabel='Users'>

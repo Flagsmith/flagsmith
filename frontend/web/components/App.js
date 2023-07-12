@@ -5,9 +5,7 @@ import amplitude from 'amplitude-js'
 import NavLink from 'react-router-dom/NavLink'
 import Aside from './Aside'
 import Popover from './base/Popover'
-import Feedback from './modals/Feedback'
 import PaymentModal from './modals/Payment'
-import AlertBar from './AlertBar'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
 import Blocked from './Blocked'
@@ -23,9 +21,10 @@ import getBuildVersion from 'project/getBuildVersion'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
+import Format from 'common/utils/format'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
-
+import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -38,6 +37,7 @@ const App = class extends Component {
   state = {
     asideIsVisible: !isMobile,
     pin: '',
+    totalApiCalls: 0,
   }
 
   constructor(props, context) {
@@ -182,10 +182,6 @@ const App = class extends Component {
     this.context.router.history.replace('/')
   }
 
-  feedback = () => {
-    openModal('Feedback', <Feedback />)
-  }
-
   render() {
     if (
       Utils.getFlagsmithHasFeature('dark_mode') &&
@@ -195,7 +191,7 @@ const App = class extends Component {
     }
     const { location } = this.props
     const pathname = location.pathname
-    const { asideIsVisible } = this.state
+    const { asideIsVisible, totalApiCalls } = this.state
     const match = matchPath(pathname, {
       exact: false,
       path: '/project/:projectId/environment/:environmentId',
@@ -250,6 +246,17 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
+    if (
+      AccountStore.getOrganisation() &&
+      AccountStore.getOrganisation().id &&
+      this.state.totalApiCalls == 0
+    ) {
+      getOrganisationUsage(getStore(), {
+        organisationId: AccountStore.getOrganisation()?.id,
+      }).then((res) => {
+        this.setState({ totalApiCalls: res[0]?.data?.totals.total })
+      })
+    }
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -288,7 +295,7 @@ const App = class extends Component {
                 >
                   {!isHomepage &&
                     (!pageHasAside || !asideIsVisible || !isMobile) && (
-                      <nav className='navbar'>
+                      <nav className='navbar px-4'>
                         <Row space>
                           <div className='navbar-left'>
                             <div className='navbar-nav'>
@@ -323,24 +330,66 @@ const App = class extends Component {
                               <React.Fragment>
                                 <nav className='my-2 my-md-0 hidden-xs-down'>
                                   {organisation &&
-                                    !organisation.subscription &&
                                     Utils.getFlagsmithHasFeature(
                                       'payments_enabled',
                                     ) && (
                                       <a
                                         href='#'
                                         className='cursor-pointer nav-link p-2'
+                                        style={
+                                          Utils.calculaterRemainingCallsPercentage(
+                                            totalApiCalls,
+                                            organisation.subscription
+                                              ?.max_api_calls,
+                                          ) &&
+                                          Utils.getFlagsmithHasFeature(
+                                            'max_api_calls_alert',
+                                          )
+                                            ? {
+                                                border: '#7B51FB',
+                                                borderRadius: '8px',
+                                                borderStyle: 'solid',
+                                                fontSize: '15px',
+                                                width: '250px',
+                                              }
+                                            : {}
+                                        }
                                         onClick={() => {
                                           openModal(
                                             'Payment plans',
                                             <PaymentModal viewOnly={false} />,
-                                            null,
-                                            { large: true },
+                                            'modal-lg',
                                           )
                                         }}
                                       >
-                                        <UpgradeIcon />
-                                        Upgrade
+                                        {Utils.calculaterRemainingCallsPercentage(
+                                          totalApiCalls,
+                                          organisation.subscription
+                                            ?.max_api_calls,
+                                        ) &&
+                                        Utils.getFlagsmithHasFeature(
+                                          'max_api_calls_alert',
+                                        ) ? (
+                                          <>
+                                            <span>
+                                              {`You used ${Format.shortenNumber(
+                                                totalApiCalls,
+                                              )}/${Format.shortenNumber(
+                                                organisation.subscription
+                                                  ?.max_api_calls,
+                                              )} requests. Click to`}{' '}
+                                              <span style={{ color: 'red' }}>
+                                                {'Upgrade'}
+                                              </span>
+                                              <UpgradeIcon />
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <UpgradeIcon />
+                                            <span>Upgrade</span>
+                                          </>
+                                        )}
                                       </a>
                                     )}
                                   <Headway className='nav-link cursor-pointer' />
@@ -355,6 +404,7 @@ const App = class extends Component {
                                   </a>
                                   <NavLink
                                     id='account-settings-link'
+                                    data-test='account-settings-link'
                                     activeClassName='active'
                                     className='nav-link'
                                     to={
@@ -421,8 +471,7 @@ const App = class extends Component {
                                       'dark_mode',
                                     )}
                                     onChange={this.toggleDarkMode}
-                                    onMarkup='Light'
-                                    offMarkup='Dark'
+                                    darkMode
                                   />
                                 </div>
                                 <div className='org-nav'>
@@ -435,12 +484,12 @@ const App = class extends Component {
                                         id='org-menu'
                                         onClick={toggle}
                                       >
-                                        <span className='nav-link-featured relative'>
+                                        <div className='nav-link-featured relative flex-row'>
                                           {organisation
                                             ? organisation.name
                                             : ''}
                                           <span className='flex-column ion ion-ios-arrow-down' />
-                                        </span>
+                                        </div>
                                       </a>
                                     )}
                                   >
@@ -483,8 +532,7 @@ const App = class extends Component {
                                               >
                                                 <Flex className='text-center'>
                                                   <Button>
-                                                    Create Organisation{' '}
-                                                    <span className='ion-md-add' />
+                                                    Create Organisation
                                                   </Button>
                                                 </Flex>
                                               </Link>

@@ -6,7 +6,7 @@
         },
         {
             "source": "/system-administration/",
-            "destination": "/advanced-use/system-administration"
+            "destination": "/system-administration/security"
         },
         {
             "source": "/contributing",
@@ -22,11 +22,11 @@
         },
         {
             "source": "/permissions/",
-            "destination": "/advanced-use/permissions"
+            "destination": "/system-administration/rbac"
         },
         {
             "source": "/audit-logs/",
-            "destination": "/advanced-use/audit-logs"
+            "destination": "/system-administration/security#audit-logs"
         },
         {
             "source": "/managing-features/",
@@ -62,7 +62,7 @@
         },
         {
             "source": "/api/",
-            "destination": "/advanced-use/api"
+            "destination": "/clients/rest"
         },
         {
             "source": "/managing-segments",
@@ -126,11 +126,11 @@
         },
         {
             "source": "/advanced-use/audit-logs/",
-            "destination": "/advanced-use/system-administration"
+            "destination": "/system-administration/security#audit-logs"
         },
         {
             "source": "/advanced-use/audit-logs",
-            "destination": "/advanced-use/system-administration"
+            "destination": "/system-administration/security#audit-logs"
         },
         {
             "source": "/clients/python",

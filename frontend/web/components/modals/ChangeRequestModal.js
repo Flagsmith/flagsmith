@@ -3,6 +3,9 @@ import DatePicker from 'react-datepicker'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
+import MyGroupsSelect from 'components/MyGroupsSelect'
+import { getMyGroups } from 'common/services/useMyGroup'
+import { getStore } from 'common/store'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -16,26 +19,42 @@ const ChangeRequestModal = class extends Component {
       (this.props.changeRequest && this.props.changeRequest.approvals) || [],
     description:
       (this.props.changeRequest && this.props.changeRequest.description) || '',
+    groups: [],
     live_from:
       this.props.changeRequest &&
       this.props.changeRequest.feature_states[0].live_from,
     title: (this.props.changeRequest && this.props.changeRequest.title) || '',
   }
 
-  addOwner = (id) => {
+  componentDidMount() {
+    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
+      (res) => {
+        this.setState({ groups: res?.data?.results || [] })
+      },
+    )
+  }
+
+  addOwner = (id, isUser = true) => {
     this.setState({
-      approvals: (this.state.approvals || []).concat({ user: id }),
+      approvals: (this.state.approvals || []).concat(
+        isUser ? { user: id } : { group: id },
+      ),
     })
   }
 
-  removeOwner = (id) => {
+  removeOwner = (id, isUser = true) => {
     this.setState({
-      approvals: (this.state.approvals || []).filter((v) => v.user !== id),
+      approvals: (this.state.approvals || []).filter((v) =>
+        isUser ? v.user !== id : v.group !== id,
+      ),
     })
   }
 
   getApprovals = (users, approvals) =>
     users.filter((v) => approvals.find((a) => a.user === v.id))
+
+  getGroupApprovals = (groups, approvals) =>
+    groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   save = () => {
     const { approvals, description, live_from, title } = this.state
@@ -48,10 +67,14 @@ const ChangeRequestModal = class extends Component {
   }
 
   render() {
-    const { description, title } = this.state
+    const { description, groups, title } = this.state
     return (
       <OrganisationProvider>
         {({ users }) => {
+          const ownerGroups = this.getGroupApprovals(
+            groups,
+            this.state.approvals || [],
+          )
           const ownerUsers = this.getApprovals(
             users,
             this.state.approvals || [],
@@ -118,77 +141,133 @@ const ChangeRequestModal = class extends Component {
                         />
                       </Flex>
 
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         className='ml-2'
                         onClick={() => {
                           this.setState({ live_from: null })
                         }}
                       >
                         Clear
-                      </ButtonLink>
+                      </Button>
                     </Row>
                   }
                 />
               </div>
-              {!this.props.changeRequest && this.props.showAssignees && (
-                <FormGroup className='mb-4'>
-                  <InputGroup
-                    component={
-                      <div>
-                        <Row>
-                          {ownerUsers.map((u) => (
-                            <Row
-                              key={u.id}
-                              onClick={() => this.removeOwner(u.id)}
-                              className='chip chip--active'
-                            >
-                              <span className='font-weight-bold'>
-                                {u.first_name} {u.last_name}
-                              </span>
-                              <span className='chip-icon ion ion-ios-close' />
+              {!this.props.changeRequest &&
+                this.props.showAssignees &&
+                (!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') ||
+                  Utils.getFlagsmithHasFeature(
+                    'enable_groups_as_reviewers',
+                  )) && (
+                  <FormGroup className='mb-4'>
+                    <InputGroup
+                      component={
+                        <div>
+                          {!Utils.getFlagsmithHasFeature(
+                            'disable_users_as_reviewers',
+                          ) && (
+                            <Row>
+                              <strong style={{ width: 70 }}> Users: </strong>
+                              {ownerUsers.map((u) => (
+                                <Row
+                                  key={u.id}
+                                  onClick={() => this.removeOwner(u.id)}
+                                  className='chip'
+                                  style={{ marginBottom: 4, marginTop: 4 }}
+                                >
+                                  <span className='font-weight-bold'>
+                                    {u.first_name} {u.last_name}
+                                  </span>
+                                  <span className='chip-icon ion ion-ios-close' />
+                                </Row>
+                              ))}
+                              <Button
+                                theme='text'
+                                onClick={() =>
+                                  this.setState({ showUsers: true })
+                                }
+                              >
+                                Add user
+                              </Button>
                             </Row>
-                          ))}
-                          <Button
-                            className='btn--link btn--link-primary'
-                            onClick={() => this.setState({ showUsers: true })}
-                          >
-                            Add Assignee
-                          </Button>
-                        </Row>
-                      </div>
+                          )}
+                          {Utils.getFlagsmithHasFeature(
+                            'enable_groups_as_reviewers',
+                          ) && (
+                            <Row>
+                              <strong style={{ width: 70 }}> Groups: </strong>
+                              {ownerGroups.map((u) => (
+                                <Row
+                                  key={u.id}
+                                  onClick={() => this.removeOwner(u.id, false)}
+                                  className='chip'
+                                  style={{ marginBottom: 4, marginTop: 4 }}
+                                >
+                                  <span className='font-weight-bold'>
+                                    {u.name}
+                                  </span>
+                                  <span className='chip-icon ion ion-ios-close' />
+                                </Row>
+                              ))}
+                              <Button
+                                theme='text'
+                                onClick={() =>
+                                  this.setState({ showGroups: true })
+                                }
+                              >
+                                Add group
+                              </Button>
+                            </Row>
+                          )}
+                        </div>
+                      }
+                      onChange={(e) =>
+                        this.setState({
+                          description: Utils.safeParseEventValue(e),
+                        })
+                      }
+                      type='text'
+                      title='Assignees'
+                      tooltipPlace='top'
+                      tooltip='Assignees will be able to review and approve the change request'
+                      inputProps={{
+                        className: 'full-width',
+                        style: { minHeight: 80 },
+                      }}
+                      className='full-width'
+                      placeholder='Add an optional description...'
+                    />
+                  </FormGroup>
+                )}
+              {!this.props.changeRequest &&
+                !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
+                  <UserSelect
+                    users={users.filter(
+                      (v) => v.id !== AccountStore.getUser().id,
+                    )}
+                    value={this.state.approvals.map((v) => v.user)}
+                    onAdd={this.addOwner}
+                    onRemove={this.removeOwner}
+                    isOpen={this.state.showUsers}
+                    onToggle={() =>
+                      this.setState({ showUsers: !this.state.showUsers })
                     }
-                    onChange={(e) =>
-                      this.setState({
-                        description: Utils.safeParseEventValue(e),
-                      })
-                    }
-                    type='text'
-                    title='Assignees'
-                    tooltipPlace='top'
-                    tooltip='Assignees will be able to review and approve the change request'
-                    inputProps={{
-                      className: 'full-width',
-                      style: { minHeight: 80 },
-                    }}
-                    className='full-width'
-                    placeholder='Add an optional description...'
                   />
-                </FormGroup>
-              )}
-              {!this.props.changeRequest && (
-                <UserSelect
-                  users={users.filter(
-                    (v) => v.id !== AccountStore.getUser().id,
-                  )}
-                  value={this.state.approvals.map((v) => v.user)}
-                  onAdd={this.addOwner}
-                  onRemove={this.removeOwner}
-                  isOpen={this.state.showUsers}
-                  onToggle={() =>
-                    this.setState({ showUsers: !this.state.showUsers })
-                  }
-                />
-              )}
+                )}
+              {!this.props.changeRequest &&
+                Utils.getFlagsmithHasFeature('enable_groups_as_reviewers') && (
+                  <MyGroupsSelect
+                    orgId={AccountStore.getOrganisation().id}
+                    value={this.state.approvals.map((v) => v.group)}
+                    onAdd={this.addOwner}
+                    onRemove={this.removeOwner}
+                    isOpen={this.state.showGroups}
+                    onToggle={() =>
+                      this.setState({ showGroups: !this.state.showGroups })
+                    }
+                  />
+                )}
 
               <FormGroup className='text-right mt-2'>
                 <Button

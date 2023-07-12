@@ -1,7 +1,7 @@
+@import "new/variables-new";
 //Fonts
 $font-family: "OpenSans", sans-serif;
 $font-family-header: 'OpenSans', sans-serif;
-
 
 
 $dark-bg-0: #232533;
@@ -61,8 +61,6 @@ $bt-brand-red: #f2576e;
 //Body
 $body-text-faint: #717186;
 $body-text-faint-dark: darken(#e3e3e3,10);
-$body-text: #43424f;
-$body-text-dark: $dark-highlight-color;
 $header-color: #1E0D26; // for headers and labels
 $header-color-dark: #d2d2d2; // for headers and labels
 $bt-link-color: $bt-brand-primary-dark; // for headers and labels
@@ -82,12 +80,6 @@ $navbar-background: transparent;
 $nav-icon-color: $bt-brand-primary;
 $nav-icon-color-dark: $dark-highlight;
 
-// Input
-$input-bg: #fff;
-$input-bg-alt: #f7f7f7;
-$input-bg-dark: $dark-bg-15;
-$input-color-dark: $body-text-dark;
-
 $bt-input-border: #d9d9e9;
 $bt-input-border-dark: $input-bg-dark;
 $bt-input-border-active: $input-bg-dark;
@@ -103,8 +95,6 @@ $body-bg: #fff;
 $body-bg-dark: $dark-bg-5;
 
 
-$p-color: #22354a;
-$p-color-dark: #c5c6c8;
 $butter-bar-bg: #fdf1dd;
 $butter-bar-bg-dark: $dark-bg-10;
 
@@ -128,10 +118,6 @@ $panel-heading-border-dark: 1px solid transparent;
 
 $bt-code-background: $dark-bg-0;
 $bt-code-background-dark: $dark-bg-0;
-$bt-switch-active:$bt-brand-primary;
-$bt-switch-active-dark: $dark-highlight;
-$bt-switch: #999;
-$bt-switch-dark: $dark-bg-20;
 
 
 $panel-grey-background-dark: $dark-bg-0;
@@ -161,21 +147,6 @@ $btn-color-dark: #d9d9d9;
 
 //Nav
 
-// BORDER RADIUS
-$default-border-radius: 8px;
-$btn-border-radius: 8px;
-
-// INPUT
-$input-border-radius: 0px;
-$input-height: 40px;
-$input-line-height: 25px;
-$input-font-size: inherit;
-$input-font-weight: 400;
-$input-border-color: #d9d9e9;
-$input-placeholder-color: rgb(224, 224, 224);
-$input-placeholder-color-dark: $header-color-dark;
-$input-border-highlight-color: $bt-brand-primary-light;
-
 $pagination-color: #333;
 
 
@@ -193,16 +164,6 @@ $hover-color: inherits;
 $panel-alt-heading-bg: #fff;
 $panel-alt-heading-color: #fff;
 
-//TABS
-$tab-inactive-color: $body-text;
-$tab-active-background: $bt-brand-faint-alt;
-$tab-inactive-background: $bt-brand-faint-alt;
-$tab-inactive-color-dark: $header-color-dark;
-$tab-active-background-dark: $panel-heading-bg-dark;
-$tab-inactive-background-dark: $panel-heading-bg-dark;
-
-$tab-line-color: $bt-brand-primary;
-$tab-line-color-dark: $bt-brand-primary-dark-desaturated-lighter;
 
 $tab-active-color: $header-color;
 $tab-active-color-dark: $header-color-dark;
@@ -217,16 +178,6 @@ $tablet-landscape: 1024px;
 $input-padding-x: .75rem !default;
 $input-padding-y: 1rem !default;
 
-//MODALS
-$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
-$modal-header-background: $bt-brand-faint-alt;
-$modal-header-background-dark: $panel-heading-bg-dark;
-$side-modal-header-background: white;
-$side-modal-header-background-dark: $panel-heading-bg-dark;
-
-$modal-header-color: $header-color;
-$modal-header-color-dark: $header-color-dark;
-$modal-header-border-width: 0;
 $border-radius-default: 8px;
 //TRANSITIONS
 $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);

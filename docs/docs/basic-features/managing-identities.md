@@ -14,11 +14,10 @@ will then send an API message to the Flagsmith API, with the relevant Identity i
 
 :::tip
 
-The SDK part of the Flagsmith API is public by design. The Environment Key is designed to be public and is easy to
-view/find when building a client integration. When identifying users, it is important to use an Identity value that is
-not easy to guess. For example, if you used an incrementing integer to identify your users, it would be trivial to
-request Identities by enumerating this integer. This would effectively give public access to any user traits that are
-associated with users.
+The SDK part of the Flagsmith API is public by design; the Environment Key is designed to be public. When identifying
+users, it is important to use an Identity value that is not easy to guess. For example, if you used an incrementing
+integer to identify your users, it would be trivial to request Identities by enumerating this integer. This would
+effectively give public access to any user traits that are associated with users.
 
 We strongly recommend using an unguessable, unidentifiable Identity Key, such as a
 [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), when identifying your users, to prevent
@@ -45,9 +44,9 @@ and modifying their Flags.
 
 ## Identity Traits
 
-You can also use Flagsmith to store 'Traits' against identities. Traits are simply key/value pairs that are associated
-with individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case
-is to drive [Segments](managing-segments.md).
+You can also use Flagsmith to store 'Traits' against identities. Traits are key/value pairs that are associated with
+individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case is to
+drive [Segments](managing-segments.md).
 
 :::important
 
@@ -63,18 +62,18 @@ that the Identity is using. When you integrate the Flagsmith SDK, you would pass
 Flagsmith platform as a trait key/value pair:
 
 ```java
-FeatureUser user = new FeatureUser();
-user.setIdentifier("user_512356");
+String identifier = "user_512356"
+Map<String, Object> traits = new HashMap<String, Object>();
+traits.put("app_version", YourApplication.getVersion());
 
-FlagsAndTraits flagsAndTraits = flagsmithClient.identifyUserWithTraits(FeatureUser user, Arrays.asList(
-    trait(null, "app_version", Application.getVersion());
+Flags flags = flagsmith.getIdentityFlags(identifier, traits);
 ```
 
-Here we are setting the trait key `app_version` with the value of `Application.getVersion()`.You can now create a
+Here we are setting the trait key `app_version` with the value of `YourApplication.getVersion()`.You can now create a
 [Segment](managing-segments.md) that is based on the application version and manage features based on the application
 version.
 
-Traits are completely freeform. You can store any number of traits, with any relevant information you see fit, in the
+Traits are completely free-form. You can store any number of traits, with any relevant information you see fit, in the
 platform and then use Segments to control features based on these Trait values.
 
 ### Using Traits as a data-store

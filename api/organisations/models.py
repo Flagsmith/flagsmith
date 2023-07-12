@@ -99,16 +99,24 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_paid(self):
         return self.has_subscription() and self.subscription.cancellation_date is None
 
-    def over_plan_seats_limit(self):
+    def over_plan_seats_limit(self, additional_seats: int = 0):
         if self.has_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats > susbcription_metadata.seats
+            return self.num_seats + additional_seats > susbcription_metadata.seats
 
-        return self.num_seats > MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats + additional_seats > getattr(
+            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
+        )
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
         self.save()
+
+    def is_auto_seat_upgrade_available(self) -> bool:
+        return (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and self.subscription.can_auto_upgrade_seats
+        )
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
@@ -231,6 +239,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         add_single_seat(self.subscription_id)
 
+    def get_api_call_overage(self):
+        subscription_info = self.organisation.subscription_information_cache
+        return subscription_info.allowed_30d_api_calls - subscription_info.api_calls_30d
+
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     name = models.CharField(max_length=100)
@@ -261,3 +273,5 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
+
+    chargebee_email = models.EmailField(blank=True, max_length=254, null=True)

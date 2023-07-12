@@ -8,12 +8,12 @@
     /* Track */
     &::-webkit-scrollbar-track {
         background: $bt-scrollbar-track;
-        border-radius: 20px;
+        border-radius: $border-radius;
     }
     /* Handle */
     &::-webkit-scrollbar-thumb {
         background: $bt-scrollbar-thumb;
-        border-radius: 20px;
+        border-radius: $border-radius;
         &:hover {
             background: $bt-scrollbar-thumb-hover;
         }
@@ -29,12 +29,12 @@
     /* Track */
     &::-webkit-scrollbar-track {
         background: $bt-scrollbar-track-dark;
-        border-radius: 20px;
+        border-radius: $border-radius;
     }
     /* Handle */
     &::-webkit-scrollbar-thumb {
         background: $bt-scrollbar-thumb-dark;
-        border-radius: 20px;
+        border-radius: $border-radius;
         &:hover {
             background: $bt-scrollbar-thumb-dark-hover;
         }

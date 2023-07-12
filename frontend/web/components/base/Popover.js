@@ -20,8 +20,8 @@ const Popover = class extends React.Component {
   render() {
     const classNames = cn(
       {
-        in: this.state.isActive,
         popover: true,
+        show: this.state.isActive,
       },
       this.props.contentClassName,
       this.props.className,

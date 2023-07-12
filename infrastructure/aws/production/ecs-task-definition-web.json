@@ -125,7 +125,7 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0001"
+                    "value": "0.00006"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
@@ -166,6 +166,10 @@
                 {
                     "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
                     "value": "True"
+                },
+                {
+                    "name": "AUTO_SEAT_UPGRADE_PLANS",
+                    "value": "scale-up,scale-up-v2,scale-up-annual-v2"
                 }
             ],
             "secrets": [
@@ -196,10 +200,6 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
-                },
-                {
-                    "name": "MAILERLITE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:MAILERLITE_API_KEY::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",

@@ -7,7 +7,7 @@ sidebar_position: 4
 Flagsmith is also provided as an "Enterprise Edition" which has additional features and capabilities over the Open
 Source product:
 
-- [Role Based Access Controls](advanced-use/permissions.md)
+- [Role Based Access Controls](/system-administration/rbac)
 - [SAML](authentication/saml), [OAuth](authentication/oauth), [LDAP](authentication/ldap), [ADFS](authentication/ADFS)
   and [Okta](authentication/okta) authentication, as well as the ability to lock authentication to a single provider
 - Additional database engines: Oracle, SQL Server and MySQL
@@ -340,7 +340,7 @@ We also recommend using [wrk](https://github.com/wg/wrk) for load testing the co
 (make sure you update URL and environment keys!)
 
 ```bash
-# Simple get flags endpoint
+#  Get flags endpoint
 wrk -t6 -c200 -d20s -H 'X-Environment-Key: iyiS5EDNDxMDuiFpHoiwzG' http://127.0.0.1:8000/api/v1/flags/
 
 # Get flags for an identity

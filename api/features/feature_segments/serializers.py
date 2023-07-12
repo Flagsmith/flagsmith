@@ -26,7 +26,7 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ("segment", "priority")
+        fields = ("id", "segment", "priority", "uuid")
         read_only_fields = ("priority",)
 
 

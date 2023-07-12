@@ -18,7 +18,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import (
     Feature,
     FeatureSegment,
@@ -28,6 +28,7 @@ from features.models import (
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
+from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -421,7 +422,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
@@ -450,7 +451,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
@@ -485,7 +486,7 @@ class ProjectFeatureTestCase(TestCase):
             user=user, project=self.project
         )
         permissions = PermissionModel.objects.filter(
-            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+            key__in=[VIEW_PROJECT, CREATE_FEATURE]
         )
         user_project_permission.permissions.add(*permissions)
         client = APIClient()
@@ -656,15 +657,63 @@ def test_get_flags_hide_sensitive_data(api_client, environment, feature):
     # When
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     response = api_client.get(url)
+    feature_sensitive_fields = [
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    ]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.json()[0].keys()) == {
-        "feature",
-        "feature_state_value",
-        "enabled",
-    }
-    assert set(response.json()[0]["feature"].keys()) == {"id", "name", "type"}
+    # Check that the sensitive fields are None
+    for flag in response.json():
+        for field in fs_sensitive_fields:
+            assert flag[field] is None
+
+        for field in feature_sensitive_fields:
+            assert flag["feature"][field] is None
+
+
+def test_get_flags__server_key_only_feature__return_expected(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.json()
+
+
+def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
+    api_client: APIClient,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()
 
 
 @pytest.mark.parametrize(

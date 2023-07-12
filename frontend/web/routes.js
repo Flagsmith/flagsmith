@@ -2,7 +2,6 @@ import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
-import BetaFeaturesPage from './components/pages/BetaFeaturesPage'
 import HomePage from './components/pages/HomePage'
 import Maintenance from './components/Maintenance'
 import ProjectSelectPage from './components/pages/ProjectSelectPage'
@@ -157,13 +156,8 @@ export default (
         exact
         component={AuditLogPage}
       />
-      <Route
-        path='/project/:projectId/beta-features'
-        exact
-        component={BetaFeaturesPage}
-      />
       <Route path='/create' exact component={CreateOrganisationPage} />
-      <Route component={NotFoundPage} />
+      <Route path='*' component={NotFoundPage} />
     </Switch>
   </App>
 )
