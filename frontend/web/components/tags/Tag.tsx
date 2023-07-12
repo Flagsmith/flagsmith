@@ -42,17 +42,23 @@ const Tag: FC<TagType> = ({
   }
 
   return (
-    <div
-      onClick={() => onClick?.(tag as TTag)}
-      style={{
-        backgroundColor: `${color(getColor()).fade(0.92)}`,
-        border: `1px solid ${color(getColor()).fade(0.76)}`,
-        color: `${color(getColor()).darken(0.1)}`,
-      }}
-      className={cx('chip', 'chip--sm', className)}
+    <Tooltip
+      title={
+        <div
+          onClick={() => onClick?.(tag as TTag)}
+          style={{
+            backgroundColor: `${color(getColor()).fade(0.92)}`,
+            border: `1px solid ${color(getColor()).fade(0.76)}`,
+            color: `${color(getColor()).darken(0.1)}`,
+          }}
+          className={cx('chip', 'chip--sm', className)}
+        >
+          {tag.label}
+        </div>
+      }
     >
       {tag.label}
-    </div>
+    </Tooltip>
   )
 }
 
