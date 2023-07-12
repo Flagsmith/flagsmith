@@ -12,6 +12,7 @@ from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from features.versioning.exceptions import FeatureVersioningError
 
 
 class EnvironmentFeatureVersion(LifecycleModel):
@@ -58,6 +59,11 @@ class EnvironmentFeatureVersion(LifecycleModel):
             f"{self.environment.id}{self.feature.id}{time.time()}".encode("utf-8")
         ).hexdigest()
 
+    @hook(BEFORE_CREATE, when="published", is_now=True)
+    def update_live_from(self):
+        if not self.live_from:
+            self.live_from = timezone.now()
+
     @property
     def is_live(self):
         return self.published and self.live_from < timezone.now()
@@ -72,21 +78,17 @@ class EnvironmentFeatureVersion(LifecycleModel):
         """
 
         if not environment.use_v2_feature_versioning:
-            # TODO: custom exception
-            raise Exception()
+            raise FeatureVersioningError(
+                "Cannot create initial version for environment using v1 versioning."
+            )
         elif cls.objects.filter(environment=environment, feature=feature).exists():
-            # TODO: custom exception
-            raise Exception()
+            raise FeatureVersioningError(
+                "Version already exists for this feature / environment combination."
+            )
 
-        version = cls.objects.create(environment=environment, feature=feature)
-        FeatureState.objects.filter(
-            environment=environment, feature=feature, identity=None
-        ).update(environment_feature_version=version)
-
-        version.publish()
-        version.save()
-
-        return version
+        return cls.objects.create(
+            environment=environment, feature=feature, published=True
+        )
 
     def get_previous_version(self) -> typing.Optional["EnvironmentFeatureVersion"]:
         return (

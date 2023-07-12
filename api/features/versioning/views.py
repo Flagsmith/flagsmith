@@ -15,8 +15,12 @@ from rest_framework.viewsets import GenericViewSet
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
+from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.serializers import EnvironmentFeatureVersionSerializer
+from features.versioning.serializers import (
+    EnvironmentFeatureVersionFeatureStateSerializer,
+    EnvironmentFeatureVersionSerializer,
+)
 
 
 class EnvironmentFeatureVersionViewSet(
@@ -49,6 +53,12 @@ class EnvironmentFeatureVersionViewSet(
     def perform_update(self, serializer: Serializer) -> None:
         serializer.save(environment=self.environment, feature=self.feature)
 
+    def perform_destroy(self, instance: EnvironmentFeatureVersion) -> None:
+        if instance.is_live:
+            raise FeatureVersioningError("Cannot delete a live version.")
+
+        super().perform_destroy(instance)
+
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:
         ef_version = self.get_object()
@@ -64,7 +74,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     UpdateModelMixin,
     DestroyModelMixin,  # TODO: prevent deletion, update for published versions?
 ):
-    serializer_class = CreateSegmentOverrideFeatureStateSerializer
+    serializer_class = EnvironmentFeatureVersionFeatureStateSerializer
     permission_classes = [IsAuthenticated]  # TODO
     pagination_class = None
 
@@ -79,13 +89,16 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
 
     def initial(self, request: Request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
+        self.environment_feature_version = get_object_or_404(
+            EnvironmentFeatureVersion, sha=self.kwargs["environment_feature_version_pk"]
+        )
+        if self.action != "list" and self.environment_feature_version.published is True:
+            raise FeatureVersioningError("Cannot modify published version.")
+
         self.environment = get_object_or_404(
             Environment, pk=self.kwargs["environment_pk"]
         )
         self.feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
-        self.environment_feature_version = get_object_or_404(
-            EnvironmentFeatureVersion, sha=self.kwargs["environment_feature_version_pk"]
-        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

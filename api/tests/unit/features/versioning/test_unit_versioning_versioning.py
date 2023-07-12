@@ -80,7 +80,7 @@ def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
     FeatureState.objects.create(
         feature=feature,
         enabled=False,
-        version=3,
+        version=None,
         environment=environment,
     )
 
