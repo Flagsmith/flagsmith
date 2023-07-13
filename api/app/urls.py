@@ -15,7 +15,7 @@ urlpatterns = [
     url(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
     url(r"^admin/", admin.site.urls),
     url(r"^health", include("health_check.urls", namespace="health")),
-    url(r"^version", views.version_info),
+    url(r"^version", views.version_info, name="version-info"),
     url(
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
