@@ -1,6 +1,5 @@
 ---
 title: Role Based Access Control
-description: Team member and group permissions.
 ---
 
 Flagsmith provides fine-grained permissions to help larger teams manage access and roles across projects and
