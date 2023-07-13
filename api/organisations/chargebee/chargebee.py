@@ -133,14 +133,12 @@ def get_subscription_metadata_from_id(
 
     with suppress(ChargebeeAPIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
-        subscription = vars(chargebee_result.subscription)
-        # convert the addons into a list of dictionaries since vars don't do it recursively
-        subscription["addons"] = [
-            vars(addon) for addon in chargebee_result.subscription.addons
-        ]
+        chargebee_subscription = _convert_chargebee_subscription_to_dictionary(
+            chargebee_result.subscription
+        )
 
         return extract_subscription_metadata(
-            subscription, chargebee_result.customer.email
+            chargebee_subscription, chargebee_result.customer.email
         )
 
 
@@ -185,3 +183,15 @@ def add_single_seat(subscription_id: str):
         )
         logger.error(msg)
         raise UpgradeSeatsError(msg) from e
+
+
+def _convert_chargebee_subscription_to_dictionary(
+    chargebee_subscription: chargebee.Subscription,
+):
+    chargebee_subscription_dict = vars(chargebee_subscription)
+    # convert the addons into a list of dictionaries since vars don't do it recursively
+    chargebee_subscription_dict["addons"] = [
+        vars(addon) for addon in chargebee_subscription.addons
+    ]
+
+    return chargebee_subscription_dict
