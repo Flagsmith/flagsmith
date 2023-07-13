@@ -373,7 +373,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs value={tab} onChange={setTab}>
+      <Tabs value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }: { isLoading: boolean; users?: User[] }) => (

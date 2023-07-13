@@ -299,12 +299,10 @@ const OrganisationSettingsPage = class extends Component {
                   return (
                     <div>
                       <Tabs
-                        inline
-                        transparent
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                       >
-                        <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                        <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
@@ -526,15 +524,11 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                        <TabItem tabLabel='Keys'>
                           <AdminAPIKeys />
                         </TabItem>
 
-                        <TabItem
-                          data-test='tab-permissions'
-                          tabLabel='Members'
-                          tabIcon='ion-md-people'
-                        >
+                        <TabItem data-test='tab-permissions' tabLabel='Members'>
                           <JSONReference
                             showNamesButton
                             className='mt-4'
@@ -572,7 +566,7 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                   {!isLoading && (
                                     <div>
-                                      <Tabs inline transparent uncontrolled>
+                                      <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
                                             <h5 className='m-b-0'>
@@ -1195,7 +1189,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                        <TabItem tabLabel='Webhooks'>
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
@@ -1305,7 +1299,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {!Project.disableAnalytics && (
-                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                          <TabItem tabLabel='Usage'>
                             {this.state.tab === 4 && (
                               <OrganisationUsage
                                 organisationId={
