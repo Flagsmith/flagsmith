@@ -35,13 +35,13 @@ def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> 
 
 
 def is_master_api_key_project_admin(
-    master_api_key: "FFAdminUser", project: Project
+    master_api_key: "MasterAPIKey", project: Project
 ) -> bool:
-    return _is_user_object_admin(master_api_key, project)
+    return _is_master_api_key_object_admin(master_api_key, project)
 
 
 def is_master_api_key_environment_admin(
-    master_api_key: "FFAdminUser", environment: Environment
+    master_api_key: "MasterAPIKey", environment: Environment
 ) -> bool:
     return is_master_api_key_project_admin(
         master_api_key, environment.project

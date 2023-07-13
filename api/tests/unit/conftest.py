@@ -184,3 +184,13 @@ def tag_two(project):
         description="Test Tag2 description",
         project=project,
     )
+
+
+@pytest.fixture()
+def project_two(organisation):
+    return Project.objects.create(name="Test Project Two", organisation=organisation)
+
+
+@pytest.fixture
+def project_two_environment(project_two):
+    return Environment.objects.create(name="Test Environment Two", project=project_two)

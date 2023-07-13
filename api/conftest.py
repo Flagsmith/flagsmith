@@ -293,10 +293,10 @@ def environment_api_key(environment):
 
 @pytest.fixture()
 def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
-    master_api_key, key = MasterAPIKey.objects.create_key(
+    master_api_key, _ = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation
     )
-    return master_api_key, key
+    return master_api_key
 
 
 @pytest.fixture()

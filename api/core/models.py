@@ -8,7 +8,6 @@ from django.http import HttpRequest
 from simple_history.models import HistoricalRecords
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
-from api_keys.user import APIKeyUser
 from audit.related_object_type import RelatedObjectType
 
 if typing.TYPE_CHECKING:
@@ -137,6 +136,8 @@ class _AbstractBaseAuditableModel(models.Model):
 def get_history_user(
     instance: typing.Any, request: HttpRequest
 ) -> typing.Optional["FFAdminUser"]:
+    from api_keys.user import APIKeyUser
+
     try:
         return None if isinstance(request.user, APIKeyUser) else request.user
     except AttributeError:
