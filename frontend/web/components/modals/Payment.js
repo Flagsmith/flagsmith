@@ -281,10 +281,8 @@ const PaymentModal = class extends Component {
                             {!viewOnly ? (
                               <a
                                 onClick={() => {
-                                  if (window.zE) {
-                                    closeModal()
-                                    Utils.openChat()
-                                  }
+                                  closeModal()
+                                  Utils.openChat()
                                 }}
                                 href='#'
                                 className='pricing-cta blue'
