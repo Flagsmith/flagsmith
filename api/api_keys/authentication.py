@@ -10,6 +10,8 @@ key_parser = KeyParser()
 class MasterAPIKeyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         key = key_parser.get(request)
+        if not key:
+            return None
         try:
             key = MasterAPIKey.objects.get_from_key(key)
         except MasterAPIKey.DoesNotExist:
