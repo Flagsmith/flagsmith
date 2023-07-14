@@ -1,0 +1,10 @@
+.idea
+frontend/node_modules
+frontend/reports
+frontend/public
+frontend/tests_output
+frontend/web/static
+frontend/web/project/libs.js
+frontend/e2e
+frontend/webpack
+frontend/api
