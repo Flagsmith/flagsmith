@@ -148,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     "integrations.dynatrace",
+    "integrations.flagsmith",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -893,3 +894,7 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+
+FLAGSMITH_SERVER_KEY = env("FLAGSMITH_SERVER_KEY", default=None)
+FLAGSMITH_API_URL = env("FLAGSMITH_API_URL", default=None)
