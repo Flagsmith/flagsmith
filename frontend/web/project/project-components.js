@@ -113,7 +113,7 @@ global.Select = class extends PureComponent {
       </div>
     ) : (
       <Select
-        className='react-select'
+        className={`react-select ${props.size ? props.size : ''}`}
         classNamePrefix='react-select'
         {...props}
       />

@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react'
+import React, { Component, ReactNode, useEffect, useState } from 'react'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
 import FeatureRow from 'components/FeatureRow'
@@ -11,19 +11,26 @@ import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import { Provider } from 'react-redux'
 import InfoMessage from 'components/InfoMessage'
+import ProjectProvider from 'common/providers/ProjectProvider'
+import AccountProvider from 'common/providers/AccountProvider'
 import PanelSearch from 'components/PanelSearch'
 // @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native'
 import {
+  Environment,
   FeatureListProviderActions,
   FeatureListProviderData,
+  Organisation,
+  PagedResponse,
+  Project,
+  ProjectFlag,
 } from 'common/types/responses'
-import { Environment, PagedResponse, ProjectFlag } from 'common/types/responses'
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react'
 import client from 'components/datadog-client'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import AuditLog from 'components/AuditLog'
 import OrgEnvironmentSelect from 'components/OrgEnvironmentSelect'
+import AccountStore from 'common/stores/account-store'
 
 const FeatureListProvider = require('common/providers/FeatureListProvider')
 const AppActions = require('common/dispatcher/app-actions')
@@ -49,6 +56,59 @@ const PermissionError = () => {
   )
 }
 
+type OrganisationWrapperType = { projectId: string | undefined; children: ReactNode }
+const OrganisationWrapper = class extends Component<OrganisationWrapperType> {
+  constructor(props: any, context: any) {
+    super(props, context)
+    ES6Component(this)
+    if (this.props.projectId) {
+      AppActions.getProject(this.props.projectId)
+    }
+  }
+
+  componentDidUpdate(prevProps: Readonly<OrganisationWrapperType>) {
+    if (this.props.projectId !== prevProps.projectId && this.props.projectId) {
+      AppActions.getProject(this.props.projectId)
+    }
+  }
+  render() {
+    if (!this.props.projectId) return <>{this.props.children}</>
+    return (
+      <AccountProvider>
+        {() => (
+          <ProjectProvider>
+            {() => {
+              const project = ProjectStore.model as Project | null
+              if (
+                project &&
+                project?.organisation !== AccountStore.getOrganisation()?.id
+              ) {
+                // @ts-ignore
+                AccountStore.organisation =
+                  AccountStore.getOrganisations()?.find(
+                    (org: Organisation) => org.id === project.organisation,
+                  )
+                // @ts-ignore
+                if (!AccountStore.organisation) {
+                  return null
+                }
+              }
+              // @ts-ignore
+              return AccountStore.model && ProjectStore.model ? (
+                this.props.children
+              ) : (
+                <div className='text-center'>
+                  <Loader />
+                </div>
+              )
+            }}
+          </ProjectProvider>
+        )}
+      </AccountProvider>
+    )
+  }
+}
+
 const FeatureList = class extends Component<FeatureListType> {
   state = {
     error: null as null | string,
@@ -60,7 +120,6 @@ const FeatureList = class extends Component<FeatureListType> {
   constructor(props: any, context: any) {
     super(props, context)
     ES6Component(this)
-    AppActions.getProject(this.props.projectId)
     AppActions.getFeatures(
       this.props.projectId,
       this.props.environmentId,
@@ -74,9 +133,6 @@ const FeatureList = class extends Component<FeatureListType> {
   }
 
   componentDidUpdate(prevProps: Readonly<FeatureListType>) {
-    if (this.props.projectId !== prevProps.projectId) {
-      AppActions.getProject(this.props.projectId)
-    }
     if (
       this.props.projectId !== prevProps.projectId ||
       this.props.environmentId !== prevProps.environmentId ||
@@ -290,7 +346,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                               this.filter,
                                             )
                                           }
-                                          projectId={`${projectId}`}
+                                          projectId={projectId}
                                           value={this.state.tags}
                                           onChange={(tags) => {
                                             FeatureListStore.isLoading = true
@@ -342,7 +398,10 @@ const FeatureList = class extends Component<FeatureListType> {
                                                 )
                                               }}
                                               className='px-2 py-2 ml-2 mr-2'
-                                              tag={{ label: 'Archived' }}
+                                              tag={{
+                                                color: '#0AADDF',
+                                                label: 'Archived',
+                                              }}
                                             />
                                           </div>
                                         </TagFilter>
@@ -429,43 +488,49 @@ export default function Widget() {
     if (isAudit) {
       return (
         <Provider store={getStore()}>
-          <div className='widget-container'>
-            <AuditLog
-              onErrorChange={setError}
-              environmentId={environmentId}
-              projectId={projectId}
-              pageSize={parseInt(pageSize)}
-            />
-          </div>
+          <OrganisationWrapper projectId={projectId}>
+            <div className='widget-container'>
+              <AuditLog
+                onErrorChange={setError}
+                environmentId={environmentId}
+                projectId={projectId}
+                pageSize={parseInt(pageSize)}
+              />
+            </div>
+          </OrganisationWrapper>
         </Provider>
       )
     }
     return (
-      <FeatureList
-        hideTags={hideTags}
-        pageSize={parseInt(pageSize)}
-        projectId={`${projectId}`}
-        environmentId={`${environmentId}`}
-      />
+      <OrganisationWrapper projectId={projectId}>
+        <FeatureList
+          hideTags={hideTags}
+          pageSize={parseInt(pageSize)}
+          projectId={projectId}
+          environmentId={`${environmentId}`}
+        />
+      </OrganisationWrapper>
     )
   }
 
   return (
-    <div className='text-center pt-5'>
-      <h3>Please select the environment you wish to use.</h3>
-      <div className='widget-container'>
-        <Provider store={getStore()}>
-          <OrgEnvironmentSelect
-            useApiKey={!isAudit}
-            organisationId={organisationId}
-            environmentId={_environmentId}
-            projectId={_projectId}
-            onOrganisationChange={setOrganisationId}
-            onProjectChange={setProjectId}
-            onEnvironmentChange={setEnvironmentId}
-          />
-        </Provider>
+    <OrganisationWrapper projectId={projectId}>
+      <div className='text-center pt-5'>
+        <h3>Please select the environment you wish to use.</h3>
+        <div className='widget-container'>
+          <Provider store={getStore()}>
+            <OrgEnvironmentSelect
+              useApiKey={!isAudit}
+              organisationId={organisationId}
+              environmentId={_environmentId}
+              projectId={_projectId}
+              onOrganisationChange={setOrganisationId}
+              onProjectChange={setProjectId}
+              onEnvironmentChange={setEnvironmentId}
+            />
+          </Provider>
+        </div>
       </div>
-    </div>
+    </OrganisationWrapper>
   )
 }

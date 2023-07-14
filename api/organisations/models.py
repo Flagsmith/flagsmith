@@ -256,7 +256,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_api_call_overage(self):
         subscription_info = self.organisation.subscription_information_cache
-        return subscription_info.allowed_30d_api_calls - subscription_info.api_calls_30d
+        overage = (
+            subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
+        )
+        return overage if overage > 0 else 0
 
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):

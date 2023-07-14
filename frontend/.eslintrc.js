@@ -30,6 +30,8 @@ module.exports = {
     'Column': true,
     'Cookies': true,
     'Dispatcher': true,
+    'DYNATRACE_URL': true,
+    'dtrum': true,
     'E2E': true,
     'ES6Component': true,
     'FB': true,

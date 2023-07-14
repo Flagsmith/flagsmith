@@ -17,12 +17,18 @@ from projects.models import (
     UserProjectPermission,
 )
 
+from .permission_service import is_user_project_admin
 from .rbac_wrapper import (
     RolePermissionData,
     get_roles_permission_data_for_environment,
     get_roles_permission_data_for_organisation,
     get_roles_permission_data_for_project,
 )
+
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from users.models import FFAdminUser
+
 
 UserPermissionType = typing.Union[
     UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
@@ -76,6 +82,7 @@ class PermissionData:
         "RolePermissionData" if "RolePermissionData" in globals() else typing.Any
     ]
     is_organisation_admin: bool = False
+    admin_override: bool = False
 
     @property
     def admin(self) -> bool:
@@ -84,6 +91,7 @@ class PermissionData:
             or self.user.admin
             or any(group.admin for group in self.groups)
             or any(role.admin for role in self.roles)
+            or self.admin_override
         )
 
     @property
@@ -114,7 +122,9 @@ def get_project_permission_data(project_id: int, user_id: int) -> PermissionData
     )
 
 
-def get_organisation_permission_data(organisation_id: int, user) -> PermissionData:
+def get_organisation_permission_data(
+    organisation_id: int, user: "FFAdminUser"
+) -> PermissionData:
     org_permission_svc = _OrganisationPermissionService(organisation_id, user.id)
     return PermissionData(
         is_organisation_admin=user.is_organisation_admin(organisation_id),
@@ -125,13 +135,14 @@ def get_organisation_permission_data(organisation_id: int, user) -> PermissionDa
 
 
 def get_environment_permission_data(
-    environment_id: int, user_id: int
+    environment: "Environment", user: "FFAdminUser"
 ) -> PermissionData:
-    environment_permission_svc = _EnvironmentPermissionService(environment_id, user_id)
+    environment_permission_svc = _EnvironmentPermissionService(environment.id, user.id)
     return PermissionData(
         groups=get_groups_permission_data(environment_permission_svc.group_qs),
         user=get_user_permission_data(environment_permission_svc.user_permission),
-        roles=get_roles_permission_data_for_environment(environment_id, user_id),
+        roles=get_roles_permission_data_for_environment(environment.id, user.id),
+        admin_override=is_user_project_admin(user, project=environment.project),
     )
 
 

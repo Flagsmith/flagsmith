@@ -1,5 +1,6 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 global.API = {
   ajaxHandler(store, res) {
@@ -42,6 +43,10 @@ global.API = {
     if (id === Project.excludeAnalytics) return
     if (Project.mixpanel) {
       mixpanel.alias(id)
+    }
+
+    if (enableDynatrace) {
+      dtrum.identifyUser(id)
     }
 
     if (Project.heap) {
@@ -141,13 +146,16 @@ global.API = {
         })
       }
 
+      if (enableDynatrace) {
+        dtrum.identifyUser(id)
+      }
+
       if (Project.heap) {
         const plans = AccountStore.getPlans()
         heap.identify(id)
         heap.addUserProperties({
           // use human-readable names
           '$first_name': user.first_name,
-
           '$last_name': user.last_name,
           'USER_ID': id,
           email: id,
