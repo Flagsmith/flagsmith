@@ -163,8 +163,8 @@ const ProjectSettingsPage = class extends Component {
             return (
               <div>
                 {
-                  <Tabs inline transparent uncontrolled>
-                    <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                  <Tabs uncontrolled>
+                    <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference title='Project' json={project} />
                         <label>Project Name</label>
@@ -415,7 +415,6 @@ const ProjectSettingsPage = class extends Component {
                     <TabItem
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
-                      tabIcon='ion-md-code'
                     >
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
@@ -448,7 +447,7 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Members' tabIcon='ion-md-people'>
+                    <TabItem tabLabel='Members'>
                       <EditPermissions
                         onSaveUser={() => {
                           this.getPermissions()

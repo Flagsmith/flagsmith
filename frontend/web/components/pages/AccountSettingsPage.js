@@ -151,8 +151,8 @@ class TheComponent extends Component {
             </div>
           ) : (
             <div className='app-container container'>
-              <Tabs inline transparent uncontrolled>
-                <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+              <Tabs uncontrolled>
+                <TabItem tabLabel='General'>
                   <div className='mt-4'>
                     <JSONReference
                       showNamesButton
@@ -289,7 +289,7 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                <TabItem tabLabel='Keys'>
                   <div className='mt-4'>
                     <div className='col-md-12'>
                       <h5>API Token</h5>
@@ -319,7 +319,7 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Security' tabIcon='ion-md-lock'>
+                <TabItem tabLabel='Security'>
                   <div className='mt-4'>
                     {AccountStore.model.auth_type === 'EMAIL' && (
                       <div className='row'>
