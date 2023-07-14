@@ -54,3 +54,4 @@ django-softdelete
 simplejson
 pydantic
 pyngo
+git+https://github.com/Flagsmith/flagsmith-python-client.git@main

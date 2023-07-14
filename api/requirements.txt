@@ -136,8 +136,12 @@ drf-yasg==1.21.6
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==4.0.3
+flagsmith @ git+https://github.com/Flagsmith/flagsmith-python-client.git@main
     # via -r requirements.in
+flagsmith-flag-engine==4.0.3
+    # via
+    #   -r requirements.in
+    #   flagsmith
 google-api-core==1.23.0
     # via
     #   google-api-python-client
@@ -288,15 +292,19 @@ requests==2.31.0
     #   analytics-python
     #   azure-core
     #   coreapi
+    #   flagsmith
     #   google-api-core
     #   msal
     #   opencensus-ext-azure
+    #   requests-futures
     #   requests-oauthlib
     #   rudder-sdk-python
     #   smsapi-client
     #   social-auth-core
     #   twilio
     #   yubico-client
+requests-futures==1.0.1
+    # via flagsmith
 requests-oauthlib==1.3.1
     # via social-auth-core
 rsa==4.7
