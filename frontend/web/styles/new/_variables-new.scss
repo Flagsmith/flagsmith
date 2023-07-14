@@ -10,6 +10,8 @@ $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
 $info: #0aaddf;
+$warning: #ff9f43;
+$secondary400: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
 $text-icon-grey: rgba(101, 109, 123, 1);
@@ -39,14 +41,15 @@ $theme-colors: (
   danger: $danger,
   success: $success,
   info: $info,
+  warning:$warning,
   // add any additional color below
 );
 $bg-light300: #eff1f4;
-$bg-dark100: #2D3443;
+$bg-dark100: #2d3443;
 $bg-dark200: #202839;
-$bg-dark300: #161D30;
-$bg-dark400: #15192B;
-$bg-dark500: #0F1425;
+$bg-dark300: #161d30;
+$bg-dark400: #15192b;
+$bg-dark500: #0f1425;
 
 //Body
 $body-text: $text-icon-dark;
@@ -93,7 +96,6 @@ $btn-outline-active-bg: $primary-alfa-16;
 $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
 $btn-border-width: 0;
-
 
 //HR
 $hr-border-color: $basic-alpha-16;
@@ -240,12 +242,17 @@ $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
 
 //Tabs
-$tab-btn-line-height:42px;
-$tab-btn-font-weight:500;
-$tab-btn-active-font-weight:600;
-$tab-btn-counter-value-bg:$danger;
-$tab-btn-counter-value-font-size:$font-caption-sm;
-$tab-btn-counter-value-width:20px;
-$pill-bg:$bg-light300;
+$tab-btn-line-height: 42px;
+$tab-btn-font-weight: 500;
+$tab-btn-active-font-weight: 600;
+$tab-btn-counter-value-bg: $danger;
+$tab-btn-counter-value-font-size: $font-caption-sm;
+$tab-btn-counter-value-width: 20px;
+$pill-bg: $bg-light300;
 $tab-line-color: $primary;
 
+//CodeHelp
+$code-btn-bg: $secondary400;
+$code-btn-description-color: $primary;
+$code-color: $text-icon-light;
+$code-bg: $bg-dark200;
