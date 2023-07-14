@@ -419,6 +419,9 @@ const store = Object.assign({}, BaseStore, {
   getOrganisations() {
     return store.model && store.model.organisations
   },
+  getPaymentMethod() {
+    return store.organisation?.subscription?.payment_method
+  },
   getPlans() {
     if (!store.model) return []
     return _.filter(

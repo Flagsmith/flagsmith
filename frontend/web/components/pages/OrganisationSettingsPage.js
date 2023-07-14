@@ -287,8 +287,11 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const isAWS =
+                    AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
                   const { chargebee_email } = subscriptionMeta || {}
-                  const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
+                  const autoSeats =
+                    !isAWS && Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
                   const overSeats =
@@ -296,6 +299,7 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
+
                   return (
                     <div>
                       <Tabs
@@ -353,7 +357,7 @@ const OrganisationSettingsPage = class extends Component {
                                     {organisation.id}
                                   </p>
                                 </div>
-                                {paymentsEnabled && (
+                                {paymentsEnabled && !isAWS && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
                                       <img
