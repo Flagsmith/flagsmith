@@ -1,1 +1,1 @@
-[{"feature_state_value": null, "enabled": false, "feature": {"id": 49759, "type": "STANDARD", "name": "v2_versioning"}}]
+[{"enabled": false, "feature_state_value": null, "feature": {"id": 49759, "name": "v2_versioning", "type": "STANDARD"}}]
