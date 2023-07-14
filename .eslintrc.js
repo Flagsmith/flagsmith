@@ -30,6 +30,8 @@ module.exports = {
     'Column': true,
     'Cookies': true,
     'Dispatcher': true,
+    'DYNATRACE_URL': true,
+    'dtrum': true,
     'E2E': true,
     'ES6Component': true,
     'FB': true,
@@ -99,7 +101,11 @@ module.exports = {
     'window': true,
     'zE': true,
   },
-  'ignorePatterns': ['server/index.js', 'next.config.js', 'babel.config.js'],
+  'ignorePatterns': [
+    'frontend/server/index.js',
+    'frontend/next.config.js',
+    'frontend/babel.config.js',
+  ],
   'parser': '@typescript-eslint/parser',
   'parserOptions': {
     'ecmaFeatures': {
@@ -121,9 +127,9 @@ module.exports = {
       'error',
       {
         'alias': {
-          'common': './common/',
-          'components': './web/components/',
-          'project': './web/project/',
+          'common': './frontend/common/',
+          'components': './frontend/web/components/',
+          'project': './frontend/web/project/',
         },
       },
     ],

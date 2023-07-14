@@ -28,3 +28,16 @@ repos:
     rev: 'v8.44.0'
     hooks:
       - id: eslint
+        additional_dependencies:
+          - eslint@8.44.0
+          - eslint-plugin-react@7.32.2
+          - eslint-plugin-react-hooks@4.6.0
+          - eslint-plugin-sort-keys-fix@1.1.2
+          - '@typescript-eslint/eslint-plugin@6.0.0'
+          - eslint-config-prettier@8.8.0
+          - eslint-plugin-prettier@5.0.0
+          - '@dword-design/eslint-plugin-import-alias@4.0.8'
+          - '@typescript-eslint/parser@6.0.0'
+          - eslint-plugin-import@2.27.5
+          - eslint-plugin-sort-destructure-keys@1.4.0
+          - eslint-plugin-sort-keys-fix@1.1.2
