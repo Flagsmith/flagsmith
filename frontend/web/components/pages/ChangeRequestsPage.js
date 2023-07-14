@@ -128,7 +128,7 @@ const ChangeRequestsPage = class extends Component {
                   tabLabel={
                     <span className='flex-row justify-content-center'>
                       Open
-                      {data && (
+                      {data && !!dataPaging.count && (
                         <div className='counter-value ml-1'>
                           {dataPaging.count}
                         </div>
@@ -225,7 +225,7 @@ const ChangeRequestsPage = class extends Component {
                   tabLabel={
                     <span className='flex-row justify-content-center'>
                       Closed
-                      {dataClosedPaging && (
+                      {dataClosedPaging && !!dataClosedPaging.count && (
                         <div className='counter-value ml-1'>
                           {dataClosedPaging.count}
                         </div>
