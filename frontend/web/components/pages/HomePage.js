@@ -564,38 +564,43 @@ const HomePage = class extends React.Component {
                                 name='password'
                                 id='password'
                               />
-                              {Utils.getFlagsmithHasFeature('mailing_list') && (
-                                <div>
-                                  <input
-                                    onChange={(e) => {
-                                      API.setCookie(
-                                        'marketing_consent_given',
-                                        `${e.target.checked}`,
-                                      )
-                                      this.setState({
-                                        marketing_consent_given:
-                                          e.target.checked,
-                                      })
-                                    }}
-                                    id='mailinglist'
-                                    type='checkbox'
-                                    checked={this.state.marketing_consent_given}
-                                  />
-                                  <label
-                                    className='mb-0'
-                                    htmlFor='mailinglist'
-                                    style={{ display: 'inline' }}
-                                  >
-                                    <span className='checkbox mr-2'>
-                                      {this.state.marketing_consent_given && (
-                                        <Icon name='checkmark' />
-                                      )}
-                                    </span>
-                                    Yes, I would like to signup for the twice
-                                    monthly newsletter (optional)
-                                  </label>
-                                </div>
-                              )}
+                              {Utils.getFlagsmithHasFeature('mailing_list') &&
+                                Utils.getFlagsmithHasFeature(
+                                  'plan_based_access',
+                                ) && (
+                                  <div>
+                                    <input
+                                      onChange={(e) => {
+                                        API.setCookie(
+                                          'marketing_consent_given',
+                                          `${e.target.checked}`,
+                                        )
+                                        this.setState({
+                                          marketing_consent_given:
+                                            e.target.checked,
+                                        })
+                                      }}
+                                      id='mailinglist'
+                                      type='checkbox'
+                                      checked={
+                                        this.state.marketing_consent_given
+                                      }
+                                    />
+                                    <label
+                                      className='mb-0'
+                                      htmlFor='mailinglist'
+                                      style={{ display: 'inline' }}
+                                    >
+                                      <span className='checkbox mr-2'>
+                                        {this.state.marketing_consent_given && (
+                                          <Icon name='checkmark' />
+                                        )}
+                                      </span>
+                                      Yes, I would like to signup for the twice
+                                      monthly newsletter (optional)
+                                    </label>
+                                  </div>
+                                )}
                               <div className='form-cta'>
                                 <Button
                                   data-test='signup-btn'
