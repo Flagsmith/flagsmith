@@ -1,11 +1,6 @@
-# Ignore a bunch of files:
-*.html
-*.json
-*.handlebars
-*.css
-.bablerc
+.idea
 frontend/node_modules
-frontend/report
+frontend/reports
 frontend/public
 frontend/tests_output
 frontend/web/static
