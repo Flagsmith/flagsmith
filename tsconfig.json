@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "lib": [
+      "dom"
+    ],
+    "jsx": "preserve",
+    "incremental": true,
+    "skipLibCheck": true,
+    "paths": {
+      "common/*": [
+        "./frontend/common/*"
+      ],
+      "components/*": [
+        "./frontend/web/components/*"
+      ],
+      "project/*": [
+        "./frontend/web/project/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+  ],
+  "include": [
+    "global.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}
