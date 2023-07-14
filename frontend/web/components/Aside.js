@@ -556,6 +556,12 @@ const Aside = class extends Component {
                               </a>
                             )}
 
+                            {Utils.getFlagsmithHasFeature('broken_feature') && (
+                              <Link to='/broken' className='aside__nav-item'>
+                                <i className='icon mr-2 ion-ios-warning aside__nav-item--icon' />
+                                Demo Broken Feature
+                              </Link>
+                            )}
                             {this.state.version && (
                               <div className='text-muted text-small text-center'>
                                 {this.state.version.tag !== 'Unknown' && (
