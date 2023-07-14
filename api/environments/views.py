@@ -12,10 +12,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api_keys.user import APIKeyUser
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
-    MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
 from permissions.permissions_calculator import get_environment_permission_data
@@ -24,6 +24,7 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
+from users.models import FFAdminUser
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
@@ -64,7 +65,7 @@ logger = logging.getLogger(__name__)
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
-    permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
+    permission_classes = [EnvironmentPermissions]
 
     def get_serializer_class(self):
         if self.action == "trait_keys":
@@ -94,10 +95,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
 
-            if self.request.user.is_anonymous:
-                return (
-                    self.request.master_api_key.organisation.projects.environments.all()
-                )
             return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
             )
@@ -107,7 +104,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         environment = serializer.save()
-        if not self.request.user.is_anonymous:
+        if isinstance(self.request.user, FFAdminUser):
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=environment, admin=True
             )
@@ -141,7 +138,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         clone = serializer.save(source_env=self.get_object())
 
-        if not self.request.user.is_anonymous:
+        if isinstance(self.request.user, FFAdminUser):
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=clone, admin=True
             )
@@ -177,7 +174,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
+        if isinstance(request.user, APIKeyUser):
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={

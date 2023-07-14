@@ -5,7 +5,6 @@ from functools import reduce
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
-from core.permissions import HasMasterAPIKey
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
@@ -45,8 +44,6 @@ from .permissions import (
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
-    MasterAPIKeyEnvironmentFeatureStatePermissions,
-    MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
@@ -78,12 +75,8 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 @swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
-@permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_by_uuid(request, uuid):
-    if getattr(request, "master_api_key", None):
-        accessible_projects = request.master_api_key.organisation.projects.all()
-    else:
-        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
         "multivariate_options", "owners", "tags"
     )
@@ -472,10 +465,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
 
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
-    permission_classes = [
-        EnvironmentFeatureStatePermissions
-        | MasterAPIKeyEnvironmentFeatureStatePermissions
-    ]
+    permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(feature_segment=None)
@@ -524,7 +514,7 @@ class SimpleFeatureStateViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = WritableNestedFeatureStateSerializer
-    permission_classes = [FeatureStatePermissions | MasterAPIKeyFeatureStatePermissions]
+    permission_classes = [FeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
@@ -550,12 +540,8 @@ class SimpleFeatureStateViewSet(
     responses={200: WritableNestedFeatureStateSerializer()}, method="get"
 )
 @api_view(["GET"])
-@permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_state_by_uuid(request, uuid):
-    if getattr(request, "master_api_key", None):
-        accessible_projects = request.master_api_key.organisation.projects.all()
-    else:
-        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = FeatureState.objects.filter(
         feature__project__in=accessible_projects
     ).select_related("feature_state_value")
