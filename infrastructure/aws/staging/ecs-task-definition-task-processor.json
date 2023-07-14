@@ -102,6 +102,10 @@
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
+                },
+                {
+                    "name": "TASK_RETENTION_DAYS",
+                    "value": "280"
                 }
             ],
             "secrets": [
