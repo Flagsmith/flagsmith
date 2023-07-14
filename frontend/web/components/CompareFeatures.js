@@ -121,10 +121,10 @@ class CompareEnvironments extends Component {
                                     e.stopPropagation()
                                     this.setState({ selectedIndex: i })
                                   }}
-                                  className={`btn--radio ion ${
+                                  className={`btn-radio mr-2 ${
                                     this.state.selectedIndex === i
-                                      ? 'ion-ios-radio-button-on'
-                                      : 'ion-ios-radio-button-off'
+                                      ? 'btn-radio-on'
+                                      : ''
                                   }`}
                                 />
                                 <strong>{data.name}</strong>
