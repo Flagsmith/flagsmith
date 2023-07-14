@@ -80,25 +80,6 @@
     }
   }
 }
-.dark {
-  .hljs {
-    background: $bt-code-background-dark;
-  }
-  .hljs-header {
-    color: $btn-code-button-color-dark;
-    .hljs-description {
-      color: $btn-code-button-color-alt-dark;
-    }
-    background-color: $btn-code-button-background-dark;
-    &:hover {
-      background-color: $btn-code-button-background-dark-hover;
-    }
-    border: 1px solid $btn-code-button-background-dark;
-  }
-  :hover > .hljs-header {
-    background-color: $btn-code-button-background-dark-hover;
-  }
-}
 .hljs {
   a {
     color: white !important;
