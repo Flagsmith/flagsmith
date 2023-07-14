@@ -1,0 +1,10 @@
+{
+  "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "include-component-in-tag": false,
+      "prerelease": false
+    }
+  }
+}
