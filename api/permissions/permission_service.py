@@ -34,15 +34,27 @@ def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> 
     )
 
 
+def is_master_api_key_organisation_admin(
+    master_api_key: "MasterAPIKey", organisation: Organisation
+) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation_id == organisation.id
+    return False
+
+
 def is_master_api_key_project_admin(
     master_api_key: "MasterAPIKey", project: Project
 ) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation_id == project.organisation_id
     return _is_master_api_key_object_admin(master_api_key, project)
 
 
 def is_master_api_key_environment_admin(
     master_api_key: "MasterAPIKey", environment: Environment
 ) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation_id == environment.project.organisation_id
     return is_master_api_key_project_admin(
         master_api_key, environment.project
     ) or _is_master_api_key_object_admin(master_api_key, environment)
@@ -74,16 +86,10 @@ def get_permitted_projects_for_user(
 def get_permitted_projects_for_master_api_key(
     master_api_key: "MasterAPIKey", permission_key: str
 ) -> QuerySet[Project]:
-    """
-    Get all projects that the user has the given permissions for.
-
-    Rules:
-        - User has the required permissions directly (UserProjectPermission)
-        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
-        - User is an admin for the organisation the project belongs to
-        - User has a role attached with the required permissions(if rbac is enabled)
-        - User is in a UserPermissionGroup that has a role attached with the required permissions
-    """
+    if is_master_api_key_organisation_admin(
+        master_api_key, master_api_key.organisation
+    ):
+        return Project.objects.filter(organisation=master_api_key.organisation)
 
     filter_ = get_role_permission_filter(master_api_key, Project, permission_key)
     return Project.objects.filter(filter_).distinct()
@@ -120,18 +126,6 @@ def get_permitted_environments_for_master_api_key(
     project: Project,
     permission_key: str,
 ) -> QuerySet[Environment]:
-    """
-    Get all environments that the user has the given permissions for.
-
-    Rules:
-        - User has the required permissions directly (UserEnvironmentPermission)
-        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
-        - User is an admin for the project the environment belongs to
-        - User is an admin for the organisation the environment belongs to
-        - User has a role attached with the required permissions(if rbac is enabled)
-        - User is in a UserPermissionGroup that has a role attached with the required permissions(if rbac is enabled)
-    """
-
     if is_master_api_key_project_admin(master_api_key, project):
         return project.environments.all()
 
@@ -164,6 +158,9 @@ def user_has_organisation_permission(
 def master_api_key_has_organisation_permission(
     master_api_key: "MasterAPIKey", organisation: Organisation, permission_key: str
 ) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation == organisation
+
     base_filter = get_role_permission_filter(
         master_api_key, Organisation, permission_key
     )
