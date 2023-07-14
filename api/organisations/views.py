@@ -303,6 +303,8 @@ def chargebee_webhook(request):
                     "allowed_30d_api_calls": subscription_metadata.api_calls,
                     "allowed_seats": subscription_metadata.seats,
                     "organisation_id": existing_subscription.organisation_id,
+                    "allowed_projects": subscription_metadata.projects,
+                    "chargebee_email": subscription_metadata.chargebee_email,
                 },
             )
 

@@ -20,6 +20,7 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_plan_meta_data,
     get_portal_url,
+    get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
@@ -94,6 +95,11 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def has_subscription(self) -> bool:
         return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
+
+    def has_subscription_information_cache(self) -> bool:
+        return hasattr(self, "subscription_information_cache") and bool(
+            self.subscription_information_cache.id
+        )
 
     @property
     def is_paid(self):
@@ -217,13 +223,17 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
-            # Getting the data from the subscription information cache because
-            # data is guaranteed to be up to date by using a Chargebee webhook.
-            metadata = ChargebeeObjMetadata(
-                seats=self.organisation.subscription_information_cache.allowed_seats,
-                api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
-            )
-
+            if self.organisation.has_subscription_information_cache():
+                # Getting the data from the subscription information cache because
+                # data is guaranteed to be up to date by using a Chargebee webhook.
+                metadata = ChargebeeObjMetadata(
+                    seats=self.organisation.subscription_information_cache.allowed_seats,
+                    api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
+                    projects=self.organisation.subscription_information_cache.allowed_projects,
+                    chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+                )
+            else:
+                metadata = get_subscription_metadata_from_id(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
             metadata = XeroSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls, projects=None
@@ -278,5 +288,6 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
+    allowed_projects = models.IntegerField(default=1)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
