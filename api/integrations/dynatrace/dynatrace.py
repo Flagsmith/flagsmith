@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 EVENTS_API_URI = "api/v2/events/ingest"
 
+# use 'Deployment' as a fallback to maintain current behaviour in the
+# event that we cannot determine the correct name to return.
+DEFAULT_DEPLOYMENT_NAME = "Deployment"
+
 
 class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
     def __init__(self, base_url: str, api_key: str, entity_selector: str):
@@ -53,29 +57,42 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
 
 
 def _get_deployment_name(audit_log_record: AuditLog) -> str:
-    if audit_log_record.related_object_type == RelatedObjectType.FEATURE.name:
-        if feature := (
-            Feature.objects.all_with_deleted()
-            .filter(id=audit_log_record.related_object_id)
-            .first()
-        ):
-            return f"Flagsmith Deployment - Flag Changed: {feature.name}"
-    elif audit_log_record.related_object_type == RelatedObjectType.FEATURE_STATE.name:
-        if feature := (
-            Feature.objects.all_with_deleted()
-            .filter(feature_states__id=audit_log_record.related_object_id)
-            .distinct()
-            .first()
-        ):
-            return f"Flagsmith Deployment - Flag Changed: {feature.name}"
-    elif audit_log_record.related_object_type == RelatedObjectType.SEGMENT.name:
-        if (
-            segment := Segment.objects.all_with_deleted()
-            .filter(id=audit_log_record.related_object_id)
-            .first()
-        ):
-            return f"Flagsmith Deployment - Segment Changed: {segment.name}"
+    related_object_type = RelatedObjectType[audit_log_record.related_object_type]
 
-    # use 'Deployment' as a fallback to maintain current behaviour in
-    # the event of an issue with new functionality
-    return "Deployment"
+    if related_object_type in (
+        RelatedObjectType.FEATURE,
+        RelatedObjectType.FEATURE_STATE,
+    ):
+        return _get_deployment_name_for_feature(
+            audit_log_record.related_object_id, related_object_type
+        )
+    elif related_object_type == RelatedObjectType.SEGMENT:
+        return _get_deployment_name_for_segment(audit_log_record.related_object_id)
+
+    # use 'Deployment' as a fallback to maintain current behaviour in the
+    # event that we cannot determine the correct name to return.
+    return DEFAULT_DEPLOYMENT_NAME
+
+
+def _get_deployment_name_for_feature(
+    object_id: int, object_type: RelatedObjectType
+) -> str:
+    qs = Feature.objects.all_with_deleted()
+    if object_type == RelatedObjectType.FEATURE:
+        qs = qs.filter(id=object_id)
+    elif object_type == RelatedObjectType.FEATURE_STATE:
+        qs = qs.filter(feature_states__id=object_id).distinct()
+
+    if feature := qs.first():
+        return f"Flagsmith Deployment - Flag Changed: {feature.name}"
+
+    # use 'Deployment' as a fallback to maintain current behaviour in the
+    # event that we cannot determine the correct name to return.
+    return DEFAULT_DEPLOYMENT_NAME
+
+
+def _get_deployment_name_for_segment(object_id: int) -> str:
+    if segment := Segment.objects.all_with_deleted().filter(id=object_id).first():
+        return f"Flagsmith Deployment - Segment Changed: {segment.name}"
+
+    return DEFAULT_DEPLOYMENT_NAME
