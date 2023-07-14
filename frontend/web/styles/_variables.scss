@@ -209,8 +209,7 @@ $aside-add-color-dark: white;
 $aside-width: 330px;
 
 // Shadows
-$aside-box-shadow: 0 6px 13px 0
-  transparentize($bt-brand-primary-dark-desaturated-light, 0.75); // Box shadow right menu
+$aside-box-shadow: 0 6px 13px 0 transparentize($bt-brand-primary-dark-desaturated-light, 0.75); // Box shadow right menu
 $aside-box-shadow-dark: 0 6px 16px 0 rgba(0, 0, 0, 0.25); // Box shadow right menu
 $aside-project-link-active-box-shadow: none;
 
@@ -223,14 +222,8 @@ $aside-left-color: white; // main aside menu
 $aside-left-color-dark: white; // main aside menu
 $aside-left-color-active: white; // main aside menu
 $aside-left-color-active-dark: white; // main aside menu
-$aside-nav-collapse: darken(
-  $aside-base-background,
-  2
-); // selected environment background
-$aside-nav-collapse-dark: lighten(
-  $aside-base-background-dark,
-  2
-); // selected environment background
+$aside-nav-collapse: darken($aside-base-background, 2); // selected environment background
+$aside-nav-collapse-dark: lighten($aside-base-background-dark, 2); // selected environment background
 
 // project link
 $aside-project-link-color: $aside-base-link-color;

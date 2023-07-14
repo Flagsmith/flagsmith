@@ -1,74 +1,74 @@
 .alert-shown {
-  .navbar {
-    margin-top: 60px;
-  }
-  .app-container {
-    margin-top: 130px;
-  }
-  .aside {
-    margin-top: 60px;
-    height: calc(100% - 60px);
-  }
-  &.hide {
     .navbar {
-      margin-top: 0;
+        margin-top: 60px;
     }
     .app-container {
-      margin-top: 70px;
+        margin-top: 130px;
     }
     .aside {
-      margin-top: 0;
-      height: 100%;
+        margin-top: 60px;
+        height: calc(100% - 60px);
     }
-  }
+    &.hide {
+        .navbar {
+            margin-top: 0;
+        }
+        .app-container {
+            margin-top: 70px;
+        }
+        .aside {
+            margin-top: 0;
+            height: 100%;
+        }
+    }
 }
 
 .alert {
-  border-radius: $border-radius-lg;
-  line-height: $alert-line-height;
-  color: $alert-color;
-  font-size: $alert-font-size;
-  text-align: left;
-  .icon-alert {
-    margin-right: 0.75rem;
-  }
+    border-radius: $border-radius-lg;
+    line-height: $alert-line-height;
+    color: $alert-color;
+    font-size: $alert-font-size;
+    text-align: left;
+    .icon-alert {
+        margin-right: 0.75rem;
+    }
 }
 
 .alert-danger {
-  background-color: $alert-danger-bg;
-  border-color: $alert-danger-border-color;
+    background-color: $alert-danger-bg;
+    border-color: $alert-danger-border-color;
 }
 
 .alert-info {
-  background-color: $alert-info-bg;
-  border-color: $alert-info-border-color;
-  .title {
-    font-weight: 500;
-    margin-bottom: 2px;
-    color: $text-icon-dark;
-  }
-  a {
-    color: $primary;
-    font-weight: normal;
-  }
-  strong {
-    font-weight: 500;
-    color: $text-icon-dark;
-  }
-}
-.dark {
-  .alert-info {
+    background-color: $alert-info-bg;
+    border-color: $alert-info-border-color;
     .title {
-      color: $text-icon-light;
+        font-weight: 500;
+        margin-bottom: 2px;
+        color: $text-icon-dark;
     }
     a {
-      color: $primary;
+        color: $primary;
+        font-weight: normal;
     }
     strong {
-      color: $text-icon-light;
+        font-weight: 500;
+        color: $text-icon-dark;
     }
-  }
+}
+.dark {
+    .alert-info {
+        .title {
+            color: $text-icon-light;
+        }
+        a {
+            color: $primary;
+        }
+        strong {
+            color: $text-icon-light;
+        }
+    }
 }
 .text-info {
-  color: $bt-brand-primary !important;
+    color: $bt-brand-primary !important;
 }

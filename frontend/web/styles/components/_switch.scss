@@ -1,122 +1,122 @@
 @import '../variables';
 
 .rc-switch {
-  position: relative;
-  display: inline-block;
-  margin-left: 5px;
-  box-sizing: border-box;
-  width: $switch-width;
-  height: $switch-height;
-  vertical-align: middle;
-  border-radius: $switch-border-radius;
-  border: none;
-  background-color: $switch-bg;
-  cursor: pointer;
-  &:focus {
-    box-shadow: 0px 0px 0px 3px rgba(51, 102, 255, 0.32);
-    border: 1px solid $primary;
-    outline: none;
-    &:after {
-      top: 2px;
-    }
-  }
-  &:hover {
-    background-color: $switch-hover-bg;
-  }
-  &-checked {
-    background-color: $primary;
-    &:hover {
-      background-color: $switch-checked-hover-bg;
-    }
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+    box-sizing: border-box;
+    width: $switch-width;
+    height: $switch-height;
+    vertical-align: middle;
+    border-radius: $switch-border-radius;
+    border: none;
+    background-color: $switch-bg;
+    cursor: pointer;
     &:focus {
-      border: none;
-      &:after {
-        top: 3px;
-      }
+        box-shadow: 0px 0px 0px 3px rgba(51, 102, 255, 0.32);
+        border: 1px solid $primary;
+        outline: none;
+        &:after {
+            top: 2px;
+        }
     }
-  }
-  &:disabled {
-    opacity: $btn-disabled-opacity;
-    background-color: $switch-disabled-bg;
-  }
-  &-checked:disabled {
-    opacity: $btn-disabled-opacity;
-    background-color: $primary;
-  }
+    &:hover {
+        background-color: $switch-hover-bg;
+    }
+    &-checked {
+        background-color: $primary;
+        &:hover {
+            background-color: $switch-checked-hover-bg;
+        }
+        &:focus {
+            border: none;
+            &:after {
+                top: 3px;
+            }
+        }
+    }
+    &:disabled {
+        opacity: $btn-disabled-opacity;
+        background-color: $switch-disabled-bg;
+    }
+    &-checked:disabled {
+        opacity: $btn-disabled-opacity;
+        background-color: $primary;
+    }
 }
 
 .rc-switch:after {
-  position: absolute;
-  width: $switcher-width;
-  height: $switcher-width;
-  left: 3px;
-  top: 3px;
-  border-radius: 50% 50%;
-  background-color: #ffffff;
-  content: ' ';
-  cursor: pointer;
-  -webkit-transform: scale(1);
-  transform: scale(1);
-  -webkit-transition: left 0.3s cubic-bezier(0.35, 0, 0.25, 1);
-  transition: left 0.3s cubic-bezier(0.35, 0, 0.25, 1);
+    position: absolute;
+    width: $switcher-width;
+    height: $switcher-width;
+    left: 3px;
+    top: 3px;
+    border-radius: 50% 50%;
+    background-color: #ffffff;
+    content: ' ';
+    cursor: pointer;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-transition: left 0.3s cubic-bezier(0.35, 0, 0.25, 1);
+    transition: left 0.3s cubic-bezier(0.35, 0, 0.25, 1);
 }
 
 .rc-switch-checked:after {
-  left: $switch-width - $switcher-width - 3px;
+    left: $switch-width - $switcher-width - 3px;
 }
 .rc-switch-disabled {
-  cursor: no-drop;
-  opacity: $btn-disabled-opacity;
+    cursor: no-drop;
+    opacity: $btn-disabled-opacity;
 }
 .rc-switch-disabled:hover:after {
-  -webkit-transform: scale(1);
-  transform: scale(1);
-  -webkit-animation-name: none;
-  animation-name: none;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-animation-name: none;
+    animation-name: none;
 }
 .rc-switch-label {
-  display: inline-block;
-  line-height: 20px;
-  font-size: 14px;
-  padding-left: 10px;
-  vertical-align: middle;
-  white-space: normal;
-  pointer-events: none;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
+    display: inline-block;
+    line-height: 20px;
+    font-size: 14px;
+    padding-left: 10px;
+    vertical-align: middle;
+    white-space: normal;
+    pointer-events: none;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .widget-mode {
-  .rc-switch {
-    cursor: default;
-    opacity: 1;
-    @extend .rc-switch;
-    &.rc-switch-checked {
-      @extend .rc-switch-checked;
+    .rc-switch {
+        cursor: default;
+        opacity: 1;
+        @extend .rc-switch;
+        &.rc-switch-checked {
+            @extend .rc-switch-checked;
+        }
     }
-  }
 }
 .dark {
-  .rc-switch {
-    background-color: $switch-bg-dark;
-    &:hover {
-      background-color: $switch-hover-bg-dark;
+    .rc-switch {
+        background-color: $switch-bg-dark;
+        &:hover {
+            background-color: $switch-hover-bg-dark;
+        }
+        &:disabled {
+            opacity: $switch-disabled-opacity-dark;
+            background-color: $switch-disabled-bg-dark;
+        }
+        &-checked {
+            background-color: $primary;
+            &:hover {
+                background-color: $switch-checked-hover-bg;
+            }
+            &:disabled {
+                opacity: $switch-disabled-opacity-dark;
+                background-color: $primary;
+            }
+        }
     }
-    &:disabled {
-      opacity: $switch-disabled-opacity-dark;
-      background-color: $switch-disabled-bg-dark;
-    }
-    &-checked {
-      background-color: $primary;
-      &:hover {
-        background-color: $switch-checked-hover-bg;
-      }
-      &:disabled {
-        opacity: $switch-disabled-opacity-dark;
-        background-color: $primary;
-      }
-    }
-  }
 }

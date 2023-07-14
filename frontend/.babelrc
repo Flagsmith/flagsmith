@@ -1,41 +1,41 @@
 {
-  "presets": [
-    "@babel/preset-react",
-    "@babel/preset-typescript",
-    [
-      "@babel/preset-env",
-      {
-        "targets": {
-          "esmodules": true,
-          "browsers": ["last 2 versions"]
-        },
-        "modules": false
-      }
-    ]
-  ],
-  "plugins": [
-    [
-      "module-resolver",
-      {
-        "root": ["."],
-        "alias": {
-          "common": "./common",
-          "components": "./web/components",
-          "project": "./web/project"
-        }
-      }
+    "presets": [
+        "@babel/preset-react",
+        "@babel/preset-typescript",
+        [
+            "@babel/preset-env",
+            {
+                "targets": {
+                    "esmodules": true,
+                    "browsers": ["last 2 versions"]
+                },
+                "modules": false
+            }
+        ]
     ],
-    "@babel/plugin-proposal-class-properties",
-    "babel-plugin-transform-object-rest-spread",
-    "@babel/plugin-transform-modules-commonjs"
-  ],
-  "env": {
-    "production": {
-      "plugins": [
-        "transform-react-remove-prop-types",
-        "@babel/transform-react-constant-elements",
-        "@babel/transform-react-inline-elements"
-      ]
+    "plugins": [
+        [
+            "module-resolver",
+            {
+                "root": ["."],
+                "alias": {
+                    "common": "./common",
+                    "components": "./web/components",
+                    "project": "./web/project"
+                }
+            }
+        ],
+        "@babel/plugin-proposal-class-properties",
+        "babel-plugin-transform-object-rest-spread",
+        "@babel/plugin-transform-modules-commonjs"
+    ],
+    "env": {
+        "production": {
+            "plugins": [
+                "transform-react-remove-prop-types",
+                "@babel/transform-react-constant-elements",
+                "@babel/transform-react-inline-elements"
+            ]
+        }
     }
-  }
 }

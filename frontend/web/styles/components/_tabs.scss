@@ -1,144 +1,144 @@
 @import '../variables';
 .code-help {
-  .tabs {
-    display: flex;
-  }
-  .tabs-content {
-    flex: 1;
-    width: 100%;
-    code {
-      margin: 20px;
-      margin-left: 0;
-      margin-right: 0;
-      max-width: 100%;
+    .tabs {
+        display: flex;
     }
-  }
-  .tabs-nav {
-    display: none;
-  }
-  .tab-line {
-    display: none;
-  }
+    .tabs-content {
+        flex: 1;
+        width: 100%;
+        code {
+            margin: 20px;
+            margin-left: 0;
+            margin-right: 0;
+            max-width: 100%;
+        }
+    }
+    .tabs-nav {
+        display: none;
+    }
+    .tab-line {
+        display: none;
+    }
 }
 .dark {
-  .tabs {
-    .tabs-nav {
-      background-color: transparent;
-      button,
-      button.btn,
-      button.btn-primary {
-        color: $text-icon-light;
-        &.btn:active {
-          color: $text-icon-light;
+    .tabs {
+        .tabs-nav {
+            background-color: transparent;
+            button,
+            button.btn,
+            button.btn-primary {
+                color: $text-icon-light;
+                &.btn:active {
+                    color: $text-icon-light;
+                }
+            }
         }
-      }
+        hr {
+            border-color: $white-alpha-16;
+        }
+        & .pill {
+            background: $bg-dark300;
+        }
     }
-    hr {
-      border-color: $white-alpha-16;
-    }
-    & .pill {
-      background: $bg-dark300;
-    }
-  }
 }
 .tabs-nav {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  button,
-  button.btn,
-  button.btn-primary {
-    border-radius: 0;
-    box-shadow: none;
-    flex: 1;
-    background-color: transparent;
-    color: $text-icon-dark;
-    &:hover {
-      background-color: transparent;
-      box-shadow: none;
-    }
-    &.btn:active {
-      box-shadow: none;
-      background: transparent;
-      color: $text-icon-dark;
-    }
-    min-height: 34px;
-    font-weight: $tab-btn-font-weight;
-    line-height: $tab-btn-line-height;
-    padding: 0;
-    &.tab-active {
-      font-weight: $tab-btn-active-font-weight;
-      background: transparent;
-    }
-    .counter-value {
-      font-size: $tab-btn-counter-value-font-size;
-      background-color: $tab-btn-counter-value-bg;
-      line-height: $line-height-xxsm;
-      display: flex;
-      width: $tab-btn-counter-value-width;
-      height: $tab-btn-counter-value-width;
-      border-radius: 50%;
-      color: $text-icon-light;
-      align-items: center;
-      justify-content: center;
-      font-weight: $tab-btn-font-weight;
-    }
-  }
-}
-
-.tabs {
-  & .pill {
-    background-color: $pill-bg;
-    border-radius: $border-radius-xlg;
-    display: inline-block;
+    position: relative;
+    display: flex;
+    flex-direction: row;
     button,
     button.btn,
     button.btn-primary {
-      padding: 0px 16px;
-      margin: 4px;
-      border-radius: $border-radius-lg;
-      line-height: $btn-line-height-sm;
-      &.tab-active {
-        font-weight: bold;
-        background: transparent;
-        background-color: $primary;
-        color: $text-icon-light;
-        font-weight: 500;
-      }
+        border-radius: 0;
+        box-shadow: none;
+        flex: 1;
+        background-color: transparent;
+        color: $text-icon-dark;
+        &:hover {
+            background-color: transparent;
+            box-shadow: none;
+        }
+        &.btn:active {
+            box-shadow: none;
+            background: transparent;
+            color: $text-icon-dark;
+        }
+        min-height: 34px;
+        font-weight: $tab-btn-font-weight;
+        line-height: $tab-btn-line-height;
+        padding: 0;
+        &.tab-active {
+            font-weight: $tab-btn-active-font-weight;
+            background: transparent;
+        }
+        .counter-value {
+            font-size: $tab-btn-counter-value-font-size;
+            background-color: $tab-btn-counter-value-bg;
+            line-height: $line-height-xxsm;
+            display: flex;
+            width: $tab-btn-counter-value-width;
+            height: $tab-btn-counter-value-width;
+            border-radius: 50%;
+            color: $text-icon-light;
+            align-items: center;
+            justify-content: center;
+            font-weight: $tab-btn-font-weight;
+        }
     }
-  }
+}
+
+.tabs {
+    & .pill {
+        background-color: $pill-bg;
+        border-radius: $border-radius-xlg;
+        display: inline-block;
+        button,
+        button.btn,
+        button.btn-primary {
+            padding: 0px 16px;
+            margin: 4px;
+            border-radius: $border-radius-lg;
+            line-height: $btn-line-height-sm;
+            &.tab-active {
+                font-weight: bold;
+                background: transparent;
+                background-color: $primary;
+                color: $text-icon-light;
+                font-weight: 500;
+            }
+        }
+    }
 }
 
 .tab-line {
-  bottom: -2px;
-  display: block;
-  height: 2px;
-  position: absolute;
-  transition: left 1s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-  background-color: $tab-line-color;
+    bottom: -2px;
+    display: block;
+    height: 2px;
+    position: absolute;
+    transition: left 1s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
+    background-color: $tab-line-color;
 }
 
 .tab-item {
-  display: none;
-  &.tab-active {
-    display: block;
-  }
+    display: none;
+    &.tab-active {
+        display: block;
+    }
 }
 
 .tab-icon {
-  font-size: 1.4em;
-  display: block;
+    font-size: 1.4em;
+    display: block;
 }
 
 .btn-tab {
-  position: relative;
-  .unread {
-    position: absolute;
-    right: 0;
-    top: 13px;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 16px;
-    height: 16px;
-  }
+    position: relative;
+    .unread {
+        position: absolute;
+        right: 0;
+        top: 13px;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        width: 16px;
+        height: 16px;
+    }
 }
