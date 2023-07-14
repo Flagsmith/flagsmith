@@ -1,42 +1,42 @@
 @mixin customScroll {
-    /* width */
-    &::-webkit-scrollbar {
-        height: 10px;
-        margin: 10px;
-        width: 10px;
+  /* width */
+  &::-webkit-scrollbar {
+    height: 10px;
+    margin: 10px;
+    width: 10px;
+  }
+  /* Track */
+  &::-webkit-scrollbar-track {
+    background: $bt-scrollbar-track;
+    border-radius: $border-radius;
+  }
+  /* Handle */
+  &::-webkit-scrollbar-thumb {
+    background: $bt-scrollbar-thumb;
+    border-radius: $border-radius;
+    &:hover {
+      background: $bt-scrollbar-thumb-hover;
     }
-    /* Track */
-    &::-webkit-scrollbar-track {
-        background: $bt-scrollbar-track;
-        border-radius: $border-radius;
-    }
-    /* Handle */
-    &::-webkit-scrollbar-thumb {
-        background: $bt-scrollbar-thumb;
-        border-radius: $border-radius;
-        &:hover {
-            background: $bt-scrollbar-thumb-hover;
-        }
-    }
+  }
 }
 @mixin customScrollDark {
-    /* width */
-    &::-webkit-scrollbar {
-        height: 10px;
-        margin: 10px;
-        width: 10px;
+  /* width */
+  &::-webkit-scrollbar {
+    height: 10px;
+    margin: 10px;
+    width: 10px;
+  }
+  /* Track */
+  &::-webkit-scrollbar-track {
+    background: $bt-scrollbar-track-dark;
+    border-radius: $border-radius;
+  }
+  /* Handle */
+  &::-webkit-scrollbar-thumb {
+    background: $bt-scrollbar-thumb-dark;
+    border-radius: $border-radius;
+    &:hover {
+      background: $bt-scrollbar-thumb-dark-hover;
     }
-    /* Track */
-    &::-webkit-scrollbar-track {
-        background: $bt-scrollbar-track-dark;
-        border-radius: $border-radius;
-    }
-    /* Handle */
-    &::-webkit-scrollbar-thumb {
-        background: $bt-scrollbar-thumb-dark;
-        border-radius: $border-radius;
-        &:hover {
-            background: $bt-scrollbar-thumb-dark-hover;
-        }
-    }
+  }
 }

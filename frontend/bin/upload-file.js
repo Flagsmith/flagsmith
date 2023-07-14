@@ -7,7 +7,7 @@ const SLACK_TOKEN = process.env.SLACK_TOKEN
 module.exports = function uploadFile(path) {
   if (!SLACK_TOKEN) {
     // eslint-disable-next-line
-        console.log('Slack token not specified, skipping upload');
+    console.log('Slack token not specified, skipping upload')
     return
   }
 
@@ -15,7 +15,7 @@ module.exports = function uploadFile(path) {
   const channelId = 'C0102JZRG3G' // infra_tests channel ID
 
   // eslint-disable-next-line
-    console.log(`Uploading ${path}`);
+  console.log(`Uploading ${path}`)
 
   const slackClient = new WebClient(process.env.SLACK_TOKEN)
 

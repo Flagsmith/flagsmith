@@ -1,50 +1,50 @@
 // Custom.scss
 // Option B: Include parts of Bootstrap
-@import "~bootstrap/scss/maps";
+@import '~bootstrap/scss/maps';
 // 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
-@import "~bootstrap/scss/mixins"; // Required
-@import "~bootstrap/scss/functions";
+@import '~bootstrap/scss/mixins'; // Required
+@import '~bootstrap/scss/functions';
 
 // 2. Include any default variable overrides in styles/_variables.scss
 
 // 3. Include remainder of required Bootstrap stylesheets
-@import "~bootstrap/scss/variables"; // Required
-@import "~bootstrap/scss/root"; // Required
-@import "~bootstrap/scss/reboot"; // Required
-@import "~bootstrap/scss/utilities"; // Required
+@import '~bootstrap/scss/variables'; // Required
+@import '~bootstrap/scss/root'; // Required
+@import '~bootstrap/scss/reboot'; // Required
+@import '~bootstrap/scss/utilities'; // Required
 
 // 4. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
-@import "~bootstrap/scss/utilities/api";
+@import '~bootstrap/scss/utilities/api';
 
 // 5. Include any optional Bootstrap CSS as needed
-@import "~bootstrap/scss/type";
-@import "~bootstrap/scss/images";
-@import "~bootstrap/scss/containers";
-@import "~bootstrap/scss/grid";
-@import "~bootstrap/scss/tables";
-@import "~bootstrap/scss/forms";
-@import "~bootstrap/scss/buttons";
-@import "~bootstrap/scss/transitions";
-@import "~bootstrap/scss/dropdown";
-@import "~bootstrap/scss/button-group";
-@import "~bootstrap/scss/nav";
-@import "~bootstrap/scss/navbar"; // Requires nav
+@import '~bootstrap/scss/type';
+@import '~bootstrap/scss/images';
+@import '~bootstrap/scss/containers';
+@import '~bootstrap/scss/grid';
+@import '~bootstrap/scss/tables';
+@import '~bootstrap/scss/forms';
+@import '~bootstrap/scss/buttons';
+@import '~bootstrap/scss/transitions';
+@import '~bootstrap/scss/dropdown';
+@import '~bootstrap/scss/button-group';
+@import '~bootstrap/scss/nav';
+@import '~bootstrap/scss/navbar'; // Requires nav
 
 //@import "~bootstrap/scss/card";
 //@import "~bootstrap/scss/accordion";
-@import "~bootstrap/scss/breadcrumb";
+@import '~bootstrap/scss/breadcrumb';
 //@import "~bootstrap/scss/pagination";
-@import "~bootstrap/scss/badge";
-@import "~bootstrap/scss/alert";
+@import '~bootstrap/scss/badge';
+@import '~bootstrap/scss/alert';
 //@import "~bootstrap/scss/progress";
 //@import "~bootstrap/scss/list-group";
-@import "~bootstrap/scss/close";
+@import '~bootstrap/scss/close';
 //@import "~bootstrap/scss/toasts";
-@import "~bootstrap/scss/modal"; // Requires transitions
+@import '~bootstrap/scss/modal'; // Requires transitions
 //@import "~bootstrap/scss/tooltip";
 //@import "~bootstrap/scss/popover";
 //@import "~bootstrap/scss/carousel";
-@import "~bootstrap/scss/spinners";
+@import '~bootstrap/scss/spinners';
 //@import "~bootstrap/scss/offcanvas";
 //@import "~bootstrap/scss/placeholders";
 

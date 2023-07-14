@@ -17,13 +17,13 @@ ${LIB_NAME}.init({
 
         // Or, use the value of a feature
         const ${FEATURE_NAME_ALT} = ${LIB_NAME}.getValue("${
-  customFeature || FEATURE_NAME_ALT
-}");
+          customFeature || FEATURE_NAME_ALT
+        }");
 
         // Check whether value has changed
         const ${FEATURE_NAME_ALT}Old = oldFlags["${
-  customFeature || FEATURE_NAME_ALT
-}"]
+          customFeature || FEATURE_NAME_ALT
+        }"]
         && oldFlags["${customFeature || FEATURE_NAME_ALT}"].value;
 
         if (${FEATURE_NAME_ALT} !== ${FEATURE_NAME_ALT}Old) {

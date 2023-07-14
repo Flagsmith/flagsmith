@@ -14,7 +14,7 @@ export default function useSearchThrottle(
   useEffect(() => {
     searchItems(searchInput)
     //eslint-disable-next-line
-    }, [searchInput]);
+  }, [searchInput])
   return { search, searchInput, setSearchInput }
 }
 /* Usage example:

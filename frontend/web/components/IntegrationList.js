@@ -226,7 +226,7 @@ class IntegrationList extends Component {
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
-        'p-0'
+      'p-0',
     )
   }
 
@@ -241,7 +241,7 @@ class IntegrationList extends Component {
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
-        'p-0'
+      'p-0',
     )
   }
 

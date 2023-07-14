@@ -41,7 +41,7 @@ const useInfiniteScroll = <
         }
       }
     }, //eslint-disable-next-line
-        [queryResponse?.data]
+    [queryResponse?.data],
   )
 
   const searchItems = useThrottle((search: string) => {

@@ -1,39 +1,40 @@
 @mixin transition($transition...) {
-  -moz-transition:    $transition;
-  -o-transition:      $transition;
+  -moz-transition: $transition;
+  -o-transition: $transition;
   -webkit-transition: $transition;
-  transition:         $transition;
+  transition: $transition;
 }
 @mixin transition-property($property...) {
-  -moz-transition-property:    $property;
-  -o-transition-property:      $property;
+  -moz-transition-property: $property;
+  -o-transition-property: $property;
   -webkit-transition-property: $property;
-  transition-property:         $property;
+  transition-property: $property;
 }
 @mixin transition-duration($duration...) {
-  -moz-transition-property:    $duration;
-  -o-transition-property:      $duration;
+  -moz-transition-property: $duration;
+  -o-transition-property: $duration;
   -webkit-transition-property: $duration;
-  transition-property:         $duration;
+  transition-property: $duration;
 }
 @mixin transition-timing-function($timing...) {
-  -moz-transition-timing-function:    $timing;
-  -o-transition-timing-function:      $timing;
+  -moz-transition-timing-function: $timing;
+  -o-transition-timing-function: $timing;
   -webkit-transition-timing-function: $timing;
-  transition-timing-function:         $timing;
+  transition-timing-function: $timing;
 }
 @mixin transition-delay($delay...) {
-  -moz-transition-delay:    $delay;
-  -o-transition-delay:      $delay;
+  -moz-transition-delay: $delay;
+  -o-transition-delay: $delay;
   -webkit-transition-delay: $delay;
-  transition-delay:         $delay;
+  transition-delay: $delay;
 }
-.invalid .value-editor .hljs{
+.invalid .value-editor .hljs {
   border: 2px solid $danger;
 }
 .value-editor {
   position: relative;
-  textarea,.hljs {
+  textarea,
+  .hljs {
     padding-top: 20px;
   }
   textarea {
@@ -91,7 +92,6 @@
     background-color: $btn-code-button-background-dark;
     &:hover {
       background-color: $btn-code-button-background-dark-hover;
-
     }
     border: 1px solid $btn-code-button-background-dark;
   }
@@ -103,8 +103,9 @@
   a {
     color: white !important;
     text-decoration: underline;
-    .hljs-regexp,.hljs-comment {
-      color: white !important;;
+    .hljs-regexp,
+    .hljs-comment {
+      color: white !important;
     }
   }
   cursor: text;
@@ -118,7 +119,6 @@
   &.no-pad {
     margin-bottom: 0;
   }
-
 }
 .yaml {
   .hljs-bullet {
@@ -146,7 +146,7 @@
   }
 }
 .btn--docs {
-  background: transparent!important;
+  background: transparent !important;
   border-width: 1px !important;
   box-shadow: none !important;
   &:hover {
@@ -156,7 +156,7 @@
 .hljs-docs {
   position: absolute;
   opacity: 0;
-  bottom:45px;
+  bottom: 45px;
   right: 140px;
 }
 
@@ -164,7 +164,7 @@
   border-radius: $border-radius;
   opacity: 0;
   position: absolute;
-  bottom:45px;
+  bottom: 45px;
   right: 15px;
   &.top-right {
     top: 10px;
@@ -183,17 +183,18 @@
 
 .hljs-header {
   user-select: none;
-  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   background-color: $btn-code-button-background;
   border: 1px solid $btn-code-button-border;
   overflow: hidden;
-  @include transition(all .2s ease-in-out);
+  @include transition(all 0.2s ease-in-out);
   color: $btn-code-button-color;
   display: inline-block;
   height: 34px;
   line-height: 34px;
   font-weight: bold;
-  font-size: .8em;
+  font-size: 0.8em;
   padding-left: 10px;
   padding-right: 10px;
   border-radius: $border-radius;
@@ -202,11 +203,9 @@
   .hljs-description {
     color: $btn-code-button-color-alt;
   }
-
 }
 
 .hljs-description {
-
 }
 
 .hljs {
@@ -277,31 +276,32 @@
   overflow: hidden;
 }
 .value-editor pre code {
-  height:100%;
+  height: 100%;
 }
 
 code.txt {
-    font-size: 16px;
-    font-weight: 500;
-    background: transparent !important;
-    border: 1px solid $input-border-color;
-    font-family: "OpenSans", sans-serif;
-    color: $text-icon-dark;
+  font-size: 16px;
+  font-weight: 500;
+  background: transparent !important;
+  border: 1px solid $input-border-color;
+  font-family: 'OpenSans', sans-serif;
+  color: $text-icon-dark;
   &.empty {
     font-weight: normal;
     color: $input-placeholder-color;
   }
-  &:focus, &:focus.empty {
+  &:focus,
+  &:focus.empty {
     font-weight: 500;
     color: $text-icon-dark;
     border-color: $primary;
   }
- }
+}
 
 .dark {
   code.txt {
-
-    &:focus, &:focus.empty {
+    &:focus,
+    &:focus.empty {
       color: white !important;
     }
     &.empty {
@@ -313,7 +313,6 @@ code.txt {
   }
 }
 
-
-code[contenteditable="false"].hljs {
+code[contenteditable='false'].hljs {
   cursor: default !important;
 }

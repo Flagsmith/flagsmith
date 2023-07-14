@@ -10,6 +10,6 @@ const src = path.resolve(__dirname, `../env/project_${env}.js`)
 const target = path.resolve(__dirname, '../common/project.js')
 
 // eslint-disable-next-line
-console.log(`Using project_${env}.js`.green);
+console.log(`Using project_${env}.js`.green)
 
 fs.copySync(src, target)

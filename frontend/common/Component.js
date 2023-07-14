@@ -1,6 +1,7 @@
 module.exports = function Component(options) {
   // eslint-disable-next-line
-    return React.createClass(Object.assign({}, options, {
+  return React.createClass(
+    Object.assign({}, options, {
       _listeners: [],
       componentWillUnmount() {
         _.each(this._listeners, (listener, index) => {

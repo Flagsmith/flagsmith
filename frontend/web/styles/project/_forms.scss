@@ -45,14 +45,14 @@
       border: 1px solid $input-border-color-dark;
       background-color: $input-bg-dark;
       color: $text-icon-light;
-      &:hover{
+      &:hover {
         border: 1px solid $input-hover-border-color-dark;
       }
       &:focus {
         border: 1px solid $input-focus-border-color-dark;
       }
       &::placeholder {
-        color:$input-placeholder-color-dark;
+        color: $input-placeholder-color-dark;
       }
       &:disabled {
         border: 1px solid $black-alpha-32;
@@ -178,8 +178,11 @@ label,
   white-space: nowrap;
   vertical-align: baseline;
   border-radius: $border-radius-sm;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
-    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .badge-info {

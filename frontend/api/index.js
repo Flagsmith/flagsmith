@@ -114,7 +114,7 @@ app.get('/config/project-overrides', (req, res) => {
   let output = values.map(getVariable).join('')
   let dynatrace = ''
   if (process.env.DYNATRACE_URL) {
-    dynatrace=`
+    dynatrace = `
 window.enableDynatrace = true;
 (function(){function va(){document.cookie="".concat("__dTCookie","=").concat("1",";SameSite=Lax");var ua=-1!==document.cookie.indexOf("__dTCookie");document.cookie="".concat("__dTCookie","=").concat("1","; expires=Thu, 01-Jan-1970 00:00:01 GMT");return ua}function Sa(){return void 0===eb.dialogArguments?navigator.cookieEnabled||va():va()}function fb(){var ua;if(Sa()&&!window.dT_){var kb=(ua={},ua.cfg="app=8e35f25923c61ac7|cors=1|featureHash=A2NVfqru|vcv=2|reportUrl=${process.env.DYNATRACE_URL}/bf|rdnt=1|uxrgce=1|bp=3|cuc=2zmvahr4|mel=100000|dpvc=1|ssv=4|lastModification=1688993944019|tp=500,50,0,1|featureHash=A2NVfqru|agentUri=https://js-cdn.dynatrace.com/jstag/17b5f18726d/ruxitagent_A2NVfqru_10269230615181503.js|auto=|domain=|rid=RID_|rpid=|app=8e35f25923c61ac7",ua.iCE=
             Sa,ua);window.dT_=kb}}this.dT_&&dT_.prm&&dT_.prm();var eb="undefined"!==typeof window?window:self,La;eb.dT_?(null===(La=eb.console)||void 0===La?void 0:La.log("Duplicate agent injection detected, turning off redundant initConfig."),eb.dT_.di=1):fb()})();
@@ -191,8 +191,6 @@ window.enableDynatrace = true;
     
     ${dynatrace}
     `)
-
-
 })
 
 // Optionally proxy the API to get around CSRF issues, exposing the API to the world

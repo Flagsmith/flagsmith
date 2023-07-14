@@ -1,9 +1,9 @@
-@import "variables";
-@import "3rdParty/index";
-@import "components/index";
-@import "flexbox/index";
-@import "project/index";
-@import "project/segments";
+@import 'variables';
+@import '3rdParty/index';
+@import 'components/index';
+@import 'flexbox/index';
+@import 'project/index';
+@import 'project/segments';
 
 .butter-bar {
   background-color: $butter-bar-bg;
@@ -13,7 +13,8 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  >* { // since the markdown can be <p we need to reset any styling
+  > * {
+    // since the markdown can be <p we need to reset any styling
     display: inline-block;
     margin: 0;
   }
@@ -25,7 +26,8 @@
   background-color: $butter-bar-bg-dark;
   color: $header-color-dark;
 }
-bold, strong {
+bold,
+strong {
   font-weight: bold;
 }
 
@@ -63,8 +65,6 @@ bold, strong {
   }
 }
 
-
-
 .faint-lg {
   color: $text-muted;
   font-size: 1.25em;
@@ -90,7 +90,10 @@ bold, strong {
   cursor: pointer;
 
   ion {
-    box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2), 0 13px 19px 2px rgba(0, 0, 0, 0.14), 0 5px 24px 4px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 7px 8px -4px rgba(0, 0, 0, 0.2),
+      0 13px 19px 2px rgba(0, 0, 0, 0.14),
+      0 5px 24px 4px rgba(0, 0, 0, 0.12);
     height: 64px;
     line-height: 64px;
     border-radius: 32px;
@@ -114,7 +117,6 @@ bold, strong {
   }
 }
 
-
 .maintenance {
   background: $bt-brand-primary-dark-desaturated-light;
 
@@ -122,7 +124,8 @@ bold, strong {
     font-weight: 400;
     color: rgba(255, 255, 255, 0.5);
     font-size: 2em;
-    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+      monospace;
   }
 
   a {
@@ -144,7 +147,8 @@ bold, strong {
   cursor: pointer;
 }
 
-body, html {
+body,
+html {
   height: 100%;
 }
 
@@ -152,7 +156,6 @@ body.dark {
   background-color: $body-bg-dark;
   a {
     color: $bt-link-color-dark;
-
   }
 }
 
@@ -241,17 +244,15 @@ input:disabled {
 }
 
 @media screen and (max-width: 576px) {
-
   .alert-bar {
     padding: 10px 10px 5px 0;
     font-size: 1em;
   }
-
 }
 
 .bottom-banner {
   position: fixed;
-  left: $aside-width+20px;
+  left: $aside-width + 20px;
   bottom: 20px;
   margin: auto;
   height: 44px;
@@ -265,7 +266,9 @@ input:disabled {
     height: 44px;
     background-color: white;
     display: inline-block;
-    box-shadow: rgba(75, 75, 75, 0.21) 0px 1px 6px, rgba(75, 75, 75, 0.21) 0px 1px 4px;
+    box-shadow:
+      rgba(75, 75, 75, 0.21) 0px 1px 6px,
+      rgba(75, 75, 75, 0.21) 0px 1px 4px;
   }
 }
 

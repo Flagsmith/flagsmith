@@ -29,7 +29,7 @@ module.exports = function webpackMiddleware(app) {
     if (process.send) {
       // Running as child process (i.e. via tests)
       // eslint-disable-next-line
-            console.log('Sending completion of bundle to parent process');
+      console.log('Sending completion of bundle to parent process')
       process.send({ done: true })
     }
   })
@@ -37,7 +37,7 @@ module.exports = function webpackMiddleware(app) {
     webpackHotMiddleware(compiler, {
       heartbeat: 10 * 1000,
       // eslint-disable-next-line
-log: console.log,
+      log: console.log,
       path: '/__webpack_hmr',
     }),
   )

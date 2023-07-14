@@ -7,7 +7,7 @@
   &:hover {
     text-decoration: none;
   }
-  transition: all .2s ease-in;
+  transition: all 0.2s ease-in;
   .btn-link {
     color: $bt-link-color;
     font-weight: bold;
@@ -15,8 +15,6 @@
       color: $bt-link-color-hover;
     }
   }
-
-
 
   .subtitle {
     font-size: 0.8em;
@@ -59,7 +57,6 @@
   left: 0.25em;
   transform: rotate(-135deg);
 }
-
 
 .dark {
   .list-item {

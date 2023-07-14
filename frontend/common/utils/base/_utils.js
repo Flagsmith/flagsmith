@@ -3,10 +3,10 @@ const Utils = {
     let d = new Date().getTime()
     const uuid = 'xxxx-xxxx-xxxx'.replace(/[xy]/g, (c) => {
       // eslint-disable-next-line
-            const r = (d + Math.random() * 16) % 16 | 0;
+      const r = (d + Math.random() * 16) % 16 | 0
       d = Math.floor(d / 16)
       // eslint-disable-next-line
-            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16)
     })
 
     return append ? `${uuid}-${append}` : uuid
@@ -390,7 +390,8 @@ const Utils = {
   ],
 
   // eslint-disable-next-line
-emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/i,
+  emailRegex:
+    /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/i,
 
   fromParam(str) {
     // {min:100,max:200} <- ?min=100&max=200
@@ -401,7 +402,7 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
       return {}
     }
     // eslint-disable-next-line
-        const urlString = (str || documentSearch).replace(/(^\?)/, '');
+    const urlString = (str || documentSearch).replace(/(^\?)/, '')
     return JSON.parse(
       `{"${urlString.replace(/&/g, '","').replace(/=/g, '":"')}"}`,
       (key, value) => (key === '' ? value : decodeURIComponent(value)),
@@ -524,6 +525,7 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
   },
 
   // eslint-disable-next-line
-urlRegex: /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/,
+  urlRegex:
+    /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/,
 }
 module.exports = Utils

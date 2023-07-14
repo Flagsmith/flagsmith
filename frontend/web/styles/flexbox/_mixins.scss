@@ -39,7 +39,6 @@
 }
 
 @mixin flex-value($fg: 1, $fs: null, $fb: null) {
-
   // Set a variable to be used by box-flex properties
   $fg-boxflex: $fg;
 
