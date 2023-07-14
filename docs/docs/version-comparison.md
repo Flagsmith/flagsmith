@@ -37,10 +37,6 @@ Our SaaS platform has a number of benefits:
 - Get real-time flag updates to your clients, the moment they are changed in the dashboard.
 - We deal with platform upgrades, security patches, scaling and backups.
 
-### SaaS Architecture
-
-![Image](/img/saas-architecture.svg)
-
 ## Enterprise Benefits
 
 You can run our Enterprise version either on-premise, or we can provide private cloud instance dedicated to your

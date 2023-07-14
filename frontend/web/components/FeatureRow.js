@@ -215,7 +215,10 @@ class TheComponent extends Component {
               {!!projectFlag.num_segment_overrides && (
                 <Tooltip
                   title={
-                    <span className='chip ml-1 chip--sm bg-primary text-white'>
+                    <span
+                      className='chip ml-1 chip--sm bg-primary text-white'
+                      style={{ border: 'none' }}
+                    >
                       <SegmentsIcon className='chip-svg-icon' />
                       <span>{projectFlag.num_segment_overrides}</span>
                     </span>
@@ -230,7 +233,10 @@ class TheComponent extends Component {
               {!!projectFlag.num_identity_overrides && (
                 <Tooltip
                   title={
-                    <span className='chip ml-1 chip--sm bg-primary text-white'>
+                    <span
+                      className='chip ml-1 chip--sm bg-primary text-white'
+                      style={{ border: 'none' }}
+                    >
                       <UsersIcon className='chip-svg-icon' />
                       <span>{projectFlag.num_identity_overrides}</span>
                     </span>

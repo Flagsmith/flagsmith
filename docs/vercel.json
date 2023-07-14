@@ -227,6 +227,42 @@
         {
             "source": "/deployment/task-processor",
             "destination": "/deployment/configuration/task-processor"
+        },
+        {
+            "source": "/integrations/amplitude",
+            "destination": "/integrations/analytics/amplitude"
+        },
+        {
+            "source": "/integrations/heap",
+            "destination": "/integrations/analytics/heap"
+        },
+        {
+            "source": "/analytics/mixpanel",
+            "destination": "/integrations/analytics/mixpanel"
+        },
+        {
+            "source": "/integrations/rudderstack",
+            "destination": "/integrations/analytics/rudderstack"
+        },
+        {
+            "source": "/integrations/segment",
+            "destination": "/integrations/analytics/segment"
+        },
+        {
+            "source": "/integrations/appdynamics",
+            "destination": "/integrations/apm/appdynamics"
+        },
+        {
+            "source": "/integrations/datadog",
+            "destination": "/integrations/apm/datadog"
+        },
+        {
+            "source": "/integrations/dynatrace",
+            "destination": "/integrations/apm/dynatrace"
+        },
+        {
+            "source": "/integrations/newrelic",
+            "destination": "/integrations/apm/newrelic"
         }
     ]
 }
