@@ -187,7 +187,7 @@ def add_single_seat(subscription_id: str):
 
 def _convert_chargebee_subscription_to_dictionary(
     chargebee_subscription: chargebee.Subscription,
-):
+) -> dict:
     chargebee_subscription_dict = vars(chargebee_subscription)
     # convert the addons into a list of dictionaries since vars don't do it recursively
     chargebee_subscription_dict["addons"] = [
