@@ -18,20 +18,24 @@ install-pip:
 install-packages:
 	pip install -r requirements-all.txt
 
+.PHONY: install-packages-dev
+install-packages-dev:
+	pip install -r requirements-dev.txt
+
 .PHONY: install
 install: install-pip install-packages
 
 .PHONY: lint-black
 lint-black:
-	black --check .
+	pre-commit run --all-files black
 
 .PHONY: lint-isort
 lint-isort:
-	isort  --check-only --diff .
+	pre-commit run --all-files isort
 
 .PHONY: lint-flake8
 lint-flake8:
-	flake8
+	pre-commit run --all-files flake8
 
 .PHONY: lint
 lint: lint-black lint-isort lint-flake8

@@ -97,7 +97,7 @@ platformdirs==3.0.0
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==3.0.4
+pre-commit==3.3.3
     # via -r requirements-dev.in
 pycodestyle==2.10.0
     # via

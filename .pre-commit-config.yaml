@@ -15,45 +15,41 @@ repos:
     hooks:
       - id: flake8
         name: flake8
-        args: [--config, api/.flake8]
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: check-yaml
+        args: [--config, .flake8]
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.0.0
     hooks:
       - id: prettier
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: 'v8.44.0'
+    rev: v8.44.0
     hooks:
       - id: eslint
         files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx]
         types: [file]
         args: [--fix]
-        exclude: |
-          (?x)(
-              .idea|
-              ^frontend/node_modules/|
-              ^frontend/reports/|
-              ^frontend/public/|
-              ^frontend/tests_output/|
-              ^frontend/web/static/|
-              ^frontend/web/project/libs.js/|
-              ^frontend/e2e/|
-              ^frontend/webpack/|
-              ^frontend/api/
-          )$
+        exclude: ^frontend/e2e/|^frontend/web/static|^frontend/report|^frontend/public|^frontend/tests_output|^frontend/web/project/libs.js|^frontend/api|^frontend/webpack|^frontend/web/project/libs.js|^docs/src/theme/prism/prism-java.js|^frontend/web/components/TryIt.js|^docs
         additional_dependencies:
           - eslint@8.44.0
           - eslint-plugin-react@7.32.2
           - eslint-plugin-react-hooks@4.6.0
           - eslint-plugin-sort-keys-fix@1.1.2
+          - babel-plugin-module-resolver@4.1.0
           - '@typescript-eslint/eslint-plugin@6.0.0'
           - eslint-config-prettier@8.8.0
           - eslint-plugin-prettier@5.0.0
-          - '@dword-design/eslint-plugin-import-alias@4.0.8'
           - '@typescript-eslint/parser@6.0.0'
           - eslint-plugin-import@2.27.5
           - eslint-plugin-sort-destructure-keys@1.4.0
           - eslint-plugin-sort-keys-fix@1.1.2
+          - '@dword-design/eslint-plugin-import-alias@latest'
+          - '@babel/plugin-proposal-class-properties@7.1.0'
+          - '@babel/plugin-transform-modules-commonjs@7.1.0'
+          - '@babel/plugin-transform-react-constant-elements@7.0.0'
+          - '@babel/plugin-transform-react-inline-elements@7.0.0'
+          - 'babel-plugin-module-resolver@4.1.0'
+          - 'babel-plugin-transform-object-rest-spread@7.0.0-beta.3'
+          - 'babel-plugin-transform-react-remove-prop-types@0.4.18'
+          - '@babel/preset-env@7.1.0'
+          - '@babel/preset-react@7.0.0'
+          - '@babel/preset-typescript@7.18.6'
+          - '@babel/register@7.0.0'

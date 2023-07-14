@@ -84,13 +84,7 @@ export const identityService = service
           }
         },
         transformResponse(baseQueryReturnValue: Res['identities'], meta, req) {
-          const {
-            isEdge,
-            page = 1,
-            page_size = 10,
-            pageType,
-            pages: _pages,
-          } = req
+          const { isEdge, page_size = 10, pageType, pages: _pages } = req
           if (isEdge) {
             // For edge, we create our own paging
             let pages = _pages ? _pages.concat([]) : []

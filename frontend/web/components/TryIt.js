@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import Highlight from './Highlight'
-import PlayIcon from './svg/PlayIcon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
