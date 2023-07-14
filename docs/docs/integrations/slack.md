@@ -2,6 +2,7 @@
 title: Slack Integration
 description: Integrate Flagsmith with Slack
 sidebar_label: Slack
+sidebar_position: 10
 hide_title: true
 ---
 
