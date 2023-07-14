@@ -34,14 +34,6 @@ def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> 
     )
 
 
-def is_master_api_key_organisation_admin(
-    master_api_key: "MasterAPIKey", organisation: Organisation
-) -> bool:
-    if master_api_key.is_admin:
-        return master_api_key.organisation_id == organisation.id
-    return False
-
-
 def is_master_api_key_project_admin(
     master_api_key: "MasterAPIKey", project: Project
 ) -> bool:
@@ -86,10 +78,8 @@ def get_permitted_projects_for_user(
 def get_permitted_projects_for_master_api_key(
     master_api_key: "MasterAPIKey", permission_key: str
 ) -> QuerySet[Project]:
-    if is_master_api_key_organisation_admin(
-        master_api_key, master_api_key.organisation
-    ):
-        return Project.objects.filter(organisation=master_api_key.organisation)
+    if master_api_key.is_admin:
+        return Project.objects.filter(organisation_id=master_api_key.organisation_id)
 
     filter_ = get_role_permission_filter(master_api_key, Project, permission_key)
     return Project.objects.filter(filter_).distinct()

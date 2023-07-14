@@ -33,11 +33,11 @@ class APIKeyUser:
         return True
 
     def get_permitted_projects(self, permission_key: str) -> QuerySet["Project"]:
-        return get_permitted_projects_for_master_api_key(self, permission_key)
+        return get_permitted_projects_for_master_api_key(self.key, permission_key)
 
     def get_permitted_environments(
         self, permission_key: str, project: "Project"
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(
-            self, project, permission_key
+            self.key, project, permission_key
         )
