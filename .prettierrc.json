@@ -1,33 +1,39 @@
 {
-    "arrowParens": "always",
-    "bracketSpacing": true,
-    "insertPragma": false,
-    "jsxSingleQuote": true,
-    "printWidth": 80,
-    "proseWrap": "preserve",
-    "quoteProps": "preserve",
-    "requirePragma": false,
-    "semi": false,
+    "proseWrap": "always",
     "singleQuote": true,
-    "tabWidth": 2,
+    "printWidth": 120,
     "trailingComma": "all",
-    "useTabs": false,
-    "vueIndentScriptAndStyle": false,
+    "tabWidth": 4,
     "overrides": [
         {
             "files": "**/*.md",
             "options": {
-                "tabWidth": 1,
-                "proseWrap": "always",
-                "singleQuote": true,
-                "printWidth": 120,
-                "trailingComma": "all"
+                "tabWidth": 1
             }
         },
         {
             "files": ["**/*.yml", "**/*.yaml"],
             "options": {
                 "tabWidth": 2
+            }
+        },
+        {
+            "files": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+            "options": {
+                "arrowParens": "always",
+                "bracketSpacing": true,
+                "insertPragma": false,
+                "jsxSingleQuote": true,
+                "printWidth": 80,
+                "proseWrap": "preserve",
+                "quoteProps": "preserve",
+                "requirePragma": false,
+                "semi": false,
+                "singleQuote": true,
+                "tabWidth": 2,
+                "trailingComma": "all",
+                "useTabs": false,
+                "vueIndentScriptAndStyle": false
             }
         }
     ]
