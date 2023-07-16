@@ -5,6 +5,7 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import { Clipboard } from 'polyfill-react-native'
+import Icon from './Icon'
 
 const getGithubLink = (key) => {
   switch (key) {
@@ -116,17 +117,17 @@ const CodeHelp = class extends Component {
               <Flex style={isMobile ? { overflowX: 'scroll' } : {}}>
                 <div>
                   <pre className='hljs-header'>
-                    <span className='ion-ios-code' /> Code example:{' '}
-                    <span className='hljs-description'>
-                      {this.props.title}{' '}
+                    <span />
+                    {'<>'} Code example:{' '}
+                    <span className='hljs-description'>{this.props.title}</span>
+                    <span className='hljs-icon'>
+                      <Icon
+                        name={
+                          this.state.visible ? 'chevron-down' : 'chevron-right'
+                        }
+                        width={16}
+                      />
                     </span>
-                    <span
-                      className={
-                        this.state.visible
-                          ? 'icon ion-ios-arrow-down'
-                          : 'icon ion-ios-arrow-forward'
-                      }
-                    />
                   </pre>
                 </div>
               </Flex>
@@ -183,36 +184,39 @@ const CodeHelp = class extends Component {
                         >
                           {s}
                         </Highlight>
-                        <Button
-                          onClick={() => this.copy(s)}
-                          className='btn btn-primary hljs-copy'
-                        >
-                          Copy Code
-                        </Button>
-                        <Row className='hljs-docs'>
+
+                        <Column className='hljs-docs'>
+                          <Button
+                            onClick={() => this.copy(s)}
+                            size='xSmall'
+                            iconLeft='copy'
+                            iconLeftColour='white'
+                          >
+                            Copy Code
+                          </Button>
                           {docs && (
-                            <a
+                            <Button
                               target='_blank'
                               href={docs}
-                              className='btn btn--docs'
-                              rel='noreferrer'
+                              className='btn btn-primary'
+                              size='xSmall'
                             >
                               <span className='icon ion ion-ios-document' />{' '}
                               {key} Docs
-                            </a>
+                            </Button>
                           )}
                           {github && (
-                            <a
+                            <Button
                               target='_blank'
                               href={github}
-                              className='btn btn--docs'
-                              rel='noreferrer'
+                              className='btn btn-primary'
+                              size='xSmall'
                             >
                               <span className='icon ion ion-logo-github' />{' '}
                               {key} GitHub
-                            </a>
+                            </Button>
                           )}
-                        </Row>
+                        </Column>
                       </div>
                     </TabItem>
                   )
