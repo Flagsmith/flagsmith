@@ -10,6 +10,8 @@ $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
 $info: #0aaddf;
+$warning: #ff9f43;
+$secondary400: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
 $text-icon-grey: rgba(101, 109, 123, 1);
@@ -39,6 +41,7 @@ $theme-colors: (
     danger: $danger,
     success: $success,
     info: $info,
+    warning: $warning,
     // add any additional color below
 );
 $bg-light300: #eff1f4;
@@ -247,3 +250,9 @@ $tab-btn-counter-value-font-size: $font-caption-sm;
 $tab-btn-counter-value-width: 20px;
 $pill-bg: $bg-light300;
 $tab-line-color: $primary;
+
+//CodeHelp
+$code-btn-bg: $secondary400;
+$code-btn-description-color: $primary;
+$code-color: $text-icon-light;
+$code-bg: $bg-dark200;

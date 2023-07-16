@@ -80,25 +80,6 @@
         }
     }
 }
-.dark {
-    .hljs {
-        background: $bt-code-background-dark;
-    }
-    .hljs-header {
-        color: $btn-code-button-color-dark;
-        .hljs-description {
-            color: $btn-code-button-color-alt-dark;
-        }
-        background-color: $btn-code-button-background-dark;
-        &:hover {
-            background-color: $btn-code-button-background-dark-hover;
-        }
-        border: 1px solid $btn-code-button-background-dark;
-    }
-    :hover > .hljs-header {
-        background-color: $btn-code-button-background-dark-hover;
-    }
-}
 .hljs {
     a {
         color: white !important;
@@ -114,9 +95,17 @@
     display: block;
     overflow-x: auto;
     padding: 0.5em;
-    background: $bt-code-background;
+    background: $code-bg;
     border-radius: $border-radius;
+    border: 1px solid $basic-alpha-8;
     &.no-pad {
+        margin-bottom: 0;
+    }
+    &-switch {
+        font-size: $font-sm;
+        line-height: $line-height-sm;
+        padding-left: 12px;
+        color: $text-icon-light;
         margin-bottom: 0;
     }
 }
@@ -145,19 +134,14 @@
         }
     }
 }
-.btn--docs {
-    background: transparent !important;
-    border-width: 1px !important;
-    box-shadow: none !important;
-    &:hover {
-        color: $bt-brand-primary;
-    }
-}
+
 .hljs-docs {
     position: absolute;
     opacity: 0;
-    bottom: 45px;
-    right: 140px;
+    top: 32px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
 }
 
 .btn.hljs-copy {
@@ -177,41 +161,44 @@
     border-top-left-radius: 0px;
 }
 
-:hover > .hljs-header {
-    background-color: $btn-code-button-background-hover;
-}
-
 .hljs-header {
     user-select: none;
     font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    background-color: $btn-code-button-background;
-    border: 1px solid $btn-code-button-border;
+    background-color: $code-btn-bg;
+    font-family: $font-family-header;
     overflow: hidden;
     @include transition(all 0.2s ease-in-out);
     color: $btn-code-button-color;
     display: inline-block;
-    height: 34px;
-    line-height: 34px;
+    line-height: $line-height-xsm;
     font-weight: bold;
-    font-size: 0.8em;
-    padding-left: 10px;
-    padding-right: 10px;
-    border-radius: $border-radius;
+    font-size: $font-caption-sm;
+    padding: 7px 12px;
+    border-radius: $border-radius-sm;
     margin-right: 5px;
     margin-bottom: $input-padding-y/2;
     .hljs-description {
-        color: $btn-code-button-color-alt;
+        color: $code-btn-description-color;
+    }
+    .hljs-icon {
+        padding-left: 6px;
+        &-left {
+            padding-right: 6px;
+        }
+    }
+    svg {
+        vertical-align: sub;
     }
 }
 
-.hljs-description {
-}
-
 .hljs {
-    color: #bababa;
-    padding: 14px 14px 14px 14px;
+    color: $code-color;
+    padding: 32px;
 }
 
+.json {
+    border: none;
+}
 .hljs-strong,
 .hljs-emphasis {
     color: #a8a8a2;
@@ -223,7 +210,7 @@
 .hljs-number,
 .hljs-regexp,
 .hljs-literal {
-    color: #6896ba;
+    color: $info;
 }
 
 .hljs-code,
@@ -241,7 +228,7 @@
 .hljs-attribute,
 .hljs-name,
 .hljs-variable {
-    color: #cb7832;
+    color: $warning;
 }
 
 .hljs-params {
@@ -249,7 +236,7 @@
 }
 
 .hljs-string {
-    color: #6a8759;
+    color: $success;
 }
 
 .hljs-subst,
@@ -263,7 +250,7 @@
 .hljs-template-tag,
 .hljs-template-variable,
 .hljs-addition {
-    color: #e0c46c;
+    color: $secondary400;
 }
 
 .hljs-comment,
