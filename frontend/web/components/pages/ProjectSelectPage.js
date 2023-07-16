@@ -4,7 +4,6 @@ import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
 
 const ProjectSelectPage = class extends Component {
   static displayName = 'ProjectSelectPage'

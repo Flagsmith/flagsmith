@@ -1,7 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-import { type } from 'common/data/base/_data'
-import UserGroupList from 'components/UserGroupList'
-
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]

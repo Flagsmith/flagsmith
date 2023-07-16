@@ -22,7 +22,7 @@ export type IconType = React.DetailedHTMLProps<
   className?: string
 }
 
-const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
+const Icon: FC<IconType> = ({ fill, name, width, ...rest }) => {
   switch (name) {
     case 'plus': {
       return (

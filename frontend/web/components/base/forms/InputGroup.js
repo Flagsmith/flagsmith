@@ -85,7 +85,6 @@ const InputGroup = class extends Component {
                 <textarea
                   ref={(c) => (this.input = c)}
                   {...props.inputProps}
-                  isValid={props.isValid}
                   disabled={props.disabled}
                   value={props.value}
                   defaultValue={props.defaultValue}

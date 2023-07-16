@@ -8,3 +8,6 @@ frontend/web/project/libs.js
 frontend/e2e
 frontend/webpack
 frontend/api
+frontend/web/components/tags/TagValues.tsx
+frontend/web/components/pages/EnvironmentSettingsPage.js
+frontend/common/utils/base/_utils.js
