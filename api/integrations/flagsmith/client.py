@@ -6,7 +6,7 @@ from django.conf import settings
 from flagsmith import Flagsmith
 from flagsmith.models import DefaultFlag
 
-flagsmith_wrapper = None
+_flagsmith_wrapper = None
 
 
 class FlagsmithWrapper:
@@ -22,18 +22,20 @@ class FlagsmithWrapper:
             default_flag_handler=self._default_handler,
         )
 
+    def get_client(self) -> Flagsmith:
+        return self._client
+
     @classmethod
-    def get_instance(
-        cls,
-        environment_key: str = settings.FLAGSMITH_SERVER_KEY,
-        api_url: str = settings.FLAGSMITH_API_URL,
-    ) -> "FlagsmithWrapper":
-        global flagsmith_wrapper
+    def get_instance(cls) -> "FlagsmithWrapper":
+        global _flagsmith_wrapper
 
-        if not flagsmith_wrapper:
-            flagsmith_wrapper = cls(environment_key=environment_key, api_url=api_url)
+        if not _flagsmith_wrapper:
+            _flagsmith_wrapper = cls(
+                environment_key=settings.FLAGSMITH_SERVER_KEY,
+                api_url=settings.FLAGSMITH_API_URL,
+            )
 
-        return flagsmith_wrapper
+        return _flagsmith_wrapper
 
     def _default_handler(self, feature_name: str) -> DefaultFlag:
         return self._defaults.get(feature_name, DefaultFlag(enabled=False, value=None))
