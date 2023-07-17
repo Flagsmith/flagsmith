@@ -18,10 +18,8 @@ jobs:
           python-version: '3.11'
           cache: pip
 
-      - name: Install Dependencies
-        run: |
-          cd api
-          make install-packages-dev
+      - name: Install pre-commit
+        run: cat api/requirements-dev.txt | grep pre-commit== | xargs pip install
 
       - name: Generate pre-commit cache key
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
@@ -33,5 +31,4 @@ jobs:
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run Linters
-        run: |
-          pre-commit run --all-files
+        run: pre-commit run --all-files
