@@ -115,7 +115,7 @@ const HomePage = class extends React.Component {
     const preventSignup = Project.preventSignup && !isInvite
     const isSignup =
       !preventSignup &&
-      (document.location.href.indexOf('login') === -1 ||
+      ((isInvite && document.location.href.indexOf('login') === -1) ||
         document.location.href.indexOf('signup') !== -1)
     const disableSignup = preventSignup && isSignup
     const preventEmailPassword = Project.preventEmailPassword
