@@ -38,7 +38,7 @@ repos:
         files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx]
         types: [file]
         args: [--fix]
-        exclude: ^frontend/e2e/|^frontend/web/static|^frontend/report|^frontend/public|^frontend/tests_output|^frontend/api|^frontend/webpack|^frontend/web/components/TryIt.js|^docs
+        exclude: ^frontend/e2e/|^frontend/web/static|^frontend/report|^frontend/public|^frontend/tests_output|^frontend/api|^frontend/webpack|^docs
         additional_dependencies:
           - eslint@8.44.0
           - eslint-plugin-react@7.32.2
