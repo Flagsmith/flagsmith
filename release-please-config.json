@@ -56,7 +56,7 @@
         {
             "type": "style",
             "hidden": true,
-            "section": "Styling"
+            "section": "Code Style"
         },
         {
             "type": "test",
