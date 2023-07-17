@@ -43,7 +43,8 @@ const TryIt = class extends Component {
         }
         const features = userId ? data.flags : data
         features.map(({ enabled, feature, feature_state_value }) => {
-          ;(userId ? res.features : res)[feature.name] = {
+          const featureObject = userId ? res.features : res
+          featureObject[feature.name] = {
             enabled,
             value: feature_state_value,
           }

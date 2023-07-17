@@ -4,7 +4,7 @@
 *.handlebars
 *.css
 .bablerc
-CHANGELOG.md
+CHANGELOG.md # Release-please commits markdown that prettier dislikes
 frontend/node_modules
 frontend/report
 frontend/public
