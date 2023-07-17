@@ -2,7 +2,16 @@ import json
 import os.path
 from unittest.mock import mock_open, patch
 
+import pytest
+
 from integrations.flagsmith.client import get_client
+
+
+@pytest.fixture(autouse=True)
+def reset_globals(mocker):
+    mocker.patch("integrations.flagsmith.client._defaults", None)
+    mocker.patch("integrations.flagsmith.client._flagsmith_client", None)
+    yield
 
 
 def test_get_client_handles_missing_flagsmith_settings(settings) -> None:

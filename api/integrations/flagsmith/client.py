@@ -23,7 +23,7 @@ from flagsmith.models import DefaultFlag, Flags
 
 _flagsmith_client: typing.Optional["_WrappedFlagsmith"] = None
 _defaults: typing.Dict[str, DefaultFlag] = {}
-FLAGSMITH_ENABLED: bool = settings.FLAGSMITH_SERVER_KEY is not None
+_FLAGSMITH_ENABLED: bool = settings.FLAGSMITH_SERVER_KEY is not None
 
 
 def get_client() -> Flagsmith:
@@ -49,13 +49,13 @@ class _WrappedFlagsmith(Flagsmith):
     """
 
     def __init__(self, *args, **kwargs):
-        if not FLAGSMITH_ENABLED:
+        if not _FLAGSMITH_ENABLED:
             return
 
         super().__init__(*args, **kwargs)
 
     def get_environment_flags(self) -> Flags:
-        if not FLAGSMITH_ENABLED:
+        if not _FLAGSMITH_ENABLED:
             return Flags(flags={}, default_flag_handler=_default_handler)
 
         return super().get_environment_flags()
@@ -63,7 +63,7 @@ class _WrappedFlagsmith(Flagsmith):
     def get_identity_flags(
         self, identifier: str, traits: typing.Dict[str, typing.Any] = None
     ) -> Flags:
-        if not FLAGSMITH_ENABLED:
+        if not _FLAGSMITH_ENABLED:
             return Flags(flags={}, default_flag_handler=_default_handler)
 
         return super().get_identity_flags(identifier, traits)
