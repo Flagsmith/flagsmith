@@ -2,7 +2,7 @@
 
 We follow the [SemVer](https://semver.org/) version naming strategy strategy.
 
-Please follow out our [Github Releases](https://github.com/Flagsmith/flagsmith/releases) page for detailed change logs.
+Please follow our [Github Releases](https://github.com/Flagsmith/flagsmith/releases) page for detailed change logs.
 
 :::important
 
