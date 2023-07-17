@@ -57,17 +57,20 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
 
 
 def _get_deployment_name(audit_log_record: AuditLog) -> str:
-    related_object_type = RelatedObjectType[audit_log_record.related_object_type]
+    try:
+        related_object_type = RelatedObjectType[audit_log_record.related_object_type]
 
-    if related_object_type in (
-        RelatedObjectType.FEATURE,
-        RelatedObjectType.FEATURE_STATE,
-    ):
-        return _get_deployment_name_for_feature(
-            audit_log_record.related_object_id, related_object_type
-        )
-    elif related_object_type == RelatedObjectType.SEGMENT:
-        return _get_deployment_name_for_segment(audit_log_record.related_object_id)
+        if related_object_type in (
+            RelatedObjectType.FEATURE,
+            RelatedObjectType.FEATURE_STATE,
+        ):
+            return _get_deployment_name_for_feature(
+                audit_log_record.related_object_id, related_object_type
+            )
+        elif related_object_type == RelatedObjectType.SEGMENT:
+            return _get_deployment_name_for_segment(audit_log_record.related_object_id)
+    except KeyError:
+        pass
 
     # use 'Deployment' as a fallback to maintain current behaviour in the
     # event that we cannot determine the correct name to return.

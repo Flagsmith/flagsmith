@@ -1,4 +1,5 @@
 from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from integrations.dynatrace.dynatrace import EVENTS_API_URI, DynatraceWrapper
 
@@ -70,15 +71,19 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
 
 
 def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(
-    django_user_model,
+    django_user_model, feature
 ):
-    # TODO
     # Given
     log = "some log data"
 
     author = django_user_model(email="test@example.com")
 
-    audit_log_record = AuditLog(log=log, author=author)
+    audit_log_record = AuditLog(
+        log=log,
+        author=author,
+        related_object_type=RelatedObjectType.FEATURE.name,
+        related_object_id=feature.id,
+    )
 
     dynatrace = DynatraceWrapper(
         base_url="http://test.com",
@@ -95,5 +100,5 @@ def test_dynatrace_when_generate_event_data_with_missing_environment_then_succes
     assert event_data["properties"]["environment"] == "unknown"
     assert (
         event_data["properties"]["dt.event.deployment.name"]
-        == "Flagsmith Deployment - Flag Changed"
-    )  # TODO
+        == f"Flagsmith Deployment - Flag Changed: {feature.name}"
+    )

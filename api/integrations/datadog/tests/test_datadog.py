@@ -3,6 +3,7 @@ import json
 import pytest
 
 from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from integrations.datadog.datadog import EVENTS_API_URI, DataDogWrapper
 
@@ -46,6 +47,7 @@ def test_datadog_track_event(mocker):
 
 def test_datadog_when_generate_event_data_with_correct_values_then_success(
     django_user_model,
+    feature,
 ):
     # Given
     log = "some log data"
@@ -53,7 +55,13 @@ def test_datadog_when_generate_event_data_with_correct_values_then_success(
     author = django_user_model(email="test@email.com")
     environment = Environment(name="test")
 
-    audit_log_record = AuditLog(log=log, author=author, environment=environment)
+    audit_log_record = AuditLog(
+        log=log,
+        author=author,
+        environment=environment,
+        related_object_type=RelatedObjectType.FEATURE.name,
+        related_object_id=feature.id,
+    )
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
@@ -68,13 +76,18 @@ def test_datadog_when_generate_event_data_with_correct_values_then_success(
     assert event_data["tags"][0] == f"env:{environment.name}"
 
 
-def test_datadog_when_generate_event_data_with_missing_author_then_success():
+def test_datadog_when_generate_event_data_with_missing_author_then_success(feature):
     # Given
     log = "some log data"
 
     environment = Environment(name="test")
 
-    audit_log_record = AuditLog(log=log, environment=environment)
+    audit_log_record = AuditLog(
+        log=log,
+        environment=environment,
+        related_object_type=RelatedObjectType.FEATURE.name,
+        related_object_id=feature.id,
+    )
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
@@ -90,13 +103,19 @@ def test_datadog_when_generate_event_data_with_missing_author_then_success():
 
 def test_datadog_when_generate_event_data_with_missing_env_then_success(
     django_user_model,
+    feature,
 ):
     # Given environment
     log = "some log data"
 
     author = django_user_model(email="test@email.com")
 
-    audit_log_record = AuditLog(log=log, author=author)
+    audit_log_record = AuditLog(
+        log=log,
+        author=author,
+        related_object_type=RelatedObjectType.FEATURE.name,
+        related_object_id=feature.id,
+    )
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
