@@ -19,7 +19,9 @@ def test_dynatrace_initialized_correctly():
     assert dynatrace.url == expected_url
 
 
-def test_dynatrace_when_generate_event_data_with_correct_values_then_success(django_user_model):
+def test_dynatrace_when_generate_event_data_with_correct_values_then_success(
+    django_user_model,
+):
     # Given
     log = "some log data"
 
@@ -35,9 +37,7 @@ def test_dynatrace_when_generate_event_data_with_correct_values_then_success(dja
     )
 
     # When
-    event_data = dynatrace.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = dynatrace.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user {author.email}"
@@ -61,9 +61,7 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
     )
 
     # When
-    event_data = dynatrace.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = dynatrace.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user system"
@@ -71,7 +69,9 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
     assert event_data["properties"]["environment"] == environment.name
 
 
-def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(django_user_model):
+def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(
+    django_user_model,
+):
     # TODO
     # Given
     log = "some log data"
@@ -87,12 +87,13 @@ def test_dynatrace_when_generate_event_data_with_missing_environment_then_succes
     )
 
     # When
-    event_data = dynatrace.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = dynatrace.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user {author.email}"
     assert event_data["properties"]["event"] == expected_event_text
     assert event_data["properties"]["environment"] == "unknown"
-    assert event_data["properties"]["dt.event.deployment.name"] == "Flagsmith Deployment - Flag Changed"  # TODO
+    assert (
+        event_data["properties"]["dt.event.deployment.name"]
+        == "Flagsmith Deployment - Flag Changed"
+    )  # TODO

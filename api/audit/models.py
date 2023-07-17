@@ -13,7 +13,6 @@ from django_lifecycle import (
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
-from features.models import Feature
 from projects.models import Project
 from sse import (
     send_environment_update_message_for_environment,

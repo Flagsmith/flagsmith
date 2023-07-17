@@ -79,9 +79,7 @@ def test_datadog_when_generate_event_data_with_missing_author_then_success():
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
     # When
-    event_data = data_dog.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user system"
@@ -109,4 +107,4 @@ def test_datadog_when_generate_event_data_with_missing_env_then_success(
     expected_event_text = f"{log} by user {author.email}"
     assert event_data["text"] == expected_event_text
     assert len(event_data["tags"]) == 1
-    assert event_data["tags"][0] == f"env:unknown"
+    assert event_data["tags"][0] == "env:unknown"

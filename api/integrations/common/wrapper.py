@@ -1,5 +1,5 @@
 import typing
-from abc import ABC, abstractmethod, abstractstaticmethod
+from abc import ABC, abstractmethod
 
 from util.util import postpone
 

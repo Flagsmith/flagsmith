@@ -57,9 +57,7 @@ def test_new_relic_when_generate_event_data_with_missing_author_then_success():
     )
 
     # When
-    event_data = new_relic.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = new_relic.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user system"
@@ -71,7 +69,9 @@ def test_new_relic_when_generate_event_data_with_missing_author_then_success():
     assert event_deployment_data["changelog"] == expected_event_text
 
 
-def test_new_relic_when_generate_event_data_with_missing_env_then_success(django_user_model):
+def test_new_relic_when_generate_event_data_with_missing_env_then_success(
+    django_user_model,
+):
     # Given
     log = "some log data"
 
@@ -84,9 +84,7 @@ def test_new_relic_when_generate_event_data_with_missing_env_then_success(django
     )
 
     # When
-    event_data = new_relic.generate_event_data(
-        audit_log_record=audit_log_record
-    )
+    event_data = new_relic.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     expected_event_text = f"{log} by user {author.email}"
@@ -94,5 +92,5 @@ def test_new_relic_when_generate_event_data_with_missing_env_then_success(django
     assert event_data.get("deployment") is not None
     event_deployment_data = event_data.get("deployment")
 
-    assert event_deployment_data["revision"] == f"env:unknown"
+    assert event_deployment_data["revision"] == "env:unknown"
     assert event_deployment_data["changelog"] == expected_event_text
