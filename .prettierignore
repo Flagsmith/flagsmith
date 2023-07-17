@@ -4,6 +4,7 @@
 *.handlebars
 *.css
 .bablerc
+CHANGELOG.md
 frontend/node_modules
 frontend/report
 frontend/public
