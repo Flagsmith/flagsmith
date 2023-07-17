@@ -30,6 +30,8 @@ repos:
     rev: v3.0.0
     hooks:
       - id: prettier
+        args: [--ignore-path, .prettierignore]
+        exclude: CHANGELOG.md
 
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v8.44.0
