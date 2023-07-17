@@ -3,7 +3,6 @@ import json
 import pytest
 
 from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from integrations.datadog.datadog import EVENTS_API_URI, DataDogWrapper
 
@@ -55,13 +54,7 @@ def test_datadog_when_generate_event_data_with_correct_values_then_success(
     author = django_user_model(email="test@email.com")
     environment = Environment(name="test")
 
-    audit_log_record = AuditLog(
-        log=log,
-        author=author,
-        environment=environment,
-        related_object_type=RelatedObjectType.FEATURE.name,
-        related_object_id=feature.id,
-    )
+    audit_log_record = AuditLog(log=log, author=author, environment=environment)
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
@@ -82,12 +75,7 @@ def test_datadog_when_generate_event_data_with_missing_author_then_success(featu
 
     environment = Environment(name="test")
 
-    audit_log_record = AuditLog(
-        log=log,
-        environment=environment,
-        related_object_type=RelatedObjectType.FEATURE.name,
-        related_object_id=feature.id,
-    )
+    audit_log_record = AuditLog(log=log, environment=environment)
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
@@ -110,12 +98,7 @@ def test_datadog_when_generate_event_data_with_missing_env_then_success(
 
     author = django_user_model(email="test@email.com")
 
-    audit_log_record = AuditLog(
-        log=log,
-        author=author,
-        related_object_type=RelatedObjectType.FEATURE.name,
-        related_object_id=feature.id,
-    )
+    audit_log_record = AuditLog(log=log, author=author)
 
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
