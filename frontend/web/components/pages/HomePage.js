@@ -112,11 +112,12 @@ const HomePage = class extends React.Component {
       ? `?redirect=${Utils.fromParam().redirect}`
       : ''
     const isInvite = document.location.href.indexOf('invite') !== -1
+    const preventSignup = !Project.preventSignup && !isInvite
     const isSignup =
-      !Project.preventSignup &&
-      ((isInvite && document.location.href.indexOf('login') === -1) ||
+      !preventSignup &&
+      (document.location.href.indexOf('login') === -1 ||
         document.location.href.indexOf('signup') !== -1)
-    const disableSignup = Project.preventSignup && isSignup
+    const disableSignup = preventSignup && isSignup
     const preventEmailPassword = Project.preventEmailPassword
     const disableForgotPassword = Project.preventForgotPassword
     const oauths = []
@@ -380,7 +381,7 @@ const HomePage = class extends React.Component {
                         </AccountProvider>
                       </Card>
 
-                      {!Project.preventSignup && (
+                      {!preventSignup && (
                         <div>
                           {!preventEmailPassword && (
                             <Row className='justify-content-center mt-2'>
