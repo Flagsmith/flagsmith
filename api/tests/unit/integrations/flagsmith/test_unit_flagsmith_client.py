@@ -2,36 +2,30 @@ import json
 import os.path
 from unittest.mock import mock_open, patch
 
-import pytest
-import responses
-from django.conf import settings
-
-from integrations.flagsmith.client import FlagsmithWrapper
+from integrations.flagsmith.client import get_client
 
 
-@pytest.mark.parametrize(
-    "feature_value, feature_enabled",
-    (
-        (42, True),
-        (42, False),
-        (True, False),
-        (False, False),
-        (True, True),
-        (False, True),
-        ("foo", True),
-        ("foo", False),
-    ),
-)
-@responses.activate()
-def test_flagsmith_wrapper_builds_defaults_from_json_file(
-    feature_value, feature_enabled
-):
+def test_get_client_handles_missing_flagsmith_settings(settings) -> None:
     # Given
-    environment_key = "not-a-real-key"
-    api_url = "https://broken.flagsmith.com/api/v1"
-    responses.add(method="GET", url=api_url, status=404)
+    assert settings.FLAGSMITH_SERVER_KEY is None
+    assert settings.FLAGSMITH_API_URL is None
+
+    # When
+    client = get_client()
+
+    # Then
+    assert client.get_environment_flags().flags == {}
+    assert client.get_identity_flags("identifier").flags == {}
+
+
+def test_get_client_sets_up_default_flags(settings) -> None:
+    # Given
+    assert settings.FLAGSMITH_SERVER_KEY is None
+    assert settings.FLAGSMITH_API_URL is None
 
     feature_name = "my_feature"
+    feature_value = 42
+    feature_enabled = True
 
     defaults_data = json.dumps(
         [
@@ -45,33 +39,42 @@ def test_flagsmith_wrapper_builds_defaults_from_json_file(
 
     # When
     with patch("builtins.open", mock_open(read_data=defaults_data)) as mock_file:
-        wrapper = FlagsmithWrapper(environment_key=environment_key, api_url=api_url)
+        client = get_client()
 
         # Then
         mock_file.assert_called_with(
             os.path.join(settings.BASE_DIR, "integrations/flagsmith/defaults.json")
         )
-        assert wrapper._client
 
         # let's verify that it's using the defaults as we expect
-        flags = wrapper.get_client().get_environment_flags()
+        flags = client.get_environment_flags()
         assert flags.is_feature_enabled(feature_name) == feature_enabled
         assert flags.get_feature_value(feature_name) == feature_value
 
 
-def test_flagsmith_wrapper_get_instance(mocker, settings):
+def test_get_client_initialises_flagsmith_with_correct_arguments(
+    settings, mocker
+) -> None:
     # Given
-    mocker.patch("integrations.flagsmith.client._flagsmith_wrapper", None)
+    server_key = "some-key"
+    api_url = "https://my.flagsmith.api/api/v1/"
 
-    settings.FLAGSMITH_SERVER_KEY = "some-key"
-    settings.FLAGSMITH_API_URL = "https://edge.api.flagsmith.com/api/v1"
+    settings.FLAGSMITH_SERVER_KEY = server_key
+    settings.FLAGSMITH_API_URL = api_url
+
+    mock_flagsmith_class = mocker.patch(
+        "integrations.flagsmith.client._WrappedFlagsmith"
+    )
 
     # When
-    wrapper: FlagsmithWrapper = FlagsmithWrapper.get_instance()
+    client = get_client()
 
     # Then
-    # we have a wrapper instance
-    assert wrapper
+    assert client == mock_flagsmith_class.return_value
 
-    # and further requests to get_instance just return the same instance
-    assert FlagsmithWrapper.get_instance() == wrapper
+    mock_flagsmith_class.assert_called_once()
+
+    call_args = mock_flagsmith_class.call_args
+    assert call_args.kwargs["environment_key"] == server_key
+    assert call_args.kwargs["api_url"] == api_url
+    assert call_args.kwargs["default_flag_handler"]
