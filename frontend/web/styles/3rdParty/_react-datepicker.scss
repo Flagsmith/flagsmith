@@ -121,6 +121,8 @@
             padding: 0px 10px;
             display: flex;
             align-items: center;
+            justify-content: center;
+
             &:hover {
                 background-color: transparent;
             }
@@ -167,7 +169,7 @@
 .react-datepicker__day--outside-month {
     color: transparent !important;
     pointer-events: none;
-    &.react-datepicker__day--selected{
+    &.react-datepicker__day--selected {
         background-color: transparent;
     }
 }
