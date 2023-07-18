@@ -268,6 +268,11 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 
 [You need to perform some additional steps to configure InfluxDB.](/deployment/overview#influxdb).
 
+### Task Processor
+
+The task processor itself is documented [here](https://docs.flagsmith.com/deployment/configuration/task-processor). See
+the table below for the values to set to configure the task processor using the helm chart.
+
 ## Chart Values
 
 The following table lists the configurable parameters of the chart and their default values.
@@ -332,6 +337,34 @@ The following table lists the configurable parameters of the chart and their def
 | `frontend.readinessProbe.periodSeconds`            |                                                                  | 10                             |
 | `frontend.readinessProbe.successThreshold`         |                                                                  | 1                              |
 | `frontend.readinessProbe.timeoutSeconds`           |                                                                  | 10                             |
+| `taskProcessor.image.repository`                   |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.tag`                          |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.imagePullPolicy`              |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.imagePullSecrets`             |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.enabled`                            | Whether to run the task processor                                | `false`                        |
+| `taskProcessor.replicacount`                       |                                                                  | 1                              |
+| `taskProcessor.sleepIntervalMs`                    | Passed as `--sleepintervalms` to the task processor              |                                |
+| `taskProcessor.numThreads`                         | Passed as `--numthreads` to the task processor                   |                                |
+| `taskProcessor.gracePeriodMs`                      | Passed as `--graceperiodms` to the task processor                |                                |
+| `taskProcessor.queuePopSize`                       | Passed as `--queuepopsize` to the task processor                 |                                |
+| `taskProcessor.livenessProbe.failureThreshold`     |                                                                  | 5                              |
+| `taskProcessor.livenessProbe.initialDelaySeconds`  |                                                                  | 5                              |
+| `taskProcessor.livenessProbe.periodSeconds`        |                                                                  | 10                             |
+| `taskProcessor.livenessProbe.successThreshold`     |                                                                  | 1                              |
+| `taskProcessor.livenessProbe.timeoutSeconds`       |                                                                  | 2                              |
+| `taskProcessor.readinessProbe.failureThreshold`    |                                                                  | 10                             |
+| `taskProcessor.readinessProbe.initialDelaySeconds` |                                                                  | 1                              |
+| `taskProcessor.readinessProbe.periodSeconds`       |                                                                  | 10                             |
+| `taskProcessor.readinessProbe.successThreshold`    |                                                                  | 1                              |
+| `taskProcessor.readinessProbe.timeoutSeconds`      |                                                                  | 2                              |
+| `taskProcessor.podAnnotations`                     |                                                                  | `{}`                           |
+| `taskProcessor.resources`                          |                                                                  | `{}`                           |
+| `taskProcessor.podLabels`                          |                                                                  | `{}`                           |
+| `taskProcessor.nodeSelector`                       |                                                                  | `{}`                           |
+| `taskProcessor.tolerations`                        |                                                                  | `[]`                           |
+| `taskProcessor.affinity`                           |                                                                  | `{}`                           |
+| `taskProcessor.podSecurityContext`                 |                                                                  | `{}`                           |
+| `taskProcessor.defaultPodSecurityContext.enabled`  | whether to use the default security context                      | `true`                         |
 | `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database                | `true`                         |
 | `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                    | `true`                         |
 | `nameOverride`                                     |                                                                  | `flagsmith-postgres`           |
