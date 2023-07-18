@@ -150,6 +150,47 @@ func determineAppConfiguration() async throws {
 }
 ```
 
+### Providing Default Flags
+
+You can define default flag values when initialising the SDK. This ensures that your application works as intended in
+the event that it cannot receive a response from our API.
+
+```swift
+// set default flags
+Flagsmith.shared.defaultFlags = [Flag(featureName: "feature_a", enabled: false),
+                                    Flag(featureName: "font_size", intValue:12, enabled: true),
+                                    Flag(featureName: "my_name", stringValue:"Testing", enabled: true)]
+```
+
+### Cache
+
+By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage),
+and in case of a failed response, fall back on the cached values. The cache can be turned off or on using:
+
+```swift
+// set cache on / off (defaults to off)
+Flagsmith.shared.cacheConfig.useCache = true
+```
+
+You can also set a TTL for the cache (in seconds), and request that Flagsmith skip calling the API if a valid cache is
+present
+
+```swift
+// set skip API on / off (defaults to off)
+Flagsmith.shared.cacheConfig.skipAPI = false
+
+// set cache TTL in seconds (defaults to 0, i.e. infinite)
+Flagsmith.shared.cacheConfig.cacheTTL = 0
+```
+
+If more customisation is required, you can override the cache implemention with your own subclass of
+[URLCache](https://developer.apple.com/documentation/foundation/urlcache), using the following code.
+
+```swift
+// set custom cache to use (defaults to shared URLCache)
+Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
+```
+
 ## Override default configuration
 
 By default, the client uses a default configuration. You can override the configuration as follows:
