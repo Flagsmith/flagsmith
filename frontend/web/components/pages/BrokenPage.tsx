@@ -4,9 +4,11 @@ import ErrorMessage from "components/ErrorMessage"; // we need this to make JSX 
 type BrokenPageType = {}
 
 const BrokenPage: FC<BrokenPageType> = ({}) => {
-  // useEffect(()=>{
-  //   throw new Error('An example error')
-  // },[])
+  useEffect(()=>{
+    setTimeout(()=>{
+      throw new Error("An example error")
+    },0)
+  },[])
   return  <div
       data-test='features-page'
       id='features-page'
