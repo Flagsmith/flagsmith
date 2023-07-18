@@ -95,7 +95,7 @@
     "react": "16.9.0",
     "react-async-script": "0.9.1",
     "react-click-outside": "3.0.1",
-    "react-datepicker": "^4.7.0",
+    "react-datepicker": "4.16.0",
     "react-device-detect": "1.9.9",
     "react-dom": "16.9.0",
     "react-markdown": "^8.0.5",
