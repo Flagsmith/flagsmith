@@ -305,7 +305,7 @@ const controller = {
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
-      API.alias(user.email)
+      API.alias(user.email, user)
       API.identify(user && user.email, user)
       store.loaded()
     } else if (!user) {
