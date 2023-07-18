@@ -6,6 +6,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
 
+from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 from .exceptions import SlackChannelJoinError
@@ -63,7 +64,11 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
         return client
 
     @staticmethod
-    def generate_event_data(log: str, email: str, environment_name: str) -> dict:
+    def generate_event_data(audit_log_record: AuditLog) -> dict:
+        log = audit_log_record.log
+        environment_name = audit_log_record.environment_name
+        email = audit_log_record.author_identifier
+
         return {
             "blocks": [
                 {"type": "section", "text": {"type": "plain_text", "text": log}},

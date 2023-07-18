@@ -3,6 +3,7 @@ import logging
 
 import requests
 
+from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,11 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
         return {"Content-Type": "application/json", "X-Api-Key": self.api_key}
 
     @staticmethod
-    def generate_event_data(log: str, email: str, environment_name: str):
+    def generate_event_data(audit_log_record: AuditLog) -> dict:
+        log = audit_log_record.log
+        environment_name = audit_log_record.environment_name
+        email = audit_log_record.author_identifier
+
         return {
             "deployment": {
                 "revision": f"env:{environment_name}",

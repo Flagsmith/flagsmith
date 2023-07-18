@@ -2,6 +2,8 @@ import json
 
 import pytest
 
+from audit.models import AuditLog
+from environments.models import Environment
 from integrations.datadog.datadog import EVENTS_API_URI, DataDogWrapper
 
 
@@ -42,59 +44,69 @@ def test_datadog_track_event(mocker):
     )
 
 
-def test_datadog_when_generate_event_data_with_correct_values_then_success():
+def test_datadog_when_generate_event_data_with_correct_values_then_success(
+    django_user_model,
+    feature,
+):
     # Given
     log = "some log data"
-    email = "tes@email.com"
-    env = "test"
+
+    author = django_user_model(email="test@email.com")
+    environment = Environment(name="test")
+
+    audit_log_record = AuditLog(log=log, author=author, environment=environment)
+
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
     # When
-    event_data = data_dog.generate_event_data(
-        log=log, email=email, environment_name=env
-    )
+    event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
-    expected_event_text = f"{log} by user {email}"
+    expected_event_text = f"{log} by user {author.email}"
 
     assert event_data["text"] == expected_event_text
     assert len(event_data["tags"]) == 1
-    assert event_data["tags"][0] == "env:" + env
+    assert event_data["tags"][0] == f"env:{environment.name}"
 
 
-def test_datadog_when_generate_event_data_with_with_missing_values_then_success():
-    # Given no log or email data
-    log = None
-    email = None
-    env = "test"
+def test_datadog_when_generate_event_data_with_missing_author_then_success(feature):
+    # Given
+    log = "some log data"
+
+    environment = Environment(name="test")
+
+    audit_log_record = AuditLog(log=log, environment=environment)
+
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
     # When
-    event_data = data_dog.generate_event_data(
-        log=log, email=email, environment_name=env
-    )
+    event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
-    expected_event_text = f"{log} by user {email}"
+    expected_event_text = f"{log} by user system"
     assert event_data["text"] == expected_event_text
     assert len(event_data["tags"]) == 1
-    assert event_data["tags"][0] == f"env:{env}"
+    assert event_data["tags"][0] == f"env:{environment.name}"
 
 
-def test_datadog_when_generate_event_data_with_with_missing_env_then_success():
+def test_datadog_when_generate_event_data_with_missing_env_then_success(
+    django_user_model,
+    feature,
+):
     # Given environment
     log = "some log data"
-    email = "tes@email.com"
-    env = None
+
+    author = django_user_model(email="test@email.com")
+
+    audit_log_record = AuditLog(log=log, author=author)
+
     data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
 
     # When
-    event_data = data_dog.generate_event_data(
-        log=log, email=email, environment_name=env
-    )
+    event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
-    expected_event_text = f"{log} by user {email}"
+    expected_event_text = f"{log} by user {author.email}"
     assert event_data["text"] == expected_event_text
     assert len(event_data["tags"]) == 1
-    assert event_data["tags"][0] == f"env:{env}"
+    assert event_data["tags"][0] == "env:unknown"

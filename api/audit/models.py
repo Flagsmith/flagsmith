@@ -86,6 +86,14 @@ class AuditLog(LifecycleModel):
         klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.get(id=self.history_record_id)
 
+    @property
+    def environment_name(self) -> str:
+        return getattr(self.environment, "name", "unknown")
+
+    @property
+    def author_identifier(self) -> str:
+        return getattr(self.author, "email", "system")
+
     @staticmethod
     def get_history_record_model_class(
         history_record_class_path: str,

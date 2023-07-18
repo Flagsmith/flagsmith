@@ -1,6 +1,8 @@
 import pytest
 from slack_sdk.errors import SlackApiError
 
+from audit.models import AuditLog
+from environments.models import Environment
 from integrations.slack.exceptions import SlackChannelJoinError
 from integrations.slack.slack import SlackChannel, SlackWrapper
 
@@ -142,14 +144,17 @@ def test_track_event_makes_correct_call(mocked_slack_internal_client):
     )
 
 
-def test_slack_generate_event_data_with_correct_values():
+def test_slack_generate_event_data_with_correct_values(django_user_model):
     # Given
     log = "some log data"
-    email = "tes@email.com"
-    environment_name = "test"
+
+    author = django_user_model(email="test@email.com")
+    environment = Environment(name="test")
+
+    audit_log_record = AuditLog(log=log, author=author, environment=environment)
 
     # When
-    event_data = SlackWrapper.generate_event_data(log, email, environment_name)
+    event_data = SlackWrapper.generate_event_data(audit_log_record=audit_log_record)
 
     # Then
     assert event_data["blocks"] == [
@@ -157,8 +162,8 @@ def test_slack_generate_event_data_with_correct_values():
         {
             "type": "section",
             "fields": [
-                {"type": "mrkdwn", "text": f"*Environment:*\n{environment_name}"},
-                {"type": "mrkdwn", "text": f"*User:*\n{email}"},
+                {"type": "mrkdwn", "text": f"*Environment:*\n{environment.name}"},
+                {"type": "mrkdwn", "text": f"*User:*\n{author.email}"},
             ],
         },
     ]

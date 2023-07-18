@@ -54,13 +54,7 @@ def track_only_feature_related_events(signal_function):
 
 
 def _track_event_async(instance, integration_client):
-    event_data = integration_client.generate_event_data(
-        log=instance.log,
-        email=instance.author.email if instance.author else "",
-        environment_name=instance.environment.name.lower()
-        if instance.environment
-        else "",
-    )
+    event_data = integration_client.generate_event_data(audit_log_record=instance)
 
     integration_client.track_event_async(event=event_data)
 
