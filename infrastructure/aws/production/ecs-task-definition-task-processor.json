@@ -15,7 +15,9 @@
                 "--numthreads",
                 "25",
                 "--graceperiodms",
-                "20000"
+                "20000",
+                "--queuepopsize",
+                "1"
             ],
             "essential": true,
             "environment": [
