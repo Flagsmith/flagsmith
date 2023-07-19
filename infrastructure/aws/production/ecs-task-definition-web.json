@@ -170,6 +170,10 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                },
+                {
+                    "name":"EDGE_API_URL",
+                    "value":"https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
