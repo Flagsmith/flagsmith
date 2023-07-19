@@ -30,9 +30,9 @@ def forward_identity_request(
         request_method, headers, json.dumps(request_data) if request_data else ""
     )
     if request_method == "POST":
-        requests.post(url, data=json.dumps(request_data), headers=headers, timeout=0.1)
+        requests.post(url, data=json.dumps(request_data), headers=headers, timeout=5)
         return
-    requests.get(url, params=query_params, headers=headers, timeout=0.1)
+    requests.get(url, params=query_params, headers=headers, timeout=5)
 
 
 @register_task_handler()
@@ -58,7 +58,7 @@ def forward_trait_request_sync(
         url,
         data=payload,
         headers=_get_headers(request_method, headers, payload),
-        timeout=0.1,
+        timeout=5,
     )
 
 
