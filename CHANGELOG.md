@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.62.1](https://github.com/Flagsmith/flagsmith/compare/v2.62.0...v2.62.1) (2023-07-19)
+
+
+### Bug Fixes
+
+* revert EDGE_API_URL removal and reduce timeout further to 0.1s ([#2467](https://github.com/Flagsmith/flagsmith/issues/2467)) ([fc81925](https://github.com/Flagsmith/flagsmith/commit/fc819257bbe41d15f208376ed451045b26015a41))
+
 ## [2.62.0](https://github.com/Flagsmith/flagsmith/compare/v2.61.0...v2.62.0) (2023-07-19)
 
 
