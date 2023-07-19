@@ -89,7 +89,8 @@ def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
 
         task_run.finished_at = timezone.now()
         task.mark_success()
-    except Exception:
+    except Exception as e:
+        logger.warning(e)
         task.mark_failure()
 
         task_run.result = TaskResult.FAILURE
