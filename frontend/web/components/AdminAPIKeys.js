@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react'
-import DatePicker from 'react-datepicker'
 import data from 'common/data/base/_data'
 import InfoMessage from './InfoMessage'
 import Token from './Token'
 import JSONReference from './JSONReference'
 import ModalHR from './modals/ModalHR'
 import Button from './base/forms/Button'
+import DateSelect from './DateSelect'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -62,35 +62,32 @@ export class CreateAPIKey extends PureComponent {
                   <label>Expiry (Leave empty for no expiry)</label>
                 </div>
                 <Row>
-                  <Flex>
-                    <DatePicker
-                      minDate={new Date()}
-                      onChange={(e) => {
-                        this.setState({
-                          expiry_date: e.toISOString(),
-                        })
-                      }}
-                      showTimeInput
-                      selected={
-                        this.state.expiry_date
-                          ? moment(this.state.expiry_date)._d
-                          : null
-                      }
-                      value={
-                        this.state.expiry_date
-                          ? `${moment(this.state.expiry_date).format(
-                              'Do MMM YYYY hh:mma',
-                            )}`
-                          : 'Never'
-                      }
-                    />
-                  </Flex>
+                  <DateSelect
+                    onChange={(e) => {
+                      this.setState({
+                        expiry_date: e.toISOString(),
+                      })
+                    }}
+                    selected={
+                      this.state.expiry_date
+                        ? moment(this.state.expiry_date)._d
+                        : null
+                    }
+                    value={
+                      this.state.expiry_date
+                        ? `${moment(this.state.expiry_date).format(
+                            'Do MMM YYYY hh:mma',
+                          )}`
+                        : 'Never'
+                    }
+                  />
 
                   <div className='ml-2'>
                     <Button
                       disabled={!this.state.expiry_date}
                       onClick={() => this.setState({ expiry_date: null })}
-                      theme='text'
+                      theme='secondary'
+                      size='large'
                     >
                       Clear
                     </Button>

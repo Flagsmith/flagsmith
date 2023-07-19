@@ -11,9 +11,11 @@ export type IconName =
   | 'info'
   | 'close-circle'
   | 'chevron-right'
+  | 'chevron-left'
   | 'chevron-down'
   | 'file-text'
   | 'copy'
+  | 'calendar'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
@@ -238,6 +240,25 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
         </svg>
       )
     }
+    case 'chevron-left': {
+      return (
+        <svg
+          width={width || '24'}
+          height={width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            id='Icon'
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M13.3623 17C13.1003 17 12.8393 16.898 12.6433 16.695L8.78028 12.695C8.40228 12.302 8.40728 11.679 8.79328 11.293L12.7933 7.29301C13.1833 6.90201 13.8163 6.90201 14.2073 7.29301C14.5973 7.68401 14.5973 8.31601 14.2073 8.70701L10.9023 12.012L14.0813 15.305C14.4653 15.703 14.4543 16.336 14.0573 16.719C13.8623 16.907 13.6123 17 13.3623 17Z'
+            fill={fill || '#1A2634'}
+          />
+        </svg>
+      )
+    }
     case 'file-text': {
       return (
         <svg
@@ -271,6 +292,25 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
             fillRule='evenodd'
             clipRule='evenodd'
             d='M9 12V13H5.667C5.299 13 5 12.701 5 12.333V5.667C5 5.299 5.299 5 5.667 5H12.333C12.701 5 13 5.299 13 5.667V9H12C10.346 9 9 10.346 9 12ZM18 9H15V5.667C15 4.196 13.804 3 12.333 3H5.667C4.196 3 3 4.196 3 5.667V12.333C3 13.804 4.196 15 5.667 15H9V18C9 19.654 10.346 21 12 21H18C19.654 21 21 19.654 21 18V12C21 10.346 19.654 9 18 9Z'
+            fill={fill || '#1A2634'}
+          />
+        </svg>
+      )
+    }
+    case 'calendar': {
+      return (
+        <svg
+          width={width || '24'}
+          height={width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            id='Icon'
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M19 11H5V7C5 6.449 5.449 6 6 6H7V7C7 7.55 7.45 8 8 8C8.55 8 9 7.55 9 7V6H15V7C15 7.55 15.45 8 16 8C16.55 8 17 7.55 17 7V6H18C18.551 6 19 6.449 19 7V11ZM16 17H12C11.45 17 11 16.55 11 16C11 15.45 11.45 15 12 15H16C16.55 15 17 15.45 17 16C17 16.55 16.55 17 16 17ZM8 17C7.45 17 7 16.55 7 16C7 15.45 7.45 15 8 15C8.55 15 9 15.45 9 16C9 16.55 8.55 17 8 17ZM18 4H17V3C17 2.45 16.55 2 16 2C15.45 2 15 2.45 15 3V4H9V3C9 2.45 8.55 2 8 2C7.45 2 7 2.45 7 3V4H6C4.346 4 3 5.346 3 7V19C3 20.654 4.346 22 6 22H18C19.654 22 21 20.654 21 19V7C21 5.346 19.654 4 18 4Z'
             fill={fill || '#1A2634'}
           />
         </svg>

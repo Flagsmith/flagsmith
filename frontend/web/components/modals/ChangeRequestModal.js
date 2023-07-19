@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
-import DatePicker from 'react-datepicker'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
+import DateSelect from 'components/DateSelect'
 
 const ChangeRequestModal = class extends Component {
   static displayName = 'ChangeRequestModal'
@@ -118,35 +118,31 @@ const ChangeRequestModal = class extends Component {
                   title='Schedule Change'
                   component={
                     <Row>
-                      <Flex>
-                        <DatePicker
-                          minDate={new Date()}
-                          onChange={(e) => {
-                            this.setState({
-                              live_from: e.toISOString(),
-                            })
-                          }}
-                          showTimeInput
-                          selected={moment(this.state.live_from)._d}
-                          value={
-                            this.state.live_from
-                              ? `${moment(this.state.live_from).format(
-                                  'Do MMM YYYY hh:mma',
-                                )} (${
-                                  Intl.DateTimeFormat().resolvedOptions()
-                                    .timeZone
-                                })`
-                              : 'Immediately'
-                          }
-                        />
-                      </Flex>
+                      <DateSelect
+                        onChange={(e) => {
+                          this.setState({
+                            live_from: e.toISOString(),
+                          })
+                        }}
+                        selected={moment(this.state.live_from)._d}
+                        value={
+                          this.state.live_from
+                            ? `${moment(this.state.live_from).format(
+                                'Do MMM YYYY hh:mma',
+                              )} (${
+                                Intl.DateTimeFormat().resolvedOptions().timeZone
+                              })`
+                            : 'Immediately'
+                        }
+                      />
 
                       <Button
-                        theme='text'
                         className='ml-2'
                         onClick={() => {
                           this.setState({ live_from: null })
                         }}
+                        theme='secondary'
+                        size='large'
                       >
                         Clear
                       </Button>
