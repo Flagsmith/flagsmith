@@ -3,8 +3,13 @@ import typing
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from tests.unit.organisations.chargebee.test_unit_chargebee_chargebee import (
+    MockChargeBeeAddOn,
+    MockChargeBeeSubscriptionResponse,
+)
 
 from api_keys.models import MasterAPIKey
 from environments.identities.models import Identity
@@ -30,6 +35,7 @@ from metadata.models import (
     MetadataModelField,
     MetadataModelFieldRequirement,
 )
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import OrganisationPermissionModel
 from organisations.permissions.permissions import (
@@ -439,3 +445,40 @@ def create_project_permission(db):
 @pytest.fixture
 def manage_user_group_permission(db):
     return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
+
+
+@pytest.fixture
+def mocked_subscription_metadata(
+    mocker: MockerFixture,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> dict[str, ChargebeeObjMetadata,]:
+    # Given
+    plan_id = "plan-id"
+    addon_id = "addon-id"
+    subscription_id = "subscription-id"
+    customer_email = "test@example.com"
+
+    # Let's create a (mocked) subscription object
+    mock_subscription_response = MockChargeBeeSubscriptionResponse(
+        subscription_id=subscription_id,
+        plan_id=plan_id,
+        customer_email=customer_email,
+        addons=[MockChargeBeeAddOn(addon_id=addon_id, quantity=1)],
+    )
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value = mock_subscription_response
+
+    # now, let's mock chargebee cache object
+    mocked_chargebee_cache = mocker.patch(
+        "organisations.chargebee.chargebee.ChargebeeCache", autospec=True
+    )
+    mocked_chargebee_cache.return_value.plans = {plan_id: chargebee_object_metadata}
+    mocked_chargebee_cache.return_value.addons = {addon_id: chargebee_object_metadata}
+
+    return {
+        "customer_email": customer_email,
+        "chargebee_object_metadata": chargebee_object_metadata,
+        "mock_subscription_response": mock_subscription_response,
+    }

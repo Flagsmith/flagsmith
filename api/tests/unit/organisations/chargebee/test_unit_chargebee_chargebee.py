@@ -261,54 +261,13 @@ class ChargeBeeTestCase(TestCase):
         )
 
 
-def create_mocked_subscription_metadata(
-    mocker, chargebee_object_metadata, addon_quantity
-):
-    # Given
-    plan_id = "plan-id"
-    addon_id = "addon-id"
-    subscription_id = "subscription-id"
-    customer_email = "test@example.com"
-
-    # Let's create a (mocked) subscription object
-    mock_subscription_response = MockChargeBeeSubscriptionResponse(
-        subscription_id=subscription_id,
-        plan_id=plan_id,
-        customer_email=customer_email,
-        addons=[MockChargeBeeAddOn(addon_id=addon_id, quantity=addon_quantity)],
-    )
-    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
-
-    # tie that subscription object to the mocked chargebee object
-    mocked_chargebee.Subscription.retrieve.return_value = mock_subscription_response
-
-    # now, let's mock chargebee cache object
-    mocked_chargebee_cache = mocker.patch(
-        "organisations.chargebee.chargebee.ChargebeeCache", autospec=True
-    )
-    mocked_chargebee_cache.return_value.plans = {plan_id: chargebee_object_metadata}
-    mocked_chargebee_cache.return_value.addons = {addon_id: chargebee_object_metadata}
-
-    return {
-        "customer_email": customer_email,
-        "mocked_chargebee_cache": mocked_chargebee_cache,
-        "mock_subscription_response": mock_subscription_response,
-    }
-
-
-@pytest.mark.parametrize("addon_quantity", (None, 1))
-def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
+def test_extract_subscription_metadata(mocked_subscription_metadata):
     # Given
     status = "status"
     plan_id = "plan-id"
     addon_id = "addon-id"
     subscription_id = "subscription-id"
-    customer_email = "test@example.com"
 
-    create_mocked_subscription_metadata(
-        mocker, chargebee_object_metadata, addon_quantity
-    )
-    # When
     subscription = {
         "status": status,
         "id": subscription_id,
@@ -322,33 +281,51 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
             }
         ],
     }
-    subscription_metadata = extract_subscription_metadata(subscription, customer_email)
 
-    # Then
-    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
-    assert subscription_metadata.chargebee_email == customer_email
-
-
-@pytest.mark.parametrize("addon_quantity", (None, 1))
-def test_get_subscription_metadata_from_id(
-    mocker, chargebee_object_metadata, addon_quantity
-):
-    # Given
-    mocked_subscription_metadata = create_mocked_subscription_metadata(
-        mocker, chargebee_object_metadata, addon_quantity
+    # When
+    subscription_metadata = extract_subscription_metadata(
+        subscription,
+        mocked_subscription_metadata["customer_email"],
     )
 
+    # Then
+    assert (
+        subscription_metadata.seats
+        == mocked_subscription_metadata["chargebee_object_metadata"].seats * 2
+    )
+    assert (
+        subscription_metadata.api_calls
+        == mocked_subscription_metadata["chargebee_object_metadata"].api_calls * 2
+    )
+    assert (
+        subscription_metadata.projects
+        == mocked_subscription_metadata["chargebee_object_metadata"].projects * 2
+    )
+    assert (
+        subscription_metadata.chargebee_email
+        == mocked_subscription_metadata["customer_email"]
+    )
+
+
+def test_get_subscription_metadata_from_id(mocked_subscription_metadata):
     # When
     subscription_metadata = get_subscription_metadata_from_id(
         mocked_subscription_metadata["mock_subscription_response"].subscription.id
     )
 
     # Then
-    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    assert (
+        subscription_metadata.seats
+        == mocked_subscription_metadata["chargebee_object_metadata"].seats * 2
+    )
+    assert (
+        subscription_metadata.api_calls
+        == mocked_subscription_metadata["chargebee_object_metadata"].api_calls * 2
+    )
+    assert (
+        subscription_metadata.projects
+        == mocked_subscription_metadata["chargebee_object_metadata"].projects * 2
+    )
     assert (
         subscription_metadata.chargebee_email
         == mocked_subscription_metadata["customer_email"]

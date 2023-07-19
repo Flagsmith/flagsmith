@@ -107,7 +107,7 @@ def extract_subscription_metadata(
     chargebee_subscription: dict,
     customer_email: str,
 ) -> ChargebeeObjMetadata:
-    chargebee_addons = chargebee_subscription["addons"] or []
+    chargebee_addons = chargebee_subscription.get("addons", [])
     chargebee_cache = ChargebeeCache()
     subscription_metadata: ChargebeeObjMetadata = chargebee_cache.plans[
         chargebee_subscription["plan_id"]
