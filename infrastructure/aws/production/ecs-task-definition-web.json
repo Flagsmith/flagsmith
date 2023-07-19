@@ -136,10 +136,6 @@
                     "value": "937916178726.1924685747446"
                 },
                 {
-                    "name": "EDGE_API_URL",
-                    "value": "https://edge.api.flagsmith.com/api/v1/"
-                },
-                {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
                     "value": "identity_migration-d46ed1a"
                 },
