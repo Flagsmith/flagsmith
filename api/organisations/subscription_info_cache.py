@@ -40,7 +40,8 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
     to_create = []
 
     for subscription_info_cache in organisation_info_cache_dict.values():
-        subscription_info_cache.updated_at = timezone.now()
+        subscription_info_cache.chargebee_updated_at = timezone.now()
+        subscription_info_cache.influx_updated_at = timezone.now()
         if subscription_info_cache.id:
             to_update.append(subscription_info_cache)
         else:
@@ -56,7 +57,8 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
             "allowed_seats",
             "allowed_30d_api_calls",
             "chargebee_email",
-            "updated_at",
+            "chargebee_updated_at",
+            "influx_updated_at",
         ],
     )
 

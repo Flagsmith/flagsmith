@@ -299,7 +299,7 @@ def chargebee_webhook(request):
             OrganisationSubscriptionInformationCache.objects.update_or_create(
                 organisation_id=existing_subscription.organisation_id,
                 defaults={
-                    "updated_at": timezone.now(),
+                    "chargebee_updated_at": timezone.now(),
                     "allowed_30d_api_calls": subscription_metadata.api_calls,
                     "allowed_seats": subscription_metadata.seats,
                     "organisation_id": existing_subscription.organisation_id,

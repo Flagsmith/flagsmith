@@ -25,7 +25,12 @@ from organisations.models import (
 )
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
-from organisations.subscriptions.constants import CHARGEBEE
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_PROJECTS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+)
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
 from users.models import (
@@ -578,23 +583,25 @@ class ChargeBeeWebhookTestCase(TestCase):
 
     @mock.patch("organisations.models.get_plan_meta_data")
     @mock.patch("organisations.views.extract_subscription_metadata")
-    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_created_and_updated(
-        self, mock_get_subscription_metadata, mock_get_plan_meta_data
+    def mock_subscription_plan_data(
+        self,
+        mock_get_subscription_metadata: ChargebeeObjMetadata,
+        mock_get_plan_meta_data: dict[str, str],
+        plan_id: str,
+        max_seats: int,
+        max_api_calls: int,
+        max_projects: int,
+        chargebee_updated_at: datetime = datetime.now(),
     ):
-        # Given
-        new_plan_id = "new-plan-id"
-        new_max_seats = 3
-        new_max_api_calls = 100
-        new_max_projects = 3
         mock_get_plan_meta_data.return_value = {
-            "seats": new_max_seats,
-            "api_calls": new_max_api_calls,
+            "seats": max_seats,
+            "api_calls": max_api_calls,
         }
 
         mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
-            seats=new_max_seats,
-            api_calls=new_max_api_calls,
-            projects=new_max_projects,
+            seats=max_seats,
+            api_calls=max_api_calls,
+            projects=max_projects,
             chargebee_email=self.cb_user.email,
         )
 
@@ -603,22 +610,25 @@ class ChargeBeeWebhookTestCase(TestCase):
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
-                    "plan_id": new_plan_id,
-                    "addons": [
-                        {
-                            "id": "addon-id",
-                            "quantity": 2,
-                            "unit_price": 0,
-                            "amount": 0,
-                            "object": "addon",
-                        }
-                    ],
+                    "plan_id": plan_id,
                 },
                 "customer": {"email": self.cb_user.email},
             }
         }
 
-        # When
+        if plan_id != "new-plan-id":
+            subscription_information_cache = (
+                OrganisationSubscriptionInformationCache.objects.create(
+                    organisation=self.organisation,
+                    allowed_seats=1,
+                    allowed_30d_api_calls=10,
+                    allowed_projects=1,
+                    chargebee_email="",
+                    chargebee_updated_at=chargebee_updated_at,
+                    influx_updated_at=None,
+                )
+            )
+
         res = self.client.post(
             self.url, data=json.dumps(data), content_type="application/json"
         )
@@ -629,13 +639,30 @@ class ChargeBeeWebhookTestCase(TestCase):
             )
         )
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
         self.subscription.refresh_from_db()
         subscription_information_cache.refresh_from_db()
 
+        return [res, subscription_information_cache]
+
+    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_created(
+        self,
+    ):
+        # Given
+        new_plan_id = "new-plan-id"
+        new_max_seats = 3
+        new_max_api_calls = 100
+        new_max_projects = 3
+
+        # When
+        res, subscription_information_cache = self.mock_subscription_plan_data(
+            plan_id=new_plan_id,
+            max_seats=new_max_seats,
+            max_api_calls=new_max_api_calls,
+            max_projects=new_max_projects,
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
         assert self.subscription.plan == new_plan_id
         assert self.subscription.max_seats == new_max_seats
         assert self.subscription.max_api_calls == new_max_api_calls
@@ -644,47 +671,42 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert subscription_information_cache.allowed_30d_api_calls == new_max_api_calls
         assert subscription_information_cache.allowed_projects == new_max_projects
         assert subscription_information_cache.chargebee_email == self.cb_user.email
+        assert subscription_information_cache.chargebee_updated_at
+        assert subscription_information_cache.influx_updated_at is None
 
-        # Update plan
-        update_plan_id = "update-plan-id"
-        update_max_seats = 4
-        update_max_api_calls = 200
-        update_max_projects = 5
-        data["content"]["subscription"]["plan_id"] = update_plan_id
-
-        mock_get_plan_meta_data.return_value = {
-            "seats": update_max_seats,
-            "api_calls": update_max_api_calls,
-        }
-
-        mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
-            seats=update_max_seats,
-            api_calls=update_max_api_calls,
-            projects=update_max_projects,
-            chargebee_email=self.cb_user.email,
-        )
+    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
+        self,
+    ):
+        # Given
+        new_plan_id = "update-plan-id"
+        new_max_seats = 5
+        new_max_api_calls = 500
+        new_max_projects = 10
+        chargebee_updated_at = datetime.now(tz=UTC) - timedelta(days=1)
 
         # When
-        res = self.client.post(
-            self.url, data=json.dumps(data), content_type="application/json"
+        res, subscription_information_cache = self.mock_subscription_plan_data(
+            plan_id=new_plan_id,
+            max_seats=new_max_seats,
+            max_api_calls=new_max_api_calls,
+            max_projects=new_max_projects,
+            chargebee_updated_at=chargebee_updated_at,
         )
 
         # Then
         assert res.status_code == status.HTTP_200_OK
+        assert self.subscription.plan == new_plan_id
+        assert self.subscription.max_seats == new_max_seats
+        assert self.subscription.max_api_calls == new_max_api_calls
 
-        # and
-        self.subscription.refresh_from_db()
-        subscription_information_cache.refresh_from_db()
-
-        assert self.subscription.plan == update_plan_id
-        assert self.subscription.max_seats == update_max_seats
-        assert self.subscription.max_api_calls == update_max_api_calls
-
-        assert subscription_information_cache.allowed_seats == update_max_seats
+        assert subscription_information_cache.allowed_seats == new_max_seats
+        assert subscription_information_cache.allowed_30d_api_calls == new_max_api_calls
+        assert subscription_information_cache.allowed_projects == new_max_projects
+        assert subscription_information_cache.chargebee_email == self.cb_user.email
         assert (
-            subscription_information_cache.allowed_30d_api_calls == update_max_api_calls
+            subscription_information_cache.chargebee_updated_at != chargebee_updated_at
         )
-        assert subscription_information_cache.allowed_projects == update_max_projects
+        assert subscription_information_cache.influx_updated_at is None
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(
@@ -765,15 +787,6 @@ class ChargeBeeWebhookTestCase(TestCase):
                 "subscription": {
                     "status": "active",
                     "id": self.subscription_id,
-                    "addons": [
-                        {
-                            "id": "addon-id",
-                            "quantity": 2,
-                            "unit_price": 0,
-                            "amount": 0,
-                            "object": "addon",
-                        }
-                    ],
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -925,7 +938,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     }
 
 
-def test_get_subscription_metadata_subscription_information_cache_does_not_exist(
+def test_get_subscription_metadata_when_subscription_information_cache_does_not_exist(
     mocker, organisation, admin_client, chargebee_subscription
 ):
     # Given
@@ -964,6 +977,30 @@ def test_get_subscription_metadata_subscription_information_cache_does_not_exist
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
     )
+
+
+def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
+    organisation, admin_client, chargebee_subscription
+):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-get-subscription-metadata",
+        args=[organisation.pk],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert response.json() == {
+        "max_seats": MAX_SEATS_IN_FREE_PLAN,
+        "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
+        "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
+        "payment_source": None,
+        "chargebee_email": None,
+    }
 
 
 def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(

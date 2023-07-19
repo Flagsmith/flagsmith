@@ -451,7 +451,7 @@ def manage_user_group_permission(db):
 def mocked_subscription_metadata(
     mocker: MockerFixture,
     chargebee_object_metadata: ChargebeeObjMetadata,
-) -> dict[str, ChargebeeObjMetadata,]:
+) -> dict:
     # Given
     plan_id = "plan-id"
     addon_id = "addon-id"

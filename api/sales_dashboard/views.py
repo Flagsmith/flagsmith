@@ -32,8 +32,8 @@ from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
 from organisations.tasks import (
-    update_organisation_subscription_information_chargebee_caches,
-    update_organisation_subscription_information_influx_caches,
+    update_organisation_subscription_information_cache,
+    update_organisation_subscription_information_influx_cache,
 )
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
@@ -91,17 +91,19 @@ class OrganisationList(ListView):
         # Use the most recent OrganisationSubscriptionInformationCache object to determine when the caches
         # were last updated.
         try:
-            subscription_information_caches_updated_at = (
-                OrganisationSubscriptionInformationCache.objects.order_by("-updated_at")
+            subscription_information_caches_influx_updated_at = (
+                OrganisationSubscriptionInformationCache.objects.order_by(
+                    "-influx_updated_at"
+                )
                 .first()
-                .updated_at.strftime("%H:%M:%S %d/%m/%Y")
+                .influx_updated_at.strftime("%H:%M:%S %d/%m/%Y")
             )
         except AttributeError:
-            subscription_information_caches_updated_at = None
+            subscription_information_caches_influx_updated_at = None
 
         data[
-            "subscription_information_caches_updated_at"
-        ] = subscription_information_caches_updated_at
+            "subscription_information_caches_influx_updated_at"
+        ] = subscription_information_caches_influx_updated_at
 
         return data
 
@@ -219,14 +221,14 @@ def download_org_data(request, organisation_id):
 
 
 @staff_member_required()
-def trigger_update_organisation_subscription_information_influx_caches(request):
-    update_organisation_subscription_information_influx_caches.delay()
+def trigger_update_organisation_subscription_information_influx_cache(request):
+    update_organisation_subscription_information_influx_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
 @staff_member_required()
-def trigger_update_organisation_subscription_information_chargebee_caches(request):
-    update_organisation_subscription_information_chargebee_caches.delay()
+def trigger_update_organisation_subscription_information_cache(request):
+    update_organisation_subscription_information_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 

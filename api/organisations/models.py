@@ -283,7 +283,8 @@ class OrganisationSubscriptionInformationCache(models.Model):
         related_name="subscription_information_cache",
         on_delete=models.CASCADE,
     )
-    updated_at = models.DateTimeField(auto_now=True)
+    chargebee_updated_at = models.DateTimeField(auto_now=False, null=True)
+    influx_updated_at = models.DateTimeField(auto_now=False, null=True)
 
     api_calls_24h = models.IntegerField(default=0)
     api_calls_7d = models.IntegerField(default=0)

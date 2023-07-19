@@ -32,7 +32,8 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     update_caches(subscription_cache_entities)
 
     # Then
-    assert organisation.subscription_information_cache.updated_at
+    assert organisation.subscription_information_cache.influx_updated_at
+    assert organisation.subscription_information_cache.chargebee_updated_at
     assert (
         organisation.subscription_information_cache.api_calls_24h
         == organisation_usage["24h"]
