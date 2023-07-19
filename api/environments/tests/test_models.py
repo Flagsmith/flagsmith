@@ -312,7 +312,6 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
     assert environment == environment_cache.get(environment_api_key.key)
 
 
-@pytest.mark.skip("skipped because this is causing lock by task processor")
 def test_updated_at_gets_updated_when_environment_audit_log_created(environment):
     # When
     audit_log = AuditLog.objects.create(
@@ -324,7 +323,6 @@ def test_updated_at_gets_updated_when_environment_audit_log_created(environment)
     assert environment.updated_at == audit_log.created_date
 
 
-@pytest.mark.skip("skipped because this is causing lock by task processor")
 def test_updated_at_gets_updated_when_project_audit_log_created(environment):
     # When
     audit_log = AuditLog.objects.create(
