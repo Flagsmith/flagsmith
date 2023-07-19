@@ -23,7 +23,7 @@ def send_environment_update_message_for_project(
 def send_environment_update_message(environment_key: str, updated_at):
     url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
     payload = {"updated_at": updated_at}
-    response = requests.post(url, headers=get_auth_header(), json=payload)
+    response = requests.post(url, headers=get_auth_header(), json=payload, timeout=2)
     response.raise_for_status()
 
 
