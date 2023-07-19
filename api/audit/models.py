@@ -114,7 +114,6 @@ class AuditLog(LifecycleModel):
         is_now=True,
     )
     def process_environment_update(self):
-        self.update_environments_updated_at()
         self.send_environments_to_dynamodb()
         self.send_environment_update_message()
 
