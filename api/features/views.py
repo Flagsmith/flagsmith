@@ -5,6 +5,7 @@ from functools import reduce
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.exceptions import ObjectsLimitReachedError
 from core.permissions import HasMasterAPIKey
 from core.request_origin import RequestOrigin
 from django.conf import settings
@@ -720,7 +721,10 @@ def create_segment_override(
 ):
     environment = get_object_or_404(Environment, api_key=environment_api_key)
     feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
-
+    if environment.feature_segments.count() >= settings.MAX_SEGMENT_OVERRIDE_ALLOWED:
+        raise ObjectsLimitReachedError(
+            "The environment has reached the maximum allowed segments overrides."
+        )
     serializer = CreateSegmentOverrideFeatureStateSerializer(
         data=request.data, context={"environment": environment, "feature": feature}
     )
