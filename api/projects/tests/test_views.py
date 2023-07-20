@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
+from features.models import FeatureSegment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -531,6 +532,82 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == "Too many identities; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_features(
+    admin_client, project, mocker, environment, feature, multivariate_feature, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    settings.MAX_FEATURES_ALLOWED = 1
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segments(
+    admin_client,
+    project,
+    mocker,
+    environment,
+    feature,
+    settings,
+    feature_based_segment,
+    segment,
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    settings.MAX_SEGMENTS_ALLOWED = 1
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_overrides(
+    admin_client,
+    project,
+    mocker,
+    environment,
+    feature,
+    settings,
+    feature_segment,
+    multivariate_feature,
+    segment,
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    settings.MAX_SEGMENT_OVERRIDE_ALLOWED = 1
+    # let's create another feature segment
+    FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
     mocked_identity_migrator.assert_not_called()
 
 
