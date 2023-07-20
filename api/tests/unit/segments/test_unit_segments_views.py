@@ -104,6 +104,41 @@ def test_can_create_segments_with_condition_that_has_null_value(project, client)
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
+def test_create_segments_reaching_max_limit(project, client, settings):
+    # Given
+    # let's reduce the max segments allowed to 1
+    settings.MAX_SEGMENTS_ALLOWED = 1
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # Now, let's create the firs segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_201_CREATED
+
+    # Then
+    # Let's try to create a second segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        res.json()["detail"] == "The project has reached the maximum allowed segments."
+    )
+    assert project.segments.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_audit_log_created_when_segment_updated(project, segment, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)

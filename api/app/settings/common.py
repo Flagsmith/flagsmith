@@ -893,3 +893,5 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+MAX_SEGMENTS_ALLOWED = env.int("MAX_SEGMENTS_ALLOWED", 30)
