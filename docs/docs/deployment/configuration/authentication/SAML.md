@@ -72,4 +72,4 @@ Here's an example configuration from Google's SAML app creation flow.
 
 ## Group Sync
 
-You can also [configure Flagsmith to add or remove a user from a group](/system-administration/SAML.md#group-sync).
+You can also [configure Flagsmith to add or remove a user from a group](/system-administration/saml.md#group-sync).
