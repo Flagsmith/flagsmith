@@ -24,6 +24,11 @@
             "section": "Bug Fixes"
         },
         {
+            "type": "infra",
+            "hidden": false,
+            "section": "Infrastructure (Flagsmith SaaS Only)"
+        },
+        {
             "type": "docs",
             "hidden": true,
             "section": "Docs"
