@@ -583,7 +583,7 @@ class ChargeBeeWebhookTestCase(TestCase):
 
     @mock.patch("organisations.models.get_plan_meta_data")
     @mock.patch("organisations.views.extract_subscription_metadata")
-    def mock_subscription_plan_data(
+    def mocked_subscription_plan_data(
         self,
         mock_get_subscription_metadata: ChargebeeObjMetadata,
         mock_get_plan_meta_data: dict[str, str],
@@ -592,7 +592,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         max_api_calls: int,
         max_projects: int,
         chargebee_updated_at: datetime = datetime.now(),
-    ):
+    ) -> list[dict]:
         mock_get_plan_meta_data.return_value = {
             "seats": max_seats,
             "api_calls": max_api_calls,

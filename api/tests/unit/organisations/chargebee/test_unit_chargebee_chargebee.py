@@ -261,7 +261,7 @@ class ChargeBeeTestCase(TestCase):
         )
 
 
-def test_extract_subscription_metadata(mocked_subscription_metadata):
+def test_extract_subscription_metadata(mocked_subscription_metadata: dict):
     # Given
     status = "status"
     plan_id = "plan-id"
@@ -281,55 +281,42 @@ def test_extract_subscription_metadata(mocked_subscription_metadata):
             }
         ],
     }
+    chargebee_object_metadata = mocked_subscription_metadata[
+        "chargebee_object_metadata"
+    ]
+    customer_email = mocked_subscription_metadata["customer_email"]
 
     # When
     subscription_metadata = extract_subscription_metadata(
         subscription,
-        mocked_subscription_metadata["customer_email"],
+        customer_email,
     )
 
     # Then
-    assert (
-        subscription_metadata.seats
-        == mocked_subscription_metadata["chargebee_object_metadata"].seats * 2
-    )
-    assert (
-        subscription_metadata.api_calls
-        == mocked_subscription_metadata["chargebee_object_metadata"].api_calls * 2
-    )
-    assert (
-        subscription_metadata.projects
-        == mocked_subscription_metadata["chargebee_object_metadata"].projects * 2
-    )
-    assert (
-        subscription_metadata.chargebee_email
-        == mocked_subscription_metadata["customer_email"]
-    )
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    assert subscription_metadata.chargebee_email == customer_email
 
 
-def test_get_subscription_metadata_from_id(mocked_subscription_metadata):
+def test_get_subscription_metadata_from_id(mocked_subscription_metadata: dict):
+    # Given
+    chargebee_object_metadata = mocked_subscription_metadata[
+        "chargebee_object_metadata"
+    ]
+    subscription_id = mocked_subscription_metadata[
+        "mock_subscription_response"
+    ].subscription.id
+    customer_email = mocked_subscription_metadata["customer_email"]
+
     # When
-    subscription_metadata = get_subscription_metadata_from_id(
-        mocked_subscription_metadata["mock_subscription_response"].subscription.id
-    )
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
-    assert (
-        subscription_metadata.seats
-        == mocked_subscription_metadata["chargebee_object_metadata"].seats * 2
-    )
-    assert (
-        subscription_metadata.api_calls
-        == mocked_subscription_metadata["chargebee_object_metadata"].api_calls * 2
-    )
-    assert (
-        subscription_metadata.projects
-        == mocked_subscription_metadata["chargebee_object_metadata"].projects * 2
-    )
-    assert (
-        subscription_metadata.chargebee_email
-        == mocked_subscription_metadata["customer_email"]
-    )
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    assert subscription_metadata.chargebee_email == customer_email
 
 
 def test_cancel_subscription(mocker):
