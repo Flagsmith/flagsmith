@@ -98,7 +98,7 @@ def _call_webhook(
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
-    return requests.post(str(webhook.url), data=json_data, headers=headers)
+    return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=2)
 
 
 def _call_webhook_email_on_error(

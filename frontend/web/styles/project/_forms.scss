@@ -68,7 +68,8 @@
     }
 }
 
-.input-container {
+.input-container,
+.react-datepicker-wrapper .react-datepicker__input-container {
     &.invalid {
         input.input {
             border-color: $danger !important;
