@@ -2,7 +2,7 @@ import DatePicker from 'react-datepicker'
 import Icon from './Icon'
 import { useState } from 'react'
 
-const DateSelect = ({ onChange, selected, value,onSelect }) => {
+const DateSelect = ({ onChange, selected, value, onSelect }) => {
   const [isMonthPicker, setMonthPicker] = useState(false)
   const [isYearPicker, setYearPicker] = useState(false)
   const [isOpen, setOpen] = useState(false)
