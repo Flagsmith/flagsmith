@@ -1,8 +1,6 @@
 import logging
 
-from core.exceptions import ObjectsLimitReachedError
 from core.permissions import HasMasterAPIKey
-from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -91,14 +89,6 @@ class SegmentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=search_term)
 
         return queryset
-
-    def perform_create(self, serializer):
-        project = serializer.validated_data["project"]
-        if project.segments.count() >= settings.MAX_SEGMENTS_ALLOWED:
-            raise ObjectsLimitReachedError(
-                "The project has reached the maximum allowed segments."
-            )
-        serializer.save()
 
     @action(
         detail=True,

@@ -845,7 +845,7 @@ def test_create_segment_override_reaching_max_limit(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        response.json()["detail"]
+        response.json()["environment"]
         == "The environment has reached the maximum allowed segments overrides."
     )
     assert environment.feature_segments.count() == 1

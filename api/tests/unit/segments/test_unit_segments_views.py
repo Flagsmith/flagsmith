@@ -131,7 +131,7 @@ def test_create_segments_reaching_max_limit(project, client, settings):
     res = client.post(url, data=json.dumps(data), content_type="application/json")
     assert res.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        res.json()["detail"] == "The project has reached the maximum allowed segments."
+        res.json()["project"] == "The project has reached the maximum allowed segments."
     )
     assert project.segments.count() == 1
 

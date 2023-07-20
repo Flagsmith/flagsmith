@@ -1,10 +1,12 @@
 import typing
 
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
+from projects.models import Project
 from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
 
 
@@ -52,18 +54,23 @@ class SegmentSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """
-        Override create method to create segment with nested rules and conditions
+        project = validated_data["project"]
+        self.validate_project_segment_limit(project)
 
-        :param validated_data: validated json data
-        :return: created Segment object
-        """
         rules_data = validated_data.pop("rules", [])
+
+        # create segment with nested rules and conditions
         segment = Segment.objects.create(**validated_data)
         self._update_or_create_segment_rules(
             rules_data, segment=segment, is_create=True
         )
         return segment
+
+    def validate_project_segment_limit(self, project: Project) -> None:
+        if project.segments.count() >= settings.MAX_SEGMENTS_ALLOWED:
+            raise ValidationError(
+                {"project": "The project has reached the maximum allowed segments."}
+            )
 
     def update(self, instance, validated_data):
         # use the initial data since we need the ids included to determine which to update & which to create

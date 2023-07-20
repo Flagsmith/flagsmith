@@ -1,11 +1,13 @@
 import typing
 
 import django.core.exceptions
+from django.conf import settings
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
@@ -427,3 +429,21 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
         return kwargs
+
+    def create(self, validated_data):
+        environment = validated_data["environment"]
+        self.validate_environment_segment_override_limit(environment)
+        return super().create(validated_data)
+
+    def validate_environment_segment_override_limit(
+        self, environment: Environment
+    ) -> None:
+        if (
+            environment.feature_segments.count()
+            >= settings.MAX_SEGMENT_OVERRIDE_ALLOWED
+        ):
+            raise serializers.ValidationError(
+                {
+                    "environment": "The environment has reached the maximum allowed segments overrides."
+                }
+            )
