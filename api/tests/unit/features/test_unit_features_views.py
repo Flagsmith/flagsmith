@@ -777,3 +777,62 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["count"] == 1
     assert response_json["results"][0]["num_segment_overrides"] == 1
     assert response_json["results"][0]["num_identity_overrides"] is None
+
+
+def test_create_segment_override_reaching_max_limit(
+    admin_client, feature, segment, environment, settings
+):
+    # Given
+    settings.MAX_SEGMENT_OVERRIDE_ALLOWED = 1
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    data = {
+        "feature_state_value": {"string_value": "value"},
+        "enabled": True,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # Now, crate the first override
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # Then
+    # Try to create another override
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["environment"]
+        == "The environment has reached the maximum allowed segments overrides."
+    )
+    assert environment.feature_segments.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_feature_reaching_max_limit(client, project, settings):
+    # Given
+    settings.MAX_FEATURES_ALLOWED = 1
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Now, crate the first feature
+    response = client.post(url, data={"name": "test_feature", "project": project.id})
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # Then
+    # Try to create another feature
+    response = client.post(url, data={"name": "second_feature", "project": project.id})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["project"]
+        == "The Project has reached the maximum allowed features."
+    )

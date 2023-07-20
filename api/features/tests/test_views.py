@@ -813,39 +813,3 @@ def test_create_segment_override(admin_client, feature, segment, environment):
     assert created_override is not None
     assert created_override.enabled is enabled
     assert created_override.get_feature_state_value() == string_value
-
-
-def test_create_segment_override_reaching_max_limit(
-    admin_client, feature, segment, environment, settings
-):
-    # Given
-    settings.MAX_SEGMENT_OVERRIDE_ALLOWED = 1
-    url = reverse(
-        "api-v1:environments:create-segment-override",
-        args=[environment.api_key, feature.id],
-    )
-
-    data = {
-        "feature_state_value": {"string_value": "value"},
-        "enabled": True,
-        "feature_segment": {"segment": segment.id},
-    }
-
-    # Now, crate the first override
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
-
-    # Then
-    # Try to create another override
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert (
-        response.json()["environment"]
-        == "The environment has reached the maximum allowed segments overrides."
-    )
-    assert environment.feature_segments.count() == 1

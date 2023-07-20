@@ -11,6 +11,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from projects.models import Project
 from users.serializers import UserIdsSerializer, UserListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -122,6 +123,9 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
+        project = self.context["project"]
+        self.validate_project_features_limit(project)
+
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
@@ -129,6 +133,12 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         if user and not user.is_anonymous:
             instance.owners.add(user)
         return instance
+
+    def validate_project_features_limit(self, project: Project) -> None:
+        if project.features.count() >= settings.MAX_FEATURES_ALLOWED:
+            raise serializers.ValidationError(
+                {"project": "The Project has reached the maximum allowed features."}
+            )
 
     def validate_multivariate_options(self, multivariate_options):
         if multivariate_options:
