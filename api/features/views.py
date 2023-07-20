@@ -720,6 +720,7 @@ def create_segment_override(
 ):
     environment = get_object_or_404(Environment, api_key=environment_api_key)
     feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
+
     serializer = CreateSegmentOverrideFeatureStateSerializer(
         data=request.data, context={"environment": environment, "feature": feature}
     )

@@ -122,7 +122,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             data["initial_value"] = str(data["initial_value"])
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Feature:
         project = self.context["project"]
         self.validate_project_features_limit(project)
 
@@ -137,7 +137,9 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
     def validate_project_features_limit(self, project: Project) -> None:
         if project.features.count() >= settings.MAX_FEATURES_ALLOWED:
             raise serializers.ValidationError(
-                {"project": "The Project has reached the maximum allowed features."}
+                {
+                    "project": "The Project has reached the maximum allowed features limit."
+                }
             )
 
     def validate_multivariate_options(self, multivariate_options):
@@ -440,7 +442,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             kwargs["environment"] = self.context.get("environment")
         return kwargs
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> FeatureState:
         environment = validated_data["environment"]
         self.validate_environment_segment_override_limit(environment)
         return super().create(validated_data)
@@ -454,6 +456,6 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
         ):
             raise serializers.ValidationError(
                 {
-                    "environment": "The environment has reached the maximum allowed segments overrides."
+                    "environment": "The environment has reached the maximum allowed segments overrides limit."
                 }
             )
