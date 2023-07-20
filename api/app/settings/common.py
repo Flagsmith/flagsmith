@@ -894,6 +894,8 @@ DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
 
-MAX_SEGMENTS_ALLOWED = env.int("MAX_SEGMENTS_ALLOWED", 100)
-MAX_SEGMENT_OVERRIDE_ALLOWED = env.int("MAX_SEGMENT_OVERRIDE_ALLOWED", 100)
-MAX_FEATURES_ALLOWED = env.int("MAX_FEATURES_ALLOWED", 100)
+# The defaults were set based on data from the production database.
+# These limits should ideally be reduced in the future.
+MAX_SEGMENTS_ALLOWED = env.int("MAX_SEGMENTS_ALLOWED", 200)
+MAX_SEGMENT_OVERRIDE_ALLOWED = env.int("MAX_SEGMENT_OVERRIDE_ALLOWED", 350)
+MAX_FEATURES_ALLOWED = env.int("MAX_FEATURES_ALLOWED", 400)
