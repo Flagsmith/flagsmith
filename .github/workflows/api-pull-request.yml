@@ -6,6 +6,12 @@ on:
       - api/**
       - .github/**
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - .github/**
+    branches:
+      - main
 
 defaults:
   run:
@@ -64,3 +70,11 @@ jobs:
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: PYTHON
