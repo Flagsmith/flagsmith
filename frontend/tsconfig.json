@@ -18,13 +18,13 @@
     "skipLibCheck": true,
     "paths": {
       "common/*": [
-        "./frontend/common/*"
+        "./common/*"
       ],
       "components/*": [
-        "./frontend/web/components/*"
+        "./web/components/*"
       ],
       "project/*": [
-        "./frontend/web/project/*"
+        "./web/project/*"
       ]
     }
   },

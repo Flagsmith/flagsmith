@@ -8,6 +8,7 @@ module.exports = {
     'eslint:recommended',
     'plugin:react/recommended',
     'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
     'plugin:@dword-design/import-alias/recommended',
   ],
   'globals': {
@@ -28,7 +29,6 @@ module.exports = {
     'CodeHelp': true,
     'Column': true,
     'Cookies': true,
-    'DYNATRACE_URL': true,
     'Dispatcher': true,
     'E2E': true,
     'ES6Component': true,
@@ -77,7 +77,6 @@ module.exports = {
     'closeModal2': true,
     'delighted': true,
     'describe': true,
-    'dtrum': true,
     'em': true,
     'flagsmith': true,
     'ga': true,
@@ -100,11 +99,7 @@ module.exports = {
     'window': true,
     'zE': true,
   },
-  'ignorePatterns': [
-    'frontend/server/index.js',
-    'frontend/next.config.js',
-    'frontend/babel.config.js',
-  ],
+  'ignorePatterns': ['server/index.js', 'next.config.js', 'babel.config.js'],
   'parser': '@typescript-eslint/parser',
   'parserOptions': {
     'ecmaFeatures': {
@@ -126,9 +121,9 @@ module.exports = {
       'error',
       {
         'alias': {
-          'common': './frontend/common/',
-          'components': './frontend/web/components/',
-          'project': './frontend/web/project/',
+          'common': './common/',
+          'components': './web/components/',
+          'project': './web/project/',
         },
       },
     ],
