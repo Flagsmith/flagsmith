@@ -58,21 +58,20 @@ export default class Feature extends PureComponent {
     )
     return (
       <div>
-        <FormGroup className='mb-4 mr-3 ml-3'>
-          <div>
-            <label>{enabledString || 'Enabled'}</label>
-          </div>
+        <FormGroup className='mb-4 flex-row'>
           <Switch
             data-test='toggle-feature-button'
             defaultChecked={checked}
             disabled={disabled || readOnly}
             checked={!disabled && checked}
             onChange={onCheckedChange}
+            className='ml-0'
           />
+          <div className='label-switch ml-3'>{enabledString || 'Enabled'}</div>
         </FormGroup>
 
         {showValue && (
-          <FormGroup className='mx-3 mb-4 mr-3'>
+          <FormGroup className='mb-4'>
             <InputGroup
               component={
                 <ValueEditor
@@ -100,7 +99,7 @@ export default class Feature extends PureComponent {
         )}
         {!!identity && (
           <div>
-            <FormGroup className='mb-4 mx-3'>
+            <FormGroup className='mb-4'>
               <VariationOptions
                 disabled
                 select
@@ -118,7 +117,7 @@ export default class Feature extends PureComponent {
         )}
         {!identity && (
           <div>
-            <FormGroup className='ml-3 mb-4 mr-3'>
+            <FormGroup className='mb-0'>
               {(!!environmentVariations || !isEdit) && (
                 <VariationOptions
                   disabled={!!identity || readOnly}

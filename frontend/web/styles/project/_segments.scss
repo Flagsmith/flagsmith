@@ -1,15 +1,31 @@
-.reveal {
-  .reveal--child {
-    opacity:0;
-    @include transition(all 200ms);
-  }
-  &:hover {
-    .reveal--child {
-      opacity:1;
+.panel-rule {
+    border-radius: $border-radius-lg;
+    background-color: $bg-light200;
+    .react-select {
+        font-weight: normal;
+        width: 200px;
+        .react-select__input input {
+            font-weight: normal;
+        }
+        &__menu {
+            font-weight: normal;
+        }
+        &__option {
+            &:hover {
+                background: $primary-alfa-8 !important;
+                color: $text-icon-dark !important;
+            }
+        }
     }
+
+}
+.dark{
+  .panel-rule{
+    background-color: $bg-dark300;
   }
 }
 
-.rule {
+.create-segment-overrides:first-child{
+    margin: -.5rem -1.5rem -1rem !important;
 }
 

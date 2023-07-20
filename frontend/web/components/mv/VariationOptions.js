@@ -31,7 +31,7 @@ export default function VariationOptions({
         <ErrorMessage error='Your variation percentage splits total to over 100%' />
       )}
       {!preventRemove && (
-        <p>
+        <p className='mb-4'>
           <InfoMessage>
             Variation values are shared amongst environments, their weights are
             specific to this Environment.

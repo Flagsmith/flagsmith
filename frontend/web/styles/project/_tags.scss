@@ -9,13 +9,18 @@
         .chip-icon {
             margin-left: 5px;
         }
-        width: 54px;
+        width: 70px;
         line-height: 32px;
-        height: 32px;
+
         user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
         -webkit-user-select: none;
+        .chip {
+            margin: 0 !important;
+            height: 48px;
+            justify-content: center;
+        }
     }
 }
 .tag-filter {
@@ -63,7 +68,6 @@
     -ms-user-select: none;
     -webkit-user-select: none;
     &:last-child {
-
     }
 }
 

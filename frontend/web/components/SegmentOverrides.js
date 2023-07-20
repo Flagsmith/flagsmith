@@ -499,12 +499,12 @@ class TheComponent extends Component {
 
     return (
       <div>
-        <div className='text-center mt-2 mb-2'>
+        <div className='mt-2 mb-2'>
           {!this.props.id &&
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly && (
-              <Flex className='text-left'>
+              <Flex className='text-left mb-4'>
                 <SegmentSelect
                   projectId={this.props.projectId}
                   data-test='select-segment'
@@ -533,7 +533,7 @@ class TheComponent extends Component {
               </div>
             )}
           {this.props.showCreateSegment && !this.state.segmentEditId && (
-            <div className='text-left panel--grey mt-2'>
+            <div className='create-segment-overrides'>
               <CreateSegmentModal
                 onComplete={(segment) => {
                   if (this.state.selectedSegment) {
@@ -559,7 +559,7 @@ class TheComponent extends Component {
                 environmentId={this.props.environmentId}
                 projectId={this.props.projectId}
               />
-            </div>
+             </div>
           )}
           {this.props.showCreateSegment && this.state.segmentEditId && (
             <CreateSegmentModal
