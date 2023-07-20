@@ -654,7 +654,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         new_max_projects = 3
 
         # When
-        res, subscription_information_cache = self.mock_subscription_plan_data(
+        res, subscription_information_cache = self.mocked_subscription_plan_data(
             plan_id=new_plan_id,
             max_seats=new_max_seats,
             max_api_calls=new_max_api_calls,
@@ -685,7 +685,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         chargebee_updated_at = datetime.now(tz=UTC) - timedelta(days=1)
 
         # When
-        res, subscription_information_cache = self.mock_subscription_plan_data(
+        res, subscription_information_cache = self.mocked_subscription_plan_data(
             plan_id=new_plan_id,
             max_seats=new_max_seats,
             max_api_calls=new_max_api_calls,
