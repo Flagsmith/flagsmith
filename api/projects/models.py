@@ -62,13 +62,13 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         help_text="Used for validating feature names",
     )
     max_segments_allowed = models.IntegerField(
-        default=200, help_text="Max segments allowed for this project"
+        default=100, help_text="Max segments allowed for this project"
     )
     max_features_allowed = models.IntegerField(
         default=400, help_text="Max features allowed for this project"
     )
     max_segments_overrides_allowed = models.IntegerField(
-        default=350,
+        default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
 
