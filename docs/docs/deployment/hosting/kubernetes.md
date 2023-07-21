@@ -381,18 +381,18 @@ The following table lists the configurable parameters of the chart and their def
 | `databaseExternal.urlFromExistingSecret.enabled`   | Reference an existing secret containing the database URL         |                                |
 | `databaseExternal.urlFromExistingSecret.name`      | Name of referenced secret                                        |                                |
 | `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secrt to use                           |                                |
-| `influxdb.enabled`                                 |                                                                  | `true`                         |
-| `influxdb.nameOverride`                            |                                                                  | `influxdb`                     |
-| `influxdb.image.repository`                        | docker image repository for influxdb                             | `quay.io/influxdb/influxdb`    |
-| `influxdb.image.tag`                               | docker image tag for influxdb                                    | `v2.0.2`                       |
-| `influxdb.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
-| `influxdb.image.imagePullSecrets`                  |                                                                  | `[]`                           |
-| `influxdb.adminUser.organization`                  |                                                                  | `influxdata`                   |
-| `influxdb.adminUser.bucket`                        |                                                                  | `default`                      |
-| `influxdb.adminUser.user`                          |                                                                  | `admin`                        |
-| `influxdb.adminUser.password`                      |                                                                  | randomly generated             |
-| `influxdb.adminUser.token`                         |                                                                  | randomly generated             |
-| `influxdb.persistence.enabled`                     |                                                                  | `false`                        |
+| `influxdb2.enabled`                                |                                                                  | `true`                         |
+| `influxdb2.nameOverride`                           |                                                                  | `influxdb`                     |
+| `influxdb2.image.repository`                       | docker image repository for influxdb                             | `quay.io/influxdb/influxdb`    |
+| `influxdb2.image.tag`                              | docker image tag for influxdb                                    | `v2.0.2`                       |
+| `influxdb2.image.imagePullPolicy`                  |                                                                  | `IfNotPresent`                 |
+| `influxdb2.image.imagePullSecrets`                 |                                                                  | `[]`                           |
+| `influxdb2.adminUser.organization`                 |                                                                  | `influxdata`                   |
+| `influxdb2.adminUser.bucket`                       |                                                                  | `default`                      |
+| `influxdb2.adminUser.user`                         |                                                                  | `admin`                        |
+| `influxdb2.adminUser.password`                     |                                                                  | randomly generated             |
+| `influxdb2.adminUser.token`                        |                                                                  | randomly generated             |
+| `influxdb2.persistence.enabled`                    |                                                                  | `false`                        |
 | `influxdb.resources`                               | resources per pod for the influxdb                               | `{}`                           |
 | `influxdb.nodeSelector`                            |                                                                  | `{}`                           |
 | `influxdb.tolerations`                             |                                                                  | `[]`                           |
