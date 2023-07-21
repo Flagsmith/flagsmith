@@ -1,3 +1,4 @@
+import itertools
 from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
@@ -25,6 +26,7 @@ from flag_engine.segments.models import (
 )
 
 from features.models import FeatureState
+from util.mappers.exceptions import MappingError
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
@@ -209,6 +211,21 @@ def map_environment_to_engine(
     )
 
     # No reading from ORM past this point!
+
+    # Validation
+    if (
+        len(project_segments) > project.max_segments_allowed
+        or len(all_environment_feature_states) > project.max_features_allowed
+        or len(
+            list(
+                itertools.chain.from_iterable(
+                    project_segment_feature_states_by_segment_id.values()
+                )
+            )
+        )
+        > project.max_segments_overrides_allowed
+    ):
+        raise MappingError("Environment exceeds size limits.")
 
     # Prepare relationships.
     organisation_model = OrganisationModel(
