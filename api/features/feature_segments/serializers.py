@@ -14,7 +14,7 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
         environment = data["environment"]
         if (
             environment.feature_segments.count()
-            >= environment.project.max_segments_overrides_allowed
+            >= environment.project.max_segment_overrides_allowed
         ):
             raise serializers.ValidationError(
                 {

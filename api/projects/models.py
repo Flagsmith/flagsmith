@@ -67,7 +67,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     max_features_allowed = models.IntegerField(
         default=400, help_text="Max features allowed for this project"
     )
-    max_segments_overrides_allowed = models.IntegerField(
+    max_segment_overrides_allowed = models.IntegerField(
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
@@ -88,7 +88,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
-            .filter(segment_override_count__gt=self.max_segments_overrides_allowed)
+            .filter(segment_override_count__gt=self.max_segment_overrides_allowed)
             .exists()
         )
 

@@ -280,7 +280,7 @@ def test_creating_segment_override_reaching_max_limit(
     client, segment, environment, project, feature, feature_based_segment
 ):
     # Given
-    project.max_segments_overrides_allowed = 1
+    project.max_segment_overrides_allowed = 1
     project.save()
 
     data = {

@@ -783,7 +783,7 @@ def test_create_segment_override_reaching_max_limit(
     admin_client, feature, segment, project, environment, settings
 ):
     # Given
-    project.max_segments_overrides_allowed = 1
+    project.max_segment_overrides_allowed = 1
     project.save()
 
     url = reverse(

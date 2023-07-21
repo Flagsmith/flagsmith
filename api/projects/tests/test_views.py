@@ -597,7 +597,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_ov
 ):
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
-    project.max_segments_overrides_allowed = 1
+    project.max_segment_overrides_allowed = 1
     project.save()
 
     # let's create another feature segment

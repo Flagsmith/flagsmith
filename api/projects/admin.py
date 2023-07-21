@@ -65,5 +65,5 @@ class ProjectAdmin(admin.ModelAdmin):
         "enable_realtime_updates",
         "max_segments_allowed",
         "max_features_allowed",
-        "max_segments_overrides_allowed",
+        "max_segment_overrides_allowed",
     )

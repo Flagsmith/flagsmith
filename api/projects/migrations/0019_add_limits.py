@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="project",
-            name="max_segments_overrides_allowed",
+            name="max_segment_overrides_allowed",
             field=models.IntegerField(
                 default=100,
                 help_text="Max segments overrides allowed for any (one) environment within this project",
