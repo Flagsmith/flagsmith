@@ -329,6 +329,11 @@ def view_project_permission():
 
 
 @pytest.fixture()
+def create_project_permission():
+    return PermissionModel.objects.get(key=CREATE_PROJECT)
+
+
+@pytest.fixture()
 def user_environment_permission(test_user, environment):
     return UserEnvironmentPermission.objects.create(
         user=test_user, environment=environment
@@ -429,11 +434,6 @@ def environment_content_type():
 @pytest.fixture()
 def project_content_type():
     return ContentType.objects.get_for_model(Project)
-
-
-@pytest.fixture
-def create_project_permission(db):
-    return OrganisationPermissionModel.objects.get(key=CREATE_PROJECT)
 
 
 @pytest.fixture
