@@ -10,5 +10,6 @@ pre-commit
 pytest-mock
 pytest-lazy-fixture
 moto
+pytest-cov
 pytest-freezegun
 pytest-xdist
