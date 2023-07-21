@@ -780,10 +780,12 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
 
 
 def test_create_segment_override_reaching_max_limit(
-    admin_client, feature, segment, environment, settings
+    admin_client, feature, segment, project, environment, settings
 ):
     # Given
-    settings.MAX_SEGMENT_OVERRIDE_ALLOWED = 1
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
     url = reverse(
         "api-v1:environments:create-segment-override",
         args=[environment.api_key, feature.id],
@@ -820,7 +822,7 @@ def test_create_segment_override_reaching_max_limit(
 )
 def test_create_feature_reaching_max_limit(client, project, settings):
     # Given
-    settings.MAX_FEATURES_ALLOWED = 1
+    project.max_features_allowed = 1
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 

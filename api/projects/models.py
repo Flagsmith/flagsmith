@@ -61,6 +61,16 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         max_length=255,
         help_text="Used for validating feature names",
     )
+    max_segments_allowed = models.IntegerField(
+        default=200, help_text="Max segments allowed for this project"
+    )
+    max_features_allowed = models.IntegerField(
+        default=400, help_text="Max features allowed for this project"
+    )
+    max_segments_overrides_allowed = models.IntegerField(
+        default=350,
+        help_text="Max segments overrides allowed for any (one) environment within this project",
+    )
 
     objects = ProjectManager()
 
@@ -73,12 +83,12 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     @property
     def is_too_large(self) -> bool:
         return (
-            self.features.count() > settings.MAX_FEATURES_ALLOWED
-            or self.segments.count() > settings.MAX_SEGMENTS_ALLOWED
+            self.features.count() > self.max_features_allowed
+            or self.segments.count() > self.max_segments_allowed
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
-            .filter(segment_override_count__gt=settings.MAX_SEGMENT_OVERRIDE_ALLOWED)
+            .filter(segment_override_count__gt=self.max_segments_overrides_allowed)
             .exists()
         )
 

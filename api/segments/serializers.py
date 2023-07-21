@@ -1,6 +1,5 @@
 import typing
 
-from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
@@ -67,7 +66,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         return segment
 
     def validate_project_segment_limit(self, project: Project) -> None:
-        if project.segments.count() >= settings.MAX_SEGMENTS_ALLOWED:
+        if project.segments.count() >= project.max_segments_allowed:
             raise ValidationError(
                 {
                     "project": "The project has reached the maximum allowed segments limit."

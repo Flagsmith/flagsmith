@@ -107,7 +107,8 @@ def test_can_create_segments_with_condition_that_has_null_value(project, client)
 def test_create_segments_reaching_max_limit(project, client, settings):
     # Given
     # let's reduce the max segments allowed to 1
-    settings.MAX_SEGMENTS_ALLOWED = 1
+    project.max_segments_allowed = 1
+    project.save()
 
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {

@@ -1,7 +1,6 @@
 import typing
 
 import django.core.exceptions
-from django.conf import settings
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -135,7 +134,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         return instance
 
     def validate_project_features_limit(self, project: Project) -> None:
-        if project.features.count() >= settings.MAX_FEATURES_ALLOWED:
+        if project.features.count() >= project.max_features_allowed:
             raise serializers.ValidationError(
                 {
                     "project": "The Project has reached the maximum allowed features limit."
@@ -452,7 +451,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     ) -> None:
         if (
             environment.feature_segments.count()
-            >= settings.MAX_SEGMENT_OVERRIDE_ALLOWED
+            >= environment.project.max_segment_overrides_allowed
         ):
             raise serializers.ValidationError(
                 {

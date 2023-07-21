@@ -540,7 +540,9 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_features(
 ):
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
-    settings.MAX_FEATURES_ALLOWED = 1
+    project.max_features_allowed = 1
+    project.save()
+
     mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
 
     url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
@@ -566,7 +568,9 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segments(
 ):
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
-    settings.MAX_SEGMENTS_ALLOWED = 1
+    project.max_segments_allowed = 1
+    project.save()
+
     mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
 
     url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
@@ -593,7 +597,9 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_ov
 ):
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
-    settings.MAX_SEGMENT_OVERRIDE_ALLOWED = 1
+    project.max_segments_overrides_allowed = 1
+    project.save()
+
     # let's create another feature segment
     FeatureSegment.objects.create(
         feature=multivariate_feature, segment=segment, environment=environment

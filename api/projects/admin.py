@@ -63,4 +63,7 @@ class ProjectAdmin(admin.ModelAdmin):
         "hide_disabled_flags",
         "enable_dynamo_db",
         "enable_realtime_updates",
+        "max_segments_allowed",
+        "max_features_allowed",
+        "max_segments_overrides_allowed",
     )
