@@ -271,3 +271,38 @@ def test_creating_segment_override_for_feature_based_segment_returns_201_for_cor
     response = client.post(url, data=json.dumps(data), content_type="application/json")
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_creating_segment_override_reaching_max_limit(
+    client, segment, environment, project, feature, feature_based_segment
+):
+    # Given
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    data = {
+        "feature": feature.id,
+        "segment": segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+    # let's create the first segment override
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # Then - Try to create another override
+    data = {
+        "feature": feature.id,
+        "segment": feature_based_segment.id,
+        "environment": environment.id,
+    }
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["environment"][0]
+        == "The environment has reached the maximum allowed segments overrides limit."
+    )
+    assert environment.feature_segments.count() == 1

@@ -7,6 +7,7 @@ from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
+from django.db.models import Count
 from django.utils import timezone
 from django_lifecycle import (
     AFTER_SAVE,
@@ -60,6 +61,16 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         max_length=255,
         help_text="Used for validating feature names",
     )
+    max_segments_allowed = models.IntegerField(
+        default=100, help_text="Max segments allowed for this project"
+    )
+    max_features_allowed = models.IntegerField(
+        default=400, help_text="Max features allowed for this project"
+    )
+    max_segment_overrides_allowed = models.IntegerField(
+        default=100,
+        help_text="Max segments overrides allowed for any (one) environment within this project",
+    )
 
     objects = ProjectManager()
 
@@ -68,6 +79,18 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def __str__(self):
         return "Project %s" % self.name
+
+    @property
+    def is_too_large(self) -> bool:
+        return (
+            self.features.count() > self.max_features_allowed
+            or self.segments.count() > self.max_segments_allowed
+            or self.environments.annotate(
+                segment_override_count=Count("feature_segments")
+            )
+            .filter(segment_override_count__gt=self.max_segment_overrides_allowed)
+            .exists()
+        )
 
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)

@@ -24,6 +24,7 @@ from permissions.serializers import (
 from projects.exceptions import (
     DynamoNotEnabledError,
     ProjectMigrationError,
+    ProjectTooLargeError,
     TooManyIdentitiesError,
 )
 from projects.models import (
@@ -163,6 +164,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise DynamoNotEnabledError()
 
         project = self.get_object()
+        if project.is_too_large:
+            raise ProjectTooLargeError()
+
         identity_count = Identity.objects.filter(environment__project=project).count()
 
         if identity_count > settings.MAX_SELF_MIGRATABLE_IDENTITIES:
