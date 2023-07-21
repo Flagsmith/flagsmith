@@ -451,7 +451,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     ) -> None:
         if (
             environment.feature_segments.count()
-            >= environment.project.max_segment_overrides_allowed
+            >= environment.project.max_segments_overrides_allowed
         ):
             raise serializers.ValidationError(
                 {
