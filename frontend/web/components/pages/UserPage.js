@@ -36,8 +36,8 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      showArchived: false,
       preselect: Utils.fromParam().flag,
+      showArchived: false,
       tags: [],
     }
   }
