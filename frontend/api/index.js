@@ -201,7 +201,7 @@ window.enableDynatrace = true;
 if (process.env.FLAGSMITH_PROXY_API_URL) {
   const { createProxyMiddleware } = require('http-proxy-middleware')
   app.use(
-    '/api/v1/',
+    ['/api/v1/', '/admin/', '/admin'],
     createProxyMiddleware({
       changeOrigin: true,
       target: process.env.FLAGSMITH_PROXY_API_URL,
