@@ -4,25 +4,31 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0018_add_unique_permission_constraint'),
+        ("projects", "0018_add_unique_permission_constraint"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='project',
-            name='max_features_allowed',
-            field=models.IntegerField(default=400, help_text='Max features allowed for this project'),
+            model_name="project",
+            name="max_features_allowed",
+            field=models.IntegerField(
+                default=400, help_text="Max features allowed for this project"
+            ),
         ),
         migrations.AddField(
-            model_name='project',
-            name='max_segments_allowed',
-            field=models.IntegerField(default=200, help_text='Max segments allowed for this project'),
+            model_name="project",
+            name="max_segments_allowed",
+            field=models.IntegerField(
+                default=100, help_text="Max segments allowed for this project"
+            ),
         ),
         migrations.AddField(
-            model_name='project',
-            name='max_segments_overrides_allowed',
-            field=models.IntegerField(default=350, help_text='Max segments overrides allowed for any (one) environment within this project'),
+            model_name="project",
+            name="max_segments_overrides_allowed",
+            field=models.IntegerField(
+                default=100,
+                help_text="Max segments overrides allowed for any (one) environment within this project",
+            ),
         ),
     ]
