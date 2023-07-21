@@ -1205,7 +1205,7 @@ const OrganisationSettingsPage = class extends Component {
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
-                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
