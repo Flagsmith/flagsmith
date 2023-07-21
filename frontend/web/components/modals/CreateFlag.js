@@ -1469,7 +1469,7 @@ const CreateFlag = class extends Component {
                                 {!identity && (
                                   <div className='text-right mr-3 mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <p className='text-right'>
+                                      <p className='text-right text-dark fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1477,7 +1477,7 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </p>
                                     ) : (
-                                      <p className='text-right'>
+                                      <p className='text-right text-dark fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
