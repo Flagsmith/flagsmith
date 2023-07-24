@@ -104,7 +104,7 @@
                     "value": "True"
                 },
                 {
-                    "name": "TASK_RETENTION_DAYS",
+                    "name": "TASK_DELETE_RETENTION_DAYS",
                     "value": "280"
                 },
                 {

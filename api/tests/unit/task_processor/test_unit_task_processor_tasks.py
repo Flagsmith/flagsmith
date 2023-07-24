@@ -24,7 +24,7 @@ def test_clean_up_old_tasks(settings, django_assert_num_queries, db):
     one_day_ago = now - timedelta(days=1)
     one_hour_from_now = now + timedelta(hours=1)
 
-    settings.TASK_RETENTION_DAYS = 2
+    settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_BATCH_SIZE = 1
 
     # 2 completed tasks that were scheduled before retention period
@@ -76,7 +76,7 @@ def test_clean_up_old_tasks_include_failed_tasks(
     # Given
     three_days_ago = timezone.now() - timedelta(days=3)
 
-    settings.TASK_RETENTION_DAYS = 2
+    settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_INCLUDE_FAILED_TASKS = True
 
     # a task that failed
