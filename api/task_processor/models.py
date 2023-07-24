@@ -44,9 +44,12 @@ class AbstractBaseTask(models.Model):
         return json.loads(data)
 
     def mark_failure(self):
-        self.is_locked = False
+        self.unlock()
 
     def mark_success(self):
+        self.unlock()
+
+    def unlock(self):
         self.is_locked = False
 
     def run(self):
@@ -119,7 +122,7 @@ class Task(AbstractBaseTask):
         self.num_failures += 1
 
     def mark_success(self):
-        super().mark_failure()
+        super().mark_success()
         self.completed = True
 
 
