@@ -24,10 +24,12 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
+from features.models import FeatureState
+
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import Feature, FeatureSegment, FeatureState
+    from features.models import Feature, FeatureSegment
     from features.multivariate.models import (
         MultivariateFeatureOption,
         MultivariateFeatureStateValue,
@@ -171,12 +173,14 @@ def map_environment_to_engine(
         project_segments,
         environment.pk,
     )
-    environment_feature_states: List["FeatureState"] = [
-        feature_state
-        for feature_state in environment.feature_states.all()
-        if feature_state.feature_segment_id is None
-        and feature_state.identity_id is None
-    ]
+    environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
+        [
+            feature_state
+            for feature_state in environment.feature_states.all()
+            if feature_state.feature_segment_id is None
+            and feature_state.identity_id is None
+        ]
+    )
     all_environment_feature_states = (
         *environment_feature_states,
         *chain(*project_segment_feature_states_by_segment_id.values()),
@@ -187,17 +191,19 @@ def map_environment_to_engine(
     }
 
     # Read integrations.
-    integration_configs: dict[str, Optional["EnvironmentIntegrationModel"]] = {
-        attr_name: getattr(environment, attr_name, None)
-        for attr_name in (
-            "amplitude_config",
-            "dynatrace_config",
-            "heap_config",
-            "mixpanel_config",
-            "rudderstack_config",
-            "segment_config",
-        )
-    }
+    integration_configs: dict[str, Optional["EnvironmentIntegrationModel"]] = {}
+    for attr_name in (
+        "amplitude_config",
+        "dynatrace_config",
+        "heap_config",
+        "mixpanel_config",
+        "rudderstack_config",
+        "segment_config",
+    ):
+        integration_config = getattr(environment, attr_name, None)
+        if integration_config and not integration_config.deleted:
+            integration_configs[attr_name] = integration_config
+
     webhook_config: Optional["WebhookConfiguration"] = getattr(
         environment, "webhook_config", None
     )
@@ -257,25 +263,30 @@ def map_environment_to_engine(
 
     # Prepare integrations.
     amplitude_config_model = map_integration_to_engine(
-        integration_configs.pop("amplitude_config"),
+        integration_configs.pop("amplitude_config", None),
     )
     dynatrace_config_model = map_integration_to_engine(
-        integration_configs.pop("dynatrace_config"),
+        integration_configs.pop("dynatrace_config", None),
     )
     heap_config_model = map_integration_to_engine(
-        integration_configs.pop("heap_config"),
+        integration_configs.pop("heap_config", None),
     )
     mixpanel_config_model = map_integration_to_engine(
-        integration_configs.pop("mixpanel_config"),
+        integration_configs.pop("mixpanel_config", None),
     )
     rudderstack_config_model = map_integration_to_engine(
-        integration_configs.pop("rudderstack_config"),
+        integration_configs.pop("rudderstack_config", None),
     )
     segment_config_model = map_integration_to_engine(
-        integration_configs.pop("segment_config"),
+        integration_configs.pop("segment_config", None),
     )
-    webhook_config_model = map_webhook_config_to_engine(
-        webhook_config,
+
+    webhook_config_model = (
+        map_webhook_config_to_engine(
+            webhook_config,
+        )
+        if webhook_config and not webhook_config.deleted
+        else None
     )
 
     return EnvironmentModel(

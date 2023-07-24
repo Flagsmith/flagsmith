@@ -11,7 +11,10 @@ const controller = {
     return data
       .post(`${Project.api}users/join/link/${id}/`)
       .catch((error) => {
-        if (error.status === 400) {
+        if (
+          Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
+          error.status === 400
+        ) {
           API.ajaxHandler(store, error)
           return
         }
@@ -302,7 +305,7 @@ const controller = {
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
-      API.alias(user.email)
+      API.alias(user.email, user)
       API.identify(user && user.email, user)
       store.loaded()
     } else if (!user) {
@@ -415,6 +418,9 @@ const store = Object.assign({}, BaseStore, {
   },
   getOrganisations() {
     return store.model && store.model.organisations
+  },
+  getPaymentMethod() {
+    return store.organisation?.subscription?.payment_method
   },
   getPlans() {
     if (!store.model) return []

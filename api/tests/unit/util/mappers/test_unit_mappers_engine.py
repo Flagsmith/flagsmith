@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
+import pytz
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -29,6 +30,8 @@ from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
+from integrations.mixpanel.models import MixpanelConfiguration
+from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from util.mappers import engine
@@ -292,6 +295,13 @@ def test_map_environment_to_engine__return_expected(
         environment=environment,
         version=None,
     )
+    # create a non-live feature state to verify it is NOT added to
+    # the environment document
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        version=None,
+    )
     different_environment_segment_feature_state = FeatureState.objects.create(
         feature_segment=FeatureSegment.objects.create(
             feature=feature,
@@ -301,6 +311,18 @@ def test_map_environment_to_engine__return_expected(
         feature=feature,
         environment=environment_2,
     )
+    mixpanel_configuration = MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key="some-key",
+    )
+    webhook_configuration = WebhookConfiguration.objects.create(
+        environment=environment, url="https://my.webhook.com/webhook"
+    )
+    deleted_segment_configuration = SegmentConfiguration.objects.create(
+        environment=environment,
+        api_key="some-key",
+    )
+    deleted_segment_configuration.delete()
 
     expected_feature_model = FeatureModel(
         id=feature.id, name="Test Feature1", type="STANDARD"
@@ -361,10 +383,16 @@ def test_map_environment_to_engine__return_expected(
         amplitude_config=None,
         dynatrace_config=None,
         heap_config=None,
-        mixpanel_config=None,
+        mixpanel_config={
+            "base_url": mixpanel_configuration.base_url,
+            "api_key": mixpanel_configuration.api_key,
+        },
         rudderstack_config=None,
-        segment_config=None,
-        webhook_config=None,
+        segment_config=None,  # note: segment configuration should not appear as it was deleted
+        webhook_config={
+            "url": webhook_configuration.url,
+            "secret": webhook_configuration.secret,
+        },
     )
 
     # When
@@ -374,7 +402,11 @@ def test_map_environment_to_engine__return_expected(
     ]
 
     # Then
+    assert len(result.feature_states) == 1
+    assert result.feature_states[0].django_id == feature_state.id
+
     assert result == expected_result
+
     assert (
         different_environment_segment_feature_state.uuid
         not in segment_feature_state_uuids
@@ -450,3 +482,48 @@ def test_map_identity_to_engine__return_expected(
 
     # Then
     assert result == expected_result
+
+
+def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(
+    feature, environment
+):
+    # Given
+    v1_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment
+    )
+
+    # Let's simulate an issue that we saw in production where 2 change requests operated on the same
+    # feature. One had a live_from of '2023-03-06 06:00:00.000 +0000' and a version of 16 and the
+    # other had a live_from of '2023-03-12 06:00:00.000 +0000' of 15. Based on the logic in
+    # FeatureState.__gt__(), I would expect that the feature state with the most recent live from,
+    # regardless of the fact that it's a lower version would be returned in the mapper.
+    v16_feature_state = FeatureState.objects.create(  # noqa
+        feature=feature,
+        environment=environment,
+        live_from=datetime.fromisoformat("2023-03-06 06:00:00.000").replace(
+            tzinfo=pytz.UTC
+        ),
+        version=16,
+    )
+    v15_feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        live_from=datetime.fromisoformat("2023-03-12 06:00:00.000").replace(
+            tzinfo=pytz.UTC
+        ),
+        version=15,
+    )
+
+    # we also need to make sure that the live_from value of the v1 feature state is earlier than
+    # the 2 we have set up for our simulation above.
+    v1_feature_state.live_from = datetime.fromisoformat(
+        "2023-03-01 06:00:00.000"
+    ).replace(tzinfo=pytz.UTC)
+    v1_feature_state.save()
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert len(result.feature_states) == 1
+    assert result.feature_states[0].django_id == v15_feature_state.id

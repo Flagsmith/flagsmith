@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -35,6 +35,9 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
     serializer_class = MetadataFieldSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return MetadataField.objects.none()
+
         queryset = MetadataField.objects.filter(organisation__users=self.request.user)
         if self.action == "list":
             serializer = MetadataFieldQuerySerializer(data=self.request.query_params)

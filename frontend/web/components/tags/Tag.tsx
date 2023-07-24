@@ -1,9 +1,10 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import color from 'color'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
+import Utils from 'common/utils/utils'
 
 type TagType = {
   className?: string
@@ -22,15 +23,10 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const [hover, setHover] = useState(false)
-
-  const toggleHover = () => {
-    if (onClick) {
-      setHover(!hover)
-    }
-  }
-
   const getColor = () => {
+    if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
+      return '#9DA4AE'
+    }
     if (selected) {
       return tag.color
     }
@@ -50,30 +46,23 @@ const Tag: FC<TagType> = ({
   }
 
   return (
-    <div
-      onClick={() => onClick?.(tag as TTag)}
-      onMouseEnter={toggleHover}
-      onMouseLeave={toggleHover}
-      style={{
-        backgroundColor: hover
-          ? `${color(getColor()).darken(0.1)}`
-          : getColor(),
-      }}
-      className={cx('tag', { hideNames: hideNames, selected }, className)}
+    <Tooltip
+      title={
+        <div
+          onClick={() => onClick?.(tag as TTag)}
+          style={{
+            backgroundColor: `${color(getColor()).fade(0.92)}`,
+            border: `1px solid ${color(getColor()).fade(0.76)}`,
+            color: `${color(getColor()).darken(0.1)}`,
+          }}
+          className={cx('chip', 'chip--sm', className)}
+        >
+          {tag.label}
+        </div>
+      }
     >
-      <div>
-        {tag.label ? (
-          <Row space>
-            {hideNames ? '' : tag.label}
-            {selected && <span className='icon ion-md-checkmark' />}
-          </Row>
-        ) : (
-          <div className='text-center'>
-            {selected && <span className='icon ion-md-checkmark' />}
-          </div>
-        )}
-      </div>
-    </div>
+      {tag.label}
+    </Tooltip>
   )
 }
 

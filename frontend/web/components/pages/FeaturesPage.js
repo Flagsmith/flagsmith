@@ -88,7 +88,7 @@ const FeaturesPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      'side-modal fade create-feature-modal',
+      'side-modal create-feature-modal',
     )
   }
 
@@ -371,8 +371,11 @@ const FeaturesPage = class extends Component {
                                             this.filter,
                                           )
                                         }}
-                                        className='px-2 py-2 ml-2 mr-2'
-                                        tag={{ label: 'Archived' }}
+                                        className='px-2 py-2 ml-2 mr-2 chip-info'
+                                        tag={{
+                                          color: '#0AADDF',
+                                          label: 'Archived',
+                                        }}
                                       />
                                     </TagFilter>
                                   </Row>

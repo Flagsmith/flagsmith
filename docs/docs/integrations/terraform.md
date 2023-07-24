@@ -1,6 +1,7 @@
 ---
 title: Terraform Provider
 sidebar_label: Terraform
+sidebar_position: 20
 hide_title: true
 ---
 

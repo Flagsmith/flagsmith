@@ -9,7 +9,7 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from django.contrib.sites.shortcuts import get_current_site
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -23,6 +23,7 @@ from organisations.exceptions import (
     SubscriptionNotFound,
 )
 from organisations.models import (
+    Organisation,
     OrganisationRole,
     OrganisationWebhook,
     Subscription,
@@ -43,6 +44,7 @@ from organisations.serializers import (
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
+from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -86,6 +88,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Organisation.objects.none()
         return self.request.user.organisations.all()
 
     def get_throttles(self):
@@ -241,13 +245,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], url_path="my-permissions")
     def my_permissions(self, request, pk):
         org = self.get_object()
-        permission_keys = request.user.get_permission_keys_for_organisation(org)
-        serializer = self.get_serializer(
-            instance={
-                "permissions": permission_keys,
-                "admin": request.user.is_organisation_admin(org),
-            }
+
+        permission_data = get_organisation_permission_data(
+            org.id,
+            user=request.user,
         )
+        serializer = UserObjectPermissionsSerializer(instance=permission_data)
+
         return Response(serializer.data)
 
 
@@ -299,6 +303,9 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixi
     webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return OrganisationWebhook.objects.none()
+
         if "organisation_pk" not in self.kwargs:
             raise ValidationError("Missing required path parameter 'organisation_pk'")
 

@@ -58,8 +58,9 @@ const OrganisationSettingsPage = class extends Component {
 
   confirmRemove = (organisation, cb) => {
     openModal(
-      'Remove Organisation',
+      'Delete Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -74,19 +75,19 @@ const OrganisationSettingsPage = class extends Component {
 
   deleteInvite = (id) => {
     openConfirm(
-      <h3>Delete Invite</h3>,
-      <p>Are you sure you want to delete this invite?</p>,
+      'Delete Invite',
+      <div>Are you sure you want to delete this invite?</div>,
       () => AppActions.deleteInvite(id),
     )
   }
 
   deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Remove User</h3>,
-      <p>
+      'Remove User',
+      <div>
         Are you sure you want to remove the user{' '}
         <strong>{userDisplayName}</strong> from the organisation?
-      </p>,
+      </div>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -179,7 +180,6 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -192,7 +192,6 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -203,6 +202,7 @@ const OrganisationSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 
@@ -218,6 +218,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
+      'p-0',
     )
   }
 
@@ -235,6 +236,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0',
     )
   }
 
@@ -263,6 +265,9 @@ const OrganisationSettingsPage = class extends Component {
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
     const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
+    const verifySeatsLimit = Utils.getFlagsmithHasFeature(
+      'verify_seats_limit_for_invite_links',
+    )
 
     return (
       <div className='app-container container'>
@@ -282,23 +287,26 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const isAWS =
+                    AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
                   const { chargebee_email } = subscriptionMeta || {}
-                  const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
+                  const autoSeats =
+                    !isAWS && Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
                   const overSeats =
                     paymentsEnabled && organisation.num_seats > max_seats
                   const needsUpgradeForAdditionalSeats =
-                    (!autoSeats && overSeats) || (!autoSeats && usedSeats)
+                    (overSeats && (!verifySeatsLimit || !autoSeats)) ||
+                    (!autoSeats && usedSeats)
+
                   return (
                     <div>
                       <Tabs
-                        inline
-                        transparent
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                       >
-                        <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                        <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
@@ -331,9 +339,9 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </Column>
                                     <Button
+                                      type='submit'
                                       disabled={this.saveDisabled()}
                                       className='float-right'
-                                      size='small'
                                     >
                                       {isSaving ? 'Saving' : 'Save'}
                                     </Button>
@@ -347,7 +355,7 @@ const OrganisationSettingsPage = class extends Component {
                                     {organisation.id}
                                   </p>
                                 </div>
-                                {paymentsEnabled && (
+                                {paymentsEnabled && !isAWS && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
                                       <img
@@ -520,15 +528,11 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                        <TabItem tabLabel='Keys'>
                           <AdminAPIKeys />
                         </TabItem>
 
-                        <TabItem
-                          data-test='tab-permissions'
-                          tabLabel='Members'
-                          tabIcon='ion-md-people'
-                        >
+                        <TabItem data-test='tab-permissions' tabLabel='Members'>
                           <JSONReference
                             showNamesButton
                             className='mt-4'
@@ -566,7 +570,7 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                   {!isLoading && (
                                     <div>
-                                      <Tabs inline transparent uncontrolled>
+                                      <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
                                             <h5 className='m-b-0'>
@@ -582,6 +586,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
+                                                  'p-0',
                                                 )
                                               }
                                               type='button'
@@ -610,7 +615,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 for your plan.{' '}
                                                 {usedSeats && (
                                                   <>
-                                                    {!autoSeats && overSeats ? (
+                                                    {overSeats &&
+                                                    (!verifySeatsLimit ||
+                                                      !autoSeats) ? (
                                                       <strong>
                                                         If you wish to invite
                                                         any additional members,
@@ -665,11 +672,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                               </InfoMessage>
                                             )}
-                                            {Utils.getFlagsmithHasFeature(
-                                              'verify_seats_limit_for_invite_links',
-                                            ) &&
-                                              !needsUpgradeForAdditionalSeats &&
-                                              inviteLinks && (
+                                            {inviteLinks &&
+                                              (!verifySeatsLimit ||
+                                                !needsUpgradeForAdditionalSeats) && (
                                                 <form
                                                   onSubmit={(e) => {
                                                     e.preventDefault()
@@ -1154,7 +1159,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    'side-modal fade create-feature-modal',
+                                                    'side-modal',
                                                   )
                                                 }
                                                 type='button'
@@ -1188,7 +1193,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                        <TabItem tabLabel='Webhooks'>
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
@@ -1200,7 +1205,7 @@ const OrganisationSettingsPage = class extends Component {
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
-                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
@@ -1298,7 +1303,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {!Project.disableAnalytics && (
-                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                          <TabItem tabLabel='Usage'>
                             {this.state.tab === 4 && (
                               <OrganisationUsage
                                 organisationId={

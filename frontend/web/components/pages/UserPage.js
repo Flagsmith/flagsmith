@@ -36,6 +36,7 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      showArchived: false,
       preselect: Utils.fromParam().flag,
       tags: [],
     }
@@ -93,7 +94,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      'fade side-modal create-segment-modal',
+      'side-modal create-segment-modal',
     )
   }
 
@@ -128,6 +129,7 @@ const UserPage = class extends Component {
         environmentFlag={environmentFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
@@ -161,7 +163,7 @@ const UserPage = class extends Component {
         }}
         environmentFlag={environmentFlag}
       />,
-      'side-modal fade create-feature-modal overflow-y-auto',
+      'side-modal create-feature-modal overflow-y-auto',
       () => {
         history.replaceState({}, null, `${document.location.pathname}`)
       },
@@ -180,6 +182,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -196,6 +199,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -213,12 +217,12 @@ const UserPage = class extends Component {
 
   removeTrait = (id, trait_key) => {
     openConfirm(
-      <h3>Delete Trait</h3>,
-      <p>
+      'Delete Trait',
+      <div>
         {'Are you sure you want to delete trait '}
         <strong>{trait_key}</strong>
         {' from this user?'}
-      </p>,
+      </div>,
       () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,
@@ -392,7 +396,10 @@ const UserPage = class extends Component {
                                             )
                                           }}
                                           className='px-2 py-2 ml-2 mr-2'
-                                          tag={{ label: 'Archived' }}
+                                          tag={{
+                                            color: '#0AADDF',
+                                            label: 'Archived',
+                                          }}
                                         />
                                       </TagFilter>
                                     </div>
@@ -525,14 +532,13 @@ const UserPage = class extends Component {
                                             />
                                           </Row>
                                           {hasUserOverride ? (
-                                            <Row className='chip'>
+                                            <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
-                                              <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
                                               data-test={`feature-override-${i}`}
-                                              className='flex-row chip'
+                                              className='flex-row mt-1 chip'
                                             >
                                               <Row>
                                                 <Flex>
@@ -563,16 +569,15 @@ const UserPage = class extends Component {
                                                     </span>
                                                   )}
                                                 </Flex>
-                                                <span className='ml-1 chip-icon icon ion-md-information' />
                                               </Row>
                                             </span>
                                           ) : flagValueDifferent ? (
                                             isMultiVariateOverride ? (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by a % variation in
                                                   the environment, the control
@@ -583,14 +588,13 @@ const UserPage = class extends Component {
                                                     value={`${flagValue}`}
                                                   />
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             ) : (
                                               <span
                                                 data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
+                                                className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by segments and
                                                   would normally be{' '}
@@ -601,7 +605,6 @@ const UserPage = class extends Component {
                                                   />{' '}
                                                   for this user
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             )
                                           ) : (
@@ -677,6 +680,7 @@ const UserPage = class extends Component {
                                                   ),
                                                 ),
                                                 <Button
+                                                  size='small'
                                                   disabled={!permission}
                                                   onClick={() =>
                                                     this.confirmRemove(

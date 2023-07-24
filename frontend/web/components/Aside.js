@@ -92,7 +92,7 @@ const Aside = class extends Component {
 
   newProject = () => {
     openModal(
-      'Create  Project',
+      'Create Project',
       <CreateProjectModal
         onSave={({ environmentId, projectId }) => {
           AppActions.getProject(projectId)
@@ -101,6 +101,7 @@ const Aside = class extends Component {
           )
         }}
       />,
+      'p-0',
     )
   }
 
@@ -256,6 +257,7 @@ const Aside = class extends Component {
                                 <div className='text-center'>
                                   <span
                                     style={{
+                                      border: 'none',
                                       bottom: 2,
                                       left: 5,
                                       position: 'relative',
@@ -554,6 +556,12 @@ const Aside = class extends Component {
                               </a>
                             )}
 
+                            {Utils.getFlagsmithHasFeature('broken_feature') && (
+                              <Link to='/broken' className='aside__nav-item'>
+                                <i className='icon mr-2 ion-ios-warning aside__nav-item--icon' />
+                                Demo Broken Feature
+                              </Link>
+                            )}
                             {this.state.version && (
                               <div className='text-muted text-small text-center'>
                                 {this.state.version.tag !== 'Unknown' && (

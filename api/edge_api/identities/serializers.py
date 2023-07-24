@@ -12,7 +12,6 @@ from flag_engine.features.models import (
 from flag_engine.features.models import (
     MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.builders import build_identity_dict
 from flag_engine.identities.models import IdentityModel as EngineIdentity
 from flag_engine.utils.exceptions import DuplicateFeatureState
 from pydantic import ValidationError as PydanticValidationError
@@ -24,7 +23,11 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
-from util.mappers import map_feature_to_engine, map_mv_option_to_engine
+from util.mappers import (
+    map_engine_identity_to_identity_document,
+    map_feature_to_engine,
+    map_mv_option_to_engine,
+)
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 from .models import EdgeIdentity
@@ -45,7 +48,9 @@ class EdgeIdentitySerializer(serializers.Serializer):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
-        EdgeIdentity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
+        EdgeIdentity.dynamo_wrapper.put_item(
+            map_engine_identity_to_identity_document(self.instance)
+        )
         return self.instance
 
 

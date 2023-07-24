@@ -1,13 +1,13 @@
 .dark {
     .or-divider {
         color: $dark-color;
-        &__line{
+        &__line {
             border-bottom: 1px dashed $dark-color;
         }
     }
     .and-divider {
         color: $dark-color;
-        &__line{
+        &__line {
             border-bottom: 1px dashed $dark-color;
         }
     }
@@ -17,7 +17,7 @@
     font-weight: 400;
     font-size: 0.8em;
     line-height: 2em;
-    &__line{
+    &__line {
         margin-left: $grid-gutter-width/2;
         height: 2px;
         border-bottom: 1px dashed #ccc;
@@ -29,7 +29,7 @@
     font-weight: 400;
     font-size: 0.8em;
     line-height: 2em;
-    &__line{
+    &__line {
         margin-right: $grid-gutter-width/2;
         &:last-child {
             margin-right: 0;
@@ -42,21 +42,34 @@
 .dark {
     .input-container {
         input.input {
-            border: 1px solid $bt-input-border-dark !important;
-            background-color: $input-bg-dark !important;
-            color: $body-text-dark;
-            &:focus {
-                border:1px solid $bt-input-border-active;
+            border: 1px solid $input-border-color-dark;
+            background-color: $input-bg-dark;
+            color: $text-icon-light;
+            &:hover {
+                border: 1px solid $input-hover-border-color-dark;
             }
-            &::placeholder{
-                color:$input-placeholder-color-dark !important;
+            &:focus {
+                border: 1px solid $input-focus-border-color-dark;
+            }
+            &::placeholder {
+                color: $input-placeholder-color-dark;
+            }
+            &:disabled {
+                border: 1px solid $black-alpha-32;
+                color: $text-icon-light-grey;
+                & + .input-icon-right {
+                    path {
+                        fill: $text-icon-light-grey;
+                        opacity: $btn-disabled-opacity;
+                    }
+                }
             }
         }
     }
 }
 
-.input-container{
-    height:$input-height;
+.input-container,
+.react-datepicker-wrapper .react-datepicker__input-container {
     &.invalid {
         input.input {
             border-color: $danger !important;
@@ -68,44 +81,69 @@
         }
     }
 
-    input.input{
-        border:1px solid $bt-input-border;
+    input.input {
+        border: 1px solid $input-border-color;
         background-color: $input-bg;
         @include transition(all 200ms);
         &:focus {
-            border:1px solid $bt-input-border-active;
+            border: 1px solid $primary;
         }
-        border-radius: $border-radius-default;
-        color:$body-text;
-        text-indent: 15px;
-        height:100%;
+        border-radius: $border-radius;
+        color: $text-icon-dark;
+        height: $input-height;
+        line-height: $line-height-lg;
+        padding: 12px 16px 12px 12px;
 
-        &--wide{
-            min-width:300px;
+        &--wide {
+            min-width: 300px;
         }
 
-        &::placeholder{
-            color:#2e2e2e;
-            opacity:0.5;
+        &::placeholder {
+            color: $input-placeholder-color;
+            font-weight: normal;
+        }
+
+        &-sm {
+            padding: $input-padding-sm;
+            line-height: $line-height-sm;
+            height: $input-height-sm;
+        }
+        &-xsm {
+            padding: $input-padding-xsm;
+            line-height: $line-height-sm;
+            height: $input-height-xsm;
+            font-size: $font-sm;
+        }
+        &-lg {
+            padding: $input-padding-lg;
+            height: $input-height-lg;
         }
     }
 }
 
-.form-group{
-    margin-bottom:1rem;
+.form-group {
+    margin-bottom: 1rem;
 }
 
-label, .icon-primary {
-    color: $header-color;
+label {
+    margin-bottom: $spacer/2;
+}
+label,
+.icon-primary {
+    color: $text-icon-dark;
     font-weight: 500;
 }
 .dark {
-    label,.icon-primary {
-        color: $header-color-dark;
+    label,
+    .icon-primary {
+        color: $white;
     }
 }
-.hljs, .hljs-header, .value-editor pre {
-    border-radius: $default-border-radius;
+
+.hljs,
+.hljs-header,
+.value-editor pre {
+    border-radius: $border-radius;
 }
 
 .control-label {
@@ -133,25 +171,19 @@ label, .icon-primary {
 
 .badge {
     display: inline-block;
-    padding: .25em .4em;
+    padding: 0.25em 0.4em;
     font-size: 75%;
     font-weight: 700;
     line-height: 1;
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: .25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.badge-pill {
-    padding-right: .6em;
-    padding-left: .6em;
-    border-radius: 10rem;
+    border-radius: $border-radius-sm;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 .badge-info {
     background-color: $bt-brand-primary;
     color: white;
 }
-

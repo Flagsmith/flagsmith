@@ -32,7 +32,7 @@ const ChangeRequestsPage = class extends Component {
     users?.filter((v) => approvals?.includes(v.group))
 
   getGroupApprovals = (groups, approvals) =>
-      groups.filter((v) => approvals.find((a) => a.group === v.id))
+    groups.filter((v) => approvals.find((a) => a.group === v.id))
 
   constructor(props, context) {
     super(props, context)
@@ -97,8 +97,8 @@ const ChangeRequestsPage = class extends Component {
 
   deleteChangeRequest = () => {
     openConfirm(
-      <h3>Delete Change Request</h3>,
-      <p>Are you sure you want to delete this change request?</p>,
+      'Delete Change Request',
+      <div>Are you sure you want to delete this change request?</div>,
       () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.context.router.history.replace(
@@ -133,7 +133,7 @@ const ChangeRequestsPage = class extends Component {
         }}
         flagId={environmentFlag.id}
       />,
-      'side-modal fade create-feature-modal',
+      'side-modal create-feature-modal',
     )
   }
 
@@ -150,15 +150,15 @@ const ChangeRequestsPage = class extends Component {
     const scheduledDate = moment(changeRequest.feature_states[0].live_from)
 
     openConfirm(
-      <h3>{isScheduled ? 'Schedule' : 'Publish'} Change Request</h3>,
-      <p>
+      `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
+      <div>
         Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
         change request
         {isScheduled
           ? ` for ${scheduledDate.format('Do MMM YYYY hh:mma')}`
           : ''}
         ? This will adjust the feature for your environment.
-      </p>,
+      </div>,
       () => {
         AppActions.actionChangeRequest(
           this.props.match.params.id,
@@ -405,7 +405,7 @@ const ChangeRequestsPage = class extends Component {
                                     <Row
                                       key={u.id}
                                       onClick={() => this.removeOwner(u.id)}
-                                      className='chip chip--active'
+                                      className='chip'
                                       style={{
                                         marginBottom: 4,
                                         marginTop: 4,
@@ -462,7 +462,7 @@ const ChangeRequestsPage = class extends Component {
                                       onClick={() =>
                                         this.removeOwner(g.id, false)
                                       }
-                                      className='chip chip--active'
+                                      className='chip'
                                       style={{
                                         marginBottom: 4,
                                         marginTop: 4,

@@ -61,6 +61,7 @@ const EnvironmentSettingsPage = class extends Component {
     openModal(
       'Remove Environment',
       <ConfirmRemoveEnvironment environment={environment} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -126,7 +127,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.createWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -141,7 +141,6 @@ const EnvironmentSettingsPage = class extends Component {
         projectId={this.props.match.params.projectId}
         save={this.props.saveWebhook}
       />,
-      'alert fade expand',
     )
   }
 
@@ -154,6 +153,7 @@ const EnvironmentSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 
@@ -226,8 +226,8 @@ const EnvironmentSettingsPage = class extends Component {
                   </div>
                 )}
                 {!isLoading && (
-                  <Tabs inline transparent uncontrolled>
-                    <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                  <Tabs uncontrolled>
+                    <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference title={'Environment'} json={env} />
                         <div>
@@ -269,8 +269,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       : env.description
                                   }
                                   inputProps={{
-                                    className: 'input--wide',
-                                    style: { minHeight: 100 },
+                                    className: 'input--wide textarea-lg',
                                   }}
                                   onChange={(e) =>
                                     this.setState({
@@ -289,6 +288,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 <Button
                                   id='save-env-btn'
                                   className='float-right mb-4'
+                                  type='submit'
                                   disabled={this.saveDisabled()}
                                 >
                                   {isSaving ? 'Updating' : 'Update'}
@@ -557,7 +557,6 @@ const EnvironmentSettingsPage = class extends Component {
                     <TabItem
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
-                      tabIcon='ion-md-code'
                     >
                       <div className='mt-4'>
                         <JSONReference title={'Environment'} json={env} />
@@ -585,9 +584,8 @@ const EnvironmentSettingsPage = class extends Component {
                                     .
                                   </p>
                                 </div>
-                                <div className='col-md-3 text-right'>
+                                <div className='col-md-3'>
                                   <Select
-                                    className={'text-left'}
                                     value={
                                       showDisabledFlagOptions.find(
                                         (v) =>
@@ -685,7 +683,7 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                    <TabItem tabLabel='Keys'>
                       <FormGroup className='mt-4'>
                         <h5>Client-side Environment Key</h5>
                         <div className='row'>
@@ -708,7 +706,6 @@ const EnvironmentSettingsPage = class extends Component {
                                   toast('Copied')
                                 }}
                                 className='ml-2'
-                                size='small'
                               >
                                 Copy
                               </Button>
@@ -720,7 +717,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members' tabIcon='ion-md-people'>
+                    <TabItem tabLabel='Members'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
@@ -733,7 +730,7 @@ const EnvironmentSettingsPage = class extends Component {
                         />
                       </FormGroup>
                     </TabItem>
-                    <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                    <TabItem tabLabel='Webhooks'>
                       <FormGroup className='mt-4'>
                         <Row className='mb-3' space>
                           <div className='col-md-8 pl-0'>

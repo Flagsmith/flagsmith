@@ -1,6 +1,8 @@
 import { Modal, ModalBody, ModalFooter } from 'reactstrap'
 import Button from 'components/base/forms/Button'
-import { FC, ReactNode } from 'react'
+import React, { FC, ReactNode } from 'react'
+import ModalHeader from './ModalHeader'
+import ModalHR from 'components/modals/ModalHR'
 
 interface Confirm {
   title: ReactNode
@@ -38,16 +40,20 @@ const Confirm: FC<Confirm> = ({
   }
 
   return (
-    <Modal unmountOnClose isOpen={isOpen} toggle={no}>
-      <div className='modal-header'>
-        <h5 className='modal-title'>{title}</h5>
-        <span onClick={no} className='icon close ion-md-close' />
-      </div>
+    <Modal
+      className='modal-dialog-centered modal-sm'
+      unmountOnClose
+      isOpen={isOpen}
+      toggle={no}
+    >
+      <ModalHeader onDismissClick={no}>{title}</ModalHeader>
       <ModalBody>{children}</ModalBody>
+      <ModalHR />
       <ModalFooter>
         <Button
           theme='secondary'
           id='confirm-btn-no'
+          className='mr-2'
           disabled={disabled}
           onClick={no}
         >

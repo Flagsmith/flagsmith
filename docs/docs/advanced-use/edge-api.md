@@ -136,13 +136,7 @@ flag.feature_segment
 
 ## Architecture
 
-### Core API Only
-
-![Image](/img/core-api-now.svg)
-
-### Core and Edge API
-
-![Image](/img/edge-api-now.svg)
+You can see our SaaS architecture [here](/system-administration/architecture.md#saas).
 
 ## How It Works
 

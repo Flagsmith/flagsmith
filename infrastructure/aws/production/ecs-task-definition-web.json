@@ -125,7 +125,7 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0001"
+                    "value": "0.00006"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
@@ -134,10 +134,6 @@
                 {
                     "name": "SLACK_CLIENT_ID",
                     "value": "937916178726.1924685747446"
-                },
-                {
-                    "name": "EDGE_API_URL",
-                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
@@ -170,6 +166,14 @@
                 {
                     "name": "AUTO_SEAT_UPGRADE_PLANS",
                     "value": "scale-up,scale-up-v2,scale-up-annual-v2"
+                },
+                {
+                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
+                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                },
+                {
+                    "name":"EDGE_API_URL",
+                    "value":"https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
