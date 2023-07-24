@@ -80,7 +80,7 @@ def test_run_recurring_tasks_multiple_runs(db, run_by_processor):
     task_identifier = "test_unit_task_processor_processor._create_organisation"
 
     @register_recurring_task(
-        run_every=timedelta(milliseconds=100), args=(organisation_name,)
+        run_every=timedelta(milliseconds=200), args=(organisation_name,)
     )
     def _create_organisation(organisation_name):
         Organisation.objects.create(name=organisation_name)
@@ -89,17 +89,28 @@ def test_run_recurring_tasks_multiple_runs(db, run_by_processor):
 
     # When
     first_task_runs = run_recurring_tasks()
-    time.sleep(0.2)
+
+    # run the process again before the task is scheduled to run again to ensure
+    # that tasks are unlocked when they are picked up by the task processor but
+    # not executed.
+    no_task_runs = run_recurring_tasks()
+
+    time.sleep(0.3)
 
     second_task_runs = run_recurring_tasks()
 
-    task_runs = first_task_runs + second_task_runs
-
     # Then
+    assert len(first_task_runs) == 1
+    assert len(no_task_runs) == 0
+    assert len(second_task_runs) == 1
+
+    # we should still only have 2 organisations, despite executing the
+    # `run_recurring_tasks` function 3 times.
     assert Organisation.objects.filter(name=organisation_name).count() == 2
 
-    assert len(task_runs) == RecurringTaskRun.objects.filter(task=task).count() == 2
-    for task_run in task_runs:
+    all_task_runs = first_task_runs + second_task_runs
+    assert len(all_task_runs) == RecurringTaskRun.objects.filter(task=task).count() == 2
+    for task_run in all_task_runs:
         assert task_run.result == TaskResult.SUCCESS
         assert task_run.started_at
         assert task_run.finished_at

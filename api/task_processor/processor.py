@@ -55,7 +55,6 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
     tasks = RecurringTask.objects.get_tasks_to_process(num_tasks)
     if tasks:
         task_runs = []
-        executed_tasks = []
 
         for task in tasks:
             # Remove the task if it's not registered anymore
@@ -65,11 +64,13 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
 
             if task.should_execute:
                 task, task_run = _run_task(task)
-                executed_tasks.append(task)
                 task_runs.append(task_run)
+            else:
+                task.unlock()
 
-        if executed_tasks:
-            RecurringTask.objects.bulk_update(executed_tasks, fields=["is_locked"])
+        # update all tasks that were not deleted
+        to_update = [task for task in tasks if task.id]
+        RecurringTask.objects.bulk_update(to_update, fields=["is_locked"])
 
         if task_runs:
             RecurringTaskRun.objects.bulk_create(task_runs)
