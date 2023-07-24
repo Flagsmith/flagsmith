@@ -45,7 +45,7 @@ def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     return []
 
 
-def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
+def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
     if num_tasks < 1:
         raise ValueError("Number of tasks to process must be at least one")
 
@@ -81,7 +81,7 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTask]:
     return []
 
 
-def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
+def _run_task(task: typing.Union[Task, RecurringTask]) -> typing.Tuple[Task, TaskRun]:
     task_run = task.task_runs.model(started_at=timezone.now(), task=task)
 
     try:
