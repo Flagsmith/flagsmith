@@ -36,7 +36,9 @@ def clean_up_old_tasks():
 
     while True:
         # delete in batches of settings.TASK_DELETE_BATCH_SIZE
-        queryset = Task.objects.filter(query)[0 : settings.TASK_DELETE_BATCH_SIZE]
+        queryset = Task.objects.filter(query)[
+            0 : settings.TASK_DELETE_BATCH_SIZE  # noqa: E203
+        ]
         if not queryset.exists():
             break
 

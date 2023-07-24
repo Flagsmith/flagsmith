@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import warnings
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url
