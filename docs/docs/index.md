@@ -52,6 +52,6 @@ Check out our [Server Side SDK architecture first!](clients/overview.md)
 - [Go](/clients/server-side)
 - [Elixir](/clients/server-side)
 
-## Open Source vs SaaS vs Enterprise
+#### Open Source vs SaaS vs Enterprise
 
 Learn more about the [different ways you can run Flagsmith](version-comparison.md).
