@@ -127,7 +127,7 @@ export default class Rule extends PureComponent {
             onClick={() => this.removeRule(i)}
             className='btn btn-with-icon'
           >
-            <Icon name='trash-2' width={20} fill={'#9DA4AE'} />
+            <Icon name='trash-2' width={20} fill={'#656D7B'} />
           </button>
         </Row>
         {this.props.showDescription && (

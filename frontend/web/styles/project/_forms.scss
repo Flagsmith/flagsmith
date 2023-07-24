@@ -13,31 +13,31 @@
     }
 }
 .or-divider {
-  color: $text-icon-light-grey;
-  font-weight: 400;
-  font-size: $font-caption;
-  line-height: $line-height-xsm;
-  &__line {
-    margin-left: $spacer/4;
-    height: 2px;
-    border-bottom: 1px dashed $text-icon-light-grey;
-  }
+    color: $text-icon-light-grey;
+    font-weight: 400;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
+    &__line {
+        margin-left: $spacer/4;
+        height: 2px;
+        border-bottom: 1px dashed $text-icon-light-grey;
+    }
 }
 .and-divider {
-  color: $text-icon-light-grey;
-  text-transform: uppercase;
-  font-weight: 400;
-  font-size: $font-caption;
-  line-height: $line-height-xsm;
-  &__line {
-    margin-right: $spacer/4;
-    &:last-child {
-      margin-right: 0;
-      margin-left: $spacer/4;
+    color: $text-icon-light-grey;
+    text-transform: uppercase;
+    font-weight: 400;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
+    &__line {
+        margin-right: $spacer/4;
+        &:last-child {
+            margin-right: 0;
+            margin-left: $spacer/4;
+        }
+        height: 2px;
+        border-bottom: 1px solid $text-icon-light-grey;
     }
-    height: 2px;
-    border-bottom: 1px solid $text-icon-light-grey;
-  }
 }
 .dark {
     .input-container {
@@ -66,6 +66,9 @@
             }
         }
     }
+    .label-switch {
+        color: $text-icon-light;
+    }
 }
 
 .input-container,
@@ -85,9 +88,9 @@
         border: 1px solid $input-border-color;
         background-color: $input-bg;
         @include transition(all 200ms);
-        &:hover{
+        &:hover {
             border: 1px solid $basic-alpha-48;
-          }
+        }
         &:focus {
             border: 1px solid $primary;
         }
@@ -127,23 +130,22 @@
     margin-bottom: 1rem;
 }
 
-.label-switch{
-  color:$text-icon-dark;
-  font-weight: 500;
+.label-switch {
+    color: $text-icon-dark;
+    font-weight: 500;
 }
 
-.setting{
-  label{
-    font-size: $font-size-base;
-    line-height: $line-height-base;
-  }
-  
+.setting {
+    label {
+        font-size: $font-size-base;
+        line-height: $line-height-base;
+    }
 }
 
 label {
-  font-size: $font-size-sm;
-  line-height: $line-height-sm;
-  margin-bottom: 6px;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    margin-bottom: 6px;
 }
 label,
 .icon-primary {
@@ -164,10 +166,10 @@ label,
 }
 
 .control-label {
-  display: block;
-  svg {
-    vertical-align: bottom;
-  }
+    display: block;
+    svg {
+        vertical-align: bottom;
+    }
 }
 
 .__react_component_tooltip {

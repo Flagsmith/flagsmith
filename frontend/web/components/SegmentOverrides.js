@@ -12,6 +12,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
+import Icon from './Icon'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -141,9 +142,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                   disabled={disabled}
                   id='remove-feature'
                   onClick={confirmRemove}
-                  className='btn btn--with-icon'
+                  className='btn btn-with-icon'
                 >
-                  <RemoveIcon />
+                 <Icon name="trash-2" fill={'#656D7B'}/>
                 </button>
               )}
               {!!v.id && (

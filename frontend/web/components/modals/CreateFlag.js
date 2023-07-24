@@ -347,7 +347,7 @@ const CreateFlag = class extends Component {
         </BarChart>
       </ResponsiveContainer>
     ) : (
-      <div className='text-dark fs-small lh-sm'>
+      <div className='modal-caption fs-small lh-sm'>
         There has been no activity for this flag within the past month. Find out
         about Flag Analytics{' '}
         <Button
@@ -901,8 +901,8 @@ const CreateFlag = class extends Component {
                                         />
                                       </>
                                     )}
-                                    <ModalHR className='mt-4'/>
-                                    <div className='text-right text-dark mt-4 mb-3 fs-small lh-sm'>
+                                    <ModalHR className='mt-4' />
+                                    <div className='text-right mt-4 mb-3 fs-small lh-sm modal-caption'>
                                       {is4Eyes
                                         ? 'This will create a change request for the environment'
                                         : 'This will update the feature value for the environment'}{' '}
@@ -1042,7 +1042,13 @@ const CreateFlag = class extends Component {
                                   <TabItem
                                     data-test='segment_overrides'
                                     tabLabel={
-                                      <Row className='justify-content-center'>
+                                      <Row
+                                        className={`justify-content-center ${
+                                          this.state.segmentsChanged
+                                            ? 'pr-1'
+                                            : ''
+                                        }`}
+                                      >
                                         Segment Overrides{' '}
                                         {this.state.segmentsChanged && (
                                           <div className='unread ml-2 px-2'>
@@ -1055,7 +1061,7 @@ const CreateFlag = class extends Component {
                                     {!identity && isEdit && (
                                       <FormGroup className='mb-4'>
                                         <div>
-                                          <Row className='justify-content-between mb-2'>
+                                          <Row className='justify-content-between mb-2 segment-overrides-title'>
                                             <Tooltip
                                               title={
                                                 <h5 className='mb-0'>
@@ -1127,9 +1133,10 @@ const CreateFlag = class extends Component {
                                               <Loader />
                                             </div>
                                           )}
+                                          <ModalHR className='mt-4' />
                                           {!this.state.showCreateSegment && (
                                             <div>
-                                              <p className='text-right mt-4 fs-small lh-sm text-dark'>
+                                              <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                                                 {is4Eyes &&
                                                 is4EyesSegmentOverrides
                                                   ? 'This will create a change request for the environment'

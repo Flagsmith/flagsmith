@@ -30,17 +30,27 @@
         }
     }
 }
+.modal-caption {
+    color: $text-icon-dark;
+}
 
 $side-width: 660px;
 .dark {
     .inline-modal {
         background: $modal-bg-dark;
         box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
+
+        .assignees-list-item {
+            color: $text-icon-light;
+        }
     }
     .modal-content {
         box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
         background: $modal-bg-dark;
         color: $modal-content-color-dark;
+    }
+    .modal-caption {
+        color: $text-icon-light;
     }
 }
 
