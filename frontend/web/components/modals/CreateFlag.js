@@ -901,7 +901,7 @@ const CreateFlag = class extends Component {
                                         />
                                       </>
                                     )}
-                                    <ModalHR />
+                                    <ModalHR className='mt-4'/>
                                     <div className='text-right text-dark mt-4 mb-3 fs-small lh-sm'>
                                       {is4Eyes
                                         ? 'This will create a change request for the environment'
