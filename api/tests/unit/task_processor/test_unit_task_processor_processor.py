@@ -4,6 +4,7 @@ from datetime import timedelta
 from threading import Thread
 
 import pytest
+from django.utils import timezone
 
 from organisations.models import Organisation
 from task_processor.decorators import (
@@ -331,6 +332,37 @@ def test_run_more_than_one_task(db):
     for task in tasks:
         task.refresh_from_db()
         assert task.completed
+
+
+def test_recurring_tasks_are_unlocked_if_picked_up_but_not_executed(
+    db, run_by_processor
+):
+    # Given
+    @register_recurring_task(run_every=timedelta(days=1))
+    def my_task():
+        pass
+
+    recurring_task = RecurringTask.objects.get(
+        task_identifier="test_unit_task_processor_processor.my_task"
+    )
+
+    # mimic the task having already been run so that it is next picked up,
+    # but not executed
+    now = timezone.now()
+    one_minute_ago = now - timedelta(minutes=1)
+    RecurringTaskRun.objects.create(
+        task=recurring_task,
+        started_at=one_minute_ago,
+        finished_at=now,
+        result=TaskResult.SUCCESS.name,
+    )
+
+    # When
+    run_recurring_tasks()
+
+    # Then
+    recurring_task.refresh_from_db()
+    assert recurring_task.is_locked is False
 
 
 @register_task_handler()
