@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from importlib import reload
 
 import dj_database_url
@@ -840,11 +840,13 @@ TASK_RUN_METHOD = env.enum(
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
-TASK_RETENTION_DAYS = env.int("TASK_RETENTION_DAYS", default=30)
+TASK_DELETE_RETENTION_DAYS = env.int("TASK_DELETE_RETENTION_DAYS", default=30)
 TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
 TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
     "TASK_DELETE_INCLUDE_FAILED_TASKS", default=False
 )
+TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
+TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)

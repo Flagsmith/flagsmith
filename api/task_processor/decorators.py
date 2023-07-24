@@ -91,11 +91,11 @@ def register_recurring_task(
 
         task, _ = RecurringTask.objects.update_or_create(
             task_identifier=task_identifier,
-            run_every=run_every,
-            first_run_time=first_run_time,
             defaults={
                 "serialized_args": RecurringTask.serialize_data(args or tuple()),
                 "serialized_kwargs": RecurringTask.serialize_data(kwargs or dict()),
+                "run_every": run_every,
+                "first_run_time": first_run_time,
             },
         )
         return task
