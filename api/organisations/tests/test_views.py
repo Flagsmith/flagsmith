@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from typing import List, Union
 from unittest import TestCase, mock
 
 import pytest
@@ -592,7 +593,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         max_api_calls: int,
         max_projects: int,
         chargebee_updated_at: datetime = datetime.now(),
-    ) -> list[dict]:
+    ) -> List[Union[dict, OrganisationSubscriptionInformationCache]]:
         mock_get_plan_meta_data.return_value = {
             "seats": max_seats,
             "api_calls": max_api_calls,
@@ -644,7 +645,7 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         return [res, subscription_information_cache]
 
-    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_created(
+    def test_when_subscription_cache_doesnt_exist_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         self,
     ):
         # Given
@@ -674,7 +675,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert subscription_information_cache.chargebee_updated_at
         assert subscription_information_cache.influx_updated_at is None
 
-    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
+    def test_when_subscription_cache_exist_and_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         self,
     ):
         # Given

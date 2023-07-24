@@ -1,4 +1,4 @@
-import typing
+from typing import Dict, Tuple, Union
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
@@ -298,7 +298,7 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
+def master_api_key(organisation) -> Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation
     )
@@ -451,7 +451,7 @@ def manage_user_group_permission(db):
 def mocked_subscription_metadata(
     mocker: MockerFixture,
     chargebee_object_metadata: ChargebeeObjMetadata,
-) -> dict:
+) -> Dict[str, Union[str, ChargebeeObjMetadata, MockChargeBeeSubscriptionResponse]]:
     # Given
     plan_id = "plan-id"
     addon_id = "addon-id"
