@@ -527,6 +527,7 @@ class TheComponent extends Component {
                     this.setState({ selectedSegment: null })
                     this.props.setShowCreateSegment(true)
                   }}
+                  theme='outline'
                 >
                   Create Feature-Specific Segment
                 </Button>

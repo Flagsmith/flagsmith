@@ -1129,7 +1129,7 @@ const CreateFlag = class extends Component {
                                           )}
                                           {!this.state.showCreateSegment && (
                                             <div>
-                                              <p className='text-right mt-4 fs-small lh-sm'>
+                                              <p className='text-right mt-4 fs-small lh-sm text-dark'>
                                                 {is4Eyes &&
                                                 is4EyesSegmentOverrides
                                                   ? 'This will create a change request for the environment'
