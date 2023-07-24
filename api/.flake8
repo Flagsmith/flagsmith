@@ -5,6 +5,6 @@ exclude = .git,.venv,.direnv,__pycache__,*/migrations/*
 
 per-file-ignores =
     # Need the * prefix to work with pre-commit which runs from the root of the repo
-    */app/settings/local.py: F403, F405
-    */app/settings/production.py: F403, F405
-    */app/settings/saas.py: F403, F405
+    *app/settings/local.py: F403, F405
+    *app/settings/production.py: F403, F405
+    *app/settings/saas.py: F403, F405
