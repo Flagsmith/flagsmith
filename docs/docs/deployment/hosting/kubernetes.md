@@ -458,6 +458,14 @@ The following table lists the configurable parameters of the chart and their def
 
 ---
 
+## Key upgrade notes
+
+- [0.20.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.20.0): upgrades the bundled in-cluster Postgres.
+  This makes no effort to preserve data in the bundled in-cluster Postgres if it is in use. This also renames the
+  bundled in-cluster Postgres to have `dev-postgresql` in the name, to signify that it exists such that the chart can be
+  deployed self-contained, but that this Postgres instance is treated as disposable. All Flagsmith installations for
+  which the data is not disposable [should use an externally managed database](#provided-database-configuration).
+
 ## Development and contributing
 
 ### Requirements
