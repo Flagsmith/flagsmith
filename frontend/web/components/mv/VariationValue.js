@@ -12,7 +12,7 @@ const VariationValue = ({
   value,
   weightTitle,
 }) => (
-  <Row className='align-items-start'>
+  <Row className='align-items-start mt-4'>
     <div className='flex flex-1'>
       <InputGroup
         component={

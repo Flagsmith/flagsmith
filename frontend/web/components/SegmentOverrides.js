@@ -144,7 +144,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   onClick={confirmRemove}
                   className='btn btn-with-icon'
                 >
-                 <Icon name="trash-2" fill={'#656D7B'}/>
+                 <Icon name="trash-2" fill={'#656D7B'} width={20}/>
                 </button>
               )}
               {!!v.id && (
