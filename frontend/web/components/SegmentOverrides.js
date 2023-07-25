@@ -12,6 +12,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
+import AlertLimit from 'components/AlertLimit'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -327,6 +328,7 @@ const SegmentOverrideListInner = ({
   const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride
   return (
     <div>
+      <AlertLimit limitType={'Segment Overrides'} percentage={90} />
       {items.map((value, index) => (
         <>
           <InnerComponent
@@ -496,6 +498,11 @@ class TheComponent extends Component {
         : SegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
+    const totalSegmentOverrides = ProjectStore.getEnvs().find(
+      (env) => env.api_key === this.props.environmentId,
+    )?.total_segment_overrides
+    const isSegmentOverrideLimitReached =
+      totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <div>
@@ -503,7 +510,8 @@ class TheComponent extends Component {
           {!this.props.id &&
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
-            !this.props.readOnly && (
+            !this.props.readOnly &&
+            !isSegmentOverrideLimitReached && (
               <Flex className='text-left'>
                 <SegmentSelect
                   projectId={this.props.projectId}

@@ -34,6 +34,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
+import ProjectStore from 'common/stores/project-store'
 
 type PageType = {
   number: number
@@ -131,6 +132,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [tab, setTab] = useState(0)
 
   const isError = createError || updateError
+  const isLimitReached =
+    ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -438,7 +441,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             ) : (
               <Button
-                disabled={isSaving || !name || !isValid}
+                disabled={isSaving || !name || !isValid || isLimitReached}
                 type='submit'
                 data-test='create-segment'
                 id='create-feature-btn'

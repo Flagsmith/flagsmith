@@ -825,6 +825,9 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
+              const isLimitReached =
+                project.total_features >= project.max_features_allowed
+
               return (
                 <Permission
                   level='project'
@@ -1502,7 +1505,8 @@ const CreateFlag = class extends Component {
                                         isSaving ||
                                         !name ||
                                         invalid ||
-                                        !regexValid
+                                        !regexValid ||
+                                        isLimitReached
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}

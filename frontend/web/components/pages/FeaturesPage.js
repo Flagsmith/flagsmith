@@ -12,6 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import AlertLimit from 'components/AlertLimit'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -159,8 +160,17 @@ const FeaturesPage = class extends Component {
         className='app-container container'
       >
         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-          {({ environmentFlags, projectFlags }, { removeFlag, toggleFlag }) => {
+          {(
+            {
+              environmentFlags,
+              maxFeaturesAllowed,
+              projectFlags,
+              totalFeatures,
+            },
+            { removeFlag, toggleFlag },
+          ) => {
             const isLoading = FeatureListStore.isLoading
+            const isLimitReached = totalFeatures >= maxFeaturesAllowed
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -176,6 +186,7 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
+                        <AlertLimit limitType={'Feautures'} percentage={90} />
                         <Row>
                           <Flex>
                             <h4>Features</h4>
@@ -206,7 +217,9 @@ const FeaturesPage = class extends Component {
                               ? this.createFeaturePermission((perm) => (
                                   <div className='text-right'>
                                     <Button
-                                      disabled={!perm || readOnly}
+                                      disabled={
+                                        !perm || readOnly || isLimitReached
+                                      }
                                       data-test='show-create-feature-btn'
                                       id='show-create-feature-btn'
                                       onClick={this.newFlag}

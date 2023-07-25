@@ -188,6 +188,7 @@ const controller = {
               data
                 .get(`${Project.api}environments/?project=${project.id}`)
                 .then((res) => {
+                  console.log('DEBUG: res:', res)
                   projects[i].environments = _.sortBy(res.results, 'name')
                 })
                 .catch(() => {

@@ -18,6 +18,8 @@ import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
+import ProjectStore from 'common/stores/project-store'
+import AlertLimit from 'components/AlertLimit'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -63,6 +65,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   })
   const [removeSegment] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
+  const isLimitReached =
+    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
 
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -158,6 +162,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
+            <AlertLimit limitType={'segment'} percentage={90} />
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
@@ -183,7 +188,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         manageSegmentsPermission,
                         'Manage segments',
                         <Button
-                          disabled={hasNoOperators || !manageSegmentsPermission}
+                          disabled={
+                            hasNoOperators ||
+                            !manageSegmentsPermission ||
+                            isLimitReached
+                          }
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'
                           onClick={newSegment}

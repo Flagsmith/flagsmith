@@ -52,6 +52,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "use_mv_v2_evaluation",
             "use_identity_composite_key_for_hashing",
             "hide_sensitive_data",
+            "total_segment_overrides",
         )
 
     def get_use_mv_v2_evaluation(self, instance: Environment) -> bool:

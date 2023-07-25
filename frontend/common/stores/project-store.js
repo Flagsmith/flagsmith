@@ -118,6 +118,7 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
+          console.log('DEBUG: environments2:', environments)
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
@@ -160,6 +161,21 @@ const store = Object.assign({}, BaseStore, {
     return await controller.getProject(projectId, null, true).then(() => {
       return Promise.resolve(store.getEnvironmentIdFromKey(apiKey))
     })
+  },
+  getMaxFeaturesAllowed: () => {
+    return store.model && store.model.max_features_allowed
+  },
+  getMaxSegmentOverridesAllowed: () => {
+    return store.model && store.model.max_segment_overrides_allowed
+  },
+  getMaxSegmentsAllowed: () => {
+    return store.model && store.model.max_segments_allowed
+  },
+  getTotalFeatures: () => {
+    return store.model && store.model.total_features
+  },
+  getTotalSegments: () => {
+    return store.model && store.model.total_segments
   },
   getEnvs: () => store.model && store.model.environments,
   id: 'project',

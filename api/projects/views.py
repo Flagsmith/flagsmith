@@ -75,6 +75,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
+        print("DEBUG: self get_queryset:", self)
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
 
@@ -84,14 +85,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queryset = self.request.user.get_permitted_projects(
                 permission_key=VIEW_PROJECT
             )
+            print("DEBUG: if hasattr else:", queryset)
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
             queryset = queryset.filter(organisation__id=organisation_id)
+            print("DEBUG: if organisation_id:", queryset)
 
         project_uuid = self.request.query_params.get("uuid")
         if project_uuid:
             queryset = queryset.filter(uuid=project_uuid)
+            print("DEBUG: if project_uuid:", queryset)
 
         return queryset
 
