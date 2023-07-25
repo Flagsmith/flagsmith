@@ -37,7 +37,13 @@ We **will not** export the following entities:
 - Change requests
 - Scheduled flag changes
 
-## The export process
+## Exporting
+
+:::info
+
+Please contact us if you need to be sent an export of your Organisation from our SaaS platform.
+
+:::
 
 The export process involves running a command from a terminal window. This must either be run from a running container
 in your self hosted deployment or, alternatively, you can run a separate container that can connect to the same database
@@ -48,9 +54,9 @@ the 'Organisations' menu item on the left, you should see something along the li
 
 ![](/img/organisations-admin.png)
 
-The id you need is the one in brackets after the organisation name, so here it would be 1.
+The ID you need is the one in brackets after the organisation name, so here it would be 1.
 
-Once you've obtained the id of your organisation, you're ready to export the organisation as a JSON file. There are 2
+Once you've obtained the ID of your organisation, you're ready to export the organisation as a JSON file. There are 2
 options as to where to output the organisation export JSON file. Option 1 - local file system, Option 2 - S3 bucket.
 These options are detailed below.
 
@@ -134,3 +140,21 @@ This requires the application to be running with access to an AWS account. If yo
 make sure whichever role you are using to run you container has access to read from and write to the given S3 bucket.
 Alternatively, you can provide the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables to refer to an
 IAM user that has access to the S3 bucket.
+
+## Importing
+
+### Option 1 - Local File System
+
+This is coming soon - see https://github.com/Flagsmith/flagsmith/issues/2512 for more info.
+
+### Option 2 - S3 bucket
+
+```bash
+python manage.py import-organisation-from-s3 <bucket-name> <key>
+```
+
+e.g.
+
+```bash
+python manage.py import-organisation-from-s3 my-export-bucket exports/organisation-1.json
+```
