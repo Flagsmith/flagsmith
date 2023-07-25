@@ -39,6 +39,12 @@ We **will not** export the following entities:
 
 ## Exporting
 
+:::info
+
+Please contact us if you need to be sent an export of your Organisation from our SaaS platform.
+
+:::
+
 The export process involves running a command from a terminal window. This must either be run from a running container
 in your self hosted deployment or, alternatively, you can run a separate container that can connect to the same database
 as your deployed fleet of flagsmith instances. To run the command, you'll also need to find the id of your organisation.
@@ -48,9 +54,9 @@ the 'Organisations' menu item on the left, you should see something along the li
 
 ![](/img/organisations-admin.png)
 
-The id you need is the one in brackets after the organisation name, so here it would be 1.
+The ID you need is the one in brackets after the organisation name, so here it would be 1.
 
-Once you've obtained the id of your organisation, you're ready to export the organisation as a JSON file. There are 2
+Once you've obtained the ID of your organisation, you're ready to export the organisation as a JSON file. There are 2
 options as to where to output the organisation export JSON file. Option 1 - local file system, Option 2 - S3 bucket.
 These options are detailed below.
 
