@@ -191,7 +191,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
         </Row>
 
-        <div className='mx-2 text-left pb-2'>
+        <div className='mx-2 text-left pb-2 mt-4'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
