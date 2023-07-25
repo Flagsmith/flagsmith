@@ -673,7 +673,11 @@ const CreateFlag = class extends Component {
           </FormGroup>
         )}
         {!hideValue && (
-          <div className={identity && !description ? 'mt-4 mx-3' : ''}>
+          <div
+            className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
+              identity ? 'mx-3' : ''
+            }`}
+          >
             <Feature
               readOnly={noPermissions}
               hide_from_client={hide_from_client}
@@ -1422,16 +1426,16 @@ const CreateFlag = class extends Component {
                                       title={'Feature'}
                                       json={projectFlag}
                                     />
-                                    <ModalHR />
+                                    <ModalHR className='mt-4' />
                                     {isEdit && (
                                       <div className='text-right mt-3'>
                                         {createFeature ? (
-                                          <p className='text-right text-dark fs-small lh-sm'>
+                                          <p className='text-right modal-caption fs-small lh-sm'>
                                             This will save the above settings{' '}
                                             <strong>all environments</strong>.
                                           </p>
                                         ) : (
-                                          <p className='text-right text-dark fs-small lh-sm'>
+                                          <p className='text-right modal-caption fs-small lh-sm'>
                                             To edit this feature's settings, you
                                             will need{' '}
                                             <strong>
@@ -1473,10 +1477,13 @@ const CreateFlag = class extends Component {
                                   createFeature,
                                   project.prevent_flag_defaults,
                                 )}
+                                <ModalHR
+                                  className={`my-4 ${identity ? 'mx-3' : ''}`}
+                                />
                                 {!identity && (
-                                  <div className='text-right mr-3 mb-3'>
+                                  <div className='text-right mb-3'>
                                     {project.prevent_flag_defaults ? (
-                                      <p className='text-right text-dark fs-small lh-sm'>
+                                      <p className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1484,7 +1491,7 @@ const CreateFlag = class extends Component {
                                         environment once the feature is created.
                                       </p>
                                     ) : (
-                                      <p className='text-right text-dark fs-small lh-sm'>
+                                      <p className='text-right modal-caption fs-small lh-sm'>
                                         This will create the feature for{' '}
                                         <strong>all environments</strong>, you
                                         can edit this feature per environment
@@ -1509,12 +1516,12 @@ const CreateFlag = class extends Component {
                                 )}
                               </div>
                             )}
-
+                            
                             {identity && (
                               <div className='pr-3'>
                                 {identity ? (
                                   <div className='mb-3 mt-4'>
-                                    <p className='text-left ml-3 text-dark'>
+                                    <p className='text-left ml-3 modal-caption fs-small lh-small'>
                                       This will update the feature value for the
                                       user <strong>{identityName}</strong> in
                                       <strong>

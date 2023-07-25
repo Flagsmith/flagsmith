@@ -165,7 +165,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                           </div>
                           <div
                             onClick={() => confirmDeleteTag(tag)}
-                            className='ml-2 clickable'
+                            className='ml-3 clickable'
                           >
                             <Icon name='trash-2' fill='#9DA4AE' />
                           </div>
