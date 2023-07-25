@@ -1,7 +1,7 @@
 import logging
 import os
 import typing
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from inspect import getmodule
 from threading import Thread
 
@@ -74,6 +74,7 @@ def register_recurring_task(
     task_name: str = None,
     args: typing.Tuple = (),
     kwargs: typing.Dict = None,
+    first_run_time: time = None,
 ):
     if not os.environ.get("RUN_BY_PROCESSOR"):
         # Do not register recurring tasks if not invoked by task processor
@@ -90,10 +91,11 @@ def register_recurring_task(
 
         task, _ = RecurringTask.objects.update_or_create(
             task_identifier=task_identifier,
-            run_every=run_every,
             defaults={
                 "serialized_args": RecurringTask.serialize_data(args or tuple()),
                 "serialized_kwargs": RecurringTask.serialize_data(kwargs or dict()),
+                "run_every": run_every,
+                "first_run_time": first_run_time,
             },
         )
         return task
