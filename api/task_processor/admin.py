@@ -18,12 +18,13 @@ class RecurringTaskRunInline(admin.StackedInline):
     model = RecurringTaskRun
     extra = 0
     show_change_link = False
+    max_num = 5
 
 
 @admin.register(RecurringTask)
 class RecurringTaskAdmin(admin.ModelAdmin):
     inlines = (RecurringTaskRunInline,)
-    list_display = ("uuid", "task_identifier", "run_every", "last_run_status")
+    list_display = ("uuid", "task_identifier", "run_every", "last_run_status", "is_locked")
     readonly_fields = ("args", "kwargs")
 
     def last_run_status(self, instance: Task) -> str:
