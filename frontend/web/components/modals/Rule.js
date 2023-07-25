@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react'
 import Constants from 'common/constants'
 import cloneDeep from 'lodash/cloneDeep'
-import TextArea from 'components/base/forms/TextArea'
 import Icon from 'components/Icon'
 
 const splitIfValue = (v, append) =>
@@ -50,25 +49,23 @@ export default class Rule extends PureComponent {
         <Row noWrap className='rule align-items-start justify-content-between'>
           <Tooltip
             title={
-              <Flex>
-                <TextArea
-                  readOnly={this.props.readOnly}
-                  data-test={`${this.props['data-test']}-property-${i}`}
-                  value={`${rule.property}`}
-                  placeholder={
-                    operator && operator === 'PERCENTAGE_SPLIT'
-                      ? 'Trait (N/A)'
-                      : 'Trait *'
-                  }
-                  onChange={(e) =>
-                    this.setRuleProperty(i, 'property', {
-                      value: Utils.safeParseEventValue(e),
-                    })
-                  }
-                  disabled={operator && operator === 'PERCENTAGE_SPLIT'}
-                  style={{ width: '156px' }}
-                />
-              </Flex>
+              <Input
+                readOnly={this.props.readOnly}
+                data-test={`${this.props['data-test']}-property-${i}`}
+                value={`${rule.property}`}
+                style={{ width: '135px' }}
+                placeholder={
+                  operator && operator === 'PERCENTAGE_SPLIT'
+                    ? 'Trait (N/A)'
+                    : 'Trait *'
+                }
+                onChange={(e) =>
+                  this.setRuleProperty(i, 'property', {
+                    value: Utils.safeParseEventValue(e),
+                  })
+                }
+                disabled={operator && operator === 'PERCENTAGE_SPLIT'}
+              />
             }
             place='top'
           >
@@ -82,15 +79,16 @@ export default class Rule extends PureComponent {
               value={operator && _.find(operators, { value: operator })}
               onChange={(value) => this.setRuleProperty(i, 'operator', value)}
               options={operators}
-              style={{ width: '200px' }}
+              style={{ width: '190px' }}
             />
           )}
-          <TextArea
+          <Input
             readOnly={this.props.readOnly}
             data-test={`${this.props['data-test']}-value-${i}`}
             value={value || ''}
             placeholder={valuePlaceholder}
             disabled={operatorObj && operatorObj.hideValue}
+            style={{ width: '135px' }}
             onChange={(e) => {
               const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
               this.setRuleProperty(
@@ -106,7 +104,6 @@ export default class Rule extends PureComponent {
               )
             }}
             isValid={Utils.validateRule(rule)}
-            style={{ width: '100px' }}
           />
           {isLastRule && !this.props.readOnly ? (
             <Button
