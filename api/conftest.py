@@ -309,23 +309,28 @@ def master_api_key_client(master_api_key):
 
 
 @pytest.fixture()
-def view_environment_permission():
+def view_environment_permission(db):
     return PermissionModel.objects.get(key=VIEW_ENVIRONMENT)
 
 
 @pytest.fixture()
-def manage_identities_permission():
+def manage_identities_permission(db):
     return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
 
 
 @pytest.fixture()
-def view_identities_permission():
+def view_identities_permission(db):
     return PermissionModel.objects.get(key=VIEW_IDENTITIES)
 
 
 @pytest.fixture()
-def view_project_permission():
+def view_project_permission(db):
     return PermissionModel.objects.get(key=VIEW_PROJECT)
+
+
+@pytest.fixture()
+def create_project_permission(db):
+    return PermissionModel.objects.get(key=CREATE_PROJECT)
 
 
 @pytest.fixture()
@@ -429,11 +434,6 @@ def environment_content_type():
 @pytest.fixture()
 def project_content_type():
     return ContentType.objects.get_for_model(Project)
-
-
-@pytest.fixture
-def create_project_permission(db):
-    return OrganisationPermissionModel.objects.get(key=CREATE_PROJECT)
 
 
 @pytest.fixture
