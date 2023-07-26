@@ -12,14 +12,31 @@ from projects.models import (
 from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
-class MigrationStatusMixin(serializers.Serializer):
+class ProjectListSerializer(serializers.ModelSerializer):
     migration_status = serializers.SerializerMethodField(
         help_text="Edge migration status of the project; can be one of: "
         + ", ".join([k.value for k in ProjectIdentityMigrationStatus])
     )
     use_edge_identities = serializers.SerializerMethodField()
 
-    def get_migration_status(self, obj):
+    class Meta:
+        model = Project
+        fields = (
+            "id",
+            "uuid",
+            "name",
+            "organisation",
+            "hide_disabled_flags",
+            "enable_dynamo_db",
+            "migration_status",
+            "use_edge_identities",
+            "prevent_flag_defaults",
+            "enable_realtime_updates",
+            "only_allow_lower_case_feature_names",
+            "feature_name_regex",
+        )
+
+    def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
             migration_status = ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
         elif obj.is_edge_project_by_default:
@@ -32,48 +49,16 @@ class MigrationStatusMixin(serializers.Serializer):
 
         return migration_status
 
-    def get_use_edge_identities(self, obj):
+    def get_use_edge_identities(self, obj: Project) -> bool:
         return (
             self.context["migration_status"]
             == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
         )
 
 
-class ProjectListSerializer(MigrationStatusMixin, serializers.ModelSerializer):
-    class Meta:
-        model = Project
-        fields = (
-            "id",
-            "uuid",
-            "name",
-            "organisation",
-            "hide_disabled_flags",
-            "enable_dynamo_db",
-            "migration_status",
-            "use_edge_identities",
-            "prevent_flag_defaults",
-            "enable_realtime_updates",
-            "only_allow_lower_case_feature_names",
-            "feature_name_regex",
-        )
-
-
-class ProjectRetrieveSerializer(MigrationStatusMixin, serializers.ModelSerializer):
-    class Meta:
-        model = Project
-        fields = (
-            "id",
-            "uuid",
-            "name",
-            "organisation",
-            "hide_disabled_flags",
-            "enable_dynamo_db",
-            "migration_status",
-            "use_edge_identities",
-            "prevent_flag_defaults",
-            "enable_realtime_updates",
-            "only_allow_lower_case_feature_names",
-            "feature_name_regex",
+class ProjectRetrieveSerializer(ProjectListSerializer):
+    class Meta(ProjectListSerializer.Meta):
+        fields = ProjectListSerializer.Meta.fields + (
             "max_segments_allowed",
             "max_features_allowed",
             "max_segment_overrides_allowed",

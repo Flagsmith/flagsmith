@@ -52,7 +52,6 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "use_mv_v2_evaluation",
             "use_identity_composite_key_for_hashing",
             "hide_sensitive_data",
-            "total_segment_overrides",
         )
 
     def get_use_mv_v2_evaluation(self, instance: Environment) -> bool:
@@ -66,15 +65,20 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         return instance.use_identity_composite_key_for_hashing
 
 
+class EnvironmentRetrieveSerializerLight(EnvironmentSerializerLight):
+    class Meta(EnvironmentSerializerLight.Meta):
+        fields = EnvironmentSerializerLight.Meta.fields + ("total_segment_overrides",)
+
+
 class EnvironmentSerializerWithMetadata(
     SerializerWithMetadata,
     DeleteBeforeUpdateWritableNestedModelSerializer,
-    EnvironmentSerializerLight,
+    EnvironmentRetrieveSerializerLight,
 ):
     metadata = MetadataSerializer(required=False, many=True)
 
-    class Meta(EnvironmentSerializerLight.Meta):
-        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
+    class Meta(EnvironmentRetrieveSerializerLight.Meta):
+        fields = EnvironmentRetrieveSerializerLight.Meta.fields + ("metadata",)
 
     def get_organisation_from_validated_data(self, validated_data) -> Organisation:
         return validated_data.get("project").organisation
