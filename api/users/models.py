@@ -10,8 +10,6 @@ from django.db.models import Count, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-from environments.models import Environment
-from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -28,13 +26,14 @@ from permissions.permission_service import (
     is_user_project_admin,
     user_has_organisation_permission,
 )
-from projects.models import Project, UserProjectPermission
+from projects.models import Project
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from organisations.invites.models import (
         AbstractBaseInviteModel,
         Invite,
@@ -202,11 +201,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
-        UserProjectPermission.objects.filter(
-            user=self, project__organisation=organisation
-        ).delete()
-        UserEnvironmentPermission.objects.filter(
-            user=self, environment__project__organisation=organisation
+        self.project_permissions.filter(project__organisation=organisation).delete()
+        self.environment_permissions.filter(
+            environment__project__organisation=organisation
         ).delete()
         self.permission_groups.remove(*organisation.permission_groups.all())
 
@@ -240,7 +237,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return project in self.get_permitted_projects(permission)
 
     def has_environment_permission(
-        self, permission: str, environment: Environment
+        self, permission: str, environment: "Environment"
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project
@@ -251,7 +248,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def get_permitted_environments(
         self, permission_key: str, project: Project
-    ) -> QuerySet[Environment]:
+    ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_user(self, project, permission_key)
 
     @staticmethod
@@ -278,7 +275,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def is_environment_admin(
         self,
-        environment: Environment,
+        environment: "Environment",
     ) -> bool:
         return is_user_environment_admin(self, environment)
 

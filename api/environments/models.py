@@ -130,16 +130,7 @@ class Environment(
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
-        features = self.project.features.all()
-        for feature in features:
-            FeatureState.objects.create(
-                feature=feature,
-                environment=self,
-                identity=None,
-                enabled=False
-                if self.project.prevent_flag_defaults
-                else feature.default_enabled,
-            )
+        FeatureState.create_initial_feature_states_for_environment(environment=self)
 
     @hook(AFTER_UPDATE)
     def clear_environment_cache(self):

@@ -1,21 +1,26 @@
-import copy
 import datetime
-import hashlib
-import time
 import typing
-import uuid
 
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
+from django.conf import settings
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 
-from environments.models import Environment
-from features.models import Feature, FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from features.models import Feature
 
-class EnvironmentFeatureVersion(LifecycleModel):
+
+class EnvironmentFeatureVersion(
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
     # TODO:
     #  - verify that sha can be used as primary key in oracle / mysql
     #  - are there any performance impacts to consider with such a large primary key?
@@ -31,38 +36,26 @@ class EnvironmentFeatureVersion(LifecycleModel):
     published = models.BooleanField(default=False)
     live_from = models.DateTimeField(null=True)
 
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="created_environment_feature_versions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="published_environment_feature_versions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
     class Meta:
         indexes = [Index(fields=("environment", "feature"))]
 
     def __gt__(self, other):
         return self.is_live and (not other.is_live or self.live_from > other.live_from)
-
-    @hook(AFTER_CREATE)
-    def add_existing_feature_states(self):
-        previous_environment_feature_version = self.get_previous_version()
-        if not previous_environment_feature_version:
-            return
-
-        feature_states = []
-        for feature_state in previous_environment_feature_version.feature_states.all():
-            new_feature_state = copy.deepcopy(feature_state)
-            new_feature_state.id = None
-            new_feature_state.environment_feature_version = self
-            new_feature_state.uuid = uuid.uuid4()
-            feature_states.append(new_feature_state)
-
-        FeatureState.objects.bulk_create(feature_states)
-
-    @hook(BEFORE_CREATE)
-    def generate_sha(self):
-        self.sha = hashlib.sha256(
-            f"{self.environment.id}{self.feature.id}{time.time()}".encode("utf-8")
-        ).hexdigest()
-
-    @hook(BEFORE_CREATE, when="published", is_now=True)
-    def update_live_from(self):
-        if not self.live_from:
-            self.live_from = timezone.now()
 
     @property
     def is_live(self):
@@ -70,7 +63,7 @@ class EnvironmentFeatureVersion(LifecycleModel):
 
     @classmethod
     def create_initial_version(
-        cls, environment: Environment, feature: Feature
+        cls, environment: "Environment", feature: "Feature"
     ) -> "EnvironmentFeatureVersion":
         """
         Create an initial version with all the current feature states

@@ -70,6 +70,7 @@ from features.value_types import (
     INTEGER,
     STRING,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -80,7 +81,6 @@ logger = logging.getLogger(__name__)
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
-    from features.versioning.models import EnvironmentFeatureVersion
 
 
 class Feature(
@@ -126,19 +126,7 @@ class Feature(
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
-        # create feature states for all environments
-        environments = self.project.environments.all()
-        for env in environments:
-            # unable to bulk create as we need signals
-            FeatureState.objects.create(
-                feature=self,
-                environment=env,
-                identity=None,
-                feature_segment=None,
-                enabled=False
-                if self.project.prevent_flag_defaults
-                else self.default_enabled,
-            )
+        FeatureState.create_initial_feature_states_for_feature(feature=self)
 
     def validate_unique(self, *args, **kwargs):
         """
@@ -694,10 +682,6 @@ class FeatureState(
         the previous behaviour.
         """
         if self.environment.use_v2_feature_versioning:
-            # TODO:
-            #  - verify this logic
-            #  - determine if we need to change the behaviour which creates new feature states when a new
-            #  environment / feature is created?
             # We don't need to do anything since, with the new behaviour, the expectation is that the
             # FE will create the initial version.
             return
@@ -746,6 +730,39 @@ class FeatureState(
 
         # Default to string if not an anticipate type value to keep backwards compatibility.
         return fsv_type if fsv_type in accepted_types else STRING
+
+    @classmethod
+    def create_initial_feature_states_for_environment(
+        cls, environment: "Environment"
+    ) -> None:
+        for feature in environment.project.features.all():
+            cls._create_initial_feature_state(feature=feature, environment=environment)
+
+    @classmethod
+    def create_initial_feature_states_for_feature(cls, feature: "Feature") -> None:
+        for environment in feature.project.environments.all():
+            cls._create_initial_feature_state(feature=feature, environment=environment)
+
+    @classmethod
+    def _create_initial_feature_state(
+        cls, feature: "Feature", environment: "Environment"
+    ) -> None:
+        kwargs = {
+            "feature": feature,
+            "environment": environment,
+            "enabled": False
+            if environment.project.prevent_flag_defaults
+            else feature.default_enabled,
+        }
+        if environment.use_v2_feature_versioning:
+            # TODO: tests!
+            kwargs.update(
+                environment_feature_version=EnvironmentFeatureVersion.create_initial_version(
+                    environment=environment, feature=feature
+                )
+            )
+
+        cls.objects.create(**kwargs)
 
     @classmethod
     def get_next_version_number(

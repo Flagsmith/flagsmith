@@ -24,12 +24,10 @@ from flag_engine.segments.models import (
     SegmentRuleModel,
 )
 
-from features.models import FeatureState
-
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import Feature, FeatureSegment
+    from features.models import Feature, FeatureSegment, FeatureState
     from features.multivariate.models import (
         MultivariateFeatureOption,
         MultivariateFeatureStateValue,

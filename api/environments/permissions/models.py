@@ -13,7 +13,11 @@ class EnvironmentPermissionModel(PermissionModel):
 
 
 class UserEnvironmentPermission(AbstractBasePermissionModel):
-    user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        "users.FFAdminUser",
+        on_delete=models.CASCADE,
+        related_name="environment_permissions",
+    )
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_query_name="userpermission"
     )
