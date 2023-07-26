@@ -1,6 +1,5 @@
 import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
 
 type LimitAlertType = {
   limitType: string
@@ -15,9 +14,6 @@ const LimitAlert: FC<LimitAlertType> = (props) => {
         className='alert flex-1 align-items-center'
         style={{ background: '#FDFDDD' }}
       >
-        <span className='icon-alert'>
-          <Icon name='info' />
-        </span>
         <span>
           {`You project|environment using ${percentage}% of the total allowance of ${limitType}. Please contact `}
           <Button theme='text'>support</Button>{' '}

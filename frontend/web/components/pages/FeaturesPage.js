@@ -193,7 +193,7 @@ const FeaturesPage = class extends Component {
                         {showLimitAlert.closeToLimit && (
                           <LimitAlert
                             limitType={'Feautures'}
-                            percentage={showAlertLimit.percentage}
+                            percentage={showLimitAlert.percentage}
                           />
                         )}
                         <Row>
