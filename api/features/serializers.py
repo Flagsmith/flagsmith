@@ -433,6 +433,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "feature",
         )
 
     def _get_save_kwargs(self, field_name):
