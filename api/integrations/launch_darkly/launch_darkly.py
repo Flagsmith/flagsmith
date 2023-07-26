@@ -41,9 +41,7 @@ class LaunchDarklyWrapper:
             feature = self._create_feature(ld_flag, environments)
 
     def _get_project(self, project_id: str):
-        response = self.client.get(
-            f"{LAUNCH_DARKLY_API_URL}/projects/{project_id}"
-        )
+        response = self.client.get(f"{LAUNCH_DARKLY_API_URL}/projects/{project_id}")
         response_json = self._handle_response(response)
         return response_json
 
@@ -55,9 +53,7 @@ class LaunchDarklyWrapper:
         return response_json.get("items", [])
 
     def _get_flags(self, project_id: str):
-        response = self.client.get(
-            f"{LAUNCH_DARKLY_API_URL}/flags/{project_id}"
-        )
+        response = self.client.get(f"{LAUNCH_DARKLY_API_URL}/flags/{project_id}")
         response_json = self._handle_response(response)
         return response_json.get("items", [])
 
@@ -78,18 +74,18 @@ class LaunchDarklyWrapper:
 
     def _create_project(self, organisation_id: UUID, ld_project: dict) -> Project:
         return Project.objects.create(
-            organisation_id=organisation_id,
-            name=ld_project.get("name")
+            organisation_id=organisation_id, name=ld_project.get("name")
         )
 
     def _create_environment(self, ld_environment, project: Project) -> Environment:
         return Environment.objects.create(
             name=ld_environment.get("name"),
             project=project,
-
         )
 
-    def _create_feature(self, ld_flag, environments: list[Environment], project: Project):
+    def _create_feature(
+        self, ld_flag, environments: list[Environment], project: Project
+    ):
         match ld_flag.get("kind"):
             case "boolean":
                 self._create_boolean_feature(ld_flag, environments, project)
@@ -98,7 +94,9 @@ class LaunchDarklyWrapper:
             case _:
                 raise Exception("Invalid flag type from Launch Darkly")
 
-    def _create_boolean_feature(self, ld_flag, environments: list[Environment], project: Project):
+    def _create_boolean_feature(
+        self, ld_flag, environments: list[Environment], project: Project
+    ):
         # todo try get tags
         feature = Feature.objects.create(
             name=ld_flag.get("key"),
@@ -108,7 +106,7 @@ class LaunchDarklyWrapper:
             default_enabled=None,  # todo
             type=STANDARD,
             tags=None,  # todo
-            is_archived = ld_flag.get("archived"),
+            is_archived=ld_flag.get("archived"),
             owners=None,  # todo
             is_server_key_only=None,  # todo
         )
@@ -117,12 +115,11 @@ class LaunchDarklyWrapper:
             if ld_environment:
                 FeatureState.objects.create(
                     feature=feature,
-                    environment = environment,
-                    identity=None, # todo
-                    feature_segment=None, # todo
+                    environment=environment,
+                    identity=None,  # todo
+                    feature_segment=None,  # todo
                     enabled=ld_environment.get("_summary").get("on"),
                 )
-
 
     def _create_multivariate_feature(self, ld_flag, environments: list[Environment]):
         pass
