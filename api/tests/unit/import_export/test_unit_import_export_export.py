@@ -252,6 +252,33 @@ def test_export_features(project, environment, segment, admin_user):
     # TODO: test whether the export is importable
 
 
+def test_export_features_with_environment_feature_version(
+    project, environment, segment, admin_user
+):
+    # Given
+    # an environment configured to use v2 feature versioning
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    # a standard feature
+    Feature.objects.create(project=project, name="standard_feature")
+
+    # When
+    export = export_features(organisation_id=project.organisation_id)
+
+    # Then
+    assert export
+
+    for item in export:
+        if item["model"] == "versioning.EnvironmentFeatureVersion":
+            assert item["fields"]["sha"]
+            assert item["fields"]["uuid"]
+        elif item["model"] == "features.FeatureState":
+            assert item["fields"]["environment_feature_version"]
+
+    # TODO: test whether the export is importable
+
+
 @mock_s3
 def test_organisation_exporter_export_to_s3(organisation):
     # Given

@@ -23,6 +23,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from integrations.datadog.models import DataDogConfiguration
 from integrations.heap.models import HeapConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -188,6 +189,11 @@ def export_features(organisation_id: int) -> typing.List[dict]:
                 Feature,
                 Q(project__organisation__id=organisation_id),
                 exclude_fields=["owners"],
+            ),
+            _EntityExportConfig(
+                EnvironmentFeatureVersion,
+                Q(feature__project__organisation__id=organisation_id),
+                exclude_fields=["created_by", "published_by"],
             ),
             _EntityExportConfig(
                 MultivariateFeatureOption,
