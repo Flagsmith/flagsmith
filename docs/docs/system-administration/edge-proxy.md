@@ -1,4 +1,6 @@
-# Edge Proxy
+---
+title: Edge Proxy
+---
 
 The Flagsmith Edge Proxy allows you to run an instance of the Flagsmith Engine close to your servers. If you are running
 Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:

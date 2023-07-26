@@ -7,7 +7,7 @@ export default class ErrorMessage extends PureComponent {
 
   render() {
     return this.props.error ? (
-      <div className='alert alert-danger flex-1'>
+      <div className='alert alert-danger flex-1 align-items-center'>
         <span className='icon-alert'>
           <Icon name='close-circle' />
         </span>

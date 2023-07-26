@@ -36,6 +36,7 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      showArchived: false,
       preselect: Utils.fromParam().flag,
       tags: [],
     }
@@ -395,7 +396,10 @@ const UserPage = class extends Component {
                                             )
                                           }}
                                           className='px-2 py-2 ml-2 mr-2'
-                                          tag={{ label: 'Archived' }}
+                                          tag={{
+                                            color: '#0AADDF',
+                                            label: 'Archived',
+                                          }}
                                         />
                                       </TagFilter>
                                     </div>
@@ -530,7 +534,6 @@ const UserPage = class extends Component {
                                           {hasUserOverride ? (
                                             <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
-                                              <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
@@ -566,7 +569,6 @@ const UserPage = class extends Component {
                                                     </span>
                                                   )}
                                                 </Flex>
-                                                <span className='ml-1 chip-icon icon ion-md-information' />
                                               </Row>
                                             </span>
                                           ) : flagValueDifferent ? (
@@ -575,7 +577,7 @@ const UserPage = class extends Component {
                                                 data-test={`feature-override-${i}`}
                                                 className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by a % variation in
                                                   the environment, the control
@@ -586,14 +588,13 @@ const UserPage = class extends Component {
                                                     value={`${flagValue}`}
                                                   />
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             ) : (
                                               <span
                                                 data-test={`feature-override-${i}`}
                                                 className='flex-row chip mt-1'
                                               >
-                                                <span>
+                                                <span className='flex-row'>
                                                   This feature is being
                                                   overriden by segments and
                                                   would normally be{' '}
@@ -604,7 +605,6 @@ const UserPage = class extends Component {
                                                   />{' '}
                                                   for this user
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             )
                                           ) : (

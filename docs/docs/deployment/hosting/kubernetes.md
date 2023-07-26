@@ -268,6 +268,11 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 
 [You need to perform some additional steps to configure InfluxDB.](/deployment/overview#influxdb).
 
+### Task Processor
+
+The task processor itself is documented [here](https://docs.flagsmith.com/deployment/configuration/task-processor). See
+the table below for the values to set to configure the task processor using the helm chart.
+
 ## Chart Values
 
 The following table lists the configurable parameters of the chart and their default values.
@@ -332,6 +337,34 @@ The following table lists the configurable parameters of the chart and their def
 | `frontend.readinessProbe.periodSeconds`            |                                                                  | 10                             |
 | `frontend.readinessProbe.successThreshold`         |                                                                  | 1                              |
 | `frontend.readinessProbe.timeoutSeconds`           |                                                                  | 10                             |
+| `taskProcessor.image.repository`                   |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.tag`                          |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.imagePullPolicy`              |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.image.imagePullSecrets`             |                                                                  | (same as for `api.image`)      |
+| `taskProcessor.enabled`                            | Whether to run the task processor                                | `false`                        |
+| `taskProcessor.replicacount`                       |                                                                  | 1                              |
+| `taskProcessor.sleepIntervalMs`                    | Passed as `--sleepintervalms` to the task processor              |                                |
+| `taskProcessor.numThreads`                         | Passed as `--numthreads` to the task processor                   |                                |
+| `taskProcessor.gracePeriodMs`                      | Passed as `--graceperiodms` to the task processor                |                                |
+| `taskProcessor.queuePopSize`                       | Passed as `--queuepopsize` to the task processor                 |                                |
+| `taskProcessor.livenessProbe.failureThreshold`     |                                                                  | 5                              |
+| `taskProcessor.livenessProbe.initialDelaySeconds`  |                                                                  | 5                              |
+| `taskProcessor.livenessProbe.periodSeconds`        |                                                                  | 10                             |
+| `taskProcessor.livenessProbe.successThreshold`     |                                                                  | 1                              |
+| `taskProcessor.livenessProbe.timeoutSeconds`       |                                                                  | 2                              |
+| `taskProcessor.readinessProbe.failureThreshold`    |                                                                  | 10                             |
+| `taskProcessor.readinessProbe.initialDelaySeconds` |                                                                  | 1                              |
+| `taskProcessor.readinessProbe.periodSeconds`       |                                                                  | 10                             |
+| `taskProcessor.readinessProbe.successThreshold`    |                                                                  | 1                              |
+| `taskProcessor.readinessProbe.timeoutSeconds`      |                                                                  | 2                              |
+| `taskProcessor.podAnnotations`                     |                                                                  | `{}`                           |
+| `taskProcessor.resources`                          |                                                                  | `{}`                           |
+| `taskProcessor.podLabels`                          |                                                                  | `{}`                           |
+| `taskProcessor.nodeSelector`                       |                                                                  | `{}`                           |
+| `taskProcessor.tolerations`                        |                                                                  | `[]`                           |
+| `taskProcessor.affinity`                           |                                                                  | `{}`                           |
+| `taskProcessor.podSecurityContext`                 |                                                                  | `{}`                           |
+| `taskProcessor.defaultPodSecurityContext.enabled`  | whether to use the default security context                      | `true`                         |
 | `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database                | `true`                         |
 | `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                    | `true`                         |
 | `nameOverride`                                     |                                                                  | `flagsmith-postgres`           |
@@ -348,18 +381,18 @@ The following table lists the configurable parameters of the chart and their def
 | `databaseExternal.urlFromExistingSecret.enabled`   | Reference an existing secret containing the database URL         |                                |
 | `databaseExternal.urlFromExistingSecret.name`      | Name of referenced secret                                        |                                |
 | `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secrt to use                           |                                |
-| `influxdb.enabled`                                 |                                                                  | `true`                         |
-| `influxdb.nameOverride`                            |                                                                  | `influxdb`                     |
-| `influxdb.image.repository`                        | docker image repository for influxdb                             | `quay.io/influxdb/influxdb`    |
-| `influxdb.image.tag`                               | docker image tag for influxdb                                    | `v2.0.2`                       |
-| `influxdb.image.imagePullPolicy`                   |                                                                  | `IfNotPresent`                 |
-| `influxdb.image.imagePullSecrets`                  |                                                                  | `[]`                           |
-| `influxdb.adminUser.organization`                  |                                                                  | `influxdata`                   |
-| `influxdb.adminUser.bucket`                        |                                                                  | `default`                      |
-| `influxdb.adminUser.user`                          |                                                                  | `admin`                        |
-| `influxdb.adminUser.password`                      |                                                                  | randomly generated             |
-| `influxdb.adminUser.token`                         |                                                                  | randomly generated             |
-| `influxdb.persistence.enabled`                     |                                                                  | `false`                        |
+| `influxdb2.enabled`                                |                                                                  | `true`                         |
+| `influxdb2.nameOverride`                           |                                                                  | `influxdb`                     |
+| `influxdb2.image.repository`                       | docker image repository for influxdb                             | `quay.io/influxdb/influxdb`    |
+| `influxdb2.image.tag`                              | docker image tag for influxdb                                    | `v2.0.2`                       |
+| `influxdb2.image.imagePullPolicy`                  |                                                                  | `IfNotPresent`                 |
+| `influxdb2.image.imagePullSecrets`                 |                                                                  | `[]`                           |
+| `influxdb2.adminUser.organization`                 |                                                                  | `influxdata`                   |
+| `influxdb2.adminUser.bucket`                       |                                                                  | `default`                      |
+| `influxdb2.adminUser.user`                         |                                                                  | `admin`                        |
+| `influxdb2.adminUser.password`                     |                                                                  | randomly generated             |
+| `influxdb2.adminUser.token`                        |                                                                  | randomly generated             |
+| `influxdb2.persistence.enabled`                    |                                                                  | `false`                        |
 | `influxdb.resources`                               | resources per pod for the influxdb                               | `{}`                           |
 | `influxdb.nodeSelector`                            |                                                                  | `{}`                           |
 | `influxdb.tolerations`                             |                                                                  | `[]`                           |
@@ -424,6 +457,14 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.prefix`                                | Prefix to add to metric ids                                      | `flagsmith.api`                |
 
 ---
+
+## Key upgrade notes
+
+- [0.20.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.20.0): upgrades the bundled in-cluster Postgres.
+  This makes no effort to preserve data in the bundled in-cluster Postgres if it is in use. This also renames the
+  bundled in-cluster Postgres to have `dev-postgresql` in the name, to signify that it exists such that the chart can be
+  deployed self-contained, but that this Postgres instance is treated as disposable. All Flagsmith installations for
+  which the data is not disposable [should use an externally managed database](#provided-database-configuration).
 
 ## Development and contributing
 

@@ -93,7 +93,7 @@ Traits are stored natively as either numbers, strings or booleans.
 
 ## Traits powering Segments
 
-Traits can be used within your application, but they also be used to power
+Traits can be used within your application, but they can also be used to power
 [Segments](/basic-features/managing-segments.md).
 
 ## Trait Value Data Types

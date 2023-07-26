@@ -14,3 +14,8 @@ class ProjectMigrationError(APIException):
 class TooManyIdentitiesError(APIException):
     status_code = 400
     default_detail = "Too many identities; Please contact support"
+
+
+class ProjectTooLargeError(APIException):
+    status_code = 400
+    default_detail = "Project is too large; Please contact support"
