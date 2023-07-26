@@ -71,7 +71,7 @@ const SamlForm = class extends React.Component {
           />
           <label className='mb-0' htmlFor='organisation'>
             <span className='checkbox mr-2'>
-              {this.state.remember && <Icon name='checkmark' />}
+              {this.state.remember && <Icon name='checkmark-square' />}
             </span>
             Remember this SAML organisation
           </label>

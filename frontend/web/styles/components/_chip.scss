@@ -1,98 +1,111 @@
 @import '../variables';
 .dark {
-  .chip {
-    border: 1px solid $primary-alfa-32;
-    color: $primary400;
+    .chip {
+        border: 1px solid $primary-alfa-32;
+        color: $primary400;
 
-    .icon-check {
-      border: 1px solid $primary-alfa-32;
-    }
-
-    &.MuiChip-root {
-      color: $primary400;
-      .MuiChip-deleteIcon {
-        &:hover {
-          color: $primary400;
+        .icon-check {
+            border: 1px solid $primary-alfa-32;
         }
+
+        &.MuiChip-root {
+            color: $primary400;
+            .MuiChip-deleteIcon {
+                &:hover {
+                    color: $primary400;
+                }
+            }
+        }
+
+        .chip-icon {
+            color: $primary400;
+        }
+
+        &.chip-user {
+          color: $text-icon-light;
       }
+    }
+}
+.chip {
+    align-self: flex-start !important;
+    background-color: $primary-alfa-8;
+    border: 1px solid $primary-alfa-24;
+    padding: 5px 12px;
+    border-radius: $border-radius;
+    margin-right: $input-padding-x;
+    font-size: $font-sm;
+    line-height: $line-height-sm;
+    font-weight: normal;
+    color: $primary600;
+    .icon-check {
+        border: 1px solid $primary-alfa-24;
+        height: 20px;
+        width: 20px;
+        border-radius: $border-radius-sm;
+        margin-right: 0.25rem;
+        svg {
+            vertical-align: baseline;
+        }
     }
 
     .chip-icon {
-      color: $primary400;
+        font-size: 2em;
+        cursor: pointer;
+        margin-left: 0.25rem;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: $primary;
     }
-  }
-}
-.chip {
-  align-self: flex-start !important;
-  background-color: $primary-alfa-8;
-  border: 1px solid $primary-alfa-24;
-  padding: 5px 12px;
-  border-radius: $border-radius;
-  margin-right: $input-padding-x;
-  font-size: $font-sm;
-  line-height: $line-height-sm;
-  font-weight: normal;
-  color: $primary600;
-  .icon-check {
-    border: 1px solid $primary-alfa-24;
-    height: 20px;
-    width: 20px;
-    border-radius: $border-radius-sm;
-    margin-right: 0.25rem;
-    svg {
-      vertical-align: baseline;
+    &--sm {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: $border-radius;
+        font-size: $font-caption;
+        line-height: $line-height-xsm;
+        height: 26px;
+        padding: 3px 8px;
+        margin-right: 5px;
+        .chip-svg-icon {
+            display: block;
+            width: 12px;
+            margin-right: 5px;
+        }
     }
-  }
-  .chip-icon {
-    font-size: 2em;
-    cursor: pointer;
-    margin-left: 0.25rem;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: $primary;
-  }
-  &--sm {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: $border-radius;
-    font-size: $font-caption;
-    line-height: $line-height-xsm;
-    height: 26px;
-    padding: 3px 8px;
-    margin-right: 5px;
-    .chip-svg-icon {
-      display: block;
-      width: 12px;
-      margin-right: 5px;
+    &.chip-user {
+        background-color: $basic-alpha-8;
+        color: $text-icon-dark;
+        border-color: $basic-alpha-24;
+        .chip-icon{
+          color:$text-icon-light-grey;
+        }
     }
-  }
 }
 .mui-root {
-  .MuiChip-root {
-    background-color: $primary-alfa-8;
-    border: 1px solid $primary-alfa-24;
-    border-radius: $border-radius;
-    color: $primary600;
-    font-size: $font-sm;
-    line-height: $line-height-sm;
-  }
-  .MuiChip-clickable:hover,
-  .MuiChip-clickable:focus {
-    background-color: $primary-alfa-8;
-  }
-  .MuiChip-deleteIcon {
-    width: 18px;
-    height: 18px;
-    margin-right: 12px;
-    &:hover {
-      color: $primary;
+    .MuiChip-root {
+        background-color: $primary-alfa-8;
+        border: 1px solid $primary-alfa-24;
+        border-radius: $border-radius;
+        color: $primary600;
+        font-size: $font-sm;
+        line-height: $line-height-sm;
     }
-  }
-  .MuiChip-label {
-    padding-right: 0;
-  }
+    .MuiChip-clickable:hover,
+    .MuiChip-clickable:focus {
+        background-color: $primary-alfa-8;
+    }
+    .MuiChip-deleteIcon {
+        width: 18px;
+        height: 18px;
+        margin-right: 12px;
+        &:hover {
+            color: $primary;
+        }
+    }
+    .MuiChip-label {
+        padding-right: 0;
+    }
 }

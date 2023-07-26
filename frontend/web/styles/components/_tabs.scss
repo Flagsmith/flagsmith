@@ -45,6 +45,7 @@
   position: relative;
   display: flex;
   flex-direction: row;
+  top: 2px;
   button,
   button.btn,
   button.btn-primary {
@@ -69,6 +70,7 @@
     &.tab-active {
       font-weight: $tab-btn-active-font-weight;
       background: transparent;
+      border-bottom: 2px solid $primary;
     }
     .counter-value {
       font-size: $tab-btn-counter-value-font-size;
@@ -109,15 +111,6 @@
   }
 }
 
-.tab-line {
-  bottom: -2px;
-  display: block;
-  height: 2px;
-  position: absolute;
-  transition: left 1s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-  background-color: $tab-line-color;
-}
-
 .tab-item {
   display: none;
   &.tab-active {
@@ -135,7 +128,7 @@
   .unread {
     position: absolute;
     right: 0;
-    top: 13px;
+    top: 9px;
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: 16px;

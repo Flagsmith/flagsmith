@@ -33,7 +33,7 @@ export default function (props) {
         }}
         className='icon-check'
       >
-        {props.active && <Icon name='checkmark' fill={props.color} />}
+        {props.active && <Icon name='checkmark-square' fill={props.color} />}
       </span>
       {props.children}
     </Row>

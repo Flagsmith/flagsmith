@@ -1,6 +1,7 @@
 /**
  * Created by kylejohnson on 25/07/2016.
  */
+import Icon from 'components/Icon'
 import React, { Component } from 'react'
 
 const InputGroup = class extends Component {
@@ -31,7 +32,7 @@ const InputGroup = class extends Component {
               <label htmlFor={id} className='cols-sm-2 control-label'>
                 <div>
                   {props.title}{' '}
-                  <span className='icon ion-ios-information-circle' />{' '}
+                  <Icon name='info-outlined'/>{' '}
                   {props.unsaved && <div className='unread'>Unsaved</div>}
                 </div>
               </label>
@@ -43,7 +44,7 @@ const InputGroup = class extends Component {
         ) : (
           <Row>
             {!!props.title && (
-              <Flex className='mr-4'>
+              <Flex >
                 <label htmlFor={id} className='cols-sm-2 control-label'>
                   <div>
                     {props.title}{' '}

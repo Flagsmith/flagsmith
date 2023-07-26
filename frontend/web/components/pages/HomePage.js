@@ -589,7 +589,7 @@ const HomePage = class extends React.Component {
                                   >
                                     <span className='checkbox mr-2'>
                                       {this.state.marketing_consent_given && (
-                                        <Icon name='checkmark' />
+                                        <Icon name='checkmark-square' />
                                       )}
                                     </span>
                                     Yes, I would like to signup for the twice

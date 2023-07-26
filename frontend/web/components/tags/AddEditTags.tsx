@@ -11,6 +11,8 @@ import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
+import ModalHR from 'components/modals/ModalHR'
+import Icon from 'components/Icon'
 
 type AddEditTagsType = {
   value?: number[]
@@ -92,23 +94,48 @@ const AddEditTags: FC<AddEditTagsType> = ({
           value={value}
         />
       </Row>
-      <InlineModal
-        title='Tags'
-        isOpen={isOpen}
-        onBack={() => setTab('SELECT')}
-        showBack={tab !== 'SELECT'}
-        onClose={toggle}
-        className='inline-modal--tags pb-0'
-      >
-        {tab === 'SELECT' && !noTags && (
+      {tab === 'SELECT' && !noTags && (
+        <InlineModal
+          title='Tags'
+          isOpen={isOpen}
+          onBack={() => setTab('SELECT')}
+          showBack={tab !== 'SELECT'}
+          onClose={toggle}
+          className='inline-modal--tags pb-0'
+          bottom={
+            !readOnly && (
+              <div className='text-right'>
+                {Utils.renderWithPermission(
+                  projectAdminPermission,
+                  Constants.projectPermissions('Admin'),
+                  <div className='inline-modal__buttons'>
+                    <Button
+                      className=''
+                      disabled={!projectAdminPermission}
+                      onClick={() => {
+                        setTab('CREATE')
+                        setFilter('')
+                      }}
+                      type='button'
+                    >
+                      Add New Tag
+                    </Button>
+                    ,
+                  </div>,
+                )}
+              </div>
+            )
+          }
+        >
           <div>
             <Input
               value={filter}
               onChange={(e: InputEvent) =>
                 setFilter(Utils.safeParseEventValue(e))
               }
-              className='full-width mb-2'
+              className='full-width'
               placeholder='Search tags...'
+              search
             />
             {tagsLoading && !projectTags && (
               <div className='text-center'>
@@ -119,7 +146,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
               {filteredTags &&
                 filteredTags.map((tag) => (
                   <div key={tag.id}>
-                    <Row className='py-2'>
+                    <Row className='mt-4'>
                       <Flex>
                         <Tag
                           className='px-2 py-2'
@@ -132,78 +159,60 @@ const AddEditTags: FC<AddEditTagsType> = ({
                         <>
                           <div
                             onClick={() => editTag(tag)}
-                            className='ml-2 px-2 clickable'
+                            className='clickable'
                           >
-                            <span className='icon ion-md-settings' />
+                            <Icon name='setting' fill='#9DA4AE' />
                           </div>
                           <div
                             onClick={() => confirmDeleteTag(tag)}
-                            className='ml-2 px-2 clickable'
+                            className='ml-3 clickable'
                           >
-                            <img
-                              width={16}
-                              src='/static/images/icons/bin.svg'
-                            />
+                            <Icon name='trash-2' fill='#9DA4AE' />
                           </div>
                         </>
                       )}
                     </Row>
                   </div>
                 ))}
-              {!readOnly && (
-                <div className='text-center mt-3'>
-                  {Utils.renderWithPermission(
-                    projectAdminPermission,
-                    Constants.projectPermissions('Admin'),
-                    <div className='mx-2'>
-                      <Button
-                        className='full-width'
-                        disabled={!projectAdminPermission}
-                        onClick={() => {
-                          setTab('CREATE')
-                          setFilter('')
-                        }}
-                        type='button'
-                      >
-                        Create New Tag
-                      </Button>
-                      ,
-                    </div>,
-                  )}
-                </div>
-              )}
               {projectTags && projectTags.length && !filteredTags.length ? (
-                <div className='text-center'>
+                <div className='text-center text-dark mt-4'>
                   No results for "<strong>{filter}</strong>"
                 </div>
               ) : null}
               {noTags && (
-                <div className='text-center'>You have no tags yet</div>
+                <div className='text-center text-dark mt-4'>You have no tags yet</div>
               )}
             </div>
           </div>
-        )}
-
-        {(tab === 'CREATE' || noTags) && (
-          <CreateEditTag
-            projectId={projectId}
-            onComplete={(tag: TTag) => {
-              selectTag(tag)
-              setTab('SELECT')
-            }}
-          />
-        )}
-        {tab === 'EDIT' && (
-          <CreateEditTag
-            projectId={projectId}
-            tag={tag}
-            onComplete={(tag: TTag) => {
-              selectTag(tag)
-              setTab('SELECT')
-            }}
-          />
-        )}
-      </InlineModal>
+        </InlineModal>
+      )}
+      {(tab === 'CREATE' || noTags) && (
+        <CreateEditTag
+          onClose={toggle}
+          isOpen={isOpen}
+          projectId={projectId}
+          title='Create tag'
+          onBack={() => setTab('SELECT')}
+          onComplete={(tag: TTag) => {
+            selectTag(tag)
+            setTab('SELECT')
+          }}
+        />
+      )}
+      {tab === 'EDIT' && (
+        <CreateEditTag
+          title='Edit tag'
+          onClose={toggle}
+          onBack={() => setTab('SELECT')}
+          isOpen={isOpen}
+          projectId={projectId}
+          tag={tag}
+          onComplete={(tag: TTag) => {
+            selectTag(tag)
+            setTab('SELECT')
+          }}
+        />
+      )}
     </div>
   )
 }

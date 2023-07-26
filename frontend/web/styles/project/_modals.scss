@@ -5,41 +5,52 @@
     }
 }
 
-.modal{
+.modal {
     z-index: 100000;
     .modal-content {
         border-radius: $modal-border-radius;
         border: none;
     }
-    .modal-header,.modal-footer {
-        padding-right:$modal-header-padding-x;
-        padding-left:$modal-header-padding-x;
-        padding-top:$modal-header-padding-y;
-        padding-bottom:$modal-header-padding-y;
+    .modal-header,
+    .modal-footer {
+        padding-right: $modal-header-padding-x;
+        padding-left: $modal-header-padding-x;
+        padding-top: $modal-header-padding-y;
+        padding-bottom: $modal-header-padding-y;
     }
     .modal-body {
-        padding-right:$modal-body-padding-x;
-        padding-left:$modal-body-padding-x;
-        padding-top:$modal-body-padding-y;
-        padding-bottom:$modal-body-padding-y;
+        padding-right: $modal-body-padding-x;
+        padding-left: $modal-body-padding-x;
+        padding-top: $modal-body-padding-y;
+        padding-bottom: $modal-body-padding-y;
     }
     &.p-0 {
-        .modal-content>.modal-body {
+        .modal-content > .modal-body {
             padding: 0;
         }
     }
 }
+.modal-caption {
+    color: $text-icon-dark;
+}
 
-$side-width: 66%;
+$side-width: 660px;
 .dark {
     .inline-modal {
         background: $modal-bg-dark;
-        box-shadow:rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
+
+        .assignees-list-item {
+            color: $text-icon-light;
+        }
     }
     .modal-content {
-        box-shadow:rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px, rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
         background: $modal-bg-dark;
         color: $modal-content-color-dark;
+    }
+    .modal-caption {
+        color: $text-icon-light;
     }
 }
 
@@ -60,7 +71,7 @@ $side-width: 66%;
 
     .modal-dialog {
         box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px, rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-        transition: transform .2s ease-out;
+        transition: transform 0.2s ease-out;
         transform: translate(100%, 0%) !important;
         position: absolute;
         max-width: 1000px;
@@ -90,7 +101,7 @@ $side-width: 66%;
     .modal-content {
         border-radius: 0;
         width: 100%;
-        height:100%;
+        height: 100%;
     }
     &.create-feature-modal {
         .modal-body {
@@ -103,7 +114,7 @@ $side-width: 66%;
         }
         .tabs {
             .tab-item {
-                margin-top: 16px;
+                padding-top: 24px;
                 overflow-y: auto;
                 height: calc(100vh - 110px);
             }
@@ -114,13 +125,12 @@ $side-width: 66%;
             height: calc(100vh - 80px);
         }
     }
-
 }
 
 .disable-transitions {
-  .modal-dialog {
-    transition: none !important;
-  }
+    .modal-dialog {
+        transition: none !important;
+    }
 }
 
 .inline-modal {
@@ -128,27 +138,35 @@ $side-width: 66%;
     background: $body-bg;
     border-radius: $border-radius;
     z-index: 1;
-    box-shadow:rgba(75, 75, 75, 0.11) 0px 1px 6px 0px, rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
+    box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px, rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
     border: 1px solid $input-border-color;
     &__title {
-        line-height: 40px;
+        padding: 1rem 1.5rem;
+    }
+    label {
+        font-size: $font-sm;
+        line-height: $line-height-sm;
+    }
+    .select-colour label {
+        margin-bottom: 1.5rem;
+    }
+    .assignees-list-item {
+        color: $bg-dark100;
+        font-weight: 500;
+        padding: 16px 0;
+        border-bottom: 1px solid $basic-alpha-16;
     }
 }
 
 .inline-modal--tags {
-    width: 350px;
+    width: 500px;
     input.input {
         border: 1px solid $input-border-color !important;
     }
 }
 
 .modal-back-btn {
-    color: $bt-brand-primary;
-    position: absolute;
-    left:10px;
-    top:0;
-    background-color: transparent !important;
-    border: none !important;
+    margin-right: 12px;
 }
 
 .modal-backdrop {
@@ -168,11 +186,12 @@ $side-width: 66%;
     }
 }
 
-.modal-open #crisp-chatbox [data-chat-status="initial"] {
+.modal-open #crisp-chatbox [data-chat-status='initial'] {
     display: none !important;
 }
 
-@media (max-width: 600px) { /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
+@media (max-width: 600px) {
+    /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
     .side-modal__footer {
         position: relative !important;
     }
@@ -181,7 +200,18 @@ $side-width: 66%;
     }
 }
 
-.create-segment-modal.modal-open,.create-segment-modal .modal-body {
+.modal-body {
+    .tabs-nav button,
+    .tabs-nav button.btn,
+    .tabs-nav button.btn-primary {
+        font-size: $font-sm;
+        line-height: $line-height-sm;
+        padding: 0 16px;
+    }
+}
+
+.create-segment-modal.modal-open,
+.create-segment-modal .modal-body {
     overflow-y: hidden !important;
     .tab-item {
         height: calc(100vh - 100px);

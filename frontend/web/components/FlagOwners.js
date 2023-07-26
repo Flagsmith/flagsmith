@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import data from 'common/data/base/_data'
 import UserSelect from './UserSelect'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Icon from './Icon'
 
 class TheComponent extends Component {
   state = {}
@@ -58,21 +59,17 @@ class TheComponent extends Component {
                   if (hasPermission) this.setState({ showUsers: true })
                 }}
               >
-                <label className='cols-sm-2 control-label'>Assignees</label>
-                <span
-                  style={{
-                    marginBottom: '0.5rem',
-                  }}
-                  className='icon ml-5 ion-md-cog icon-primary'
-                />
+                <label className='cols-sm-2 control-label'>
+                  Assignees <Icon name='setting' width={20} fill={'#656D7B'} />
+                </label>
               </Row>
-              <Row>
+              <Row style={{ rowGap: '12px' }}>
                 {hasPermission &&
                   ownerUsers.map((u) => (
                     <Row
                       key={u.id}
                       onClick={() => this.removeOwner(u.id)}
-                      className='chip'
+                      className='chip chip-user mr-2'
                     >
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}

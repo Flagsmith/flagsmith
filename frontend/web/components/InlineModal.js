@@ -2,6 +2,8 @@ import propTypes from 'prop-types'
 import React, { PureComponent } from 'react'
 import cx from 'classnames'
 import ModalClose from './modals/base/ModalClose'
+import ModalHR from './modals/ModalHR'
+import Icon from './Icon'
 
 const enhanceWithClickOutside = require('react-click-outside')
 
@@ -15,6 +17,7 @@ class InlineModal extends PureComponent {
     onClose: propTypes.func,
     showBack: propTypes.bool,
     title: propTypes.string,
+    bottom: propTypes.node,
   }
 
   handleClickOutside() {
@@ -28,28 +31,35 @@ class InlineModal extends PureComponent {
     return (
       <div className='relative'>
         {this.props.isOpen && (
-          <div
-            className={cx('inline-modal', 'mt-2', 'px-2', this.props.className)}
-          >
+          <div className={cx('inline-modal', this.props.className)}>
             <div className='inline-modal__title'>
               <Row space>
-                <div>
+                <Row>
                   {this.props.showBack && (
-                    <button
-                      type='button'
+                    <span
                       onClick={this.props.onBack}
-                      className='modal-back-btn'
+                      className='modal-back-btn clickable'
                     >
-                      <span className='icon ion-ios-arrow-back' />
-                    </button>
+                      <Icon name='arrow-left' fill='#9DA4AE' />
+                    </span>
                   )}
-                </div>
-                <Flex className='text-center'>{this.props.title}</Flex>
-
+                  <h5 className='mb-0'>{this.props.title}</h5>
+                </Row>
                 <ModalClose type='button' onClick={this.props.onClose} />
               </Row>
             </div>
-            <div className='inline-modal__content'>{this.props.children}</div>
+            <ModalHR />
+            <div className='inline-modal__content m-4'>
+              {this.props.children}
+            </div>
+            {this.props.bottom && (
+              <>
+                <ModalHR />
+                <div className='inline-modal__bottom m-3'>
+                  {this.props.bottom}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
