@@ -10,7 +10,7 @@ from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
-from projects.serializers import ProjectSerializer
+from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -18,7 +18,7 @@ from util.drf_writable_nested.serializers import (
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
     feature_states = FeatureStateSerializerFull(many=True)
-    project = ProjectSerializer()
+    project = ProjectListSerializer()
 
     class Meta:
         model = Environment

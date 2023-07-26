@@ -44,7 +44,8 @@ from projects.serializers import (
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
-    ProjectSerializer,
+    ProjectListSerializer,
+    ProjectRetrieveSerializer,
 )
 
 
@@ -70,12 +71,18 @@ from projects.serializers import (
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ProjectListSerializer
+        elif self.action == "retrieve":
+            return ProjectRetrieveSerializer
+
+        return ProjectListSerializer
+
     permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 
     def get_queryset(self):
-        print("DEBUG: self get_queryset:", self)
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
 
@@ -85,17 +92,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queryset = self.request.user.get_permitted_projects(
                 permission_key=VIEW_PROJECT
             )
-            print("DEBUG: if hasattr else:", queryset)
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
             queryset = queryset.filter(organisation__id=organisation_id)
-            print("DEBUG: if organisation_id:", queryset)
 
         project_uuid = self.request.query_params.get("uuid")
         if project_uuid:
             queryset = queryset.filter(uuid=project_uuid)
-            print("DEBUG: if project_uuid:", queryset)
 
         return queryset
 
