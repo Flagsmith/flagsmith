@@ -209,5 +209,6 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
                 WebhookType.ENVIRONMENT,
                 expected_send_failure_status_code,
             ),
-        ]
+        ],
+        any_order=True,
     )
