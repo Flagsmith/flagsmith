@@ -111,9 +111,9 @@ const CreateFlag = class extends Component {
               return {
                 ...v,
                 default_percentage_allocation:
-                  v.default_percentage_allocation ||
                   (matchingVariation &&
                     matchingVariation.percentage_allocation) ||
+                  v.default_percentage_allocation ||
                   0,
               }
             }),
