@@ -120,7 +120,6 @@
     "suppress-exit-code": "^1.0.0",
     "terser-webpack-plugin": "^5.3.6",
     "toml": "^3.0.0",
-    "vercel": "^28.16.15",
     "webpack": "5.76.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.10.0",
