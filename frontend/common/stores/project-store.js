@@ -118,7 +118,6 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
-          console.log('DEBUG: environments2:', environments)
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })

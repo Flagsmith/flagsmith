@@ -35,6 +35,7 @@ import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
+import LimitAlert from 'components/LimitAlert'
 
 type PageType = {
   number: number
@@ -134,6 +135,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const isError = createError || updateError
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
+
+  const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxFeaturesAllowed(),
+  )
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -346,7 +352,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </Flex>
         </Row>
       )}
-
+      {showLimitAlert.closeToLimit && (
+        <LimitAlert
+          limitType='Segments'
+          percentage={showLimitAlert.percentage}
+        />
+      )}
       {!condensed && (
         <FormGroup className='mb-4'>
           <InputGroup

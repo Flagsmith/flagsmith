@@ -333,7 +333,7 @@ const App = class extends Component {
                                             organisation.subscription
                                               ?.max_api_calls,
                                             30,
-                                          ) &&
+                                          ).closeToLimit &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
                                           )
@@ -359,7 +359,7 @@ const App = class extends Component {
                                           organisation.subscription
                                             ?.max_api_calls,
                                           30,
-                                        ) &&
+                                        ).closeToLimit &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
                                         ) ? (

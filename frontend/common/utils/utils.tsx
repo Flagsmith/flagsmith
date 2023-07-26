@@ -60,9 +60,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     const percentage = (total / max) * 100
     if (percentage >= limit) {
-      return true
+      return { closeToLimit: true, percentage }
     }
-    return false
+    return { closeToLimit: false, percentage }
   },
 
   changeRequestsEnabled(value: number | null | undefined) {

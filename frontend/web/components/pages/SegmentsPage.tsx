@@ -19,7 +19,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import AlertLimit from 'components/AlertLimit'
+import LimitAlert from 'components/LimitAlert'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -67,6 +67,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const hasHadResults = useRef(false)
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
+  const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxSegmentsAllowed(),
+  )
 
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -162,7 +166,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            <AlertLimit limitType={'segment'} percentage={90} />
+            {showLimitAlert.closeToLimit && (
+              <LimitAlert
+                limitType={'segment'}
+                percentage={showLimitAlert.percentage}
+              />
+            )}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>

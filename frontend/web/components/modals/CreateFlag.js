@@ -28,6 +28,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose } from './base/ModalDefault'
+import LimitAlert from 'components/LimitAlert'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -828,6 +829,11 @@ const CreateFlag = class extends Component {
               const isLimitReached =
                 project.total_features >= project.max_features_allowed
 
+              const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+                project.total_features,
+                project.max_features_allowed,
+              )
+
               return (
                 <Permission
                   level='project'
@@ -863,6 +869,12 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
+                                    {showLimitAlert.closeToLimit && (
+                                      <LimitAlert
+                                        limitType={'Features'}
+                                        percentage={showLimitAlert.percentage}
+                                      />
+                                    )}
                                     <Panel
                                       title={
                                         <Tooltip

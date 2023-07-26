@@ -12,7 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import AlertLimit from 'components/AlertLimit'
+import LimitAlert from '../LimitAlert'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -171,6 +171,10 @@ const FeaturesPage = class extends Component {
           ) => {
             const isLoading = FeatureListStore.isLoading
             const isLimitReached = totalFeatures >= maxFeaturesAllowed
+            const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+              totalFeatures,
+              maxFeaturesAllowed,
+            )
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -186,7 +190,12 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
-                        <AlertLimit limitType={'Feautures'} percentage={90} />
+                        {showLimitAlert.closeToLimit && (
+                          <LimitAlert
+                            limitType={'Feautures'}
+                            percentage={showAlertLimit.percentage}
+                          />
+                        )}
                         <Row>
                           <Flex>
                             <h4>Features</h4>

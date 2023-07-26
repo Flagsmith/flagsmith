@@ -1,13 +1,13 @@
 import React, { FC, useState } from 'react'
-import UpgradeIcon from './svg/UpgradeIcon'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
 
-type AlertLimitType = {
+type LimitAlertType = {
   limitType: string
   percentage: number
 }
 
-const AlertLimit: FC<AlertLimitType> = (props) => {
+const LimitAlert: FC<LimitAlertType> = (props) => {
   const { limitType, percentage } = props
   return (
     <>
@@ -15,9 +15,9 @@ const AlertLimit: FC<AlertLimitType> = (props) => {
         className='alert flex-1 align-items-center'
         style={{ background: '#FDFDDD' }}
       >
-        {/* <span className='icon-alert'>
-          <Icon name='close-circle' />
-        </span> */}
+        <span className='icon-alert'>
+          <Icon name='info' />
+        </span>
         <span>
           {`You project|environment using ${percentage}% of the total allowance of ${limitType}. Please contact `}
           <Button theme='text'>support</Button>{' '}
@@ -28,4 +28,4 @@ const AlertLimit: FC<AlertLimitType> = (props) => {
   )
 }
 
-export default AlertLimit
+export default LimitAlert
