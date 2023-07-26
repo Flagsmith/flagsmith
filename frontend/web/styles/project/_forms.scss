@@ -13,30 +13,30 @@
     }
 }
 .or-divider {
-    color: #ccc;
+    color: $text-icon-light-grey;
     font-weight: 400;
-    font-size: 0.8em;
-    line-height: 2em;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
     &__line {
-        margin-left: $grid-gutter-width/2;
+        margin-left: $spacer/4;
         height: 2px;
-        border-bottom: 1px dashed #ccc;
+        border-bottom: 1px dashed $text-icon-light-grey;
     }
 }
 .and-divider {
-    color: #ccc;
+    color: $text-icon-light-grey;
     text-transform: uppercase;
     font-weight: 400;
-    font-size: 0.8em;
-    line-height: 2em;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
     &__line {
-        margin-right: $grid-gutter-width/2;
+        margin-right: $spacer/4;
         &:last-child {
             margin-right: 0;
-            margin-left: $grid-gutter-width/2;
+            margin-left: $spacer/4;
         }
         height: 2px;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid $text-icon-light-grey;
     }
 }
 .dark {
@@ -66,6 +66,9 @@
             }
         }
     }
+    .label-switch {
+        color: $text-icon-light;
+    }
 }
 
 .input-container,
@@ -85,6 +88,9 @@
         border: 1px solid $input-border-color;
         background-color: $input-bg;
         @include transition(all 200ms);
+        &:hover {
+            border: 1px solid $basic-alpha-48;
+        }
         &:focus {
             border: 1px solid $primary;
         }
@@ -92,8 +98,7 @@
         color: $text-icon-dark;
         height: $input-height;
         line-height: $line-height-lg;
-        padding: 12px 16px 12px 12px;
-
+        padding: 12px 12px 12px 16px;
         &--wide {
             min-width: 300px;
         }
@@ -125,8 +130,22 @@
     margin-bottom: 1rem;
 }
 
+.label-switch {
+    color: $text-icon-dark;
+    font-weight: 500;
+}
+
+.setting {
+    label {
+        font-size: $font-size-base;
+        line-height: $line-height-base;
+    }
+}
+
 label {
-    margin-bottom: $spacer/2;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    margin-bottom: 6px;
 }
 label,
 .icon-primary {
@@ -148,6 +167,9 @@ label,
 
 .control-label {
     display: block;
+    svg {
+        vertical-align: bottom;
+    }
 }
 
 .__react_component_tooltip {
