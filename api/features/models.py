@@ -544,7 +544,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from > timezone.now()
+        return self.live_from and self.live_from > timezone.now()
 
     def clone(
         self,
@@ -833,14 +833,11 @@ class FeatureState(
             and other.live_from is None
         )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        if self.change_request_id and not self.change_request.committed_at:
-            # change requests create feature states that may not ever go live,
-            # since we already include the change requests in the audit log
-            # we don't want to create separate audit logs for the associated
-            # feature states
-            return
+    @property
+    def belongs_to_uncommited_change_request(self) -> bool:
+        return self.change_request_id and not self.change_request.committed_at
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
@@ -854,9 +851,6 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        if self.change_request_id and not self.change_request.committed_at:
-            return
-
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -885,6 +879,15 @@ class FeatureState(
         except ObjectDoesNotExist:
             # Account for cascade deletes
             return None
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        # Change requests can create, update, or delete feature states that may never go live,
+        # since we already include the change requests in the audit log
+        # we don't want to create separate audit logs for the associated
+        # feature states
+        if self.belongs_to_uncommited_change_request:
+            return None
+        return super().get_audit_log_related_object_id(history_instance)
 
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)

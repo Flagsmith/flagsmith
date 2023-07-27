@@ -150,6 +150,9 @@ class MultivariateFeatureStateValue(
         return f"Multivariate value changed for feature '{feature.name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
+        if self.feature_state.belongs_to_uncommited_change_request:
+            return None
+
         return self.feature_state.feature_id
 
     def _get_environment(self) -> typing.Optional["Environment"]:

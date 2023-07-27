@@ -55,6 +55,6 @@ SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
 CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
 CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
 CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
-
+CHANGE_REQUEST_DELETED_MESSAGE = "Change Request: %s deleted"
 
 DATETIME_FORMAT = "%d/%m/%Y %H:%M:%S"
