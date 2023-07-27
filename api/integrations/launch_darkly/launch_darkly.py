@@ -4,6 +4,8 @@ from requests import Response, Session
 from rest_framework import status
 
 from environments.models import Environment
+from features.feature_types import STANDARD
+from features.models import Feature, FeatureState
 from integrations.launch_darkly.serializers import LaunchDarklyImportSerializer
 from organisations.models import Organisation
 from projects.models import Project
@@ -87,17 +89,40 @@ class LaunchDarklyWrapper:
 
         )
 
-    def _create_feature(self, ld_flag, environments: list[Environment]):
+    def _create_feature(self, ld_flag, environments: list[Environment], project: Project):
         match ld_flag.get("kind"):
             case "boolean":
-                self._create_boolean_feature(ld_flag, environments)
+                self._create_boolean_feature(ld_flag, environments, project)
             case "multivariate":
-                self._create_multivariate_feature(ld_flag, environments)
+                self._create_multivariate_feature(ld_flag, environments, project)
             case _:
                 raise Exception("Invalid flag type from Launch Darkly")
 
-    def _create_boolean_feature(self, ld_flag, environments: list[Environment]):
-        pass
+    def _create_boolean_feature(self, ld_flag, environments: list[Environment], project: Project):
+        # todo try get tags
+        feature = Feature.objects.create(
+            name=ld_flag.get("key"),
+            project=project,
+            initial_value=None,  # todo
+            description=ld_flag.get("description"),
+            default_enabled=None,  # todo
+            type=STANDARD,
+            tags=None,  # todo
+            is_archived = ld_flag.get("archived"),
+            owners=None,  # todo
+            is_server_key_only=None,  # todo
+        )
+        for environment in environments:
+            ld_environment = ld_flag.get("environments", {}).get(environment.name)
+            if ld_environment:
+                FeatureState.objects.create(
+                    feature=feature,
+                    environment = environment,
+                    identity=None, # todo
+                    feature_segment=None, # todo
+                    enabled=ld_environment.get("_summary").get("on"),
+                )
+
 
     def _create_multivariate_feature(self, ld_flag, environments: list[Environment]):
         pass
