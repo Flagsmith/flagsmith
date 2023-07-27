@@ -12,6 +12,23 @@ this.
 
 :::
 
+## Prerequisites
+
+### SaaS Customers & Private Cloud
+
+To configure the SAML integration with Flagsmith, you must have created a valid organisation at app.flagsmith.com or
+your private cloud URL. The organisation must be on our Enterprise plan. You should contact the Flagsmith support team
+(support@flagsmith.com) to create a SAML organisation and we will provide you with your organisation name.
+
+### Enterprise Self Hosted
+
+To configure the SAML integration with Flagsmith self hosted, you must be using an Enterprise licence to self host the
+Flagsmith application. You should then complete the steps listed
+[here](https://docs.flagsmith.com/deployment/authentication#saml---enterprise-on-premise) up to and including the line
+which states ‘_Once you've completed these fields, hit the Save button to create the SAML configuration._’
+
+## Procedure
+
 The Flagsmith platform can be configured for a given organisation to use SAML authentication. To configure SAML login
 for your organisation please get in touch with us directly to help set it up.
 
