@@ -22,10 +22,7 @@ your private cloud URL. The organisation must be on our Enterprise plan. You sho
 
 ### Enterprise Self Hosted
 
-To configure the SAML integration with Flagsmith self hosted, you must be using an Enterprise licence to self host the
-Flagsmith application. You should then complete the steps listed
-[here](https://docs.flagsmith.com/deployment/authentication#saml---enterprise-on-premise) up to and including the line
-which states ‘_Once you've completed these fields, hit the Save button to create the SAML configuration._’
+Please refer to our [Self Hosted Docs](/deployment/configuration/authentication/SAML).
 
 ## Procedure
 
