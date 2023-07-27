@@ -12,7 +12,7 @@ def add_default_base_url(apps, schema_editor):
     )
     amplitude_configuration_model.objects.filter(
         Q(base_url__isnull=True) | Q(base_url="")
-    ).update(DEFAULT_AMPLITUDE_API_URL)
+    ).update(base_url=DEFAULT_AMPLITUDE_API_URL)
 
 
 class Migration(migrations.Migration):
