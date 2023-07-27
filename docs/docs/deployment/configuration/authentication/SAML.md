@@ -13,6 +13,17 @@ SAML authentication is only available as part of our Enterprise Plans. Please
 
 :::
 
+## Prerequisites
+
+### Enterprise Self Hosted
+
+To configure the SAML integration with Flagsmith self hosted, you must be using an Enterprise licence to self host the
+Flagsmith application. You should then complete the steps listed
+[here](https://docs.flagsmith.com/deployment/authentication#saml---enterprise-on-premise) up to and including the line
+which states ‘_Once you've completed these fields, hit the Save button to create the SAML configuration._’
+
+## Procedure
+
 To allow an Organisation on the Flagsmith platform to login using SAML authentication, you'll need to access the admin
 interface. Instructions on how to access the admin interface can be found
 [here](https://docs.flagsmith.com/deployment/configuration/django-admin).
