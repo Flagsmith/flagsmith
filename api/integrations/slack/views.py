@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from slack_sdk.oauth import AuthorizeUrlGenerator
 
 from environments.models import Environment
-from integrations.common.views import IntegrationCommonViewSet
+from integrations.common.views import EnvironmentIntegrationCommonViewSet
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.slack.serializers import (
     SlackChannelListQueryParamSerializer,
@@ -58,7 +58,7 @@ class SlackGetChannelsViewSet(GenericViewSet):
         return Response(serializer.data)
 
 
-class SlackEnvironmentViewSet(IntegrationCommonViewSet):
+class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
     serializer_class = SlackEnvironmentSerializer
     pagination_class = None  # set here to ensure documentation is correct
     model_class = SlackEnvironment
