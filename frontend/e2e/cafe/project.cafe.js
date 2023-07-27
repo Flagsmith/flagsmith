@@ -19,6 +19,6 @@ test('Project Test', async () => {
     await waitForElementVisible(byId('switch-project-test project-active'));
 }).after(async (t) => {
     console.log('Start of Project Requests');
-    await logResults(logger.requests);
-    console.log('End of Project Errors');
+    await logResults(logger.requests,t );
+    console.log('End of Project Requests');
 });

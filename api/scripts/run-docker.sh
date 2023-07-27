@@ -23,6 +23,7 @@ function serve() {
              --workers ${GUNICORN_WORKERS:-3} \
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
+             --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s' \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \

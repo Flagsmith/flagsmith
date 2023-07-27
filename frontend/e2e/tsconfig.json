@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "baseUrl": ".",
+    "lib": [
+      "dom"
+    ],
+    "skipLibCheck": true
+  },
+}

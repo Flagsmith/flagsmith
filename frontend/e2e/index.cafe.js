@@ -26,15 +26,17 @@ createTestCafe()
                 resolve();
             });
         });
-        const runner = testcafe.createRunner();
+        const runner = testcafe.createRunner()
         return runner
+            .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .run(options)
             .then((v) => {
                 if (!v) {
                     return runner
+                        .clientScripts('e2e/add-error-logs.js')
                         .src(['./e2e/cafe'])
-                        .concurrency(2)
+                        .concurrency(1)
                         .run(options);
                 }
                 return v;

@@ -111,7 +111,7 @@ test('[Initialise]', async () => {
     await toggleFeature(0, true);
 
     log('Try it');
-    await t.wait(1500);
+    await t.wait(2000);
     await click('#try-it-btn');
     await t.wait(1500);
     let text = await getText('#try-it-results');
@@ -130,7 +130,7 @@ test('[Initialise]', async () => {
     await closeModal();
 
     log('Try it again');
-    await t.wait(1500);
+    await t.wait(2000);
     await click('#try-it-btn');
     await t.wait(1500);
     text = await getText('#try-it-results');
@@ -145,7 +145,7 @@ test('[Initialise]', async () => {
     await closeModal();
 
     log('Try it again 2');
-    await t.wait(1500);
+    await t.wait(2000);
     await click('#try-it-btn');
     await t.wait(1500);
     text = await getText('#try-it-results');
@@ -257,6 +257,6 @@ test('[Initialise]', async () => {
     await deleteFeature(0, 'mv_flag');
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
-    await logResults(logger.requests);
-    console.log('Start of Initialise Requests');
+    await logResults(logger.requests, t);
+    console.log('End of Initialise Requests');
 });

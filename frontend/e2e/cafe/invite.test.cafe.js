@@ -90,7 +90,7 @@ test('Invite Test', async () => {
   await setText("[name='currentPassword']", password)
   await click(byId('delete-account'))
 }).after(async (t) => {
-  console.log('Start of Invite Requests')
-  await logResults(logger.requests)
-  console.log('End of Invite Errors')
-})
+    console.log('Start of Invite Requests');
+    await logResults(logger.requests, t);
+    console.log('End of Invite Requests');
+});
