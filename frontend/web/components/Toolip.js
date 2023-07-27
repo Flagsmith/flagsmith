@@ -16,7 +16,7 @@ const Tooltip = class extends React.Component {
           <span className='ion ion-ios-help' data-for={this.id} data-tip />
         )}
         <ReactTooltip
-          html
+          html={false}
           id={this.id}
           place={this.props.place || 'top'}
           type='dark'
