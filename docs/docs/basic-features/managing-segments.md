@@ -98,7 +98,7 @@ The full set of Flagsmith rule operators are as follows:
 | `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
 | `<`                    | Trait value is less than segment value.                                                                                                           |
 | `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Segment value, delimited by `","`, is split by delimiter. Trait value is equal to one or more of the resulting parts.                             |
+| `In`                   | Trait value is equal to one or more elements in comma delimited a list. E.g the rule value might read `21,682,8345`.                              |
 | `Contains`             | Segment value is a substring of trait value.                                                                                                      |
 | `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
 | `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
@@ -108,6 +108,9 @@ The full set of Flagsmith rule operators are as follows:
 | `SemVer >=`            | Trait value is set a newer SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators).     |
 | `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                |
 | `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
+
+Some of the operators in local evaluation mode are only supported in later SDK versions, see [SDK
+Compatibility/(/clients/overview.md#sdk-compatibility).
 
 Some of the operators also have special powers, described below.
 
