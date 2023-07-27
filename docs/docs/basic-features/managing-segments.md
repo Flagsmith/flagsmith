@@ -109,9 +109,6 @@ The full set of Flagsmith rule operators are as follows:
 | `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                |
 | `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
 
-Some of the operators in local evaluation mode are only supported in later SDK versions, see [SDK
-Compatibility/(/clients/overview.md#sdk-compatibility).
-
 Some of the operators also have special powers, described below.
 
 ### SemVer-aware operators
