@@ -48,7 +48,7 @@ export const Button: FC<ButtonType> = ({
 }) => {
   return href ? (
     <a
-      className={cn(className, themeClassNames[theme])}
+      className={cn(className, themeClassNames[theme], sizeClassNames[size])}
       target={target}
       href={href}
       rel='noreferrer'

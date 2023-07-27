@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import InlineModal from './InlineModal'
+import Icon from './Icon'
 
 class TheComponent extends Component {
   state = {
@@ -17,7 +18,7 @@ class TheComponent extends Component {
     const value = this.props.value || []
     return (
       <InlineModal
-        title='Users'
+        title='Assignees'
         isOpen={this.props.isOpen}
         onClose={this.props.onToggle}
         className='inline-modal--tags'
@@ -29,12 +30,13 @@ class TheComponent extends Component {
             this.setState({ filter: Utils.safeParseEventValue(e) })
           }
           className='full-width mb-2'
-          placeholder='Type or choose a user'
+          placeholder='Search User'
+          search
         />
         <div style={{ maxHeight: 200, overflowY: 'auto' }}>
           {users &&
             users.map((v) => (
-              <div className='list-item clickable' key={v.id}>
+              <div className='assignees-list-item clickable' key={v.id}>
                 <Row
                   onClick={() => {
                     const isRemove = value.includes(v.id)
@@ -58,10 +60,9 @@ class TheComponent extends Component {
                     {v.first_name} {v.last_name}
                   </Flex>
                   {value.includes(v.id) && (
-                    <span
-                      style={{ fontSize: 24 }}
-                      className='ion `text-primary` ion-ios-checkmark'
-                    />
+                    <span className='mr-1'>
+                      <Icon name='checkmark' fill='#6837FC' />
+                    </span>
                   )}
                 </Row>
               </div>

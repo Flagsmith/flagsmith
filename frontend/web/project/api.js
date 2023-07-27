@@ -1,7 +1,6 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
-
-const enableDynatrace = typeof DYNATRACE_URL !== 'undefined' && !!DYNATRACE_URL
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 global.API = {
   ajaxHandler(store, res) {
@@ -40,14 +39,14 @@ global.API = {
         }
       })
   },
-  alias(id) {
+  alias(id, user={}) {
     if (id === Project.excludeAnalytics) return
     if (Project.mixpanel) {
       mixpanel.alias(id)
     }
 
-    if (enableDynatrace) {
-      dtrum.identifyUser(id)
+    if (enableDynatrace && user?.id) {
+      dtrum.identifyUser( `${user.id}`)
     }
 
     if (Project.heap) {
@@ -147,8 +146,8 @@ global.API = {
         })
       }
 
-      if (enableDynatrace) {
-        dtrum.identifyUser(id)
+      if (enableDynatrace && user?.id) {
+        dtrum.identifyUser( `${user.id}`)
       }
 
       if (Project.heap) {

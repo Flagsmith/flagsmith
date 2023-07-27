@@ -72,7 +72,6 @@ class ChangeRequest(
         related_name="change_requests",
     )
 
-    deleted_at = models.DateTimeField(null=True)
     committed_at = models.DateTimeField(null=True)
     committed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

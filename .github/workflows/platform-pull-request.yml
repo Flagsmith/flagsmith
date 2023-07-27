@@ -7,6 +7,27 @@ on:
       - docs/**
 
 jobs:
+  validate-pr-title:
+    name: Validate Conventional Commit title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: | # mirrors changelog-sections in the /release-please-config.json
+            fix
+            feat
+            infra
+            docs
+            chore
+            build
+            deps
+            ci
+            refactor
+            style
+            test
+
   run-e2e-tests:
     runs-on: ubuntu-latest
     name: Full E2E tests

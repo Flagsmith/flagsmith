@@ -60,7 +60,7 @@ docker-build:
 test:
 	pytest $(opts)
 
-.PHONY: django-migrations
+.PHONY: django-make-migrations
 django-make-migrations:
 	python manage.py waitfordb
 	python manage.py makemigrations $(opts)

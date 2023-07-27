@@ -5,7 +5,7 @@
 
 [tool.black]
 line-length = 88
-target-version = ['py36', 'py37', 'py38']
+target-version = ['py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -34,4 +34,4 @@ known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','cor
 skip = ['migrations','.venv','.direnv']
 
 [tool.pytest.ini_options]
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '-n', 'auto']
+addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '--cov', '.']

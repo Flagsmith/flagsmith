@@ -3,7 +3,7 @@ import React from 'react'
 
 export default function AddVariationButton({ disabled, onClick }) {
   return (
-    <div className='text-center'>
+    <div className='text-end'>
       <Button
         disabled={disabled}
         data-test='add-variation'

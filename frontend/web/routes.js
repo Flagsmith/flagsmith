@@ -28,6 +28,7 @@ import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage'
 import WidgetPage from './components/pages/WidgetPage'
+import BrokenPage from './components/pages/BrokenPage';
 
 export default (
   <App>
@@ -73,6 +74,7 @@ export default (
       <Route path='/widget' exact component={WidgetPage} />
       <Route path='/invite/:id' exact component={InvitePage} />
       <Route path='/invite-link/:id' exact component={InvitePage} />
+      <Route path='/broken' exact component={BrokenPage} />
       <Route path='/oauth/:type' exact component={HomePage} />
       <Route path='/saml' exact component={HomePage} />
       <Route
