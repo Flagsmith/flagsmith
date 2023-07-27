@@ -881,7 +881,7 @@ class FeatureState(
             return None
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
-        # change requests create/delete feature states that may not ever go live,
+        # Change requests can create, update, or delete feature states that may never go live,
         # since we already include the change requests in the audit log
         # we don't want to create separate audit logs for the associated
         # feature states
