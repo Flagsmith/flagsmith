@@ -53,7 +53,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 100 - total
   },
 
-  calculaterRemainingLimitsPercentage(total: number, max: number, limit = 90) {
+  calculateRemainingLimitsPercentage(total: number, max: number, limit = 90) {
     if (total === 0) {
       return 0
     }

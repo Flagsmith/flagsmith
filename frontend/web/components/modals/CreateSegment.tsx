@@ -136,7 +136,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
 
-  const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+  const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
     ProjectStore.getMaxFeaturesAllowed(),
   )

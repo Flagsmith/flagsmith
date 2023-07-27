@@ -67,7 +67,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const hasHadResults = useRef(false)
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
-  const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+  const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
     ProjectStore.getMaxSegmentsAllowed(),
   )

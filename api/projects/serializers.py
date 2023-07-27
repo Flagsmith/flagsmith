@@ -66,6 +66,12 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "total_segments",
         )
 
+        read_only_fields = (
+            "max_segments_allowed",
+            "max_features_allowed",
+            "max_segment_overrides_allowed",
+        )
+
 
 class CreateUpdateUserProjectPermissionSerializer(
     CreateUpdateUserPermissionSerializerABC

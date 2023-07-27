@@ -12,7 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import LimitAlert from '../LimitAlert'
+import LimitAlert from 'components/LimitAlert'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -171,7 +171,7 @@ const FeaturesPage = class extends Component {
           ) => {
             const isLoading = FeatureListStore.isLoading
             const isLimitReached = totalFeatures >= maxFeaturesAllowed
-            const showLimitAlert = Utils.calculaterRemainingLimitsPercentage(
+            const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
               totalFeatures,
               maxFeaturesAllowed,
             )

@@ -114,7 +114,7 @@ class TheComponent extends Component {
     const totalSegmentOverrides = ProjectStore.getEnvs().find(
       (env) => env.name === this.state.selectedEnv,
     )?.total_segment_overrides
-    const showAlertLimit = Utils.calculaterRemainingLimitsPercentage(
+    const showAlertLimit = Utils.calculateRemainingLimitsPercentage(
       totalSegmentOverrides,
       ProjectStore.getMaxSegmentOverridesAllowed(),
     )

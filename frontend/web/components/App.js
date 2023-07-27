@@ -328,7 +328,7 @@ const App = class extends Component {
                                         href='#'
                                         className='cursor-pointer nav-link p-2'
                                         style={
-                                          Utils.calculaterRemainingLimitsPercentage(
+                                          Utils.calculateRemainingLimitsPercentage(
                                             totalApiCalls,
                                             organisation.subscription
                                               ?.max_api_calls,
@@ -354,7 +354,7 @@ const App = class extends Component {
                                           )
                                         }}
                                       >
-                                        {Utils.calculaterRemainingLimitsPercentage(
+                                        {Utils.calculateRemainingLimitsPercentage(
                                           totalApiCalls,
                                           organisation.subscription
                                             ?.max_api_calls,

@@ -68,6 +68,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
 class EnvironmentRetrieveSerializerLight(EnvironmentSerializerLight):
     class Meta(EnvironmentSerializerLight.Meta):
         fields = EnvironmentSerializerLight.Meta.fields + ("total_segment_overrides",)
+        read_only_fields = ("total_segment_overrides",)
 
 
 class EnvironmentSerializerWithMetadata(
