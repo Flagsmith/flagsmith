@@ -3,16 +3,18 @@
 from django.db import migrations, models
 from django.db.models import Q
 
-from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
-
 
 def add_default_base_url(apps, schema_editor):
     amplitude_configuration_model = apps.get_model(
         "amplitude", "AmplitudeConfiguration"
     )
+
+    # Note that we're updating the existing items to point to
+    # api.amplitude.com (rather than api2) to maintain existing
+    # behaviour for these integrations.
     amplitude_configuration_model.objects.filter(
         Q(base_url__isnull=True) | Q(base_url="")
-    ).update(base_url=DEFAULT_AMPLITUDE_API_URL)
+    ).update(base_url="https://api.amplitude.com")
 
 
 class Migration(migrations.Migration):
