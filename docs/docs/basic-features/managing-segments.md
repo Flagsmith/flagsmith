@@ -98,7 +98,7 @@ The full set of Flagsmith rule operators are as follows:
 | `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
 | `<`                    | Trait value is less than segment value.                                                                                                           |
 | `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Trait value is equal to one or more elements in comma delimited a list. E.g the rule value might read `21,682,8345`.                              |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. E.g the rule value might read `21,682,8345`.                              |
 | `Contains`             | Segment value is a substring of trait value.                                                                                                      |
 | `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
 | `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
