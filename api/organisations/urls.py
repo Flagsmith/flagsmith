@@ -99,6 +99,7 @@ if settings.IS_RBAC_INSTALLED:
     from rbac.views import (
         GroupRoleViewSet,
         RoleEnvironmentPermissionsViewSet,
+        RoleOrganisationPermissionViewSet,
         RoleProjectPermissionsViewSet,
         RoleViewSet,
         UserRoleViewSet,
@@ -118,8 +119,14 @@ if settings.IS_RBAC_INSTALLED:
         RoleProjectPermissionsViewSet,
         basename="roles-projects-permissions",
     )
+    nested_roles_router.register(
+        "organisation-permissions",
+        RoleOrganisationPermissionViewSet,
+        basename="roles-organisations-permissions",
+    )
     nested_roles_router.register("groups", GroupRoleViewSet, basename="group-roles")
     nested_roles_router.register("users", UserRoleViewSet, basename="user-roles")
+
     urlpatterns.extend(
         [
             url(r"^", include(organisations_router.urls)),

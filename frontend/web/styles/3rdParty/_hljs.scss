@@ -35,47 +35,46 @@
   position: relative;
   textarea,
   .hljs {
-    padding-top: 20px;
+   padding: $input-padding-lg;
+   line-height: $line-height-lg;
+  }
+  &.code-medium{
+    .hljs{
+      padding: $input-padding;
+    }
   }
   textarea {
     min-height: 50px;
     padding-bottom: 5px;
     text-indent: 10px;
   }
-  &.light {
-    .select-language {
-      span {
-        color: $body-text;
-      }
-    }
-  }
   code {
     outline-color: transparent !important;
   }
   .select-language {
     position: absolute;
-    top: 5px;
-    right: 10px;
+    top: -24px;
+    right: 0;
     .active {
       span {
         margin: 0;
         opacity: 1;
       }
+      .language-icon{
+        color:$text-icon-dark;
+      }
     }
     span {
-      margin-right: 5px;
-      color: white;
-      font-weight: bold;
-      opacity: 0.5;
+      color: $text-icon-light-grey;
       cursor: pointer;
-      font-size: 12px;
+      font-size: $font-caption-sm;
+      line-height: $line-height-xxsm;
       &.active {
-        color: $btn-code-button-color-alt;
-        opacity: 1;
+        color: $text-icon-dark;
+        font-weight: 500;
       }
       &.primary {
-        opacity: 1;
-        color: $bt-brand-primary !important;
+        color: $primary !important;
       }
     }
   }
