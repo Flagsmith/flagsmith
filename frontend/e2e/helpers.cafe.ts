@@ -1,8 +1,17 @@
 import { RequestLogger, Selector, t } from 'testcafe';
+import { Operator } from 'rxjs';
 
-export const byId = id => `[data-test="${id}"]`;
+export const byId = (id:string) => `[data-test="${id}"]`;
 
-export const setText = async (selector, text) => {
+export type MultiVariate = {value:string,weight:number}
+
+export type Rule = {
+    name: string,
+    operator: string,
+    value: string,
+    ors?:Rule[]
+}
+export const setText = async (selector:string, text:string) => {
     console.log(`Set text ${selector} : ${text}`);
     return t.selectText(selector)
         .pressKey('delete')
@@ -10,22 +19,29 @@ export const setText = async (selector, text) => {
         .typeText(selector, `${text}`);
 };
 
-export const waitForElementVisible = async (selector) => {
+export const waitForElementVisible = async (selector:string) => {
     console.log(`Waiting element visible ${selector}`);
     return t.expect(Selector(selector).visible).ok();
 };
 
-export const logResults = async (requests)=> {
+export const logResults = async (requests:LoggedRequest[], t)=> {
+    if(!t.testRun?.errs?.length) {
+        return // do not log anything for passed tests
+    }
     console.log(JSON.stringify(requests.filter((v)=>{
-        if (!v.response || (v.response.statusCode >= 200 && v.response.statusCode < 300)) {
+        if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
+            return false
+        }
+        if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
             return false
         }
         return true
     }), null, 2));
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+    console.log("Session JavaScript Errors")
+    console.log(JSON.stringify((await t.getBrowserConsoleMessages())));
 }
 
-export const waitForElementNotExist = async (selector) => {
+export const waitForElementNotExist = async (selector:string) => {
     console.log(`Waiting element not visible ${selector}`);
     return t.expect(Selector(selector).exists).notOk('', { timeout: 10000 });
 };
@@ -34,7 +50,7 @@ export const gotoFeatures = async () => {
     await waitForElementVisible('#show-create-feature-btn');
 };
 
-export const click = async (selector) => {
+export const click = async (selector:string) => {
     await waitForElementVisible(selector);
     await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
     await t.click(selector);
@@ -43,7 +59,14 @@ export const gotoSegments = async () => {
     await click('#segments-link');
 };
 
-export const getLogger = () => RequestLogger(/api\/v1/, { logResponseBody: false, stringifyResponseBody: false });
+export const getLogger = () => RequestLogger(/api\/v1/, {
+    logResponseBody: true,
+    stringifyRequestBody: true,
+    stringifyResponseBody: true,
+    logResponseHeaders: true,
+    logRequestBody: true,
+    logRequestHeaders: true
+});
 
 export const gotoTraits = async () => {
     await click('#users-link');
@@ -51,34 +74,34 @@ export const gotoTraits = async () => {
     await waitForElementVisible('#add-trait');
 };
 
-export const createTrait = async (index, id, value) => {
+export const createTrait = async (index:number, id: string, value:string) => {
     await click('#add-trait');
     await waitForElementVisible('#create-trait-modal');
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
     await t.wait(2000);
-    await t.eval(() => location.reload(true));
+    await t.eval(() => location.reload());
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await assertTextContent(byId(`user-trait-value-${index}`), expectedValue);
 };
 
-export const deleteTrait = async (index) => {
+export const deleteTrait = async (index:number) => {
     await click(byId(`delete-user-trait-${index}`));
     await click('#confirm-btn-yes');
     await waitForElementNotExist(byId(`user-trait-${index}`));
 };
 
 // eslint-disable-next-line no-console
-export const log = (message, group = '') => console.log('\n', '\x1b[32m', `${group ? `[${group}] ` : ''}${message}`, '\x1b[0m', '\n');
+export const log = (message:string, group = '') => console.log('\n', '\x1b[32m', `${group ? `[${group}] ` : ''}${message}`, '\x1b[0m', '\n');
 
-export const viewFeature = async (index) => {
+export const viewFeature = async (index:number) => {
     await click(byId(`feature-item-${index}`));
     await waitForElementVisible('#create-feature-modal');
 };
 
-export const addSegmentOverrideConfig = async (index, value, selectionIndex = 0) => {
+export const addSegmentOverrideConfig = async (index:number, value:string, selectionIndex = 0) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
 
@@ -87,7 +110,7 @@ export const addSegmentOverrideConfig = async (index, value, selectionIndex = 0)
     await click(byId('segment-override-toggle-0'));
 };
 
-export const addSegmentOverride = async (index, value, selectionIndex = 0, mvs) => {
+export const addSegmentOverride = async (index:number, value:string, selectionIndex = 0, mvs:MultiVariate[]) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
     await waitForElementVisible(byId(`segment-override-value-${index}`));
@@ -96,7 +119,7 @@ export const addSegmentOverride = async (index, value, selectionIndex = 0, mvs) 
     }
     if (mvs) {
         await Promise.all(mvs.map(async (v, i) => {
-            await setText(`.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`, v.weight);
+            await setText(`.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`, `${v.weight}`);
         }));
     }
 };
@@ -118,40 +141,40 @@ export const saveFeatureSegments = async () => {
     await waitForElementNotExist('#create-feature-modal');
 };
 
-export const goToUser = async (index) => {
+export const goToUser = async (index:number) => {
     await click('#users-link');
     await click(byId(`user-item-${index}`));
 };
 
-export const gotoFeature = async (index) => {
+export const gotoFeature = async (index:number) => {
     await click(byId(`feature-item-${index}`));
     await waitForElementVisible('#create-feature-modal');
 };
 
-export const setSegmentOverrideIndex = async (index, newIndex) => {
+export const setSegmentOverrideIndex = async (index:number, newIndex:number) => {
     await click(byId('segment_overrides'));
     await setText(byId(`sort-${index}`), `${newIndex}`);
 };
 
-export const assertTextContent = (selector, v) => t.expect(Selector(selector).textContent).eql(v);
-export const assertTextContentContains = (selector, v) => t.expect(Selector(selector).textContent).contains(v);
-export const getText = selector => Selector(selector).innerText;
+export const assertTextContent = (selector:string, v:string) => t.expect(Selector(selector).textContent).eql(v);
+export const assertTextContentContains = (selector:string, v:string) => t.expect(Selector(selector).textContent).contains(v);
+export const getText = (selector:string) => Selector(selector).innerText;
 
-export const deleteSegment = async (index, name) => {
+export const deleteSegment = async (index:number, name:string) => {
     await click(byId(`remove-segment-btn-${index}`));
     await setText('[name="confirm-segment-name"]', name);
     await click('#confirm-remove-segment-btn');
     await waitForElementNotExist(`remove-segment-btn-${index}`);
 };
 
-export const login = async (email, password) => {
+export const login = async (email:string, password:string) => {
     await setText('[name="email"]', `${email}`);
     await setText('[name="password"]', `${password}`);
     await click('#login-btn');
     await waitForElementVisible('#project-select-page');
 };
 
-export const createRemoteConfig = async (index, name, value, description = 'description', defaultOff, mvs = []) => {
+export const createRemoteConfig = async (index:number, name:string, value:string, description = 'description', defaultOff?:boolean, mvs:MultiVariate[] = []) => {
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await gotoFeatures();
     await click('#show-create-feature-btn');
@@ -165,7 +188,7 @@ export const createRemoteConfig = async (index, name, value, description = 'desc
         await click(byId('add-variation'));
 
         await setText(byId(`featureVariationValue${i}`), v.value);
-        await setText(byId(`featureVariationWeight${v.value}`), v.weight);
+        await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`);
     }));
     await click(byId('create-feature-btn'));
     await waitForElementVisible(byId(`feature-value-${index}`));
@@ -177,7 +200,7 @@ export const closeModal = async () => {
         offsetY: 50,
     });
 };
-export const createFeature = async (index, name, value, description = 'description') => {
+export const createFeature = async (index:number, name:string, value:string, description = 'description') => {
     await gotoFeatures();
     await click('#show-create-feature-btn');
     await setText(byId('featureID'), name);
@@ -189,20 +212,20 @@ export const createFeature = async (index, name, value, description = 'descripti
     await waitForElementVisible(byId(`feature-item-${index}`));
 };
 
-export const deleteFeature = async (index, name) => {
+export const deleteFeature = async (index:number, name:string) => {
     await click(byId(`remove-feature-btn-${index}`));
     await setText('[name="confirm-feature-name"]', name);
     await click('#confirm-remove-feature-btn');
     await waitForElementNotExist(`remove-feature-btn-${index}`);
 };
 
-export const toggleFeature = async (index, toValue) => {
+export const toggleFeature = async (index:number, toValue:boolean) => {
     await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`));
     await click('#confirm-toggle-feature-btn');
     await waitForElementVisible(byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`));
 };
 
-export const setSegmentRule = async (ruleIndex, orIndex, name, operator, value) => {
+export const setSegmentRule = async (ruleIndex:number, orIndex:number, name:string, operator:string, value:string) => {
     await setText(byId(`rule-${ruleIndex}-property-${orIndex}`), name);
     if (operator) {
         await setText(byId(`rule-${ruleIndex}-operator-${orIndex}`), operator);
@@ -210,25 +233,28 @@ export const setSegmentRule = async (ruleIndex, orIndex, name, operator, value) 
     await setText(byId(`rule-${ruleIndex}-value-${orIndex}`), value);
 };
 
-export const createSegment = async (index, id, rules) => {
+export const createSegment = async (index:number, id:string, rules?:Rule[]) => {
     await click(byId('show-create-segment-btn'));
     await setText(byId('segmentID'), id);
-    for (let x = 0; x<rules.length; x++) {
-        const rule = rules[x];
-        if (x > 0) {
+        for (let x = 0; x<rules.length; x++) {
+            const rule = rules[x];
+            if (x > 0) {
+                // eslint-disable-next-line no-await-in-loop
+                await click(byId('add-rule'));
+            }
             // eslint-disable-next-line no-await-in-loop
-            await click(byId('add-rule'));
+            await setSegmentRule(x, 0, rule.name, rule.operator, rule.value);
+            if( rule.ors) {
+                for (let orIndex = 0; orIndex<rule.ors.length; orIndex++) {
+                    const or = rule.ors[orIndex];
+                    // eslint-disable-next-line no-await-in-loop
+                    await click(byId(`rule-${x}-or`));
+                    // eslint-disable-next-line no-await-in-loop
+                    await setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
+                }
+            }
         }
-        // eslint-disable-next-line no-await-in-loop
-        await setSegmentRule(x, 0, rule.name, rule.operator, rule.value);
-        for (let orIndex = 0; orIndex<rule.ors; orIndex++) {
-            const or = rule.ors[orIndex];
-            // eslint-disable-next-line no-await-in-loop
-            await click(byId(`rule-${x}-or`));
-            // eslint-disable-next-line no-await-in-loop
-            await setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
-        }
-    }
+
     // Create
     await click(byId('create-segment'));
     await waitForElementVisible(byId(`segment-${index}-name`));
