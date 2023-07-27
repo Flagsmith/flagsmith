@@ -26,6 +26,7 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
+    CHANGE_REQUEST_DELETED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
 from audit.tasks import (
@@ -122,6 +123,9 @@ class ChangeRequest(
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if (
