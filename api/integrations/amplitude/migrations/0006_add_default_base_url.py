@@ -27,6 +27,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="amplitudeconfiguration",
             name="base_url",
-            field=models.URLField(default="https://api.amplitude.com"),
+            field=models.URLField(default="https://api2.amplitude.com"),
         ),
     ]
