@@ -110,6 +110,10 @@
                 {
                     "name": "TASK_DELETE_RUN_TIME",
                     "value": "11:00"
+                },
+                {
+                    "name": "TASK_DELETE_BATCH_SIZE",
+                    "value": "100000"
                 }
             ],
             "secrets": [

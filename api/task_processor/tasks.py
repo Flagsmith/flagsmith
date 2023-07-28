@@ -25,6 +25,9 @@ def create_health_check_model(health_check_model_uuid: str):
     first_run_time=settings.TASK_DELETE_RUN_TIME,
 )
 def clean_up_old_tasks():
+    if not settings.ENABLE_CLEAN_UP_OLD_TASKS:
+        return
+
     now = timezone.now()
     delete_before = now - timedelta(days=settings.TASK_DELETE_RETENTION_DAYS)
 
