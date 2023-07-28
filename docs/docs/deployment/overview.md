@@ -13,7 +13,7 @@ If you would rather skip the hosting and jump straight to integrating Flagsmith 
 ## Terraform Templates
 
 We have a number of example deployments across different providers and orchestration frameworks in our
-[Terraform Examples](https://github.com/Flagsmith/terraform-examples/pull/7/files) repository.
+[Terraform Examples](https://github.com/Flagsmith/terraform-examples) repository.
 
 ## One Click Installers
 
