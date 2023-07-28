@@ -1,4 +1,14 @@
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+
 const ReactTooltip = require('react-tooltip')
+
+const TooltipStyler = ({ children }) => (
+  <div className='flex-row'>
+    <div className='icon--tooltip ion-ios-information-circle mr-1'></div>
+    <span>{`${children}`}</span>
+  </div>
+)
 
 const Tooltip = class extends React.Component {
   static displayName = 'Tooltip'
@@ -16,13 +26,15 @@ const Tooltip = class extends React.Component {
           <span className='ion ion-ios-help' data-for={this.id} data-tip />
         )}
         <ReactTooltip
-          html={false}
+          html
           id={this.id}
           place={this.props.place || 'top'}
           type='dark'
           effect='solid'
         >
-          {`<div class="flex-row"><div class="icon--tooltip ion-ios-information-circle mr-1"></div><span>${this.props.children}</span></div>`}
+          {renderToStaticMarkup(
+            <TooltipStyler>{this.props.children}</TooltipStyler>,
+          )}
         </ReactTooltip>
       </span>
     )
