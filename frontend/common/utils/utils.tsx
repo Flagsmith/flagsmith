@@ -248,11 +248,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return planNames.free
   },
   getPlanPermission: (plan: string, permission: string) => {
-    let valid = true
-    const planName = Utils.getPlanName(plan)
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+    if (global.flagsmithVersion?.backend.is_enterprise) {
       return true
     }
+    let valid = true
+    const planName = Utils.getPlanName(plan)
+
     if (!plan || planName === planNames.free) {
       return false
     }
@@ -306,7 +307,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlansPermission: (permission: string) => {
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+    if (global.flagsmithVersion?.backend.is_enterprise) {
       return true
     }
     const isOrgPermission = permission !== '2FA'
