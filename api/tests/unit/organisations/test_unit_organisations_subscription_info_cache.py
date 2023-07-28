@@ -1,4 +1,4 @@
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeePlanMetadata
 from organisations.subscription_info_cache import update_caches
 from task_processor.task_run_method import TaskRunMethod
 
@@ -17,7 +17,7 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
         organisation.id: organisation_usage.get(t)
     }
 
-    chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
+    chargebee_metadata = ChargebeePlanMetadata(seats=15, api_calls=1000000)
     mocked_get_subscription_metadata = mocker.patch(
         "organisations.subscription_info_cache.get_subscription_metadata"
     )

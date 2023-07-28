@@ -48,4 +48,9 @@ urlpatterns = [
         views.trigger_update_chargebee_caches,
         name="update-chargebee-cache",
     ),
+    path(
+        "organisations/<int:organisation_id>/validate-chargebee-credentials",
+        views.validate_chargebee_credentials,
+        name="validate-chargebee-credentials",
+    ),
 ]

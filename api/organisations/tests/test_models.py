@@ -5,7 +5,7 @@ import pytest
 from django.test import TestCase
 from rest_framework.test import override_settings
 
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeePlanMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
@@ -250,7 +250,7 @@ def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subsc
         payment_method=CHARGEBEE, subscription_id="cb-subscription"
     )
 
-    expected_metadata = ChargebeeObjMetadata(seats=10, api_calls=50000000, projects=10)
+    expected_metadata = ChargebeePlanMetadata(seats=10, api_calls=50000000, projects=10)
     mock_cb_get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata"
     )

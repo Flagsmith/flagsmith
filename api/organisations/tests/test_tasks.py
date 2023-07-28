@@ -1,6 +1,6 @@
 import pytest
 
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeePlanMetadata
 from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
     MAX_SEATS_IN_FREE_PLAN,
@@ -36,7 +36,7 @@ def test_send_org_over_limit_alert_for_organisation_with_free_subscription(
 
 
 @pytest.mark.parametrize(
-    "SubscriptionMetadata", [ChargebeeObjMetadata, XeroSubscriptionMetadata]
+    "SubscriptionMetadata", [ChargebeePlanMetadata, XeroSubscriptionMetadata]
 )
 def test_send_org_over_limit_alert_for_organisation_with_subscription(
     organisation, subscription, mocker, SubscriptionMetadata

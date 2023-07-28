@@ -1,4 +1,4 @@
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeePlanMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     MAX_API_CALLS_IN_FREE_PLAN,
@@ -34,7 +34,7 @@ def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription
     mocked_get_chargebee_subscription_metadata = mocker.patch(
         "organisations.subscriptions.subscription_service.get_chargebee_subscription_metadata",
         autospec=True,
-        return_value=ChargebeeObjMetadata(
+        return_value=ChargebeePlanMetadata(
             seats=seats, projects=projects, api_calls=api_calls
         ),
     )

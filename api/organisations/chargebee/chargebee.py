@@ -15,7 +15,7 @@ from ..subscriptions.exceptions import (
 )
 from .cache import ChargebeeCache
 from .constants import ADDITIONAL_SEAT_ADDON_ID
-from .metadata import ChargebeeObjMetadata
+from .metadata import ChargebeeSubscriptionMetadata
 
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
@@ -105,7 +105,7 @@ def get_hosted_page_url_for_subscription_upgrade(
 
 def get_subscription_metadata(
     subscription_id: str,
-) -> typing.Optional[ChargebeeObjMetadata]:
+) -> typing.Optional[ChargebeeSubscriptionMetadata]:
     if not (subscription_id and subscription_id.strip() != ""):
         logger.warning("Subscription id is empty or None")
         return None

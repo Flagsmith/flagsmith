@@ -23,6 +23,9 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee import (
+    get_subscription_metadata as get_subscription_metadata_from_chargebee,
+)
 from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
@@ -227,3 +230,21 @@ def trigger_update_organisation_subscription_information_caches(request):
 def trigger_update_chargebee_caches(request):
     update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def validate_chargebee_credentials(request, organisation_id):
+    organisation = get_object_or_404(
+        Organisation.objects.select_related("subscription"), pk=organisation_id
+    )
+
+    # and organisation.subscription.subscription_id == subscription_id
+    # and organisation.subscription.customer_id == customer_id
+
+    subscription = get_subscription_metadata_from_chargebee(
+        organisation.subscription.subscription_id
+    )
+    # subscription_metadata = get_subscription_metadata(organisation)
+
+    print(subscription)
+    return organisation_info(request, organisation_id)

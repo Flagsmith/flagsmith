@@ -14,7 +14,7 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeeSubscriptionMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
     Organisation,
@@ -804,7 +804,7 @@ def test_get_subscription_metadata(
 
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata",
-        return_value=ChargebeeObjMetadata(
+        return_value=ChargebeeSubscriptionMetadata(
             seats=expected_seats,
             projects=expected_projects,
             api_calls=expected_api_calls,
@@ -882,7 +882,6 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
         "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
-        "chargebee_email": None,
     }
 
 

@@ -5,7 +5,7 @@ from chargebee.result import Result as ChargebeeResult
 from django.conf import settings
 from django.core.cache import caches
 
-from .metadata import ChargebeeItem, ChargebeeObjMetadata
+from .metadata import ChargebeeItem, ChargebeePlanMetadata
 
 CHARGEBEE_CACHE_KEY = "chargebee_items"
 
@@ -20,11 +20,11 @@ class ChargebeeCache:
         self._cache.set(CHARGEBEE_CACHE_KEY, {"plans": plans, "addons": addons})
 
     @property
-    def plans(self) -> Dict[str, ChargebeeObjMetadata]:
+    def plans(self) -> Dict[str, ChargebeePlanMetadata]:
         return self._get_items()["plans"]
 
     @property
-    def addons(self) -> Dict[str, ChargebeeObjMetadata]:
+    def addons(self) -> Dict[str, ChargebeePlanMetadata]:
         return self._get_items()["addons"]
 
     def _get_items(self) -> dict:
@@ -38,7 +38,7 @@ class ChargebeeCache:
         for entry in get_item_generator(ChargebeeItem.PLAN):
             plan = entry.plan
             plan_metadata = plan.meta_data or {}
-            plans[plan.id] = ChargebeeObjMetadata(**plan_metadata)
+            plans[plan.id] = ChargebeePlanMetadata(**plan_metadata)
         return plans
 
     def fetch_addons(self) -> dict:
@@ -46,7 +46,7 @@ class ChargebeeCache:
         for entry in get_item_generator(ChargebeeItem.ADDON):
             addon = entry.addon
             addon_metadata = addon.meta_data or {}
-            addons[addon.id] = ChargebeeObjMetadata(**addon_metadata)
+            addons[addon.id] = ChargebeePlanMetadata(**addon_metadata)
         return addons
 
 

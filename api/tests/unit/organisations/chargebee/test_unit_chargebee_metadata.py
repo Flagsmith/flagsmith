@@ -1,10 +1,10 @@
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeePlanMetadata
 
 
 def test_add_chargebee_object_meta_data():
     # Given
-    a_obj_metadata = ChargebeeObjMetadata(seats=10, api_calls=100)
-    another_obj_metadata = ChargebeeObjMetadata(seats=20, api_calls=200, projects=100)
+    a_obj_metadata = ChargebeePlanMetadata(seats=10, api_calls=100)
+    another_obj_metadata = ChargebeePlanMetadata(seats=20, api_calls=200, projects=100)
 
     # When
     added_chargebee_obj_metadata = a_obj_metadata + another_obj_metadata
@@ -17,7 +17,7 @@ def test_add_chargebee_object_meta_data():
 
 def test_multiply_chargebee_object_metadata():
     # Given
-    metadata = ChargebeeObjMetadata(seats=10, api_calls=100)
+    metadata = ChargebeePlanMetadata(seats=10, api_calls=100)
 
     # When
     new_metadata = metadata * 3
@@ -30,7 +30,7 @@ def test_multiply_chargebee_object_metadata():
 
 def test_multiply_chargebee_object_metadata_works_for_null_values():
     # Given
-    metadata = ChargebeeObjMetadata(seats=10, api_calls=100, projects=None)
+    metadata = ChargebeePlanMetadata(seats=10, api_calls=100, projects=None)
 
     # When
     new_metadata = metadata * 3

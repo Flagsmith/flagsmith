@@ -81,6 +81,10 @@
                         </tr>
                     </tbody>
                 </table>
+                <form method="POST" action="{% url 'sales_dashboard:validate-chargebee-credentials' organisation.id %}">
+                    {% csrf_token %}
+                    <input type="submit" value="Validate Chargebee Credentials">
+                </form>
             </div>
 
             <h2>Projects</h2>
