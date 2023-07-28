@@ -862,6 +862,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata"
     )
+
     get_subscription_metadata.return_value = None
 
     url = reverse(
@@ -882,6 +883,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
         "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
+        "chargebee_email": None,
     }
 
 

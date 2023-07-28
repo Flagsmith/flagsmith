@@ -244,4 +244,4 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
 
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
 
-    chargebee_email = serializers.EmailField()
+    chargebee_email = serializers.EmailField(allow_null=True)
