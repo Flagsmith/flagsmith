@@ -81,9 +81,14 @@
                         </tr>
                     </tbody>
                 </table>
-                <form method="POST" action="{% url 'sales_dashboard:validate-chargebee-credentials' organisation.id %}">
+                {% for error in form.non_field_errors %}
+                {{error}}
+                {% endfor %}
+
+                <form method="POST" action="{% url 'sales_dashboard:sync-chargebee-data' organisation.id %}" class="form-inline">
                     {% csrf_token %}
-                    <input type="submit" value="Validate Chargebee Credentials">
+                    <input class="form-control mr-sm-2 w-100=" type="subscription_id" placeholder="Chargebee Sub ID" name="subscription_id">
+                    <input type="submit" value="Sync Chargebee Data" class="btn btn-outline-success my-2 my-sm-0">
                 </form>
             </div>
 

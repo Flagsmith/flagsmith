@@ -118,6 +118,14 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             and self.subscription.can_auto_upgrade_seats
         )
 
+    def update_chargebee_metadata(self, chargebee_metadata):
+        self.subscription.update_chargebee_metadata(
+            chargebee_metadata.plan_id,
+            chargebee_metadata.seats,
+            chargebee_metadata.api_calls,
+        )
+        self.save()
+
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
         if self.has_subscription():
@@ -179,6 +187,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.plan = plan_id
         self.max_seats = get_max_seats_for_plan(plan_metadata)
         self.max_api_calls = get_max_api_calls_for_plan(plan_metadata)
+        self.save()
+
+    def update_chargebee_metadata(self, plan_id, max_seats, max_api_calls):
+        self.customer_id = get_customer_id_from_subscription_id(self.subscription_id)
+        self.plan = plan_id
+        self.max_seats = max_seats
+        self.max_api_calls = max_api_calls
         self.save()
 
     @property

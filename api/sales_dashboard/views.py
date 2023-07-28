@@ -23,9 +23,6 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
-from organisations.chargebee import (
-    get_subscription_metadata as get_subscription_metadata_from_chargebee,
-)
 from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
@@ -38,7 +35,12 @@ from organisations.tasks import (
     update_organisation_subscription_information_caches,
 )
 
-from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
+from .forms import (
+    ChargebeeSyncForm,
+    EmailUsageForm,
+    MaxAPICallsForm,
+    MaxSeatsForm,
+)
 
 OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
@@ -109,7 +111,7 @@ class OrganisationList(ListView):
 
 
 @staff_member_required
-def organisation_info(request, organisation_id):
+def organisation_info(request, organisation_id, form=None):
     organisation = get_object_or_404(
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
@@ -159,6 +161,7 @@ def organisation_info(request, organisation_id):
             range_: get_events_for_organisation(organisation_id, date_range=range_)
             for range_ in ("24h", "7d", "30d")
         }
+    context["form"] = form
 
     return HttpResponse(template.render(context, request))
 
@@ -233,18 +236,19 @@ def trigger_update_chargebee_caches(request):
 
 
 @staff_member_required()
-def validate_chargebee_credentials(request, organisation_id):
-    organisation = get_object_or_404(
-        Organisation.objects.select_related("subscription"), pk=organisation_id
-    )
+def sync_chargebee_data(request, organisation_id):
+    if request.method == "POST":
+        form = ChargebeeSyncForm(request.POST, organisation_id=organisation_id)
 
-    # and organisation.subscription.subscription_id == subscription_id
-    # and organisation.subscription.customer_id == customer_id
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse(
+                    "sales_dashboard:organisation_info",
+                    kwargs={"organisation_id": organisation_id},
+                )
+            )
 
-    subscription = get_subscription_metadata_from_chargebee(
-        organisation.subscription.subscription_id
-    )
-    # subscription_metadata = get_subscription_metadata(organisation)
+        return organisation_info(request, organisation_id, form=form)
 
-    print(subscription)
     return organisation_info(request, organisation_id)

@@ -118,13 +118,14 @@ def get_subscription_metadata(
         chargebee_cache = ChargebeeCache()
         plan_metadata = chargebee_cache.plans[subscription.plan_id]
         subscription_metadata = plan_metadata
-        subscription_metadata.chargebee_email = chargebee_result.customer.email
 
         for addon in addons:
             quantity = getattr(addon, "quantity", None) or 1
             addon_metadata = chargebee_cache.addons[addon.id] * quantity
             subscription_metadata = subscription_metadata + addon_metadata
 
+        subscription_metadata.chargebee_email = chargebee_result.customer.email
+        subscription_metadata.plan_id = subscription.plan_id
         return subscription_metadata
 
 

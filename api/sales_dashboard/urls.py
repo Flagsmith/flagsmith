@@ -49,8 +49,8 @@ urlpatterns = [
         name="update-chargebee-cache",
     ),
     path(
-        "organisations/<int:organisation_id>/validate-chargebee-credentials",
-        views.validate_chargebee_credentials,
-        name="validate-chargebee-credentials",
+        "organisations/<int:organisation_id>/sync-chargebee-data",
+        views.sync_chargebee_data,
+        name="sync-chargebee-data",
     ),
 ]
