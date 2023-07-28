@@ -21,7 +21,6 @@ from organisations.models import OrganisationRole
 class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = AuditLogSerializer
     pagination_class = CustomPagination
-    filterset_fields = ["is_system_event"]
 
     def get_queryset(self) -> QuerySet[AuditLog]:
         q = self._get_base_filters()
