@@ -4,11 +4,16 @@ sidebar_label: Overview
 sidebar_position: 1
 ---
 
-## Paid Hosting
+## Flagsmith SaaS Platform
 
 If you would rather skip the hosting and jump straight to integrating Flagsmith with your own application, you can use
 [https://flagsmith.com/](https://flagsmith.com/) right now. We have
 [paid plans with pricing to suit both startups and enterprise customers alike](https://flagsmith.com/pricing).
+
+## Terraform Templates
+
+We have a number of example deployments across different providers and orchestration frameworks in our
+[Terraform Examples](https://github.com/Flagsmith/terraform-examples) repository.
 
 ## One Click Installers
 
