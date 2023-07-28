@@ -69,7 +69,7 @@ jobs:
       - name: Run Tests
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
-        run: make test
+        run: make test --cov .
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
