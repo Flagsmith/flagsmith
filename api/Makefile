@@ -60,6 +60,10 @@ docker-build:
 test:
 	pytest $(opts)
 
+.PHONY: test
+test-coverage:
+	pytest --cov
+
 .PHONY: django-make-migrations
 django-make-migrations:
 	python manage.py waitfordb
