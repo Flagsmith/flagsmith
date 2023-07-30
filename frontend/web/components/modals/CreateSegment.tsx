@@ -5,6 +5,7 @@ import useSearchThrottle from 'common/useSearchThrottle'
 import {
   EdgePagedResponse,
   Identity,
+  Operator,
   Segment,
   SegmentRule,
 } from 'common/types/responses'
@@ -61,6 +62,7 @@ type CreateSegmentType = {
   segment?: Segment
 }
 
+let _operators: Operator[] | null = null
 const CreateSegment: FC<CreateSegmentType> = ({
   condensed,
   environmentId,
@@ -214,7 +216,40 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     //eslint-disable-next-line
   }, [updateSuccess])
+  const operators: Operator[] | null =
+    _operators || Utils.getFlagsmithValue('segment_operators')
+      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
+      : null
+  if (operators) {
+    _operators = operators
+  }
 
+  const allWarnings = useMemo(() => {
+    const warnings: string[] = []
+    const parseRules = (
+      rules: SegmentRule[] | null,
+      _operators: Operator[],
+    ) => {
+      rules?.map((v) => {
+        v?.conditions?.map((condition) => {
+          const operatorObj = operators?.find(
+            (op) => op.value === condition.operator,
+          )
+          if (
+            operatorObj?.warning &&
+            !warnings?.includes(operatorObj.warning)
+          ) {
+            warnings.push(operatorObj.warning)
+          }
+        })
+        parseRules(v.rules, operators!)
+      })
+    }
+    if (operators) {
+      parseRules(rules, operators)
+    }
+    return warnings
+  }, [operators, rules])
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
@@ -237,11 +272,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${i}`}
                   rule={rule}
-                  operators={
-                    Utils.getFlagsmithValue('segment_operators')
-                      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-                      : null
-                  }
+                  operators={operators}
                   onRemove={() => removeRule(0, i)}
                   onChange={(v: SegmentRule) => updateRule(0, i, v)}
                 />
@@ -363,7 +394,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             className={'ml-0'}
           />
           <span
-            style={{ marginLeft: '12px', fontWeight: 'normal' }}
+            style={{ fontWeight: 'normal', marginLeft: '12px' }}
             className='mb-0 text-dark'
           >
             {showDescriptions
@@ -379,6 +410,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
             Note: Trait names are case sensitive
           </span>
         </Flex>
+        {allWarnings?.map((warning, i) => (
+          <InfoMessage key={i}>
+            <div dangerouslySetInnerHTML={{ __html: warning }} />
+          </InfoMessage>
+        ))}
         {rulesEl}
       </div>
 
