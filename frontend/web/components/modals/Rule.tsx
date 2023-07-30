@@ -2,16 +2,27 @@ import React, { PureComponent } from 'react'
 import Constants from 'common/constants'
 import cloneDeep from 'lodash/cloneDeep'
 import Icon from 'components/Icon'
+import Utils from 'common/utils/utils'
+import { Operator, SegmentCondition, SegmentRule } from 'common/types/responses'
+import Input from 'components/base/forms/Input'
+import find from 'lodash/find'
+import Button from 'components/base/forms/Button'
+const splitIfValue = (v: string | null | number, append: string) =>
+  append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
-const splitIfValue = (v, append) =>
-  append ? v.split(append) : [v === null ? '' : v]
-
-export default class Rule extends PureComponent {
+export default class Rule extends PureComponent<{
+  operators: Operator[]
+  rule: SegmentRule
+  onChange: (newValue: SegmentRule) => void
+  readOnly?: boolean
+  showDescription?: boolean
+  'data-test'?: string
+}> {
   static displayName = 'Rule'
 
   static propTypes = {}
 
-  renderRule = (rule, i) => {
+  renderRule = (rule: SegmentCondition, i: number) => {
     const {
       props: {
         operators,
@@ -30,10 +41,9 @@ export default class Rule extends PureComponent {
     if (rule.delete) {
       return null
     }
-
-    const valuePlaceholder = rule.hideValue
+    const valuePlaceholder = operatorObj?.hideValue
       ? 'Value (N/A)'
-      : rule.valuePlaceholder || 'Value'
+      : operatorObj?.valuePlaceholder || 'Value'
     return (
       <div className='rule__row reveal' key={i}>
         {hasOr && (
@@ -59,7 +69,7 @@ export default class Rule extends PureComponent {
                     ? 'Trait (N/A)'
                     : 'Trait *'
                 }
-                onChange={(e) =>
+                onChange={(e: InputEvent) =>
                   this.setRuleProperty(i, 'property', {
                     value: Utils.safeParseEventValue(e),
                   })
@@ -72,12 +82,14 @@ export default class Rule extends PureComponent {
             {Constants.strings.USER_PROPERTY_DESCRIPTION}
           </Tooltip>
           {this.props.readOnly ? (
-            _.find(operators, { value: operator }).label
+            find(operators, { value: operator })!.label
           ) : (
             <Select
               data-test={`${this.props['data-test']}-operator-${i}`}
-              value={operator && _.find(operators, { value: operator })}
-              onChange={(value) => this.setRuleProperty(i, 'operator', value)}
+              value={operator && find(operators, { value: operator })}
+              onChange={(value: { value: string }) =>
+                this.setRuleProperty(i, 'operator', value)
+              }
               options={operators}
               style={{ width: '190px' }}
             />
@@ -89,19 +101,14 @@ export default class Rule extends PureComponent {
             placeholder={valuePlaceholder}
             disabled={operatorObj && operatorObj.hideValue}
             style={{ width: '135px' }}
-            onChange={(e) => {
+            onChange={(e: InputEvent) => {
               const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
-              this.setRuleProperty(
-                i,
-                'value',
-                {
-                  value:
-                    operatorObj && operatorObj.append
-                      ? `${value}${operatorObj.append}`
-                      : value,
-                },
-                true,
-              )
+              this.setRuleProperty(i, 'value', {
+                value:
+                  operatorObj && operatorObj.append
+                    ? `${value}${operatorObj.append}`
+                    : value,
+              })
             }}
             isValid={Utils.validateRule(rule)}
           />
@@ -137,7 +144,7 @@ export default class Rule extends PureComponent {
               placeholder='Condition description (Optional)'
               onChange={(e) => {
                 const value = Utils.safeParseEventValue(e)
-                this.setRuleProperty(i, 'description', { value }, true)
+                this.setRuleProperty(i, 'description', { value })
               }}
             />
           </Row>
@@ -145,11 +152,15 @@ export default class Rule extends PureComponent {
       </div>
     )
   }
-  removeRule = (i) => {
+  removeRule = (i: number) => {
     this.setRuleProperty(i, 'delete', { value: true })
   }
 
-  setRuleProperty = (i, prop, { value }) => {
+  setRuleProperty = (
+    i: number,
+    prop: string,
+    { value }: { value: string | boolean },
+  ) => {
     const rule = cloneDeep(this.props.rule)
 
     const { conditions: rules } = rule
@@ -182,11 +193,12 @@ export default class Rule extends PureComponent {
     const invalidPercentageSplit =
       prop === 'value' &&
       rules[i].operator === 'PERCENTAGE_SPLIT' &&
-      (`${value}`?.match(/\D/) || value > 100)
+      (`${value}`?.match(/\D/) || (value as any) > 100)
     if (!invalidPercentageSplit) {
       // split operator by append
+      // @ts-ignore
       rules[i][prop] =
-        prop === 'operator' ? formattedValue.split(':')[0] : formattedValue
+        prop === 'operator' ? formattedValue?.split(':')[0] : formattedValue
     }
 
     if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {

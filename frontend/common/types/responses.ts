@@ -13,12 +13,19 @@ export type PagedResponse<T> = {
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
+export type Operator = {
+  value: string | null
+  label: string
+  hideValue?: boolean
+  warning?: string
+  valuePlaceholder?: string
+}
 export type SegmentCondition = {
+  delete?: boolean
+  description?: string
   operator: string
   property: string
-
-  delete?: boolean
-  value: string
+  value: string | number | null
 }
 export type SegmentRule = {
   type: string
@@ -297,7 +304,7 @@ export type Res = {
       environment: number
       enabled: boolean
       feature: number
-      feature_state_value: featureStateValue
+      feature_state_value: FeatureStateValue
       deleted_at: string
       uuid: string
       created_at: string
