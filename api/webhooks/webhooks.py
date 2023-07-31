@@ -3,6 +3,8 @@ import json
 import typing
 
 import requests
+import backoff
+
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from django.conf import settings
@@ -19,6 +21,8 @@ from webhooks.sample_webhook_data import (
 
 from .models import AbstractBaseExportableWebhookModel
 from .serializers import WebhookSerializer
+
+from task_processor.decorators import register_task_handler
 
 if typing.TYPE_CHECKING:
     import environments  # noqa
@@ -50,6 +54,7 @@ def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
         return Webhook
 
 
+@register_task_handler()
 def call_environment_webhooks(environment, data, event_type):
     if settings.DISABLE_WEBHOOKS:
         return
@@ -62,6 +67,7 @@ def call_environment_webhooks(environment, data, event_type):
     )
 
 
+@register_task_handler()
 def call_organisation_webhooks(organisation, data, event_type):
     if settings.DISABLE_WEBHOOKS:
         return
@@ -88,6 +94,8 @@ def trigger_sample_webhook(
     return _call_webhook(webhook, serializer.data)
 
 
+@backoff.on_exception(backoff.expo,
+                      requests.exceptions.RequestException, max_tries=8, jitter=backoff.full_jitter)
 def _call_webhook(
     webhook: typing.Type[AbstractBaseExportableWebhookModel],
     data: typing.Mapping,
