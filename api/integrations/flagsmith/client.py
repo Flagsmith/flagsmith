@@ -21,7 +21,7 @@ from flagsmith.offline_handlers import LocalFileHandler
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
-_flagsmith_client: typing.Optional["Flagsmith"] = None
+_flagsmith_client: typing.Optional[Flagsmith] = None
 
 
 def get_client() -> Flagsmith:
