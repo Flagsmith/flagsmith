@@ -136,7 +136,7 @@ drf-yasg==1.21.6
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith @ git+https://github.com/Flagsmith/flagsmith-python-client.git@main
+flagsmith==3.4.0
     # via -r requirements.in
 flagsmith-flag-engine==4.0.3
     # via
