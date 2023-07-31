@@ -19,4 +19,5 @@ class MasterAPIKeyAuthentication(authentication.BaseAuthentication):
             if MasterAPIKey.objects.is_valid(key):
                 key = MasterAPIKey.objects.get_from_key(key)
                 return APIKeyUser(key), None
+
         raise exceptions.AuthenticationFailed("Valid Master API Key not found.")
