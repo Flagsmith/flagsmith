@@ -18,8 +18,8 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
     server_key = "some-key"
     api_url = "https://my.flagsmith.api/api/v1/"
 
-    settings.FLAGSMITH_SERVER_KEY = server_key
-    settings.FLAGSMITH_API_URL = api_url
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = server_key
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
     settings.FLAGSMITH_OFFLINE_MODE = False
 
     mock_local_file_handler = mocker.MagicMock(spec=LocalFileHandler)

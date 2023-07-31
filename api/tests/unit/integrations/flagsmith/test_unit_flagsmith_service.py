@@ -12,7 +12,7 @@ from integrations.flagsmith.flagsmith_service import update_environment_json
 def test_update_environment_json(settings):
     # Given
     api_url = "https://api.flagsmith.com/api/v1"
-    settings.FLAGSMITH_API_URL = api_url
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
 
     environment_document = {"api_key": "some-key", "name": "test"}
     environment_json = json.dumps(environment_document)
@@ -36,7 +36,7 @@ def test_update_environment_json(settings):
 def test_update_environment_json_throws_exception_for_failed_request(settings):
     # Given
     api_url = "https://api.flagsmith.com/api/v1"
-    settings.FLAGSMITH_API_URL = api_url
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
 
     responses.add(
         method="GET",

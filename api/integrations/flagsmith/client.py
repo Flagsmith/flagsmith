@@ -37,13 +37,17 @@ def _get_client_kwargs() -> dict[str, typing.Any]:
 
     if settings.FLAGSMITH_OFFLINE_MODE:
         return {"offline_mode": True, **_default_kwargs}
-    elif settings.FLAGSMITH_SERVER_KEY and settings.FLAGSMITH_API_URL:
+    elif (
+        settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
+        and settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL
+    ):
         return {
-            "environment_key": settings.FLAGSMITH_SERVER_KEY,
-            "api_url": settings.FLAGSMITH_API_URL,
+            "environment_key": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY,
+            "api_url": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL,
             **_default_kwargs,
         }
 
     raise ValueError(
-        "Must either use offline mode, or provide FLAGSMITH_SERVER_KEY and FLAGSMITH_API_URL."
+        "Must either use offline mode, or provide "
+        "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY and FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL."
     )
