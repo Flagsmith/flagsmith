@@ -13,13 +13,11 @@ from .models import AmplitudeConfiguration
 
 logger = logging.getLogger(__name__)
 
-AMPLITUDE_API_URL = "https://api.amplitude.com"
-
 
 class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, config: AmplitudeConfiguration):
         self.api_key = config.api_key
-        self.url = f"{AMPLITUDE_API_URL}/identify"
+        self.url = f"{config.base_url}/identify"
 
     def _identify_user(self, user_data: dict) -> None:
         payload = {"api_key": self.api_key, "identification": json.dumps([user_data])}
