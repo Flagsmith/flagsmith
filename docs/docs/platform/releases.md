@@ -1,13 +1,16 @@
 # Releases
 
-We have a fairly standard tagging strategy:
+We follow the [SemVer](https://semver.org/) version naming strategy strategy.
 
-- Git tags created from the `main` branch trigger Docker image builds tagged `latest`.
-- Git tags e.g. `2.7.1` will trigger Docker image builds tagged:
-  - `2.7.1`
-  - `2.7`
+Please follow our [Github Releases](https://github.com/Flagsmith/flagsmith/releases) page for detailed change logs.
 
-Please look out our [Github Releases](https://github.com/Flagsmith/flagsmith/releases) page for detailed change logs.
+:::important
+
+This page is no longer being updated. Please refer to our
+[Github Releases](https://github.com/Flagsmith/flagsmith/releases) and
+[Changelog](https://github.com/Flagsmith/flagsmith/blob/main/CHANGELOG.md) pages for detailed change logs.
+
+:::
 
 ## v2.48
 

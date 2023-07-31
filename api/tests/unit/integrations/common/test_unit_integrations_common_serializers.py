@@ -69,7 +69,7 @@ def test_base_project_integration_model_serializer_save_updates_existing_if_soft
     serializer.is_valid(raise_exception=True)
 
     # When
-    serializer.save(project=project)
+    serializer.save(project_id=project.id)
 
     # Then
     updated_webhook_config = DataDogConfiguration.objects.filter(

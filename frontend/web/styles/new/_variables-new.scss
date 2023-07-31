@@ -10,6 +10,8 @@ $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
 $info: #0aaddf;
+$warning: #ff9f43;
+$secondary400: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
 $text-icon-grey: rgba(101, 109, 123, 1);
@@ -33,20 +35,24 @@ $white-alpha-16: rgba(255, 255, 255, 0.16);
 $white-alpha-24: rgba(255, 255, 255, 0.24);
 $white-alpha-32: rgba(255, 255, 255, 0.32);
 $white-alpha-48: rgba(255, 255, 255, 0.48);
+$black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 $theme-colors: (
-  primary: $primary,
-  danger: $danger,
-  success: $success,
-  info: $info,
-  // add any additional color below
+    primary: $primary,
+    danger: $danger,
+    success: $success,
+    info: $info,
+    warning: $warning,
+    dark:$text-icon-dark,
+    // add any additional color below
 );
+$bg-light200: #fafafb;
 $bg-light300: #eff1f4;
-$bg-dark100: #2D3443;
+$bg-dark100: #2d3443;
 $bg-dark200: #202839;
-$bg-dark300: #161D30;
-$bg-dark400: #15192B;
-$bg-dark500: #0F1425;
+$bg-dark300: #161d30;
+$bg-dark400: #15192b;
+$bg-dark500: #0f1425;
 
 //Body
 $body-text: $text-icon-dark;
@@ -94,13 +100,12 @@ $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
 $btn-border-width: 0;
 
-
 //HR
 $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $bg-dark500;
+    border-color: $bg-dark500;
 }
 
 //Modal
@@ -122,20 +127,20 @@ $modal-footer-margin-between: 0;
 
 //Breakpoints
 $grid-breakpoints: (
-  xs: 0,
-  sm: 544px,
-  md: 768px,
-  lg: 992px,
-  xl: 1200px,
-  xxl: 1201px,
+    xs: 0,
+    sm: 544px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1201px,
 );
 
 $container-max-widths: (
-  sm: 576px,
-  md: 720px,
-  lg: 940px,
-  xl: 1140px,
-  xxl: 1141px,
+    sm: 576px,
+    md: 720px,
+    lg: 940px,
+    xl: 1140px,
+    xxl: 1141px,
 );
 
 //Typography
@@ -153,10 +158,10 @@ $font-caption: 13px;
 $font-caption-sm: 12px;
 $font-caption-xs: 11px;
 $font-sizes: (
-  small: $font-sm,
-  caption: $font-caption,
-  captionSmall: $font-caption-sm,
-  captionXSmall: $font-caption-xs,
+    small: $font-sm,
+    caption: $font-caption,
+    captionSmall: $font-caption-sm,
+    captionXSmall: $font-caption-xs,
 );
 
 $h1-font-size: 42px;
@@ -190,10 +195,10 @@ $input-border-color-dark: $bg-dark400;
 $input-focus-border-color-dark: $primary;
 $input-hover-border-color-dark: $white-alpha-8;
 $input-placeholder-color: $text-icon-light-grey;
-$input-padding: 12px 16px 12px 12px;
-$input-padding-sm: 8px 14px 8px 12px;
+$input-padding: 12px 12px 12px 16px;
+$input-padding-sm: 8px 12px 8px 14px;
 $input-padding-xsm: 6px 12px;
-$input-padding-lg: 16px 20px 16px 12px;
+$input-padding-lg: 16px 12px 16px 20px;
 $textarea-height: 120px;
 $textarea-height-sm: 100px;
 $textarea-height-xsm: 86px;
@@ -240,12 +245,17 @@ $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
 
 //Tabs
-$tab-btn-line-height:42px;
-$tab-btn-font-weight:500;
-$tab-btn-active-font-weight:600;
-$tab-btn-counter-value-bg:$danger;
-$tab-btn-counter-value-font-size:$font-caption-sm;
-$tab-btn-counter-value-width:20px;
-$pill-bg:$bg-light300;
+$tab-btn-line-height: 42px;
+$tab-btn-font-weight: 500;
+$tab-btn-active-font-weight: 600;
+$tab-btn-counter-value-bg: $danger;
+$tab-btn-counter-value-font-size: $font-caption-sm;
+$tab-btn-counter-value-width: 20px;
+$pill-bg: $bg-light300;
 $tab-line-color: $primary;
 
+//CodeHelp
+$code-btn-bg: $secondary400;
+$code-btn-description-color: $primary;
+$code-color: $text-icon-light;
+$code-bg: $bg-dark200;

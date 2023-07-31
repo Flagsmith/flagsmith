@@ -102,6 +102,14 @@
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
+                },
+                {
+                    "name": "TASK_DELETE_RETENTION_DAYS",
+                    "value": "280"
+                },
+                {
+                    "name": "TASK_DELETE_RUN_TIME",
+                    "value": "11:00"
                 }
             ],
             "secrets": [

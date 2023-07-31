@@ -121,6 +121,15 @@ button.btn {
       fill: #d93939;
     }
   }
+  &-with-icon{
+    padding: 0 14px;
+    background-color: $basic-alpha-8;
+    border-radius: $border-radius;
+    &:hover,
+    &:active{
+      background-color: $basic-alpha-8 !important;
+    }
+  }
   &--with-icon {
     background: none !important;
     &.primary {

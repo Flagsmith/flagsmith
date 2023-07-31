@@ -16,7 +16,7 @@ azure-core==1.23.1
     # via
     #   azure-identity
     #   opencensus-ext-azure
-azure-identity==1.12.0
+azure-identity==1.13.0
     # via opencensus-ext-azure
 backoff==1.10.0
     # via
@@ -33,7 +33,7 @@ botocore==1.29.75
     #   s3transfer
 cachetools==4.1.1
     # via google-auth
-certifi==2022.12.7
+certifi==2023.7.22
     # via
     #   influxdb-client
     #   requests
@@ -48,7 +48,7 @@ coreapi==2.3.3
     # via -r requirements.in
 coreschema==0.0.4
     # via coreapi
-cryptography==39.0.1
+cryptography==41.0.2
     # via
     #   azure-identity
     #   msal
@@ -188,7 +188,7 @@ monotonic==1.6
     # via
     #   analytics-python
     #   rudder-sdk-python
-msal==1.21.0
+msal==1.22.0
     # via
     #   azure-identity
     #   msal-extensions
