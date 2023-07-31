@@ -144,7 +144,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                   onClick={confirmRemove}
                   className='btn btn-with-icon'
                 >
-                 <Icon name="trash-2" fill={'#656D7B'} width={20}/>
+                  <span className='no-pointer'>
+                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
+                  </span>
                 </button>
               )}
               {!!v.id && (
@@ -561,7 +563,7 @@ class TheComponent extends Component {
                 environmentId={this.props.environmentId}
                 projectId={this.props.projectId}
               />
-             </div>
+            </div>
           )}
           {this.props.showCreateSegment && this.state.segmentEditId && (
             <CreateSegmentModal
