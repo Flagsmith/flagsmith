@@ -18,6 +18,7 @@ from django.conf import settings
 from flagsmith import Flagsmith
 from flagsmith.offline_handlers import LocalFileHandler
 
+from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 _flagsmith_client: typing.Optional["Flagsmith"] = None
@@ -35,7 +36,7 @@ def get_client() -> Flagsmith:
 def _get_client_kwargs() -> dict[str, typing.Any]:
     _default_kwargs = {"offline_handler": LocalFileHandler(ENVIRONMENT_JSON_PATH)}
 
-    if settings.FLAGSMITH_OFFLINE_MODE:
+    if settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE:
         return {"offline_mode": True, **_default_kwargs}
     elif (
         settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
@@ -47,7 +48,7 @@ def _get_client_kwargs() -> dict[str, typing.Any]:
             **_default_kwargs,
         }
 
-    raise ValueError(
+    raise FlagsmithIntegrationError(
         "Must either use offline mode, or provide "
         "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY and FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL."
     )

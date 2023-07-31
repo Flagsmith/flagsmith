@@ -1,18 +1,41 @@
+from unittest.mock import MagicMock
+
 import pytest
 from flagsmith.offline_handlers import LocalFileHandler
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 from integrations.flagsmith.client import get_client
+from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 
 @pytest.fixture(autouse=True)
-def reset_globals(mocker):
+def reset_globals(mocker: MockerFixture) -> None:
     mocker.patch("integrations.flagsmith.client._flagsmith_client", None)
     yield
 
 
+@pytest.fixture()
+def mock_local_file_handler(mocker: MockerFixture) -> None:
+    return mocker.MagicMock(spec=LocalFileHandler)
+
+
+@pytest.fixture()
+def mock_local_file_handler_class(
+    mocker: MockerFixture, mock_local_file_handler: MagicMock
+):
+    return mocker.patch(
+        "integrations.flagsmith.client.LocalFileHandler",
+        return_value=mock_local_file_handler,
+    )
+
+
 def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(
-    settings, mocker
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    mock_local_file_handler,
+    mock_local_file_handler_class,
 ) -> None:
     # Given
     server_key = "some-key"
@@ -20,15 +43,9 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
 
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = server_key
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
-    settings.FLAGSMITH_OFFLINE_MODE = False
-
-    mock_local_file_handler = mocker.MagicMock(spec=LocalFileHandler)
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
 
     mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_local_file_handler_class = mocker.patch(
-        "integrations.flagsmith.client.LocalFileHandler",
-        return_value=mock_local_file_handler,
-    )
 
     # When
     client = get_client()
@@ -48,18 +65,15 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
 
 
 def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(
-    settings, mocker
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    mock_local_file_handler,
+    mock_local_file_handler_class,
 ) -> None:
     # Given
-    settings.FLAGSMITH_OFFLINE_MODE = True
-
-    mock_local_file_handler = mocker.MagicMock(spec=LocalFileHandler)
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = True
 
     mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_local_file_handler_class = mocker.patch(
-        "integrations.flagsmith.client.LocalFileHandler",
-        return_value=mock_local_file_handler,
-    )
 
     # When
     client = get_client()
@@ -74,3 +88,15 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_en
     assert call_args.kwargs["offline_handler"] == mock_local_file_handler
 
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
+
+
+def test_get_client_raises_value_error_if_missing_args(
+    settings: SettingsWrapper, mock_local_file_handler_class
+):
+    # Given
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
+    assert settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY is None
+
+    # When
+    with pytest.raises(FlagsmithIntegrationError):
+        get_client()
