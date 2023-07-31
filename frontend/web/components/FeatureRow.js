@@ -183,13 +183,11 @@ class TheComponent extends Component {
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
+        onClick={() =>
+          !readOnly && this.editFeature(projectFlag, environmentFlags[id])
+        }
       >
-        <Flex
-          className='table-column'
-          onClick={() =>
-            !readOnly && this.editFeature(projectFlag, environmentFlags[id])
-          }
-        >
+        <Flex className='table-column'>
           <Row>
             <div className='font-weight-medium'>{name}</div>
             {!!projectFlag.num_segment_overrides && (
@@ -312,7 +310,8 @@ class TheComponent extends Component {
                 html
                 title={
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       this.context.router.history.push(
                         `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
@@ -345,11 +344,12 @@ class TheComponent extends Component {
                         disabled={
                           !removeFeaturePermission || readOnly || isProtected
                         }
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation()
                           this.confirmRemove(projectFlag, () => {
                             removeFlag(projectId, projectFlag)
                           })
-                        }
+                        }}
                         className='btn btn-with-icon'
                         data-test={`remove-feature-btn-${this.props.index}`}
                       >

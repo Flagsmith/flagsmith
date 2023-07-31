@@ -546,11 +546,9 @@ const UserPage = class extends Component {
                                         }`}
                                         key={id}
                                         data-test={`user-feature-${i}`}
+                                        onClick={onClick}
                                       >
-                                        <Flex
-                                          onClick={onClick}
-                                          className='table-column px-3'
-                                        >
+                                        <Flex className='table-column px-3'>
                                           <div className='font-weight-medium'>
                                             {name}
                                           </div>
@@ -659,6 +657,9 @@ const UserPage = class extends Component {
                                         <div
                                           className='table-column'
                                           style={{ width: width[2] }}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                          }}
                                         >
                                           {Utils.renderWithPermission(
                                             permission,
@@ -702,6 +703,9 @@ const UserPage = class extends Component {
                                         <div
                                           className='table-column p-0'
                                           style={{ width: width[3] }}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                          }}
                                         >
                                           {hasUserOverride && (
                                             <>
