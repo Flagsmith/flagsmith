@@ -1,14 +1,8 @@
 import React from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+
+import * as DOMPurify from 'dompurify'
 
 const ReactTooltip = require('react-tooltip')
-
-const TooltipStyler = ({ children }) => (
-  <div className='flex-row'>
-    <div className='icon--tooltip ion-ios-information-circle mr-1'></div>
-    <span>{`${children}`}</span>
-  </div>
-)
 
 const Tooltip = class extends React.Component {
   static displayName = 'Tooltip'
@@ -32,8 +26,8 @@ const Tooltip = class extends React.Component {
           type='dark'
           effect='solid'
         >
-          {renderToStaticMarkup(
-            <TooltipStyler>{this.props.children}</TooltipStyler>,
+          {DOMPurify.sanitize(
+            `<div class="flex-row"><div class="icon--tooltip ion-ios-information-circle mr-1"></div><span>${this.props.children}</span></div>`,
           )}
         </ReactTooltip>
       </span>
