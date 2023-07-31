@@ -7,4 +7,4 @@ from integrations.common.serializers import (
 class AmplitudeConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = AmplitudeConfiguration
-        fields = ("id", "api_key")
+        fields = ("id", "api_key", "base_url")
