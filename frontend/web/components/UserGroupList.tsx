@@ -10,6 +10,7 @@ import {
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage' // we need this to make JSX compile
+import Icon from './Icon'
 const Panel = require('components/base/grid/Panel')
 
 type UserGroupsListType = {
@@ -58,12 +59,27 @@ const UserGroupsList: FC<UserGroupsListType> = ({
         title={noTitle ? '' : 'Groups'}
         className='no-pad'
         itemHeight={64}
-        icon='ion-md-people'
         items={sortBy(userGroups?.results, 'name')}
         paging={userGroups}
         nextPage={() => setPage(page + 1)}
         prevPage={() => setPage(page - 1)}
         goToPage={setPage}
+        header={
+          showRemove && (
+            <Row className='table-header'>
+              <Flex className='table-column px-3'>Groups</Flex>
+              <div style={{ width: '170px' }} className='table-column'>
+                Action
+              </div>
+              <div
+                style={{ width: '80px' }}
+                className='table-column text-center'
+              >
+                Remove
+              </div>
+            </Row>
+          )
+        }
         renderRow={(group: UserGroup, index: number) => {
           const { id, name, users } = group
           const _onClick = () => {
@@ -84,49 +100,65 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               key={id}
               data-test={`user-item-${index}`}
             >
-              <Flex onClick={_onClick}>
-                <div>
-                  <Button theme='text'>{name}</Button>
-                </div>
-                <div className='list-item-footer faint'>
+              <Flex onClick={_onClick} className=' table-column px-3'>
+                <div className='mb-1 font-weight-medium'>{name}</div>
+                <div className='list-item-subtitle faint'>
                   {users.length}
                   {users.length === 1 ? ' Member' : ' Members'}
                 </div>
               </Flex>
 
-              {onEditPermissions && isAdmin && (
-                <Button theme='text' onClick={() => onEditPermissions(group)}>
-                  Edit Permissions
-                </Button>
+              {onEditPermissions && isAdmin ? (
+                <div
+                  style={{
+                    width: '170px',
+                  }}
+                  onClick={() => onEditPermissions(group)}
+                  className='table-column'
+                >
+                  <Button theme='text' size='small'>
+                    <Icon name='edit' width={18} fill='#6837FC' /> Edit
+                    Permissions
+                  </Button>
+                </div>
+              ) : (
+                <div style={{ width: '170px' }} className='table-column'></div>
               )}
               {showRemove ? (
-                <Column>
+                <div
+                  style={{ width: '80px' }}
+                  className='table-column text-center'
+                >
                   {isAdmin && (
-                    <button
+                    <Button
                       id='remove-group'
-                      className='btn btn--with-icon'
                       type='button'
                       onClick={() => removeGroup(id, name)}
+                      className='btn btn-with-icon'
                     >
-                      <RemoveIcon />
-                    </button>
+                      <Icon name='trash-2' width={20} fill='#656D7B' />
+                    </Button>
                   )}
-                </Column>
+                </div>
               ) : (
-                <span
+                <div
                   onClick={_onClick}
-                  style={{ fontSize: 24 }}
-                  className='icon--primary ion ion-md-settings'
-                />
+                  style={{ width: '72px' }}
+                  className='px-3 text-center'
+                >
+                  <Icon name='setting' width={20} fill='#656D7B' />
+                </div>
               )}
             </Row>
           )
         }}
         isLoading={isLoading}
         renderNoResults={
-          <Panel icon='ion-md-people' title={noTitle ? '' : 'Groups'}>
-            <div className='p-2 text-center'>
-              You have no groups in your organisation.
+          <Panel title={noTitle ? '' : 'Groups'} className='no-pad'>
+            <div className='search-list'>
+              <Row className='list-item p-3 text-muted'>
+                You have no groups in your organisation.
+              </Row>
             </div>
           </Panel>
         }

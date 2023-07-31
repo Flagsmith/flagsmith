@@ -23,12 +23,12 @@ const FeatureValue = class extends Component {
     }
     return (
       <span
-        className={`chip chip--sm ${this.props.className || ''}`}
+        className={`chip ${this.props.className || ''}`}
         onClick={this.props.onClick}
         data-test={this.props['data-test']}
       >
         {type == 'string' && <span>"</span>}
-        {Format.truncateText(`${this.props.value}`, 20)}
+        {Format.truncateText(`${this.props.value}`, 16)}
         {type == 'string' && <span>"</span>}
       </span>
     )

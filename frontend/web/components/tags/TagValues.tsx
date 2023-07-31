@@ -23,7 +23,12 @@ const TagValues: FC<TagValuesType> = ({
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
-            <Tag hideNames={hideNames} onClick={onAdd} tag={tag} />
+            <Tag
+              hideNames={hideNames}
+              onClick={onAdd}
+              tag={tag}
+              isTruncated={(!onAdd && value.length > 2) || tag.label.length > 5}
+            />
           ),
       )}
       {!!onAdd && (

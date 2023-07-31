@@ -124,20 +124,24 @@ const ProjectSelectPage = class extends Component {
                       renderRow={({ environments, id, name }, i) => (
                         <Link
                           key={id}
-                          className='list-item text-decoration-none link-unstyled clickable'
                           id={`project-select-${i}`}
                           to={`/project/${id}/environment/${
                             environments && environments[0]
                               ? `${environments[0].api_key}/features`
                               : 'create'
                           }`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row>
-                            <Flex className='align-start'>
-                              <span className='fw-bold'>{name}</span>
-                            </Flex>
-                            <span className='text__link icon ion-ios-arrow-forward list-item' />
-                          </Row>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>{name}</div>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )}
                       renderNoResults={

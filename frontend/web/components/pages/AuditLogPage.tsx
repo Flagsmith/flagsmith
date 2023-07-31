@@ -45,33 +45,6 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
           <FormGroup>
             <div>
               <div className='audit'>
-                <div className='font-weight-bold mb-2'>
-                  Filter by environments:
-                </div>
-                <ProjectProvider>
-                  {({ project }: { project: Project }) => (
-                    <Row>
-                      {project &&
-                        project.environments &&
-                        project.environments.map((env) => (
-                          <ToggleChip
-                            key={env.id}
-                            active={`${environment}` === `${env.id}`}
-                            onClick={() => {
-                              setEnvironment(
-                                `${environment}` === `${env.id}`
-                                  ? undefined
-                                  : env.id,
-                              )
-                            }}
-                            className='mr-2 mb-4'
-                          >
-                            {env.name}
-                          </ToggleChip>
-                        ))}
-                    </Row>
-                  )}
-                </ProjectProvider>
                 <FormGroup>
                   <AuditLog
                     onSearchChange={(search: string) => {
@@ -85,6 +58,32 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                     pageSize={10}
                     environmentId={environment}
                     projectId={projectId}
+                    searchPanel={
+                      <ProjectProvider>
+                        {({ project }: { project: Project }) => (
+                          <Row>
+                            {project &&
+                              project.environments &&
+                              project.environments.map((env) => (
+                                <ToggleChip
+                                  key={env.id}
+                                  active={`${environment}` === `${env.id}`}
+                                  onClick={() => {
+                                    setEnvironment(
+                                      `${environment}` === `${env.id}`
+                                        ? undefined
+                                        : env.id,
+                                    )
+                                  }}
+                                  className='mr-2 mb-2'
+                                >
+                                  {env.name}
+                                </ToggleChip>
+                              ))}
+                          </Row>
+                        )}
+                      </ProjectProvider>
+                    }
                   />
                 </FormGroup>
               </div>

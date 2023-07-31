@@ -5,6 +5,7 @@ import cx from 'classnames'
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
+import Format from 'common/utils/format'
 
 type TagType = {
   className?: string
@@ -13,12 +14,14 @@ type TagType = {
   onClick?: (tag: TTag) => void
   selected?: boolean
   tag: Partial<TTag>
+  isTruncated?: boolean
 }
 
 const Tag: FC<TagType> = ({
   className,
   deselectedColor,
   hideNames,
+  isTruncated,
   onClick,
   selected,
   tag,
@@ -55,9 +58,9 @@ const Tag: FC<TagType> = ({
             border: `1px solid ${color(getColor()).fade(0.76)}`,
             color: `${color(getColor()).darken(0.1)}`,
           }}
-          className={cx('chip', 'chip--sm', className)}
+          className={cx('chip', className)}
         >
-          {tag.label}
+          {isTruncated ? Format.truncateText(`${tag.label}`, 1) : tag.label}
         </div>
       }
     >

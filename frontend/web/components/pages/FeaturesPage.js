@@ -13,6 +13,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
+const width = [200, 170, 200, 65, 48, 75]
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -233,13 +234,53 @@ const FeaturesPage = class extends Component {
                               <PanelSearch
                                 className='no-pad'
                                 id='features-list'
-                                icon='ion-ios-rocket'
                                 title='Features'
                                 renderSearchWithNoResults
                                 itemHeight={65}
                                 isLoading={FeatureListStore.isLoading}
                                 paging={FeatureListStore.paging}
                                 search={this.state.search}
+                                header={
+                                  <Row className='table-header'>
+                                    <Flex className='table-column px-3'>
+                                      Name
+                                    </Flex>
+                                    <Flex
+                                      className='table-column'
+                                      style={{ maxWidth: width[0] }}
+                                    >
+                                      Assigned to
+                                    </Flex>
+                                    <Flex
+                                      className='table-column'
+                                      style={{ maxWidth: width[1] }}
+                                    >
+                                      Tag
+                                    </Flex>
+                                    <Flex
+                                      className='table-column'
+                                      style={{ maxWidth: width[2] }}
+                                    >
+                                      Control Value
+                                    </Flex>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[3] }}
+                                    >
+                                      <Switch disabled />
+                                    </div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[4] }}
+                                    ></div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[5] }}
+                                    >
+                                      Remove
+                                    </div>
+                                  </Row>
+                                }
                                 onChange={(e) => {
                                   this.setState(
                                     { search: Utils.safeParseEventValue(e) },
@@ -316,7 +357,7 @@ const FeaturesPage = class extends Component {
                                   },
                                 ]}
                                 items={projectFlags}
-                                header={
+                                searchPanel={
                                   <Row className='px-0 pt-0 pb-2'>
                                     <TagFilter
                                       showUntagged
