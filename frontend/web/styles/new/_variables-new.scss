@@ -12,6 +12,8 @@ $success: #27ab95;
 $info: #0aaddf;
 $warning: #ff9f43;
 $secondary400: #fae392;
+$secondary600: #d4b050;
+$secondary: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
 $text-icon-grey: #656d7b;
@@ -38,6 +40,7 @@ $white-alpha-32: rgba(255, 255, 255, 0.32);
 $white-alpha-48: rgba(255, 255, 255, 0.48);
 $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
+$secondary-alfa-16: rgba(247, 213, 110, 0.16);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
@@ -256,8 +259,8 @@ $pill-bg: $bg-light300;
 $tab-line-color: $primary;
 
 //CodeHelp
-$code-btn-bg: $secondary400;
-$code-btn-description-color: $primary;
+$code-btn-bg: $secondary-alfa-16;
+$code-btn-description-color: $secondary600;
 $code-color: $text-icon-light;
 $code-bg: $bg-dark200;
 

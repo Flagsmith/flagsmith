@@ -275,7 +275,13 @@ class TheComponent extends Component {
             data-test={`feature-value-${this.props.index}`}
           />
         </div>
-        <div className='table-column' style={{ width: width[3] }}>
+        <div
+          className='table-column'
+          style={{ width: width[3] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
           <Switch
             disabled={!permission || readOnly}
             data-test={`feature-switch-${this.props.index}${
@@ -303,15 +309,20 @@ class TheComponent extends Component {
             }}
           />
         </div>
-        <div className='table-column' style={{ width: width[4] }}>
+        <div
+          className='table-column'
+          style={{ width: width[4] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
           {AccountStore.getOrganisationRole() === 'ADMIN' &&
             !this.props.hideAudit && (
               <Tooltip
                 html
                 title={
                   <div
-                    onClick={(e) => {
-                      e.stopPropagation()
+                    onClick={() => {
                       this.context.router.history.push(
                         `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
@@ -326,7 +337,13 @@ class TheComponent extends Component {
               </Tooltip>
             )}
         </div>
-        <div className='table-column' style={{ width: width[5] }}>
+        <div
+          className='table-column'
+          style={{ width: width[5] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
           {!this.props.hideRemove && (
             <Permission
               level='project'
@@ -344,12 +361,11 @@ class TheComponent extends Component {
                         disabled={
                           !removeFeaturePermission || readOnly || isProtected
                         }
-                        onClick={(e) => {
-                          e.stopPropagation()
+                        onClick={() =>
                           this.confirmRemove(projectFlag, () => {
                             removeFlag(projectId, projectFlag)
                           })
-                        }}
+                        }
                         className='btn btn-with-icon'
                         data-test={`remove-feature-btn-${this.props.index}`}
                       >
