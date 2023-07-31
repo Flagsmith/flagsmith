@@ -29,7 +29,7 @@
     }
   },
   "exclude": [
-    "node_modules",
+    "node_modules"
   ],
   "include": [
     "global.d.ts",
