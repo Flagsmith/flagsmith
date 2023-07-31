@@ -895,6 +895,6 @@ DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
 
-
+FLAGSMITH_OFFLINE_MODE = env.bool("FLAGSMITH_OFFLINE_MODE", default=True)
 FLAGSMITH_SERVER_KEY = env("FLAGSMITH_SERVER_KEY", default=None)
 FLAGSMITH_API_URL = env("FLAGSMITH_API_URL", default=None)

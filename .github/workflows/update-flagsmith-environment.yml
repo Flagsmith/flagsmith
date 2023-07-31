@@ -29,13 +29,13 @@ jobs:
         run: make install
 
       - name: Update defaults
-        run: python manage.py updateflagsmithdefaults
+        run: python manage.py updateflagsmithenvironment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           commit-message: Update API Flagsmith Defaults
-          branch: chore/update-api-flagsmith-defaults
+          branch: chore/update-api-flagsmith-environment
           delete-branch: true
-          title: 'chore: update API Flagsmith defaults'
+          title: 'chore: update Flagsmith environment document'
           labels: api
