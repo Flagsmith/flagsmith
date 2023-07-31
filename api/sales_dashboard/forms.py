@@ -13,6 +13,7 @@ from organisations.chargebee import (
     get_subscription_metadata as get_subscription_metadata_from_chargebee,
 )
 from organisations.models import Organisation
+from organisations.subscriptions.constants import CHARGEBEE
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -80,13 +81,14 @@ class ChargebeeSyncForm(forms.Form):
             raise ValidationError("Could not find valid Subscription in Chargebee")
 
     def save(self, commit=True):
-        print(self.cleaned_data["subscription_id"])
         subscription_id = self.cleaned_data["subscription_id"]
 
         organisation = get_object_or_404(
             Organisation.objects.select_related("subscription"), pk=self.organisation_id
         )
+
         organisation.subscription.subscription_id = subscription_id
+        organisation.subscription.payment_method = CHARGEBEE
         organisation.save()
 
         subscription_metadata = get_subscription_metadata(organisation)

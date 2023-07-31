@@ -23,6 +23,7 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee.metadata import ChargebeeSubscriptionMetadata
 from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
@@ -134,10 +135,12 @@ def organisation_info(request, organisation_id, form=None):
         "max_api_calls": subscription_metadata.api_calls,
         "max_seats": subscription_metadata.seats,
         "max_projects": subscription_metadata.projects,
-        "chargebee_email": subscription_metadata.chargebee_email,
         "identity_count_dict": identity_count_dict,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
+
+    if isinstance(subscription_metadata, ChargebeeSubscriptionMetadata):
+        subscription_metadata["chargebee_email"] = subscription_metadata.chargebee_email
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
