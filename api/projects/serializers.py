@@ -57,6 +57,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
+    total_features = serializers.SerializerMethodField()
+    total_segments = serializers.SerializerMethodField()
+
     class Meta(ProjectListSerializer.Meta):
         fields = ProjectListSerializer.Meta.fields + (
             "max_segments_allowed",
@@ -70,7 +73,15 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "max_segments_allowed",
             "max_features_allowed",
             "max_segment_overrides_allowed",
+            "total_features",
+            "total_segments",
         )
+
+    def get_total_features(self, obj: Project) -> int:
+        return obj.total_features
+
+    def get_total_segments(self, obj: Project) -> int:
+        return obj.total_segments
 
 
 class CreateUpdateUserProjectPermissionSerializer(

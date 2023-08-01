@@ -136,14 +136,6 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
         )
 
-    @property
-    def total_features(self) -> int:
-        return self.features.count()
-
-    @property
-    def total_segments(self) -> int:
-        return self.segments.count()
-
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """
         Validate the feature name based on the feature_name_regex attribute.

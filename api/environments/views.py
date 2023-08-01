@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -98,9 +99,12 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 return (
                     self.request.master_api_key.organisation.projects.environments.all()
                 )
-            return self.request.user.get_permitted_environments(
+
+            queryset = self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
-            )
+            ).annotate(total_segment_overrides=Count("feature_segments"))
+
+            return queryset
 
         # Permission class handles validation of permissions for other actions
         return Environment.objects.all()

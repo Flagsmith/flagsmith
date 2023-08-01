@@ -121,10 +121,6 @@ class Environment(
         help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
-    @property
-    def total_segment_overrides(self) -> int:
-        return self.feature_segments.count()
-
     objects = EnvironmentManager()
 
     class Meta:
