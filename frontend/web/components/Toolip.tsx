@@ -5,7 +5,7 @@ import * as DOMPurify from 'dompurify'
 
 const ReactTooltip = require('react-tooltip')
 
-type TooltipStylerProps = {
+type StyledTooltipProps = {
   children: string | JSX.Element | JSX.Element[] | (() => JSX.Element)
 }
 
@@ -13,15 +13,31 @@ type TooltipProps = {
   children: string | JSX.Element | JSX.Element[] | (() => JSX.Element)
   htmlEncode: boolean
   place?: string | undefined
-  title: string
+  title: JSX.Element
 }
 
-const TooltipStyler = ({ children }: TooltipStylerProps) => (
+const StyledTooltip = ({ children }: StyledTooltipProps) => (
   <div className='flex-row'>
     <div className='icon--tooltip ion-ios-information-circle mr-1'></div>
     <span>{`${children}`}</span>
   </div>
 )
+
+const tooltipStyler = (
+  htmlEncode: boolean,
+  children: string | JSX.Element | JSX.Element[] | (() => JSX.Element),
+): string => {
+  const html = renderToStaticMarkup(
+    <StyledTooltip>{htmlEncode ? children : '{{placeholder}}'}</StyledTooltip>,
+  )
+  if (htmlEncode) {
+    return html
+  }
+  return html.replace(
+    '{{placeholder}}',
+    DOMPurify.sanitize(children.toString()),
+  )
+}
 
 const Tooltip = ({
   children,
@@ -47,11 +63,7 @@ const Tooltip = ({
         type='dark'
         effect='solid'
       >
-        {htmlEncode
-          ? renderToStaticMarkup(<TooltipStyler>{children}</TooltipStyler>)
-          : DOMPurify.sanitize(
-              `<div class="flex-row"><div class="icon--tooltip ion-ios-information-circle mr-1"></div><span>${children}</span></div>`,
-            )}
+        {tooltipStyler(htmlEncode, children)}
       </ReactTooltip>
     </span>
   )
