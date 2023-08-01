@@ -261,7 +261,7 @@ const FeaturesPage = class extends Component {
                                       className='table-column'
                                       style={{ maxWidth: width[2] }}
                                     >
-                                      Control Value
+                                      Value
                                     </Flex>
                                     <div
                                       className='table-column'

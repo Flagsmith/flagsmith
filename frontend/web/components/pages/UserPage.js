@@ -423,7 +423,7 @@ const UserPage = class extends Component {
                                         className='table-column'
                                         style={{ width: width[1] }}
                                       >
-                                        Control Value
+                                        Value
                                       </div>
                                       <div
                                         className='table-column'

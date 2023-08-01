@@ -198,7 +198,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   permission ? (
                     <Row
                       space
-                      className='list-item clickable'
+                      className='list-item clickable list-item-sm'
                       key={id}
                       data-test={`user-item-${index}`}
                     >
