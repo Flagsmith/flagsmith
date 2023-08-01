@@ -16,8 +16,8 @@ class MasterAPIKeyAuthentication(authentication.BaseAuthentication):
             return None
 
         with suppress(MasterAPIKey.DoesNotExist):
-            if MasterAPIKey.objects.is_valid(key):
-                key = MasterAPIKey.objects.get_from_key(key)
+            key = MasterAPIKey.objects.get_from_key(key)
+            if not key.has_expired:
                 return APIKeyUser(key), None
 
         raise exceptions.AuthenticationFailed("Valid Master API Key not found.")

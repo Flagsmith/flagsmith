@@ -39,6 +39,19 @@ def test_authenticate_raises_error_for_expired_key(rf, master_api_key):
     # Then - exception was raised
 
 
+def test_authenticate_raises_error_for_invalid_key(rf, master_api_key):
+    # Given
+    request = rf.get("/some-endpoint", HTTP_AUTHORIZATION="Api-Key something_random")
+    master_api_key[0].expiry_date = timezone.now()
+    master_api_key[0].save()
+
+    # When
+    with pytest.raises(AuthenticationFailed):
+        MasterAPIKeyAuthentication().authenticate(request)
+
+    # Then - exception was raised
+
+
 def test_authenticate_raises_error_for_revoked_key(rf, master_api_key):
     # Given
     request = rf.get(
