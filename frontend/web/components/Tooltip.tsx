@@ -11,7 +11,7 @@ type StyledTooltipProps = {
 
 type TooltipProps = {
   children: string | JSX.Element | JSX.Element[] | (() => JSX.Element)
-  htmlEncode: boolean
+  plainText: boolean
   place?: string | undefined
   title: JSX.Element
 }
@@ -24,13 +24,13 @@ const StyledTooltip = ({ children }: StyledTooltipProps) => (
 )
 
 const tooltipStyler = (
-  htmlEncode: boolean,
+  plainText: boolean,
   children: string | JSX.Element | JSX.Element[] | (() => JSX.Element),
 ): string => {
   const html = renderToStaticMarkup(
-    <StyledTooltip>{htmlEncode ? children : '{{placeholder}}'}</StyledTooltip>,
+    <StyledTooltip>{plainText ? children : '{{placeholder}}'}</StyledTooltip>,
   )
-  if (htmlEncode) {
+  if (plainText) {
     return html
   }
   return html.replace(
@@ -41,8 +41,8 @@ const tooltipStyler = (
 
 const Tooltip = ({
   children,
-  htmlEncode,
   place,
+  plainText,
   title,
 }: TooltipProps): JSX.Element => {
   const id = Utils.GUID()
@@ -63,7 +63,7 @@ const Tooltip = ({
         type='dark'
         effect='solid'
       >
-        {tooltipStyler(htmlEncode, children)}
+        {tooltipStyler(plainText, children)}
       </ReactTooltip>
     </span>
   )

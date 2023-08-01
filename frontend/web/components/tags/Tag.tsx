@@ -47,7 +47,7 @@ const Tag: FC<TagType> = ({
 
   return (
     <Tooltip
-      htmlEncode
+      plainText
       title={
         <div
           onClick={() => onClick?.(tag as TTag)}
