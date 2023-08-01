@@ -1248,12 +1248,15 @@ const OrganisationSettingsPage = class extends Component {
                                       <Button theme='text'>
                                         {webhook.url}
                                       </Button>
+                                      {/* 
+                                      todo: reinstate when we have data from API
                                       <div className='list-item-footer faint'>
                                         Created{' '}
                                         {moment(webhook.created_date).format(
                                           'DD/MMM/YYYY',
                                         )}
                                       </div>
+                                      */}
                                     </div>
                                     <Row>
                                       <Switch checked={webhook.enabled} />
