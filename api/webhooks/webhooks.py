@@ -2,9 +2,8 @@ import enum
 import json
 import typing
 
-import requests
 import backoff
-
+import requests
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from django.conf import settings
@@ -14,6 +13,7 @@ from django.template.loader import get_template
 
 from environments.models import Webhook
 from organisations.models import OrganisationWebhook
+from task_processor.decorators import register_task_handler
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,
@@ -21,8 +21,6 @@ from webhooks.sample_webhook_data import (
 
 from .models import AbstractBaseExportableWebhookModel
 from .serializers import WebhookSerializer
-
-from task_processor.decorators import register_task_handler
 
 if typing.TYPE_CHECKING:
     import environments  # noqa
@@ -94,8 +92,12 @@ def trigger_sample_webhook(
     return _call_webhook(webhook, serializer.data)
 
 
-@backoff.on_exception(backoff.expo,
-                      requests.exceptions.RequestException, max_tries=8, jitter=backoff.full_jitter)
+@backoff.on_exception(
+    backoff.expo,
+    requests.exceptions.RequestException,
+    max_tries=8,
+    jitter=backoff.full_jitter,
+)
 def _call_webhook(
     webhook: typing.Type[AbstractBaseExportableWebhookModel],
     data: typing.Mapping,
@@ -109,6 +111,7 @@ def _call_webhook(
     return requests.post(str(webhook.url), data=json_data, headers=headers)
 
 
+@register_task_handler()
 def _call_webhook_email_on_error(
     webhook: WebhookModels, data: typing.Mapping, webhook_type: WebhookType
 ):
@@ -127,7 +130,9 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
-        _call_webhook_email_on_error(webhook, serializer.data, webhook_type)
+        _call_webhook_email_on_error.delay(
+            args=(webhook, serializer.data, webhook_type)
+        )
 
 
 def send_failure_email(webhook, data, webhook_type, status_code=None):
