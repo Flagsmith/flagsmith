@@ -800,7 +800,6 @@ if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
 
-
 IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
