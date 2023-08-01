@@ -5,7 +5,6 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from features.feature_segments.serializers import (
@@ -16,6 +15,8 @@ from features.feature_segments.serializers import (
 )
 from features.models import FeatureSegment
 from projects.permissions import VIEW_PROJECT
+
+from .permissions import FeatureSegmentPermissions
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,7 @@ logger = logging.getLogger(__name__)
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,
 ):
-    # TODO: should this have better permissions?
-    permission_classes = [IsAuthenticated]
+    permission_classes = [FeatureSegmentPermissions]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
