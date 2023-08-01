@@ -73,6 +73,7 @@ test('Invite Test', async () => {
   await setText(byId('email'), inviteEmail)
   await setText(byId('password'), password)
   await waitForElementVisible(byId('signup-btn'))
+  t.wait(1000)
   await click(byId('signup-btn'))
   await assertTextContent('.nav-link-featured', organisationName)
   log('Change email', 'Invite Test')
