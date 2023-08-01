@@ -51,15 +51,6 @@ class Highlight extends React.Component {
 
   highlightCode = () => {
     const nodes = this.el.querySelectorAll('pre code')
-    if (nodes[0] && nodes[0].innerHTML && nodes[0].innerHTML.match(/[<>]/)) {
-      if (!this.state.focus) {
-        nodes[0].innerHTML = nodes[0].innerText
-      }
-      setTimeout(() => {
-        this.highlightCode()
-      }, 100)
-      return
-    }
     if (typeof hljs !== 'undefined') {
       for (let i = 0; i < nodes.length; i++) {
         hljs.highlightBlock(nodes[i])
