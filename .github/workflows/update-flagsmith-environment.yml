@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Update API Flagsmith Defaults
     env:
-      FLAGSMITH_API_URL: https://edge.api.flagsmith.com/api/v1
-      FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_SERVER_KEY }}
+      FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL: https://edge.api.flagsmith.com/api/v1
+      FLAGSMITH_ON_FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY }}
 
     steps:
       - uses: actions/checkout@v3
