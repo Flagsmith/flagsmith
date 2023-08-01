@@ -2,18 +2,19 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import * as DOMPurify from 'dompurify'
+import Utils from 'common/utils/utils'
 
 const ReactTooltip = require('react-tooltip')
 
 type StyledTooltipProps = {
-  children: string | JSX.Element | JSX.Element[] | (() => JSX.Element)
+  children: string
 }
 
 type TooltipProps = {
-  children: string | JSX.Element | JSX.Element[] | (() => JSX.Element)
+  children: string
   plainText: boolean
   place?: string | undefined
-  title: JSX.Element
+  title: JSX.Element // This is actually the Tooltip parent component
 }
 
 const StyledTooltip = ({ children }: StyledTooltipProps) => (
@@ -23,20 +24,14 @@ const StyledTooltip = ({ children }: StyledTooltipProps) => (
   </div>
 )
 
-const tooltipStyler = (
-  plainText: boolean,
-  children: string | JSX.Element | JSX.Element[] | (() => JSX.Element),
-): string => {
+const tooltipStyler = (plainText: boolean, children: string): string => {
   const html = renderToStaticMarkup(
-    <StyledTooltip>{plainText ? children : '{{placeholder}}'}</StyledTooltip>,
+    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>,
   )
   if (plainText) {
     return html
   }
-  return html.replace(
-    '{{placeholder}}',
-    DOMPurify.sanitize(children.toString()),
-  )
+  return html.replace('{{html}}', DOMPurify.sanitize(children.toString()))
 }
 
 const Tooltip = ({

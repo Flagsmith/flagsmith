@@ -136,6 +136,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/classnames": "^2.3.1",
     "@types/color": "^3.0.3",
+    "@types/dompurify": "^3.0.2",
     "@types/react-router": "^5.1.19",
     "@types/react-router-dom": "^4.3.1",
     "@types/react-select": "^2.0.3",
