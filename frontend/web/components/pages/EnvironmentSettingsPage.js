@@ -792,7 +792,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   </div>
                                   <div className='list-item-subtitle'>
                                     Created{' '}
-                                    {moment(webhook.created_date).format(
+                                    {moment(webhook.created_at).format(
                                       'DD/MMM/YYYY',
                                     )}
                                   </div>

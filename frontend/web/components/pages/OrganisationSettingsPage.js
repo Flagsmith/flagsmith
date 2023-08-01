@@ -1300,12 +1300,14 @@ const OrganisationSettingsPage = class extends Component {
                                       <div className='font-weight-medium mb-1'>
                                         {webhook.url}
                                       </div>
-                                      <div className='list-item-description'>
-                                        Created{' '}
-                                        {moment(webhook.created_date).format(
-                                          'DD/MMM/YYYY',
-                                        )}
-                                      </div>
+                                      {webhook.created_at ? (
+                                          <div className='list-item-description'>
+                                          Created{' '}
+                                          {moment(webhook.created_at).format(
+                                            'DD/MMM/YYYY',
+                                          )}
+                                        </div>
+                                          ):null}
                                     </Flex>
                                     <div className='table-column'>
                                       <Switch checked={webhook.enabled} />

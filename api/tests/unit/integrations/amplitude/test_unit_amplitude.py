@@ -3,10 +3,8 @@ import pytest
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import FeatureState
-from integrations.amplitude.amplitude import (
-    AMPLITUDE_API_URL,
-    AmplitudeWrapper,
-)
+from integrations.amplitude.amplitude import AmplitudeWrapper
+from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
@@ -18,8 +16,20 @@ def test_amplitude_initialized_correctly():
     amplitude_wrapper = AmplitudeWrapper(config)
 
     # Then
-    expected_url = f"{AMPLITUDE_API_URL}/identify"
+    expected_url = f"{DEFAULT_AMPLITUDE_API_URL}/identify"
     assert amplitude_wrapper.url == expected_url
+
+
+def test_amplitude_initialized_correctly_with_custom_base_url():
+    # Given
+    base_url = "https://api.eu.amplitude.com"
+    config = AmplitudeConfiguration(api_key="123key", base_url=base_url)
+
+    # When initialized
+    amplitude_wrapper = AmplitudeWrapper(config)
+
+    # Then
+    assert amplitude_wrapper.url == f"{base_url}/identify"
 
 
 @pytest.mark.django_db
