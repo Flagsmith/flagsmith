@@ -80,22 +80,36 @@ individual value weightings as part of a Segment override.
 
 ## Rules Operators
 
+:::important
+
+Some of the operators in local evaluation mode are only supported in later SDK versions, see
+[SDK Compatibility](../clients/overview.md#sdk-compatibility).
+
+:::
+
 The full set of Flagsmith rule operators are as follows:
 
-- `Exactly Matches (=)`
-- `Does Not Match (!=)`
-- `% Split`
-- `>`
-- `>=`
-- `<`
-- `<=`
-- `Contains`
-- `Does Not Contain`
-- `Matches Regex`
-- `Is Set` (if the Trait property exists)
-- `Is Not Set` (if the Trait property does not exist)
+| Name                   | Condition                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                            |
+| `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                        |
+| `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](#percentage-split-operator).                                                |
+| `>`                    | Trait value is greater than segment value.                                                                                                        |
+| `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
+| `<`                    | Trait value is less than segment value.                                                                                                           |
+| `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. E.g the rule value might read `21,682,8345`.                              |
+| `Contains`             | Segment value is a substring of trait value.                                                                                                      |
+| `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
+| `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
+| `Is Set`               | Trait value is set for given identity and trait key.                                                                                              |
+| `Is Not Set`           | Trait value is not set for given identity and trait key.                                                                                          |
+| `SemVer >`             | Trait value is set to a newer SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                 |
+| `SemVer >=`            | Trait value is set a newer SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators).     |
+| `SemVer <`             | Trait value is set to an older SemVer-formatted version than segment value. See [SemVer-aware operators](#semver-aware-operators).                |
+| `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
 
-All of the operators act as you would expect. Some of the operators also have special powers!
+Some of the operators also have special powers, described below.
 
 ### SemVer-aware operators
 

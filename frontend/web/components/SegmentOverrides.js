@@ -12,6 +12,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
+import Icon from './Icon'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -141,9 +142,11 @@ const SegmentOverrideInner = class Override extends React.Component {
                   disabled={disabled}
                   id='remove-feature'
                   onClick={confirmRemove}
-                  className='btn btn--with-icon'
+                  className='btn btn-with-icon'
                 >
-                  <RemoveIcon />
+                  <span className='no-pointer'>
+                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
+                  </span>
                 </button>
               )}
               {!!v.id && (
@@ -190,7 +193,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
         </Row>
 
-        <div className='mx-2 text-left pb-2'>
+        <div className='mx-2 text-left pb-2 mt-4'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
@@ -499,12 +502,12 @@ class TheComponent extends Component {
 
     return (
       <div>
-        <div className='text-center mt-2 mb-2'>
+        <div className='mt-2 mb-2'>
           {!this.props.id &&
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly && (
-              <Flex className='text-left'>
+              <Flex className='text-left mb-4'>
                 <SegmentSelect
                   projectId={this.props.projectId}
                   data-test='select-segment'
@@ -527,13 +530,14 @@ class TheComponent extends Component {
                     this.setState({ selectedSegment: null })
                     this.props.setShowCreateSegment(true)
                   }}
+                  theme='outline'
                 >
                   Create Feature-Specific Segment
                 </Button>
               </div>
             )}
           {this.props.showCreateSegment && !this.state.segmentEditId && (
-            <div className='text-left panel--grey mt-2'>
+            <div className='create-segment-overrides'>
               <CreateSegmentModal
                 onComplete={(segment) => {
                   if (this.state.selectedSegment) {

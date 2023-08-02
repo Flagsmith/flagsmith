@@ -791,7 +791,7 @@ const EnvironmentSettingsPage = class extends Component {
                                   <Button theme='text'>{webhook.url}</Button>
                                   <div className='list-item-footer faint'>
                                     Created{' '}
-                                    {moment(webhook.created_date).format(
+                                    {moment(webhook.created_at).format(
                                       'DD/MMM/YYYY',
                                     )}
                                   </div>

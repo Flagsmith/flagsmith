@@ -78,7 +78,7 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_change_request(
+def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncommitted_change_request(
     environment, feature, admin_user, mocker
 ):
     # Given
@@ -93,12 +93,12 @@ def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_cha
     )
 
     # When
-    message = feature_state.get_create_log_message(
+    related_object_id = feature_state.get_audit_log_related_object_id(
         mocker.MagicMock(id="history_instance")
     )  # history instance is irrelevant here
 
     # Then
-    assert message is None
+    assert related_object_id is None
 
 
 @pytest.mark.parametrize(
