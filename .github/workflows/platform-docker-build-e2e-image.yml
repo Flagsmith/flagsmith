@@ -1,11 +1,12 @@
 name: Build E2E Frontend Image
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    # Update the E2E Firefox testcafe version on the first of every month
+    - cron: 0 0 1 * *
 
 jobs:
-  build-dockerhub:
+  build-e2e-docker-image:
     runs-on: ubuntu-latest
     name: Publish E2E Frontend Image
 
@@ -20,7 +21,7 @@ jobs:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: 'Build E2E Frontend Image'
+      - name: Build E2E Frontend Image
         run: |
           cd frontend
           docker build -f Dockerfile-base.e2e --tag ghcr.io/flagsmith/e2e-frontend:latest .
