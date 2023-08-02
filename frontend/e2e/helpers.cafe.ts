@@ -12,10 +12,8 @@ export type Rule = {
     ors?:Rule[]
 }
 export const setText = async (selector:string, text:string) => {
-    console.log(`Set text ${selector} : ${text}`);
     return t.selectText(selector)
         .pressKey('delete')
-        .selectText(selector) // Prevents issue where input tabs out of focus
         .typeText(selector, `${text}`);
 };
 
@@ -51,7 +49,6 @@ export const gotoFeatures = async () => {
 };
 
 export const click = async (selector:string) => {
-    await waitForElementVisible(selector);
     await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
     await t.click(selector);
 };
