@@ -236,15 +236,17 @@ class TheComponent extends Component {
                 Created {moment(created_date).format('Do MMM YYYY HH:mma')}
               </div>
             </Flex>
-            <Tooltip
-              title={
-                <span>
-                  <Icon name='info-outlined' />
-                </span>
-              }
-            >
-              {description || 'No description'}
-            </Tooltip>
+            {description && (
+              <Tooltip
+                title={
+                  <span>
+                    <Icon name='info-outlined' />
+                  </span>
+                }
+              >
+                {description}
+              </Tooltip>
+            )}
           </Row>
         </Flex>
         <div
