@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organisations', '0042_alter_subscription_payment_method'),
+        ('organisations', '0043_add_created_at_and_updated_at_to_organisationwebhook'),
     ]
 
     operations = [
