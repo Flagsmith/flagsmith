@@ -80,6 +80,13 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
       - name: Run docker-compose with unified-image
         working-directory: frontend
         env:
