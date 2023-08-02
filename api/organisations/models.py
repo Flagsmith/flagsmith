@@ -268,6 +268,8 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="webhooks"
     )
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings

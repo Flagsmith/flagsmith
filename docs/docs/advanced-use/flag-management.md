@@ -9,6 +9,18 @@ of Flags in the event that you have a large number.
 
 ![Image](/img/flag-tags.png)
 
+## Server-side only Flags
+
+When creating a flag, you can optionally define it as "Server-Side Only". Enabling this option for the flag will prevent
+it from being returned to Client-side SDKs.
+
+## Hide disabled Flags from SDKs
+
+To prevent letting your users know about your upcoming features and to cut down on payload, enabling this will prevent
+the API from returning any flags that are disabled.
+
+You can set this at both the Project and Environment level.
+
 ## Flag Archiving
 
 You can also archive Flags within Flagsmith. Archived flags will continue to be sent to your SDKs when you get the flags

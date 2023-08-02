@@ -4,6 +4,7 @@ import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
+import Utils from 'common/utils/utils'
 
 type TagType = {
   className?: string
@@ -23,6 +24,9 @@ const Tag: FC<TagType> = ({
   tag,
 }) => {
   const getColor = () => {
+    if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
+      return '#9DA4AE'
+    }
     if (selected) {
       return tag.color
     }
@@ -43,6 +47,7 @@ const Tag: FC<TagType> = ({
 
   return (
     <Tooltip
+      plainText
       title={
         <div
           onClick={() => onClick?.(tag as TTag)}

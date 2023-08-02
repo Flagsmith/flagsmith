@@ -1,10 +1,13 @@
 import hashlib
 import hmac
 import json
+from typing import Type
 from unittest import TestCase, mock
 
 import pytest
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from pytest_mock import MockerFixture
+from requests.exceptions import ConnectionError, Timeout
 
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
@@ -149,3 +152,63 @@ class WebhooksTestCase(TestCase):
         # Then
         _, kwargs = mock_requests.post.call_args_list[0]
         assert FLAGSMITH_SIGNATURE_HEADER not in kwargs["headers"]
+
+
+@pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
+def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
+    mocker: MockerFixture,
+    expected_error: Type[Exception],
+    environment: Environment,
+) -> None:
+    # Given
+    requests_post_mock = mocker.patch("webhooks.webhooks.requests.post")
+    requests_post_mock.side_effect = expected_error()
+    send_failure_email_mock: mock.Mock = mocker.patch(
+        "webhooks.webhooks.send_failure_email"
+    )
+
+    webhook_1 = Webhook.objects.create(
+        url="http://url.1.com",
+        enabled=True,
+        environment=environment,
+    )
+    webhook_2 = Webhook.objects.create(
+        url="http://url.2.com",
+        enabled=True,
+        environment=environment,
+    )
+
+    expected_data = {}
+    expected_event_type = WebhookEventType.FLAG_UPDATED
+    expected_send_failure_email_data = {
+        "event_type": expected_event_type.value,
+        "data": expected_data,
+    }
+    expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
+
+    # When
+    call_environment_webhooks(
+        environment=environment,
+        data=expected_data,
+        event_type=expected_event_type,
+    )
+
+    # Then
+    assert send_failure_email_mock.call_count == 2
+    send_failure_email_mock.assert_has_calls(
+        [
+            mocker.call(
+                webhook_2,
+                expected_send_failure_email_data,
+                WebhookType.ENVIRONMENT,
+                expected_send_failure_status_code,
+            ),
+            mocker.call(
+                webhook_1,
+                expected_send_failure_email_data,
+                WebhookType.ENVIRONMENT,
+                expected_send_failure_status_code,
+            ),
+        ],
+        any_order=True,
+    )

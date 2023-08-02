@@ -1205,7 +1205,7 @@ const OrganisationSettingsPage = class extends Component {
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
-                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
@@ -1248,12 +1248,14 @@ const OrganisationSettingsPage = class extends Component {
                                       <Button theme='text'>
                                         {webhook.url}
                                       </Button>
-                                      <div className='list-item-footer faint'>
-                                        Created{' '}
-                                        {moment(webhook.created_date).format(
-                                          'DD/MMM/YYYY',
-                                        )}
-                                      </div>
+                                      {webhook.created_at ? (
+                                        <div className='list-item-footer faint'>
+                                          Created{' '}
+                                          {moment(webhook.created_at).format(
+                                            'DD/MMM/YYYY',
+                                          )}
+                                        </div>
+                                      ) : null}
                                     </div>
                                     <Row>
                                       <Switch checked={webhook.enabled} />
