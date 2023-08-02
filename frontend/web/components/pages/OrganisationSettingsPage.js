@@ -587,7 +587,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
-                                                  'p-0',
+                                                  'p-0 side-modal',
                                                 )
                                               }
                                               type='button'
