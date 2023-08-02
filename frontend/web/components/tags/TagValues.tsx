@@ -27,7 +27,7 @@ const TagValues: FC<TagValuesType> = ({
               hideNames={hideNames}
               onClick={onAdd}
               tag={tag}
-              isTruncated={(!onAdd && value.length > 2) || tag.label.length > 5}
+              isTruncated={tag.label.length > 12}
             />
           ),
       )}

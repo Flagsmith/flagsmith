@@ -9,9 +9,9 @@ import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
-import Icon from 'components/Icon'
+import Icon from './Icon'
 
-const width = [200, 170, 190, 65, 48, 75]
+export const width = [190, 65, 48, 75]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -194,7 +194,21 @@ class TheComponent extends Component {
                 className='font-weight-medium'
                 style={{ wordBreak: 'break-all' }}
               >
-                {name}
+                {description ? (
+                  <Tooltip
+                    title={
+                      <span>
+                        {name}
+                        <span className={'ms-1'}></span>
+                        <Icon name='info-outlined' />
+                      </span>
+                    }
+                  >
+                    {description}
+                  </Tooltip>
+                ) : (
+                  name
+                )}
                 {!!projectFlag.num_segment_overrides && (
                   <Tooltip
                     title={
@@ -231,59 +245,20 @@ class TheComponent extends Component {
                     }`}
                   </Tooltip>
                 )}
+                <div className='ms-2'>
+                  <TagValues
+                    projectId={`${projectId}`}
+                    value={projectFlag.tags}
+                  />
+                </div>
               </Row>
               <div className='list-item-subtitle'>
                 Created {moment(created_date).format('Do MMM YYYY HH:mma')}
               </div>
             </Flex>
-            {description && (
-              <Tooltip
-                title={
-                  <span>
-                    <Icon name='info-outlined' />
-                  </span>
-                }
-              >
-                {description}
-              </Tooltip>
-            )}
           </Row>
         </Flex>
-        <div
-          className='table-column assignees-column'
-          style={{ width: width[0] }}
-        >
-          {projectFlag.owners && !!projectFlag.owners.length ? (
-            <Tooltip
-              title={
-                <>
-                  <span className='chip chip-user chip-user-icon p-1 mr-0'>
-                    <Icon name='person' width={14} />{' '}
-                    {projectFlag.owners.length}
-                  </span>
-                  {projectFlag.owners.length === 1 && (
-                    <span className='lh-sm fs-small owners-title ml-2'>
-                      {projectFlag.owners.map(
-                        (v) => `${v.first_name} ${v.last_name}`,
-                      )}
-                    </span>
-                  )}
-                </>
-              }
-              place='right'
-            >
-              {`Flag assigned to ${projectFlag.owners
-                .map((v) => `${v.first_name} ${v.last_name}`)
-                .join(', ')}`}
-            </Tooltip>
-          ) : (
-            <span />
-          )}
-        </div>
-        <div className='table-column' style={{ width: width[1] }}>
-          <TagValues projectId={`${projectId}`} value={projectFlag.tags} />
-        </div>
-        <div className='table-column' style={{ width: width[2] }}>
+        <div className='table-column' style={{ width: width[0] }}>
           <FeatureValue
             onClick={() =>
               !readOnly && this.editFeature(projectFlag, environmentFlags[id])
@@ -296,7 +271,7 @@ class TheComponent extends Component {
         </div>
         <div
           className='table-column'
-          style={{ width: width[3] }}
+          style={{ width: width[1] }}
           onClick={(e) => {
             e.stopPropagation()
           }}
@@ -330,7 +305,7 @@ class TheComponent extends Component {
         </div>
         <div
           className='table-column'
-          style={{ width: width[4] }}
+          style={{ width: width[2] }}
           onClick={(e) => {
             e.stopPropagation()
           }}
@@ -358,7 +333,7 @@ class TheComponent extends Component {
         </div>
         <div
           className='table-column'
-          style={{ width: width[5] }}
+          style={{ width: width[3] }}
           onClick={(e) => {
             e.stopPropagation()
           }}

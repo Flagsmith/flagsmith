@@ -3,7 +3,7 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow, { width } from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
@@ -13,7 +13,6 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
-const width = [200, 170, 190, 65, 48, 75]
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -246,36 +245,24 @@ const FeaturesPage = class extends Component {
                                       Name
                                     </Flex>
                                     <div
-                                      className='table-column assignees-column'
+                                      className='table-column'
                                       style={{ width: width[0] }}
-                                    >
-                                      Assigned to
-                                    </div>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[1] }}
-                                    >
-                                      Tag
-                                    </div>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[2] }}
                                     >
                                       Value
                                     </div>
                                     <div
                                       className='table-column'
-                                      style={{ width: width[3] }}
+                                      style={{ width: width[1] }}
                                     >
                                       <Switch disabled />
                                     </div>
                                     <div
                                       className='table-column'
-                                      style={{ width: width[4] }}
+                                      style={{ width: width[2] }}
                                     ></div>
                                     <div
                                       className='table-column'
-                                      style={{ width: width[5] }}
+                                      style={{ width: width[3] }}
                                     >
                                       Remove
                                     </div>
