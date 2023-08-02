@@ -23,5 +23,5 @@ jobs:
       - name: 'Build E2E Frontend Image'
         run: |
           cd frontend
-          docker build -f Dockerfile.e2e --tag ghcr.io/flagsmith/e2e-frontend:latest .
+          docker build -f Dockerfile-base.e2e --tag ghcr.io/flagsmith/e2e-frontend:latest .
           docker push ghcr.io/flagsmith/e2e-frontend:latest
