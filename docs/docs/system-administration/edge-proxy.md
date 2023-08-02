@@ -15,6 +15,13 @@ you get the lowest possible latency.
 
 ## How does it work
 
+:::info
+
+The Edge Proxy has the same
+[caveats as running our SDK in Local Evaluation mode.](/clients/overview#local-evaluation-mode).
+
+:::
+
 You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in
 [Local Evaluation Mode](/clients/overview#2---local-evaluation), with an API interface that is compatible with the
 Flagsmith SDK API.
