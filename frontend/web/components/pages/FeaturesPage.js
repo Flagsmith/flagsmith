@@ -13,7 +13,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
-const width = [200, 170, 200, 65, 48, 75]
+const width = [200, 170, 190, 65, 48, 75]
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -245,24 +245,24 @@ const FeaturesPage = class extends Component {
                                     <Flex className='table-column px-3'>
                                       Name
                                     </Flex>
-                                    <Flex
-                                      className='table-column'
-                                      style={{ maxWidth: width[0] }}
+                                    <div
+                                      className='table-column assignees-column'
+                                      style={{ width: width[0] }}
                                     >
                                       Assigned to
-                                    </Flex>
-                                    <Flex
+                                    </div>
+                                    <div
                                       className='table-column'
-                                      style={{ maxWidth: width[1] }}
+                                      style={{ width: width[1] }}
                                     >
                                       Tag
-                                    </Flex>
-                                    <Flex
+                                    </div>
+                                    <div
                                       className='table-column'
-                                      style={{ maxWidth: width[2] }}
+                                      style={{ width: width[2] }}
                                     >
                                       Value
-                                    </Flex>
+                                    </div>
                                     <div
                                       className='table-column'
                                       style={{ width: width[3] }}

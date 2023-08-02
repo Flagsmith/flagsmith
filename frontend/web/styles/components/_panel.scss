@@ -186,3 +186,13 @@ a.text-white {
     }
   }
 }
+
+@include media-breakpoint-down(xxl) {
+  .owners-title {
+    display: none;
+  }
+  .table-column.assignees-column {
+    display: block;
+    width: 98px !important;
+  }
+}

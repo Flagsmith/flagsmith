@@ -130,7 +130,7 @@ const ProjectSelectPage = class extends Component {
                               ? `${environments[0].api_key}/features`
                               : 'create'
                           }`}
-                          className='flex-row list-item clickable'
+                          className='flex-row list-item list-item-sm clickable'
                         >
                           <Flex className='table-column px-3'>
                             <div className='font-weight-medium'>{name}</div>

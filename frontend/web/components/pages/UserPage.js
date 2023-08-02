@@ -878,21 +878,19 @@ const UserPage = class extends Component {
                                       i,
                                     ) => (
                                       <Row
-                                        className='list-item list-item-sm clickable py-2'
+                                        className='list-item clickable '
                                         key={trait_key}
                                         space
                                         data-test={`user-trait-${i}`}
+                                        onClick={() =>
+                                          this.editTrait({
+                                            id,
+                                            trait_key,
+                                            trait_value,
+                                          })
+                                        }
                                       >
-                                        <Flex
-                                          onClick={() =>
-                                            this.editTrait({
-                                              id,
-                                              trait_key,
-                                              trait_value,
-                                            })
-                                          }
-                                          className='table-column px-3'
-                                        >
+                                        <Flex className='table-column px-3'>
                                           <div
                                             className={`js-trait-key-${i} font-weight-medium`}
                                           >
@@ -907,8 +905,9 @@ const UserPage = class extends Component {
                                           />
                                         </Flex>
                                         <div
-                                          className='table-column'
+                                          className='table-column text-center'
                                           style={{ width: '80px' }}
+                                          onClick={(e) => e.stopPropagation()}
                                         >
                                           {Utils.renderWithPermission(
                                             manageUserPermission,
@@ -960,7 +959,7 @@ const UserPage = class extends Component {
                                         }
                                       >
                                         <div className='search-list'>
-                                          <Row className='list-item  list-item-sm p-3 text-muted'>
+                                          <Row className='list-item text-muted px-3'>
                                             This user has no traits.
                                           </Row>
                                         </div>
@@ -988,6 +987,19 @@ const UserPage = class extends Component {
                                         className='no-pad'
                                         title='Segments'
                                         itemHeight={70}
+                                        header={
+                                          <Row className='table-header'>
+                                            <Flex
+                                              className='table-column px-3'
+                                              style={{ maxWidth: '230px' }}
+                                            >
+                                              Name
+                                            </Flex>
+                                            <Flex className='table-column'>
+                                              Description
+                                            </Flex>
+                                          </Row>
+                                        }
                                         items={segments || []}
                                         renderRow={(
                                           { created_date, description, name },
@@ -997,11 +1009,14 @@ const UserPage = class extends Component {
                                             onClick={() =>
                                               this.editSegment(segments[i])
                                             }
-                                            className='list-item  list-item-sm clickable'
+                                            className='list-item clickable'
                                             space
                                             key={i}
                                           >
-                                            <Flex className='px-3'>
+                                            <Flex
+                                              className=' table-column px-3'
+                                              style={{ maxWidth: '230px' }}
+                                            >
                                               <div
                                                 onClick={() =>
                                                   this.editSegment(segments[i])
@@ -1015,19 +1030,21 @@ const UserPage = class extends Component {
                                                 </span>
                                               </div>
                                               <div className='list-item-subtitle'>
-                                                {description ? (
-                                                  <div>
-                                                    {description}
-                                                    <br />
-                                                  </div>
-                                                ) : (
-                                                  ''
-                                                )}
                                                 Created{' '}
                                                 {moment(created_date).format(
                                                   'DD/MMM/YYYY',
                                                 )}
                                               </div>
+                                            </Flex>
+                                            <Flex className='table-column list-item-subtitle'>
+                                              {description ? (
+                                                <div>
+                                                  {description}
+                                                  <br />
+                                                </div>
+                                              ) : (
+                                                ''
+                                              )}
                                             </Flex>
                                           </Row>
                                         )}
@@ -1037,7 +1054,7 @@ const UserPage = class extends Component {
                                             className='no-pad'
                                           >
                                             <div className='search-list'>
-                                              <Row className='list-item text-muted p-3 list-item-sm'>
+                                              <Row className='list-item text-muted px-3'>
                                                 This user is not a member of any
                                                 segments.
                                               </Row>

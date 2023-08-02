@@ -11,7 +11,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from 'components/Icon'
 
-const width = [200, 170, 200, 65, 48, 75]
+const width = [200, 170, 190, 65, 48, 75]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -189,61 +189,78 @@ class TheComponent extends Component {
       >
         <Flex className='table-column'>
           <Row>
-            <div className='font-weight-medium'>{name}</div>
-            {!!projectFlag.num_segment_overrides && (
-              <Tooltip
-                title={
-                  <span
-                    className='chip ml-1 chip--sm bg-primary text-white'
-                    style={{ border: 'none' }}
-                  >
-                    <SegmentsIcon className='chip-svg-icon' />
-                    <span>{projectFlag.num_segment_overrides}</span>
-                  </span>
-                }
-                place='top'
+            <Flex>
+              <Row
+                className='font-weight-medium'
+                style={{ wordBreak: 'break-all' }}
               >
-                {`${projectFlag.num_segment_overrides} Segment Override${
-                  projectFlag.num_segment_overrides !== 1 ? 's' : ''
-                }`}
-              </Tooltip>
-            )}
-            {!!projectFlag.num_identity_overrides && (
-              <Tooltip
-                title={
-                  <span
-                    className='chip ml-1 chip--sm bg-primary text-white'
-                    style={{ border: 'none' }}
+                {name}
+                {!!projectFlag.num_segment_overrides && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip ml-1 chip--sm bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <SegmentsIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_segment_overrides}</span>
+                      </span>
+                    }
+                    place='top'
                   >
-                    <UsersIcon className='chip-svg-icon' />
-                    <span>{projectFlag.num_identity_overrides}</span>
-                  </span>
-                }
-                place='top'
-              >
-                {`${projectFlag.num_identity_overrides} Identity Override${
-                  projectFlag.num_identity_overrides !== 1 ? 's' : ''
-                }`}
-              </Tooltip>
-            )}
+                    {`${projectFlag.num_segment_overrides} Segment Override${
+                      projectFlag.num_segment_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                )}
+                {!!projectFlag.num_identity_overrides && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip ml-1 chip--sm bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <UsersIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_identity_overrides}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {`${projectFlag.num_identity_overrides} Identity Override${
+                      projectFlag.num_identity_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                )}
+              </Row>
+              <div className='list-item-subtitle'>
+                Created {moment(created_date).format('Do MMM YYYY HH:mma')}
+              </div>
+            </Flex>
+            <Tooltip
+              title={
+                <span>
+                  <Icon name='info-outlined' />
+                </span>
+              }
+            >
+              {description || 'No description'}
+            </Tooltip>
           </Row>
-          <div className='list-item-subtitle'>
-            Created {moment(created_date).format('Do MMM YYYY HH:mma')}
-            {' - '}
-            {description || 'No description'}
-          </div>
         </Flex>
-        <div className='table-column' style={{ width: width[0] }}>
+        <div
+          className='table-column assignees-column'
+          style={{ width: width[0] }}
+        >
           {projectFlag.owners && !!projectFlag.owners.length ? (
             <Tooltip
               title={
                 <>
-                  <span className='chip chip-user chip-user-icon p-1'>
+                  <span className='chip chip-user chip-user-icon p-1 mr-0'>
                     <Icon name='person' width={14} />{' '}
                     {projectFlag.owners.length}
                   </span>
                   {projectFlag.owners.length === 1 && (
-                    <span className='lh-sm fs-small'>
+                    <span className='lh-sm fs-small owners-title ml-2'>
                       {projectFlag.owners.map(
                         (v) => `${v.first_name} ${v.last_name}`,
                       )}

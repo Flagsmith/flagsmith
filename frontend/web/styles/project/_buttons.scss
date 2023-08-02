@@ -127,7 +127,8 @@ button.btn {
     border-radius: $border-radius;
     &:hover,
     &:active,
-    &:focus {
+    &:focus,
+    &:disabled {
       background-color: $basic-alpha-8 !important;
     }
   }
