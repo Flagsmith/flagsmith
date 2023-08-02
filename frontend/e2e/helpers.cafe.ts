@@ -29,7 +29,7 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         return // do not log anything for passed tests
     }
     console.log(JSON.stringify(requests.filter((v)=>{
-        if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
+        if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags") || v.request?.url?.includes("list-change-requests")) {
             return false
         }
         if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
