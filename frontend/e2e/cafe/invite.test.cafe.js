@@ -73,7 +73,6 @@ test('Invite Test', async () => {
   await setText(byId('email'), inviteEmail)
   await setText(byId('password'), password)
   await waitForElementVisible(byId('signup-btn'))
-  await t.wait(1000)
   await click(byId('signup-btn'))
   await assertTextContent('.nav-link-featured', organisationName)
   log('Change email', 'Invite Test')
@@ -89,8 +88,6 @@ test('Invite Test', async () => {
   await click(byId('account-settings-link'))
   await click(byId('delete-user-btn'))
   await setText("[name='currentPassword']", password)
-  await waitForElementVisible(byId('delete-account'))
-  await t.wait(1000)
   await click(byId('delete-account'))
 }).after(async (t) => {
     console.log('Start of Invite Requests');
