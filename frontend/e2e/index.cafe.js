@@ -6,7 +6,7 @@ const _options = require("../.testcaferc")
 const upload = require('../bin/upload-file');
 const options = {
     ..._options,
-    browsers: process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'],
+    browsers: process.env.E2E_DEV ? ['firefox'] : ['firefox:headless'],
     debugOnFail: !!process.env.E2E_DEV
 }
 let testcafe;
