@@ -62,7 +62,7 @@ class EnvironmentFeatureVersionViewSet(
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:
         ef_version = self.get_object()
-        ef_version.publish()
+        ef_version.publish(published_by=request.user)
         ef_version.save()
         return Response(self.get_serializer(instance=ef_version).data)
 

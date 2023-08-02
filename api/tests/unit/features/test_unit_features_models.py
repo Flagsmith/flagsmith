@@ -1,3 +1,4 @@
+import typing
 from datetime import timedelta
 
 import pytest
@@ -5,8 +6,12 @@ from django.utils import timezone
 
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
+
+if typing.TYPE_CHECKING:
+    from projects.models import Project
 
 now = timezone.now()
 yesterday = now - timedelta(days=1)
@@ -297,3 +302,22 @@ def test_feature_state_gt_operator_for_segment_overrides_and_environment_default
 
     # Then
     assert segment_override > environment_default
+
+
+def test_create_feature_creates_feature_states_in_all_environments_and_environment_feature_version(
+    project: "Project",
+) -> None:
+    # Given
+    Environment.objects.create(
+        project=project, name="Environment 1", use_v2_feature_versioning=True
+    )
+    Environment.objects.create(
+        project=project, name="Environment 2", use_v2_feature_versioning=True
+    )
+
+    # When
+    feature = Feature.objects.create(name="test_feature", project=project)
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(feature=feature).count() == 2
+    assert feature.feature_states.count() == 2

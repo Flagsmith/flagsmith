@@ -15,6 +15,7 @@ from features.versioning.exceptions import FeatureVersioningError
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from features.models import Feature
+    from users.models import FFAdminUser
 
 
 class EnvironmentFeatureVersion(
@@ -96,6 +97,9 @@ class EnvironmentFeatureVersion(
             .first()
         )
 
-    def publish(self, live_from: datetime.datetime = None) -> None:
+    def publish(
+        self, published_by: "FFAdminUser", live_from: datetime.datetime = None
+    ) -> None:
         self.live_from = live_from or timezone.now()
         self.published = True
+        self.published_by = published_by

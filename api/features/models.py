@@ -755,7 +755,6 @@ class FeatureState(
             else feature.default_enabled,
         }
         if environment.use_v2_feature_versioning:
-            # TODO: tests!
             kwargs.update(
                 environment_feature_version=EnvironmentFeatureVersion.create_initial_version(
                     environment=environment, feature=feature
