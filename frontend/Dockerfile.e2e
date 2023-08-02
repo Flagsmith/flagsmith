@@ -1,21 +1,47 @@
-FROM debian
+FROM debian:latest
 
-SHELL [ "/bin/bash", "-l", "-c" ]
-RUN apt-get update && apt-get install -y curl python3 make gcc g++
-RUN curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
-RUN nvm install 16.14.0
+# replace shell with bash so we can source files
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
+# update the repository sources list
+# and install dependencies
+RUN apt-get update \
+    && apt-get install -y curl \
+    && apt-get -y autoclean
+
+# nvm environment variables
+ENV NVM_DIR /usr/local/nvm
+ENV NODE_VERSION 16.14.0
+
+# Bring in firefox into debian sources
 RUN echo "deb http://deb.debian.org/debian/ unstable main contrib non-free" >> /etc/apt/sources.list.d/debian.list
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends firefox
+RUN apt-get update && apt-get install -y build-essential libssl-dev  python3 gnupg2 firefox
+
+# install nvm
+# https://github.com/creationix/nvm#install-script
+RUN curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+
+# install node and npm LTS
+RUN source $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+
+# add node and npm to path so the commands are available
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+# confirm installation of node
+RUN node -v
+RUN npm -v
 
 WORKDIR /srv/flagsmith
 COPY . .
 RUN npm cache clean --force
 RUN npm ci
 
-ENV ENV=e2e
-RUN npm run env
 
-EXPOSE 8080
-CMD ["npm",  "run", "test"]
+# Force bash as shell
+# RUN ["/bin/bash", "-c", "echo hello all in one string"]
+
+CMD ["bash", "-l"]
