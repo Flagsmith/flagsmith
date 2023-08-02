@@ -65,29 +65,31 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         return instance.use_identity_composite_key_for_hashing
 
 
-class EnvironmentRetrieveSerializerLight(EnvironmentSerializerLight):
-    total_segment_overrides = serializers.IntegerField()
-
-    class Meta(EnvironmentSerializerLight.Meta):
-        fields = EnvironmentSerializerLight.Meta.fields + ("total_segment_overrides",)
-        read_only_fields = ("total_segment_overrides",)
-
-
 class EnvironmentSerializerWithMetadata(
     SerializerWithMetadata,
     DeleteBeforeUpdateWritableNestedModelSerializer,
-    EnvironmentRetrieveSerializerLight,
+    EnvironmentSerializerLight,
 ):
     metadata = MetadataSerializer(required=False, many=True)
 
-    class Meta(EnvironmentRetrieveSerializerLight.Meta):
-        fields = EnvironmentRetrieveSerializerLight.Meta.fields + ("metadata",)
+    class Meta(EnvironmentSerializerLight.Meta):
+        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
 
     def get_organisation_from_validated_data(self, validated_data) -> Organisation:
         return validated_data.get("project").organisation
 
     def get_project_from_validated_data(self, validated_data) -> Project:
         return validated_data.get("project")
+
+
+class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):
+    total_segment_overrides = serializers.IntegerField()
+
+    class Meta(EnvironmentSerializerWithMetadata.Meta):
+        fields = EnvironmentSerializerWithMetadata.Meta.fields + (
+            "total_segment_overrides",
+        )
+        read_only_fields = ("total_segment_overrides",)
 
 
 class CreateUpdateEnvironmentSerializer(

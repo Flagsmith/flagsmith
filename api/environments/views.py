@@ -42,6 +42,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
+    EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
@@ -74,6 +75,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return DeleteAllTraitKeysSerializer
         if self.action == "clone":
             return CloneEnvironmentSerializer
+        if self.action == "retrieve":
+            return EnvironmentRetrieveSerializerWithMetadata
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
@@ -100,14 +103,19 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                     self.request.master_api_key.organisation.projects.environments.all()
                 )
 
-            queryset = self.request.user.get_permitted_environments(
+            return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
-            ).annotate(total_segment_overrides=Count("feature_segments"))
-
-            return queryset
+            )
 
         # Permission class handles validation of permissions for other actions
-        return Environment.objects.all()
+        queryset = Environment.objects.all()
+
+        if self.action == "retrieve":
+            queryset = queryset.annotate(
+                total_segment_overrides=Count("feature_segments")
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         environment = serializer.save()
