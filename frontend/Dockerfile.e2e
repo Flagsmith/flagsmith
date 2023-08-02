@@ -1,3 +1,4 @@
+# From https://hub.docker.com/r/mkfarrow/docker-nvm/dockerfile as a start
 FROM debian:latest
 
 # replace shell with bash so we can source files
@@ -9,7 +10,7 @@ ENV NODE_VERSION 16.14.0
 
 # Bring in firefox into debian sources
 RUN echo "deb http://deb.debian.org/debian/ unstable main contrib non-free" >> /etc/apt/sources.list.d/debian.list
-RUN apt-get update && apt-get install -y build-essential libssl-dev python3 gnupg2 firefox && apt-get -y autoclean
+RUN apt-get update && apt-get install -y build-essential libssl-dev python3 gnupg2 firefox curl && apt-get -y autoclean
 
 # install nvm
 # https://github.com/creationix/nvm#install-script
@@ -29,13 +30,10 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 RUN node -v
 RUN npm -v
 
+# build Flagsmith front end
 WORKDIR /srv/flagsmith
 COPY . .
 RUN npm cache clean --force
 RUN npm ci
-
-
-# Force bash as shell
-# RUN ["/bin/bash", "-c", "echo hello all in one string"]
 
 CMD ["bash", "-l"]
