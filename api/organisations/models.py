@@ -98,7 +98,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def has_subscription_information_cache(self) -> bool:
         return hasattr(self, "subscription_information_cache") and bool(
-            self.subscription_information_cache.id
+            self.subscription_information_cache
         )
 
     @property
@@ -283,6 +283,7 @@ class OrganisationSubscriptionInformationCache(models.Model):
         related_name="subscription_information_cache",
         on_delete=models.CASCADE,
     )
+    updated_at = models.DateTimeField(auto_now=True)
     chargebee_updated_at = models.DateTimeField(auto_now=False, null=True)
     influx_updated_at = models.DateTimeField(auto_now=False, null=True)
 

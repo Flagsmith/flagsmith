@@ -2,7 +2,6 @@ import typing
 
 from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
-from django.utils import timezone
 
 from .chargebee import get_subscription_metadata_from_id
 from .models import Organisation, OrganisationSubscriptionInformationCache
@@ -40,8 +39,6 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
     to_create = []
 
     for subscription_info_cache in organisation_info_cache_dict.values():
-        subscription_info_cache.chargebee_updated_at = timezone.now()
-        subscription_info_cache.influx_updated_at = timezone.now()
         if subscription_info_cache.id:
             to_update.append(subscription_info_cache)
         else:

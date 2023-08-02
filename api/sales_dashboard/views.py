@@ -88,8 +88,9 @@ class OrganisationList(ListView):
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
 
-        # Use the most recent OrganisationSubscriptionInformationCache object to determine when the caches
-        # were last updated.
+        # Use the most recent "influx_updated_at" in
+        # OrganisationSubscriptionInformationCache object to determine
+        # when the caches were last updated.
         try:
             subscription_information_caches_influx_updated_at = (
                 OrganisationSubscriptionInformationCache.objects.order_by(

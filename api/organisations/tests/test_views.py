@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timedelta
-from typing import List, Union
+from typing import Tuple, Union
 from unittest import TestCase, mock
 
 import pytest
@@ -584,16 +584,41 @@ class ChargeBeeWebhookTestCase(TestCase):
 
     @mock.patch("organisations.models.get_plan_meta_data")
     @mock.patch("organisations.views.extract_subscription_metadata")
-    def mocked_subscription_plan_data(
+    def _get_mocked_subscription_plan_data(
         self,
-        mock_get_subscription_metadata: ChargebeeObjMetadata,
-        mock_get_plan_meta_data: dict[str, str],
+        mock_get_subscription_metadata: mock.MagicMock,
+        mock_get_plan_meta_data: mock.MagicMock,
         plan_id: str,
         max_seats: int,
         max_api_calls: int,
         max_projects: int,
         chargebee_updated_at: datetime = datetime.now(),
-    ) -> List[Union[dict, OrganisationSubscriptionInformationCache]]:
+    ) -> Tuple[Union[dict, OrganisationSubscriptionInformationCache]]:
+        """
+
+        This function creates a mock environment for simulating subscription and plan data
+        to be used in test cases. It uses the `unittest.mock.MagicMock` class to generate
+        mock objects for the `get_subscription_metadata` and `get_plan_meta_data` functions,
+        which are patched with the `@mock.patch` decorator.
+
+        Parameters:
+            mock_get_subscription_metadata (MagicMock): A mocked object representing the
+                `get_subscription_metadata` function.
+            mock_get_plan_meta_data (MagicMock): A mocked object representing the
+                `get_plan_meta_data` function.
+            plan_id (str): The ID of the plan to be used in the mock subscription data.
+            max_seats (int): The maximum number of seats allowed in the mock plan data.
+            max_api_calls (int): The maximum number of API calls allowed in the mock plan data.
+            max_projects (int): The maximum number of projects allowed in the mock subscription data.
+            chargebee_updated_at (datetime, optional): The timestamp representing the
+                update time of the mock Chargebee data. Defaults to the current time.
+
+        Returns:
+            Tuple[Union[dict, OrganisationSubscriptionInformationCache]]: A tuple
+            containing the response data from a mocked API call and a mock object
+            representing the `OrganisationSubscriptionInformationCache` data.
+
+        """
         mock_get_plan_meta_data.return_value = {
             "seats": max_seats,
             "api_calls": max_api_calls,
@@ -617,7 +642,7 @@ class ChargeBeeWebhookTestCase(TestCase):
             }
         }
 
-        if plan_id != "new-plan-id":
+        if plan_id != "updated-plan-id":
             subscription_information_cache = (
                 OrganisationSubscriptionInformationCache.objects.create(
                     organisation=self.organisation,
@@ -643,34 +668,36 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription.refresh_from_db()
         subscription_information_cache.refresh_from_db()
 
-        return [res, subscription_information_cache]
+        return res, subscription_information_cache
 
     def test_when_subscription_cache_doesnt_exist_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         self,
     ):
         # Given
-        new_plan_id = "new-plan-id"
-        new_max_seats = 3
-        new_max_api_calls = 100
-        new_max_projects = 3
+        plan_id = "plan-id"  # The ID of the current plan
+        max_seats = 3  # The maximum number of seats allowed in the current plan
+        max_api_calls = (
+            100  # The maximum number of API calls allowed in the current plan
+        )
+        max_projects = 3  # The maximum number of projects allowed in the current plan
 
         # When
-        res, subscription_information_cache = self.mocked_subscription_plan_data(
-            plan_id=new_plan_id,
-            max_seats=new_max_seats,
-            max_api_calls=new_max_api_calls,
-            max_projects=new_max_projects,
+        res, subscription_information_cache = self._get_mocked_subscription_plan_data(
+            plan_id=plan_id,
+            max_seats=max_seats,
+            max_api_calls=max_api_calls,
+            max_projects=max_projects,
         )
 
         # Then
         assert res.status_code == status.HTTP_200_OK
-        assert self.subscription.plan == new_plan_id
-        assert self.subscription.max_seats == new_max_seats
-        assert self.subscription.max_api_calls == new_max_api_calls
+        assert self.subscription.plan == plan_id
+        assert self.subscription.max_seats == max_seats
+        assert self.subscription.max_api_calls == max_api_calls
 
-        assert subscription_information_cache.allowed_seats == new_max_seats
-        assert subscription_information_cache.allowed_30d_api_calls == new_max_api_calls
-        assert subscription_information_cache.allowed_projects == new_max_projects
+        assert subscription_information_cache.allowed_seats == max_seats
+        assert subscription_information_cache.allowed_30d_api_calls == max_api_calls
+        assert subscription_information_cache.allowed_projects == max_projects
         assert subscription_information_cache.chargebee_email == self.cb_user.email
         assert subscription_information_cache.chargebee_updated_at
         assert subscription_information_cache.influx_updated_at is None
@@ -679,19 +706,23 @@ class ChargeBeeWebhookTestCase(TestCase):
         self,
     ):
         # Given
-        new_plan_id = "update-plan-id"
-        new_max_seats = 5
-        new_max_api_calls = 500
-        new_max_projects = 10
-        chargebee_updated_at = datetime.now(tz=UTC) - timedelta(days=1)
+        new_plan_id = "updated-plan-id"  # The new ID of an updated plan
+        new_max_seats = 5  # The new maximum number of seats allowed in the plan
+        new_max_api_calls = (
+            500  # The new maximum number of API calls allowed in the plan
+        )
+        new_max_projects = 10  # The new maximum number of projects allowed in the plan
+        updated_at = datetime.now(tz=UTC) - timedelta(
+            days=1
+        )  # The timestamp representing the last update time, one day ago from the current time.
 
         # When
-        res, subscription_information_cache = self.mocked_subscription_plan_data(
+        res, subscription_information_cache = self._get_mocked_subscription_plan_data(
             plan_id=new_plan_id,
             max_seats=new_max_seats,
             max_api_calls=new_max_api_calls,
             max_projects=new_max_projects,
-            chargebee_updated_at=chargebee_updated_at,
+            chargebee_updated_at=updated_at,
         )
 
         # Then
@@ -704,9 +735,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert subscription_information_cache.allowed_30d_api_calls == new_max_api_calls
         assert subscription_information_cache.allowed_projects == new_max_projects
         assert subscription_information_cache.chargebee_email == self.cb_user.email
-        assert (
-            subscription_information_cache.chargebee_updated_at != chargebee_updated_at
-        )
+        assert subscription_information_cache.chargebee_updated_at != updated_at
         assert subscription_information_cache.influx_updated_at is None
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
@@ -909,16 +938,13 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
-    subscription_information_cache = (
-        OrganisationSubscriptionInformationCache.objects.create(
-            organisation=organisation,
-            allowed_seats=expected_seats,
-            allowed_projects=expected_projects,
-            allowed_30d_api_calls=expected_api_calls,
-            chargebee_email=expected_chargebee_email,
-        )
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=expected_seats,
+        allowed_projects=expected_projects,
+        allowed_30d_api_calls=expected_api_calls,
+        chargebee_email=expected_chargebee_email,
     )
-    subscription_information_cache.refresh_from_db()
 
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
