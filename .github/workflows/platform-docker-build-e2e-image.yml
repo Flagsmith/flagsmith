@@ -1,0 +1,27 @@
+name: Build E2E Frontend Image
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  build-dockerhub:
+    runs-on: ubuntu-latest
+    name: Platform Publish Docker Image
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: 'Build E2E Frontend Image'
+        run: |
+          cd frontend
+          docker build Dockerfile.e2e --tag ghcr.io/flagsmith/e2e-frontend:latest
+          docker push ghcr.io/flagsmith/e2e-frontend:latest
