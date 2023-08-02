@@ -1,22 +1,17 @@
-FROM node:16
+FROM debian
 
-RUN mkdir /srv/flagsmith && chown node:node /srv/flagsmith
+SHELL [ "/bin/bash", "-l", "-c" ]
+RUN apt-get update && apt-get install -y curl python3 make gcc g++
+RUN curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+RUN nvm install 16.14.0
 
 RUN echo "deb http://deb.debian.org/debian/ unstable main contrib non-free" >> /etc/apt/sources.list.d/debian.list
 RUN apt-get update
-#ARG CHROME_URL='https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_107.0.5304.121-1_amd64.deb'
-#RUN wget -q $CHROME_URL
-RUN apt install -y firefox -f
-RUN apt-get clean
+RUN apt-get install -y --no-install-recommends firefox
 
 WORKDIR /srv/flagsmith
-
-COPY --chown=node:node . .
-
-USER node
-
+COPY . .
 RUN npm cache clean --force
-
 RUN npm ci
 
 ENV ENV=e2e
