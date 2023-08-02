@@ -1,0 +1,523 @@
+import json
+import typing
+from datetime import datetime, timedelta
+
+import pytest
+from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
+from rest_framework import status
+
+from environments.models import Environment
+from features.models import FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
+
+if typing.TYPE_CHECKING:
+    from rest_framework.test import APIClient
+
+    from features.models import Feature
+    from segments.models import Segment
+    from users.models import FFAdminUser
+
+now = timezone.now()
+tomorrow = now + timedelta(days=1)
+
+
+def test_get_versions_for_a_feature_and_environment(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # the initial version created automatically
+    version_1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # create a second published version
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    version_2.publish(published_by=admin_user)
+    version_2.save()
+
+    # and a draft version
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 3
+
+    shas = {result["sha"] for result in response_json["results"]}
+    assert len(shas) == 3
+    assert all(version.sha in shas for version in (version_1, version_2, draft_version))
+
+
+def test_create_new_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_delete_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    environment_feature_version.refresh_from_db()
+    assert environment_feature_version.deleted is True
+
+
+def test_cannot_delete_live_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    # the initial published version
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json()["detail"] == "Cannot delete a live version."
+
+
+@pytest.mark.parametrize("live_from", (None, tomorrow))
+def test_publish_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+    live_from: typing.Optional[datetime],
+) -> None:
+    # Given
+    # an unpublished version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-publish",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    # When
+    with freeze_time(now):
+        response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    environment_feature_version.refresh_from_db()
+    assert environment_feature_version.is_live is True
+    assert environment_feature_version.published is True
+    assert environment_feature_version.published_by == admin_user
+    assert (
+        environment_feature_version.live_from == now if live_from is None else live_from
+    )
+
+
+def test_list_environment_feature_version_feature_states(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert len(response_json) == 1
+
+
+def test_add_environment_feature_version_feature_state(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    segment: "Segment",
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "segment value!",
+        },
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    assert environment_feature_version.feature_states.count() == 2
+
+
+def test_cannot_add_feature_state_to_published_environment_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    segment: "Segment",
+    feature: "Feature",
+) -> None:
+    # Given
+    # the initial (published) environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+        ],
+    )
+
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "segment value!",
+        },
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert environment_feature_version.feature_states.count() == 1
+
+    assert response.json()["detail"] == "Cannot modify published version."
+
+
+def test_update_environment_feature_version_feature_state(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and the environment feature state for the feature, environment, version combination
+    feature_state = environment_feature_version.feature_states.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    ).get()
+    assert feature_state.enabled is False
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+            feature_state.id,
+        ],
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps({"enabled": True}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    feature_state.refresh_from_db()
+    assert feature_state.enabled is True
+
+
+def test_cannot_update_feature_state_in_published_environment_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    # the initial (published) environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and the environment feature state for the feature, environment, version combination
+    feature_state = environment_feature_version.feature_states.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    ).get()
+    assert feature_state.enabled is False
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+            feature_state.id,
+        ],
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps({"enabled": True}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json()["detail"] == "Cannot modify published version."
+
+    feature_state.refresh_from_db()
+    assert feature_state.enabled is False
+
+
+def test_delete_environment_feature_version_feature_state(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    segment: "Segment",
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and a Segment override feature state in the feature version
+    segment_override = FeatureState.objects.create(
+        environment_feature_version=environment_feature_version,
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, environment=environment_v2_versioning, segment=segment
+        ),
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+            segment_override.id,
+        ],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    segment_override.refresh_from_db()
+    assert segment_override.deleted is True
+
+
+def test_cannot_delete_feature_state_in_published_environment_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    segment: "Segment",
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and a Segment override feature state in the feature version
+    segment_override = FeatureState.objects.create(
+        environment_feature_version=environment_feature_version,
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, environment=environment_v2_versioning, segment=segment
+        ),
+    )
+
+    # and we publish the version
+    environment_feature_version.publish(admin_user)
+    environment_feature_version.save()
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+            segment_override.id,
+        ],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json()["detail"] == "Cannot modify published version."
+
+    segment_override.refresh_from_db()
+    assert segment_override.deleted is False
+
+
+def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(
+    admin_client: "APIClient",
+    admin_user: "FFAdminUser",
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+) -> None:
+    # Given
+    # an unpublished environment feature version
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # and the environment default feature state in the feature version
+    segment_override = FeatureState.objects.get(
+        environment_feature_version=environment_feature_version,
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.sha,
+            segment_override.id,
+        ],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert (
+        response.json()["detail"] == "Cannot delete environment default feature state."
+    )
+
+    segment_override.refresh_from_db()
+    assert segment_override.deleted is False

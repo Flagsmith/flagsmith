@@ -60,7 +60,7 @@ class EnvironmentFeatureVersion(
 
     @property
     def is_live(self):
-        return self.published and self.live_from < timezone.now()
+        return self.published and self.live_from <= timezone.now()
 
     @classmethod
     def create_initial_version(

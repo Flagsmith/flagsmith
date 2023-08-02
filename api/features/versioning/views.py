@@ -15,10 +15,11 @@ from rest_framework.viewsets import GenericViewSet
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
-from features.versioning.exceptions import FeatureVersioningError
+from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.serializers import (
     EnvironmentFeatureVersionFeatureStateSerializer,
+    EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionSerializer,
 )
 
@@ -27,11 +28,17 @@ class EnvironmentFeatureVersionViewSet(
     GenericViewSet,
     ListModelMixin,
     CreateModelMixin,
-    UpdateModelMixin,
     DestroyModelMixin,
 ):
     serializer_class = EnvironmentFeatureVersionSerializer
     permission_classes = [IsAuthenticated]  # TODO
+
+    def get_serializer_class(self):
+        match self.action:
+            case "publish":
+                return EnvironmentFeatureVersionPublishSerializer
+            case _:
+                return EnvironmentFeatureVersionSerializer
 
     def initial(self, request: Request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
@@ -55,16 +62,17 @@ class EnvironmentFeatureVersionViewSet(
 
     def perform_destroy(self, instance: EnvironmentFeatureVersion) -> None:
         if instance.is_live:
-            raise FeatureVersioningError("Cannot delete a live version.")
+            raise FeatureVersionDeleteError("Cannot delete a live version.")
 
         super().perform_destroy(instance)
 
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:
         ef_version = self.get_object()
-        ef_version.publish(published_by=request.user)
-        ef_version.save()
-        return Response(self.get_serializer(instance=ef_version).data)
+        serializer = self.get_serializer(data=request.data, instance=ef_version)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(published_by=request.user)
+        return Response(serializer.data)
 
 
 class EnvironmentFeatureVersionFeatureStatesViewSet(
@@ -93,7 +101,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             EnvironmentFeatureVersion, sha=self.kwargs["environment_feature_version_pk"]
         )
         if self.action != "list" and self.environment_feature_version.published is True:
-            raise FeatureVersioningError("Cannot modify published version.")
+            raise FeatureVersionDeleteError("Cannot modify published version.")
 
         self.environment = get_object_or_404(
             Environment, pk=self.kwargs["environment_pk"]
@@ -119,3 +127,10 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
+
+    def perform_destroy(self, instance):
+        if instance.feature_segment is None and instance.identity is None:
+            raise FeatureVersionDeleteError(
+                "Cannot delete environment default feature state."
+            )
+        super().perform_destroy(instance)

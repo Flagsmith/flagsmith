@@ -1,7 +1,4 @@
-from datetime import datetime
-
-from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from features.serializers import CreateSegmentOverrideFeatureStateSerializer
 from features.versioning.models import EnvironmentFeatureVersion
@@ -17,20 +14,38 @@ class EnvironmentFeatureVersionFeatureStateSerializer(
         )
 
 
-class EnvironmentFeatureVersionSerializer(ModelSerializer):
+class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnvironmentFeatureVersion
-        fields = ("created_at", "updated_at", "published", "live_from", "sha")
-        read_only_fields = ("updated_at", "created_at", "sha")
+        fields = (
+            "created_at",
+            "updated_at",
+            "published",
+            "live_from",
+            "sha",
+            "is_live",
+            "published_by",
+            "created_by",
+        )
+        read_only_fields = (
+            "updated_at",
+            "created_at",
+            "live_from",
+            "published",
+            "sha",
+            "is_live",
+            "published_by",
+            "created_by",
+        )
 
-    def validate_published(self, published: bool) -> None:
-        if instance := getattr(self, "instance", None):
-            if instance.is_live and published is False:
-                raise ValidationError("Cannot un-publish already live version")
 
-    def validate_live_from(self, live_from: datetime) -> None:
-        if instance := getattr(self, "instance", None):
-            if instance.is_live and live_from != instance.live_from:
-                raise ValidationError(
-                    "Cannot change 'live from' date of already live version."
-                )
+class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
+    live_from = serializers.DateTimeField(required=False)
+
+    def save(self, **kwargs):
+        live_from = self.validated_data.get("live_from")
+        self.instance.publish(
+            live_from=live_from, published_by=self.context["request"].user
+        )
+        self.instance.save()
+        return self.instance
