@@ -36,7 +36,7 @@ createTestCafe()
                     return runner
                         .clientScripts('e2e/add-error-logs.js')
                         .src(['./e2e/cafe'])
-                        .concurrency(4)
+                        .concurrency(2)
                         .run(options);
                 }
                 return v;
