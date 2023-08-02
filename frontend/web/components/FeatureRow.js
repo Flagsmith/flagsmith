@@ -194,21 +194,24 @@ class TheComponent extends Component {
                 className='font-weight-medium'
                 style={{ wordBreak: 'break-all' }}
               >
-                {description ? (
-                  <Tooltip
-                    title={
-                      <span>
-                        {name}
-                        <span className={'ms-1'}></span>
-                        <Icon name='info-outlined' />
-                      </span>
-                    }
-                  >
-                    {description}
-                  </Tooltip>
-                ) : (
-                  name
-                )}
+                <span className='me-1'>
+                  {description ? (
+                    <Tooltip
+                      title={
+                        <span>
+                          {name}
+                          <span className={'ms-1'}></span>
+                          <Icon name='info-outlined' />
+                        </span>
+                      }
+                    >
+                      {description}
+                    </Tooltip>
+                  ) : (
+                    name
+                  )}
+                </span>
+
                 {!!projectFlag.num_segment_overrides && (
                   <Tooltip
                     title={
@@ -245,12 +248,10 @@ class TheComponent extends Component {
                     }`}
                   </Tooltip>
                 )}
-                <div className='ms-2'>
-                  <TagValues
-                    projectId={`${projectId}`}
-                    value={projectFlag.tags}
-                  />
-                </div>
+                <TagValues
+                  projectId={`${projectId}`}
+                  value={projectFlag.tags}
+                />
               </Row>
               <div className='list-item-subtitle'>
                 Created {moment(created_date).format('Do MMM YYYY HH:mma')}
