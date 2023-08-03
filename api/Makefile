@@ -70,7 +70,7 @@ docker-build:
 test:
 	poetry run pytest $(opts)
 
-.PHONY: django-migrations
+.PHONY: django-make-migrations
 django-make-migrations:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)

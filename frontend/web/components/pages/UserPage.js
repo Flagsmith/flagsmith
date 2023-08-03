@@ -36,6 +36,7 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      showArchived: false,
       preselect: Utils.fromParam().flag,
       tags: [],
     }
@@ -533,7 +534,6 @@ const UserPage = class extends Component {
                                           {hasUserOverride ? (
                                             <Row className='chip mt-1'>
                                               <span>Overriding defaults</span>
-                                              <span className='chip-icon icon ion-md-information' />
                                             </Row>
                                           ) : flagEnabledDifferent ? (
                                             <span
@@ -569,7 +569,6 @@ const UserPage = class extends Component {
                                                     </span>
                                                   )}
                                                 </Flex>
-                                                <span className='ml-1 chip-icon icon ion-md-information' />
                                               </Row>
                                             </span>
                                           ) : flagValueDifferent ? (
@@ -589,7 +588,6 @@ const UserPage = class extends Component {
                                                     value={`${flagValue}`}
                                                   />
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             ) : (
                                               <span
@@ -607,7 +605,6 @@ const UserPage = class extends Component {
                                                   />{' '}
                                                   for this user
                                                 </span>
-                                                <span className='chip-icon icon ion-md-information' />
                                               </span>
                                             )
                                           ) : (

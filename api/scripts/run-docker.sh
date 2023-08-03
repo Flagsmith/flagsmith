@@ -7,7 +7,6 @@ set -e
 
 function migrate () {
     python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
-    migrate_analytics_db
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -23,6 +22,7 @@ function serve() {
              --workers ${GUNICORN_WORKERS:-3} \
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
+             --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s' \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
@@ -64,6 +64,7 @@ function go_to_sleep(){
 if [ "$1" == "migrate" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
 elif [ "$1" == "serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
@@ -72,6 +73,7 @@ elif [ "$1" == "run-task-processor" ]; then
 elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
     serve
 elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"

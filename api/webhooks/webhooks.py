@@ -98,7 +98,7 @@ def _call_webhook(
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
-    return requests.post(str(webhook.url), data=json_data, headers=headers)
+    return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
 
 
 def _call_webhook_email_on_error(
@@ -106,8 +106,13 @@ def _call_webhook_email_on_error(
 ):
     try:
         res = _call_webhook(webhook, data)
-    except requests.exceptions.ConnectionError:
-        send_failure_email(webhook, data, webhook_type)
+    except requests.exceptions.RequestException as exc:
+        send_failure_email(
+            webhook,
+            data,
+            webhook_type,
+            f"N/A ({exc.__class__.__name__})",
+        )
         return
 
     if res.status_code != 200:

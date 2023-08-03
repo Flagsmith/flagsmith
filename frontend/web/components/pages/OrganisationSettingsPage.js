@@ -287,8 +287,11 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const isAWS =
+                    AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
                   const { chargebee_email } = subscriptionMeta || {}
-                  const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
+                  const autoSeats =
+                    !isAWS && Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
                   const overSeats =
@@ -296,15 +299,14 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
+
                   return (
                     <div>
                       <Tabs
-                        inline
-                        transparent
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                       >
-                        <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                        <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
@@ -353,7 +355,7 @@ const OrganisationSettingsPage = class extends Component {
                                     {organisation.id}
                                   </p>
                                 </div>
-                                {paymentsEnabled && (
+                                {paymentsEnabled && !isAWS && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
                                       <img
@@ -526,15 +528,11 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                        <TabItem tabLabel='Keys'>
                           <AdminAPIKeys />
                         </TabItem>
 
-                        <TabItem
-                          data-test='tab-permissions'
-                          tabLabel='Members'
-                          tabIcon='ion-md-people'
-                        >
+                        <TabItem data-test='tab-permissions' tabLabel='Members'>
                           <JSONReference
                             showNamesButton
                             className='mt-4'
@@ -572,7 +570,7 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                   {!isLoading && (
                                     <div>
-                                      <Tabs inline transparent uncontrolled>
+                                      <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
                                             <h5 className='m-b-0'>
@@ -1195,7 +1193,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                        <TabItem tabLabel='Webhooks'>
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
@@ -1207,7 +1205,7 @@ const OrganisationSettingsPage = class extends Component {
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
-                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
@@ -1250,12 +1248,14 @@ const OrganisationSettingsPage = class extends Component {
                                       <Button theme='text'>
                                         {webhook.url}
                                       </Button>
-                                      <div className='list-item-footer faint'>
-                                        Created{' '}
-                                        {moment(webhook.created_date).format(
-                                          'DD/MMM/YYYY',
-                                        )}
-                                      </div>
+                                      {webhook.created_at ? (
+                                        <div className='list-item-footer faint'>
+                                          Created{' '}
+                                          {moment(webhook.created_at).format(
+                                            'DD/MMM/YYYY',
+                                          )}
+                                        </div>
+                                      ) : null}
                                     </div>
                                     <Row>
                                       <Switch checked={webhook.enabled} />
@@ -1305,7 +1305,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {!Project.disableAnalytics && (
-                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                          <TabItem tabLabel='Usage'>
                             {this.state.tab === 4 && (
                               <OrganisationUsage
                                 organisationId={

@@ -63,7 +63,6 @@ const ChangeRequestsPage = class extends Component {
     const environment = ProjectStore.getEnvironment(environmentId)
 
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-
     return (
       <div
         data-test='change-requests-page'
@@ -126,7 +125,16 @@ const ChangeRequestsPage = class extends Component {
                 }}
               >
                 <TabItem
-                  tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}
+                  tabLabel={
+                    <span className='flex-row justify-content-center'>
+                      Open
+                      {data && !!dataPaging.count && (
+                        <div className='counter-value ml-1'>
+                          {dataPaging.count}
+                        </div>
+                      )}
+                    </span>
+                  }
                 >
                   <PanelSearch
                     renderSearchWithNoResults
@@ -214,9 +222,11 @@ const ChangeRequestsPage = class extends Component {
                   />
                 </TabItem>
                 <TabItem
-                  tabLabel={`Closed${
-                    dataClosedPaging ? ` (${dataClosedPaging.count})` : ''
-                  }`}
+                  tabLabel={
+                    <span className='flex-row justify-content-center'>
+                      Closed
+                    </span>
+                  }
                 >
                   <PanelSearch
                     renderSearchWithNoResults

@@ -305,7 +305,7 @@ const controller = {
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
-      API.alias(user.email)
+      API.alias(user.email, user)
       API.identify(user && user.email, user)
       store.loaded()
     } else if (!user) {
@@ -418,6 +418,9 @@ const store = Object.assign({}, BaseStore, {
   },
   getOrganisations() {
     return store.model && store.model.organisations
+  },
+  getPaymentMethod() {
+    return store.organisation?.subscription?.payment_method
   },
   getPlans() {
     if (!store.model) return []

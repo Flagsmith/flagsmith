@@ -4,11 +4,16 @@ sidebar_label: Overview
 sidebar_position: 1
 ---
 
-## Paid Hosting
+## Flagsmith SaaS Platform
 
 If you would rather skip the hosting and jump straight to integrating Flagsmith with your own application, you can use
 [https://flagsmith.com/](https://flagsmith.com/) right now. We have
 [paid plans with pricing to suit both startups and enterprise customers alike](https://flagsmith.com/pricing).
+
+## Terraform Templates
+
+We have a number of example deployments across different providers and orchestration frameworks in our
+[Terraform Examples](https://github.com/Flagsmith/terraform-examples) repository.
 
 ## One Click Installers
 
@@ -66,7 +71,7 @@ We recommend running Flagsmith with [Docker](/deployment/hosting/docker). We hav
 The Flagsmith architecture is based around a REST API that is accessed by both SDK clients and the Flagsmith Dashboard
 Front End Web App.
 
-![Application Architecture](/img/architecture.svg)
+![Application Architecture](/img/self-hosted-architecture.svg)
 
 ## Dependencies
 
@@ -207,7 +212,7 @@ The list of the flags and remote config we're currently using in production is b
  "datadog": {
   "perEnvironment": false,
   "image": "/static/images/integrations/datadog.svg",
-  "docs": "https://docs.flagsmith.com/integrations/datadog/",
+  "docs": "https://docs.flagsmith.com/integrations/apm/datadog/",
   "fields": [
    {
     "key": "base_url",
@@ -225,7 +230,7 @@ The list of the flags and remote config we're currently using in production is b
  "dynatrace": {
   "perEnvironment": true,
   "image": "/static/images/integrations/dynatrace.svg",
-  "docs": "https://docs.flagsmith.com/integrations/dynatrace/",
+  "docs": "https://docs.flagsmith.com/integrations/apm/dynatrace/",
   "fields": [
    {
     "key": "base_url",
@@ -256,7 +261,7 @@ The list of the flags and remote config we're currently using in production is b
  "amplitude": {
   "perEnvironment": true,
   "image": "/static/images/integrations/amplitude.svg",
-  "docs": "https://docs.flagsmith.com/integrations/amplitude/",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/amplitude/",
   "fields": [
    {
     "key": "api_key",
@@ -270,7 +275,7 @@ The list of the flags and remote config we're currently using in production is b
  "new-relic": {
   "perEnvironment": false,
   "image": "/static/images/integrations/new_relic.svg",
-  "docs": "https://docs.flagsmith.com/integrations/newrelic",
+  "docs": "https://docs.flagsmith.com/integrations/apm/newrelic",
   "fields": [
    {
     "key": "base_url",
@@ -292,7 +297,7 @@ The list of the flags and remote config we're currently using in production is b
  "segment": {
   "perEnvironment": true,
   "image": "/static/images/integrations/segment.svg",
-  "docs": "https://docs.flagsmith.com/integrations/segment",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/segment",
   "fields": [
    {
     "key": "api_key",
@@ -306,7 +311,7 @@ The list of the flags and remote config we're currently using in production is b
  "rudderstack": {
   "perEnvironment": true,
   "image": "/static/images/integrations/rudderstack.svg",
-  "docs": "https://docs.flagsmith.com/integrations/rudderstack",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/rudderstack",
   "fields": [
    {
     "key": "base_url",
@@ -342,7 +347,7 @@ The list of the flags and remote config we're currently using in production is b
  "heap": {
   "perEnvironment": true,
   "image": "/static/images/integrations/heap.svg",
-  "docs": "https://docs.flagsmith.com/integrations/heap",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/heap",
   "fields": [
    {
     "key": "api_key",
@@ -356,7 +361,7 @@ The list of the flags and remote config we're currently using in production is b
  "mixpanel": {
   "perEnvironment": true,
   "image": "/static/images/integrations/mp.svg",
-  "docs": "https://docs.flagsmith.com/integrations/mixpanel",
+  "docs": "https://docs.flagsmith.com/integrations/analytics/mixpanel",
   "fields": [
    {
     "key": "api_key",

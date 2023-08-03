@@ -5,7 +5,7 @@
 
 [tool.black]
 line-length = 88
-target-version = ['py36', 'py37', 'py38']
+target-version = ['py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -123,3 +123,4 @@ pip-tools = "~6.13.0"
 [build-system]
 requires = ["poetry-core>=1.5.0"]
 build-backend = "poetry.core.masonry.api"
+addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']

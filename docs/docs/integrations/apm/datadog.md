@@ -51,4 +51,4 @@ Flag change events will now be sent to Datadog.
 ## 3. Integrate with the DataDog RUM
 
 You can also send Identity flag values from Flagsmith to DataDog using our
-[Javascript Integration](../clients/client-side/javascript.md#datadog-rum-javascript-sdk-integration).
+[Javascript Integration](/clients/client-side/javascript.md#datadog-rum-javascript-sdk-integration).

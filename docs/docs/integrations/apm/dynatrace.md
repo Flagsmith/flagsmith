@@ -13,7 +13,7 @@ You can integrate Flagsmith with Dynatrace. Send flag change events from Flagsmi
 :::tip
 
 The Flagsmith Javascript SDK can also talk to the Dynatrace Javascript SDK.
-[More info available in our JS docs page](../clients/client-side/javascript.md#dynatrace-javascript-sdk-integration).
+[More info available in our JS docs page](/clients/client-side/javascript.md#dynatrace-javascript-sdk-integration).
 
 :::
 
@@ -42,4 +42,4 @@ of the Dynatrace Entities defined in the `Entity Selector`. You will see Deploym
 ## Javascript to Javascript SDK
 
 You can also send Identity flag values from Flagsmith to Dynatrace using our
-[Javascript Integration](../clients/client-side/javascript.md#dynatrace-javascript-sdk-integration).
+[Javascript Integration](/clients/client-side/javascript.md#dynatrace-javascript-sdk-integration).

@@ -1,4 +1,6 @@
-# Edge Proxy
+---
+title: Edge Proxy
+---
 
 The Flagsmith Edge Proxy allows you to run an instance of the Flagsmith Engine close to your servers. If you are running
 Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:
@@ -12,6 +14,13 @@ The main benefit to running server side SDKs in [Local Evaluation Mode](/clients
 you get the lowest possible latency.
 
 ## How does it work
+
+:::info
+
+The Edge Proxy has the same
+[caveats as running our SDK in Local Evaluation mode.](/clients/overview#local-evaluation-mode).
+
+:::
 
 You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in
 [Local Evaluation Mode](/clients/overview#2---local-evaluation), with an API interface that is compatible with the

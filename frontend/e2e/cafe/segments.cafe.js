@@ -142,7 +142,7 @@ test('Segments Test', async () => {
     await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-on'));
 }).after(async (t) => {
-    console.log('Start of Segments Requests');
-    await logResults(logger.requests);
-    console.log('End of Segments Errors');
+    console.log('Start of Segment Requests');
+    await logResults(logger.requests, t);
+    console.log('End of Segment Requests');
 });

@@ -1,6 +1,5 @@
 import ModalHR from 'components/modals/ModalHR'
-
-const classNames = require('classnames')
+import { oneOf } from 'prop-types'
 /**
  * Created by kylejohnson on 30/07/2016.
  */
@@ -16,13 +15,9 @@ const Tabs = class extends React.Component {
     const children = this.props.children.filter((c) => !!c)
     const value = this.props.uncontrolled ? this.state.value : this.props.value
     return (
-      <div
-        className={`tabs ${this.props.className || ''} ${
-          this.props.transparent ? 'tabs--transparent' : ''
-        } ${this.props.inline ? 'tabs--inline' : ''}`}
-      >
+      <div className={`tabs ${this.props.className || ''}`}>
         <div
-          className='tabs-nav mx-3'
+          className={`tabs-nav mx-4 mt-3 ${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
           {children.map((child, i) => {
@@ -45,35 +40,21 @@ const Tabs = class extends React.Component {
                     this.props.onChange(i)
                   }
                 }}
-                className={`btn-tab btn-primary${
-                  isSelected ? ' tab-active' : ''
-                }`}
+                className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
               >
-                {child.props.tabIcon && (
-                  <span
-                    className={classNames('icon mr-2', child.props.tabIcon)}
-                  />
-                )}
                 {child.props.tabLabel}
               </Button>
             )
           })}
-          <div
-            className='tab-line'
-            style={{
-              left: `${(100 / children.length) * value}%`,
-              width: `${100 / children.length}%`,
-            }}
-          />
         </div>
-        <ModalHR className='mx-3' />
+        {this.props.theme === 'tab' && <ModalHR className='mx-4' />}
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item px-3${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item px-4${isSelected ? ' tab-active' : ''}`}
               >
                 {child}
               </div>
@@ -87,14 +68,14 @@ const Tabs = class extends React.Component {
 
 Tabs.defaultProps = {
   className: '',
+  theme: 'tab',
   value: 0,
 }
 
 Tabs.propTypes = {
   children: RequiredElement,
-  inline: OptionalBool,
   onChange: OptionalFunc,
-  transparent: OptionalBool,
+  theme: oneOf(['tab', 'pill']),
   uncontrolled: OptionalBool,
   value: OptionalNumber,
 }

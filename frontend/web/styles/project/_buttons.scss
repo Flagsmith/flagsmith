@@ -3,7 +3,6 @@
 $google: #c53d23;
 $github: #eeefee;
 
-
 .btn,
 button.btn {
   white-space: nowrap;
@@ -79,7 +78,6 @@ button.btn {
       }
       &.btn:active {
         background-color: $danger-alfa-16;
-
       }
     }
   }
@@ -121,6 +119,15 @@ button.btn {
   &--remove:hover {
     svg path {
       fill: #d93939;
+    }
+  }
+  &-with-icon{
+    padding: 0 14px;
+    background-color: $basic-alpha-8;
+    border-radius: $border-radius;
+    &:hover,
+    &:active{
+      background-color: $basic-alpha-8 !important;
     }
   }
   &--with-icon {
@@ -177,7 +184,7 @@ button.btn {
     -ms-user-select: none;
     -moz-user-select: none;
     position: relative;
-    padding-left: $spacer*3.5;
+    padding-left: $spacer * 3.5;
     svg {
       position: absolute;
       left: 20px;
@@ -277,11 +284,36 @@ $add-btn-size: 34px;
     line-height: $remove-btn-size;
   }
 }
-.btn--radio {
+.btn-radio {
   cursor: pointer;
-  padding: 10px;
-  font-size: 16px;
-  color: $bt-brand-primary;
+  width: 20px;
+  height: 20px;
+  border: 1px solid $basic-alpha-24;
+  border-radius: 50%;
+  &:hover {
+    border-color: $primary;
+  }
+
+  &.btn-radio-on {
+    border-color: $primary;
+    display: flex;
+    justify-content: center;
+    &::before {
+      content: '';
+      display: block;
+      border-radius: 50%;
+      background-color: $primary;
+      width: 12px;
+      height: 12px;
+      align-self: center;
+    }
+    &:hover {
+      border-color: $primary600;
+      &::before {
+        background-color: $primary600;
+      }
+    }
+  }
 }
 
 @include media-breakpoint-down(sm) {
@@ -370,6 +402,9 @@ $add-btn-size: 34px;
       svg path {
         fill: $header-color-dark !important;
       }
+    }
+    .btn-radio {
+      border-color: $white-alpha-24;
     }
   }
 
