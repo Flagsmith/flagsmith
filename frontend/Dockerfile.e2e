@@ -1,4 +1,4 @@
-FROM ghcr.io/flagsmith/e2e-frontend:latest
+FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
 # Build Flagsmith
 WORKDIR /srv/flagsmith

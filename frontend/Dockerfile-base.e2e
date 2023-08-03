@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y g++ make libssl-dev python3 gnupg2 fire
 
 # nvm environment variables
 ENV NVM_DIR /usr/local/nvm
-ENV NODE_VERSION 16.14.0
+ENV NODE_VERSION 16.20.1
 
 # install nvm
 # https://github.com/creationix/nvm#install-script
