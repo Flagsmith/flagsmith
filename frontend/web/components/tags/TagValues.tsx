@@ -24,6 +24,7 @@ const TagValues: FC<TagValuesType> = ({
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
+              className='chip--sm'
               hideNames={hideNames}
               onClick={onAdd}
               tag={tag}
