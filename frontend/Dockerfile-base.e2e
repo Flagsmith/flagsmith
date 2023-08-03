@@ -1,5 +1,8 @@
 FROM debian:latest
 
+# Set node version
+ENV NODE_VERSION 16.20.1
+
 # replace shell with bash so we can source files
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
@@ -9,7 +12,6 @@ RUN apt-get update && apt-get install -y g++ make libssl-dev python3 gnupg2 fire
 
 # nvm environment variables
 ENV NVM_DIR /usr/local/nvm
-ENV NODE_VERSION 16.20.1
 
 # install nvm
 # https://github.com/creationix/nvm#install-script
