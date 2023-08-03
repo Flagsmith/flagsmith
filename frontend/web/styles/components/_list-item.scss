@@ -24,6 +24,11 @@
   &-sm {
     min-height: 60px;
   }
+  a:hover svg {
+    path {
+      fill: $primary;
+    }
+  }
 }
 
 .dark {
