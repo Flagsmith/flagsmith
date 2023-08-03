@@ -50,6 +50,7 @@ const Tag: FC<TagType> = ({
 
   return isTruncated && `${tag.label}`.length > 12 ? (
     <Tooltip
+      plainText
       title={
         <div
           onClick={() => onClick?.(tag as TTag)}
