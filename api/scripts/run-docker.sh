@@ -7,7 +7,6 @@ set -e
 
 function migrate () {
     python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
-    migrate_analytics_db
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -65,6 +64,7 @@ function go_to_sleep(){
 if [ "$1" == "migrate" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
 elif [ "$1" == "serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
@@ -73,6 +73,7 @@ elif [ "$1" == "run-task-processor" ]; then
 elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
     serve
 elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"
