@@ -67,10 +67,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const hasHadResults = useRef(false)
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
-  const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    ProjectStore.getTotalSegments(),
-    ProjectStore.getMaxSegmentsAllowed(),
-  )
 
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -166,12 +162,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            {showLimitAlert.closeToLimit && (
-              <LimitAlert
-                limitType={'segment'}
-                percentage={showLimitAlert.percentage}
-              />
-            )}
+            {isLimitReached && <LimitAlert limitType={'segment'} />}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>

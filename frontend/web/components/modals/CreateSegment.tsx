@@ -136,11 +136,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
 
-  const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    ProjectStore.getTotalSegments(),
-    ProjectStore.getMaxFeaturesAllowed(),
-  )
-
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
     newRules[0].rules = newRules[0].rules.concat({
@@ -342,12 +337,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </Flex>
         </div>
       )}
-      {showLimitAlert.closeToLimit && (
-        <LimitAlert
-          limitType='Segments'
-          percentage={showLimitAlert.percentage}
-        />
-      )}
+      {isLimitReached && <LimitAlert limitType='Segments' />}
       {!condensed && (
         <InputGroup
           className='mb-3'

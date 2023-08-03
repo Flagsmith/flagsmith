@@ -171,10 +171,6 @@ const FeaturesPage = class extends Component {
           ) => {
             const isLoading = FeatureListStore.isLoading
             const isLimitReached = totalFeatures >= maxFeaturesAllowed
-            const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
-              totalFeatures,
-              maxFeaturesAllowed,
-            )
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -190,11 +186,8 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
-                        {showLimitAlert.closeToLimit && (
-                          <LimitAlert
-                            limitType={'Feautures'}
-                            percentage={showLimitAlert.percentage}
-                          />
+                        {isLimitReached && (
+                          <LimitAlert limitType={'Features'} />
                         )}
                         <Row>
                           <Flex>

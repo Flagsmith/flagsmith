@@ -114,10 +114,8 @@ class TheComponent extends Component {
     const totalSegmentOverrides = ProjectStore.getEnvs().find(
       (env) => env.name === this.state.selectedEnv,
     )?.total_segment_overrides
-    const showAlertLimit = Utils.calculateRemainingLimitsPercentage(
-      totalSegmentOverrides,
-      ProjectStore.getMaxSegmentOverridesAllowed(),
-    )
+    const isSegmentOverrideLimitReached =
+      totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
 
     return this.state.isLoading ? (
       <div className='text-center'>
@@ -138,11 +136,8 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
-        {showAlertLimit.closeToLimit && (
-          <LimitAlert
-            limitType={'Segment Overrides'}
-            percentage={showAlertLimit.percentage}
-          />
+        {isSegmentOverrideLimitReached && (
+          <LimitAlert limitType={'Segment Overrides'} />
         )}
         <div>
           <InputGroup

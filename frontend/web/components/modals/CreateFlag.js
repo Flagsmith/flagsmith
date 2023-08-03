@@ -844,11 +844,6 @@ const CreateFlag = class extends Component {
               const isLimitReached =
                 project.total_features >= project.max_features_allowed
 
-              const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
-                project.total_features,
-                project.max_features_allowed,
-              )
-
               return (
                 <Permission
                   level='project'
@@ -884,11 +879,8 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
-                                    {showLimitAlert.closeToLimit && (
-                                      <LimitAlert
-                                        limitType={'Features'}
-                                        percentage={showLimitAlert.percentage}
-                                      />
+                                    {isLimitReached && (
+                                      <LimitAlert limitType={'Features'} />
                                     )}
                                     <Tooltip
                                       title={
