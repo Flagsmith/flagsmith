@@ -53,22 +53,37 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 100 - total
   },
 
-  calculateRemainingLimitsPercentage(total: number, max: number, limit = 90) {
+  calculateRemainingLimitsPercentage(
+    total: number,
+    max: number,
+    threshold: number,
+  ) {
     if (total === 0) {
       return 0
     }
 
     const percentage = (total / max) * 100
-    if (percentage >= limit) {
+    if (percentage >= threshold) {
       return { closeToLimit: true, percentage }
     }
-    return { closeToLimit: false, percentage }
+    return 0
   },
 
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
-
+  displayToastAlert(total, max, type) {
+    const TOAST_POSITION = 'center'
+    const TOAST_EXPIRY = 0
+    const display = Utils.calculateRemainingLimitsPercentage(total, max, 90)
+    if (display) {
+      toast(
+        `You project|environment using ${display.percentage}  of the total allowance of ${type}.`,
+        TOAST_EXPIRY,
+        TOAST_POSITION,
+      )
+    }
+  },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')

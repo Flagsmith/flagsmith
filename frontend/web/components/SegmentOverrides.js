@@ -12,7 +12,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
-import LimitAlert from 'components/LimitAlert'
 import Icon from './Icon'
 
 const arrayMoveMutate = (array, from, to) => {
@@ -327,21 +326,8 @@ const SegmentOverrideListInner = ({
   toggle,
 }) => {
   const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride
-  const totalSegmentOverrides = ProjectStore.getEnvs().find(
-    (env) => env.api_key === environmentId,
-  )?.total_segment_overrides
-  const showLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    totalSegmentOverrides,
-    ProjectStore.getMaxSegmentOverridesAllowed(),
-  )
   return (
     <div>
-      {showLimitAlert.closeToLimit && (
-        <LimitAlert
-          limitType={'Segment Overrides'}
-          percentage={showLimitAlert.percentage}
-        />
-      )}
       {items.map((value, index) => (
         <>
           <InnerComponent
