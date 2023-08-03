@@ -127,7 +127,7 @@ runs:
 
     - name: Set ECR tag
       id: ecr-tag-variable
-      run: echo ::set-output name=tag::${{ inputs.image_tag }}
+      run: echo "tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Write git info to Docker image
@@ -159,7 +159,7 @@ runs:
         cd api
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+        echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Fill in the new image ID in the Amazon ECS API task definition
@@ -187,7 +187,7 @@ runs:
         AWS_DEFAULT_REGION: eu-west-2
         TASK_DEFINITION: ${{ steps.task-def-migration.outputs.task-definition }}
       run: |
-        echo "::set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
+        echo "task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')" >> $GITHUB_OUTPUT
         aws ecs run-task --cluster ${{ inputs.aws_ecs_cluster_name }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
           "awsvpcConfiguration": {
             "subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
