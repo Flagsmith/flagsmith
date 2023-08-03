@@ -35,7 +35,7 @@ click==8.1.3
     #   pip-tools
 coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==41.0.2
+cryptography==41.0.3
     # via moto
 dill==0.3.6
     # via pylint
