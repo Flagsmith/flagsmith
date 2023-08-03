@@ -19,7 +19,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/Icon'
 
-const width = [170, 200, 65, 80]
+const width = [200, 190, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
     actualValue == null ||
@@ -38,8 +38,8 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      showArchived: false,
       preselect: Utils.fromParam().flag,
+      showArchived: false,
       tags: [],
     }
   }
@@ -407,17 +407,14 @@ const UserPage = class extends Component {
                                   }
                                   header={
                                     <Row className='table-header'>
-                                      <Flex className='table-column px-3'>
+                                      <Flex className='table-column flex-fill px-3'>
                                         Name
-                                      </Flex>
-                                      <Flex className='table-column'>
-                                        Description
                                       </Flex>
                                       <div
                                         className='table-column'
                                         style={{ width: width[0] }}
                                       >
-                                        Tag
+                                        Description
                                       </div>
                                       <div
                                         className='table-column'
@@ -465,7 +462,7 @@ const UserPage = class extends Component {
                                       value: 'created_date',
                                     },
                                   ]}
-                                  renderRow={({ id, name }, i) => {
+                                  renderRow={({ description, id, name }, i) => {
                                     const identityFlag = identityFlags[id] || {}
                                     const environmentFlag =
                                       (environmentFlags &&
@@ -540,20 +537,54 @@ const UserPage = class extends Component {
                                       onClick()
                                     }
                                     return (
-                                      <Row
-                                        className={`list-item clickable py-1 ${
+                                      <div
+                                        className={`flex-row space list-item clickable py-2 ${
                                           flagDifferent && 'flag-different'
                                         }`}
                                         key={id}
                                         data-test={`user-feature-${i}`}
                                         onClick={onClick}
                                       >
-                                        <Flex className='table-column px-3'>
-                                          <div className='font-weight-medium'>
-                                            {name}
-                                          </div>
-                                        </Flex>
                                         <Flex className='table-column'>
+                                          <Row>
+                                            <Flex>
+                                              <Row
+                                                className='font-weight-medium'
+                                                style={{
+                                                  wordBreak: 'break-all',
+                                                }}
+                                              >
+                                                <span className='me-1'>
+                                                  {description ? (
+                                                    <Tooltip
+                                                      title={
+                                                        <span>
+                                                          {name}
+                                                          <span
+                                                            className={'ms-1'}
+                                                          ></span>
+                                                          <Icon name='info-outlined' />
+                                                        </span>
+                                                      }
+                                                    >
+                                                      {description}
+                                                    </Tooltip>
+                                                  ) : (
+                                                    name
+                                                  )}
+                                                </span>
+                                                <TagValues
+                                                  projectId={`${projectId}`}
+                                                  value={projectFlag.tags}
+                                                />
+                                              </Row>
+                                            </Flex>
+                                          </Row>
+                                        </Flex>
+                                        <div
+                                          style={{ width: width[0] }}
+                                          className='table-column'
+                                        >
                                           {hasUserOverride ? (
                                             <div className='list-item-subtitle'>
                                               Overriding defaults
@@ -635,15 +666,6 @@ const UserPage = class extends Component {
                                               Using environment defaults
                                             </div>
                                           )}
-                                        </Flex>
-                                        <div
-                                          className='table-column'
-                                          style={{ width: width[0] }}
-                                        >
-                                          <TagValues
-                                            projectId={`${projectId}`}
-                                            value={projectFlag.tags}
-                                          />
                                         </div>
                                         <div
                                           className='table-column'
@@ -754,7 +776,7 @@ const UserPage = class extends Component {
                                             </>
                                           )}
                                         </div>
-                                      </Row>
+                                      </div>
                                     )
                                   }}
                                   renderSearchWithNoResults
