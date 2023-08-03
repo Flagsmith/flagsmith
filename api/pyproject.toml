@@ -119,6 +119,7 @@ pytest = "~7.2.1"
 pytest-django = "~4.5.2"
 black = "~23.1.0"
 pip-tools = "~6.13.0"
+pytest-cov = "~4.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]
