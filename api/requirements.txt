@@ -48,7 +48,7 @@ coreapi==2.3.3
     # via -r requirements.in
 coreschema==0.0.4
     # via coreapi
-cryptography==41.0.2
+cryptography==41.0.3
     # via
     #   azure-identity
     #   msal
