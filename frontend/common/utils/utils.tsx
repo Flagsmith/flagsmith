@@ -242,15 +242,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (plan && plan.includes('enterprise')) {
+    if (
+      global.flagsmithVersion?.backend.is_enterprise ||
+      (plan && plan.includes('enterprise'))
+    ) {
       return planNames.enterprise
     }
     return planNames.free
   },
   getPlanPermission: (plan: string, permission: string) => {
-    if (global.flagsmithVersion?.backend.is_enterprise) {
-      return true
-    }
     let valid = true
     const planName = Utils.getPlanName(plan)
 
@@ -307,9 +307,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlansPermission: (permission: string) => {
-    if (global.flagsmithVersion?.backend.is_enterprise) {
-      return true
-    }
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
