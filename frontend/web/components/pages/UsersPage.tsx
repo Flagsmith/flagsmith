@@ -211,7 +211,9 @@ const UsersPage: FC<UsersPageType> = (props) => {
                         className='flex-row flex flex-1 table-column'
                       >
                         <div className='font-weight-medium'>{identifier}</div>
-                        <Icon name='chevron-right' width={22} />
+                        <span style={{ marginTop: 2 }}>
+                          <Icon name='chevron-right' width={22} />
+                        </span>
                       </Link>
                       <div className='table-column'>
                         <Button
