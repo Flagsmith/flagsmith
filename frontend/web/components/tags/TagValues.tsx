@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, Fragment } from 'react'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import { useGetTagsQuery } from 'common/services/useTag'
@@ -8,26 +8,30 @@ type TagValuesType = {
   value?: number[]
   projectId: string
 
+  inline?: boolean
   hideNames?: boolean
 }
 
 const TagValues: FC<TagValuesType> = ({
   hideNames = true,
+  inline,
   onAdd,
   projectId,
   value,
 }) => {
   const { data: tags } = useGetTagsQuery({ projectId })
+  const Wrapper = inline ? Fragment : Row
   return (
-    <Row className='tag-values'>
+    <Wrapper className='tag-values'>
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
+              className='chip--xs'
               hideNames={hideNames}
               onClick={onAdd}
               tag={tag}
-              isTruncated={(!onAdd && value.length > 2) || tag.label.length > 5}
+              isTruncated={tag.label.length > 12}
             />
           ),
       )}
@@ -36,7 +40,7 @@ const TagValues: FC<TagValuesType> = ({
           Add Tag
         </Button>
       )}
-    </Row>
+    </Wrapper>
   )
 }
 

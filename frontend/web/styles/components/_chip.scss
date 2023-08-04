@@ -36,6 +36,7 @@
   font-size: $font-sm;
   line-height: $line-height-sm;
   font-weight: normal;
+  text-wrap: nowrap;
   color: $primary600;
   .icon-check {
     border: 1px solid $primary-alfa-24;
@@ -68,6 +69,22 @@
     line-height: $line-height-xsm;
     height: 26px;
     padding: 3px 8px;
+    margin-right: 5px;
+    .chip-svg-icon {
+      display: block;
+      width: 12px;
+      margin-right: 5px;
+    }
+  }
+  &--xs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: $border-radius;
+    font-size: $font-caption-sm;
+    line-height: $line-height-xsm;
+    height: 20px;
+    padding: 0px 6px;
     margin-right: 5px;
     .chip-svg-icon {
       display: block;

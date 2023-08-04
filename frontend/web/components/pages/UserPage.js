@@ -19,7 +19,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/Icon'
 
-const width = [170, 200, 65, 80]
+const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
     actualValue == null ||
@@ -38,8 +38,8 @@ const UserPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      showArchived: false,
       preselect: Utils.fromParam().flag,
+      showArchived: false,
       tags: [],
     }
   }
@@ -407,33 +407,24 @@ const UserPage = class extends Component {
                                   }
                                   header={
                                     <Row className='table-header'>
-                                      <Flex className='table-column px-3'>
+                                      <Flex className='table-column flex-fill px-3'>
                                         Name
-                                      </Flex>
-                                      <Flex className='table-column'>
-                                        Description
                                       </Flex>
                                       <div
                                         className='table-column'
                                         style={{ width: width[0] }}
                                       >
-                                        Tag
+                                        Value
                                       </div>
                                       <div
                                         className='table-column'
                                         style={{ width: width[1] }}
                                       >
-                                        Value
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: width[2] }}
-                                      >
                                         <Switch disabled />
                                       </div>
                                       <div
                                         className='table-column'
-                                        style={{ width: width[3] }}
+                                        style={{ width: width[2] }}
                                       ></div>
                                     </Row>
                                   }
@@ -465,7 +456,7 @@ const UserPage = class extends Component {
                                       value: 'created_date',
                                     },
                                   ]}
-                                  renderRow={({ id, name }, i) => {
+                                  renderRow={({ description, id, name }, i) => {
                                     const identityFlag = identityFlags[id] || {}
                                     const environmentFlag =
                                       (environmentFlags &&
@@ -540,114 +531,139 @@ const UserPage = class extends Component {
                                       onClick()
                                     }
                                     return (
-                                      <Row
-                                        className={`list-item clickable py-1 ${
+                                      <div
+                                        className={`flex-row space list-item clickable py-2 ${
                                           flagDifferent && 'flag-different'
                                         }`}
                                         key={id}
                                         data-test={`user-feature-${i}`}
                                         onClick={onClick}
                                       >
-                                        <Flex className='table-column px-3'>
-                                          <div className='font-weight-medium'>
-                                            {name}
-                                          </div>
-                                        </Flex>
                                         <Flex className='table-column'>
-                                          {hasUserOverride ? (
-                                            <div className='list-item-subtitle'>
-                                              Overriding defaults
-                                            </div>
-                                          ) : flagEnabledDifferent ? (
-                                            <div
-                                              data-test={`feature-override-${i}`}
-                                              className='list-item-subtitle'
-                                            >
-                                              <Row>
-                                                <Flex>
-                                                  {isMultiVariateOverride ? (
-                                                    <span>
-                                                      This flag is being
-                                                      overridden by a variation
-                                                      defined on your feature,
-                                                      the control value is{' '}
-                                                      <strong>
-                                                        {flagEnabled
-                                                          ? 'on'
-                                                          : 'off'}
-                                                      </strong>{' '}
-                                                      for this user
-                                                    </span>
+                                          <Row>
+                                            <Flex>
+                                              <Row
+                                                className='font-weight-medium'
+                                                style={{
+                                                  alignItems: 'start',
+                                                  lineHeight: 1,
+                                                  rowGap: 4,
+                                                  wordBreak: 'break-all',
+                                                }}
+                                              >
+                                                <span className='me-2'>
+                                                  {description ? (
+                                                    <Tooltip
+                                                      title={
+                                                        <span>
+                                                          {name}
+                                                          <span
+                                                            className={'ms-1'}
+                                                          ></span>
+                                                          <Icon name='info-outlined' />
+                                                        </span>
+                                                      }
+                                                    >
+                                                      {description}
+                                                    </Tooltip>
                                                   ) : (
-                                                    <span>
-                                                      This flag is being
-                                                      overridden by segments and
+                                                    name
+                                                  )}
+                                                </span>
+                                                <TagValues
+                                                  projectId={`${projectId}`}
+                                                  value={projectFlag.tags}
+                                                />
+                                              </Row>
+                                              {hasUserOverride ? (
+                                                <div className='list-item-subtitle'>
+                                                  Overriding defaults
+                                                </div>
+                                              ) : flagEnabledDifferent ? (
+                                                <div
+                                                  data-test={`feature-override-${i}`}
+                                                  className='list-item-subtitle'
+                                                >
+                                                  <Row>
+                                                    <Flex>
+                                                      {isMultiVariateOverride ? (
+                                                        <span>
+                                                          This flag is being
+                                                          overridden by a
+                                                          variation defined on
+                                                          your feature, the
+                                                          control value is{' '}
+                                                          <strong>
+                                                            {flagEnabled
+                                                              ? 'on'
+                                                              : 'off'}
+                                                          </strong>{' '}
+                                                          for this user
+                                                        </span>
+                                                      ) : (
+                                                        <span>
+                                                          This flag is being
+                                                          overridden by segments
+                                                          and would normally be{' '}
+                                                          <strong>
+                                                            {flagEnabled
+                                                              ? 'on'
+                                                              : 'off'}
+                                                          </strong>{' '}
+                                                          for this user
+                                                        </span>
+                                                      )}
+                                                    </Flex>
+                                                  </Row>
+                                                </div>
+                                              ) : flagValueDifferent ? (
+                                                isMultiVariateOverride ? (
+                                                  <div
+                                                    data-test={`feature-override-${i}`}
+                                                    className='list-item-subtitle'
+                                                  >
+                                                    <span className='flex-row'>
+                                                      This feature is being
+                                                      overriden by a % variation
+                                                      in the environment, the
+                                                      control value of this
+                                                      feature is{' '}
+                                                      <FeatureValue
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />
+                                                    </span>
+                                                  </div>
+                                                ) : (
+                                                  <div
+                                                    data-test={`feature-override-${i}`}
+                                                    className='list-item-subtitle'
+                                                  >
+                                                    <span className='flex-row'>
+                                                      This feature is being
+                                                      overriden by segments and
                                                       would normally be{' '}
-                                                      <strong>
-                                                        {flagEnabled
-                                                          ? 'on'
-                                                          : 'off'}
-                                                      </strong>{' '}
+                                                      <FeatureValue
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />{' '}
                                                       for this user
                                                     </span>
-                                                  )}
-                                                </Flex>
-                                              </Row>
-                                            </div>
-                                          ) : flagValueDifferent ? (
-                                            isMultiVariateOverride ? (
-                                              <div
-                                                data-test={`feature-override-${i}`}
-                                                className='list-item-subtitle'
-                                              >
-                                                <span className='flex-row'>
-                                                  This feature is being
-                                                  overriden by a % variation in
-                                                  the environment, the control
-                                                  value of this feature is{' '}
-                                                  <FeatureValue
-                                                    includeEmpty
-                                                    data-test={`user-feature-original-value-${i}`}
-                                                    value={`${flagValue}`}
-                                                  />
-                                                </span>
-                                              </div>
-                                            ) : (
-                                              <div
-                                                data-test={`feature-override-${i}`}
-                                                className='list-item-subtitle'
-                                              >
-                                                <span className='flex-row'>
-                                                  This feature is being
-                                                  overriden by segments and
-                                                  would normally be{' '}
-                                                  <FeatureValue
-                                                    includeEmpty
-                                                    data-test={`user-feature-original-value-${i}`}
-                                                    value={`${flagValue}`}
-                                                  />{' '}
-                                                  for this user
-                                                </span>
-                                              </div>
-                                            )
-                                          ) : (
-                                            <div className='list-item-subtitle'>
-                                              Using environment defaults
-                                            </div>
-                                          )}
+                                                  </div>
+                                                )
+                                              ) : (
+                                                <div className='list-item-subtitle'>
+                                                  Using environment defaults
+                                                </div>
+                                              )}
+                                            </Flex>
+                                          </Row>
                                         </Flex>
                                         <div
                                           className='table-column'
                                           style={{ width: width[0] }}
-                                        >
-                                          <TagValues
-                                            projectId={`${projectId}`}
-                                            value={projectFlag.tags}
-                                          />
-                                        </div>
-                                        <div
-                                          className='table-column'
-                                          style={{ width: width[1] }}
                                         >
                                           <FeatureValue
                                             data-test={`user-feature-value-${i}`}
@@ -656,7 +672,7 @@ const UserPage = class extends Component {
                                         </div>
                                         <div
                                           className='table-column'
-                                          style={{ width: width[2] }}
+                                          style={{ width: width[1] }}
                                           onClick={(e) => {
                                             e.stopPropagation()
                                           }}
@@ -702,7 +718,7 @@ const UserPage = class extends Component {
                                         </div>
                                         <div
                                           className='table-column p-0'
-                                          style={{ width: width[3] }}
+                                          style={{ width: width[2] }}
                                           onClick={(e) => {
                                             e.stopPropagation()
                                           }}
@@ -754,7 +770,7 @@ const UserPage = class extends Component {
                                             </>
                                           )}
                                         </div>
-                                      </Row>
+                                      </div>
                                     )
                                   }}
                                   renderSearchWithNoResults

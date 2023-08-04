@@ -202,20 +202,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
                       key={id}
                       data-test={`user-item-${index}`}
                     >
-                      <Flex className='table-column'>
-                        <Link
-                          to={`/project/${
-                            props.match.params.projectId
-                          }/environment/${
-                            props.match.params.environmentId
-                          }/users/${encodeURIComponent(identifier)}/${id}`}
-                        >
-                          <div className='font-weight-medium'>
-                            {identifier}
-                            <Icon name='chevron-right' />
-                          </div>
-                        </Link>
-                      </Flex>
+                      <Link
+                        to={`/project/${
+                          props.match.params.projectId
+                        }/environment/${
+                          props.match.params.environmentId
+                        }/users/${encodeURIComponent(identifier)}/${id}`}
+                        className='flex-row flex flex-1 table-column'
+                      >
+                        <div className='font-weight-medium'>{identifier}</div>
+                        <span style={{ marginTop: 2 }}>
+                          <Icon name='chevron-right' width={22} />
+                        </span>
+                      </Link>
                       <div className='table-column'>
                         <Button
                           id='remove-feature'
