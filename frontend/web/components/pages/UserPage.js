@@ -545,6 +545,9 @@ const UserPage = class extends Component {
                                               <Row
                                                 className='font-weight-medium'
                                                 style={{
+                                                  alignItems: 'start',
+                                                  lineHeight: 1,
+                                                  rowGap: 4,
                                                   wordBreak: 'break-all',
                                                 }}
                                               >

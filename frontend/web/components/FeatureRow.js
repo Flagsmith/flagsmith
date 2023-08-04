@@ -191,8 +191,13 @@ class TheComponent extends Component {
           <Row>
             <Flex>
               <Row
-                className='font-weight-medium'
-                style={{ rowGap: 4, wordBreak: 'break-all' }}
+                className='font-weight-medium mb-1'
+                style={{
+                  alignItems: 'start',
+                  lineHeight: 1,
+                  rowGap: 4,
+                  wordBreak: 'break-all',
+                }}
               >
                 <span className='me-2'>
                   {description ? (
@@ -216,7 +221,7 @@ class TheComponent extends Component {
                   <Tooltip
                     title={
                       <span
-                        className='chip me-2 chip--sm bg-primary text-white'
+                        className='chip me-2 chip--xs bg-primary text-white'
                         style={{ border: 'none' }}
                       >
                         <SegmentsIcon className='chip-svg-icon' />
@@ -234,7 +239,7 @@ class TheComponent extends Component {
                   <Tooltip
                     title={
                       <span
-                        className='chip me-2 chip--sm bg-primary text-white'
+                        className='chip me-2 chip--xs bg-primary text-white'
                         style={{ border: 'none' }}
                       >
                         <UsersIcon className='chip-svg-icon' />
