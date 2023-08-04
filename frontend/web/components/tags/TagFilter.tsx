@@ -43,7 +43,7 @@ const TagFilter: FC<TagFilterType> = ({
     label: 'Untagged',
   }
   return (
-    <Row className='tag-filter mx-2 mt-4'>
+    <Row className='tag-filter mt-2'>
       <div className='ml-1'>
         <Row>
           <Flex>

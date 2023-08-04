@@ -6,6 +6,7 @@ import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
 import { setInterceptClose } from './base/ModalDefault'
+import Icon from 'components/Icon'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -324,7 +325,7 @@ const CreateGroup = class extends Component {
                         header={
                           <>
                             <Row className='table-header'>
-                              <Flex>
+                              <Flex className='table-column px-3'>
                                 <div>
                                   User{' '}
                                   {this.props.isEdit &&
@@ -336,12 +337,13 @@ const CreateGroup = class extends Component {
                               {Utils.getFlagsmithHasFeature('group_admins') && (
                                 <div
                                   style={{ paddingLeft: 5, width: widths[0] }}
+                                  className='table-column'
                                 >
                                   Admin
                                 </div>
                               )}
                               <div
-                                className='text-right'
+                                className='table-column text-center'
                                 style={{ width: widths[1] }}
                               >
                                 Remove
@@ -357,15 +359,15 @@ const CreateGroup = class extends Component {
                           const userEdited = matchingUser?.edited
                           return (
                             <Row className='list-item' key={id}>
-                              <Flex>
-                                <div>
+                              <Flex className='table-column px-3'>
+                                <div className='font-weight-medium'>
                                   {`${first_name} ${last_name}`}{' '}
                                   {id == AccountStore.getUserId() && '(You)'}{' '}
                                   {this.props.isEdit && userEdited && (
                                     <div className='unread'>Unsaved</div>
                                   )}
                                 </div>
-                                <div className='list-item-footer faint'>
+                                <div className='list-item-subtitle'>
                                   {email}
                                 </div>
                               </Flex>
@@ -380,10 +382,10 @@ const CreateGroup = class extends Component {
                                 </div>
                               )}
                               <div
-                                className='text-right'
+                                className='table-column text-center'
                                 style={{ width: widths[1] }}
                               >
-                                <button
+                                <Button
                                   type='button'
                                   disabled={!(isAdmin || email !== yourEmail)}
                                   id='remove-feature'
@@ -391,10 +393,14 @@ const CreateGroup = class extends Component {
                                     this.toggleUser(id)
                                     this.setState({ userRemoved: true })
                                   }}
-                                  className='btn btn--with-icon'
+                                  className='btn btn-with-icon'
                                 >
-                                  <RemoveIcon />
-                                </button>
+                                  <Icon
+                                    name='trash-2'
+                                    width={20}
+                                    fill='#656D7B'
+                                  />
+                                </Button>
                               </div>
                             </Row>
                           )
