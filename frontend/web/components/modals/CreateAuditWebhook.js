@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
-import Highlight from 'components/Highlight'
-import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Highlight from 'components/Highlight'
+import ErrorMessage from 'components/ErrorMessage'
 import TestWebhook from 'components/TestWebhook'
+import ViewDocs from 'components/ViewDocs'
 
 const exampleJSON = Constants.exampleAuditWebhook
 
@@ -48,19 +49,20 @@ const CreateAuditWebhook = class extends Component {
       state: { enabled, error, isSaving, url },
     } = this
     return (
-      <div className='modal-body px-4'>
+      <div className='px-4'>
         <ProjectProvider id={this.props.projectId}>
-          {() => (
+          {({ project }) => (
             <form
+              className='mt-4'
               onSubmit={(e) => {
                 e.preventDefault()
                 this.save()
               }}
             >
               <Row space>
-                <Flex className='my-4 mr-4'>
+                <Flex className='mb-4'>
                   <div>
-                    <label>URL (Expects a 200 response from POST)</label>
+                    <label>*URL (Expects a 200 response from POST)</label>
                   </div>
                   <Input
                     ref={(e) => (this.input = e)}
@@ -74,20 +76,22 @@ const CreateAuditWebhook = class extends Component {
                     placeholder='https://example.com/audit/'
                   />
                 </Flex>
-                <FormGroup className='mb-4 ml-1'>
-                  <div>
-                    <label>Enabled</label>
-                  </div>
-                  <div>
-                    <Switch
-                      defaultChecked={enabled}
-                      checked={enabled}
-                      onChange={(enabled) => this.setState({ enabled })}
-                    />
-                  </div>
-                </FormGroup>
+                <Row className='ms-4'>
+                  <Switch
+                    defaultChecked={enabled}
+                    checked={enabled}
+                    onChange={(enabled) => this.setState({ enabled })}
+                  />
+                  <span
+                    onClick={() => this.setState({ enabled: !enabled })}
+                    className='ms-2'
+                  >
+                    {' '}
+                    Enable
+                  </span>
+                </Row>
               </Row>
-              <Flex className='mb-4 mr-4'>
+              <Flex className='mb-4'>
                 <div>
                   <label>
                     Secret (Optional) -{' '}
@@ -109,11 +113,11 @@ const CreateAuditWebhook = class extends Component {
                   }
                   isValid={url && url.length}
                   type='text'
-                  inputClassName='input--wide'
+                  className='full-width'
                   placeholder='Secret'
                 />
               </Flex>
-              <Flex className='mb-4 mr-4'>
+              <Flex className='mb-4'>
                 {error && (
                   <ErrorMessage error='Could not create a webhook for this url, please ensure you include http or https.' />
                 )}
@@ -125,17 +129,14 @@ const CreateAuditWebhook = class extends Component {
                       <strong>{AccountStore.getOrganisation().name}</strong>
                     </p>
                   </div>
-                  <div className='text-right'>
+                  <div className='justify-content-end flex-row'>
                     <TestWebhook
                       json={Constants.exampleAuditWebhook}
                       webhook={this.state.url}
                     />
-                  </div>
-                  <div className='text-right'>
                     {isEdit ? (
                       <Button
-                        className='mt-3'
-                        type='submit'
+                        className='ml-4'
                         data-test='update-feature-btn'
                         id='update-feature-btn'
                         disabled={isSaving || !url}
@@ -144,9 +145,7 @@ const CreateAuditWebhook = class extends Component {
                       </Button>
                     ) : (
                       <Button
-                        className='mt-3'
-                        data-test='create-feature-btn'
-                        id='create-feature-btn'
+                        className='ml-4'
                         type='submit'
                         disabled={isSaving || !url}
                       >
@@ -156,17 +155,13 @@ const CreateAuditWebhook = class extends Component {
                   </div>
                 </div>
               </Flex>
-              <FormGroup className='mb-4 ml-1'>
+              <FormGroup className='ml-1'>
                 <div>
-                  <label>Example Payload </label>
-                  <Button
-                    theme='text'
-                    className='ml-2'
-                    href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
-                    target='_blank'
-                  >
-                    View docs
-                  </Button>
+                  <Row className={'mb-4'} space>
+                    <h6>Example Payload </h6>
+                    <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks' />
+                  </Row>
+
                   <Highlight
                     forceExpanded
                     style={{ marginBottom: 10 }}

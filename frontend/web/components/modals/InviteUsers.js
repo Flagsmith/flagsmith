@@ -75,6 +75,14 @@ const InviteUsers = class extends Component {
               }}
             >
               <div className='modal-body px-4 pt-4'>
+                <Row>
+                  <Flex>
+                    <label>Email Address</label>
+                  </Flex>
+                  <Flex>
+                    <label>Select Role</label>
+                  </Flex>
+                </Row>
                 {_.map(invites, (invite, index) => (
                   <Row className='mb-2' key={index}>
                     <Flex>
@@ -116,7 +124,7 @@ const InviteUsers = class extends Component {
                       />
                     </Flex>
                     {invites.length > 1 ? (
-                      <Column style={{ width: 50 }}>
+                      <div className="ml-2">
                         <Button
                           id='delete-invite'
                           type='button'
@@ -125,9 +133,9 @@ const InviteUsers = class extends Component {
                         >
                           <Icon name='trash-2' width={20} fill='#656D7B' />
                         </Button>
-                      </Column>
+                      </div>
                     ) : (
-                      <div/>
+                      <div />
                     )}
                   </Row>
                 ))}

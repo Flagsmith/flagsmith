@@ -1,29 +1,22 @@
-import React, { FC, useEffect, useState } from 'react'
-import { find } from 'lodash'
-import _data from 'common/data/base/_data'
-import {
-  AvailablePermission,
-  GroupPermission,
-  User,
-  UserGroup,
-  UserPermission,
-} from 'common/types/responses'
-import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
-import Format from 'common/utils/format'
-import PanelSearch from './PanelSearch'
-import Button from './base/forms/Button'
-import InfoMessage from './InfoMessage'
-import Switch from './Switch'
-import TabItem from './base/forms/TabItem'
-import Tabs from './base/forms/Tabs'
-import UserGroupList from './UserGroupList'
-import { PermissionLevel } from 'common/types/requests'
-import { RouterChildContext } from 'react-router'
-import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
-import ConfigProvider from 'common/providers/ConfigProvider'
-import ModalHR from './modals/ModalHR'
-import Icon from './Icon'
+import React, { FC, useEffect, useState } from 'react';
+import { find } from 'lodash';
+import _data from 'common/data/base/_data';
+import { AvailablePermission, GroupPermission, User, UserGroup, UserPermission } from 'common/types/responses';
+import Utils from 'common/utils/utils';
+import AccountStore from 'common/stores/account-store';
+import Format from 'common/utils/format';
+import PanelSearch from './PanelSearch';
+import Button from './base/forms/Button';
+import InfoMessage from './InfoMessage';
+import Switch from './Switch';
+import TabItem from './base/forms/TabItem';
+import Tabs from './base/forms/Tabs';
+import UserGroupList from './UserGroupList';
+import { PermissionLevel } from 'common/types/requests';
+import { RouterChildContext } from 'react-router';
+import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Icon from './Icon';
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -199,7 +192,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   ) : (
     <div>
       <div className='modal-body px-4'>
-        <div className='mb-2'>
+        <div className='mb-2 mt-4'>
           {level !== 'organisation' && (
             <Row>
               <Flex>
@@ -261,7 +254,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           }}
         />
 
-        <div className='text-right pt-4'>
+        <div className='text-right pt-4 mb-4'>
           This will edit the permissions for{' '}
           <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
         </div>

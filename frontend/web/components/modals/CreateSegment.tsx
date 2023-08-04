@@ -395,7 +395,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 text-dark'
+            className='mb-0 fs-small text-dark'
           >
             {showDescriptions
               ? 'Hide condition descriptions'
@@ -406,7 +406,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <label className='cols-sm-2 control-label mb-1'>
             Include users when the following rules apply:
           </label>
-          <span className='text-small text-faint'>
+          <span className='fs-caption text-faint'>
             Note: Trait names are case sensitive
           </span>
         </Flex>

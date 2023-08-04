@@ -84,7 +84,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
     openModal(
       'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      'p-0',
+      'side-modal',
     )
   }
 
