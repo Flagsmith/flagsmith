@@ -43,6 +43,7 @@ jobs:
           e2e_test_token: some-token
           slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: local
+          github_action_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Output API logs
         if: failure()
