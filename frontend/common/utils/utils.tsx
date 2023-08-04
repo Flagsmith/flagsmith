@@ -76,9 +76,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const TOAST_POSITION = 'center'
     const TOAST_EXPIRY = 0
     const display = Utils.calculateRemainingLimitsPercentage(total, max, 90)
+    const envOrProject =
+      type === 'segments overrides' ? 'environment' : 'project'
     if (display) {
       toast(
-        `You project|environment using ${display.percentage}  of the total allowance of ${type}.`,
+        `You ${envOrProject} is using ${display.percentage}% of the total allowance of ${type}.`,
         TOAST_EXPIRY,
         TOAST_POSITION,
       )
