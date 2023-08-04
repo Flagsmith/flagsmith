@@ -68,7 +68,6 @@ def test_get_versions_for_a_feature_and_environment(
 
 def test_create_new_feature_version(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     feature: "Feature",
 ) -> None:
@@ -87,7 +86,6 @@ def test_create_new_feature_version(
 
 def test_delete_feature_version(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     feature: "Feature",
 ) -> None:
@@ -118,7 +116,6 @@ def test_delete_feature_version(
 
 def test_cannot_delete_live_feature_version(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     feature: "Feature",
 ) -> None:
@@ -187,7 +184,6 @@ def test_publish_feature_version(
 
 def test_list_environment_feature_version_feature_states(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     feature: "Feature",
 ) -> None:
@@ -217,7 +213,6 @@ def test_list_environment_feature_version_feature_states(
 
 def test_add_environment_feature_version_feature_state(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     segment: "Segment",
     feature: "Feature",
@@ -258,7 +253,6 @@ def test_add_environment_feature_version_feature_state(
 
 def test_cannot_add_feature_state_to_published_environment_feature_version(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     segment: "Segment",
     feature: "Feature",
@@ -300,7 +294,6 @@ def test_cannot_add_feature_state_to_published_environment_feature_version(
 
 def test_update_environment_feature_version_feature_state(
     admin_client: "APIClient",
-    admin_user: "FFAdminUser",
     environment_v2_versioning: Environment,
     feature: "Feature",
 ) -> None:
