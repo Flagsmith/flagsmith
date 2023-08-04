@@ -19,7 +19,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/Icon'
 
-const width = [200, 190, 48, 78]
+const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
     actualValue == null ||
