@@ -80,7 +80,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     ListModelMixin,
     CreateModelMixin,
     UpdateModelMixin,
-    DestroyModelMixin,  # TODO: prevent deletion, update for published versions?
+    DestroyModelMixin,
 ):
     serializer_class = EnvironmentFeatureVersionFeatureStateSerializer
     permission_classes = [IsAuthenticated]  # TODO
