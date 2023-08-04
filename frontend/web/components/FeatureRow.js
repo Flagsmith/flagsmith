@@ -194,7 +194,7 @@ class TheComponent extends Component {
                 className='font-weight-medium'
                 style={{ rowGap: 4, wordBreak: 'break-all' }}
               >
-                <span className='me-1'>
+                <span className='me-2'>
                   {description ? (
                     <Tooltip
                       title={
@@ -216,7 +216,7 @@ class TheComponent extends Component {
                   <Tooltip
                     title={
                       <span
-                        className='chip ml-1 chip--sm bg-primary text-white'
+                        className='chip me-2 chip--sm bg-primary text-white'
                         style={{ border: 'none' }}
                       >
                         <SegmentsIcon className='chip-svg-icon' />
@@ -234,7 +234,7 @@ class TheComponent extends Component {
                   <Tooltip
                     title={
                       <span
-                        className='chip ml-1 chip--sm bg-primary text-white'
+                        className='chip me-2 chip--sm bg-primary text-white'
                         style={{ border: 'none' }}
                       >
                         <UsersIcon className='chip-svg-icon' />

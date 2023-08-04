@@ -548,7 +548,7 @@ const UserPage = class extends Component {
                                                   wordBreak: 'break-all',
                                                 }}
                                               >
-                                                <span className='me-1'>
+                                                <span className='me-2'>
                                                   {description ? (
                                                     <Tooltip
                                                       title={
