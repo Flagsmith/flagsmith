@@ -19,7 +19,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import LimitAlert from 'components/LimitAlert'
+import ErrorMessage from 'components/ErrorMessage'
 import Icon from 'components/Icon'
 
 const CodeHelp = require('../../components/CodeHelp')
@@ -163,7 +163,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            {isLimitReached && <LimitAlert limitType={'segment'} />}
+            {isLimitReached &&
+            <ErrorMessage
+                error={'Your project reached the limit of segments totals.'}
+            />}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>

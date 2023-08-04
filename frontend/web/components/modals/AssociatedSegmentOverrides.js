@@ -9,7 +9,7 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
-import LimitAlert from 'components/LimitAlert'
+import ErrorMessage from 'components/ErrorMessage'
 
 class TheComponent extends Component {
   state = {
@@ -137,7 +137,11 @@ class TheComponent extends Component {
           .
         </InfoMessage>
         {isSegmentOverrideLimitReached && (
-          <LimitAlert limitType={'Segment Overrides'} />
+          <ErrorMessage
+            error={
+              'Your environment reached the limit of segment overrides totals.'
+            }
+          />
         )}
         <div>
           <InputGroup

@@ -12,7 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import LimitAlert from 'components/LimitAlert'
+import ErrorMessage from 'components/ErrorMessage'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -187,7 +187,11 @@ const FeaturesPage = class extends Component {
                       !isLoading) ? (
                       <div>
                         {isLimitReached && (
-                          <LimitAlert limitType={'Features'} />
+                          <ErrorMessage
+                            error={
+                              'Your project reached the limit of features totals.'
+                            }
+                          />
                         )}
                         <Row>
                           <Flex>

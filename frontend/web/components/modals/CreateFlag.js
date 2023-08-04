@@ -28,7 +28,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose } from './base/ModalDefault'
-import LimitAlert from 'components/LimitAlert'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 
@@ -880,7 +879,11 @@ const CreateFlag = class extends Component {
                                 >
                                   <FormGroup>
                                     {isLimitReached && (
-                                      <LimitAlert limitType={'Features'} />
+                                      <ErrorMessage
+                                        error={
+                                          'Your project reached the limit of features totals.'
+                                        }
+                                      />
                                     )}
                                     <Tooltip
                                       title={

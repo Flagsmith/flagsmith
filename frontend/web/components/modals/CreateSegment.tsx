@@ -36,7 +36,6 @@ import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
-import LimitAlert from 'components/LimitAlert'
 
 type PageType = {
   number: number
@@ -368,7 +367,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </Flex>
         </div>
       )}
-      {isLimitReached && <LimitAlert limitType='Segments' />}
+      {isLimitReached && (
+        <ErrorMessage
+          error={'Your project reached the limit of segments totals.'}
+        />
+      )}
       {!condensed && (
         <InputGroup
           className='mb-3'
