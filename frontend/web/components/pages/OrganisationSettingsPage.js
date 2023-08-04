@@ -181,6 +181,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
+      'side-modal',
     )
   }
 
@@ -193,6 +194,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
+      'side-modal',
     )
   }
 
