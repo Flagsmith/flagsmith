@@ -12,7 +12,7 @@ module.exports = function uploadFile(path) {
   }
 
   const title = 'Test Run' // Optional
-  const channelId = 'C05M0UKBP24' // infra_tests channel ID
+  const channelId = 'C0102JZRG3G' // infra_tests channel ID
 
   // eslint-disable-next-line
     console.log(`Uploading ${path}`);
@@ -23,6 +23,6 @@ module.exports = function uploadFile(path) {
   return slackClient.files.upload({
     channels: channelId,
     file: fs.createReadStream(path),
-    initial_comment: `${title} ${process.env.GITHUB_ACTION_URL || ''}`,
+    initial_comment: title,
   })
 }
