@@ -245,7 +245,7 @@ const App = class extends Component {
       getOrganisationUsage(getStore(), {
         organisationId: AccountStore.getOrganisation()?.id,
       }).then((res) => {
-        this.setState({ totalApiCalls: res[0]?.data?.totals.total })
+        this.setState({ totalApiCalls: res?.data?.totals.total })
       })
     }
     return (
