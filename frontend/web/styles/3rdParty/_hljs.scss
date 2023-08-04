@@ -297,6 +297,9 @@ code.txt {
     background: $input-bg-dark !important;
     color: white;
   }
+  .hljs-header {
+    color: white;
+  }
 }
 
 code[contenteditable='false'].hljs {
