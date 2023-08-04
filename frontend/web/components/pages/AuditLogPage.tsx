@@ -1,12 +1,11 @@
 import React, { FC, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
+import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
-import Tag from 'components/tags/Tag'
-import Constants from 'common/constants'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -62,17 +61,13 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                     searchPanel={
                       <ProjectProvider>
                         {({ project }: { project: Project }) => (
-                          <Row className='mb-2'>
+                          <Row>
                             {project &&
                               project.environments &&
-                              project.environments.map((env, i) => (
-                                <Tag
-                                  tag={{
-                                    color: Constants.tagColors[i],
-                                    label: env.name,
-                                  }}
-                                  selected={`${environment}` === `${env.id}`}
+                              project.environments.map((env) => (
+                                <ToggleChip
                                   key={env.id}
+                                  active={`${environment}` === `${env.id}`}
                                   onClick={() => {
                                     setEnvironment(
                                       `${environment}` === `${env.id}`
@@ -83,7 +78,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                                   className='mr-2 mb-2'
                                 >
                                   {env.name}
-                                </Tag>
+                                </ToggleChip>
                               ))}
                           </Row>
                         )}
