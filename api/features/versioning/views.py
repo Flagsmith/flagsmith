@@ -57,9 +57,6 @@ class EnvironmentFeatureVersionViewSet(
     def perform_create(self, serializer: Serializer) -> None:
         serializer.save(environment=self.environment, feature=self.feature)
 
-    def perform_update(self, serializer: Serializer) -> None:
-        serializer.save(environment=self.environment, feature=self.feature)
-
     def perform_destroy(self, instance: EnvironmentFeatureVersion) -> None:
         if instance.is_live:
             raise FeatureVersionDeleteError("Cannot delete a live version.")
