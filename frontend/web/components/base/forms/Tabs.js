@@ -17,7 +17,9 @@ const Tabs = class extends React.Component {
     return (
       <div className={`tabs ${this.props.className || ''}`}>
         <div
-          className={`tabs-nav mx-4 mt-3 ${this.props.theme}`}
+          className={`tabs-nav ${
+            this.props.theme === 'tab' ? 'mx-4 mt-3 ' : ''
+          }${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
           {children.map((child, i) => {
@@ -54,7 +56,9 @@ const Tabs = class extends React.Component {
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item px-4${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item ${
+                  this.props.theme === 'tab' ? 'px-4' : ''
+                }${isSelected ? ' tab-active' : ''}`}
               >
                 {child}
               </div>

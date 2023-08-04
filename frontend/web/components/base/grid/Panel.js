@@ -11,25 +11,17 @@ const Panel = class extends PureComponent {
         }`}
       >
         {(this.props.title || this.props.action) && (
-          <div className='panel-heading'>
+          <div className='panel-heading mb-2'>
             <Row space>
               <Row className='flex-1'>
-                {this.props.icon && (
-                  <span className='panel-icon'>
-                    <span className={`icon ${this.props.icon}`} />
-                  </span>
-                )}
-                <Flex className='m-b-0 title'>{this.props.title}</Flex>
+                <h5 className='m-b-0 title'>{this.props.title}</h5>{' '}
               </Row>
               {this.props.action}
             </Row>
           </div>
         )}
 
-        <div className='panel-content'>
-          {this.props.children}
-          {this.props.renderFooter && this.props.renderFooter()}
-        </div>
+        <div className='panel-content'>{this.props.children}</div>
       </div>
     )
   }
@@ -39,7 +31,6 @@ Panel.displayName = 'Panel'
 
 Panel.propTypes = {
   children: OptionalNode,
-  icon: OptionalString,
   title: oneOfType([OptionalObject, OptionalString]),
 }
 

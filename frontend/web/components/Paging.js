@@ -30,20 +30,17 @@ export default class Paging extends PureComponent {
     const range = _.range(from, to)
     const noPages = range.length < 2
     if (noPages && !(paging.next || paging.previous)) {
-      return <div />
+      return null
     }
     return (
-      <Row
-        className='list-item paging py-0'
-        style={isLoading ? { opacity: 0.5 } : {}}
-      >
+      <Row className=' paging py-0' style={isLoading ? { opacity: 0.5 } : {}}>
         <Button
           disabled={isLoading || !paging.previous}
           className='icon btn-paging ion-ios-arrow-back'
           onClick={() => prevPage()}
         />
         {paging.currentPage ? (
-          <Row className='list-item'>
+          <Row>
             {!range.includes(0) && !noPages && (
               <>
                 <div

@@ -507,227 +507,233 @@ const ChangeRequestsPage = class extends Component {
                       title={
                         isScheduled ? 'Scheduled Change' : 'Change Request'
                       }
+                      className='no-pad'
                     >
-                      <Row
-                        className='mt-2'
-                        style={{
-                          marginLeft: '0.75rem',
-                          marginRight: '0.75rem',
-                        }}
-                      >
-                        <strong style={{ width: labelWidth }}>Feature</strong>
-
-                        <a
-                          target='_blank'
-                          className='btn-link'
-                          href={`/project/${
-                            this.props.match.params.projectId
-                          }/environment/${
-                            this.props.match.params.environmentId
-                          }/features?feature=${projectFlag && projectFlag.id}`}
-                          rel='noreferrer'
-                        >
-                          {projectFlag && projectFlag.name}
-                        </a>
-                      </Row>
-                      <Row
-                        className='mt-2'
-                        style={{
-                          marginLeft: '0.75rem',
-                          marginRight: '0.75rem',
-                        }}
-                      >
-                        <span style={{ width: labelWidth }} />
-
-                        <Flex>
-                          {!changeRequest.committed_at && (
-                            <strong>Live Version</strong>
-                          )}
-                        </Flex>
-                        <Flex>
-                          <strong>
-                            {isScheduled
-                              ? 'Scheduled Change'
-                              : 'Change Request'}
-                          </strong>
-                        </Flex>
-                      </Row>
-
-                      <Row
-                        className='mt-2'
-                        style={{
-                          marginLeft: '0.75rem',
-                          marginRight: '0.75rem',
-                          opacity:
-                            newEnabled === oldEnabled &&
-                            !changeRequest.committed_at
-                              ? 0.25
-                              : 1,
-                        }}
-                      >
-                        <strong style={{ width: labelWidth }}>Enabled</strong>
-                        <Flex>
-                          {!changeRequest.committed_at && (
-                            <Switch checked={oldEnabled} />
-                          )}
-                        </Flex>
-                        <Flex>
-                          <Switch checked={newEnabled} />
-                        </Flex>
-                      </Row>
-                      <Row
-                        className='mt-2'
-                        style={{
-                          marginLeft: '0.75rem',
-                          marginRight: '0.75rem',
-                          opacity:
-                            oldValue === newValue && !changeRequest.committed_at
-                              ? 0.25
-                              : 1,
-                        }}
-                      >
-                        <strong style={{ width: labelWidth }}>Value</strong>
-                        <Flex className='mr-2'>
-                          {!changeRequest.committed_at && (
-                            <ValueEditor
-                              value={Utils.getTypedValue(oldValue)}
-                            />
-                          )}
-                        </Flex>
-                        <Flex className='ml-2'>
-                          <ValueEditor value={newValue} />
-                        </Flex>
-                      </Row>
-                      {isMv && (
+                      <div className='search-list p-3'>
                         <Row
-                          className='mt-2 align-start'
+                          className='mt-2'
+                          style={{
+                            marginLeft: '0.75rem',
+                            marginRight: '0.75rem',
+                          }}
+                        >
+                          <strong style={{ width: labelWidth }}>Feature</strong>
+
+                          <a
+                            target='_blank'
+                            className='btn-link'
+                            href={`/project/${
+                              this.props.match.params.projectId
+                            }/environment/${
+                              this.props.match.params.environmentId
+                            }/features?feature=${
+                              projectFlag && projectFlag.id
+                            }`}
+                            rel='noreferrer'
+                          >
+                            {projectFlag && projectFlag.name}
+                          </a>
+                        </Row>
+                        <Row
+                          className='mt-2'
+                          style={{
+                            marginLeft: '0.75rem',
+                            marginRight: '0.75rem',
+                          }}
+                        >
+                          <span style={{ width: labelWidth }} />
+
+                          <Flex>
+                            {!changeRequest.committed_at && (
+                              <strong>Live Version</strong>
+                            )}
+                          </Flex>
+                          <Flex>
+                            <strong>
+                              {isScheduled
+                                ? 'Scheduled Change'
+                                : 'Change Request'}
+                            </strong>
+                          </Flex>
+                        </Row>
+
+                        <Row
+                          className='mt-2'
                           style={{
                             marginLeft: '0.75rem',
                             marginRight: '0.75rem',
                             opacity:
-                              !mvChanged && !changeRequest.committed_at
+                              newEnabled === oldEnabled &&
+                              !changeRequest.committed_at
                                 ? 0.25
                                 : 1,
                           }}
                         >
-                          <strong style={{ width: labelWidth }}>
-                            Variations
-                          </strong>
+                          <strong style={{ width: labelWidth }}>Enabled</strong>
+                          <Flex>
+                            {!changeRequest.committed_at && (
+                              <Switch checked={oldEnabled} />
+                            )}
+                          </Flex>
+                          <Flex>
+                            <Switch checked={newEnabled} />
+                          </Flex>
+                        </Row>
+                        <Row
+                          className='mt-2'
+                          style={{
+                            marginLeft: '0.75rem',
+                            marginRight: '0.75rem',
+                            opacity:
+                              oldValue === newValue &&
+                              !changeRequest.committed_at
+                                ? 0.25
+                                : 1,
+                          }}
+                        >
+                          <strong style={{ width: labelWidth }}>Value</strong>
                           <Flex className='mr-2'>
-                            {mvData.map((v, i) => (
-                              <div
-                                key={i}
-                                className='mb-4'
-                                style={{
-                                  opacity: mvChanged && !v.changed ? 0.25 : 1,
-                                }}
-                              >
-                                <div>
-                                  <div className='mb-2'>
-                                    <strong>Variation {i + 1}</strong>
+                            {!changeRequest.committed_at && (
+                              <ValueEditor
+                                value={Utils.getTypedValue(oldValue)}
+                              />
+                            )}
+                          </Flex>
+                          <Flex className='ml-2'>
+                            <ValueEditor value={newValue} />
+                          </Flex>
+                        </Row>
+                        {isMv && (
+                          <Row
+                            className='mt-2 align-start'
+                            style={{
+                              marginLeft: '0.75rem',
+                              marginRight: '0.75rem',
+                              opacity:
+                                !mvChanged && !changeRequest.committed_at
+                                  ? 0.25
+                                  : 1,
+                            }}
+                          >
+                            <strong style={{ width: labelWidth }}>
+                              Variations
+                            </strong>
+                            <Flex className='mr-2'>
+                              {mvData.map((v, i) => (
+                                <div
+                                  key={i}
+                                  className='mb-4'
+                                  style={{
+                                    opacity: mvChanged && !v.changed ? 0.25 : 1,
+                                  }}
+                                >
+                                  <div>
+                                    <div className='mb-2'>
+                                      <strong>Variation {i + 1}</strong>
+                                    </div>
+                                    <Row>
+                                      <Flex>
+                                        <ValueEditor
+                                          value={Utils.getTypedValue(v.value)}
+                                        />
+                                      </Flex>
+                                    </Row>
                                   </div>
                                   <Row>
-                                    <Flex>
-                                      <ValueEditor
-                                        value={Utils.getTypedValue(v.value)}
-                                      />
+                                    <Flex className='ml-4'>
+                                      <span>
+                                        Environment weight:{' '}
+                                        <strong>{v.oldValue}%</strong>
+                                      </span>
+                                    </Flex>
+                                    <Flex className='mr-4'>
+                                      <span>
+                                        Environment weight:{' '}
+                                        <strong>{v.newValue}%</strong>
+                                      </span>
                                     </Flex>
                                   </Row>
                                 </div>
-                                <Row>
-                                  <Flex className='ml-4'>
-                                    <span>
-                                      Environment weight:{' '}
-                                      <strong>{v.oldValue}%</strong>
-                                    </span>
-                                  </Flex>
-                                  <Flex className='mr-4'>
-                                    <span>
-                                      Environment weight:{' '}
-                                      <strong>{v.newValue}%</strong>
-                                    </span>
-                                  </Flex>
-                                </Row>
-                              </div>
-                            ))}
-                          </Flex>
-                        </Row>
-                      )}
+                              ))}
+                            </Flex>
+                          </Row>
+                        )}
 
-                      <Row className='mt-2'>
-                        <span style={{ width: labelWidth }} />
+                        <Row className='mt-2'>
+                          <span style={{ width: labelWidth }} />
 
-                        <Flex />
-                        <Flex>
-                          {approvedBy.length ? (
-                            <div className='text-right mb-2 mr-2'>
-                              <span className='ion icon-primary text-primary icon ion-md-checkbox mr-2' />
-                              Approved by {approvedBy.join(', ')}
-                            </div>
-                          ) : (
-                            !!minApprovals && (
+                          <Flex />
+                          <Flex>
+                            {approvedBy.length ? (
                               <div className='text-right mb-2 mr-2'>
-                                <span className='ion icon-primary text-primary icon ion-ios-information-circle mr-2' />
-                                You need at least {minApprovals} approval
-                                {minApprovals !== 1 ? 's' : ''} to{' '}
-                                {isScheduled ? 'schedule' : 'publish'} this
-                                change
+                                <span className='ion icon-primary text-primary icon ion-md-checkbox mr-2' />
+                                Approved by {approvedBy.join(', ')}
                               </div>
-                            )
-                          )}
+                            ) : (
+                              !!minApprovals && (
+                                <div className='text-right mb-2 mr-2'>
+                                  <span className='ion icon-primary text-primary icon ion-ios-information-circle mr-2' />
+                                  You need at least {minApprovals} approval
+                                  {minApprovals !== 1 ? 's' : ''} to{' '}
+                                  {isScheduled ? 'schedule' : 'publish'} this
+                                  change
+                                </div>
+                              )
+                            )}
 
-                          {changeRequest.committed_at ? (
-                            <div className='text-right'>
-                              <span className='ion icon-primary text-primary icon ion-ios-git-merge mr-2' />
-                              Committed at{' '}
-                              {moment(changeRequest.committed_at).format(
-                                'Do MMM YYYY HH:mma',
-                              )}{' '}
-                              by {committedBy.first_name}{' '}
-                              {committedBy.last_name}
-                            </div>
-                          ) : (
-                            <Row className='text-right mr-2'>
-                              <Flex />
-                              {!isYourChangeRequest &&
-                                Utils.renderWithPermission(
-                                  approvePermission,
+                            {changeRequest.committed_at ? (
+                              <div className='text-right mr-2'>
+                                <span className='ion icon-primary text-primary icon ion-ios-git-merge mr-2' />
+                                Committed at{' '}
+                                {moment(changeRequest.committed_at).format(
+                                  'Do MMM YYYY HH:mma',
+                                )}{' '}
+                                by {committedBy.first_name}{' '}
+                                {committedBy.last_name}
+                              </div>
+                            ) : (
+                              <Row className='text-right mr-2'>
+                                <Flex />
+                                {!isYourChangeRequest &&
+                                  Utils.renderWithPermission(
+                                    approvePermission,
+                                    Constants.environmentPermissions(
+                                      'Approve Change Requests',
+                                    ),
+                                    <Button
+                                      disabled={approved || !approvePermission}
+                                      onClick={this.approveChangeRequest}
+                                      className='btn'
+                                    >
+                                      <span className='ion icon ion-md-checkbox text-light mr-2' />
+                                      {approved ? 'Approved' : 'Approve'}
+                                    </Button>,
+                                  )}
+                                {Utils.renderWithPermission(
+                                  publishPermission,
                                   Constants.environmentPermissions(
-                                    'Approve Change Requests',
+                                    'Update Feature States',
                                   ),
                                   <Button
-                                    disabled={approved || !approvePermission}
-                                    onClick={this.approveChangeRequest}
-                                    className='btn'
+                                    disabled={
+                                      approvedBy.length < minApprovals ||
+                                      !publishPermission
+                                    }
+                                    onClick={this.publishChangeRequest}
+                                    className='btn ml-2'
                                   >
-                                    <span className='ion icon ion-md-checkbox text-light mr-2' />
-                                    {approved ? 'Approved' : 'Approve'}
+                                    <span className='ion icon ion-ios-git-merge text-light mr-2' />
+                                    {isScheduled
+                                      ? 'Publish Scheduled'
+                                      : 'Publish'}{' '}
+                                    Change
                                   </Button>,
                                 )}
-                              {Utils.renderWithPermission(
-                                publishPermission,
-                                Constants.environmentPermissions(
-                                  'Update Feature States',
-                                ),
-                                <Button
-                                  disabled={
-                                    approvedBy.length < minApprovals ||
-                                    !publishPermission
-                                  }
-                                  onClick={this.publishChangeRequest}
-                                  className='btn ml-2'
-                                >
-                                  <span className='ion icon ion-ios-git-merge text-light mr-2' />
-                                  {isScheduled
-                                    ? 'Publish Scheduled'
-                                    : 'Publish'}{' '}
-                                  Change
-                                </Button>,
-                              )}
-                            </Row>
-                          )}
-                        </Flex>
-                      </Row>
+                              </Row>
+                            )}
+                          </Flex>
+                        </Row>
+                      </div>
                     </Panel>
                   </div>
                 </div>

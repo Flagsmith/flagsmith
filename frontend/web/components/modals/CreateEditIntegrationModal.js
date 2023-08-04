@@ -153,8 +153,10 @@ const CreateEditIntegration = class extends Component {
       <form onSubmit={this.submit}>
         <div className={this.props.modal ? 'modal-body' : ''}>
           {this.props.integration.perEnvironment && (
-            <div className='mb-2'>
-              <label>Flagsmith Environment</label>
+            <div className='mb-3'>
+              <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
+                Flagsmith Environment
+              </label>
               <EnvironmentSelect
                 readOnly={!!this.props.data || this.props.readOnly}
                 value={this.state.data.flagsmithEnvironment}
@@ -168,16 +170,15 @@ const CreateEditIntegration = class extends Component {
             this.state.fields.map((field) => (
               <>
                 <div>
-                  <label htmlFor={field.label.replace(/ /g, '')}>
-                    {this.props.readOnly ? (
-                      <Button theme='text'>{field.label}</Button>
-                    ) : (
-                      field.label
-                    )}
+                  <label
+                    htmlFor={field.label.replace(/ /g, '')}
+                    className={!this.props.modal ? 'mb-1 fw-bold' : ''}
+                  >
+                    {field.label}
                   </label>
                 </div>
                 {this.props.readOnly ? (
-                  <div className='mb-2'>{this.state.data[field.key]}</div>
+                  <div className='mb-3'>{this.state.data[field.key]}</div>
                 ) : field.options ? (
                   <div className='full-width mb-2'>
                     <Select

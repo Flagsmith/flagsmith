@@ -3,6 +3,7 @@ import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
 import ModalHR from './modals/ModalHR'
+import Icon from 'components/Icon'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -190,20 +191,24 @@ class ServerSideSDKKeys extends Component {
               )
             }}
             renderRow={({ id, key, name }) => (
-              <div className='list-item'>
-                <Row>
-                  <Flex>{name}</Flex>
+              <Row className='list-item'>
+                <Flex className='table-column px-3 font-weight-medium'>
+                  {name}
+                </Flex>
+                <div className='table-column'>
                   <Token style={{ width: 280 }} token={key} />
-                  <button
+                </div>
+                <div className='table-column'>
+                  <Button
                     onClick={() => this.remove(id, name)}
                     disabled={this.state.isSaving}
                     id='remove-feature'
-                    className='btn btn--with-icon'
+                    className='btn btn-with-icon'
                   >
-                    <RemoveIcon />
-                  </button>
-                </Row>
-              </div>
+                    <Icon name='trash-2' width={20} fill='#656D7B' />
+                  </Button>
+                </div>
+              </Row>
             )}
           />
         )}

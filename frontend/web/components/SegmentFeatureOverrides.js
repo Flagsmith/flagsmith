@@ -71,7 +71,7 @@ const SegmentOverride = ConfigProvider(
           <div
             data-test={`segment-override-${index}`}
             style={{ zIndex: 9999999999 }}
-            className='panel segment-overrides panel-without-heading panel--draggable mb-2'
+            className='panel segment-overrides panel-without-heading panel--draggable mb-2 p-3'
           >
             <Row className='panel-content' space>
               <div className='flex flex-1 text-left'>

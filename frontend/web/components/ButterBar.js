@@ -21,11 +21,10 @@ class ButterBar extends Component {
       if (environmentDetail && environmentDetail.banner_text) {
         return (
           <div
-            className='butter-bar'
+            className='butter-bar font-weight-medium'
             style={{
               backgroundColor: environmentDetail.banner_colour,
               color: 'white',
-              fontWeight: '500',
             }}
           >
             {environmentDetail.banner_text}

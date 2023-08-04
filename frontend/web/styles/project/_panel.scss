@@ -14,9 +14,6 @@
                 }
             }
         }
-
-        &--draggable {
-        }
     }
 }
 .dark .panel--flat {
@@ -34,9 +31,7 @@
             @include transition(background 200ms ease-in-out);
         }
     }
-    border-radius:$border-radius;
-    box-shadow: $card-default;
-    border:1px solid #d6dbe0;
+
     input[type="text"] {
         opacity:1;
         border-radius: $border-radius;
@@ -45,8 +40,7 @@
     &--grey{
         background:$panel-grey-background;
         border-radius: $border-radius-sm;
-        //border:1px solid #d6dbe0;
-        //box-shadow: $card-default;
+
         padding:20px;
 
     }
@@ -56,9 +50,6 @@
         box-shadow: none;
         .panel-heading {
             background-color: transparent;
-        }
-        input[type="text"] {
-            background: $input-bg-alt;
         }
     }
     &--nested {

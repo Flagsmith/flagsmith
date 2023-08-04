@@ -15,6 +15,7 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
+import Icon from 'components/Icon'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -765,10 +766,9 @@ const EnvironmentSettingsPage = class extends Component {
                             title={
                               <Tooltip
                                 title={
-                                  <h6 className='mb-0'>
-                                    Webhooks{' '}
-                                    <span className='icon ion-ios-information-circle' />
-                                  </h6>
+                                  <h5 className='mb-0'>
+                                    Webhooks <Icon name='info-outlined' />
+                                  </h5>
                                 }
                                 place='right'
                               >
@@ -776,7 +776,6 @@ const EnvironmentSettingsPage = class extends Component {
                               </Tooltip>
                             }
                             className='no-pad'
-                            icon='ion-md-cloud'
                             items={webhooks}
                             renderRow={(webhook) => (
                               <Row
@@ -787,18 +786,22 @@ const EnvironmentSettingsPage = class extends Component {
                                 className='list-item clickable cursor-pointer'
                                 key={webhook.id}
                               >
-                                <div>
-                                  <Button theme='text'>{webhook.url}</Button>
-                                  <div className='list-item-footer faint'>
+                                <Flex className='table-column px-3'>
+                                  <div className='font-weight-medium mb-1'>
+                                    {webhook.url}
+                                  </div>
+                                  <div className='list-item-subtitle'>
                                     Created{' '}
                                     {moment(webhook.created_at).format(
                                       'DD/MMM/YYYY',
                                     )}
                                   </div>
-                                </div>
-                                <Row>
+                                </Flex>
+                                <div className='table-column'>
                                   <Switch checked={webhook.enabled} />
-                                  <button
+                                </div>
+                                <div className='table-column'>
+                                  <Button
                                     id='delete-invite'
                                     type='button'
                                     onClick={(e) => {
@@ -806,25 +809,27 @@ const EnvironmentSettingsPage = class extends Component {
                                       e.preventDefault()
                                       this.deleteWebhook(webhook)
                                     }}
-                                    className='btn btn--with-icon ml-auto btn--remove'
+                                    className='btn btn-with-icon'
                                   >
-                                    <RemoveIcon />
-                                  </button>
-                                </Row>
+                                    <Icon
+                                      name='trash-2'
+                                      width={20}
+                                      fill='#656D7B'
+                                    />
+                                  </Button>
+                                </div>
                               </Row>
                             )}
                             renderNoResults={
                               <Panel
                                 id='users-list'
-                                icon='ion-md-cloud'
-                                className='fs-small lh-sm'
+                                className='no-pad'
                                 title={
                                   <Tooltip
                                     title={
-                                      <h6 className='mb-0'>
-                                        Webhooks{' '}
-                                        <span className='icon ion-ios-information-circle' />
-                                      </h6>
+                                      <h5 className='mb-0'>
+                                        Webhooks <Icon name='info-outlined' />
+                                      </h5>
                                     }
                                     place='right'
                                   >
@@ -832,8 +837,12 @@ const EnvironmentSettingsPage = class extends Component {
                                   </Tooltip>
                                 }
                               >
-                                You currently have no Feature Webhooks
-                                configured for this Environment.
+                                <div className='search-list'>
+                                  <Row className='list-item p-3 text-muted'>
+                                    You currently have no Feature Webhooks
+                                    configured for this Environment.
+                                  </Row>
+                                </div>
                               </Panel>
                             }
                             isLoading={this.props.webhookLoading}

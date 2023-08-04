@@ -59,6 +59,9 @@ button.btn {
     &.btn-lg {
       line-height: calc($btn-line-height-lg - 2px);
     }
+    &:disabled {
+      color: $primary;
+    }
     &:hover,
     &:focus {
       background-color: $btn-outline-hover-bg;
@@ -121,12 +124,14 @@ button.btn {
       fill: #d93939;
     }
   }
-  &-with-icon{
+  &-with-icon {
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
     &:hover,
-    &:active{
+    &:active,
+    &:focus,
+    &:disabled {
       background-color: $basic-alpha-8 !important;
     }
   }
@@ -354,7 +359,9 @@ $add-btn-size: 34px;
       background: transparent;
       border-color: $primary400;
       color: $primary400;
-
+      &:disabled {
+        color: $primary400;
+      }
       &:hover {
         color: $primary400;
         border-color: $primary400;

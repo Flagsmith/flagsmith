@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import Highlight from './Highlight'
-import PlayIcon from './svg/PlayIcon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
@@ -62,40 +61,42 @@ const TryIt = class extends Component {
 
   render() {
     return Utils.getFlagsmithHasFeature('try_it') ? (
-      <Panel icon='ion-md-code' title='Try it out'>
-        <div>
-          <div className='text-center'>
-            <p>{this.props.title}</p>
-            <div>
-              <Button
-                id='try-it-btn'
-                disabled={this.state.isLoading}
-                onClick={this.request}
-              >
-                {this.state.data ? 'Test again' : 'Run test'}{' '}
-              </Button>
+      <div>
+        <Row space>
+          <Flex className='align-items-start'>
+            <h5 className='mb-2'>Try it out</h5>
+            <div className='fs-small lh-sm'>{this.props.title}</div>
+          </Flex>
+          <div>
+            <Button
+              id='try-it-btn'
+              disabled={this.state.isLoading}
+              onClick={this.request}
+              size='small'
+            >
+              {this.state.data ? 'Test again' : 'Run test'}{' '}
+            </Button>
+          </div>
+        </Row>
+        {this.state.data && (
+          <div id={!this.state.isLoading && 'try-it-results'}>
+            <FormGroup />
+            <div
+              style={{ opacity: this.state.isLoading ? 0.5 : 1 }}
+              className='fade '
+            >
+              <Highlight forceExpanded className='json'>
+                {this.state.data}
+              </Highlight>
             </div>
           </div>
-          {this.state.data && (
-            <div id={!this.state.isLoading && 'try-it-results'}>
-              <FormGroup />
-              <div
-                style={{ opacity: this.state.isLoading ? 0.5 : 1 }}
-                className='fade '
-              >
-                <Highlight forceExpanded className='json'>
-                  {this.state.data}
-                </Highlight>
-              </div>
-            </div>
-          )}
-          {this.state.isLoading && !this.state.data && (
-            <div className='text-center'>
-              <Loader />
-            </div>
-          )}
-        </div>
-      </Panel>
+        )}
+        {this.state.isLoading && !this.state.data && (
+          <div className='text-center'>
+            <Loader />
+          </div>
+        )}
+      </div>
     ) : (
       <div />
     )

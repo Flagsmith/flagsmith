@@ -103,7 +103,7 @@ const InviteUsers = class extends Component {
                         placeholder='Select a role'
                         value={invite.role}
                         onChange={(role) => this.onChange(index, 'role', role)}
-                        className='pl-2'
+                        className='pl-2 react-select'
                         options={_.map(Constants.roles, (label, value) => ({
                           isDisabled: value !== 'ADMIN' && !hasRbacPermission,
                           label:

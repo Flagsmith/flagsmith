@@ -90,7 +90,9 @@ const SegmentOverrideInner = class Override extends React.Component {
         data-test={`segment-override-${index}`}
         style={{ zIndex: 9999999999 }}
         className={`segment-overrides mb-2${
-          this.props.id ? '' : ' panel panel-without-heading panel--draggable'
+          this.props.id
+            ? ''
+            : ' panel panel-without-heading panel--draggable p-3'
         }`}
       >
         <Row className='panel-content' space>
