@@ -23,6 +23,28 @@ def test_create_master_api_key_returns_key_in_response(admin_client, organisatio
     assert response.json()["key"] is not None
 
 
+def test_creating_non_admin_master_api_key_without_rbac_returns_400(
+    admin_client, organisation, settings
+):
+    # Given
+    settings.IS_RBAC_INSTALLED = False
+
+    url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-list",
+        args=[organisation],
+    )
+    data = {"name": "test_key", "organisation": organisation, "is_admin": False}
+
+    # When
+    response = admin_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["is_admin"] == [
+        "RBAC is not installed, cannot create non-admin key"
+    ]
+
+
 def test_delete_master_api_key(admin_client, organisation, master_api_key_prefix):
     # Given
     url = reverse(
@@ -67,8 +89,12 @@ def test_retrieve_master_api_key(admin_client, organisation, master_api_key_pref
     assert response.json()["prefix"] == master_api_key_prefix
 
 
-def test_update_master_api_key(admin_client, organisation, master_api_key_prefix):
+def test_update_master_api_key(
+    admin_client, organisation, master_api_key_prefix, settings
+):
     # Given
+    settings.IS_RBAC_INSTALLED = True
+
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
         args=[organisation, master_api_key_prefix],
@@ -79,6 +105,7 @@ def test_update_master_api_key(admin_client, organisation, master_api_key_prefix
         "revoked": True,
         "organisation": organisation,
         "name": new_name,
+        "is_admin": False,
     }
 
     # When
@@ -89,6 +116,35 @@ def test_update_master_api_key(admin_client, organisation, master_api_key_prefix
     assert response.json()["prefix"] == master_api_key_prefix
     assert response.json()["revoked"] is True
     assert response.json()["name"] == new_name
+    assert response.json()["is_admin"] is False
+
+
+def test_update_master_api_key_is_admin_returns_400_if_rbac_is_not_installed(
+    admin_client, organisation, master_api_key_prefix, settings
+):
+    # Given
+    settings.IS_RBAC_INSTALLED = False
+
+    url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-detail",
+        args=[organisation, master_api_key_prefix],
+    )
+    new_name = "updated_test_key"
+    data = {
+        "prefix": master_api_key_prefix,
+        "organisation": organisation,
+        "name": new_name,
+        "is_admin": False,
+    }
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["is_admin"] == [
+        "RBAC is not installed, cannot create non-admin key"
+    ]
 
 
 def test_api_returns_403_if_user_is_not_the_org_admin(non_admin_client, organisation):

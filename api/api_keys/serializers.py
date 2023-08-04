@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from .models import MasterAPIKey
@@ -19,6 +20,7 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
             "revoked",
             "expiry_date",
             "key",
+            "is_admin",
         )
         read_only_fields = ("prefix", "created", "key")
 
@@ -26,3 +28,10 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
         obj, key = MasterAPIKey.objects.create_key(**validated_data)
         obj.key = key
         return obj
+
+    def validate_is_admin(self, is_admin: bool):
+        if is_admin is False and not settings.IS_RBAC_INSTALLED:
+            raise serializers.ValidationError(
+                "RBAC is not installed, cannot create non-admin key"
+            )
+        return is_admin
