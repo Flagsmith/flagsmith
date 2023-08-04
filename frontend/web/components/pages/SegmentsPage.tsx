@@ -20,6 +20,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
 import LimitAlert from 'components/LimitAlert'
+import Icon from 'components/Icon'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -210,7 +211,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                     renderSearchWithNoResults
                     className='no-pad'
                     id='segment-list'
-                    icon='ion-ios-globe'
                     title='Segments'
                     renderFooter={() => (
                       <JSONReference
@@ -237,8 +237,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         manageSegmentsPermission,
                         'Manage segments',
                         <Row className='list-item clickable' key={id} space>
-                          <div
-                            className='flex flex-1'
+                          <Flex
+                            className='table-column px-3'
                             onClick={
                               manageSegmentsPermission
                                 ? () =>
@@ -246,42 +246,39 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <Row>
-                              <Button theme='text'>
-                                <span data-test={`segment-${i}-name`}>
-                                  {name}
-                                  {feature && (
-                                    <div className='unread ml-2 px-2'>
-                                      {' '}
-                                      Feature-Specific
-                                    </div>
-                                  )}
-                                </span>
-                              </Button>
-                            </Row>
-                            <div className='list-item-footer faint'>
+                            <div
+                              data-test={`segment-${i}-name`}
+                              className='font-weight-medium'
+                            >
+                              {name}
+                              {feature && (
+                                <div className='unread ml-2 px-2'>
+                                  {' '}
+                                  Feature-Specific
+                                </div>
+                              )}
+                            </div>
+                            <div className='list-item-subtitle'>
                               {description || 'No description'}
                             </div>
+                          </Flex>
+                          <div className='table-column'>
+                            <Button
+                              disabled={!manageSegmentsPermission}
+                              data-test={`remove-segment-btn-${i}`}
+                              onClick={() => {
+                                const segment = find(segments, { id })
+                                if (segment) {
+                                  confirmRemove(segment, () => {
+                                    removeSegment({ id, projectId })
+                                  })
+                                }
+                              }}
+                              className='btn btn-with-icon'
+                            >
+                              <Icon name='trash-2' width={20} fill='#656D7B' />
+                            </Button>
                           </div>
-                          <Row>
-                            <Column>
-                              <button
-                                disabled={!manageSegmentsPermission}
-                                data-test={`remove-segment-btn-${i}`}
-                                onClick={() => {
-                                  const segment = find(segments, { id })
-                                  if (segment) {
-                                    confirmRemove(segment, () => {
-                                      removeSegment({ id, projectId })
-                                    })
-                                  }
-                                }}
-                                className='btn btn--with-icon'
-                              >
-                                <RemoveIcon />
-                              </button>
-                            </Column>
-                          </Row>
                         </Row>,
                       )
                     }}

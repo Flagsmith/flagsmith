@@ -13,11 +13,11 @@ import useSearchThrottle from 'common/useSearchThrottle'
 import { Req } from 'common/types/requests'
 import { Identity } from 'common/types/responses'
 import CreateUserModal from 'components/modals/CreateUser'
-import RemoveIcon from 'components/RemoveIcon'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button' // we need this to make JSX compile
 import JSONReference from 'components/JSONReference' // we need this to make JSX compile
 import Utils from 'common/utils/utils'
+import Icon from 'components/Icon'
 
 const CodeHelp = require('../CodeHelp')
 
@@ -158,7 +158,6 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 className='no-pad'
                 isLoading={isLoading}
                 filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
-                icon='ion-md-person'
                 items={identities?.results}
                 paging={identities}
                 showExactFilter
@@ -199,28 +198,27 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   permission ? (
                     <Row
                       space
-                      className='list-item clickable'
+                      className='list-item clickable list-item-sm'
                       key={id}
                       data-test={`user-item-${index}`}
                     >
-                      <Flex>
-                        <Link
-                          to={`/project/${
-                            props.match.params.projectId
-                          }/environment/${
-                            props.match.params.environmentId
-                          }/users/${encodeURIComponent(identifier)}/${id}`}
-                        >
-                          <Button theme='text'>
-                            {identifier}
-                            <span className='ion-ios-arrow-forward ml-3' />
-                          </Button>
-                        </Link>
-                      </Flex>
-                      <Column>
-                        <button
+                      <Link
+                        to={`/project/${
+                          props.match.params.projectId
+                        }/environment/${
+                          props.match.params.environmentId
+                        }/users/${encodeURIComponent(identifier)}/${id}`}
+                        className='flex-row flex flex-1 table-column'
+                      >
+                        <div className='font-weight-medium'>{identifier}</div>
+                        <span style={{ marginTop: 2 }}>
+                          <Icon name='chevron-right' width={22} />
+                        </span>
+                      </Link>
+                      <div className='table-column'>
+                        <Button
                           id='remove-feature'
-                          className='btn btn--with-icon'
+                          className='btn btn-with-icon'
                           type='button'
                           onClick={() => {
                             if (id) {
@@ -230,9 +228,9 @@ const UsersPage: FC<UsersPageType> = (props) => {
                             }
                           }}
                         >
-                          <RemoveIcon />
-                        </button>
-                      </Column>
+                          <Icon name='trash-2' width={20} fill='#656D7B' />
+                        </Button>
+                      </div>
                     </Row>
                   ) : (
                     <Row
@@ -246,7 +244,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   )
                 }
                 renderNoResults={
-                  <div className='mx-2 pt-1 pb-2'>
+                  <Row className='list-item p-3'>
                     You have no users in your project
                     {search ? (
                       <span>
@@ -257,7 +255,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                       ''
                     )}
                     .
-                  </div>
+                  </Row>
                 }
                 filterRow={() => true}
                 search={searchInput}

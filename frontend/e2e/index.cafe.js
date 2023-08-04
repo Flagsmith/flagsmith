@@ -31,16 +31,6 @@ createTestCafe()
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .run(options)
-            .then((v) => {
-                if (!v) {
-                    return runner
-                        .clientScripts('e2e/add-error-logs.js')
-                        .src(['./e2e/cafe'])
-                        .concurrency(1)
-                        .run(options);
-                }
-                return v;
-            });
     })
     .then(async (v) => {
         // Upload files

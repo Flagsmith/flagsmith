@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
 import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { AuditLogItem } from 'common/types/responses'
@@ -13,10 +13,11 @@ type AuditLogType = {
   projectId: string
   pageSize: number
   onSearchChange?: (search: string) => void
+  searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
 }
 
-const widths = [200, 200, 200]
+const widths = [210, 210, 210]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -70,11 +71,17 @@ const AuditLog: FC<AuditLogType> = (props) => {
     log,
   }: AuditLogItem) => {
     return (
-      <Row className='list-item py-2 audit__item' key={created_date}>
-        <span style={{ width: widths[0] }}>
+      <Row className='list-item list-item-sm' key={created_date}>
+        <div
+          className='table-column px-3 fs-small ln-sm'
+          style={{ width: widths[0] }}
+        >
           {moment(created_date).format('Do MMM YYYY HH:mma')}
-        </span>
-        <div style={{ width: widths[1] }}>
+        </div>
+        <div
+          className='table-column fs-small ln-sm'
+          style={{ width: widths[1] }}
+        >
           {author?.first_name} {author?.last_name}
         </div>
         {environment?.name ? (
@@ -88,9 +95,9 @@ const AuditLog: FC<AuditLogType> = (props) => {
             </Row>
           </Link>
         ) : (
-          <div style={{ width: widths[2] }} />
+          <div className='table-column' style={{ width: widths[2] }} />
         )}
-        <Flex>{log}</Flex>
+        <Flex className='table-column fs-small ln-sm'>{log}</Flex>
       </Row>
     )
   }
@@ -114,10 +121,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
       title='Log entries'
       isLoading={isFetching}
       className='no-pad'
-      icon='ion-md-browsers'
       items={projectAuditLog?.results}
       filter={envFilter}
       search={searchInput}
+      searchPanel={props.searchPanel}
       onChange={(e: InputEvent) => {
         setSearchInput(Utils.safeParseEventValue(e))
       }}
@@ -135,10 +142,16 @@ const AuditLog: FC<AuditLogType> = (props) => {
       renderRow={renderRow}
       header={
         <Row className='table-header'>
-          <span style={{ width: widths[0] }}>Date</span>
-          <div style={{ width: widths[1] }}>User</div>
-          <div style={{ width: widths[2] }}>Environment</div>
-          <Flex>Content</Flex>
+          <div className='table-column px-3' style={{ width: widths[0] }}>
+            Date
+          </div>
+          <div className='table-column' style={{ width: widths[1] }}>
+            User
+          </div>
+          <div className='table-column' style={{ width: widths[2] }}>
+            Environment
+          </div>
+          <Flex className='table-column'>Content</Flex>
         </Row>
       }
       renderFooter={() => (
