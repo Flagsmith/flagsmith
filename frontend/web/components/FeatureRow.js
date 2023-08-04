@@ -192,7 +192,7 @@ class TheComponent extends Component {
             <Flex>
               <Row
                 className='font-weight-medium'
-                style={{ wordBreak: 'break-all' }}
+                style={{ rowGap: 4, wordBreak: 'break-all' }}
               >
                 <span className='me-1'>
                   {description ? (
@@ -249,6 +249,7 @@ class TheComponent extends Component {
                   </Tooltip>
                 )}
                 <TagValues
+                  inline
                   projectId={`${projectId}`}
                   value={projectFlag.tags}
                 />
