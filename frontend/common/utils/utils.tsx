@@ -64,27 +64,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     const percentage = (total / max) * 100
     if (percentage >= threshold) {
-      return { closeToLimit: true, percentage }
+      return { closeToLimit: true, percentage: percentage.toFixed(2) }
     }
     return 0
   },
 
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
-  },
-  displayToastAlert(total: number, max: number, type: string) {
-    const TOAST_POSITION = 'center'
-    const TOAST_EXPIRY = 0
-    const display = Utils.calculateRemainingLimitsPercentage(total, max, 90)
-    const envOrProject =
-      type === 'segments overrides' ? 'environment' : 'project'
-    if (display) {
-      toast(
-        `You ${envOrProject} is using ${display.percentage}% of the total allowance of ${type}.`,
-        TOAST_EXPIRY,
-        TOAST_POSITION,
-      )
-    }
   },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)

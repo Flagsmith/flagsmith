@@ -4,25 +4,20 @@ const Message = class extends React.Component {
   static displayName = 'Message'
 
   componentDidMount() {
-    if (this.props.expiry !== 0) {
-      setTimeout(this.props.remove, this.props.expiry)
-    }
+    setTimeout(this.props.remove, this.props.expiry)
   }
 
   render() {
-    const toastStyle =
-      this.props.position === 'center' ? 'toast-warning ' : 'toast-message'
-
     const className = cn({
       'alert alert-warning fade': true,
       'removing out': this.props.isRemoving,
       'show': !this.props.isRemoving,
-      [toastStyle]: true,
+      'toast-message': true,
     })
 
     return (
       <div className={className}>
-        <a onClick={this.props.remove} className='close-icon'>
+        <a onClick={this.props.remove} className='pull-xs-right'>
           <span className='icon ion-md-close' />
         </a>
         {this.props.children}
@@ -40,7 +35,6 @@ Message.propTypes = {
   content: OptionalNode,
   expiry: OptionalNumber,
   isRemoving: OptionalBool,
-  position: OptionalString,
   remove: RequiredFunc,
 }
 
@@ -51,16 +45,16 @@ const Toast = class extends React.Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { messages: [], position: 'right' }
+    this.state = { messages: [] }
     window.toast = this.toast
   }
 
-  toast = (content, expiry, position) => {
+  toast = (content, expiry) => {
     const { messages } = this.state
 
     const id = Utils.GUID()
     messages.unshift({ content, expiry: E2E ? 1000 : expiry, id })
-    this.setState({ messages, position })
+    this.setState({ messages })
   }
 
   remove = (id) => {
@@ -80,17 +74,14 @@ const Toast = class extends React.Component {
   }
 
   render() {
-    const style =
-      this.state.position === 'center' ? 'toast-container' : 'toast-messages'
     return (
-      <div className={style}>
+      <div className='toast-messages'>
         {this.state.messages.map((message) => (
           <Message
             key={message.id}
             isRemoving={message.isRemoving}
             remove={() => this.remove(message.id)}
             expiry={message.expiry}
-            position={this.state.position}
           >
             {message.content}
           </Message>

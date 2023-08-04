@@ -85,14 +85,9 @@ const controller = {
     })
   },
   getEnv: (envId) => {
-    data.get(`${Project.api}environments/${envId}`).then((environment) => {
+    data.get(`${Project.api}environments/${envId}/`).then((environment) => {
       store.model = Object.assign(store.model, { environment })
       store.saved()
-      Utils.displayToastAlert(
-        environment.total_segment_overrides,
-        store.getMaxSegmentOverridesAllowed(),
-        'segments overrides',
-      )
     })
   },
   getProject: (id, cb, force) => {
@@ -139,16 +134,6 @@ const controller = {
           }
           store.id = id
           store.loaded()
-          Utils.displayToastAlert(
-            project.total_segments,
-            project.max_segments_allowed,
-            'segments',
-          )
-          Utils.displayToastAlert(
-            project.total_features,
-            project.max_features_allowed,
-            'features',
-          )
           if (cb) {
             cb()
           }
