@@ -57,8 +57,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
-    total_features = serializers.SerializerMethodField()
-    total_segments = serializers.SerializerMethodField()
+    total_features = serializers.IntegerField()
+    total_segments = serializers.IntegerField()
 
     class Meta(ProjectListSerializer.Meta):
         fields = ProjectListSerializer.Meta.fields + (
@@ -76,12 +76,6 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "total_features",
             "total_segments",
         )
-
-    def get_total_features(self, obj: Project) -> int:
-        return obj.total_features
-
-    def get_total_segments(self, obj: Project) -> int:
-        return obj.total_segments
 
 
 class CreateUpdateUserProjectPermissionSerializer(
