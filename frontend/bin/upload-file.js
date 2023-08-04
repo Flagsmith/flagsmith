@@ -19,12 +19,15 @@ module.exports = function uploadFile(path) {
 
   const slackClient = new WebClient(process.env.SLACK_TOKEN)
 
+  const { GITHUB_REF, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_SERVER_URL } =
+    process.env
+  const githubInfo = GITHUB_SERVER_URL
+    ? `${GITHUB_REF} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
+    : ''
   // Call the files.upload method using the WebClient
   return slackClient.files.upload({
     channels: channelId,
     file: fs.createReadStream(path),
-    initial_comment: `${title} ${process.env.GITHUB_BRANCH || ''} ${
-      process.env.GITHUB_ACTION_URL || ''
-    }`,
+    initial_comment: `${title} ${githubInfo}`,
   })
 }
