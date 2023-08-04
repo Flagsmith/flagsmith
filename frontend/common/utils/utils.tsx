@@ -72,7 +72,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
-  displayToastAlert(total, max, type) {
+  displayToastAlert(total: number, max: number, type: string) {
     const TOAST_POSITION = 'center'
     const TOAST_EXPIRY = 0
     const display = Utils.calculateRemainingLimitsPercentage(total, max, 90)
