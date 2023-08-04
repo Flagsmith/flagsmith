@@ -68,7 +68,7 @@ fixture`Initialise`
 
 test('[Initialise]', async () => {
     log('Create Organisation');
-    await click(byId('jsSignup2'));
+    await click(byId('jsSignup'));
     await setText(byId('firstName'), 'Bullet'); // visit the url
     await setText(byId('lastName'), 'Train'); // visit the url
     await setText(byId('email'), email); // visit the url
