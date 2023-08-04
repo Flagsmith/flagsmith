@@ -4,6 +4,7 @@
     "noEmit": true,
     "noImplicitAny": false,
     "allowJs": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "lib": [
       "dom"
