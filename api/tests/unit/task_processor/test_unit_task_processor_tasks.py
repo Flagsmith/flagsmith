@@ -5,6 +5,12 @@ from django.utils import timezone
 from task_processor.models import Task
 from task_processor.tasks import clean_up_old_tasks
 
+now = timezone.now()
+three_days_ago = now - timedelta(days=3)
+one_day_ago = now - timedelta(days=1)
+one_hour_from_now = now + timedelta(hours=1)
+sixty_days_ago = now - timedelta(days=60)
+
 
 def test_clean_up_old_tasks_does_nothing_when_no_tasks(db):
     # Given
@@ -19,11 +25,6 @@ def test_clean_up_old_tasks_does_nothing_when_no_tasks(db):
 
 def test_clean_up_old_tasks(settings, django_assert_num_queries, db):
     # Given
-    now = timezone.now()
-    three_days_ago = now - timedelta(days=3)
-    one_day_ago = now - timedelta(days=1)
-    one_hour_from_now = now + timedelta(hours=1)
-
     settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_BATCH_SIZE = 1
 
@@ -74,8 +75,6 @@ def test_clean_up_old_tasks_include_failed_tasks(
     settings, django_assert_num_queries, db
 ):
     # Given
-    three_days_ago = timezone.now() - timedelta(days=3)
-
     settings.TASK_DELETE_RETENTION_DAYS = 2
     settings.TASK_DELETE_INCLUDE_FAILED_TASKS = True
 
@@ -89,3 +88,21 @@ def test_clean_up_old_tasks_include_failed_tasks(
 
     # Then
     assert not Task.objects.exists()
+
+
+def test_clean_up_old_tasks_does_not_run_if_disabled(
+    settings, django_assert_num_queries, db
+):
+    # Given
+    settings.ENABLE_CLEAN_UP_OLD_TASKS = False
+
+    task = Task.objects.create(
+        task_identifier="some.identifier", scheduled_for=sixty_days_ago
+    )
+
+    # When
+    with django_assert_num_queries(0):
+        clean_up_old_tasks()
+
+    # Then
+    assert Task.objects.filter(id=task.id).exists()
