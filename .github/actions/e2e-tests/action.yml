@@ -11,9 +11,6 @@ inputs:
   environment:
     description: The value of the ENV environment variable to use for npm run env.
     required: true
-  github_action_url:
-    description: A URL that links to the action that triggered the test
-    required: true
 
 runs:
   using: composite
@@ -39,7 +36,6 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         STATIC_ASSET_CDN_URL: /
         ENV: ${{ inputs.environment }}
-        GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       run: |
         node -v
