@@ -48,7 +48,7 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  return (
+  return isTruncated && `${tag.label}`.length > 12 ? (
     <Tooltip
       plainText
       title={
@@ -61,12 +61,24 @@ const Tag: FC<TagType> = ({
           }}
           className={cx('chip', className)}
         >
-          {isTruncated ? Format.truncateText(`${tag.label}`, 1) : tag.label}
+          {Format.truncateText(`${tag.label}`, 12)}
         </div>
       }
     >
       {tag.label}
     </Tooltip>
+  ) : (
+    <div
+      onClick={() => onClick?.(tag as TTag)}
+      style={{
+        backgroundColor: `${color(getColor()).fade(0.92)}`,
+        border: `1px solid ${color(getColor()).fade(0.76)}`,
+        color: `${color(getColor()).darken(0.1)}`,
+      }}
+      className={cx('chip', className)}
+    >
+      {tag.label}
+    </div>
   )
 }
 
