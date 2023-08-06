@@ -840,8 +840,13 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
-              const isLimitReached =
-                project.total_features >= project.max_features_allowed
+              const THRESHOLD = 90
+              const featureLimitAlert =
+                Utils.calculateRemainingLimitsPercentage(
+                  project.total_features,
+                  project.max_features_allowed,
+                  THRESHOLD,
+                )
 
               return (
                 <Permission
@@ -878,13 +883,7 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
-                                    {isLimitReached && (
-                                      <ErrorMessage
-                                        error={
-                                          'Your project reached the limit of features totals.'
-                                        }
-                                      />
-                                    )}
+                                  {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
                                     <Tooltip
                                       title={
                                         <h5 className='mb-4'>
@@ -1497,6 +1496,7 @@ const CreateFlag = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
+                                {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
                                 {Value(
                                   error,
                                   projectAdmin,
@@ -1534,7 +1534,7 @@ const CreateFlag = class extends Component {
                                         !name ||
                                         invalid ||
                                         !regexValid ||
-                                        isLimitReached
+                                        featureLimitAlert.percentage >= 100
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}

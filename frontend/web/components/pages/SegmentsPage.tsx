@@ -19,7 +19,6 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import ErrorMessage from 'components/ErrorMessage'
 import Icon from 'components/Icon'
 
 const CodeHelp = require('../../components/CodeHelp')
@@ -66,9 +65,13 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   })
   const [removeSegment] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
-  const isLimitReached =
-    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
 
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxSegmentsAllowed(),
+    THRESHOLD,
+  )
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
   }, [])
@@ -163,10 +166,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            {isLimitReached &&
-            <ErrorMessage
-                error={'Your project reached the limit of segments totals.'}
-            />}
+            {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
@@ -195,7 +195,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           disabled={
                             hasNoOperators ||
                             !manageSegmentsPermission ||
-                            isLimitReached
+                            segmentsLimitAlert.percentage >= 100
                           }
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'

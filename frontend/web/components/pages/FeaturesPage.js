@@ -12,7 +12,6 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import ErrorMessage from 'components/ErrorMessage'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -111,7 +110,8 @@ const FeaturesPage = class extends Component {
     if (!error?.name && !error?.initial_value) {
       // Could not determine field level error, show generic toast.
       toast(
-        'We could not create this feature, please check the name is not in use.',
+        error.project ||
+          'We could not create this feature, please check the name is not in use.',
       )
     }
   }
@@ -170,7 +170,12 @@ const FeaturesPage = class extends Component {
             { removeFlag, toggleFlag },
           ) => {
             const isLoading = FeatureListStore.isLoading
-            const isLimitReached = totalFeatures >= maxFeaturesAllowed
+            const THRESHOLD = 90
+            const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
+              totalFeatures,
+              maxFeaturesAllowed,
+              THRESHOLD,
+            )
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -186,13 +191,7 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
-                        {isLimitReached && (
-                          <ErrorMessage
-                            error={
-                              'Your project reached the limit of features totals.'
-                            }
-                          />
-                        )}
+                        {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
                         <Row>
                           <Flex>
                             <h4>Features</h4>
@@ -224,7 +223,9 @@ const FeaturesPage = class extends Component {
                                   <div className='text-right'>
                                     <Button
                                       disabled={
-                                        !perm || readOnly || isLimitReached
+                                        !perm ||
+                                        readOnly ||
+                                        featureLimitAlert.percentage >= 100
                                       }
                                       data-test='show-create-feature-btn'
                                       id='show-create-feature-btn'

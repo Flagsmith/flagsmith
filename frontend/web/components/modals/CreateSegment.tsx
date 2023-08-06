@@ -137,6 +137,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const isLimitReached =
     ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
 
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxFeaturesAllowed(),
+    THRESHOLD,
+  )
+
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
     newRules[0].rules = newRules[0].rules.concat({
@@ -338,6 +345,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </a>
             .
           </InfoMessage>
+          {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
         </div>
       )}
 
@@ -366,11 +374,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
             />
           </Flex>
         </div>
-      )}
-      {isLimitReached && (
-        <ErrorMessage
-          error={'Your project reached the limit of segments totals.'}
-        />
       )}
       {!condensed && (
         <InputGroup

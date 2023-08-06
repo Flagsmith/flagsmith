@@ -504,8 +504,13 @@ class TheComponent extends Component {
     const totalSegmentOverrides = ProjectStore.getEnvs().find(
       (env) => env.api_key === this.props.environmentId,
     )?.total_segment_overrides
-    const isSegmentOverrideLimitReached =
-      totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
+
+    const THRESHOLD = 90
+    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
+      totalSegmentOverrides,
+      ProjectStore.getMaxSegmentOverridesAllowed(),
+      THRESHOLD,
+    )
 
     return (
       <div>
@@ -514,7 +519,7 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly &&
-            !isSegmentOverrideLimitReached && (
+            !segmentOverrideLimitAlert >= 100 && (
               <Flex className='text-left'>
                 <SegmentSelect
                   projectId={this.props.projectId}
@@ -616,6 +621,7 @@ class TheComponent extends Component {
                       </a>
                       .
                     </InfoMessage>
+                    {segmentOverrideLimitAlert.percentage && Utils.displayLimitAlert("segment overrides", segmentOverrideLimitAlert.percentage)}
                   </div>
                 )}
 

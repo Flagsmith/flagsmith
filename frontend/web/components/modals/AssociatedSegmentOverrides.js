@@ -9,7 +9,6 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
-import ErrorMessage from 'components/ErrorMessage'
 
 class TheComponent extends Component {
   state = {
@@ -114,8 +113,12 @@ class TheComponent extends Component {
     const totalSegmentOverrides = ProjectStore.getEnvs().find(
       (env) => env.name === this.state.selectedEnv,
     )?.total_segment_overrides
-    const isSegmentOverrideLimitReached =
-      totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
+    const THRESHOLD = 90
+    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
+      totalSegmentOverrides,
+      ProjectStore.getMaxSegmentOverridesAllowed(),
+      THRESHOLD,
+    )
 
     return this.state.isLoading ? (
       <div className='text-center'>
@@ -136,13 +139,7 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
-        {isSegmentOverrideLimitReached && (
-          <ErrorMessage
-            error={
-              'Your environment reached the limit of segment overrides totals.'
-            }
-          />
-        )}
+        {segmentOverrideLimitAlert.percentage && Utils.displayLimitAlert("segment overrides", segmentOverrideLimitAlert.percentage)}
         <div>
           <InputGroup
             component={
@@ -439,14 +436,14 @@ class SegmentOverridesInnerAdd extends Component {
     const totalSegmentOverrides = ProjectStore.getEnvs().find(
       (env) => env.name === environmentId,
     )?.total_segment_overrides
-    const isSegmentOverrideLimitReached =
+    const segmentOverrideLimitAlert =
       totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <FeatureListProvider>
         {() => {
           return (
-            !isSegmentOverrideLimitReached && (
+            !segmentOverrideLimitAlert >= 100 && (
               <div className='mt-2'>
                 <FlagSelect
                   onlyInclude={this.props.feature}

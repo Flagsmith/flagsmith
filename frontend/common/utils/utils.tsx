@@ -14,6 +14,8 @@ import {
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
+import WarningMessage from 'components/WarningMessage'
 
 const semver = require('semver')
 
@@ -54,9 +56,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   calculateRemainingLimitsPercentage(
-    total: number,
-    max: number,
-    threshold: number,
+    total: number | undefined,
+    max: number | undefined,
+    threshold: number | undefined,
   ) {
     if (total === 0) {
       return 0
@@ -64,9 +66,25 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     const percentage = (total / max) * 100
     if (percentage >= threshold) {
-      return { closeToLimit: true, percentage: percentage.toFixed(2) }
+      return {
+        percentage: percentage >= 100 ? percentage : percentage.toFixed(2),
+      }
     }
     return 0
+  },
+
+  displayLimitAlert(type: string, percentage: number | undefined) {
+    const envOrProject =
+      type === 'segment overrides' ? 'environment' : 'project'
+    return percentage >= 100 ? (
+      <ErrorMessage
+        error={`Your ${envOrProject} reached the limit of ${type} totals.`}
+      />
+    ) : percentage ? (
+      <WarningMessage
+        warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
+      />
+    ) : null
   },
 
   changeRequestsEnabled(value: number | null | undefined) {
