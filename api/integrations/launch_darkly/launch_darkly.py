@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -34,7 +35,7 @@ class LaunchDarklyWrapper:
             organisation=self.request["organisation_id"],
             project=self.request["project_id"],
         )
-        self.import_id = self.logger.id
+        self.import_id = self.logger.uuid
 
     def import_data(self):
         self.logger.info(
@@ -92,12 +93,18 @@ class LaunchDarklyWrapper:
             )
 
         environments = []
+        self.logger.info(f"Adding {len(ld_environments)} environments")
         for ld_environment in ld_environments:
             environment = self._create_environment(ld_environment, project)
             environments.append(environment)
 
+        self.logger.info(f"Adding {len(ld_flags)} features")
         for ld_flag in ld_flags:
-            feature = self._create_feature(ld_flag, environments)
+            self._create_feature(ld_flag, environments, project)
+
+        self.logger.completed_at(datetime.now())
+        self.logger.completed = True
+        self.logger.save()
 
         self.logger.info("Finished importing")
 
