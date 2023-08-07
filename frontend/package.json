@@ -85,7 +85,7 @@
     "mini-css-extract-plugin": "^2.6.0",
     "moment": "2.29.4",
     "node-fetch": "2.6.7",
-    "node-sass": "^7.0.1",
+    "node-sass": "^9.0.0",
     "pipedrive": "^20.3.0",
     "polyfill-react-native": "1.0.5",
     "postcss-loader": "4.3.0",
