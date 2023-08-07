@@ -23,6 +23,6 @@ module.exports = function uploadFile(path) {
   return slackClient.files.upload({
     channels: channelId,
     file: fs.createReadStream(path),
-    initial_comment: title,
+    initial_comment: `${title} ${process.env.GITHUB_ACTION_URL || ''}`,
   })
 }

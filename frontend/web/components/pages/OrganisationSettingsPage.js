@@ -19,8 +19,9 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
+import Icon from 'components/Icon'
 
-const widths = [450, 150, 100]
+const widths = [170, 150, 80]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -246,13 +247,13 @@ const OrganisationSettingsPage = class extends Component {
     const diff = moment().diff(moment(last_login), 'days')
     if (diff >= 30) {
       return (
-        <>
+        <div className='mb-1'>
           {`${diff} days ago`}
           <br />
-          <span className='text-small text-muted'>
+          <div className='list-item-subtitle'>
             {moment(last_login).format('Do MMM YYYY')}
-          </span>
-        </>
+          </div>
+        </div>
       )
     }
     return 'Within 30 days'
@@ -287,8 +288,11 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
+                  const isAWS =
+                    AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
                   const { chargebee_email } = subscriptionMeta || {}
-                  const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
+                  const autoSeats =
+                    !isAWS && Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
                   const overSeats =
@@ -296,15 +300,14 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
+
                   return (
                     <div>
                       <Tabs
-                        inline
-                        transparent
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                       >
-                        <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                        <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
@@ -353,7 +356,7 @@ const OrganisationSettingsPage = class extends Component {
                                     {organisation.id}
                                   </p>
                                 </div>
-                                {paymentsEnabled && (
+                                {paymentsEnabled && !isAWS && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
                                       <img
@@ -526,15 +529,11 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                        <TabItem tabLabel='Keys'>
                           <AdminAPIKeys />
                         </TabItem>
 
-                        <TabItem
-                          data-test='tab-permissions'
-                          tabLabel='Members'
-                          tabIcon='ion-md-people'
-                        >
+                        <TabItem data-test='tab-permissions' tabLabel='Members'>
                           <JSONReference
                             showNamesButton
                             className='mt-4'
@@ -572,7 +571,7 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                   {!isLoading && (
                                     <div>
-                                      <Tabs inline transparent uncontrolled>
+                                      <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
                                             <h5 className='m-b-0'>
@@ -842,21 +841,27 @@ const OrganisationSettingsPage = class extends Component {
                                               className='no-pad'
                                               header={
                                                 <Row className='table-header'>
-                                                  <Flex>
-                                                    <strong>User</strong>
+                                                  <Flex className='table-column px-3'>
+                                                    User
+                                                  </Flex>
+                                                  <Flex className='table-column'>
+                                                    Role
                                                   </Flex>
                                                   <div
                                                     style={{ width: widths[0] }}
+                                                    className='table-column'
                                                   >
-                                                    Role
+                                                    Action
                                                   </div>
                                                   <div
                                                     style={{ width: widths[1] }}
+                                                    className='table-column'
                                                   >
                                                     Last logged in
                                                   </div>
                                                   <div
                                                     style={{ width: widths[2] }}
+                                                    className='table-column text-center'
                                                   >
                                                     Remove
                                                   </div>
@@ -890,31 +895,26 @@ const OrganisationSettingsPage = class extends Component {
                                                     className='list-item clickable'
                                                     key={id}
                                                   >
-                                                    <Flex onClick={onEditClick}>
+                                                    <Flex
+                                                      onClick={onEditClick}
+                                                      className='table-column px-3 font-weight-medium'
+                                                    >
                                                       {`${first_name} ${last_name}`}{' '}
                                                       {id ===
                                                         AccountStore.getUserId() &&
                                                         '(You)'}
-                                                      <div className='list-item-footer faint'>
+                                                      <div className='list-item-subtitle'>
                                                         {email}
                                                       </div>
                                                     </Flex>
 
-                                                    <Row
-                                                      style={{
-                                                        width: widths[0],
-                                                      }}
-                                                    >
+                                                    <Flex className='table-column'>
                                                       <div>
                                                         {organisation.role ===
                                                           'ADMIN' &&
                                                         id !==
                                                           AccountStore.getUserId() ? (
-                                                          <div
-                                                            style={{
-                                                              width: 250,
-                                                            }}
-                                                          >
+                                                          <div>
                                                             <Select
                                                               data-test='select-role'
                                                               placeholder='Select a role'
@@ -968,38 +968,52 @@ const OrganisationSettingsPage = class extends Component {
                                                               }
                                                               menuPosition='absolute'
                                                               menuPlacement='auto'
+                                                              className='react-select select-xsm'
                                                             />
                                                           </div>
                                                         ) : (
-                                                          <div className='mr-2'>
+                                                          <div className='mr-2 fs-small lh-sm'>
                                                             {Constants.roles[
                                                               role
                                                             ] || ''}
                                                           </div>
                                                         )}
                                                       </div>
-
-                                                      {role !== 'ADMIN' && (
-                                                        <div
-                                                          className='ml-2'
-                                                          style={{
-                                                            width: widths[2],
-                                                          }}
-                                                          onClick={onEditClick}
+                                                    </Flex>
+                                                    {role !== 'ADMIN' ? (
+                                                      <div
+                                                        style={{
+                                                          width: widths[0],
+                                                        }}
+                                                        onClick={onEditClick}
+                                                        className='table-column'
+                                                      >
+                                                        <Button
+                                                          theme='text'
+                                                          size='small'
                                                         >
-                                                          <Button theme='text'>
-                                                            Edit Permissions
-                                                          </Button>
-                                                        </div>
-                                                      )}
-                                                    </Row>
-
+                                                          <Icon
+                                                            name='edit'
+                                                            width={18}
+                                                            fill='#6837FC'
+                                                          />{' '}
+                                                          Edit Permissions
+                                                        </Button>
+                                                      </div>
+                                                    ) : (
+                                                      <div
+                                                        style={{
+                                                          width: widths[0],
+                                                        }}
+                                                      ></div>
+                                                    )}
                                                     <div
                                                       style={{
                                                         width: widths[1],
                                                       }}
+                                                      className='table-column'
                                                     >
-                                                      <div>
+                                                      <div className='fs-small lh-sm'>
                                                         {this.formatLastLoggedIn(
                                                           last_login,
                                                         )}
@@ -1009,8 +1023,9 @@ const OrganisationSettingsPage = class extends Component {
                                                       style={{
                                                         width: widths[2],
                                                       }}
+                                                      className='table-column text-center'
                                                     >
-                                                      <button
+                                                      <Button
                                                         id='delete-invite'
                                                         type='button'
                                                         onClick={() =>
@@ -1028,10 +1043,14 @@ const OrganisationSettingsPage = class extends Component {
                                                             email,
                                                           )
                                                         }
-                                                        className='btn btn--with-icon ml-auto btn--remove'
+                                                        className='btn btn-with-icon'
                                                       >
-                                                        <RemoveIcon />
-                                                      </button>
+                                                        <Icon
+                                                          name='trash-2'
+                                                          width={20}
+                                                          fill='#656D7B'
+                                                        />
+                                                      </Button>
                                                     </div>
                                                   </Row>
                                                 )
@@ -1067,6 +1086,29 @@ const OrganisationSettingsPage = class extends Component {
                                                   invites,
                                                   'email',
                                                 )}
+                                                header={
+                                                  <Row className='table-header'>
+                                                    <Flex className='table-column px-3'>
+                                                      User
+                                                    </Flex>
+                                                    <div
+                                                      style={{
+                                                        width: widths[0],
+                                                      }}
+                                                      className='table-column'
+                                                    >
+                                                      Action
+                                                    </div>
+                                                    <div
+                                                      style={{
+                                                        width: widths[2],
+                                                      }}
+                                                      className='table-column text-center'
+                                                    >
+                                                      Remove
+                                                    </div>
+                                                  </Row>
+                                                }
                                                 renderRow={(
                                                   {
                                                     date_created,
@@ -1082,16 +1124,16 @@ const OrganisationSettingsPage = class extends Component {
                                                     className='list-item'
                                                     key={id}
                                                   >
-                                                    <div className='flex flex-1'>
+                                                    <div className='flex flex-1 px-3'>
                                                       {email || link}
-                                                      <div className='list-item-footer faint'>
+                                                      <div className='list-item-subtitle'>
                                                         Created{' '}
                                                         {moment(
                                                           date_created,
                                                         ).format('DD/MMM/YYYY')}
                                                       </div>
                                                       {invited_by ? (
-                                                        <div className='list-item-footer faint'>
+                                                        <div className='list-item-subtitle'>
                                                           Invited by{' '}
                                                           {invited_by.first_name
                                                             ? `${invited_by.first_name} ${invited_by.last_name}`
@@ -1099,40 +1141,51 @@ const OrganisationSettingsPage = class extends Component {
                                                         </div>
                                                       ) : null}
                                                     </div>
-                                                    <Row>
-                                                      <Column>
-                                                        {link ? (
-                                                          ' '
-                                                        ) : (
-                                                          <Button
-                                                            id='resend-invite'
-                                                            type='button'
-                                                            onClick={() =>
-                                                              AppActions.resendInvite(
-                                                                id,
-                                                              )
-                                                            }
-                                                            theme='text'
-                                                          >
-                                                            Resend
-                                                          </Button>
-                                                        )}
-                                                      </Column>
-                                                      <Column>
-                                                        <button
-                                                          id='delete-invite'
+                                                    <div
+                                                      style={{
+                                                        width: widths[0],
+                                                      }}
+                                                      className='table-column'
+                                                    >
+                                                      {link ? (
+                                                        ' '
+                                                      ) : (
+                                                        <Button
+                                                          id='resend-invite'
                                                           type='button'
                                                           onClick={() =>
-                                                            this.deleteInvite(
+                                                            AppActions.resendInvite(
                                                               id,
                                                             )
                                                           }
-                                                          className='btn btn--with-icon ml-auto btn--remove'
+                                                          theme='text'
+                                                          size='small'
                                                         >
-                                                          <RemoveIcon />
-                                                        </button>
-                                                      </Column>
-                                                    </Row>
+                                                          Resend
+                                                        </Button>
+                                                      )}
+                                                    </div>
+                                                    <div
+                                                      className='table-column text-center'
+                                                      style={{
+                                                        width: widths[2],
+                                                      }}
+                                                    >
+                                                      <Button
+                                                        id='delete-invite'
+                                                        type='button'
+                                                        onClick={() =>
+                                                          this.deleteInvite(id)
+                                                        }
+                                                        className='btn btn-with-icon'
+                                                      >
+                                                        <Icon
+                                                          name='trash-2'
+                                                          width={20}
+                                                          fill='#656D7B'
+                                                        />
+                                                      </Button>
+                                                    </div>
                                                   </Row>
                                                 )}
                                                 filterRow={(item, search) =>
@@ -1195,7 +1248,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                        <TabItem tabLabel='Webhooks'>
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
@@ -1207,7 +1260,7 @@ const OrganisationSettingsPage = class extends Component {
                                 webhooks per organisation.{' '}
                                 <Button
                                   theme='text'
-                                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>
@@ -1224,18 +1277,15 @@ const OrganisationSettingsPage = class extends Component {
                                 title={
                                   <Tooltip
                                     title={
-                                      <h6 className='mb-0'>
-                                        Webhooks{' '}
-                                        <span className='icon ion-ios-information-circle' />
-                                      </h6>
+                                      <h5 className='mb-0'>
+                                        Webhooks <Icon name='info' />
+                                      </h5>
                                     }
                                     place='right'
                                   >
                                     {Constants.strings.WEBHOOKS_DESCRIPTION}
                                   </Tooltip>
                                 }
-                                className='no-pad'
-                                icon='ion-md-cloud'
                                 items={webhooks}
                                 renderRow={(webhook) => (
                                   <Row
@@ -1246,20 +1296,24 @@ const OrganisationSettingsPage = class extends Component {
                                     className='list-item clickable cursor-pointer'
                                     key={webhook.id}
                                   >
-                                    <div>
-                                      <Button theme='text'>
+                                    <Flex className='table-column px-3'>
+                                      <div className='font-weight-medium mb-1'>
                                         {webhook.url}
-                                      </Button>
-                                      <div className='list-item-footer faint'>
-                                        Created{' '}
-                                        {moment(webhook.created_date).format(
-                                          'DD/MMM/YYYY',
-                                        )}
                                       </div>
-                                    </div>
-                                    <Row>
+                                      {webhook.created_at ? (
+                                        <div className='list-item-description'>
+                                          Created{' '}
+                                          {moment(webhook.created_at).format(
+                                            'DD/MMM/YYYY',
+                                          )}
+                                        </div>
+                                      ) : null}
+                                    </Flex>
+                                    <div className='table-column'>
                                       <Switch checked={webhook.enabled} />
-                                      <button
+                                    </div>
+                                    <div className='table-column'>
+                                      <Button
                                         id='delete-invite'
                                         type='button'
                                         onClick={(e) => {
@@ -1267,24 +1321,27 @@ const OrganisationSettingsPage = class extends Component {
                                           e.preventDefault()
                                           this.deleteWebhook(webhook)
                                         }}
-                                        className='btn btn--with-icon ml-auto btn--remove'
+                                        className='btn btn-with-icon'
                                       >
-                                        <RemoveIcon />
-                                      </button>
-                                    </Row>
+                                        <Icon
+                                          name='trash-2'
+                                          width={20}
+                                          fill='#656D7B'
+                                        />
+                                      </Button>
+                                    </div>
                                   </Row>
                                 )}
                                 renderNoResults={
                                   <Panel
-                                    icon='ion-md-cloud'
-                                    className='fs-small lh-sm'
+                                    className='no-pad'
                                     title={
                                       <Tooltip
                                         title={
-                                          <h6 className='mb-0'>
+                                          <h5 className='mb-0'>
                                             Webhooks{' '}
-                                            <span className='icon ion-ios-information-circle' />
-                                          </h6>
+                                            <Icon name='info-outlined' />
+                                          </h5>
                                         }
                                         place='right'
                                       >
@@ -1295,8 +1352,12 @@ const OrganisationSettingsPage = class extends Component {
                                       </Tooltip>
                                     }
                                   >
-                                    You currently have no webhooks configured
-                                    for this organisation.
+                                    <div className='search-list'>
+                                      <Row className='list-item p-3 text-muted'>
+                                        You currently have no webhooks
+                                        configured for this organisation.
+                                      </Row>
+                                    </div>
                                   </Panel>
                                 }
                                 isLoading={this.props.webhookLoading}
@@ -1305,7 +1366,7 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
                         {!Project.disableAnalytics && (
-                          <TabItem tabLabel='Usage' tabIcon='ion-md-analytics'>
+                          <TabItem tabLabel='Usage'>
                             {this.state.tab === 4 && (
                               <OrganisationUsage
                                 organisationId={

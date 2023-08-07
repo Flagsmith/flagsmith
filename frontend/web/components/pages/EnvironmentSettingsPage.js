@@ -15,6 +15,7 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
+import Icon from 'components/Icon'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -226,8 +227,8 @@ const EnvironmentSettingsPage = class extends Component {
                   </div>
                 )}
                 {!isLoading && (
-                  <Tabs inline transparent uncontrolled>
-                    <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                  <Tabs uncontrolled>
+                    <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference title={'Environment'} json={env} />
                         <div>
@@ -557,7 +558,6 @@ const EnvironmentSettingsPage = class extends Component {
                     <TabItem
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
-                      tabIcon='ion-md-code'
                     >
                       <div className='mt-4'>
                         <JSONReference title={'Environment'} json={env} />
@@ -585,9 +585,8 @@ const EnvironmentSettingsPage = class extends Component {
                                     .
                                   </p>
                                 </div>
-                                <div className='col-md-3 text-right'>
+                                <div className='col-md-3'>
                                   <Select
-                                    className={'text-left'}
                                     value={
                                       showDisabledFlagOptions.find(
                                         (v) =>
@@ -685,7 +684,7 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                    <TabItem tabLabel='Keys'>
                       <FormGroup className='mt-4'>
                         <h5>Client-side Environment Key</h5>
                         <div className='row'>
@@ -719,7 +718,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members' tabIcon='ion-md-people'>
+                    <TabItem tabLabel='Members'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
@@ -732,7 +731,7 @@ const EnvironmentSettingsPage = class extends Component {
                         />
                       </FormGroup>
                     </TabItem>
-                    <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                    <TabItem tabLabel='Webhooks'>
                       <FormGroup className='mt-4'>
                         <Row className='mb-3' space>
                           <div className='col-md-8 pl-0'>
@@ -767,10 +766,9 @@ const EnvironmentSettingsPage = class extends Component {
                             title={
                               <Tooltip
                                 title={
-                                  <h6 className='mb-0'>
-                                    Webhooks{' '}
-                                    <span className='icon ion-ios-information-circle' />
-                                  </h6>
+                                  <h5 className='mb-0'>
+                                    Webhooks <Icon name='info-outlined' />
+                                  </h5>
                                 }
                                 place='right'
                               >
@@ -778,7 +776,6 @@ const EnvironmentSettingsPage = class extends Component {
                               </Tooltip>
                             }
                             className='no-pad'
-                            icon='ion-md-cloud'
                             items={webhooks}
                             renderRow={(webhook) => (
                               <Row
@@ -789,18 +786,22 @@ const EnvironmentSettingsPage = class extends Component {
                                 className='list-item clickable cursor-pointer'
                                 key={webhook.id}
                               >
-                                <div>
-                                  <Button theme='text'>{webhook.url}</Button>
-                                  <div className='list-item-footer faint'>
+                                <Flex className='table-column px-3'>
+                                  <div className='font-weight-medium mb-1'>
+                                    {webhook.url}
+                                  </div>
+                                  <div className='list-item-subtitle'>
                                     Created{' '}
-                                    {moment(webhook.created_date).format(
+                                    {moment(webhook.created_at).format(
                                       'DD/MMM/YYYY',
                                     )}
                                   </div>
-                                </div>
-                                <Row>
+                                </Flex>
+                                <div className='table-column'>
                                   <Switch checked={webhook.enabled} />
-                                  <button
+                                </div>
+                                <div className='table-column'>
+                                  <Button
                                     id='delete-invite'
                                     type='button'
                                     onClick={(e) => {
@@ -808,25 +809,27 @@ const EnvironmentSettingsPage = class extends Component {
                                       e.preventDefault()
                                       this.deleteWebhook(webhook)
                                     }}
-                                    className='btn btn--with-icon ml-auto btn--remove'
+                                    className='btn btn-with-icon'
                                   >
-                                    <RemoveIcon />
-                                  </button>
-                                </Row>
+                                    <Icon
+                                      name='trash-2'
+                                      width={20}
+                                      fill='#656D7B'
+                                    />
+                                  </Button>
+                                </div>
                               </Row>
                             )}
                             renderNoResults={
                               <Panel
                                 id='users-list'
-                                icon='ion-md-cloud'
-                                className='fs-small lh-sm'
+                                className='no-pad'
                                 title={
                                   <Tooltip
                                     title={
-                                      <h6 className='mb-0'>
-                                        Webhooks{' '}
-                                        <span className='icon ion-ios-information-circle' />
-                                      </h6>
+                                      <h5 className='mb-0'>
+                                        Webhooks <Icon name='info-outlined' />
+                                      </h5>
                                     }
                                     place='right'
                                   >
@@ -834,8 +837,12 @@ const EnvironmentSettingsPage = class extends Component {
                                   </Tooltip>
                                 }
                               >
-                                You currently have no Feature Webhooks
-                                configured for this Environment.
+                                <div className='search-list'>
+                                  <Row className='list-item p-3 text-muted'>
+                                    You currently have no Feature Webhooks
+                                    configured for this Environment.
+                                  </Row>
+                                </div>
                               </Panel>
                             }
                             isLoading={this.props.webhookLoading}

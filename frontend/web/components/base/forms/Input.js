@@ -73,6 +73,7 @@ const Input = class extends React.Component {
 
   render() {
     const {
+      disabled,
       inputClassName,
       isValid,
       mask,
@@ -129,6 +130,7 @@ const Input = class extends React.Component {
             onBlur={this.onBlur}
             value={this.props.value}
             className={innerClassName}
+            disabled={disabled}
           />
         )}
         {this.props.type === 'password' && (
@@ -139,11 +141,13 @@ const Input = class extends React.Component {
               },
               sizeClassNames[size],
             )}
-            onClick={() =>
-              this.setState({
-                type: this.state.type === 'password' ? 'text' : 'password',
-              })
-            }
+            onClick={() => {
+              if (!disabled) {
+                this.setState({
+                  type: this.state.type === 'password' ? 'text' : 'password',
+                })
+              }
+            }}
           >
             <Icon
               name={this.state.type === 'text' ? 'eye' : 'eye-off'}

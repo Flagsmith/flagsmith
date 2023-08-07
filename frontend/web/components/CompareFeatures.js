@@ -112,51 +112,39 @@ class CompareEnvironments extends Component {
                       id={data.api_key}
                     >
                       {({ permission }) => (
-                        <div className='list-item clickable mb-2'>
-                          <Row className='relative'>
-                            <div style={{ zIndex: 1 }}>
-                              <Row>
-                                <div
-                                  onMouseDown={(e) => {
-                                    e.stopPropagation()
-                                    this.setState({ selectedIndex: i })
-                                  }}
-                                  className={`btn--radio ion ${
-                                    this.state.selectedIndex === i
-                                      ? 'ion-ios-radio-button-on'
-                                      : 'ion-ios-radio-button-off'
-                                  }`}
-                                />
-                                <strong>{data.name}</strong>
-                              </Row>
+                        <Row className='list-item clickable'>
+                          <Flex className=' flex-row table-column px-3'>
+                            <div
+                              onMouseDown={(e) => {
+                                e.stopPropagation()
+                                this.setState({ selectedIndex: i })
+                              }}
+                              className={`btn-radio mr-2 ${
+                                this.state.selectedIndex === i
+                                  ? 'btn-radio-on'
+                                  : ''
+                              }`}
+                            />
+                            <div className='font-weight-medium'>
+                              {data.name}
                             </div>
-                            <Row>
-                              <FeatureRow
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'flex-end',
-                                  left: 0,
-                                  position: 'absolute',
-                                  right: 0,
-                                  zIndex: 0,
-                                }}
-                                fadeEnabled={fadeEnabled}
-                                fadeValue={fadeValue}
-                                condensed
-                                environmentFlags={flagValues}
-                                projectFlags={[this.state.flag]}
-                                permission={permission}
-                                environmentId={data.api_key}
-                                projectId={this.props.projectId}
-                                index={i}
-                                canDelete={permission}
-                                toggleFlag={toggleFlag}
-                                removeFlag={removeFlag}
-                                projectFlag={this.state.flag}
-                              />
-                            </Row>
-                          </Row>
-                        </div>
+                          </Flex>
+                          <FeatureRow
+                            fadeEnabled={fadeEnabled}
+                            fadeValue={fadeValue}
+                            condensed
+                            environmentFlags={flagValues}
+                            projectFlags={[this.state.flag]}
+                            permission={permission}
+                            environmentId={data.api_key}
+                            projectId={this.props.projectId}
+                            index={i}
+                            canDelete={permission}
+                            toggleFlag={toggleFlag}
+                            removeFlag={removeFlag}
+                            projectFlag={this.state.flag}
+                          />
+                        </Row>
                       )}
                     </Permission>
                   )
@@ -171,12 +159,20 @@ class CompareEnvironments extends Component {
                     {!this.state.isLoading && (
                       <div>
                         <PanelSearch
-                          className='mt-4'
-                          title={
-                            <Row>
-                              <span style={{ width: featureNameWidth }}>
-                                Feature Values
-                              </span>
+                          className='mt-4 no-pad'
+                          title={' Feature Values'}
+                          header={
+                            <Row className='table-header'>
+                              <Flex className='table-column px-3'>
+                                Environment
+                              </Flex>
+                              <Flex className='flex-row'>
+                                <div
+                                  className='table-column'
+                                  style={{ width: '120px' }}
+                                ></div>
+                                <Flex className='table-column'>Value</Flex>
+                              </Flex>
                             </Row>
                           }
                           items={ProjectStore.getEnvs()}

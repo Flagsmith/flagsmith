@@ -26,6 +26,7 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
+    CHANGE_REQUEST_DELETED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
 from audit.tasks import (
@@ -36,7 +37,6 @@ from features.models import FeatureState
 
 from .exceptions import (
     CannotApproveOwnChangeRequest,
-    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 
@@ -73,7 +73,6 @@ class ChangeRequest(
         related_name="change_requests",
     )
 
-    deleted_at = models.DateTimeField(null=True)
     committed_at = models.DateTimeField(null=True)
     committed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -121,18 +120,11 @@ class ChangeRequest(
         self.committed_by = committed_by
         self.save()
 
-    def delete(self, *args, **kwargs):
-        now = timezone.now()
-        if self.committed_at and all(
-            fs.live_from <= now for fs in self.feature_states.all()
-        ):
-            raise ChangeRequestDeletionError(
-                "Cannot delete change request that has been committed."
-            )
-        super().delete(*args, **kwargs)
-
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if (

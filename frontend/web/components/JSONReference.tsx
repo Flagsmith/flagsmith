@@ -5,6 +5,7 @@ import Highlight from './Highlight'
 import Button from './base/forms/Button'
 import Switch from './Switch'
 import flagsmith from 'flagsmith'
+import Icon from './Icon'
 
 type JSONReferenceType = {
   title: string
@@ -100,15 +101,16 @@ const JSONReference: FC<JSONReferenceType> = ({
           <Flex>
             <div>
               <pre className='hljs-header'>
-                <span className='ion-md-document' /> JSON data:{' '}
-                <span className='hljs-description'>{title} </span>
-                <span
-                  className={
-                    visible
-                      ? 'icon ion-ios-arrow-down'
-                      : 'icon ion-ios-arrow-forward'
-                  }
-                />
+                <span className='hljs-icon-left'>
+                  <Icon name='file-text' width={16} />
+                </span>
+                JSON data: <span className='hljs-description'>{title}</span>
+                <span className='hljs-icon'>
+                  <Icon
+                    name={visible ? 'chevron-down' : 'chevron-right'}
+                    width={16}
+                  />
+                </span>
               </pre>
             </div>
           </Flex>
@@ -119,23 +121,21 @@ const JSONReference: FC<JSONReferenceType> = ({
               <div>
                 <Row>
                   {!hideCondensedButton && (
-                    <div className='ml-2'>
-                      <label className='text-small text-white'>Condensed</label>
+                    <div className='mb-2'>
                       <Switch
                         checked={condensed}
                         onChange={() => setCondensed(!condensed)}
                       />
+                      <label className='hljs-switch'>Condensed</label>
                     </div>
                   )}
                   {condensed && showNamesButton && (
                     <div className='ml-2'>
-                      <label className='text-small text-white'>
-                        Show names
-                      </label>
                       <Switch
                         checked={!useIdsOnly}
                         onChange={() => setUseIdsOnly(!useIdsOnly)}
                       />
+                      <label className='hljs-switch'>Show names</label>
                     </div>
                   )}
                 </Row>
@@ -145,13 +145,15 @@ const JSONReference: FC<JSONReferenceType> = ({
                   navigator.clipboard.writeText(condensed ? idsOnly : value)
                   toast('Copied')
                 }}
-                className='btn btn-primary'
+                size='xSmall'
+                iconLeft='copy'
+                iconLeftColour='white'
               >
                 Copy JSON
               </Button>
             </Row>
             <div className='hljs-container'>
-              <Highlight forceExpanded preventEscape className={'json'}>
+              <Highlight forceExpanded preventEscape className={'json p-0'}>
                 {condensed ? idsOnly : value}
               </Highlight>
             </div>

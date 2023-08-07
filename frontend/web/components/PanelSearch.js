@@ -136,16 +136,16 @@ const PanelSearch = class extends Component {
       <Panel
         className={this.props.className}
         title={this.props.title}
-        icon={this.props.icon}
-        renderFooter={this.props.renderFooter}
         action={
-          this.props.filterRow || this.props.sorting ? (
+          this.props.filterRow ||
+          this.props.sorting ||
+          this.props.actionButton ? (
             <Row>
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover
                     renderTitle={(toggle) => (
-                      <a onClick={toggle}>
+                      <a onClick={toggle} className='text-muted'>
                         <div className='flex-column ion ion-md-funnel' />
                         {currentSort ? currentSort.label : 'Unsorted'}
                       </a>
@@ -188,9 +188,9 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div className='mr-2' style={{ width: 200 }}>
+                    <div style={{ width: 175 }}>
                       <Select
-                        className='select-sm'
+                        size='select-sm'
                         styles={{
                           control: (base) => ({
                             ...base,
@@ -245,13 +245,15 @@ const PanelSearch = class extends Component {
                       }}
                       type='text'
                       value={search}
-                      className='pl-4'
+                      className='ml-3'
                       size='small'
+                      placeholder='Search'
                       search
                     />
                   </Row>
                 </Row>
               )}
+              {!!this.props.actionButton && this.props.actionButton}
             </Row>
           ) : (
             action || null
@@ -264,15 +266,6 @@ const PanelSearch = class extends Component {
           className='search-list'
           style={isLoading ? { opacity: 0.5 } : {}}
         >
-          {!!paging && (
-            <Paging
-              paging={paging}
-              isLoading={isLoading}
-              nextPage={nextPage}
-              prevPage={prevPage}
-              goToPage={goToPage}
-            />
-          )}
           {this.props.header}
 
           {this.props.isLoading && (!filteredItems || !items) ? (
@@ -284,11 +277,11 @@ const PanelSearch = class extends Component {
           ) : renderNoResults && !search ? (
             renderNoResults
           ) : (
-            <Column>
+            <Row className='list-item'>
               {!isLoading && (
-                <div className='mx-2 pt-1 pb-2'>
+                <>
                   {this.props.noResultsText?.(search) || (
-                    <>
+                    <div className='table-column'>
                       {'No results '}
                       {search && (
                         <span>
@@ -296,16 +289,24 @@ const PanelSearch = class extends Component {
                           <strong>{` "${search}"`}</strong>
                         </span>
                       )}
-                    </>
+                    </div>
                   )}
-                </div>
+                </>
               )}
-            </Column>
+            </Row>
           )}
+          {!!paging && (
+            <Paging
+              paging={paging}
+              isLoading={isLoading}
+              nextPage={nextPage}
+              prevPage={prevPage}
+              goToPage={goToPage}
+            />
+          )}
+
+          {this.props.renderFooter && this.props.renderFooter()}
         </div>
-        {!!paging && filteredItems && filteredItems.length > 10 && (
-          <Paging paging={paging} isLoading={isLoading} goToPage={goToPage} />
-        )}
       </Panel>
     )
   }

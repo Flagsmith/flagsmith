@@ -5,6 +5,7 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import { Clipboard } from 'polyfill-react-native'
+import Icon from './Icon'
 
 const getGithubLink = (key) => {
   switch (key) {
@@ -116,17 +117,17 @@ const CodeHelp = class extends Component {
               <Flex style={isMobile ? { overflowX: 'scroll' } : {}}>
                 <div>
                   <pre className='hljs-header'>
-                    <span className='ion-ios-code' /> Code example:{' '}
-                    <span className='hljs-description'>
-                      {this.props.title}{' '}
+                    <span />
+                    {'<>'} Code example:{' '}
+                    <span className='hljs-description'>{this.props.title}</span>
+                    <span className='hljs-icon'>
+                      <Icon
+                        name={
+                          this.state.visible ? 'chevron-down' : 'chevron-right'
+                        }
+                        width={16}
+                      />
                     </span>
-                    <span
-                      className={
-                        this.state.visible
-                          ? 'icon ion-ios-arrow-down'
-                          : 'icon ion-ios-arrow-forward'
-                      }
-                    />
                   </pre>
                 </div>
               </Flex>
@@ -169,55 +170,58 @@ const CodeHelp = class extends Component {
                   }),
                 }}
               />
-              <Tabs value={tab}>
-                {_.map(this.props.snippets, (s, key) => {
-                  const docs = getDocsLink(key)
-                  const github = getGithubLink(key)
-                  return (
-                    <TabItem key={key} tabLabel={key}>
-                      <div className='hljs-container mb-2'>
-                        <Highlight
-                          forceExpanded
-                          preventEscape
-                          className={Constants.codeHelp.keys[key]}
-                        >
-                          {s}
-                        </Highlight>
+              {_.map(this.props.snippets, (s, key) => {
+                const docs = getDocsLink(key)
+                const github = getGithubLink(key)
+                return (
+                  <div
+                    className={
+                      key !== language ? 'd-none' : 'hljs-container mt-2 mb-2'
+                    }
+                  >
+                    <Highlight
+                      forceExpanded
+                      preventEscape
+                      className={Constants.codeHelp.keys[key]}
+                    >
+                      {s}
+                    </Highlight>
+
+                    <Column className='hljs-docs'>
+                      <Button
+                        onClick={() => this.copy(s)}
+                        size='xSmall'
+                        iconLeft='copy'
+                        iconLeftColour='white'
+                      >
+                        Copy Code
+                      </Button>
+                      {docs && (
                         <Button
-                          onClick={() => this.copy(s)}
-                          className='btn btn-primary hljs-copy'
+                          target='_blank'
+                          href={docs}
+                          className='btn btn-primary'
+                          size='xSmall'
                         >
-                          Copy Code
+                          <span className='icon ion ion-ios-document' /> {key}{' '}
+                          Docs
                         </Button>
-                        <Row className='hljs-docs'>
-                          {docs && (
-                            <a
-                              target='_blank'
-                              href={docs}
-                              className='btn btn--docs'
-                              rel='noreferrer'
-                            >
-                              <span className='icon ion ion-ios-document' />{' '}
-                              {key} Docs
-                            </a>
-                          )}
-                          {github && (
-                            <a
-                              target='_blank'
-                              href={github}
-                              className='btn btn--docs'
-                              rel='noreferrer'
-                            >
-                              <span className='icon ion ion-logo-github' />{' '}
-                              {key} GitHub
-                            </a>
-                          )}
-                        </Row>
-                      </div>
-                    </TabItem>
-                  )
-                })}
-              </Tabs>
+                      )}
+                      {github && (
+                        <Button
+                          target='_blank'
+                          href={github}
+                          className='btn btn-primary'
+                          size='xSmall'
+                        >
+                          <span className='icon ion ion-logo-github' /> {key}{' '}
+                          GitHub
+                        </Button>
+                      )}
+                    </Column>
+                  </div>
+                )
+              })}
             </div>
           </>
         )}

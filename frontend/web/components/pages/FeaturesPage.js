@@ -3,7 +3,7 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow, { width } from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
@@ -233,13 +233,41 @@ const FeaturesPage = class extends Component {
                               <PanelSearch
                                 className='no-pad'
                                 id='features-list'
-                                icon='ion-ios-rocket'
                                 title='Features'
                                 renderSearchWithNoResults
                                 itemHeight={65}
                                 isLoading={FeatureListStore.isLoading}
                                 paging={FeatureListStore.paging}
                                 search={this.state.search}
+                                header={
+                                  <Row className='table-header'>
+                                    <Flex className='table-column px-3'>
+                                      Name
+                                    </Flex>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[0] }}
+                                    >
+                                      Value
+                                    </div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[1] }}
+                                    >
+                                      <Switch disabled />
+                                    </div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[2] }}
+                                    ></div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[3] }}
+                                    >
+                                      Remove
+                                    </div>
+                                  </Row>
+                                }
                                 onChange={(e) => {
                                   this.setState(
                                     { search: Utils.safeParseEventValue(e) },
@@ -316,7 +344,7 @@ const FeaturesPage = class extends Component {
                                   },
                                 ]}
                                 items={projectFlags}
-                                header={
+                                searchPanel={
                                   <Row className='px-0 pt-0 pb-2'>
                                     <TagFilter
                                       showUntagged
@@ -371,8 +399,11 @@ const FeaturesPage = class extends Component {
                                             this.filter,
                                           )
                                         }}
-                                        className='px-2 py-2 ml-2 mr-2'
-                                        tag={{ label: 'Archived' }}
+                                        className='px-2 py-2 ml-2 mr-2 chip-info'
+                                        tag={{
+                                          color: '#0AADDF',
+                                          label: 'Archived',
+                                        }}
                                       />
                                     </TagFilter>
                                   </Row>

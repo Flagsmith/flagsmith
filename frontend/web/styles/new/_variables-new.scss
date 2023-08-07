@@ -7,18 +7,27 @@ $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
 $danger: #ef4d56;
+$danger400: #f57c78;
 $success: #27ab95;
 $info: #0aaddf;
+$warning: #ff9f43;
+$secondary400: #fae392;
+$secondary600: #d4b050;
+$secondary: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
-$text-icon-grey: rgba(101, 109, 123, 1);
+$text-icon-grey: #656d7b;
+$text-muted: $text-icon-grey;
 $text-icon-light: #ffffff;
 $link-color: $primary;
 $info-alfa-8: rgba(10, 173, 223, 0.08);
+$info-alfa-24: rgba(10, 173, 223, 0.24);
 $danger-alfa-8: rgba(255, 66, 75, 0.08);
 $danger-alfa-16: rgba(255, 66, 75, 0.16);
 $primary-alfa-8: rgba(149, 108, 255, 0.08);
 $primary-alfa-16: rgba(149, 108, 255, 0.16);
+$primary-alfa-24: rgba(149, 108, 255, 0.24);
+$primary-alfa-32: rgba(149, 108, 255, 0.32);
 $basic-alpha-8: rgba(101, 109, 123, 0.08);
 $basic-alpha-16: rgba(101, 109, 123, 0.16);
 $basic-alpha-24: rgba(101, 109, 123, 0.24);
@@ -29,18 +38,25 @@ $white-alpha-16: rgba(255, 255, 255, 0.16);
 $white-alpha-24: rgba(255, 255, 255, 0.24);
 $white-alpha-32: rgba(255, 255, 255, 0.32);
 $white-alpha-48: rgba(255, 255, 255, 0.48);
+$black-alpha-16: rgba(0, 0, 0, 0.16);
+$black-alpha-32: rgba(0, 0, 0, 0.32);
+$secondary-alfa-16: rgba(247, 213, 110, 0.16);
 $theme-colors: (
   primary: $primary,
   danger: $danger,
   success: $success,
   info: $info,
+  warning: $warning,
+  dark: $text-icon-dark,
   // add any additional color below
 );
+$bg-light200: #fafafb;
 $bg-light300: #eff1f4;
+$bg-dark100: #2d3443;
 $bg-dark200: #202839;
-$bg-dark100: rgba(45, 52, 67, 1);
-$bg-dark300: #121827;
-$bg-dark500: rgba(15, 20, 37, 1);
+$bg-dark300: #161d30;
+$bg-dark400: #15192b;
+$bg-dark500: #0f1425;
 
 //Body
 $body-text: $text-icon-dark;
@@ -49,6 +65,7 @@ $body-text-dark: white;
 $border-radius-sm: 4px;
 $border-radius: 6px;
 $border-radius-lg: 8px;
+$border-radius-xlg: 10px;
 
 //Buttons
 $btn-line-height-xsm: 32px;
@@ -87,17 +104,7 @@ $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
 $btn-border-width: 0;
 
-//TABS
-$tab-inactive-color: $body-text;
-$tab-active-background: white;
-$tab-inactive-background: white;
-$tab-inactive-color-dark: $body-text-dark;
-$tab-active-background-dark: $bg-dark100;
-$tab-inactive-background-dark: $bg-dark100;
-
-$tab-line-color: $primary;
-$tab-line-color-dark: $primary;
-
+$link-hover-color: $primary;
 //HR
 $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
@@ -130,7 +137,7 @@ $grid-breakpoints: (
   md: 768px,
   lg: 992px,
   xl: 1200px,
-  xxl: 1201px,
+  xxl: 1400px,
 );
 
 $container-max-widths: (
@@ -143,13 +150,13 @@ $container-max-widths: (
 
 //Typography
 $font-family-base: 'OpenSans', sans-serif;
-$font-size-sm: 0.825rem;
+$font-size-sm: 0.875rem;
 $line-height-base: 1.375;
 $line-height-sm: 20px;
 $line-height-lg: 24px;
 $line-height-xlg: 28px;
 $line-height-xsm: 18px;
-$line-height-xxsm: 24px;
+$line-height-xxsm: 16px;
 $body-color: $text-icon-dark;
 $font-sm: 14px;
 $font-caption: 13px;
@@ -181,20 +188,22 @@ $input-bg-dark: $bg-dark200;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
-$input-height: 48px;
-$input-height-sm: 40px;
-$input-height-xsm: 32px;
-$input-height-lg: 56px;
+$input-height: 50px;
+$input-height-sm: 42px;
+$input-height-xsm: 34px;
+$input-height-lg: 58px;
 $input-line-height: 24px;
 $input-font-size: $font-size-base;
 $input-font-weight: 500;
 $input-border-color: $basic-alpha-16;
-$input-border-color-dark: $btn-secondary-bg-dark;
+$input-border-color-dark: $bg-dark400;
+$input-focus-border-color-dark: $primary;
+$input-hover-border-color-dark: $white-alpha-8;
 $input-placeholder-color: $text-icon-light-grey;
-$input-padding: 12px 16px 12px 12px;
-$input-padding-sm: 8px 14px 8px 12px;
+$input-padding: 12px 12px 12px 16px;
+$input-padding-sm: 8px 12px 8px 14px;
 $input-padding-xsm: 6px 12px;
-$input-padding-lg: 16px 20px 16px 12px;
+$input-padding-lg: 16px 12px 16px 20px;
 $textarea-height: 120px;
 $textarea-height-sm: 100px;
 $textarea-height-xsm: 86px;
@@ -239,3 +248,33 @@ $alert-danger-border-color: $danger;
 $alert-color: $text-icon-grey;
 $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
+
+//Tabs
+$tab-btn-line-height: 42px;
+$tab-btn-font-weight: 500;
+$tab-btn-active-font-weight: 600;
+$tab-btn-counter-value-bg: $danger;
+$tab-btn-counter-value-font-size: $font-caption-sm;
+$tab-btn-counter-value-width: 20px;
+$pill-bg: $bg-light300;
+$tab-line-color: $primary;
+
+//CodeHelp
+$code-btn-bg: $secondary-alfa-16;
+$code-btn-description-color: $secondary600;
+$code-color: $text-icon-light;
+$code-bg: $bg-dark200;
+
+//Panels
+$panel-border-color: $basic-alpha-16;
+$panel-border-radius: $border-radius-lg;
+$panel-table-header-bc: $bg-light200;
+$panel-table-header-color: $text-icon-grey;
+$panel-table-header-font-size: $font-caption;
+$panel-table-header-line-height: $line-height-xsm;
+$panel-table-header-min-height: 44px;
+$panel-list-item-min-height: 72px;
+$panel-list-item-color: $text-icon-dark;
+$panel-list-item-sub-font-size: $font-caption;
+$panel-list-item-sub-line-height: $line-height-xsm;
+$panel-list-item-sub-color: $text-icon-grey;
