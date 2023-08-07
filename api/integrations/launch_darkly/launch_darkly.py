@@ -149,8 +149,7 @@ class LaunchDarklyWrapper:
             )
         except IntegrityError:
             # Feature with this name already exists
-            # todo do we want to update or just log and ignore this one?
-            pass
+            self.logger.error(f"Unable to create feature with name: {ld_flag.get('key')}")
 
         for environment in environments:
             ld_environment = ld_flag.get("environments", {}).get(environment.name)
@@ -183,8 +182,8 @@ class LaunchDarklyWrapper:
             )
         except IntegrityError:
             # Feature with this name already exists
-            # todo do we want to update or just log and ignore this one?
-            pass
+            self.logger.error(f"Unable to create feature with name: {ld_flag.get('key')}")
+
         feature_options = {}
         for variant in ld_flag.get("variations"):
             value = variant.get("value")
