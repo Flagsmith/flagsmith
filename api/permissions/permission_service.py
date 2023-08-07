@@ -6,7 +6,13 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
-from .rbac_wrapper import get_role_permission_filter
+from .rbac_wrapper import (
+    get_permitted_environments_for_master_api_key_using_roles,
+    get_permitted_projects_for_master_api_key_using_roles,
+    get_role_permission_filter,
+    is_master_api_key_object_admin,
+    master_api_key_has_organisation_permission_using_roles,
+)
 
 if TYPE_CHECKING:
     from api_keys.models import MasterAPIKey
@@ -39,7 +45,7 @@ def is_master_api_key_project_admin(
 ) -> bool:
     if master_api_key.is_admin:
         return master_api_key.organisation_id == project.organisation_id
-    return _is_master_api_key_object_admin(master_api_key, project)
+    return is_master_api_key_object_admin(master_api_key, project)
 
 
 def is_master_api_key_environment_admin(
@@ -49,7 +55,7 @@ def is_master_api_key_environment_admin(
         return master_api_key.organisation_id == environment.project.organisation_id
     return is_master_api_key_project_admin(
         master_api_key, environment.project
-    ) or _is_master_api_key_object_admin(master_api_key, environment)
+    ) or is_master_api_key_object_admin(master_api_key, environment)
 
 
 def get_permitted_projects_for_user(
@@ -81,8 +87,9 @@ def get_permitted_projects_for_master_api_key(
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
 
-    filter_ = get_role_permission_filter(master_api_key, Project, permission_key)
-    return Project.objects.filter(filter_).distinct()
+    return get_permitted_projects_for_master_api_key_using_roles(
+        master_api_key, permission_key
+    )
 
 
 def get_permitted_environments_for_user(
@@ -112,20 +119,16 @@ def get_permitted_environments_for_user(
 
 
 def get_permitted_environments_for_master_api_key(
-    master_api_key: "FFAdminUser",
+    master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
         return project.environments.all()
 
-    base_filter = get_role_permission_filter(
-        master_api_key, Environment, permission_key
+    return get_permitted_environments_for_master_api_key_using_roles(
+        master_api_key, project, permission_key
     )
-
-    filter_ = base_filter & Q(project=project)
-
-    return Environment.objects.filter(filter_).distinct().defer("description")
 
 
 def user_has_organisation_permission(
@@ -151,12 +154,9 @@ def master_api_key_has_organisation_permission(
     if master_api_key.is_admin:
         return master_api_key.organisation == organisation
 
-    base_filter = get_role_permission_filter(
-        master_api_key, Organisation, permission_key
+    return master_api_key_has_organisation_permission_using_roles(
+        master_api_key, organisation, permission_key
     )
-    filter_ = base_filter & Q(id=organisation.id)
-
-    return Organisation.objects.filter(filter_).exists()
 
 
 def _is_user_object_admin(
@@ -164,16 +164,6 @@ def _is_user_object_admin(
 ) -> bool:
     ModelClass = type(object_)
     base_filter = get_base_permission_filter(user, ModelClass)
-    filter_ = base_filter & Q(id=object_.id)
-    return ModelClass.objects.filter(filter_).exists()
-
-
-def _is_master_api_key_object_admin(
-    master_api_key: "MasterAPIKey", object_: Union[Project, Environment]
-) -> bool:
-    ModelClass = type(object_)
-
-    base_filter = get_role_permission_filter(master_api_key, ModelClass)
     filter_ = base_filter & Q(id=object_.id)
     return ModelClass.objects.filter(filter_).exists()
 
