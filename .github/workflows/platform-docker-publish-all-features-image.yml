@@ -32,7 +32,6 @@ jobs:
       - name: Integrate SAML module
         run: |
           mv ./flagsmith-saml/saml ./api
-          cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
 
       - name: Checkout Workflows Logic package
         uses: actions/checkout@v3
@@ -44,6 +43,18 @@ jobs:
 
       - name: Integrate Workflows Logic module
         run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
+
+      - name: Checkout Auth Controller package
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-auth-controller
+          token: ${{ inputs.github_access_token }}
+          ref: ${{ inputs.flagsmith_auth_controller_revision }}
+          path: ./flagsmith-auth-controller
+
+      - name: Integrate Auth Controller module
+        run: mv ./flagsmith-auth-controller/auth_controller ./api
+        shell: bash
 
       - name: Checkout RBAC module
         uses: actions/checkout@v3
@@ -98,3 +109,4 @@ jobs:
           context: .
           build-args: |
             SAML_INSTALLED=1
+            POETRY_OPTS="--with saml,auth-controller"

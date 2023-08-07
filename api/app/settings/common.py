@@ -641,6 +641,7 @@ TRENCH_AUTH = {
             "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
         },
     },
+    "SECRET_KEY_LENGTH": 32,
 }
 
 USER_CREATE_PERMISSIONS = env.list(
