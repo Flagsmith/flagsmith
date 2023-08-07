@@ -80,10 +80,7 @@ runs:
         path: ./flagsmith-saml
 
     - name: Integrate SAML module
-      run: |
-        mv ./flagsmith-saml/saml ./api
-        cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
-        echo "" >> ./api/requirements.txt  # add a new line so that future concatenation works
+      run: mv ./flagsmith-saml/saml ./api
       shell: bash
 
     - name: Checkout Workflows Logic package
@@ -107,10 +104,7 @@ runs:
         path: ./flagsmith-auth-controller
 
     - name: Integrate Auth Controller module
-      run: |
-        mv ./flagsmith-auth-controller/auth_controller ./api
-        cat ./flagsmith-auth-controller/requirements.txt >> ./api/requirements.txt
-        echo "" >> ./api/requirements.txt # add a new line so that future concatenation works
+      run: mv ./flagsmith-auth-controller/auth_controller ./api
       shell: bash
 
     - name: Checkout RBAC module
@@ -157,7 +151,7 @@ runs:
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
         cd api
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 .
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTIONAL_GROUPS=saml,auth-controller .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
