@@ -1673,21 +1673,6 @@ files = [
 ]
 
 [[package]]
-name = "importlib-resources"
-version = "6.0.1"
-description = "Read resources from Python packages"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "importlib_resources-6.0.1-py3-none-any.whl", hash = "sha256:134832a506243891221b88b4ae1213327eea96ceb4e407a00d790bb0626f45cf"},
-    {file = "importlib_resources-6.0.1.tar.gz", hash = "sha256:4359457e42708462b9626a04657c6208ad799ceb41e5c58c57ffa0e6a098a5d4"},
-]
-
-[package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
-
-[[package]]
 name = "inflection"
 version = "0.5.1"
 description = "A port of Ruby on Rails inflector to Python"
@@ -2734,24 +2719,22 @@ tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "pysaml2"
-version = "7.0.1"
+version = "7.4.2"
 description = "Python implementation of SAML Version 2 Standard"
 optional = false
-python-versions = "<4,>=3.6"
+python-versions = ">=3.9,<4.0"
 files = [
-    {file = "pysaml2-7.0.1-py2.py3-none-any.whl", hash = "sha256:25bc3be6dcf9e3655b16bef2471477d170fb98e2c03a76fa028c625a54cb4f36"},
-    {file = "pysaml2-7.0.1.tar.gz", hash = "sha256:d81b822286f1e73ae420b53fe18b737b0abb0c17c0cf78e360dd37bcd9dc98b4"},
+    {file = "pysaml2-7.4.2-py3-none-any.whl", hash = "sha256:6616abe0526915cabef6af3a81570bd4c339bedd8db3ab12dcd4fa0612896837"},
+    {file = "pysaml2-7.4.2.tar.gz", hash = "sha256:2bc5147b3b2f902a9131bf08240c068becea29994aafb7654a63d7270ac5b63b"},
 ]
 
 [package.dependencies]
-cryptography = ">=1.4"
+cryptography = ">=3.1"
 defusedxml = "*"
-importlib-resources = "*"
-pyOpenSSL = "*"
+pyopenssl = "*"
 python-dateutil = "*"
 pytz = "*"
-requests = ">=1.0.0"
-six = "*"
+requests = ">=2,<3"
 xmlschema = ">=1.2.1"
 
 [package.extras]
@@ -3835,4 +3818,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "53fbf31ad1ff0c684b7224f67bc3c08c4b7aa9c4c995fbb73dfaf772911552c0"
+content-hash = "235e26f83e60ed2432a8c42cd166b42e5cffbfbc140189fcd34051c9cf40e10b"
