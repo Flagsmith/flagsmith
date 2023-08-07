@@ -34,7 +34,7 @@ known_third_party=['_pytest','apiclient','app_analytics','axes','chargebee','cor
 skip = ['migrations','.venv','.direnv']
 
 [tool.pytest.ini_options]
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings', '-n', 'auto']
+addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 
 [tool.poetry]
 name = "flagsmith-api"
@@ -124,4 +124,3 @@ pytest-cov = "~4.1.0"
 [build-system]
 requires = ["poetry-core>=1.5.0"]
 build-backend = "poetry.core.masonry.api"
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
