@@ -11,15 +11,15 @@ from permissions.permission_service import (
     master_api_key_has_organisation_permission,
 )
 
+from .models import MasterAPIKey
+
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from projects.models import Project
 
 
 class APIKeyUser:
-    key = None
-
-    def __init__(self, key):
+    def __init__(self, key: MasterAPIKey):
         self.key = key
 
     def is_authenticated(self):
@@ -43,7 +43,6 @@ class APIKeyUser:
         return environment in self.get_permitted_environments(
             permission, environment.project
         )
-        return True
 
     def has_organisation_permission(
         self, organisation: Organisation, permission_key: str

@@ -10,6 +10,7 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
         help_text="Since we don't store the api key itself(i.e: we only store the hash) this key will be none "
         "for every endpoint apart from create",
     )
+    is_admin = serializers.BooleanField(default=True)
 
     class Meta:
         model = MasterAPIKey

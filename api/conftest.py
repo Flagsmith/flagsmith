@@ -292,24 +292,31 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
+def admin_master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, _ = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation
+        name="test_key", organisation=organisation, is_admin=True
     )
     return master_api_key
 
 
 @pytest.fixture()
-def master_api_key_obj_and_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
-    master_api_key_obj, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation
-    )
-    return master_api_key_obj, key
+def master_api_key(admin_master_api_key) -> typing.Tuple[MasterAPIKey, str]:
+    admin_master_api_key.is_admin = False
+    admin_master_api_key.save()
+    return admin_master_api_key
 
 
 @pytest.fixture()
-def master_api_key_client(master_api_key_obj_and_key):
-    key = master_api_key_obj_and_key[1]
+def master_api_key_and_obj(organisation) -> typing.Tuple[MasterAPIKey, str]:
+    master_api_key_obj, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation
+    )
+    return key, master_api_key_obj
+
+
+@pytest.fixture()
+def master_api_key_client(master_api_key_and_obj):
+    key = master_api_key_and_obj[0]
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()

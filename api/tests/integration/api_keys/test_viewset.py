@@ -1,10 +1,6 @@
-import typing
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from api_keys.models import MasterAPIKey
 
 
 def test_create_master_api_key_returns_key_in_response(admin_client, organisation):
@@ -21,6 +17,7 @@ def test_create_master_api_key_returns_key_in_response(admin_client, organisatio
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["key"] is not None
+    assert response.json()["is_admin"] is True
 
 
 def test_creating_non_admin_master_api_key_without_rbac_returns_400(
@@ -191,8 +188,8 @@ def test_create_master_api_key_ignores_organisation_in_body(admin_client, organi
 def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
     admin_client: APIClient,
     organisation: int,
-    master_api_key: typing.Tuple[MasterAPIKey, str],
     master_api_key_client: APIClient,
+    master_api_key_prefix: str,
 ) -> None:
     # Given
     # the relevant URLs
@@ -202,7 +199,7 @@ def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
     )
     detail_url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key["prefix"]],
+        args=[organisation, master_api_key_prefix],
     )
     list_projects_url = "%s?organisation=%s" % (
         reverse("api-v1:projects:project-list"),
