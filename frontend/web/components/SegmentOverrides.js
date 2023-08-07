@@ -507,7 +507,7 @@ class TheComponent extends Component {
 
     const THRESHOLD = 90
     const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
-      totalSegmentOverrides,
+      100,
       ProjectStore.getMaxSegmentOverridesAllowed(),
       THRESHOLD,
     )
@@ -519,8 +519,8 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly &&
-            (!segmentOverrideLimitAlert.percentage ||
-              !segmentOverrideLimitAlert.percentage >= 100) && (
+            (!segmentOverrideLimitAlert.percentage || 
+              segmentOverrideLimitAlert.percentage < 90) && (
               <Flex className='text-left'>
                 <SegmentSelect
                   projectId={this.props.projectId}
