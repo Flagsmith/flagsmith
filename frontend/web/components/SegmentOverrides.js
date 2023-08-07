@@ -519,7 +519,8 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly &&
-            !segmentOverrideLimitAlert >= 100 && (
+            (!segmentOverrideLimitAlert.percentage ||
+              !segmentOverrideLimitAlert.percentage >= 100) && (
               <Flex className='text-left'>
                 <SegmentSelect
                   projectId={this.props.projectId}

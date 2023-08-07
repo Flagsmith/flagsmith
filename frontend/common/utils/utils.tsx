@@ -67,7 +67,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const percentage = (total / max) * 100
     if (percentage >= threshold) {
       return {
-        percentage: percentage >= 100 ? percentage : percentage.toFixed(2),
+        percentage: Math.floor(percentage),
       }
     }
     return 0
