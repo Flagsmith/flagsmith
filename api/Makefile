@@ -27,10 +27,6 @@ install-packages:
 .PHONY: install
 install: install-pip install-poetry install-packages
 
-.PHONY: generate-requirements-file
-generate-requirements-file: 
-	poetry export -f requirements.txt --output requirements.txt --with $(opts)
-
 .PHONY: lint-black
 lint-black:
 	poetry run black --check .

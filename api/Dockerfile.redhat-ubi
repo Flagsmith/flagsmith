@@ -16,7 +16,7 @@ USER 1001
 
 ARG POETRY_VIRTUALENVS_CREATE=false
 ADD --chown=1001:0 pyproject.toml poetry.lock Makefile .
-RUN make generate-requirements-file opts="main"
+RUN make install-packages
 RUN pip install -r requirements.txt
 ENV PATH="$PATH:/root/.local/bin"
 RUN make install-packages opts="--no-root --only main"
