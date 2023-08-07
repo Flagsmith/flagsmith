@@ -9,8 +9,10 @@ def test_authenticate_returns_api_key_user_for_valid_key(master_api_key_and_obj,
     # Given
     key, master_api_key_obj = master_api_key_and_obj
     request = rf.get("/some-endpoint", HTTP_AUTHORIZATION="Api-Key " + key)
+
     # When
     user, _ = MasterAPIKeyAuthentication().authenticate(request)
+
     # Then
     assert user.key == master_api_key_obj
 

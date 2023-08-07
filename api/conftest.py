@@ -300,10 +300,11 @@ def admin_master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
 
 
 @pytest.fixture()
-def master_api_key(admin_master_api_key) -> typing.Tuple[MasterAPIKey, str]:
-    admin_master_api_key.is_admin = False
-    admin_master_api_key.save()
-    return admin_master_api_key
+def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
+    master_api_key, _ = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation, is_admin=False
+    )
+    return master_api_key
 
 
 @pytest.fixture()

@@ -172,6 +172,11 @@ def project_two(organisation):
     return Project.objects.create(name="Test Project Two", organisation=organisation)
 
 
+@pytest.fixture()
+def environment_two(project):
+    return Environment.objects.create(name="Test Environment two", project=project)
+
+
 @pytest.fixture
 def project_two_environment(project_two):
     return Environment.objects.create(name="Test Environment Two", project=project_two)
