@@ -179,4 +179,6 @@ def environment_two(project):
 
 @pytest.fixture
 def project_two_environment(project_two):
-    return Environment.objects.create(name="Test Environment Two", project=project_two)
+    return Environment.objects.create(
+        name="Test Project two Environment", project=project_two
+    )

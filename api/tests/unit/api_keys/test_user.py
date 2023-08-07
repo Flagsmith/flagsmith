@@ -31,7 +31,7 @@ def test_belongs_to(for_organisation, expected_result, master_api_key):
 
 
 @pytest.mark.parametrize(
-    "for_project,for_master_api_key, expected_is_admin",
+    "for_project, for_master_api_key, expected_is_admin",
     [
         (lazy_fixture("project"), lazy_fixture("admin_master_api_key"), True),
         (lazy_fixture("project"), lazy_fixture("master_api_key"), False),
@@ -62,7 +62,7 @@ def test_is_project_admin(
 
 
 @pytest.mark.parametrize(
-    "for_environment,for_master_api_key, expected_is_admin",
+    "for_environment, for_master_api_key, expected_is_admin",
     [
         (lazy_fixture("environment"), lazy_fixture("admin_master_api_key"), True),
         (lazy_fixture("environment"), lazy_fixture("master_api_key"), False),
@@ -253,6 +253,7 @@ def test_get_permitted_environments(
 ):
     # Given
     user = APIKeyUser(for_master_api_key)
+
     # When
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
