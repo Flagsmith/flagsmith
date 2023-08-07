@@ -1,0 +1,25 @@
+{
+  "_links": {
+    "environments": {
+      "href": "/api/v2/projects/another-project/environments",
+      "type": "application/json"
+    },
+    "flagDefaults": {
+      "href": "/api/v2/projects/another-project/flag-defaults",
+      "type": "application/json"
+    },
+    "self": {
+      "href": "/api/v2/projects/another-project",
+      "type": "application/json"
+    }
+  },
+  "_id": "64c102aeca98f813c9eb1b64",
+  "key": "another-project",
+  "includeInSnippetByDefault": false,
+  "defaultClientSideAvailability": {
+    "usingMobileKey": false,
+    "usingEnvironmentId": false
+  },
+  "name": "AnotherProject",
+  "tags": []
+}

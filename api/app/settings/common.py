@@ -147,7 +147,7 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     "integrations.dynatrace",
-    "integrations.flagsmith",
+    "integrations.launch_darkly",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",

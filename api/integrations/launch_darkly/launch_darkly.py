@@ -16,44 +16,80 @@ from integrations.launch_darkly.models import LaunchDarklyImport
 from integrations.launch_darkly.serializers import LaunchDarklyImportSerializer
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 class LaunchDarklyWrapper:
-    def __init__(self, api_key: str):
-        self.client = LaunchDarklyClient(api_key)
-        self.logger = LaunchDarklyImport.objects.create()
+    def __init__(
+        self,
+        api_key: str,
+        user: FFAdminUser,
+        request: LaunchDarklyImportSerializer,
+        client: LaunchDarklyClient = None,
+    ):
+        self.client = client or LaunchDarklyClient(api_key)
+        self.request = request
+        self.logger = LaunchDarklyImport.objects.create(
+            user=user,
+            organisation=self.request["organisation_id"],
+            project=self.request["project_id"],
+        )
+        self.import_id = self.logger.id
 
-    def import_data(self, request: LaunchDarklyImportSerializer):
-        self.logger.info("Starting Launch Dark feature importer")
-        organisation_id = request['organisation_id']
-        self.logger.info(f"Attempting to retrieve Flagsmith organisation with id: {organisation_id}")
-        organisation = Organisation.objects.get(pk=request["organisation_id"])
-        self.logger.info(f"Successfully retrieved Flagsmith organisation with id: {organisation_id}")
-
+    def import_data(self):
+        self.logger.info(
+            f"Starting Launch Darkly feature importer with job id: {self.import_id}"
+        )
+        organisation_id = self.request["organisation_id"]
+        self.logger.info(
+            f"Attempting to retrieve Flagsmith organisation with id: {organisation_id}"
+        )
+        organisation = Organisation.objects.get(pk=self.request["organisation_id"])
+        self.logger.info(
+            f"Successfully retrieved Flagsmith organisation with id: {organisation_id}"
+        )
+        ld_project_id = self.request["ld_project_id"]
         try:
-            project_id = request["project_id"]
-            self.logger.info(f"Attempting to retrieve Flagsmith project with id: {project_id}")
+            project_id = self.request["project_id"]
+            self.logger.info(
+                f"Attempting to retrieve Flagsmith project with id: {project_id}"
+            )
             project = Project.objects.get(project_id)
-            self.logger.info(f"Successfully retrieved Flagsmith project with id: {project_id}")
+            self.logger.info(
+                f"Successfully retrieved Flagsmith project with id: {project_id}"
+            )
         except KeyError:
-            self.logger.warning("Could not find Flagsmith project with id: {project_id}")
-            self.logger.info("Creating new Flagsmith project for Launch Darklys' imported features")
-            ld_project = self.client.get_project(request["ld_project_id"])
+            self.logger.warning(
+                "Could not find Flagsmith project with id: {project_id}"
+            )
+            self.logger.info(
+                "Creating new Flagsmith project for Launch Darklys' imported features"
+            )
+            ld_project = self.client.get_project(ld_project_id)
             project = self._create_project(organisation, ld_project)
-            self.logger.info("Successfully created new Flagsmith project for Launch Darklys' imported features")
-
-        self.logger.info(f"Attempting to retrieve Launch Darkly environments under project id: {request['ld_project_id']}")
-        ld_environments = self.client.get_environments(request["ld_project_id"])
-        if not ld_environments:
-            # todo do we want to stop the script if no environments can be found
-            self.logger.warning(f"No environments found in Launch Darkly for project id: {request['ld_project_id']}")
+            self.logger.info(
+                "Successfully created new Flagsmith project for Launch Darklys' imported features"
+            )
 
         self.logger.info(
-            f"Attempting to retrieve Launch Darkly flags under project id: {request['ld_project_id']}")
-        ld_flags = self.client.get_flags(request["ld_project_id"])
+            f"Attempting to retrieve Launch Darkly environments under project id: {ld_project_id}"
+        )
+        ld_environments = self.client.get_environments(ld_project_id)
+        if not ld_environments:
+            # todo do we want to stop the script if no environments can be found
+            self.logger.warning(
+                f"No environments found in Launch Darkly for project id: {ld_project_id}"
+            )
+
+        self.logger.info(
+            f"Attempting to retrieve Launch Darkly flags under project id: {ld_project_id}"
+        )
+        ld_flags = self.client.get_flags(ld_project_id)
         if not ld_flags:
             # todo do we want to stop the script if no flags can be found
-            self.logger.warning(f"No flags found in Launch Darkly for project id: {request['ld_project_id']}")
+            self.logger.warning(
+                f"No flags found in Launch Darkly for project id: {ld_project_id}"
+            )
 
         environments = []
         for ld_environment in ld_environments:
