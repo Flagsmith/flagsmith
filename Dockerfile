@@ -19,7 +19,8 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
-RUN make install-packages opts="saml,auth-controller"
+ARG POETRY_OPTS
+RUN make install-packages opts=${POETRY_OPTS}
 
 # Step 3 - Build Django Application
 FROM python:3.11-slim as application

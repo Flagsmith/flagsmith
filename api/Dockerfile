@@ -9,8 +9,8 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
-ARG POETRY_OPTIONAL_GROUPS=""
-RUN make install-packages opts="${POETRY_OPTIONAL_GROUPS}"
+ARG POETRY_OPTS
+RUN make install-packages opts=${POETRY_OPTS}
 
 # Step 2 - Build Django Application
 FROM python:3.11-slim as application
