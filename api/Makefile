@@ -12,10 +12,6 @@ POETRY_VERSION ?= 1.5.0
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
-.PHONY: install-pip
-install-pip:
-	python -m pip install --upgrade pip
-
 .PHONY: install-poetry
 install-poetry:
 	curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION}
@@ -25,10 +21,10 @@ install-packages:
 	poetry install $(opts)
 
 .PHONY: install
-install: install-pip install-poetry install-packages
+install: install-poetry install-packages
 
 .PHONY: generate-requirements-file
-generate-requirements-file: 
+generate-requirements-file:
 	poetry export -f requirements.txt --output requirements.txt --only $(opts)
 
 .PHONY: lint-black
