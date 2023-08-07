@@ -1,23 +1,25 @@
+from typing import Optional
 from uuid import UUID
 
-from requests import Response, Session
-from rest_framework import status
+from django.db import IntegrityError
 
 from environments.models import Environment
 from features.feature_types import STANDARD
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureState, FeatureStateValue
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
+from features.value_types import BOOLEAN, FLOAT, INTEGER, STRING
+from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.serializers import LaunchDarklyImportSerializer
 from organisations.models import Organisation
 from projects.models import Project
 
-LAUNCH_DARKLY_API_URL = "https://app.launchdarkly.com/api/v2"
-
 
 class LaunchDarklyWrapper:
     def __init__(self, api_key: str):
-        headers = {"Authorization": api_key}
-        self.client = Session()
-        self.client.headers = headers
+        self.client = LaunchDarklyClient(api_key)
 
     def import_data(self, request: LaunchDarklyImportSerializer):
         organisation = Organisation.objects.get(pk=request["organisation_id"])
@@ -26,11 +28,11 @@ class LaunchDarklyWrapper:
             project_id = request["project_id"]
             project = Project.objects.get(project_id)
         except KeyError:
-            ld_project = self._get_project(request["ld_project_id"])
+            ld_project = self.client.get_project(request["ld_project_id"])
             project = self._create_project(organisation, ld_project)
 
-        ld_environments = self._get_environments(request["ld_project_id"])
-        ld_flags = self._get_flags(request["ld_project_id"])
+        ld_environments = self.client.get_environments(request["ld_project_id"])
+        ld_flags = self.client.get_flags(request["ld_project_id"])
 
         environments = []
         for ld_environment in ld_environments:
@@ -39,38 +41,6 @@ class LaunchDarklyWrapper:
 
         for ld_flag in ld_flags:
             feature = self._create_feature(ld_flag, environments)
-
-    def _get_project(self, project_id: str):
-        response = self.client.get(f"{LAUNCH_DARKLY_API_URL}/projects/{project_id}")
-        response_json = self._handle_response(response)
-        return response_json
-
-    def _get_environments(self, project_id: str):
-        response = self.client.get(
-            f"{LAUNCH_DARKLY_API_URL}/projects/{project_id}/environments/"
-        )
-        response_json = self._handle_response(response)
-        return response_json.get("items", [])
-
-    def _get_flags(self, project_id: str):
-        response = self.client.get(f"{LAUNCH_DARKLY_API_URL}/flags/{project_id}")
-        response_json = self._handle_response(response)
-        return response_json.get("items", [])
-
-    def _handle_response(self, response: Response):
-        match response.status_code:
-            case status.HTTP_400_BAD_REQUEST:
-                pass
-            case status.HTTP_401_UNAUTHORIZED:
-                pass
-            case status.HTTP_403_FORBIDDEN:
-                pass
-            case status.HTTP_404_NOT_FOUND:
-                pass
-            case status.HTTP_429_TOO_MANY_REQUESTS:
-                pass
-            case _:
-                return response.json()
 
     def _create_project(self, organisation_id: UUID, ld_project: dict) -> Project:
         return Project.objects.create(
@@ -98,28 +68,103 @@ class LaunchDarklyWrapper:
         self, ld_flag, environments: list[Environment], project: Project
     ):
         # todo try get tags
-        feature = Feature.objects.create(
-            name=ld_flag.get("key"),
-            project=project,
-            initial_value=None,  # todo
-            description=ld_flag.get("description"),
-            default_enabled=None,  # todo
-            type=STANDARD,
-            tags=None,  # todo
-            is_archived=ld_flag.get("archived"),
-            owners=None,  # todo
-            is_server_key_only=None,  # todo
-        )
+        try:
+            feature = Feature.objects.create(
+                name=ld_flag.get("key"),
+                project=project,
+                initial_value=None,  # todo
+                description=ld_flag.get("description"),
+                default_enabled=None,  # todo
+                type=STANDARD,
+                tags=None,  # todo
+                is_archived=ld_flag.get("archived", False),
+                owners=None,  # todo
+                is_server_key_only=None,  # todo
+            )
+        except IntegrityError:
+            # Feature with this name already exists
+            # todo do we want to update or just log and ignore this one?
+            pass
+
         for environment in environments:
             ld_environment = ld_flag.get("environments", {}).get(environment.name)
             if ld_environment:
-                FeatureState.objects.create(
+                feature_state = FeatureState.objects.create(
                     feature=feature,
                     environment=environment,
                     identity=None,  # todo
                     feature_segment=None,  # todo
                     enabled=ld_environment.get("_summary").get("on"),
                 )
+                FeatureStateValue.objects.create(feature_state=feature_state)
 
-    def _create_multivariate_feature(self, ld_flag, environments: list[Environment]):
-        pass
+    def _create_multivariate_feature(
+        self, ld_flag, environments: list[Environment], project: Project
+    ):
+        # todo try get tags
+        try:
+            feature = Feature.objects.create(
+                name=ld_flag.get("key"),
+                project=project,
+                initial_value=None,  # todo
+                description=ld_flag.get("description"),
+                default_enabled=None,  # todo
+                type=STANDARD,
+                tags=None,  # todo
+                is_archived=ld_flag.get("archived", False),
+                owners=None,  # todo
+                is_server_key_only=None,  # todo
+            )
+        except IntegrityError:
+            # Feature with this name already exists
+            # todo do we want to update or just log and ignore this one?
+            pass
+        feature_options = {}
+        for variant in ld_flag.get("variations"):
+            value = variant.get("value")
+            variant_type = self._get_multivariant_kind(value)
+            variant_values = self._get_multivariant_value(value, variant_type)
+            feature_option = MultivariateFeatureOption.objects.create(
+                feature=feature,
+                type=variant_type,
+                boolean_value=variant_values[0],
+                integer_value=variant_values[1],
+                string_value=variant_values[2],
+            )
+            feature_options[value] = feature_option
+
+        for environment in environments:
+            ld_environment = ld_flag.get("environments", {}).get(environment.name)
+            if ld_environment:
+                env_feature_option = feature_options.get(ld_environment.get(""))
+                MultivariateFeatureStateValue.objects.create(
+                    feature=feature,
+                    environment=environment,
+                    identity=None,  # todo
+                    feature_segment=None,  # todo
+                    enabled=ld_environment.get("_summary").get("on"),
+                    multivariate_feature_option=env_feature_option,
+                    updated_at=ld_environment.get("_summary").get("lastModified"),
+                )
+
+    def _get_multivariant_kind(self, value: any) -> str:
+        if isinstance(value, bool):
+            return BOOLEAN
+        if isinstance(value, str):
+            return STRING
+        if isinstance(value, float):
+            return FLOAT
+        if isinstance(value, int):
+            return INTEGER
+        return STRING
+
+    def _get_multivariant_value(
+        self, value: any, type: str
+    ) -> (Optional[bool], Optional[int], Optional[str]):
+        if type == BOOLEAN:
+            return (value, None, None)
+        if type in [INTEGER, FLOAT]:
+            return (None, int(value), None)
+        if type == STRING:
+            return (None, None, value)
+        raise Exception()
