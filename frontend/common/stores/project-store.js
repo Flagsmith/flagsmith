@@ -99,12 +99,6 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
-          project.max_segments_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_features_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_segments_allowed =
-            project.max_segment_overrides_allowed || Number.MAX_SAFE_INTEGER
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
@@ -131,12 +125,6 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
-          project.max_segments_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_features_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_segments_allowed =
-            project.max_segment_overrides_allowed || Number.MAX_SAFE_INTEGER
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
