@@ -78,7 +78,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type === 'segment overrides' ? 'environment' : 'project'
     return percentage >= 100 ? (
       <ErrorMessage
-        error={`Your ${envOrProject} reached the limit of ${type} totals.`}
+        error={`Your ${envOrProject} reached the limit of ${type}, please contact support to discuss increasing this limit.`}
       />
     ) : percentage ? (
       <WarningMessage
