@@ -106,7 +106,7 @@ pyngo = "~1.6.0"
 django-multiselectfield = "~0.1.12"
 
 [tool.poetry.group.saml.dependencies]
-pysaml2 = "~7.0.0"
+pysaml2 = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
