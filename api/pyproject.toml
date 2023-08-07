@@ -117,7 +117,7 @@ pep8 = "~1.7.1"
 autopep8 = "~2.0.1"
 pytest = "~7.2.1"
 pytest-django = "~4.5.2"
-black = "~23.1.0"
+black = "~23.7.0"
 pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
 
