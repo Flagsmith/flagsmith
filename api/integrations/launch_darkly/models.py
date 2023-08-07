@@ -1,13 +1,15 @@
+from core.models import AbstractBaseExportableModel
 from django.db import models
 
-from core.models import AbstractBaseExportableModel
 from integrations.launch_darkly.enums import LogLevel
 from organisations.models import Organisation
 from projects.models import Project
 
 
 class LaunchDarklyImportLogs(AbstractBaseExportableModel):
-    launch_darkly_import = models.ForeignKey("LaunchDarklyImport", on_delete=models.CASCADE)
+    launch_darkly_import = models.ForeignKey(
+        "LaunchDarklyImport", on_delete=models.CASCADE
+    )
     log_level = models.CharField(max_length=8, choices=LogLevel.choices)
     log_message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,7 +18,9 @@ class LaunchDarklyImportLogs(AbstractBaseExportableModel):
 class LaunchDarklyImport(AbstractBaseExportableModel):
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE
+    )
     started_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed = models.BooleanField(default=False)
