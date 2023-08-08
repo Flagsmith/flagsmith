@@ -181,6 +181,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
+      'side-modal',
     )
   }
 
@@ -193,6 +194,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
+      'side-modal',
     )
   }
 
@@ -219,7 +221,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -237,7 +239,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -587,7 +589,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
-                                                  'p-0',
+                                                  'p-0 side-modal',
                                                 )
                                               }
                                               type='button'

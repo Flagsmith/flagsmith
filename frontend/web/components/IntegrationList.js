@@ -230,7 +230,7 @@ class IntegrationList extends Component {
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
-      'p-0',
+      'side-modal',
     )
   }
 

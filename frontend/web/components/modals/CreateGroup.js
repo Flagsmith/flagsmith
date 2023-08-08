@@ -7,6 +7,7 @@ import { getStore } from 'common/store'
 import { components } from 'react-select'
 import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
+import Tooltip from 'components/Tooltip'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -241,35 +242,34 @@ const CreateGroup = class extends Component {
                       placeholder='Add an optional external reference ID'
                     />
 
-                    <InputGroup
-                      title='Add new users by default'
-                      tooltipPlace='top'
-                      tooltip='New users that sign up to your organisation will be automatically added to this group with USER permissions'
-                      ref={(e) => (this.input = e)}
-                      data-test='groupName'
-                      component={
-                        <Switch
-                          onChange={(e) =>
-                            this.setState({
-                              is_default: Utils.safeParseEventValue(e),
-                              toggleChange: true,
-                            })
-                          }
-                          checked={!!this.state.is_default}
-                        />
-                      }
-                      inputProps={{
-                        className: 'full-width',
-                        name: 'groupName',
-                      }}
-                      unsaved={this.props.isEdit && this.state.toggleChange}
-                      value={name}
-                      isValid={name && name.length}
-                      type='text'
-                    />
+                    <Row className='mb-4'>
+                      <Tooltip
+                        title={
+                          <Row>
+                            <Switch
+                              onChange={(e) =>
+                                this.setState({
+                                  is_default: Utils.safeParseEventValue(e),
+                                  toggleChange: true,
+                                })
+                              }
+                              checked={!!this.state.is_default}
+                            />
+                            <label className='ms-2 me-2 mb-0'>
+                              Add new users by default
+                            </label>
+                            <Icon name='info-outlined' />
+                          </Row>
+                        }
+                      >
+                        New users that sign up to your organisation will be
+                        automatically added to this group with USER permissions
+                      </Tooltip>
+                    </Row>
+
                     <div className='mb-4'>
                       <label>Group members</label>
-                      <div style={{ width: 350 }}>
+                      <div>
                         <Select
                           disabled={!inactiveUsers?.length}
                           components={{
@@ -302,11 +302,13 @@ const CreateGroup = class extends Component {
                       <PanelSearch
                         noResultsText={(search) =>
                           search ? (
-                            <>
+                            <Flex className='text-center'>
                               No results found for <strong>{search}</strong>
-                            </>
+                            </Flex>
                           ) : (
-                            'This group has no members'
+                            <Flex className='text-center'>
+                              This group has no members
+                            </Flex>
                           )
                         }
                         id='org-members-list'

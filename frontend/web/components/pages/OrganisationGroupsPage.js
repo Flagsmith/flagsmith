@@ -46,7 +46,7 @@ const OrganisationGroupsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 

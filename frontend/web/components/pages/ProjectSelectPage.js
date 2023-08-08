@@ -37,7 +37,7 @@ const ProjectSelectPage = class extends Component {
           )
         }}
       />,
-      'p-0',
+      'side-modal',
     )
   }
 

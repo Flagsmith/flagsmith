@@ -43,7 +43,7 @@ const CreateProject = class extends Component {
           const disableCreate = !canCreate && hasProject
 
           return (
-            <div>
+            <div className='mt-4 px-4'>
               <form
                 style={{ opacity: disableCreate ? 0.5 : 1 }}
                 data-test='create-project-modal'
@@ -94,8 +94,7 @@ const CreateProject = class extends Component {
                   />
                   {error && <ErrorMessage error={error} />}
                 </div>
-                <ModalHR />
-                <div className='modal-footer'>
+                <div className='modal-footer px-0 mt-2'>
                   <Button
                     onClick={closeModal}
                     theme='secondary'

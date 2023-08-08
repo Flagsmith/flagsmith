@@ -28,8 +28,8 @@ const CreateUser: FC<CreateUserType> = ({ environmentId }) => {
   }, [isSuccess])
   return (
     <div>
-      <div className='modal-body'>
-        <FormGroup>
+      <div className='modal-body px-4'>
+        <FormGroup className='mt-4'>
           <label>User IDs</label>
           <p className='text-muted text-small'>
             Enter a comma or space separate list of user IDs.
@@ -46,7 +46,6 @@ const CreateUser: FC<CreateUserType> = ({ environmentId }) => {
           <ErrorMessage error='Some Identities already exist and were not created' />
         )}
       </div>
-      <ModalHR />
       <div className='modal-footer'>
         <Button className='mr-2' onClick={closeModal} theme='secondary'>
           Cancel
