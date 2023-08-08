@@ -19,6 +19,12 @@ export default (WrappedComponent) => {
       this.getOverrides()
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+      if (prevProps.environmentId !== this.props.environmentId) {
+        this.getOverrides()
+      }
+    }
+
     getOverrides = () => {
       if (this.props.projectFlag) {
         Promise.all([
