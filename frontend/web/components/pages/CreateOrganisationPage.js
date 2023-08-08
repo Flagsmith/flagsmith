@@ -30,6 +30,7 @@ class CreateOrganisationPage extends Component {
 
   onSave = (id) => {
     AppActions.selectOrganisation(id)
+    API.setCookie('organisation', `${id}`)
     this.context.router.history.push('/projects')
   }
 
@@ -54,45 +55,51 @@ class CreateOrganisationPage extends Component {
     }
     return (
       <div id='create-org-page' className='container app-container'>
-        <h3 className='pt-5'>Create your organisation</h3>
-        <p>
-          Organisations allow you to manage multiple projects within a team.
-        </p>
-        <AccountProvider onSave={this.onSave}>
-          {({ isSaving }, { createOrganisation }) => (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (Project.capterraKey) {
-                  const parts = Project.capterraKey.split(',')
-                  Utils.appendImage(
-                    `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                  )
-                }
-                createOrganisation(this.state.name)
-              }}
-            >
-              <InputGroup
-                ref={(e) => (this.input = e)}
-                inputProps={{ className: 'full-width', name: 'orgName' }}
-                title='Organisation Name'
-                placeholder='E.g. ACME Ltd'
-                onChange={(e) =>
-                  this.setState({ name: Utils.safeParseEventValue(e) })
-                }
-              />
-              <div className='text-right mt-2'>
-                <Button
-                  type='submit'
-                  disabled={isSaving || !this.state.name}
-                  id='create-org-btn'
-                >
-                  Create
-                </Button>
-              </div>
-            </form>
-          )}
-        </AccountProvider>
+        <div className='container-mw-700'>
+          <h5 className='mb-2'>Create your organisation</h5>
+          <p className='mb-0'>
+            Organisations allow you to manage multiple projects within a team.
+          </p>
+        </div>
+        <hr className='my-0 py-0 mt-2 mb-3' />
+        <div className='container-mw-700'>
+          <AccountProvider onSave={this.onSave}>
+            {({ isSaving }, { createOrganisation }) => (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (Project.capterraKey) {
+                    const parts = Project.capterraKey.split(',')
+                    Utils.appendImage(
+                      `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+                    )
+                  }
+                  createOrganisation(this.state.name)
+                }}
+              >
+                <InputGroup
+                  ref={(e) => (this.input = e)}
+                  inputProps={{ className: 'full-width', name: 'orgName' }}
+                  title='Organisation Name'
+                  placeholder='E.g. ACME Ltd'
+                  onChange={(e) =>
+                    this.setState({ name: Utils.safeParseEventValue(e) })
+                  }
+                  className='mb-5'
+                />
+                <div className='text-right'>
+                  <Button
+                    type='submit'
+                    disabled={isSaving || !this.state.name}
+                    id='create-org-btn'
+                  >
+                    Create Organisation
+                  </Button>
+                </div>
+              </form>
+            )}
+          </AccountProvider>
+        </div>
       </div>
     )
   }
