@@ -41,14 +41,16 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
+          cache: 'poetry'
 
       - name: Install Dependencies
-        run: make install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-packages
 
       - name: Run Linters
         run: make lint
