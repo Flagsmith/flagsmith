@@ -110,6 +110,12 @@ class TheComponent extends Component {
         />
       </div>
     )
+    const THRESHOLD = 90
+    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
+      ProjectStore.getTotalSegmentOverrides(),
+      ProjectStore.getMaxSegmentOverridesAllowed(),
+      THRESHOLD,
+    )
 
     return this.state.isLoading ? (
       <div className='text-center'>
@@ -130,6 +136,11 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
+        {segmentOverrideLimitAlert.percentage &&
+          Utils.displayLimitAlert(
+            'segment overrides',
+            segmentOverrideLimitAlert.percentage,
+          )}
         <div>
           <InputGroup
             component={
@@ -423,6 +434,9 @@ class SegmentOverridesInnerAdd extends Component {
       // const newValue = ;
       // updateSegments(segmentOverrides.concat([newValue]))
     }
+    const segmentOverrideLimitAlert =
+      ProjectStore.getTotalSegmentOverrides >=
+      ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <FeatureListProvider>
@@ -430,6 +444,7 @@ class SegmentOverridesInnerAdd extends Component {
           return (
             <div className='mt-2'>
               <FlagSelect
+                disabled={!!segmentOverrideLimitAlert}
                 onlyInclude={this.props.feature}
                 placeholder='Create a Segment Override...'
                 projectId={projectId}

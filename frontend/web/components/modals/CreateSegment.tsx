@@ -35,6 +35,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
+import ProjectStore from 'common/stores/project-store'
 
 type PageType = {
   number: number
@@ -133,6 +134,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [tab, setTab] = useState(0)
 
   const isError = createError || updateError
+  const isLimitReached =
+    ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
+
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxFeaturesAllowed(),
+    THRESHOLD,
+  )
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -335,6 +345,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </a>
             .
           </InfoMessage>
+          {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
         </div>
       )}
 
@@ -364,7 +375,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </Flex>
         </div>
       )}
-
       {!condensed && (
         <InputGroup
           className='mb-3'
@@ -467,7 +477,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             ) : (
               <Button
-                disabled={isSaving || !name || !isValid}
+                disabled={isSaving || !name || !isValid || isLimitReached}
                 type='submit'
                 data-test='create-segment'
                 id='create-feature-btn'

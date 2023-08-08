@@ -1,6 +1,7 @@
 import { getIsWidget } from 'components/pages/WidgetPage'
 
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -83,6 +84,12 @@ const controller = {
       store.saved()
     })
   },
+  getEnv: (envId) => {
+    data.get(`${Project.api}environments/${envId}/`).then((environment) => {
+      store.model = Object.assign(store.model, { environment })
+      store.saved()
+    })
+  },
   getProject: (id, cb, force) => {
     if (force) {
       store.loading()
@@ -162,6 +169,24 @@ const store = Object.assign({}, BaseStore, {
     })
   },
   getEnvs: () => store.model && store.model.environments,
+  getMaxFeaturesAllowed: () => {
+    return store.model && store.model.max_features_allowed
+  },
+  getMaxSegmentOverridesAllowed: () => {
+    return store.model && store.model.max_segment_overrides_allowed
+  },
+  getMaxSegmentsAllowed: () => {
+    return store.model && store.model.max_segments_allowed
+  },
+  getTotalFeatures: () => {
+    return store.model && store.model.total_features
+  },
+  getTotalSegmentOverrides: () => {
+    return store.model && store.model.environment.total_segment_overrides
+  },
+  getTotalSegments: () => {
+    return store.model && store.model.total_segments
+  },
   id: 'project',
   model: null,
 })
@@ -186,6 +211,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_ENVIRONMENT:
       controller.editEnv(action.env)
+      break
+    case Actions.GET_ENVIRONMENT:
+      controller.getEnv(action.environmentId)
       break
     case Actions.DELETE_ENVIRONMENT:
       controller.deleteEnv(action.env)

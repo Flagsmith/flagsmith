@@ -37,6 +37,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
+  getEnv(environmentId) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.GET_ENVIRONMENT,
+      environmentId,
+    })
+  },
   createFlag(projectId, environmentId, flag, segmentOverrides) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_FLAG,

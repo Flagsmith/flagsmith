@@ -52,6 +52,7 @@ export type Environment = {
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
   hide_sensitive_data: boolean
+  total_segment_overrides?: number
 }
 export type Project = {
   id: number
@@ -64,6 +65,11 @@ export type Project = {
   use_edge_identities: boolean
   prevent_flag_defaults: boolean
   enable_realtime_updates: boolean
+  max_segments_allowed?: number | null
+  max_features_allowed?: number | null
+  max_segment_overrides_allowed?: number | null
+  total_features?: number
+  total_segments?: number
   environments: Environment[]
 }
 

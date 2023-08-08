@@ -840,6 +840,14 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
+              const THRESHOLD = 90
+              const featureLimitAlert =
+                Utils.calculateRemainingLimitsPercentage(
+                  project.total_features,
+                  project.max_features_allowed,
+                  THRESHOLD,
+                )
+
               return (
                 <Permission
                   level='project'
@@ -875,6 +883,7 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
+                                  {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
                                     <Tooltip
                                       title={
                                         <h5 className='mb-4'>
@@ -1487,6 +1496,7 @@ const CreateFlag = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
+                                {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
                                 {Value(
                                   error,
                                   projectAdmin,
@@ -1523,7 +1533,8 @@ const CreateFlag = class extends Component {
                                         isSaving ||
                                         !name ||
                                         invalid ||
-                                        !regexValid
+                                        !regexValid ||
+                                        featureLimitAlert.percentage >= 100
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}
@@ -1532,7 +1543,6 @@ const CreateFlag = class extends Component {
                                 )}
                               </div>
                             )}
-
                             {identity && (
                               <div className='pr-3'>
                                 {identity ? (

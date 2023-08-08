@@ -328,11 +328,12 @@ const App = class extends Component {
                                         href='#'
                                         className='cursor-pointer nav-link p-2'
                                         style={
-                                          Utils.calculaterRemainingCallsPercentage(
+                                          Utils.calculateRemainingLimitsPercentage(
                                             totalApiCalls,
                                             organisation.subscription
                                               ?.max_api_calls,
-                                          ) &&
+                                            30,
+                                          ).closeToLimit &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
                                           )
@@ -353,11 +354,12 @@ const App = class extends Component {
                                           )
                                         }}
                                       >
-                                        {Utils.calculaterRemainingCallsPercentage(
+                                        {Utils.calculateRemainingLimitsPercentage(
                                           totalApiCalls,
                                           organisation.subscription
                                             ?.max_api_calls,
-                                        ) &&
+                                          30,
+                                        ).closeToLimit &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
                                         ) ? (

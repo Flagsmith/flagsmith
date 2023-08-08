@@ -18,6 +18,7 @@ import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
+import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 
 const CodeHelp = require('../../components/CodeHelp')
@@ -65,6 +66,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const [removeSegment] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
 
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxSegmentsAllowed(),
+    THRESHOLD,
+  )
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
   }, [])
@@ -159,6 +166,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
+            {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
@@ -184,7 +192,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         manageSegmentsPermission,
                         'Manage segments',
                         <Button
-                          disabled={hasNoOperators || !manageSegmentsPermission}
+                          disabled={
+                            hasNoOperators ||
+                            !manageSegmentsPermission ||
+                            segmentsLimitAlert.percentage >= 100
+                          }
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'
                           onClick={newSegment}
