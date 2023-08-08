@@ -18,8 +18,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Deploy API to Production
         id: deploy-api
@@ -65,8 +63,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Run E2E tests against production
         uses: ./.github/actions/e2e-tests
