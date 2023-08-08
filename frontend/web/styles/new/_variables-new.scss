@@ -6,6 +6,7 @@ $primary: #6837fc;
 $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
+$primary900: #1d113e;
 $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
@@ -52,6 +53,7 @@ $theme-colors: (
 );
 $bg-light200: #fafafb;
 $bg-light300: #eff1f4;
+$bg-light500: #e0e3e9;
 $bg-dark100: #2d3443;
 $bg-dark200: #202839;
 $bg-dark300: #161d30;
@@ -110,7 +112,7 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $bg-dark500;
+  border-color: $white-alpha-16;
 }
 
 //Modal
@@ -145,7 +147,7 @@ $container-max-widths: (
   md: 720px,
   lg: 940px,
   xl: 1140px,
-  xxl: 1141px,
+  xxl: 1200px,
 );
 
 //Typography
@@ -158,6 +160,8 @@ $line-height-xlg: 28px;
 $line-height-xsm: 18px;
 $line-height-xxsm: 16px;
 $body-color: $text-icon-dark;
+$body-text-dark: $text-icon-light;
+$header-color-dark: $text-icon-light;
 $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
@@ -184,7 +188,7 @@ $h6-line-height: 24px;
 
 //Input
 $input-bg: #fff;
-$input-bg-dark: $bg-dark200;
+$input-bg-dark: $bg-dark300;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
@@ -278,3 +282,32 @@ $panel-list-item-color: $text-icon-dark;
 $panel-list-item-sub-font-size: $font-caption;
 $panel-list-item-sub-line-height: $line-height-xsm;
 $panel-list-item-sub-color: $text-icon-grey;
+
+//Nav
+$nav-background: $text-icon-light;
+$nav-background-dark: $bg-dark400;
+$nav-icon-color-dark: $text-icon-grey;
+$nav-link-color-dark: $text-icon-light;
+$nav-link-color-active-dark: $text-icon-light;
+
+//Aside
+$aside-bg: $primary900;
+$aside-bg-dark: $bg-dark300;
+$aside-nav-collapse: $primary900;
+$aside-nav-collapse-dark: $bg-dark300;
+$aside-nav-color: $text-icon-light-grey;
+$aside-nav-active-color: $text-icon-light;
+$aside-width: 300px;
+$aside-nav-hover: $primary400;
+$aside-nav-hover-dark: $primary400;
+$aside-nav-active: $primary;
+$aside-nav-active-dark: $primary;
+$aside-nav-active-color-dark: $text-icon-light;
+
+$bt-scrollbar-track: $white-alpha-16;
+$bt-scrollbar-thumb: $bg-light300;
+$bt-scrollbar-thumb-hover: $bg-light300;
+
+$bt-scrollbar-track-dark: $basic-alpha-16;
+$bt-scrollbar-thumb-dark: $bg-dark300;
+$bt-scrollbar-thumb-dark-hover: $bg-dark300;

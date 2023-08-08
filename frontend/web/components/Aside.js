@@ -1,28 +1,16 @@
 import React, { Component } from 'react'
 import propTypes from 'prop-types'
 import NavLink from 'react-router-dom/NavLink'
-import ProjectSelect from './ProjectSelect'
-import AsideProjectButton from './AsideProjectButton'
 import AsideTitleLink from './AsideTitleLink'
 import Collapsible from './Collapsible'
-import ProjectSettingsIcon from './svg/ProjectSettingsIcon'
-import AuditLogIcon from './svg/AuditLogIcon'
 import OrgSettingsIcon from './svg/OrgSettingsIcon'
 import EnvironmentDropdown from './EnvironmentDropdown'
-import CreateProjectModal from './modals/CreateProject'
-import UserSettingsIcon from './svg/UserSettingsIcon'
-import DocumentationIcon from './svg/DocumentationIcon'
-import NavIconSmall from './svg/NavIconSmall'
-import PlusIcon from './svg/PlusIcon'
-import FeaturesIcon from './svg/FeaturesIcon'
-import UsersIcon from './svg/UsersIcon'
-import SegmentsIcon from './svg/SegmentsIcon'
-import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import getBuildVersion from 'project/getBuildVersion'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import Icon from './Icon'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -39,7 +27,7 @@ const Aside = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { isOpenProject: true }
     ES6Component(this)
     AppActions.getProject(this.props.projectId)
     if (this.props.environmentId && this.props.environmentId !== 'create') {
@@ -88,21 +76,6 @@ const Aside = class extends Component {
 
   onProjectSave = () => {
     AppActions.refreshOrganisation()
-  }
-
-  newProject = () => {
-    openModal(
-      'Create Project',
-      <CreateProjectModal
-        onSave={({ environmentId, projectId }) => {
-          AppActions.getProject(projectId)
-          this.context.router.history.push(
-            `/project/${projectId}/environment/${environmentId}/features?new=true`,
-          )
-        }}
-      />,
-      'side-modal',
-    )
   }
 
   render() {
@@ -162,231 +135,182 @@ const Aside = class extends Component {
                     </div>
                   )}
                   <div className='row ml-0 mr-0 aside__wrapper'>
-                    <div
-                      className={`aside__projects-sidebar ${
-                        this.props.className || ''
-                      }`}
-                    >
-                      <div className='flex-row justify-content-center'>
-                        <div className='flex-column'>
-                          <Link to='/projects'>
-                            <NavIconSmall className='aside__logo' />
-                          </Link>
-                        </div>
-
-                        <div className='flex-column'>
-                          <div className='aside__projects-item'>
-                            <div className='flex-row justify-content-center'>
-                              <div className='flex-column mb-3'>
-                                <Tooltip
-                                  title={
-                                    <Button
-                                      onClick={this.newProject}
-                                      className='btn--transparent aside__add-btn'
-                                    >
-                                      <a id='create-project-link'>
-                                        <PlusIcon width={18} />
-                                      </a>
-                                    </Button>
-                                  }
-                                  place='right'
-                                >
-                                  Create Project
-                                </Tooltip>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <ProjectSelect
-                          renderRow={(project, onClick) => (
-                            <AsideProjectButton
-                              data-test={`switch-project-${project.name.toLowerCase()}${
-                                this.props.projectId === `${project.id}`
-                                  ? '-active'
-                                  : ''
-                              }`}
-                              key={project.id}
-                              onClick={onClick}
-                              className={
-                                this.props.projectId === `${project.id}`
-                                  ? 'active'
-                                  : ''
-                              }
-                              name={project.name}
-                              projectLetter={`${project.name[0]}`.toUpperCase()}
-                            />
-                          )}
-                          projectId={this.props.projectId}
-                          environmentId={environmentId}
-                          clearableValue={false}
-                          onChange={(project) => {
-                            AppActions.getProject(project.id)
-                            if (project.environments[0]) {
-                              this.context.router.history.push(
-                                `/project/${project.id}/environment/${project.environments[0].api_key}/features`,
-                              )
-                            } else {
-                              this.context.router.history.push(
-                                `/project/${project.id}/environment/create`,
-                              )
-                            }
-                            AsyncStorage.setItem(
-                              'lastEnv',
-                              JSON.stringify({
-                                environmentId: project.environments[0].api_key,
-                                orgId: AccountStore.getOrganisation().id,
-                                projectId: project.id,
-                              }),
-                            )
-                          }}
-                        />
-                      </div>
-                    </div>
                     {
                       <React.Fragment>
                         <div className='aside__main-content px-0'>
-                          <div className='pl-4 pr-4 pt-4'>
-                            <Row>
-                              <h1 className='aside__project-title'>
-                                {project && project.name ? project.name : '...'}
-                              </h1>
-                              {Utils.getFlagsmithHasFeature(
-                                'edge_identities',
-                              ) && (
-                                <div className='text-center'>
-                                  <span
-                                    style={{
-                                      border: 'none',
-                                      bottom: 2,
-                                      left: 5,
-                                      position: 'relative',
-                                    }}
-                                    className='chip chip--active bg-secondary'
-                                  >
-                                    <a
-                                      data-test={
-                                        Utils.getIsEdge()
-                                          ? 'edge-project'
-                                          : 'core-project'
-                                      }
-                                      href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
-                                      className='text-white font-weight-bold'
-                                    >
-                                      {Utils.getIsEdge() ? (
-                                        'Edge'
-                                      ) : Utils.isMigrating() ? (
-                                        <Tooltip title='Migrating to Edge'>
-                                          Depending on the amount of project
-                                          data, migrating can take a while.
-                                          Refresh the page to track progress.
-                                        </Tooltip>
-                                      ) : (
-                                        'Core'
-                                      )}
-                                    </a>
-                                  </span>
-                                </div>
-                              )}
-                            </Row>
-                          </div>
-                          <Permission
-                            level='project'
-                            permission='ADMIN'
-                            id={this.props.projectId}
-                          >
-                            {({ permission }) =>
-                              permission && (
-                                <NavLink
-                                  id='project-settings-link'
-                                  activeClassName='active'
-                                  className='aside__nav-item mt-4'
-                                  to={`/project/${this.props.projectId}/settings`}
-                                >
-                                  <ProjectSettingsIcon className='aside__nav-item--icon' />
-                                  Project Settings
-                                </NavLink>
+                          <a href={'/projects'} className='nav-logo'>
+                            <Icon name='nav-logo' />
+                          </a>
+                          <hr className='my-0 py-0' />
+                          <Collapsible
+                            title={
+                              project && project.name ? (
+                                <Row>
+                                  {project.name}{' '}
+                                  {Utils.getFlagsmithHasFeature(
+                                    'edge_identities',
+                                  ) && (
+                                    <div className='text-center'>
+                                      <span
+                                        style={{
+                                          border: 'none',
+                                          bottom: 2,
+                                          left: 5,
+                                          position: 'relative',
+                                        }}
+                                        className='chip chip--active bg-secondary'
+                                      >
+                                        <a
+                                          data-test={
+                                            Utils.getIsEdge()
+                                              ? 'edge-project'
+                                              : 'core-project'
+                                          }
+                                          href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
+                                          className='text-white font-weight-bold'
+                                        >
+                                          {Utils.getIsEdge() ? (
+                                            'Edge'
+                                          ) : Utils.isMigrating() ? (
+                                            <Tooltip title='Migrating to Edge'>
+                                              Depending on the amount of project
+                                              data, migrating can take a while.
+                                              Refresh the page to track
+                                              progress.
+                                            </Tooltip>
+                                          ) : (
+                                            'Core'
+                                          )}
+                                        </a>
+                                      </span>
+                                    </div>
+                                  )}
+                                </Row>
+                              ) : (
+                                'No Project'
                               )
                             }
-                          </Permission>
-
-                          <NavLink
-                            to={`/project/${project.id}/environment/${environmentId}/segments`}
-                            id='segments-link'
-                            className='aside__nav-item'
+                            onClick={() => {
+                              this.setState((prev) => {
+                                return {
+                                  isOpenProject: !prev.isOpenProject,
+                                }
+                              })
+                            }}
+                            active={this.state.isOpenProject}
+                            className='collapsible-project'
                           >
-                            <SegmentsIcon className='aside__nav-item--icon' />
-                            Segments
-                          </NavLink>
-                          <NavLink
-                            id='integrations-link'
-                            activeClassName='active'
-                            className='aside__nav-item'
-                            to={`/project/${project.id}/environment/${environmentId}/compare`}
-                            exact
-                          >
-                            <span className='icon ion-md-git-pull-request aside__nav-item--icon' />
-                            Compare
-                          </NavLink>
-
-                          <Permission
-                            level='project'
-                            permission='VIEW_AUDIT_LOG'
-                            id={this.props.projectId}
-                          >
-                            {({ permission }) =>
-                              permission &&
-                              hasRbacPermission && (
-                                <NavLink
-                                  id='audit-log-link'
-                                  activeClassName='active'
-                                  className='aside__nav-item'
-                                  to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
-                                >
-                                  <AuditLogIcon className='aside__nav-item--icon' />
-                                  Audit Log
-                                </NavLink>
-                              )
-                            }
-                          </Permission>
-
-                          {!hasRbacPermission && (
-                            <Tooltip
-                              title={
-                                <a
-                                  href='#'
-                                  className='aside__nav-item disabled'
-                                >
-                                  <AuditLogIcon className='aside__nav-item--icon' />
-                                  Audit Log
-                                </a>
-                              }
-                            >
-                              This feature is available with our scaleup plan
-                            </Tooltip>
-                          )}
-                          {!!integrations.length && (
                             <Permission
                               level='project'
-                              permission='CREATE_ENVIRONMENT'
+                              permission='ADMIN'
                               id={this.props.projectId}
                             >
                               {({ permission }) =>
                                 permission && (
                                   <NavLink
-                                    id='integrations-link'
+                                    id='project-settings-link'
                                     activeClassName='active'
-                                    className='aside__nav-item'
-                                    to={`/project/${this.props.projectId}/integrations`}
-                                    exact
+                                    className='aside__nav-item mx-3'
+                                    to={`/project/${this.props.projectId}/settings`}
                                   >
-                                    <i className='icon mr-2 ion-ios-apps aside__nav-item--icon' />
-                                    Integrations
+                                    <span className='mr-2'>
+                                      <Icon name='options-2' />
+                                    </span>
+                                    Project Settings
                                   </NavLink>
                                 )
                               }
                             </Permission>
-                          )}
+
+                            <NavLink
+                              to={`/project/${project.id}/environment/${environmentId}/segments`}
+                              id='segments-link'
+                              className='aside__nav-item mx-3'
+                            >
+                              <span className='mr-2'>
+                                <Icon name='pie-chart' />
+                              </span>
+                              Segments
+                            </NavLink>
+                            <NavLink
+                              id='integrations-link'
+                              activeClassName='active'
+                              className='aside__nav-item mx-3'
+                              to={`/project/${project.id}/environment/${environmentId}/compare`}
+                              exact
+                            >
+                              <span className='mr-2'>
+                                <Icon name='bar-chart' />
+                              </span>
+                              Compare
+                            </NavLink>
+
+                            <Permission
+                              level='project'
+                              permission='VIEW_AUDIT_LOG'
+                              id={this.props.projectId}
+                            >
+                              {({ permission }) =>
+                                permission &&
+                                hasRbacPermission && (
+                                  <NavLink
+                                    id='audit-log-link'
+                                    activeClassName='active'
+                                    className='aside__nav-item mx-3'
+                                    to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
+                                  >
+                                    <span className='mr-2'>
+                                      <Icon name='list' />
+                                    </span>
+                                    Audit Log
+                                  </NavLink>
+                                )
+                              }
+                            </Permission>
+
+                            {!hasRbacPermission && (
+                              <Tooltip
+                                title={
+                                  <a
+                                    href='#'
+                                    className='aside__nav-item disabled mx-3'
+                                  >
+                                    <span className='mr-2'>
+                                      <Icon name='list' />
+                                    </span>
+                                    Audit Log
+                                  </a>
+                                }
+                              >
+                                This feature is available with our scaleup plan
+                              </Tooltip>
+                            )}
+                            {!!integrations.length && (
+                              <Permission
+                                level='project'
+                                permission='CREATE_ENVIRONMENT'
+                                id={this.props.projectId}
+                              >
+                                {({ permission }) =>
+                                  permission && (
+                                    <NavLink
+                                      id='integrations-link'
+                                      activeClassName='active'
+                                      className='aside__nav-item mx-3'
+                                      to={`/project/${this.props.projectId}/integrations`}
+                                      exact
+                                    >
+                                      <span className='mr-2'>
+                                        <Icon name='layers' />
+                                      </span>
+                                      Integrations
+                                    </NavLink>
+                                  )
+                                }
+                              </Permission>
+                            )}
+                          </Collapsible>
+                          <hr className='my-0 py-0' />
                           <Permission
                             level='project'
                             permission='CREATE_ENVIRONMENT'
@@ -396,15 +320,14 @@ const Aside = class extends Component {
                               permission && (
                                 <NavLink
                                   id='create-env-link'
-                                  className='aside__header-link'
+                                  className='aside__header-link mt-2'
                                   to={`/project/${this.props.projectId}/environment/create`}
                                   exact
                                 >
                                   <AsideTitleLink
                                     tooltip='Create Environment'
                                     className='mt-4'
-                                    title='Environments'
-                                    iconClassName='ion-md-add'
+                                    title='Create Environment'
                                   />
                                 </NavLink>
                               )
@@ -457,16 +380,14 @@ const Aside = class extends Component {
                                                   id='features-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                                 >
-                                                  <FeaturesIcon className='aside__environment-list-item--icon' />
                                                   Features
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item'
+                                                  className='aside__environment-list-item mt-1'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                 >
-                                                  <span className='ion icon ion-ios-timer aside__environment-list-item--icon' />
                                                   Scheduling
                                                   {scheduled ? (
                                                     <span className='ml-1 unread'>
@@ -476,11 +397,10 @@ const Aside = class extends Component {
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item'
+                                                  className='aside__environment-list-item mt-1'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                 >
-                                                  <span className='ion icon ion-md-git-pull-request aside__environment-list-item--icon' />
                                                   Change Requests{' '}
                                                   {changeRequests ? (
                                                     <span className='unread'>
@@ -491,11 +411,10 @@ const Aside = class extends Component {
                                                 {manageIdentityPermission && (
                                                   <NavLink
                                                     id='users-link'
-                                                    className='aside__environment-list-item'
+                                                    className='aside__environment-list-item mt-1'
                                                     exact
                                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                   >
-                                                    <UsersIcon className='aside__environment-list-item--icon' />
                                                     Identities
                                                   </NavLink>
                                                 )}
@@ -503,10 +422,9 @@ const Aside = class extends Component {
                                                 {environmentAdmin && (
                                                   <NavLink
                                                     id='env-settings-link'
-                                                    className='aside__environment-list-item'
+                                                    className='aside__environment-list-item mt-1'
                                                     to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                                   >
-                                                    <EnvironmentSettingsIcon className='aside__environment-list-item--icon' />
                                                     Settings
                                                   </NavLink>
                                                 )}
@@ -563,7 +481,7 @@ const Aside = class extends Component {
                               </Link>
                             )}
                             {this.state.version && (
-                              <div className='text-muted text-small text-center'>
+                              <div className='px-4 fs-small lh-sm text-white my-3'>
                                 {this.state.version.tag !== 'Unknown' && (
                                   <Tooltip
                                     html
@@ -610,24 +528,6 @@ const Aside = class extends Component {
                                   Organisation
                                 </NavLink>
                               )}
-
-                            <a
-                              href='https://docs.flagsmith.com'
-                              target='_blank'
-                              className='aside__nav-item hidden-sm-up'
-                              rel='noreferrer'
-                            >
-                              <DocumentationIcon className='aside__nav-item--icon' />
-                              Documentation
-                            </a>
-                            <NavLink
-                              id='account-settings-link'
-                              className='aside__nav-item hidden-sm-up'
-                              to={`/project/${this.props.projectId}/environment/${environmentId}/account`}
-                            >
-                              <UserSettingsIcon className='aside__nav-item--icon' />
-                              Account Settings
-                            </NavLink>
                           </div>
                         </div>
                       </React.Fragment>

@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { FixedSizeList as List } from 'react-window'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
+import Icon from './Icon'
 
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
@@ -144,9 +145,18 @@ const PanelSearch = class extends Component {
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover
-                    renderTitle={(toggle) => (
-                      <a onClick={toggle} className='text-muted'>
-                        <div className='flex-column ion ion-md-funnel' />
+                    renderTitle={(toggle, isActive) => (
+                      <a
+                        onClick={toggle}
+                        className='flex-row'
+                        style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      >
+                        <span className='mr-1'>
+                          <Icon
+                            name='height'
+                            fill={isActive ? '#6837FC' : '#656d7b'}
+                          />
+                        </span>
                         {currentSort ? currentSort.label : 'Unsorted'}
                       </a>
                     )}
@@ -163,19 +173,19 @@ const PanelSearch = class extends Component {
                               toggle()
                             }}
                           >
-                            <Row space>
-                              <Row className='flex-1'>{sortOption.label}</Row>
+                            <Row space className='px-3 py-2'>
+                              <div>{sortOption.label}</div>
                               {currentSort &&
                                 currentSort.value === sortOption.value && (
-                                  <Row>
-                                    <div
-                                      className={`flex-column ion ${
+                                  <div>
+                                    <Icon
+                                      name={
                                         sortOrder === 'asc'
-                                          ? 'ion-ios-arrow-up'
-                                          : 'ion-ios-arrow-down'
-                                      }`}
+                                          ? 'chevron-up'
+                                          : 'chevron-down'
+                                      }
                                     />
-                                  </Row>
+                                  </div>
                                 )}
                             </Row>
                           </a>
