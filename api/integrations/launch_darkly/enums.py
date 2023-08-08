@@ -6,4 +6,4 @@ class LogLevel(models.TextChoices):
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"
-    FATAL = "FATAL"
+    CRITICAL = "CRITICAL"

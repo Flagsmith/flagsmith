@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
 from django.db import IntegrityError
 
@@ -23,16 +22,16 @@ from users.models import FFAdminUser
 class LaunchDarklyWrapper:
     def __init__(
         self,
-        api_key: str,
         user: FFAdminUser,
         request: LaunchDarklyImportSerializer,
         client: LaunchDarklyClient = None,
     ):
-        self.client = client or LaunchDarklyClient(api_key)
-        self.request = request
+        request.is_valid(raise_exception=True)
+        self.request = request.validated_data
+        self.client = client or LaunchDarklyClient(self.request["api_key"])
         self.logger = LaunchDarklyImport.objects.create(
-            user=user,
-            organisation=self.request["organisation_id"],
+            created_by=user,
+            organisation_id=self.request["organisation_id"],
             project=self.request["project_id"],
         )
         self.import_id = self.logger.uuid
@@ -45,31 +44,39 @@ class LaunchDarklyWrapper:
         self.logger.info(
             f"Attempting to retrieve Flagsmith organisation with id: {organisation_id}"
         )
-        organisation = Organisation.objects.get(pk=self.request["organisation_id"])
-        self.logger.info(
-            f"Successfully retrieved Flagsmith organisation with id: {organisation_id}"
-        )
+        try:
+            organisation = Organisation.objects.get(pk=organisation_id)
+            self.logger.info(
+                f"Successfully retrieved Flagsmith organisation with id: {organisation_id}"
+            )
+        except Organisation.DoesNotExist:
+            self.logger.critical(
+                f"Could not find Flagsmith organisation with id: {organisation_id}"
+            )
+            # Todo kill import here
+            raise Exception()
+
         ld_project_id = self.request["ld_project_id"]
         try:
             project_id = self.request["project_id"]
             self.logger.info(
                 f"Attempting to retrieve Flagsmith project with id: {project_id}"
             )
-            project = Project.objects.get(project_id)
+            project = Project.objects.get(pk=project_id)
             self.logger.info(
                 f"Successfully retrieved Flagsmith project with id: {project_id}"
             )
-        except KeyError:
+        except (KeyError, Project.DoesNotExist):
             self.logger.warning(
-                "Could not find Flagsmith project with id: {project_id}"
+                f"Could not find Flagsmith project with id: {project_id}"
             )
             self.logger.info(
-                "Creating new Flagsmith project for Launch Darklys' imported features"
+                "Creating new Flagsmith project for Launch Darkly's imported features"
             )
             ld_project = self.client.get_project(ld_project_id)
-            project = self._create_project(organisation, ld_project)
+            project = self._create_project(organisation.id, ld_project)
             self.logger.info(
-                "Successfully created new Flagsmith project for Launch Darklys' imported features"
+                "Successfully created new Flagsmith project for Launch Darkly's imported features"
             )
 
         self.logger.info(
@@ -108,7 +115,7 @@ class LaunchDarklyWrapper:
 
         self.logger.info("Finished importing")
 
-    def _create_project(self, organisation_id: UUID, ld_project: dict) -> Project:
+    def _create_project(self, organisation_id: int, ld_project: dict) -> Project:
         return Project.objects.create(
             organisation_id=organisation_id, name=ld_project.get("name")
         )
@@ -142,28 +149,36 @@ class LaunchDarklyWrapper:
                 description=ld_flag.get("description"),
                 default_enabled=None,  # todo
                 type=STANDARD,
-                tags=None,  # todo
+                # tags=None,  # todo
                 is_archived=ld_flag.get("archived", False),
-                owners=None,  # todo
+                # owners=None,  # todo
                 is_server_key_only=None,  # todo
             )
+
+            for environment in environments:
+                ld_environment = ld_flag.get("environments", {}).get(environment.name)
+                if ld_environment:
+                    feature_state = FeatureState.objects.create(
+                        feature=feature,
+                        environment=environment,
+                        identity=None,  # todo
+                        feature_segment=None,  # todo
+                        enabled=ld_environment.get("_summary").get("on"),
+                    )
+                    FeatureStateValue.objects.create(feature_state=feature_state)
+                else:
+                    self.logger.error(
+                        f"""
+                        There was a problem adding a feature state to
+                         environment: {environment.name},
+                         for feature: {feature.name}
+                        """
+                    )
         except IntegrityError:
             # Feature with this name already exists
             self.logger.error(
                 f"Unable to create feature with name: {ld_flag.get('key')}"
             )
-
-        for environment in environments:
-            ld_environment = ld_flag.get("environments", {}).get(environment.name)
-            if ld_environment:
-                feature_state = FeatureState.objects.create(
-                    feature=feature,
-                    environment=environment,
-                    identity=None,  # todo
-                    feature_segment=None,  # todo
-                    enabled=ld_environment.get("_summary").get("on"),
-                )
-                FeatureStateValue.objects.create(feature_state=feature_state)
 
     def _create_multivariate_feature(
         self, ld_flag, environments: list[Environment], project: Project

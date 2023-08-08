@@ -13,29 +13,31 @@ from integrations.launch_darkly.serializers import LaunchDarklyImportSerializer
     "ld_project_response, ld_env_response, ld_flags_response",
     [
         (
-            "standard_project_response.json",
-            "standard_environments_response",
-            "standard_flags_response.json",
+            "./data/standard_project_response.json",
+            "./data/standard_environments_response.json",
+            "./data/standard_flags_response.json",
         )
     ],
 )
 def test_launch_darkly_import_into_new_project(
-    ld_project_response, ld_env_response, ld_flags_response, organisation
+    ld_project_response, ld_env_response, ld_flags_response, organisation, test_user
 ):
     # Given
     ld_client_mock = _build_launch_darkly_client_mock(
         ld_project_response, ld_env_response, ld_flags_response
     )
     data = {
-        "project_id": "",
+        "api_key": "test-api-key",
+        "project_id": None,
         "organisation_id": organisation.id,
         "ld_project_id": "another-project",
     }
     serializer = LaunchDarklyImportSerializer(data=data)
+    serializer.is_valid()
 
     # When
     LaunchDarklyWrapper(
-        client=ld_client_mock, request=serializer, api_key=None, user=None
+        client=ld_client_mock, request=serializer, user=test_user
     ).import_data()
 
     # Then
