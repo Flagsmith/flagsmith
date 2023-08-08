@@ -76,6 +76,9 @@ def create_audit_log_from_historical_record(
     user_model = get_user_model()
 
     instance = history_instance.instance
+    if instance.get_skip_create_audit_log():
+        return
+
     history_user = user_model.objects.filter(id=history_user_id).first()
 
     override_author = instance.get_audit_log_author(history_instance)

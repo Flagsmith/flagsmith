@@ -798,6 +798,20 @@ class FeatureState(
     def belongs_to_uncommited_change_request(self) -> bool:
         return self.change_request_id and not self.change_request.committed_at
 
+    def get_skip_create_audit_log(self) -> bool:
+        if self.belongs_to_uncommited_change_request:
+            # Change requests can create, update, or delete feature states that may never go live,
+            # since we already include the change requests in the audit log
+            # we don't want to create separate audit logs for the associated
+            # feature states
+            return True
+        elif self.environment_feature_version_id is not None:
+            # Don't create audit logs for feature states created using versioning
+            # v2 as we rely on the version history instead.
+            return True
+
+        return False
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
@@ -840,15 +854,6 @@ class FeatureState(
         except ObjectDoesNotExist:
             # Account for cascade deletes
             return None
-
-    def get_audit_log_related_object_id(self, history_instance) -> int:
-        # Change requests can create, update, or delete feature states that may never go live,
-        # since we already include the change requests in the audit log
-        # we don't want to create separate audit logs for the associated
-        # feature states
-        if self.belongs_to_uncommited_change_request:
-            return None
-        return super().get_audit_log_related_object_id(history_instance)
 
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)

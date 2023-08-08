@@ -81,6 +81,9 @@ class _AbstractBaseAuditableModel(models.Model):
     class Meta:
         abstract = True
 
+    def get_skip_create_audit_log(self) -> bool:
+        return False
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         """Override if audit log records should be written when model is created"""
         return None
@@ -112,7 +115,7 @@ class _AbstractBaseAuditableModel(models.Model):
         """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
         """Override the related object ID in cases where it shouldn't be self.id"""
         return self.id
 

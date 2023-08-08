@@ -106,6 +106,41 @@ def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncomm
     assert related_object_id is None
 
 
+def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
+    environment, feature, admin_user
+):
+    # Given
+    change_request = ChangeRequest.objects.create(
+        environment=environment, title="Test CR", user=admin_user
+    )
+    feature_state = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=change_request,
+        version=None,
+    )
+
+    # Then
+    assert feature_state.get_skip_create_audit_log() is True
+
+
+def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
+    environment_v2_versioning, feature
+):
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_state = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        environment_feature_version=environment_feature_version,
+    )
+
+    # Then
+    assert feature_state.get_skip_create_audit_log() is True
+
+
 @pytest.mark.parametrize(
     "feature_segment_id, identity_id, expected_function_name",
     (

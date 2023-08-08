@@ -99,6 +99,49 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
+def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create_audit_log_true(
+    mocker,
+    monkeypatch,
+):
+    # Given
+    instance = mocker.MagicMock()
+    instance.get_skip_create_audit_log.return_value = True
+    history_instance = mocker.MagicMock(
+        history_id=1, instance=instance, master_api_key=None, history_type="+"
+    )
+
+    history_user = mocker.MagicMock()
+    history_user.id = 1
+
+    mocked_historical_record_model_class = mocker.MagicMock(
+        name="DummyHistoricalRecordModelClass"
+    )
+    mocked_historical_record_model_class.objects.get.return_value = history_instance
+
+    mocked_user_model_class = mocker.MagicMock()
+    mocker.patch("audit.tasks.get_user_model", return_value=mocked_user_model_class)
+    mocked_user_model_class.objects.filter.return_value.first.return_value = (
+        history_user
+    )
+
+    mocked_audit_log_model_class = mocker.patch("audit.tasks.AuditLog")
+    mocked_audit_log_model_class.get_history_record_model_class.return_value = (
+        mocked_historical_record_model_class
+    )
+
+    history_record_class_path = (
+        f"app.models.{mocked_historical_record_model_class.name}"
+    )
+
+    # When
+    create_audit_log_from_historical_record(
+        history_instance.history_id, history_user.id, history_record_class_path
+    )
+
+    # Then
+    mocked_audit_log_model_class.objects.create.assert_not_called()
+
+
 def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_fields(
     mocker,
     monkeypatch,

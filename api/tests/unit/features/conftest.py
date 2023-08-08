@@ -1,6 +1,12 @@
+import typing
+
 import pytest
 
+from environments.models import Environment
 from features.models import FeatureState
+
+if typing.TYPE_CHECKING:
+    from projects.models import Project
 
 
 @pytest.fixture()
@@ -25,4 +31,11 @@ def feature_state_version_generator(environment, feature, request):
             live_from=version_2_live_from,
         ),
         expected_result,
+    )
+
+
+@pytest.fixture()
+def environment_v2_versioning(project: "Project") -> Environment:
+    return Environment.objects.create(
+        name="v2_versioning", project=project, use_v2_feature_versioning=True
     )
