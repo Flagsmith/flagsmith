@@ -501,13 +501,10 @@ class TheComponent extends Component {
         : SegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
-    const totalSegmentOverrides = ProjectStore.getEnvs().find(
-      (env) => env.api_key === this.props.environmentId,
-    )?.total_segment_overrides
 
     const THRESHOLD = 90
     const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
-      totalSegmentOverrides,
+      ProjectStore.getTotalSegmentOverrides(),
       ProjectStore.getMaxSegmentOverridesAllowed(),
       THRESHOLD,
     )

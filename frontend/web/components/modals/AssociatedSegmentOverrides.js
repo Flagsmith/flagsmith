@@ -110,12 +110,9 @@ class TheComponent extends Component {
         />
       </div>
     )
-    const totalSegmentOverrides = ProjectStore.getEnvs().find(
-      (env) => env.name === this.state.selectedEnv,
-    )?.total_segment_overrides
     const THRESHOLD = 90
     const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
-      totalSegmentOverrides,
+      ProjectStore.getTotalSegmentOverrides(),
       ProjectStore.getMaxSegmentOverridesAllowed(),
       THRESHOLD,
     )
