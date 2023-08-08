@@ -165,7 +165,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
           search={search}
           renderRow={({ api_key, id, name }: Environment) => (
             <a
-              className='list-item clickable'
+              className='list-item clickable flex flex-1 flex-row px-4'
               onClick={() => {
                 onClick(`${useApiKey ? api_key || id : id}`)
               }}

@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
@@ -90,7 +90,9 @@ const SegmentOverrideInner = class Override extends React.Component {
         data-test={`segment-override-${index}`}
         style={{ zIndex: 9999999999 }}
         className={`segment-overrides mb-2${
-          this.props.id ? '' : ' panel panel-without-heading panel--draggable'
+          this.props.id
+            ? ''
+            : ' panel panel-without-heading panel--draggable p-3'
         }`}
       >
         <Row className='panel-content' space>
@@ -181,7 +183,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             className='ml-2 dark-link'
                           >
                             Edit Segment
-                            <ion className={'ion ml-1 ion-md-open'} />
+                            <i className={'ion ml-1 ion-md-open'} />
                           </Button>
                         )}
                       </>,
@@ -331,7 +333,7 @@ const SegmentOverrideListInner = ({
   return (
     <div>
       {items.map((value, index) => (
-        <>
+        <Fragment key={value.segment.name}>
           <InnerComponent
             id={id}
             name={name}
@@ -342,7 +344,6 @@ const SegmentOverrideListInner = ({
             environmentId={environmentId}
             projectId={projectId}
             multivariateOptions={multivariateOptions}
-            key={value.segment.name}
             index={index}
             readOnly={readOnly}
             value={value}
@@ -370,7 +371,7 @@ const SegmentOverrideListInner = ({
               json={value}
             />
           </div>
-        </>
+        </Fragment>
       ))}
     </div>
   )

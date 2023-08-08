@@ -6,6 +6,7 @@ import JSONReference from './JSONReference'
 import ModalHR from './modals/ModalHR'
 import Button from './base/forms/Button'
 import DateSelect from './DateSelect'
+import Icon from './Icon'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -38,11 +39,11 @@ export class CreateAPIKey extends PureComponent {
 
   render() {
     return (
-      <div>
-        <div className='modal-body'>
+      <>
+        <div className='modal-body flex flex-column flex-fill px-4'>
           {!this.state.key && (
             <div>
-              <Flex className='mb-4'>
+              <Flex className='mb-4 mt-4'>
                 <div>
                   <label>Name</label>
                 </div>
@@ -59,7 +60,7 @@ export class CreateAPIKey extends PureComponent {
               </Flex>
               <Flex>
                 <div>
-                  <label>Expiry (Leave empty for no expiry)</label>
+                  <label>Expiry</label>
                 </div>
                 <Row>
                   <DateSelect
@@ -107,27 +108,25 @@ export class CreateAPIKey extends PureComponent {
               <Token show style={{ width: '435px' }} token={this.state.key} />
             </div>
           )}
+          {this.state.key ? (
+            <div />
+          ) : (
+            <>
+              <div className='modal-footer mt-2 px-0'>
+                <Button onClick={closeModal} theme='secondary' className='mr-2'>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={this.submit}
+                  disabled={this.state.isSaving || !this.state.name}
+                >
+                  {this.state.isSaving ? 'Creating' : 'Create'}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
-
-        {this.state.key ? (
-          <div />
-        ) : (
-          <>
-            <ModalHR />
-            <div className='modal-footer'>
-              <Button onClick={closeModal} theme='secondary' className='mr-2'>
-                Cancel
-              </Button>
-              <Button
-                onClick={this.submit}
-                disabled={this.state.isSaving || !this.state.name}
-              >
-                {this.state.isSaving ? 'Creating' : 'Create'}
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+      </>
     )
   }
 }
@@ -154,7 +153,7 @@ export default class AdminAPIKeys extends PureComponent {
           this.fetch()
         }}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -226,34 +225,49 @@ export default class AdminAPIKeys extends PureComponent {
           </div>
         )}
         {!!apiKeys && !!apiKeys.length && (
-          <Panel className='mt-4' title='API Keys'>
-            {apiKeys &&
-              apiKeys.map(
-                (v) =>
-                  !v.revoked && (
-                    <div className='list-item' key={v.id}>
-                      <Row>
-                        <Flex>
-                          <strong>{v.name}</strong>
-                          <div className='list-item-footer faint'>
-                            <div>{v.prefix}*****************</div>
-                            <div>
-                              Created{' '}
-                              {moment(v.created).format('Do MMM YYYY HH:mma')}
-                            </div>
-                          </div>
-                        </Flex>
-                        <Button
-                          onClick={() => this.remove(v)}
-                          className='btn btn--with-icon ml-auto btn--remove'
-                        >
-                          <RemoveIcon />
-                        </Button>
-                      </Row>
+          <PanelSearch
+            className='no-pad'
+            title='API Keys'
+            items={apiKeys}
+            header={
+              <Row className='table-header'>
+                <Flex className='table-column px-3'>API Keys</Flex>
+                <Flex className='table-column'>Created</Flex>
+                <div
+                  className='table-column text-center'
+                  style={{ width: '80px' }}
+                >
+                  Remove
+                </div>
+              </Row>
+            }
+            renderRow={(v) =>
+              !v.revoked && (
+                <Row className='list-item' key={v.id}>
+                  <Flex className='table-column px-3'>
+                    <div className='font-weight-medium mb-1'>{v.name}</div>
+                    <div className='list-item-subtitle'>
+                      <div>{v.prefix}*****************</div>
                     </div>
-                  ),
-              )}
-          </Panel>
+                  </Flex>
+                  <Flex className='table-column fs-small lh-sm'>
+                    {moment(v.created).format('Do MMM YYYY HH:mma')}
+                  </Flex>
+                  <div
+                    className='table-column  text-center'
+                    style={{ width: '80px' }}
+                  >
+                    <Button
+                      onClick={() => this.remove(v)}
+                      className='btn btn-with-icon'
+                    >
+                      <Icon name='trash-2' width={20} fill='#656D7B' />
+                    </Button>
+                  </div>
+                </Row>
+              )
+            }
+          />
         )}
       </div>
     )

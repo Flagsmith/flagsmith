@@ -395,7 +395,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 text-dark'
+            className='mb-0 fs-small text-dark'
           >
             {showDescriptions
               ? 'Hide condition descriptions'
@@ -406,7 +406,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <label className='cols-sm-2 control-label mb-1'>
             Include users when the following rules apply:
           </label>
-          <span className='text-small text-faint'>
+          <span className='fs-caption text-faint'>
             Note: Trait names are case sensitive
           </span>
         </Flex>
@@ -522,7 +522,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     title='Segment Users'
                     className='no-pad'
                     isLoading={identitiesLoading}
-                    icon='ion-md-person'
                     items={identities?.results}
                     paging={identities}
                     showExactFilter
@@ -560,7 +559,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
                       { id, identifier }: { id: string; identifier: string },
                       index: number,
                     ) => (
-                      <div key={id}>
+                      <Row
+                        key={id}
+                        className='list-item list-item-sm clickable'
+                      >
                         <IdentitySegmentsProvider
                           fetch
                           id={id}
@@ -574,25 +576,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             return (
                               <Row
                                 space
-                                className='list-item clickable'
+                                className='px-3'
                                 key={id}
                                 data-test={`user-item-${index}`}
                               >
-                                <strong>{identifier}</strong>
+                                <div className='font-weight-medium'>
+                                  {identifier}
+                                </div>
                                 <div
                                   className={`${
                                     inSegment
-                                      ? 'strong text-primary'
-                                      : 'text-faint muted faint text-small'
-                                  } badge`}
+                                      ? 'font-weight-medium text-primary'
+                                      : 'text-muted fs-small lh-sm'
+                                  }`}
                                 >
-                                  <span
-                                    className={`ion mr-1 line ${
-                                      inSegment
-                                        ? ' text-primary ion-ios-checkmark-circle'
-                                        : 'ion-ios-remove-circle'
-                                    }`}
-                                  />
                                   {inSegment
                                     ? 'User in segment'
                                     : 'Not in segment'}
@@ -601,7 +598,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             )
                           }}
                         </IdentitySegmentsProvider>
-                      </div>
+                      </Row>
                     )}
                     filterRow={() => true}
                     search={searchInput}

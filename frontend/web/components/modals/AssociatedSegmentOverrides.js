@@ -95,7 +95,7 @@ class TheComponent extends Component {
       (results && results[this.state.selectedEnv]) || [],
     )
     const addOverride = (
-      <div style={{ width: 300 }} className='p-2 ml-2'>
+      <div style={{ width: 300 }} className='my-4'>
         <WrappedSegmentOverrideAdd
           onSave={this.fetch}
           addItem={this.addItem}
@@ -147,13 +147,13 @@ class TheComponent extends Component {
             title='Environment'
           />
           <PanelSearch
-            header={addOverride}
+            searchPanel={addOverride}
             search={this.state.search}
             onChange={(search) => this.setState({ search })}
             filterRow={(row, search) =>
               row.feature.name.toLowerCase().includes(search.toLowerCase())
             }
-            className='no-pad'
+            className='no-pad panel-override'
             title='Associated Features'
             items={selectedResults}
             renderNoResults={
@@ -165,12 +165,11 @@ class TheComponent extends Component {
               </Panel>
             }
             renderRow={(v) => (
-              <div key={v.feature.id} className='m-3 mb-4'>
+              <div key={v.feature.id} className='list-item-override p-3 mb-4'>
                 <div
                   onClick={() => {
                     // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
                   }}
-                  className='list-item panel panel-without-heading py-3 clickable'
                 >
                   <div>
                     <strong>{v.feature.name}</strong>
