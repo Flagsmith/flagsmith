@@ -40,8 +40,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Install poetry
         run: pipx install poetry
