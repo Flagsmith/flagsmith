@@ -517,10 +517,10 @@ class TheComponent extends Component {
           {!this.props.id &&
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
-            !this.props.readOnly &&
-            !isLimitReached && (
+            !this.props.readOnly && (
               <Flex className='text-left'>
                 <SegmentSelect
+                  disabled={!!isLimitReached}
                   projectId={this.props.projectId}
                   data-test='select-segment'
                   placeholder='Create a Segment Override...'

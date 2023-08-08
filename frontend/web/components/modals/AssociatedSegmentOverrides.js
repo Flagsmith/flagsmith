@@ -442,17 +442,16 @@ class SegmentOverridesInnerAdd extends Component {
       <FeatureListProvider>
         {() => {
           return (
-            !segmentOverrideLimitAlert && (
-              <div className='mt-2'>
-                <FlagSelect
-                  onlyInclude={this.props.feature}
-                  placeholder='Create a Segment Override...'
-                  projectId={projectId}
-                  ignore={ignoreFlags}
-                  onChange={addValue}
-                />
-              </div>
-            )
+            <div className='mt-2'>
+              <FlagSelect
+                disabled={!!segmentOverrideLimitAlert}
+                onlyInclude={this.props.feature}
+                placeholder='Create a Segment Override...'
+                projectId={projectId}
+                ignore={ignoreFlags}
+                onChange={addValue}
+              />
+            </div>
           )
         }}
       </FeatureListProvider>
