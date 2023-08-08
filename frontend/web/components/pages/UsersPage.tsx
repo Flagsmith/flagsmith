@@ -84,7 +84,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
     openModal(
       'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      'p-0',
+      'side-modal',
     )
   }
 
@@ -211,9 +211,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                         className='flex-row flex flex-1 table-column'
                       >
                         <div className='font-weight-medium'>{identifier}</div>
-                        <span style={{ marginTop: 2 }}>
-                          <Icon name='chevron-right' width={22} />
-                        </span>
+                        <Icon name='chevron-right' width={22} />
                       </Link>
                       <div className='table-column'>
                         <Button

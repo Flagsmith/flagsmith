@@ -235,3 +235,11 @@
         scrollbar-color: $bg-dark300;
     }
 }
+
+.dark {
+    .calendar-icon {
+        path {
+            fill: $text-icon-grey;
+        }
+    }
+}
