@@ -508,7 +508,9 @@ class TheComponent extends Component {
       ProjectStore.getMaxSegmentOverridesAllowed(),
       THRESHOLD,
     )
-
+    const isLimitReached =
+      segmentOverrideLimitAlert.percentage &&
+      segmentOverrideLimitAlert.percentage >= 100
     return (
       <div>
         <div className='mt-2 mb-2'>
@@ -516,8 +518,7 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly &&
-            (!segmentOverrideLimitAlert.percentage ||
-              segmentOverrideLimitAlert.percentage < 90) && (
+            !isLimitReached && (
               <Flex className='text-left'>
                 <SegmentSelect
                   projectId={this.props.projectId}
@@ -542,6 +543,7 @@ class TheComponent extends Component {
                     this.props.setShowCreateSegment(true)
                   }}
                   theme='outline'
+                  disabled={!!isLimitReached}
                 >
                   Create Feature-Specific Segment
                 </Button>

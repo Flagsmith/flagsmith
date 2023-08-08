@@ -136,7 +136,11 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
-        {segmentOverrideLimitAlert.percentage && Utils.displayLimitAlert("segment overrides", segmentOverrideLimitAlert.percentage)}
+        {segmentOverrideLimitAlert.percentage &&
+          Utils.displayLimitAlert(
+            'segment overrides',
+            segmentOverrideLimitAlert.percentage,
+          )}
         <div>
           <InputGroup
             component={
@@ -430,17 +434,15 @@ class SegmentOverridesInnerAdd extends Component {
       // const newValue = ;
       // updateSegments(segmentOverrides.concat([newValue]))
     }
-    const totalSegmentOverrides = ProjectStore.getEnvs().find(
-      (env) => env.name === environmentId,
-    )?.total_segment_overrides
     const segmentOverrideLimitAlert =
-      totalSegmentOverrides >= ProjectStore.getMaxSegmentOverridesAllowed()
+      ProjectStore.getTotalSegmentOverrides >=
+      ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <FeatureListProvider>
         {() => {
           return (
-            !segmentOverrideLimitAlert >= 100 && (
+            !segmentOverrideLimitAlert && (
               <div className='mt-2'>
                 <FlagSelect
                   onlyInclude={this.props.feature}
