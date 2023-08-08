@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 1.5.0
+POETRY_VERSION ?= 1.5.1
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
