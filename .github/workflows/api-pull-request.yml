@@ -53,7 +53,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v3
         with:
           path: .venv
           key:
