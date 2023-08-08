@@ -36,7 +36,7 @@ const Tag: FC<TagType> = ({
     return deselectedColor || tag.color
   }
 
-  if (!hideNames) {
+  if (!hideNames && !!onClick) {
     return (
       <ToggleChip
         color={getColor()}
