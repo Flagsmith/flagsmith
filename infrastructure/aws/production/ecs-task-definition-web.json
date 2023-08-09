@@ -125,7 +125,7 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.0001"
+                    "value": "0.00006"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
@@ -134,10 +134,6 @@
                 {
                     "name": "SLACK_CLIENT_ID",
                     "value": "937916178726.1924685747446"
-                },
-                {
-                    "name": "EDGE_API_URL",
-                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
@@ -166,6 +162,18 @@
                 {
                     "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
                     "value": "True"
+                },
+                {
+                    "name": "AUTO_SEAT_UPGRADE_PLANS",
+                    "value": "scale-up-12-months-v2-gbp,scale-up-12-months-v2-eur,scale-up-12-months-v2,scale-up-quarterly-v2-semiannual,scale-up-quarterly-v2,scale-up-v2"
+                },
+                {
+                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
+                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                },
+                {
+                    "name":"EDGE_API_URL",
+                    "value":"https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
@@ -196,10 +204,6 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
-                },
-                {
-                    "name": "MAILERLITE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:MAILERLITE_API_KEY::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",

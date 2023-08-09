@@ -1,6 +1,7 @@
 ---
 title: Terraform Provider
 sidebar_label: Terraform
+sidebar_position: 20
 hide_title: true
 ---
 
@@ -15,10 +16,6 @@ your Infrastructure as Code tooling.
 You can find the latest Hashicorp docs for using the Flagsmith provider
 [here](https://registry.terraform.io/providers/Flagsmith/flagsmith/latest/docs).
 
-:::
-
-:::tip
-
 Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](../clients/rest.md#json-view)
 from your account settings page which will help you access these variables.
 
@@ -26,7 +23,7 @@ from your account settings page which will help you access these variables.
 
 ## Prerequisite
 
-### [Terraform API Key](../advanced-use/system-administration.md#terraform-api-keys-for-organisations):
+### Terraform API Key
 
 In order to configure the Flagsmith Terraform provider we are going to need an API key. To generate that head over to
 the Organisation Settings page, and click on `Create Terraform API Key`.

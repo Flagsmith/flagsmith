@@ -2,6 +2,7 @@ from app_analytics.views import (
     get_usage_data_total_count_view,
     get_usage_data_view,
 )
+from django.conf import settings
 from django.conf.urls import include, url
 from django.urls import path
 from rest_framework_nested import routers
@@ -61,11 +62,13 @@ organisations_router.register(
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
 )
+
 organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
 )
 
 app_name = "organisations"
+
 
 urlpatterns = [
     url(r"^", include(router.urls)),
@@ -91,3 +94,42 @@ urlpatterns = [
         name="remove-user-group-admin",
     ),
 ]
+
+if settings.IS_RBAC_INSTALLED:
+    from rbac.views import (
+        GroupRoleViewSet,
+        RoleEnvironmentPermissionsViewSet,
+        RoleOrganisationPermissionViewSet,
+        RoleProjectPermissionsViewSet,
+        RoleViewSet,
+        UserRoleViewSet,
+    )
+
+    organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
+    nested_roles_router = routers.NestedSimpleRouter(
+        organisations_router, r"roles", lookup="role"
+    )
+    nested_roles_router.register(
+        "environments-permissions",
+        RoleEnvironmentPermissionsViewSet,
+        basename="roles-environments-permissions",
+    )
+    nested_roles_router.register(
+        "projects-permissions",
+        RoleProjectPermissionsViewSet,
+        basename="roles-projects-permissions",
+    )
+    nested_roles_router.register(
+        "organisation-permissions",
+        RoleOrganisationPermissionViewSet,
+        basename="roles-organisations-permissions",
+    )
+    nested_roles_router.register("groups", GroupRoleViewSet, basename="group-roles")
+    nested_roles_router.register("users", UserRoleViewSet, basename="user-roles")
+
+    urlpatterns.extend(
+        [
+            url(r"^", include(organisations_router.urls)),
+            url(r"^", include(nested_roles_router.urls)),
+        ]
+    )

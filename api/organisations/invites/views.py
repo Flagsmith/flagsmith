@@ -83,8 +83,20 @@ class InviteLinkViewSet(
     pagination_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return InviteLink.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
+        organisation = Organisation.objects.get(id=organisation_pk)
+
+        if (
+            settings.ENABLE_CHARGEBEE
+            and organisation.over_plan_seats_limit(additional_seats=1)
+            and not organisation.is_auto_seat_upgrade_available()
+        ):
+            raise SubscriptionDoesNotSupportSeatUpgrade()
+
         return InviteLink.objects.filter(
             organisation__in=user.organisations.all()
         ).filter(organisation__pk=organisation_pk)
@@ -111,6 +123,9 @@ class InviteViewSet(
         }.get(self.action, InviteListSerializer)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Invite.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
 

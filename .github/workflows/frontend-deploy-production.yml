@@ -24,8 +24,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Run E2E tests against production
         uses: ./.github/actions/e2e-tests
@@ -43,8 +41,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js 16.x
         uses: actions/setup-node@v3
@@ -79,8 +75,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js 16.x
         uses: actions/setup-node@v3
@@ -104,4 +98,5 @@ jobs:
           npm run env
           npm run bundle
           echo ${{ github.sha }} > CI_COMMIT_SHA
+          npm install --global vercel@31.2.0
           vercel --prod --token ${{ secrets.VERCEL_TOKEN }}

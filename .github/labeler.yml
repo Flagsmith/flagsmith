@@ -1,0 +1,9 @@
+# https://github.com/actions/labeler
+
+docs: docs/**
+
+front-end: frontend/**
+
+api: api/**
+
+github: .github/**

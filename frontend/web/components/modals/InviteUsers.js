@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import ModalHR from './ModalHR'
+import Icon from 'components/Icon'
 
 const InviteUsers = class extends Component {
   static displayName = 'InviteUsers'
@@ -72,88 +74,106 @@ const InviteUsers = class extends Component {
                 AppActions.inviteUsers(invites)
               }}
             >
-              {_.map(invites, (invite, index) => (
-                <Row className='mt-2' key={index}>
+              <div className='modal-body px-4 pt-4'>
+                <Row>
                   <Flex>
-                    <InputGroup
-                      ref={(e) => (this.input = e)}
-                      inputProps={{
-                        className: 'full-width',
-                        name: 'inviteEmail',
-                      }}
-                      onChange={(e) =>
-                        this.onChange(
-                          index,
-                          'emailAddress',
-                          Utils.safeParseEventValue(e),
-                        )
-                      }
-                      value={invite.emailAddress}
-                      isValid={this.isValid}
-                      type='text'
-                      placeholder='E-mail address'
-                    />
+                    <label>Email Address</label>
                   </Flex>
-                  <Flex className='mb-4' style={{ position: 'relative' }}>
-                    <Select
-                      data-test='select-role'
-                      placeholder='Select a role'
-                      value={invite.role}
-                      onChange={(role) => this.onChange(index, 'role', role)}
-                      className='pl-2'
-                      options={_.map(Constants.roles, (label, value) => ({
-                        isDisabled: value !== 'ADMIN' && !hasRbacPermission,
-                        label:
-                          value !== 'ADMIN' && !hasRbacPermission
-                            ? `${label} - Please upgrade for role based access`
-                            : label,
-                        value,
-                      }))}
-                    />
+                  <Flex>
+                    <label>Select Role</label>
                   </Flex>
-                  {invites.length > 1 ? (
-                    <Column style={{ width: 50 }}>
-                      <button
-                        id='delete-invite'
-                        type='button'
-                        onClick={() => this.deleteInvite(index)}
-                        className='btn btn--with-icon ml-auto btn--remove'
-                      >
-                        <RemoveIcon />
-                      </button>
-                    </Column>
-                  ) : (
-                    <Column style={{ width: 50 }} />
-                  )}
                 </Row>
-              ))}
+                {_.map(invites, (invite, index) => (
+                  <Row className='mb-2' key={index}>
+                    <Flex>
+                      <InputGroup
+                        className='mb-2'
+                        ref={(e) => (this.input = e)}
+                        inputProps={{
+                          className: 'full-width',
+                          name: 'inviteEmail',
+                        }}
+                        onChange={(e) =>
+                          this.onChange(
+                            index,
+                            'emailAddress',
+                            Utils.safeParseEventValue(e),
+                          )
+                        }
+                        value={invite.emailAddress}
+                        isValid={this.isValid}
+                        type='text'
+                        placeholder='E-mail address'
+                      />
+                    </Flex>
+                    <Flex className='mb-2' style={{ position: 'relative' }}>
+                      <Select
+                        data-test='select-role'
+                        placeholder='Select a role'
+                        value={invite.role}
+                        onChange={(role) => this.onChange(index, 'role', role)}
+                        className='pl-2 react-select'
+                        options={_.map(Constants.roles, (label, value) => ({
+                          isDisabled: value !== 'ADMIN' && !hasRbacPermission,
+                          label:
+                            value !== 'ADMIN' && !hasRbacPermission
+                              ? `${label} - Please upgrade for role based access`
+                              : label,
+                          value,
+                        }))}
+                      />
+                    </Flex>
+                    {invites.length > 1 ? (
+                      <div className="ml-2">
+                        <Button
+                          id='delete-invite'
+                          type='button'
+                          onClick={() => this.deleteInvite(index)}
+                          className='btn btn-with-icon mb-2'
+                        >
+                          <Icon name='trash-2' width={20} fill='#656D7B' />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
+                  </Row>
+                ))}
 
-              <div className='text-center mt-2'>
-                <ButtonLink
-                  id='btn-add-invite'
-                  disabled={isSaving || !this.isValid()}
-                  type='button'
-                  onClick={() =>
-                    this.setState({ invites: this.state.invites.concat([{}]) })
-                  }
-                >
-                  {isSaving ? 'Sending' : 'Invite additional member'}
-                  <span className='pl-2 icon ion-ios-add' />
-                </ButtonLink>
-              </div>
+                <div className='text-right'>
+                  <Button
+                    theme='outline'
+                    id='btn-add-invite'
+                    disabled={isSaving || !this.isValid()}
+                    type='button'
+                    onClick={() =>
+                      this.setState({
+                        invites: this.state.invites.concat([{}]),
+                      })
+                    }
+                  >
+                    {isSaving ? 'Sending' : 'Invite additional member'}
+                    <span className='pl-2 icon ion-ios-add' />
+                  </Button>
+                </div>
 
-              <p className='mt-3'>
-                Users without administrator privileges will need to be invited
-                to individual projects.{' '}
-                <ButtonLink
-                  target='_blank'
-                  href='https://docs.flagsmith.com/advanced-use/permissions'
-                >
-                  Learn about User Roles.
-                </ButtonLink>
-              </p>
-              <div className='text-right mt-2'>
+                <div className='mt-3'>
+                  Users without administrator privileges will need to be invited
+                  to individual projects.{' '}
+                  <Button
+                    theme='text'
+                    target='_blank'
+                    href='https://docs.flagsmith.com/system-administration/rbac'
+                  >
+                    Learn about User Roles.
+                  </Button>
+                </div>
                 {error && <Error error={error} />}
+              </div>
+              <div className='modal-footer'>
+                <Button onClick={closeModal} className='mr-2' theme='secondary'>
+                  Cancel
+                </Button>
                 <Button
                   id='btn-send-invite'
                   disabled={isSaving || !this.isValid()}

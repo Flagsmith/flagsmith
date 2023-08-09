@@ -6,6 +6,12 @@ on:
       - api/**
       - .github/**
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - .github/**
+    branches:
+      - main
 
 defaults:
   run:
@@ -13,7 +19,6 @@ defaults:
 
 jobs:
   test:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: API Unit Tests
 
@@ -35,17 +40,17 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
+          cache: 'poetry'
 
       - name: Install Dependencies
-        run: make install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-packages
 
       - name: Run Linters
         run: make lint
@@ -65,3 +70,11 @@ jobs:
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: PYTHON

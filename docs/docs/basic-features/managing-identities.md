@@ -62,18 +62,18 @@ that the Identity is using. When you integrate the Flagsmith SDK, you would pass
 Flagsmith platform as a trait key/value pair:
 
 ```java
-FeatureUser user = new FeatureUser();
-user.setIdentifier("user_512356");
+String identifier = "user_512356"
+Map<String, Object> traits = new HashMap<String, Object>();
+traits.put("app_version", YourApplication.getVersion());
 
-FlagsAndTraits flagsAndTraits = flagsmithClient.identifyUserWithTraits(FeatureUser user, Arrays.asList(
-    trait(null, "app_version", Application.getVersion());
+Flags flags = flagsmith.getIdentityFlags(identifier, traits);
 ```
 
-Here we are setting the trait key `app_version` with the value of `Application.getVersion()`.You can now create a
+Here we are setting the trait key `app_version` with the value of `YourApplication.getVersion()`.You can now create a
 [Segment](managing-segments.md) that is based on the application version and manage features based on the application
 version.
 
-Traits are completely freeform. You can store any number of traits, with any relevant information you see fit, in the
+Traits are completely free-form. You can store any number of traits, with any relevant information you see fit, in the
 platform and then use Segments to control features based on these Trait values.
 
 ### Using Traits as a data-store
@@ -93,7 +93,7 @@ Traits are stored natively as either numbers, strings or booleans.
 
 ## Traits powering Segments
 
-Traits can be used within your application, but they also be used to power
+Traits can be used within your application, but they can also be used to power
 [Segments](/basic-features/managing-segments.md).
 
 ## Trait Value Data Types

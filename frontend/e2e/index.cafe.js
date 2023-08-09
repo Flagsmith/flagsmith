@@ -6,7 +6,7 @@ const _options = require("../.testcaferc")
 const upload = require('../bin/upload-file');
 const options = {
     ..._options,
-    browsers: process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'],
+    browsers: process.env.E2E_DEV ? ['firefox'] : ['firefox:headless'],
     debugOnFail: !!process.env.E2E_DEV
 }
 let testcafe;
@@ -26,19 +26,11 @@ createTestCafe()
                 resolve();
             });
         });
-        const runner = testcafe.createRunner();
+        const runner = testcafe.createRunner()
         return runner
+            .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .run(options)
-            .then((v) => {
-                if (!v) {
-                    return runner
-                        .src(['./e2e/cafe'])
-                        .concurrency(2)
-                        .run(options);
-                }
-                return v;
-            });
     })
     .then(async (v) => {
         // Upload files

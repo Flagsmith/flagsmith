@@ -1,10 +1,6 @@
 import { PureComponent } from 'react'
 import Select from 'react-select'
-import Button, {
-  ButtonLink,
-  ButtonOutline,
-  ButtonProject,
-} from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
@@ -12,18 +8,21 @@ import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
 import AccountStore from 'common/stores/account-store'
-import Tooltip from 'components/Toolip'
+import Tooltip from 'components/Tooltip'
+import ProjectProvider from 'common/providers/ProjectProvider'
+import AccountProvider from 'common/providers/AccountProvider'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
 window.IdentityProvider = require('../../common/providers/IdentityProvider')
-window.AccountProvider = require('../../common/providers/AccountProvider')
+window.IdentityProvider = require('../../common/providers/IdentityProvider')
+window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
 window.OrganisationProvider = require('../../common/providers/OrganisationProvider')
-window.ProjectProvider = require('../../common/providers/ProjectProvider')
+window.ProjectProvider = ProjectProvider
 window.OrganisationSelect = require('../components/OrganisationSelect')
 
 window.Paging = Paging
@@ -36,9 +35,6 @@ window.Column = require('../components/base/grid/Column')
 window.InputGroup = InputGroup
 window.Input = Input
 window.Button = Button
-window.ButtonOutline = ButtonOutline
-window.ButtonLink = ButtonLink
-window.ButtonProject = ButtonProject
 window.FormGroup = require('../components/base/grid/FormGroup')
 window.Panel = require('../components/base/grid/Panel')
 window.FormGroup = require('../components/base/grid/FormGroup')
@@ -116,7 +112,7 @@ global.Select = class extends PureComponent {
       </div>
     ) : (
       <Select
-        className='react-select'
+        className={`react-select ${props.size ? props.size : ''}`}
         classNamePrefix='react-select'
         {...props}
       />

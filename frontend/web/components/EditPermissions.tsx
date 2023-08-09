@@ -1,27 +1,22 @@
-import React, { FC, useEffect, useState } from 'react'
-import { find } from 'lodash'
-import _data from 'common/data/base/_data'
-import {
-  AvailablePermission,
-  GroupPermission,
-  User,
-  UserGroup,
-  UserPermission,
-} from 'common/types/responses'
-import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
-import Format from 'common/utils/format'
-import PanelSearch from './PanelSearch'
-import Button, { ButtonLink } from './base/forms/Button'
-import InfoMessage from './InfoMessage'
-import Switch from './Switch'
-import TabItem from './base/forms/TabItem'
-import Tabs from './base/forms/Tabs'
-import UserGroupList from './UserGroupList'
-import { PermissionLevel } from 'common/types/requests'
-import { RouterChildContext } from 'react-router'
-import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
-import ConfigProvider from 'common/providers/ConfigProvider'
+import React, { FC, useEffect, useState } from 'react';
+import { find } from 'lodash';
+import _data from 'common/data/base/_data';
+import { AvailablePermission, GroupPermission, User, UserGroup, UserPermission } from 'common/types/responses';
+import Utils from 'common/utils/utils';
+import AccountStore from 'common/stores/account-store';
+import Format from 'common/utils/format';
+import PanelSearch from './PanelSearch';
+import Button from './base/forms/Button';
+import InfoMessage from './InfoMessage';
+import Switch from './Switch';
+import TabItem from './base/forms/TabItem';
+import Tabs from './base/forms/Tabs';
+import UserGroupList from './UserGroupList';
+import { PermissionLevel } from 'common/types/requests';
+import { RouterChildContext } from 'react-router';
+import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Icon from './Icon';
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -191,45 +186,45 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
   return !permissions || !entityPermissions ? (
-    <div className='text-center'>
+    <div className='modal-body text-center'>
       <Loader />
     </div>
   ) : (
     <div>
-      <div className='list-item'>
-        {level !== 'organisation' && (
-          <Row>
-            <Flex>
-              <strong>Administrator</strong>
-              <div className='list-item-footer faint'>
-                {hasRbacPermission ? (
-                  `Full View and Write permissions for the given ${Format.camelCase(
-                    level,
-                  )}.`
-                ) : (
-                  <span>
-                    Role-based access is not available on our Free Plan. Please
-                    visit{' '}
-                    <a href='https://flagsmith.com/pricing/'>
-                      our Pricing Page
-                    </a>{' '}
-                    for more information on our licensing options.
-                  </span>
-                )}
-              </div>
-            </Flex>
-            <Switch
-              disabled={!hasRbacPermission}
-              onChange={toggleAdmin}
-              checked={isAdmin}
-            />
-          </Row>
-        )}
-      </div>
-      <div className='panel--grey'>
+      <div className='modal-body px-4'>
+        <div className='mb-2 mt-4'>
+          {level !== 'organisation' && (
+            <Row>
+              <Flex>
+                <h5>Administrator</h5>
+                <div className='list-item-footer faint'>
+                  {hasRbacPermission ? (
+                    `Full View and Write permissions for the given ${Format.camelCase(
+                      level,
+                    )}.`
+                  ) : (
+                    <span>
+                      Role-based access is not available on our Free Plan.
+                      Please visit{' '}
+                      <a href='https://flagsmith.com/pricing/'>
+                        our Pricing Page
+                      </a>{' '}
+                      for more information on our licensing options.
+                    </span>
+                  )}
+                </div>
+              </Flex>
+              <Switch
+                disabled={!hasRbacPermission}
+                onChange={toggleAdmin}
+                checked={isAdmin}
+              />
+            </Row>
+          )}
+        </div>
         <PanelSearch
           title='Permissions'
-          className='no-pad'
+          className='no-pad mb-2'
           items={permissions}
           renderRow={(p: AvailablePermission) => {
             const levelUpperCase = level.toUpperCase()
@@ -238,17 +233,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
               p.key !== `VIEW_${levelUpperCase}` &&
               !hasPermission(`VIEW_${levelUpperCase}`)
             return (
-              <div
+              <Row
                 key={p.key}
                 style={admin() ? { opacity: 0.5 } : undefined}
-                className='list-item'
+                className='list-item list-item-sm px-3'
               >
-                <Row>
+                <Row space>
                   <Flex>
                     <strong>{Format.enumeration.get(p.key)}</strong>
-                    <div className='list-item-footer faint'>
-                      {p.description}
-                    </div>
+                    <div className='list-item-subtitle'>{p.description}</div>
                   </Flex>
                   <Switch
                     onChange={() => togglePermission(p.key)}
@@ -256,37 +249,40 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
                     checked={!disabled && hasPermission(p.key)}
                   />
                 </Row>
-              </div>
+              </Row>
             )
           }}
         />
+
+        <div className='text-right pt-4 mb-4'>
+          This will edit the permissions for{' '}
+          <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
+        </div>
+
+        {parentError && (
+          <InfoMessage>
+            The selected {isGroup ? 'group' : 'user'} does not have explicit
+            user permissions to view this {parentLevel}. If the user does not
+            belong to any groups with this permissions, you may have to adjust
+            their permissions in{' '}
+            <a
+              onClick={() => {
+                if (parentSettingsLink) {
+                  push(parentSettingsLink)
+                }
+                closeModal()
+              }}
+            >
+              <strong>{parentLevel} settings</strong>
+            </a>
+            .
+          </InfoMessage>
+        )}
       </div>
-
-      <p className='text-right mt-2'>
-        This will edit the permissions for{' '}
-        <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
-      </p>
-
-      {parentError && (
-        <InfoMessage>
-          The selected {isGroup ? 'group' : 'user'} does not have explicit user
-          permissions to view this {parentLevel}. If the user does not belong to
-          any groups with this permissions, you may have to adjust their
-          permissions in{' '}
-          <a
-            onClick={() => {
-              if (parentSettingsLink) {
-                push(parentSettingsLink)
-              }
-              closeModal()
-            }}
-          >
-            <strong>{parentLevel} settings</strong>
-          </a>
-          .
-        </InfoMessage>
-      )}
-      <div className='text-right'>
+      <div className='modal-footer'>
+        <Button className='mr-2' onClick={closeModal} theme='secondary'>
+          Cancel
+        </Button>
         <Button
           onClick={save}
           data-test='update-feature-btn'
@@ -330,6 +326,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         user={user}
         push={router.history.push}
       />,
+      'p-0 side-modal',
     )
   }
 
@@ -348,23 +345,25 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         group={group}
         push={router.history.push}
       />,
+      'p-0 side-modal',
     )
   }
 
   return (
     <div className='mt-4'>
-      <h3>Manage Users and Permissions</h3>
-      <p>
+      <h5>Manage Users and Permissions</h5>
+      <p className='fs-small lh-sm'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
-        <ButtonLink
-          href='https://docs.flagsmith.com/advanced-use/permissions'
+        <Button
+          theme='text'
+          href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
         >
           Learn about User Roles.
-        </ButtonLink>
+        </Button>
       </p>
-      <Tabs value={tab} onChange={setTab}>
+      <Tabs value={tab} onChange={setTab} theme='pill'>
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }: { isLoading: boolean; users?: User[] }) => (
@@ -380,9 +379,22 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                       <div className={tabClassName}>
                         <PanelSearch
                           id='org-members-list'
-                          title=''
+                          title='Users'
                           className='panel--transparent'
                           items={users}
+                          itemHeight={64}
+                          header={
+                            <Row className='table-header'>
+                              <Flex className='table-column px-3'>User</Flex>
+                              <Flex className='table-column'>Role</Flex>
+                              <div
+                                style={{ width: '80px' }}
+                                className='table-column text-center'
+                              >
+                                Action
+                              </div>
+                            </Row>
+                          }
                           renderRow={({
                             email,
                             first_name,
@@ -414,40 +426,51 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 }`}
                                 key={id}
                               >
-                                <div>
-                                  <strong>
-                                    {`${first_name} ${last_name}`}
-                                  </strong>{' '}
-                                  {id == AccountStore.getUserId() && '(You)'}
-                                  <div className='list-item-footer faint'>
+                                <Flex className='table-column px-3'>
+                                  <div className='mb-1 font-weight-medium'>
+                                    {`${first_name} ${last_name}`}{' '}
+                                    {id == AccountStore.getUserId() && '(You)'}
+                                  </div>
+                                  <div className='list-item-subtitle'>
                                     {email}
                                   </div>
-                                </div>
+                                </Flex>
                                 {role === 'ADMIN' ? (
-                                  <Tooltip
-                                    html
-                                    title='Organisation Administrator'
-                                  >
-                                    {
-                                      'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
-                                    }
-                                  </Tooltip>
+                                  <Flex className='table-column fs-small lh-sm'>
+                                    <Tooltip
+                                      html
+                                      title={'Organisation Administrator'}
+                                    >
+                                      {
+                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                      }
+                                    </Tooltip>
+                                  </Flex>
                                 ) : (
-                                  <div onClick={onClick} className='flex-row'>
-                                    <span className='mr-3'>
-                                      {matchingPermissions &&
-                                      matchingPermissions.admin
-                                        ? `${Format.camelCase(
-                                            level,
-                                          )} Administrator`
-                                        : 'Regular User'}
-                                    </span>
-                                    <span
-                                      style={{ fontSize: 24 }}
-                                      className='icon--primary ion ion-md-settings'
-                                    />
-                                  </div>
+                                  <Flex
+                                    onClick={onClick}
+                                    className='table-column fs-small lh-sm'
+                                  >
+                                    {matchingPermissions &&
+                                    matchingPermissions.admin
+                                      ? `${Format.camelCase(
+                                          level,
+                                        )} Administrator`
+                                      : 'Regular User'}
+                                  </Flex>
                                 )}
+                                <div
+                                  style={{ width: '80px' }}
+                                  className='text-center'
+                                >
+                                  {role !== 'ADMIN' && (
+                                    <Icon
+                                      name='setting'
+                                      width={20}
+                                      fill='#656D7B'
+                                    />
+                                  )}
+                                </div>
                               </Row>
                             )
                           }}

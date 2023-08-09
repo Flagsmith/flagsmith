@@ -11,17 +11,26 @@ import {
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
+import InlineModal from 'components/InlineModal'
 
 type CreateEditTagType = {
   projectId: string
   onComplete?: (tag: TTag) => void
   tag?: TTag
+  isOpen: boolean
+  onBack: () => void
+  onClose: () => void
+  title: string
 }
 
 const CreateEditTag: FC<CreateEditTagType> = ({
   onComplete: _onComplete,
   projectId,
   tag: _tag,
+  isOpen,
+  onBack,
+  onClose,
+  title,
 }) => {
   const [tag, setTag] = useState<Partial<TTag> | undefined>(_tag)
   const isEdit = !!tag?.id
@@ -83,54 +92,72 @@ const CreateEditTag: FC<CreateEditTagType> = ({
   }
 
   return (
-    <div>
-      <InputGroup
-        value={tag?.label}
-        id='tag-label'
-        inputProps={{
-          className: 'full-width mb-2',
-          name: 'create-tag-name',
-          onKeyDown,
-        }}
-        title='Name'
-        onChange={(e: InputEvent) => update('label', e)}
-      />
-      <InputGroup
-        title='Select a color'
-        component={
-          <Row className='mb-2'>
-            {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select mr-2 mb-2'>
-                <Tag
-                  onClick={(e: TTag) => update('color', e.color)}
-                  selected={tag?.color === color}
-                  tag={{ color }}
-                />
-              </div>
-            ))}
-          </Row>
-        }
-      />
-      <div className='text-center'>
-        <Permission level='project' permission='ADMIN' id={projectId}>
-          {({ permission }) =>
-            Utils.renderWithPermission(
-              permission,
-              Constants.projectPermissions('Admin'),
-              <Button
-                onClick={save}
-                type='button'
-                disabled={
-                  tagsSaving || !tag?.color || !tag?.label || !permission
-                }
-              >
-                {isEdit ? 'Save Tag' : 'Create Tag'}
-              </Button>,
-            )
+    <InlineModal
+      title={title}
+      isOpen={isOpen}
+      onBack={onBack}
+      showBack
+      onClose={onClose}
+      className='inline-modal--tags pb-0'
+      bottom={
+        <Row className="justify-content-end">
+          <Button onClick={onClose} type='button' theme='secondary'>
+            Cancel
+          </Button>
+          <Permission level='project' permission='ADMIN' id={projectId}>
+            {({ permission }) =>
+              Utils.renderWithPermission(
+                permission,
+                Constants.projectPermissions('Admin'),
+                <div className='ml-2'>
+                  <Button
+                    onClick={save}
+                    type='button'
+                    disabled={
+                      tagsSaving || !tag?.color || !tag?.label || !permission
+                    }
+                  >
+                    Save Tag
+                  </Button>
+                  ,
+                </div>,
+              )
+            }
+          </Permission>
+        </Row>
+      }
+    >
+      <div>
+        <InputGroup
+          value={tag?.label}
+          id='tag-label'
+          inputProps={{
+            className: 'full-width mb-2',
+            name: 'create-tag-name',
+            onKeyDown,
+          }}
+          title='Name'
+          onChange={(e: InputEvent) => update('label', e)}
+        />
+        <InputGroup
+          title='Select a color'
+          component={
+            <Row className={'gap-4'}>
+              {Constants.tagColors.map((color) => (
+                <div key={color} className='tag--select'>
+                  <Tag
+                    onClick={(e: TTag) => update('color', e.color)}
+                    selected={tag?.color === color}
+                    tag={{ color }}
+                  />
+                </div>
+              ))}
+            </Row>
           }
-        </Permission>
+          className='select-colour'
+        />
       </div>
-    </div>
+    </InlineModal>
   )
 }
 

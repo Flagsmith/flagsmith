@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/Icon'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -61,7 +62,7 @@ const ChangeRequestsPage = class extends Component {
         className='app-container container'
       >
         <Flex>
-          <h3>Scheduled Changes</h3>
+          <h4>Scheduled Changes</h4>
           {
             <div>
               {!hasSchedulePlan ? (
@@ -69,27 +70,26 @@ const ChangeRequestsPage = class extends Component {
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
                     with our{' '}
-                    <a
-                      href='#'
+                    <Button
+                      theme='text'
                       onClick={() => {
                         openModal(
                           'Payment plans',
                           <PaymentModal viewOnly={false} />,
-                          null,
-                          { large: true },
+                          'modal-lg',
                         )
                       }}
                     >
                       Start-up plan
-                    </a>
+                    </Button>
                     . Find out more{' '}
-                    <a
+                    <Button
+                      theme='text'
                       href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'
                       target='_blank'
-                      rel='noreferrer'
                     >
                       here
-                    </a>
+                    </Button>
                     .
                   </InfoMessage>
                 </div>
@@ -103,17 +103,16 @@ const ChangeRequestsPage = class extends Component {
                     renderSearchWithNoResults
                     id='users-list'
                     title='Scheduled Changes'
-                    className='mt-4'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !dataScheduled ||
                       !OrganisationStore.model
                     }
-                    icon='ion-ios-timer'
                     items={dataScheduled}
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={dataScheduled}
                       />
@@ -149,21 +148,24 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-ios-timer' />
-                            <div>
-                              <ButtonLink>{title}</ButtonLink>
-                              <div className='list-item-footer faint'>
-                                Created at{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>{title}</div>
+                            <div className='list-item-subtitle'>
+                              Created at{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
                             </div>
-                          </Row>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}

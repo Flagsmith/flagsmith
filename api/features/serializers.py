@@ -6,9 +6,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from projects.models import Project
 from users.serializers import UserIdsSerializer, UserListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -119,7 +121,10 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             data["initial_value"] = str(data["initial_value"])
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Feature:
+        project = self.context["project"]
+        self.validate_project_features_limit(project)
+
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
@@ -127,6 +132,14 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         if user and not user.is_anonymous:
             instance.owners.add(user)
         return instance
+
+    def validate_project_features_limit(self, project: Project) -> None:
+        if project.features.count() >= project.max_features_allowed:
+            raise serializers.ValidationError(
+                {
+                    "project": "The Project has reached the maximum allowed features limit."
+                }
+            )
 
     def validate_multivariate_options(self, multivariate_options):
         if multivariate_options:
@@ -395,9 +408,30 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     class Meta:
         model = FeatureState
         fields = (
+            "id",
             "enabled",
             "feature_state_value",
             "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+        )
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
         )
 
     def _get_save_kwargs(self, field_name):
@@ -406,3 +440,21 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
         return kwargs
+
+    def create(self, validated_data: dict) -> FeatureState:
+        environment = validated_data["environment"]
+        self.validate_environment_segment_override_limit(environment)
+        return super().create(validated_data)
+
+    def validate_environment_segment_override_limit(
+        self, environment: Environment
+    ) -> None:
+        if (
+            environment.feature_segments.count()
+            >= environment.project.max_segment_overrides_allowed
+        ):
+            raise serializers.ValidationError(
+                {
+                    "environment": "The environment has reached the maximum allowed segments overrides limit."
+                }
+            )

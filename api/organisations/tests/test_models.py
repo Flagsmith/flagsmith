@@ -9,6 +9,7 @@ from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
+    OrganisationSubscriptionInformationCache,
     Subscription,
 )
 from organisations.subscriptions.constants import (
@@ -114,7 +115,9 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
 
 def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
     # Given
-    mocker.patch("organisations.models.MAX_SEATS_IN_FREE_PLAN", 0)
+    organisation.subscription.max_seats = 0
+    organisation.subscription.save()
+
     mocked_get_subscription_metadata = mocker.patch(
         "organisations.models.Subscription.get_subscription_metadata",
         autospec=True,
@@ -122,6 +125,23 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     # Then
     assert organisation.over_plan_seats_limit() is True
     mocked_get_subscription_metadata.assert_not_called()
+
+
+def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
+    # Given
+    plan = "Scale-Up"
+    subscription_id = "subscription-id"
+    settings.AUTO_SEAT_UPGRADE_PLANS = [plan]
+
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id, plan=plan
+    )
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.is_auto_seat_upgrade_available() is True
 
 
 class SubscriptionTestCase(TestCase):
@@ -348,3 +368,24 @@ def test_organisation_update_clears_environment_caches(
 
     # Then
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
+
+
+@pytest.mark.parametrize(
+    "allowed_calls_30d, actual_calls_30d, expected_overage",
+    ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
+)
+def test_subscription_get_api_call_overage(
+    organisation, subscription, allowed_calls_30d, actual_calls_30d, expected_overage
+):
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=allowed_calls_30d,
+        api_calls_30d=actual_calls_30d,
+    )
+
+    # When
+    overage = subscription.get_api_call_overage()
+
+    # Then
+    assert overage == expected_overage

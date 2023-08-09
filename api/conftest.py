@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -13,7 +15,10 @@ from environments.permissions.constants import (
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from environments.permissions.models import UserEnvironmentPermission
+from environments.permissions.models import (
+    UserEnvironmentPermission,
+    UserPermissionGroupEnvironmentPermission,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -26,9 +31,19 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    MANAGE_USER_GROUPS,
+)
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
-from projects.models import Project, UserProjectPermission
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
+from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
@@ -211,8 +226,21 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def feature_state(feature, environment):
-    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+def feature_state(feature: Feature, environment: Environment) -> FeatureState:
+    return FeatureState.objects.get(environment=environment, feature=feature)
+
+
+@pytest.fixture()
+def feature_state_with_value(environment: Environment) -> FeatureState:
+    feature = Feature.objects.create(
+        name="feature_with_value",
+        initial_value="foo",
+        default_enabled=True,
+        project=environment.project,
+    )
+    return FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment=None, identity=None
+    )
 
 
 @pytest.fixture()
@@ -264,7 +292,7 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation):
+def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
         name="test_key", organisation=organisation
     )
@@ -281,23 +309,28 @@ def master_api_key_client(master_api_key):
 
 
 @pytest.fixture()
-def view_environment_permission():
+def view_environment_permission(db):
     return PermissionModel.objects.get(key=VIEW_ENVIRONMENT)
 
 
 @pytest.fixture()
-def manage_identities_permission():
+def manage_identities_permission(db):
     return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
 
 
 @pytest.fixture()
-def view_identities_permission():
+def view_identities_permission(db):
     return PermissionModel.objects.get(key=VIEW_IDENTITIES)
 
 
 @pytest.fixture()
-def view_project_permission():
-    return PermissionModel.objects.get(key="VIEW_PROJECT")
+def view_project_permission(db):
+    return PermissionModel.objects.get(key=VIEW_PROJECT)
+
+
+@pytest.fixture()
+def create_project_permission(db):
+    return PermissionModel.objects.get(key=CREATE_PROJECT)
 
 
 @pytest.fixture()
@@ -308,8 +341,22 @@ def user_environment_permission(test_user, environment):
 
 
 @pytest.fixture()
+def user_environment_permission_group(test_user, user_permission_group, environment):
+    return UserPermissionGroupEnvironmentPermission.objects.create(
+        group=user_permission_group, environment=environment
+    )
+
+
+@pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
+
+
+@pytest.fixture()
+def user_project_permission_group(project, user_permission_group):
+    return UserPermissionGroupProjectPermission.objects.create(
+        group=user_permission_group, project=project
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -387,3 +434,8 @@ def environment_content_type():
 @pytest.fixture()
 def project_content_type():
     return ContentType.objects.get_for_model(Project)
+
+
+@pytest.fixture
+def manage_user_group_permission(db):
+    return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)

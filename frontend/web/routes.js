@@ -2,7 +2,6 @@ import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
-import BetaFeaturesPage from './components/pages/BetaFeaturesPage'
 import HomePage from './components/pages/HomePage'
 import Maintenance from './components/Maintenance'
 import ProjectSelectPage from './components/pages/ProjectSelectPage'
@@ -29,6 +28,7 @@ import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage'
 import WidgetPage from './components/pages/WidgetPage'
+import BrokenPage from './components/pages/BrokenPage';
 
 export default (
   <App>
@@ -74,6 +74,7 @@ export default (
       <Route path='/widget' exact component={WidgetPage} />
       <Route path='/invite/:id' exact component={InvitePage} />
       <Route path='/invite-link/:id' exact component={InvitePage} />
+      <Route path='/broken' exact component={BrokenPage} />
       <Route path='/oauth/:type' exact component={HomePage} />
       <Route path='/saml' exact component={HomePage} />
       <Route
@@ -156,11 +157,6 @@ export default (
         path='/project/:projectId/audit-log'
         exact
         component={AuditLogPage}
-      />
-      <Route
-        path='/project/:projectId/beta-features'
-        exact
-        component={BetaFeaturesPage}
       />
       <Route path='/create' exact component={CreateOrganisationPage} />
       <Route path='*' component={NotFoundPage} />

@@ -1,6 +1,7 @@
 /**
  * Created by kylejohnson on 25/07/2016.
  */
+import Icon from 'components/Icon'
 import React, { Component } from 'react'
 
 const InputGroup = class extends Component {
@@ -18,12 +19,12 @@ const InputGroup = class extends Component {
   render() {
     const { props } = this
     const id = this.props.id || Utils.GUID()
-    const { inputProps } = this.props
+    const { inputProps, size } = this.props
     return (
       <div
-        className={`${this.props.className} form-group ${
-          this.props.isInvalid ? 'invalid' : ''
-        }`}
+        className={`${
+          this.props.className ? this.props.className : ''
+        } form-group ${this.props.isInvalid ? 'invalid' : ''}`}
       >
         {this.props.tooltip ? (
           <Tooltip
@@ -31,7 +32,7 @@ const InputGroup = class extends Component {
               <label htmlFor={id} className='cols-sm-2 control-label'>
                 <div>
                   {props.title}{' '}
-                  <span className='icon ion-ios-information-circle' />{' '}
+                  <Icon name='info-outlined'/>{' '}
                   {props.unsaved && <div className='unread'>Unsaved</div>}
                 </div>
               </label>
@@ -43,7 +44,7 @@ const InputGroup = class extends Component {
         ) : (
           <Row>
             {!!props.title && (
-              <Flex className='mr-4'>
+              <Flex >
                 <label htmlFor={id} className='cols-sm-2 control-label'>
                   <div>
                     {props.title}{' '}
@@ -108,6 +109,7 @@ const InputGroup = class extends Component {
                   type={props.type || 'text'}
                   id={id}
                   placeholder={props.placeholder}
+                  size={size}
                 />
               )}
             </div>
@@ -124,6 +126,7 @@ InputGroup.propTypes = {
   isValid: propTypes.any,
   onChange: OptionalFunc,
   placeholder: OptionalString,
+  size: OptionalString,
   title: propTypes.any,
   type: OptionalString,
   value: OptionalString,

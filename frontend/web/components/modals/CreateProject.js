@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import PaymentModal from './Payment'
 import ErrorMessage from 'components/ErrorMessage'
+import Button from 'components/base/forms/Button'
+import ModalHR from './ModalHR'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -41,26 +43,7 @@ const CreateProject = class extends Component {
           const disableCreate = !canCreate && hasProject
 
           return (
-            <div>
-              {disableCreate && (
-                <InfoMessage>
-                  View and manage multiple projects in your organisation with
-                  the{' '}
-                  <a
-                    href='#'
-                    onClick={() => {
-                      openModal(
-                        'Payment plans',
-                        <PaymentModal viewOnly={false} />,
-                        null,
-                        { large: true },
-                      )
-                    }}
-                  >
-                    Startup plan
-                  </a>
-                </InfoMessage>
-              )}
+            <div className='mt-4 px-4'>
               <form
                 style={{ opacity: disableCreate ? 0.5 : 1 }}
                 data-test='create-project-modal'
@@ -73,24 +56,55 @@ const CreateProject = class extends Component {
                   !isSaving && name && createProject(name)
                 }}
               >
-                <InputGroup
-                  ref={(e) => (this.input = e)}
-                  data-test='projectName'
-                  disabled={disableCreate}
-                  inputProps={{ className: 'full-width', name: 'projectName' }}
-                  onChange={(e) =>
-                    this.setState({ name: Utils.safeParseEventValue(e) })
-                  }
-                  isValid={name && name.length}
-                  type='text'
-                  title='Project Name*'
-                  placeholder='My Product Name'
-                />
-                {error && <ErrorMessage error={error} />}
-                <div className='text-right'>
+                <div className='modal-body'>
+                  {disableCreate && (
+                    <InfoMessage>
+                      View and manage multiple projects in your organisation
+                      with the{' '}
+                      <a
+                        href='#'
+                        onClick={() => {
+                          openModal(
+                            'Payment plans',
+                            <PaymentModal viewOnly={false} />,
+                            'modal-lg',
+                          )
+                        }}
+                      >
+                        Startup plan
+                      </a>
+                    </InfoMessage>
+                  )}
+                  <InputGroup
+                    ref={(e) => (this.input = e)}
+                    data-test='projectName'
+                    disabled={disableCreate}
+                    className='mb-0'
+                    inputProps={{
+                      className: 'full-width',
+                      name: 'projectName',
+                    }}
+                    onChange={(e) =>
+                      this.setState({ name: Utils.safeParseEventValue(e) })
+                    }
+                    isValid={name && name.length}
+                    type='text'
+                    title='Project Name*'
+                    placeholder='My Product Name'
+                  />
+                  {error && <ErrorMessage error={error} />}
+                </div>
+                <div className='modal-footer px-0 mt-2'>
                   <Button
+                    onClick={closeModal}
+                    theme='secondary'
+                    className='mr-2'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type='submit'
                     data-test='create-project-btn'
-                    className='mt-3'
                     id='create-project-btn'
                     disabled={isSaving || !name}
                   >

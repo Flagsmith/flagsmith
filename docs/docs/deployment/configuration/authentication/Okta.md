@@ -17,8 +17,8 @@ this.
 ### SaaS Customers & Private Cloud
 
 To configure the Okta integration with Flagsmith, you must have created a valid organisation at app.flagsmith.com or
-your private cloud URL. The organisation must be on our scale up or enterprise plan. You should contact the Flagsmith
-support team (support@flagsmith.com) to create a SAML organisation and we will provide you with your organisation name.
+your private cloud URL. The organisation must be on our Enterprise plan. You should contact the Flagsmith support team
+(support@flagsmith.com) to create a SAML organisation and we will provide you with your organisation name.
 
 ### Enterprise Self Hosted
 

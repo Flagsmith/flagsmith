@@ -24,7 +24,7 @@ depending on the SDK you are using.
 Client-side SDKs run in web browsers or on mobile devices. These runtimes execute within _untrusted environments_.
 Anyone using the Javascript SDK in a web browser, for example, can find the Client-side SDK, create a new Identity, look
 at their flags and
-[potentially write Traits to the Identity](../advanced-use/system-administration.md#preventing-client-sdks-from-setting-traits).
+[potentially write Traits to the Identity](/system-administration/security#preventing-client-sdks-from-setting-traits).
 
 Client-side SDKs are also limited to the
 [types of data that they have access to](/guides-and-examples/integration-approaches#segment-and-targeting-rules-are-not-leaked-to-the-client).
@@ -146,3 +146,29 @@ In circumstances where you need to target a specific identity, you can do this b
 specific user and subsequently adding a segment override for that segment.
 
 :::
+
+## SDK Compatibility
+
+### `In` Segment operator
+
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+Only these SDK versions support segments with the `In` operator in [local evaluation mode](#2---local-evaluation):
+
+- Python SDK: `3.3.0` and later.
+- Java SDK: `7.1.0` and later.
+- .NET SDK: `5.0.0` and later.
+- NodeJS SDK: `2.5.0` and later.
+- Ruby SDK: `3.2.0` and later.
+- PHP SDK: `4.1.0` and later.
+- Go SDK: `3.1.0` and later.
+- Rust SDK: `1.3.0` and later.
+- Elixir SDK: `2.0.0` and later.

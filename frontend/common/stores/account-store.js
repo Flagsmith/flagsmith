@@ -10,7 +10,16 @@ const controller = {
     API.setInviteType('')
     return data
       .post(`${Project.api}users/join/link/${id}/`)
-      .catch(() => data.post(`${Project.api}users/join/${id}/`))
+      .catch((error) => {
+        if (
+          Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
+          error.status === 400
+        ) {
+          API.ajaxHandler(store, error)
+          return
+        }
+        return data.post(`${Project.api}users/join/${id}/`)
+      })
       .then((res) => {
         store.savedId = res.id
         store.model.organisations.push(res)
@@ -296,7 +305,7 @@ const controller = {
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
-      API.alias(user.email)
+      API.alias(user.email, user)
       API.identify(user && user.email, user)
       store.loaded()
     } else if (!user) {
@@ -409,6 +418,9 @@ const store = Object.assign({}, BaseStore, {
   },
   getOrganisations() {
     return store.model && store.model.organisations
+  },
+  getPaymentMethod() {
+    return store.organisation?.subscription?.payment_method
   },
   getPlans() {
     if (!store.model) return []

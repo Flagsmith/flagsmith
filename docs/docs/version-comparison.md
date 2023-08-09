@@ -9,9 +9,12 @@ Open Source, SaaS hosted and Enterprise versions:
 
 - The Open Source version has **no** API request or Identity limits - you can run as many API instances in a cluster as
   you wish.
-- The Open Source version has **no** Dashboard User limits - you can have as many team members as you wish.
+- The Open Source version has **no** Dashboard User limits.
+- The Open Source version has **no** Environment limits.
+- The Open Source version is limited to a single Project.
 - The SaaS and Enterprise versions have [Change Requests and Flag Scheduling](advanced-use/change-requests.md).
-- The SaaS and Enterprise versions have [Role-Based Access Controls](advanced-use/permissions.md).
+- The SaaS and Enterprise versions have [Role-Based Access Control](/system-administration/rbac).
+- The SaaS and Enterprise versions have [Audit Logs](/system-administration/security#audit-logs).
 - The SaaS and Enterprise versions have additional Authentication Providers:
   - [Okta](/deployment/configuration/authentication/okta)
   - [LDAP](/deployment/configuration/authentication/ldap)
@@ -35,16 +38,12 @@ Our SaaS platform has a number of benefits:
 - Get real-time flag updates to your clients, the moment they are changed in the dashboard.
 - We deal with platform upgrades, security patches, scaling and backups.
 
-### SaaS Architecture
-
-![Image](/img/saas-architecture.svg)
-
 ## Enterprise Benefits
 
 You can run our Enterprise version either on-premise, or we can provide private cloud instance dedicated to your
 organisation.
 
-- [Role Based Access Controls](advanced-use/permissions.md).
+- [Role Based Access Control](/system-administration/rbac).
 - [Okta](/deployment/configuration/authentication/okta), [LDAP](/deployment/configuration/authentication/ldap),
   [SAML](/deployment/configuration/authentication/saml) and [ADFS](/deployment/configuration/authentication/adfs)
   authentication, as well as the ability to lock authentication to a single provider.

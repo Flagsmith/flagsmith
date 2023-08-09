@@ -17,7 +17,6 @@ import _ from 'lodash'
 
 const semver = require('semver')
 
-let flagsmithBetaFeatures: string[] | null = null
 const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
@@ -112,10 +111,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return conditions.find((v) => v.value === operator)
   },
   getApproveChangeRequestPermission() {
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'APPROVE_CHANGE_REQUEST'
-    }
-    return 'VIEW_ENVIRONMENT'
+    return 'APPROVE_CHANGE_REQUEST'
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -187,21 +183,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
   },
   getFlagsmithHasFeature(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-enabled`) === 'boolean') {
-        return flagsmith.getTrait(`${key}-opt-in-enabled`)
-      }
-    }
     return flagsmith.hasFeature(key)
   },
   getFlagsmithValue(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-value`) !== 'undefined') {
-        return flagsmith.getTrait(`${key}-opt-in-value`)
-      }
-    }
     return flagsmith.getValue(key)
   },
   getIdentitiesEndpoint(_project: ProjectType) {
@@ -228,28 +212,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'UPDATE_FEATURE_STATE'
-    }
-    return 'ADMIN'
+    return 'UPDATE_FEATURE_STATE'
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'Create Change Request'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'Update Feature State'
-    }
-    return 'Admin'
+    return 'Update Feature State'
   },
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
@@ -270,7 +242,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (plan && plan.includes('enterprise')) {
+    if (
+      global.flagsmithVersion?.backend.is_enterprise ||
+      (plan && plan.includes('enterprise'))
+    ) {
       return planNames.enterprise
     }
     return planNames.free
@@ -278,15 +253,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getPlanPermission: (plan: string, permission: string) => {
     let valid = true
     const planName = Utils.getPlanName(plan)
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
+
     if (!plan || planName === planNames.free) {
       return false
     }
     const isSideProjectOrGreater = planName !== planNames.sideProject
     const isScaleupOrGreater =
       isSideProjectOrGreater && planName !== planNames.startup
+    const isEnterprise = planName === planNames.enterprise
+
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
@@ -309,7 +284,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats')
+        valid = isScaleupOrGreater && !isEnterprise
         break
       }
       case 'FORCE_2FA': {
@@ -332,9 +307,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlansPermission: (permission: string) => {
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
@@ -470,10 +442,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getViewIdentitiesPermission() {
-    if (Utils.getFlagsmithHasFeature('view_identities_permission')) {
-      return 'VIEW_IDENTITIES'
-    }
-    return 'MANAGE_IDENTITIES'
+    return 'VIEW_IDENTITIES'
   },
 
   isMigrating() {
@@ -517,29 +486,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       // @ts-ignore
       zE('messenger', 'open')
     }
-  },
-  parseBetaFeatures() {
-    if (!flagsmith.hasFeature('beta_features')) {
-      return []
-    }
-    if (flagsmithBetaFeatures) {
-      return flagsmithBetaFeatures
-    }
-    let res: Record<
-      string,
-      { flag: string; hasEnabled: boolean; description: string }[]
-    >
-    try {
-      res = JSON.parse(flagsmith.getValue('beta_features'))
-      const features: string[] = []
-      Object.keys(res).map((v) => {
-        res[v].map((v) => {
-          features.push(v.flag)
-        })
-      })
-      flagsmithBetaFeatures = features
-    } catch (e) {}
-    return flagsmithBetaFeatures || []
   },
 
   removeElementFromArray(array: any[], index: number) {

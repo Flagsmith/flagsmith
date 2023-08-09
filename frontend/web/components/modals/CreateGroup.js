@@ -5,7 +5,9 @@ import Switch from 'components/Switch'
 import { getGroup } from 'common/services/useGroup'
 import { getStore } from 'common/store'
 import { components } from 'react-select'
-import { setInterceptClose } from 'project/modals'
+import { setInterceptClose } from './base/ModalDefault'
+import Icon from 'components/Icon'
+import Tooltip from 'components/Tooltip'
 
 const widths = [80, 80]
 const CreateGroup = class extends Component {
@@ -75,7 +77,7 @@ const CreateGroup = class extends Component {
     ) {
       return new Promise((resolve) => {
         openConfirm(
-          'Are you sure',
+          'Are you sure?',
           'Closing this will discard your unsaved changes.',
           () => resolve(true),
           () => resolve(false),
@@ -126,7 +128,7 @@ const CreateGroup = class extends Component {
   }
 
   save = () => {
-    const { external_id, is_default, name, users } = this.state
+    const { external_id, name, users } = this.state
 
     this.setState({
       externalIdEdited: false,
@@ -196,7 +198,7 @@ const CreateGroup = class extends Component {
                     this.save()
                   }}
                 >
-                  <FormGroup className='mb-4 mr-3 ml-3'>
+                  <FormGroup className='my-4 mx-3'>
                     <InputGroup
                       title='Group name*'
                       ref={(e) => (this.input = e)}
@@ -240,35 +242,34 @@ const CreateGroup = class extends Component {
                       placeholder='Add an optional external reference ID'
                     />
 
-                    <InputGroup
-                      title='Add new users by default'
-                      tooltipPlace='top'
-                      tooltip='New users that sign up to your organisation will be automatically added to this group with USER permissions'
-                      ref={(e) => (this.input = e)}
-                      data-test='groupName'
-                      component={
-                        <Switch
-                          onChange={(e) =>
-                            this.setState({
-                              is_default: Utils.safeParseEventValue(e),
-                              toggleChange: true,
-                            })
-                          }
-                          checked={!!this.state.is_default}
-                        />
-                      }
-                      inputProps={{
-                        className: 'full-width',
-                        name: 'groupName',
-                      }}
-                      unsaved={this.props.isEdit && this.state.toggleChange}
-                      value={name}
-                      isValid={name && name.length}
-                      type='text'
-                    />
+                    <Row className='mb-4'>
+                      <Tooltip
+                        title={
+                          <Row>
+                            <Switch
+                              onChange={(e) =>
+                                this.setState({
+                                  is_default: Utils.safeParseEventValue(e),
+                                  toggleChange: true,
+                                })
+                              }
+                              checked={!!this.state.is_default}
+                            />
+                            <label className='ms-2 me-2 mb-0'>
+                              Add new users by default
+                            </label>
+                            <Icon name='info-outlined' />
+                          </Row>
+                        }
+                      >
+                        New users that sign up to your organisation will be
+                        automatically added to this group with USER permissions
+                      </Tooltip>
+                    </Row>
+
                     <div className='mb-4'>
                       <label>Group members</label>
-                      <div style={{ width: 350 }}>
+                      <div>
                         <Select
                           disabled={!inactiveUsers?.length}
                           components={{
@@ -301,11 +302,13 @@ const CreateGroup = class extends Component {
                       <PanelSearch
                         noResultsText={(search) =>
                           search ? (
-                            <>
+                            <Flex className='text-center'>
                               No results found for <strong>{search}</strong>
-                            </>
+                            </Flex>
                           ) : (
-                            'This group has no members'
+                            <Flex className='text-center'>
+                              This group has no members
+                            </Flex>
                           )
                         }
                         id='org-members-list'
@@ -324,7 +327,7 @@ const CreateGroup = class extends Component {
                         header={
                           <>
                             <Row className='table-header'>
-                              <Flex>
+                              <Flex className='table-column px-3'>
                                 <div>
                                   User{' '}
                                   {this.props.isEdit &&
@@ -336,12 +339,13 @@ const CreateGroup = class extends Component {
                               {Utils.getFlagsmithHasFeature('group_admins') && (
                                 <div
                                   style={{ paddingLeft: 5, width: widths[0] }}
+                                  className='table-column'
                                 >
                                   Admin
                                 </div>
                               )}
                               <div
-                                className='text-right'
+                                className='table-column text-center'
                                 style={{ width: widths[1] }}
                               >
                                 Remove
@@ -357,15 +361,15 @@ const CreateGroup = class extends Component {
                           const userEdited = matchingUser?.edited
                           return (
                             <Row className='list-item' key={id}>
-                              <Flex>
-                                <div>
+                              <Flex className='table-column px-3'>
+                                <div className='font-weight-medium'>
                                   {`${first_name} ${last_name}`}{' '}
                                   {id == AccountStore.getUserId() && '(You)'}{' '}
                                   {this.props.isEdit && userEdited && (
                                     <div className='unread'>Unsaved</div>
                                   )}
                                 </div>
-                                <div className='list-item-footer faint'>
+                                <div className='list-item-subtitle'>
                                   {email}
                                 </div>
                               </Flex>
@@ -380,10 +384,10 @@ const CreateGroup = class extends Component {
                                 </div>
                               )}
                               <div
-                                className='text-right'
+                                className='table-column text-center'
                                 style={{ width: widths[1] }}
                               >
-                                <button
+                                <Button
                                   type='button'
                                   disabled={!(isAdmin || email !== yourEmail)}
                                   id='remove-feature'
@@ -391,10 +395,14 @@ const CreateGroup = class extends Component {
                                     this.toggleUser(id)
                                     this.setState({ userRemoved: true })
                                   }}
-                                  className='btn btn--with-icon'
+                                  className='btn btn-with-icon'
                                 >
-                                  <RemoveIcon />
-                                </button>
+                                  <Icon
+                                    name='trash-2'
+                                    width={20}
+                                    fill='#656D7B'
+                                  />
+                                </Button>
                               </div>
                             </Row>
                           )
@@ -404,16 +412,13 @@ const CreateGroup = class extends Component {
                     <div className='text-right'>
                       {isEdit ? (
                         <>
-                          <Button
-                            data-test='update-feature-btn'
-                            id='update-feature-btn'
-                            disabled={isSaving || !name}
-                          >
+                          <Button type='submit' disabled={isSaving || !name}>
                             {isSaving ? 'Updating' : 'Update Group'}
                           </Button>
                         </>
                       ) : (
                         <Button
+                          type='submit'
                           data-test='create-feature-btn'
                           id='create-feature-btn'
                           disabled={isSaving || !name}

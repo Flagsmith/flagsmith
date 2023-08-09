@@ -2,6 +2,7 @@ import React from 'react'
 import VariationValue from './VariationValue'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'
+import ErrorMessage from 'components/ErrorMessage'
 
 export default function VariationOptions({
   controlValue,
@@ -27,12 +28,10 @@ export default function VariationOptions({
   return (
     <>
       {invalid && (
-        <div className='alert alert-danger'>
-          Your variation percentage splits total to over 100%
-        </div>
+        <ErrorMessage error='Your variation percentage splits total to over 100%' />
       )}
       {!preventRemove && (
-        <p>
+        <p className='mb-4'>
           <InfoMessage>
             Variation values are shared amongst environments, their weights are
             specific to this Environment.
@@ -66,10 +65,8 @@ export default function VariationOptions({
                   setVariations([])
                   setValue(controlValue)
                 }}
-                className={`btn--radio ion ${
-                  controlSelected
-                    ? 'ion-ios-radio-button-on'
-                    : 'ion-ios-radio-button-off'
+                className={`btn-radio ml-2 ${
+                  controlSelected ? 'btn-radio-on' : ''
                 }`}
               />
             </Row>
@@ -118,11 +115,7 @@ export default function VariationOptions({
                     ])
                     return false
                   }}
-                  className={`btn--radio ion ${
-                    override
-                      ? 'ion-ios-radio-button-on'
-                      : 'ion-ios-radio-button-off'
-                  }`}
+                  className={`btn-radio ml-2 ${override ? 'btn-radio-on' : ''}`}
                 />
               </Row>
             </div>

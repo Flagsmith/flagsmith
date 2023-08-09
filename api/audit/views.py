@@ -1,6 +1,6 @@
 from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -21,20 +21,19 @@ from organisations.models import OrganisationRole
 class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = AuditLogSerializer
     pagination_class = CustomPagination
-    filterset_fields = ["is_system_event"]
 
     def get_queryset(self) -> QuerySet[AuditLog]:
         q = self._get_base_filters()
 
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
-        project_id = serializer.data.get("project")
-        environment_ids = serializer.data.get("environments")
 
-        if project_id:
+        if project_id := serializer.data.get("project"):
             q = q & Q(project__id=project_id)
-        if environment_ids:
+        if environment_ids := serializer.data.get("environments"):
             q = q & Q(environment__id__in=environment_ids)
+        if is_system_event := serializer.data.get("is_system_event") is not None:
+            q = q & Q(is_system_event=is_system_event)
 
         search = serializer.data.get("search")
         if search:

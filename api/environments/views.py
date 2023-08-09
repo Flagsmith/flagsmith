@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import logging
 
 from django.utils.decorators import method_decorator
-from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -18,6 +18,7 @@ from environments.permissions.permissions import (
     MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
+from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -35,7 +36,6 @@ from .models import Environment, EnvironmentAPIKey, Webhook
 from .permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
-    UserPermissionGroupEnvironmentPermission,
 )
 from .serializers import (
     CloneEnvironmentSerializer,
@@ -185,46 +185,12 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        # TODO: tidy this mess up
         environment = self.get_object()
 
-        group_permissions = UserPermissionGroupEnvironmentPermission.objects.filter(
-            group__users=request.user, environment=environment
+        permission_data = get_environment_permission_data(
+            environment=environment, user=request.user
         )
-        user_permissions = UserEnvironmentPermission.objects.filter(
-            user=request.user, environment=environment
-        )
-
-        permissions = set()
-        for group_permission in group_permissions:
-            permissions = permissions.union(
-                {
-                    permission.key
-                    for permission in group_permission.permissions.all()
-                    if permission.key
-                }
-            )
-        for user_permission in user_permissions:
-            permissions = permissions.union(
-                {
-                    permission.key
-                    for permission in user_permission.permissions.all()
-                    if permission.key
-                }
-            )
-
-        is_project_admin = request.user.is_project_admin(environment.project)
-
-        data = {
-            "admin": group_permissions.filter(admin=True).exists()
-            or user_permissions.filter(admin=True).exists()
-            or is_project_admin,
-            "permissions": permissions,
-        }
-
-        serializer = UserObjectPermissionsSerializer(data=data)
-        serializer.is_valid()
-
+        serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="document")

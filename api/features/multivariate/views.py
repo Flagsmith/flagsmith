@@ -1,5 +1,5 @@
 from core.permissions import HasMasterAPIKey
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import get_object_or_404
@@ -8,6 +8,8 @@ from rest_framework.response import Response
 
 from features.models import Feature
 from projects.permissions import (
+    CREATE_FEATURE,
+    VIEW_PROJECT,
     NestedProjectMasterAPIKeyPermissions,
     NestedProjectPermissions,
 )
@@ -24,12 +26,12 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         action_permission_map = {
-            "list": "VIEW_PROJECT",
-            "detail": "VIEW_PROJECT",
-            "create": "CREATE_FEATURE",
-            "update": "CREATE_FEATURE",
-            "partial_update": "CREATE_FEATURE",
-            "destroy": "CREATE_FEATURE",
+            "list": VIEW_PROJECT,
+            "detail": VIEW_PROJECT,
+            "create": CREATE_FEATURE,
+            "update": CREATE_FEATURE,
+            "partial_update": CREATE_FEATURE,
+            "destroy": CREATE_FEATURE,
         }
 
         permission_kwargs = {
@@ -41,6 +43,9 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
         ]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return MultivariateFeatureOption.objects.none()
+
         feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
         return feature.multivariate_options.all()
 
@@ -54,7 +59,7 @@ def get_mv_feature_option_by_uuid(request, uuid):
     if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
-        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = MultivariateFeatureOption.objects.filter(
         feature__project__in=accessible_projects
     )

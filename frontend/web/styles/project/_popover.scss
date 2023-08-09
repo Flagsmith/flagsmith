@@ -61,7 +61,7 @@
         padding-right: 0 !important;
     }
 
-    &.in {
+    &.show {
         @include box-shadow();
         transform: scaleY(1);
         height: auto;
@@ -69,7 +69,7 @@
     }
 
     &-bt {
-        border-radius: $border-radius-default;
+        border-radius: $border-radius;
         overflow: visible;
 
         &.aside-select {
@@ -147,8 +147,8 @@
     position: absolute !important;
     left: 10px;
     &__content {
-        border-bottom-left-radius: $border-radius-default;
-        border-bottom-right-radius: $border-radius-default;
+        border-bottom-left-radius: $border-radius;
+        border-bottom-right-radius: $border-radius;
         overflow: hidden;
     }
 }

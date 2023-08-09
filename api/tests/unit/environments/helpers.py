@@ -8,6 +8,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
 )
 from projects.models import ProjectPermissionModel, UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 
@@ -21,7 +22,7 @@ def get_environment_user_client(
     Update provided user with given permissions and return an authenticated client
     """
 
-    view_project_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+    view_project_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
     user_project_permission = UserProjectPermission.objects.create(
         user=user, project=environment.project
     )

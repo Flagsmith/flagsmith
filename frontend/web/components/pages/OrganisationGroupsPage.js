@@ -6,7 +6,6 @@ import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
-import InfoMessage from 'components/InfoMessage'
 import Permission from 'common/providers/Permission'
 
 const OrganisationGroupsPage = class extends Component {
@@ -47,6 +46,7 @@ const OrganisationGroupsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0 side-modal',
     )
   }
 

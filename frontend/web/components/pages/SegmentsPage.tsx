@@ -11,13 +11,14 @@ import {
 } from 'common/services/useSegment'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
-import Button, { ButtonLink } from 'components/base/forms/Button'
+import Button from 'components/base/forms/Button'
 import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
+import Icon from 'components/Icon'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -36,13 +37,13 @@ const HowToUseSegmentsMessage = () => (
     <p className='alert alert-info'>
       In order to use segments, please set the segment_operators remote config
       value.{' '}
-      <a
+      <Button
+        theme='text'
         target='_blank'
         href='https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith'
-        rel='noreferrer'
       >
         Learn about self hosting
-      </a>
+      </Button>
       .
     </p>
   </div>
@@ -85,18 +86,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      null,
-      { className: 'fade side-modal create-new-segment-modal' },
+      'side-modal create-new-segment-modal',
     )
   }
-  const confirmRemove = (segment: Segment, cb?: () => void) => {
+  const confirmRemove = (segment: Segment, cb: () => void) => {
     openModal(
       'Remove Segment',
-      <ConfirmRemoveSegment
-        environmentId={environmentId}
-        segment={segment}
-        cb={cb}
-      />,
+      <ConfirmRemoveSegment segment={segment} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -123,12 +120,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      null,
-      {
-        className: 'fade side-modal create-segment-modal',
-        onClose: () => {
-          history.replaceState({}, '', `${document.location.pathname}`)
-        },
+      'side-modal create-segment-modal',
+      () => {
+        history.replaceState({}, '', `${document.location.pathname}`)
       },
     )
   }
@@ -168,19 +162,20 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row>
-                  <Flex>
-                    <h3>Segments</h3>
+                <Row className='justify-content-between'>
+                  <Flex style={{ maxWidth: '700px' }}>
+                    <h4>Segments</h4>
                     <p>
                       Create and manage groups of users with similar traits.
                       Segments can be used to override features within the
                       features page for any environment.{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         target='_blank'
                         href='https://docs.flagsmith.com/basic-features/managing-segments'
                       >
                         Learn about Segments.
-                      </ButtonLink>
+                      </Button>
                     </p>
                   </Flex>
                   <FormGroup className='float-right'>
@@ -190,7 +185,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         'Manage segments',
                         <Button
                           disabled={hasNoOperators || !manageSegmentsPermission}
-                          className='btn-lg btn-primary'
                           id='show-create-segment-btn'
                           data-test='show-create-segment-btn'
                           onClick={newSegment}
@@ -208,7 +202,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                     renderSearchWithNoResults
                     className='no-pad'
                     id='segment-list'
-                    icon='ion-ios-globe'
                     title='Segments'
                     renderFooter={() => (
                       <JSONReference
@@ -235,8 +228,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         manageSegmentsPermission,
                         'Manage segments',
                         <Row className='list-item clickable' key={id} space>
-                          <div
-                            className='flex flex-1'
+                          <Flex
+                            className='table-column px-3'
                             onClick={
                               manageSegmentsPermission
                                 ? () =>
@@ -244,42 +237,39 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <Row>
-                              <ButtonLink>
-                                <span data-test={`segment-${i}-name`}>
-                                  {name}
-                                  {feature && (
-                                    <div className='unread ml-2 px-2'>
-                                      {' '}
-                                      Feature-Specific
-                                    </div>
-                                  )}
-                                </span>
-                              </ButtonLink>
-                            </Row>
-                            <div className='list-item-footer faint'>
+                            <div
+                              data-test={`segment-${i}-name`}
+                              className='font-weight-medium'
+                            >
+                              {name}
+                              {feature && (
+                                <div className='unread ml-2 px-2'>
+                                  {' '}
+                                  Feature-Specific
+                                </div>
+                              )}
+                            </div>
+                            <div className='list-item-subtitle'>
                               {description || 'No description'}
                             </div>
+                          </Flex>
+                          <div className='table-column'>
+                            <Button
+                              disabled={!manageSegmentsPermission}
+                              data-test={`remove-segment-btn-${i}`}
+                              onClick={() => {
+                                const segment = find(segments, { id })
+                                if (segment) {
+                                  confirmRemove(segment, () => {
+                                    removeSegment({ id, projectId })
+                                  })
+                                }
+                              }}
+                              className='btn btn-with-icon'
+                            >
+                              <Icon name='trash-2' width={20} fill='#656D7B' />
+                            </Button>
                           </div>
-                          <Row>
-                            <Column>
-                              <button
-                                disabled={!manageSegmentsPermission}
-                                data-test={`remove-segment-btn-${i}`}
-                                onClick={() => {
-                                  const segment = find(segments, { id })
-                                  if (segment) {
-                                    confirmRemove(segment, () => {
-                                      removeSegment({ id, projectId })
-                                    })
-                                  }
-                                }}
-                                className='btn btn--with-icon'
-                              >
-                                <RemoveIcon />
-                              </button>
-                            </Column>
-                          </Row>
                         </Row>,
                       )
                     }}
@@ -296,10 +286,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   />
                 </FormGroup>
 
-                <div className='mt-2'>
+                <p>
                   Segments require you to identitfy users, setting traits will
                   add users to segments.
-                </div>
+                </p>
                 <FormGroup className='mt-4'>
                   <CodeHelp
                     title='Using segments'
@@ -314,20 +304,22 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   <Panel icon='ion-ios-globe' title='1. creating a segment'>
                     <p>
                       You can create a segment that targets{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
                         target='_blank'
                       >
                         User Traits
-                      </ButtonLink>
+                      </Button>
                       . As user's traits are updated they will automatically be
                       added to the segments based on the rules you create.{' '}
-                      <ButtonLink
+                      <Button
+                        theme='text'
                         href='https://docs.flagsmith.com/basic-features/managing-segments'
                         target='_blank'
                       >
                         Check out the documentation on Segments
-                      </ButtonLink>
+                      </Button>
                       .
                     </p>
                   </Panel>

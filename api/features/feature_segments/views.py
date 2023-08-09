@@ -2,7 +2,7 @@ import logging
 
 from core.permissions import HasMasterAPIKey
 from django.utils.decorators import method_decorator
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -17,6 +17,7 @@ from features.feature_segments.serializers import (
 )
 from features.models import FeatureSegment
 from projects.models import Project
+from projects.permissions import VIEW_PROJECT
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +38,16 @@ class FeatureSegmentViewSet(
     permission_classes = [IsAuthenticated | HasMasterAPIKey]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureSegment.objects.none()
+
         if hasattr(self.request, "master_api_key"):
             permitted_projects = Project.objects.filter(
                 organisation_id=self.request.master_api_key.organisation_id
             )
         else:
             permitted_projects = self.request.user.get_permitted_projects(
-                permissions=["VIEW_PROJECT"]
+                permission_key=VIEW_PROJECT
             )
         queryset = FeatureSegment.objects.filter(
             feature__project__in=permitted_projects

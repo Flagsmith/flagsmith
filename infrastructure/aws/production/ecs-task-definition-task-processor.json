@@ -11,9 +11,9 @@
                 "manage.py",
                 "runprocessor",
                 "--sleepintervalms",
-                "700",
+                "1000",
                 "--numthreads",
-                "25",
+                "12",
                 "--graceperiodms",
                 "20000"
             ],
@@ -120,12 +120,20 @@
                     "value": "f001193d9249bb49d631d7c2c516ab72f9ebd204"
                 },
                 {
-                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
-                },
-                {
                     "name": "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID",
                     "value": "d828a3a0-bf34-11ed-b08d-b12d3497f5c4"
+                },
+                {
+                    "name": "TASK_DELETE_RUN_TIME",
+                    "value": "07:00"
+                },
+                {
+                    "name": "TASK_DELETE_RETENTION_DAYS",
+                    "value": "280"
+                },
+                {
+                    "name": "ENABLE_CLEAN_UP_OLD_TASKS",
+                    "value": "False"
                 }
             ],
             "secrets": [
@@ -152,10 +160,6 @@
                 {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
-                },
-                {
-                    "name": "MAILERLITE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:MAILERLITE_API_KEY::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",
@@ -199,6 +203,6 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "256",
-    "memory": "512"
+    "cpu": "1024",
+    "memory": "2048"
 }

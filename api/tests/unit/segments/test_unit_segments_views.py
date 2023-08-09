@@ -4,7 +4,6 @@ import random
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from flag_engine.api.document_builders import build_identity_document
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
@@ -13,6 +12,7 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
 
@@ -104,6 +104,43 @@ def test_can_create_segments_with_condition_that_has_null_value(project, client)
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
+def test_create_segments_reaching_max_limit(project, client, settings):
+    # Given
+    # let's reduce the max segments allowed to 1
+    project.max_segments_allowed = 1
+    project.save()
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # Now, let's create the firs segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_201_CREATED
+
+    # Then
+    # Let's try to create a second segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        res.json()["project"]
+        == "The project has reached the maximum allowed segments limit."
+    )
+    assert project.segments.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_audit_log_created_when_segment_updated(project, segment, client):
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
@@ -169,7 +206,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     # Given
     Segment.objects.create(name="Non matching segment", project=project)
     expected_segment_ids = [identity_matching_segment.id]
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     identity_uuid = identity_document["identity_uuid"]
 
     edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (

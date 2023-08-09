@@ -26,9 +26,6 @@ class TheComponent extends Component {
       ...AccountStore.getUser(),
     }
   }
-
-  componentDidMount() {}
-
   save = (e) => {
     Utils.preventDefault(e)
     const {
@@ -58,11 +55,12 @@ class TheComponent extends Component {
 
   confirmDeleteAccount = (lastUserOrganisations, id) => {
     openModal(
-      'Are you sure',
+      'Are you sure?',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
       />,
+      'p-0',
     )
   }
 
@@ -153,8 +151,8 @@ class TheComponent extends Component {
             </div>
           ) : (
             <div className='app-container container'>
-              <Tabs inline transparent uncontrolled>
-                <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+              <Tabs uncontrolled>
+                <TabItem tabLabel='General'>
                   <div className='mt-4'>
                     <JSONReference
                       showNamesButton
@@ -194,6 +192,7 @@ class TheComponent extends Component {
                                         AppActions.logout()
                                       }}
                                     />,
+                                    'p-0',
                                   )
                                 }
                                 id='change-email-button'
@@ -255,7 +254,7 @@ class TheComponent extends Component {
                       <Row>
                         <Flex>
                           <h5>Show JSON References</h5>
-                          <p>
+                          <p className='fs-small lh-sm'>
                             Enabling this will allow you to inspect the JSON of
                             entities such as features within the platform.
                           </p>
@@ -269,42 +268,41 @@ class TheComponent extends Component {
                           checked={flagsmith.getTrait('json_inspect')}
                         />
                       </Row>
-                      {Utils.getFlagsmithHasFeature('delete_account') && (
-                        <Row className='mt-4' space>
-                          <div className='col-md-8 pl-0'>
-                            <h5>Delete Account</h5>
-                            <p>
-                              Your account data will be permanently deleted.
-                            </p>
-                          </div>
-                          <Button
-                            id='delete-user-btn'
-                            data-test='delete-user-btn'
-                            onClick={() =>
-                              this.confirmDeleteAccount(
-                                lastUserOrganisations,
-                                id,
-                              )
-                            }
-                            className='btn btn--with-icon ml-auto btn--remove'
-                          >
-                            <RemoveIcon />
-                          </Button>
-                        </Row>
-                      )}
+                      <Row className='mt-4' space>
+                        <div className='col-md-8 pl-0'>
+                          <h5>Delete Account</h5>
+                          <p className='fs-small lh-sm'>
+                            Your account data will be permanently deleted.
+                          </p>
+                        </div>
+                        <Button
+                          id='delete-user-btn'
+                          data-test='delete-user-btn'
+                          onClick={() =>
+                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                          }
+                          className='btn btn--with-icon ml-auto btn--remove'
+                        >
+                          <RemoveIcon />
+                        </Button>
+                      </Row>
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                <TabItem tabLabel='Keys'>
                   <div className='mt-4'>
                     <div className='col-md-12'>
                       <h5>API Token</h5>
-                      <p>
+                      <p className='fs-small lh-sm'>
                         You can use this token to integrate with our RESTful
                         API, the documentation can be found{' '}
-                        <a href='https://api.flagsmith.com/api/v1/docs/'>
+                        <Button
+                          theme='text'
+                          href='https://api.flagsmith.com/api/v1/docs/'
+                          target='_blank'
+                        >
                           here
-                        </a>
+                        </Button>
                         .
                       </p>
                     </div>
@@ -321,7 +319,7 @@ class TheComponent extends Component {
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Security' tabIcon='ion-md-lock'>
+                <TabItem tabLabel='Security'>
                   <div className='mt-4'>
                     {AccountStore.model.auth_type === 'EMAIL' && (
                       <div className='row'>
@@ -410,7 +408,7 @@ class TheComponent extends Component {
                     )}
                     <div>
                       <h5>Two-Factor Authentication</h5>
-                      <p>
+                      <p className='fs-small lh-sm'>
                         Increase your account's security by enabling Two-Factor
                         Authentication (2FA).
                       </p>
@@ -427,8 +425,7 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
-                                null,
-                                { large: true },
+                                'modal-lg',
                               )
                             }}
                           >

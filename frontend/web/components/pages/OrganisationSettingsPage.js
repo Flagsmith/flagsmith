@@ -19,8 +19,9 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
+import Icon from 'components/Icon'
 
-const widths = [450, 150, 100]
+const widths = [170, 150, 80]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -58,8 +59,9 @@ const OrganisationSettingsPage = class extends Component {
 
   confirmRemove = (organisation, cb) => {
     openModal(
-      'Remove Organisation',
+      'Delete Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
+      'p-0',
     )
   }
 
@@ -74,19 +76,19 @@ const OrganisationSettingsPage = class extends Component {
 
   deleteInvite = (id) => {
     openConfirm(
-      <h3>Delete Invite</h3>,
-      <p>Are you sure you want to delete this invite?</p>,
+      'Delete Invite',
+      <div>Are you sure you want to delete this invite?</div>,
       () => AppActions.deleteInvite(id),
     )
   }
 
   deleteUser = (id, userDisplayName) => {
     openConfirm(
-      <h3>Remove User</h3>,
-      <p>
+      'Remove User',
+      <div>
         Are you sure you want to remove the user{' '}
         <strong>{userDisplayName}</strong> from the organisation?
-      </p>,
+      </div>,
       () => AppActions.deleteUser(id),
     )
   }
@@ -179,8 +181,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'side-modal',
     )
   }
 
@@ -193,8 +194,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
-      null,
-      { className: 'alert fade expand' },
+      'side-modal',
     )
   }
 
@@ -205,6 +205,7 @@ const OrganisationSettingsPage = class extends Component {
         url={webhook.url}
         cb={() => this.props.deleteWebhook(webhook)}
       />,
+      'p-0',
     )
   }
 
@@ -220,6 +221,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
+      'p-0 side-modal',
     )
   }
 
@@ -237,6 +239,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0 side-modal',
     )
   }
 
@@ -246,13 +249,13 @@ const OrganisationSettingsPage = class extends Component {
     const diff = moment().diff(moment(last_login), 'days')
     if (diff >= 30) {
       return (
-        <>
+        <div className='mb-1'>
           {`${diff} days ago`}
           <br />
-          <span className='text-small text-muted'>
+          <div className='list-item-subtitle'>
             {moment(last_login).format('Do MMM YYYY')}
-          </span>
-        </>
+          </div>
+        </div>
       )
     }
     return 'Within 30 days'
@@ -265,6 +268,9 @@ const OrganisationSettingsPage = class extends Component {
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
     const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
+    const verifySeatsLimit = Utils.getFlagsmithHasFeature(
+      'verify_seats_limit_for_invite_links',
+    )
 
     return (
       <div className='app-container container'>
@@ -284,22 +290,26 @@ const OrganisationSettingsPage = class extends Component {
                 }) => {
                   const { max_seats } = subscriptionMeta ||
                     organisation.subscription || { max_seats: 1 }
-                  const autoSeats = Utils.getPlansPermission('AUTO_SEATS')
+                  const isAWS =
+                    AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
+                  const { chargebee_email } = subscriptionMeta || {}
+                  const autoSeats =
+                    !isAWS && Utils.getPlansPermission('AUTO_SEATS')
                   const usedSeats =
                     paymentsEnabled && organisation.num_seats >= max_seats
                   const overSeats =
                     paymentsEnabled && organisation.num_seats > max_seats
                   const needsUpgradeForAdditionalSeats =
-                    overSeats || (!autoSeats && usedSeats)
+                    (overSeats && (!verifySeatsLimit || !autoSeats)) ||
+                    (!autoSeats && usedSeats)
+
                   return (
                     <div>
                       <Tabs
-                        inline
-                        transparent
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
                       >
-                        <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+                        <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
                             <div className='mt-4'>
                               <div>
@@ -313,7 +323,7 @@ const OrganisationSettingsPage = class extends Component {
                                 >
                                   <h5>Organisation Name</h5>
                                   <Row>
-                                    <Column className='m-l-0'>
+                                    <Column className='ml-0'>
                                       <Input
                                         ref={(e) => (this.input = e)}
                                         data-test='organisation-name'
@@ -332,6 +342,7 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </Column>
                                     <Button
+                                      type='submit'
                                       disabled={this.saveDisabled()}
                                       className='float-right'
                                     >
@@ -341,11 +352,13 @@ const OrganisationSettingsPage = class extends Component {
                                 </form>
                                 <div>
                                   <Row space className='mt-4'>
-                                    <h3 className='m-b-0'>Organisation ID</h3>
+                                    <h5 className='m-b-0'>Organisation ID</h5>
                                   </Row>
-                                  <p>{organisation.id}</p>
+                                  <p className='fs-small lh-sm'>
+                                    {organisation.id}
+                                  </p>
                                 </div>
-                                {paymentsEnabled && (
+                                {paymentsEnabled && !isAWS && (
                                   <div className='plan plan--current flex-row m-t-2'>
                                     <div className='plan__prefix'>
                                       <img
@@ -355,10 +368,10 @@ const OrganisationSettingsPage = class extends Component {
                                       />
                                     </div>
                                     <div className='plan__details flex flex-1'>
-                                      <p className='text-small m-b-0'>
+                                      <p className='fs-small lh-sm m-b-0'>
                                         Your plan
                                       </p>
-                                      <h3 className='m-b-0'>
+                                      <h5 className='m-b-0'>
                                         {Utils.getPlanName(
                                           _.get(
                                             organisation,
@@ -372,7 +385,13 @@ const OrganisationSettingsPage = class extends Component {
                                               ),
                                             )
                                           : 'Free'}
-                                      </h3>
+                                      </h5>
+                                      {!!chargebee_email && (
+                                        <p>
+                                          Management Email:{' '}
+                                          <strong>{chargebee_email}</strong>
+                                        </p>
+                                      )}
                                     </div>
                                     <div>
                                       {organisation.subscription && (
@@ -402,8 +421,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <PaymentModal
                                                   viewOnly={false}
                                                 />,
-                                                null,
-                                                { large: true },
+                                                'modal-lg',
                                               )
                                             }
                                           }}
@@ -418,8 +436,7 @@ const OrganisationSettingsPage = class extends Component {
                                             openModal(
                                               'Payment Plans',
                                               <PaymentModal viewOnly={false} />,
-                                              null,
-                                              { large: true },
+                                              'modal-lg',
                                             )
                                           }
                                         >
@@ -435,7 +452,7 @@ const OrganisationSettingsPage = class extends Component {
                           {Utils.getFlagsmithHasFeature('force_2fa') && (
                             <div>
                               <Row space className='mt-4'>
-                                <h3 className='m-b-0'>Enforce 2FA</h3>
+                                <h5 className='m-b-0'>Enforce 2FA</h5>
                                 {!force2faPermission ? (
                                   <Tooltip
                                     title={
@@ -455,7 +472,7 @@ const OrganisationSettingsPage = class extends Component {
                                   />
                                 )}
                               </Row>
-                              <p>
+                              <p className='fs-small lh-sm'>
                                 Enabling this setting forces users within the
                                 organisation to setup 2 factor security.
                               </p>
@@ -465,10 +482,10 @@ const OrganisationSettingsPage = class extends Component {
                             'restrict_project_create_to_admin',
                           ) && (
                             <FormGroup className='mt-4'>
-                              <h3>Admin Settings</h3>
+                              <h5>Admin Settings</h5>
                               <div className='row'>
                                 <div className='col-md-10'>
-                                  <p>
+                                  <p className='fs-small lh-sm'>
                                     Only allow organisation admins to create
                                     projects
                                   </p>
@@ -488,46 +505,37 @@ const OrganisationSettingsPage = class extends Component {
                               </div>
                             </FormGroup>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'delete_organisation',
-                          ) && (
-                            <FormGroup className='mt-4'>
-                              <h3>Delete Organisation</h3>
-                              <div className='row'>
-                                <div className='col-md-10'>
-                                  <p>
-                                    This organisation will be permanently
-                                    deleted, along with all projects and
-                                    features.
-                                  </p>
-                                </div>
-                                <div className='col-md-2 text-right'>
-                                  <Button
-                                    id='delete-org-btn'
-                                    onClick={() =>
-                                      this.confirmRemove(organisation, () => {
-                                        deleteOrganisation()
-                                      })
-                                    }
-                                    className='btn btn--with-icon ml-auto btn--remove'
-                                  >
-                                    <RemoveIcon />
-                                  </Button>
-                                </div>
+                          <FormGroup className='mt-4'>
+                            <h5>Delete Organisation</h5>
+                            <div className='row'>
+                              <div className='col-md-10'>
+                                <p className='fs-small lh-sm'>
+                                  This organisation will be permanently deleted,
+                                  along with all projects and features.
+                                </p>
                               </div>
-                            </FormGroup>
-                          )}
+                              <div className='col-md-2 text-right'>
+                                <Button
+                                  id='delete-org-btn'
+                                  onClick={() =>
+                                    this.confirmRemove(organisation, () => {
+                                      deleteOrganisation()
+                                    })
+                                  }
+                                  className='btn btn--with-icon ml-auto btn--remove'
+                                >
+                                  <RemoveIcon />
+                                </Button>
+                              </div>
+                            </div>
+                          </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
+                        <TabItem tabLabel='Keys'>
                           <AdminAPIKeys />
                         </TabItem>
 
-                        <TabItem
-                          data-test='tab-permissions'
-                          tabLabel='Members'
-                          tabIcon='ion-md-people'
-                        >
+                        <TabItem data-test='tab-permissions' tabLabel='Members'>
                           <JSONReference
                             showNamesButton
                             className='mt-4'
@@ -540,19 +548,20 @@ const OrganisationSettingsPage = class extends Component {
                           />
 
                           <FormGroup className='mt-4'>
-                            <h3>Manage Users and Permissions</h3>
-                            <p>
+                            <h5>Manage Users and Permissions</h5>
+                            <p className='fs-small lh-sm'>
                               Flagsmith lets you manage fine-grained permissions
                               for your projects and environments, invite members
                               as a user or an administrator and then set
                               permission in your Project and Environment
                               settings.{' '}
-                              <ButtonLink
-                                href='https://docs.flagsmith.com/advanced-use/permissions'
+                              <Button
+                                theme='text'
+                                href='https://docs.flagsmith.com/system-administration/rbac'
                                 target='_blank'
                               >
                                 Learn about User Roles.
-                              </ButtonLink>
+                              </Button>
                             </p>
                             <div>
                               <div>
@@ -564,12 +573,12 @@ const OrganisationSettingsPage = class extends Component {
                                   )}
                                   {!isLoading && (
                                     <div>
-                                      <Tabs inline transparent uncontrolled>
+                                      <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
-                                            <h3 className='m-b-0'>
+                                            <h5 className='m-b-0'>
                                               Team Members
-                                            </h3>
+                                            </h5>
                                             <Button
                                               disabled={
                                                 needsUpgradeForAdditionalSeats
@@ -580,6 +589,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
+                                                  'p-0 side-modal',
                                                 )
                                               }
                                               type='button'
@@ -608,7 +618,9 @@ const OrganisationSettingsPage = class extends Component {
                                                 for your plan.{' '}
                                                 {usedSeats && (
                                                   <>
-                                                    {overSeats ? (
+                                                    {overSeats &&
+                                                    (!verifySeatsLimit ||
+                                                      !autoSeats) ? (
                                                       <strong>
                                                         If you wish to invite
                                                         any additional members,
@@ -641,8 +653,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     false
                                                                   }
                                                                 />,
-                                                                null,
-                                                                { large: true },
+                                                                'modal-lg',
                                                               )
                                                             }
                                                           >
@@ -664,183 +675,195 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                               </InfoMessage>
                                             )}
-                                            {inviteLinks && (
-                                              <form
-                                                onSubmit={(e) => {
-                                                  e.preventDefault()
-                                                }}
-                                              >
-                                                <div className='mt-3'>
-                                                  <Row>
-                                                    <div
-                                                      className='mr-2'
-                                                      style={{ width: 280 }}
-                                                    >
-                                                      <Select
-                                                        value={{
-                                                          label:
-                                                            this.state.role ===
-                                                            'ADMIN'
-                                                              ? 'Organisation Administrator'
-                                                              : 'User',
-                                                          value:
-                                                            this.state.role,
-                                                        }}
-                                                        onChange={(v) =>
-                                                          this.setState({
-                                                            role: v.value,
-                                                          })
-                                                        }
-                                                        options={[
-                                                          {
+                                            {inviteLinks &&
+                                              (!verifySeatsLimit ||
+                                                !needsUpgradeForAdditionalSeats) && (
+                                                <form
+                                                  onSubmit={(e) => {
+                                                    e.preventDefault()
+                                                  }}
+                                                >
+                                                  <div className='mt-3'>
+                                                    <Row>
+                                                      <div
+                                                        className='mr-2'
+                                                        style={{ width: 280 }}
+                                                      >
+                                                        <Select
+                                                          value={{
                                                             label:
-                                                              'Organisation Administrator',
-                                                            value: 'ADMIN',
-                                                          },
-                                                          {
-                                                            isDisabled:
-                                                              !hasRbacPermission,
-                                                            label:
-                                                              hasRbacPermission
-                                                                ? 'User'
-                                                                : 'User - Please upgrade for role based access',
-                                                            value: 'USER',
-                                                          },
-                                                        ]}
-                                                      />
-                                                    </div>
-                                                    {inviteLinks.find(
-                                                      (f) =>
-                                                        f.role ===
-                                                        this.state.role,
-                                                    ) && (
-                                                      <>
-                                                        <Flex className='mr-4'>
-                                                          <Input
-                                                            style={{
-                                                              width: '100%',
-                                                            }}
-                                                            value={`${
-                                                              document.location
-                                                                .origin
-                                                            }/invite-link/${
-                                                              inviteLinks.find(
-                                                                (f) =>
-                                                                  f.role ===
-                                                                  this.state
-                                                                    .role,
-                                                              ).hash
-                                                            }`}
-                                                            data-test='invite-link'
-                                                            inputClassName='input input--wide'
-                                                            className='full-width'
-                                                            type='text'
-                                                            readonly='readonly'
-                                                            title={
-                                                              <h3>Link</h3>
-                                                            }
-                                                            placeholder='Link'
-                                                          />
-                                                        </Flex>
-
-                                                        <Row>
-                                                          <Button
-                                                            className='btn-secondary'
-                                                            style={{
-                                                              width: 180,
-                                                            }}
-                                                            onClick={() => {
-                                                              navigator.clipboard.writeText(
-                                                                `${
-                                                                  document
-                                                                    .location
-                                                                    .origin
-                                                                }/invite/${
-                                                                  inviteLinks.find(
-                                                                    (f) =>
-                                                                      f.role ===
-                                                                      this.state
-                                                                        .role,
-                                                                  ).hash
-                                                                }`,
-                                                              )
-                                                              toast(
-                                                                'Link copied',
-                                                              )
-                                                            }}
-                                                          >
-                                                            Copy Invite Link
-                                                          </Button>
-                                                          <Button
-                                                            className='ml-4'
-                                                            type='button'
-                                                            onClick={() => {
-                                                              openConfirm(
-                                                                'Regenerate Invite Link',
-                                                                'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?',
-                                                                () => {
-                                                                  invalidateInviteLink(
+                                                              this.state
+                                                                .role ===
+                                                              'ADMIN'
+                                                                ? 'Organisation Administrator'
+                                                                : 'User',
+                                                            value:
+                                                              this.state.role,
+                                                          }}
+                                                          onChange={(v) =>
+                                                            this.setState({
+                                                              role: v.value,
+                                                            })
+                                                          }
+                                                          options={[
+                                                            {
+                                                              label:
+                                                                'Organisation Administrator',
+                                                              value: 'ADMIN',
+                                                            },
+                                                            {
+                                                              isDisabled:
+                                                                !hasRbacPermission,
+                                                              label:
+                                                                hasRbacPermission
+                                                                  ? 'User'
+                                                                  : 'User - Please upgrade for role based access',
+                                                              value: 'USER',
+                                                            },
+                                                          ]}
+                                                        />
+                                                      </div>
+                                                      {inviteLinks.find(
+                                                        (f) =>
+                                                          f.role ===
+                                                          this.state.role,
+                                                      ) && (
+                                                        <>
+                                                          <Flex className='mr-4'>
+                                                            <Input
+                                                              style={{
+                                                                width: '100%',
+                                                              }}
+                                                              value={`${
+                                                                document
+                                                                  .location
+                                                                  .origin
+                                                              }/invite-link/${
+                                                                inviteLinks.find(
+                                                                  (f) =>
+                                                                    f.role ===
+                                                                    this.state
+                                                                      .role,
+                                                                ).hash
+                                                              }`}
+                                                              data-test='invite-link'
+                                                              inputClassName='input input--wide'
+                                                              className='full-width'
+                                                              type='text'
+                                                              readonly='readonly'
+                                                              title={
+                                                                <h3>Link</h3>
+                                                              }
+                                                              placeholder='Link'
+                                                            />
+                                                          </Flex>
+                                                          <Row>
+                                                            <Button
+                                                              className='btn-secondary'
+                                                              style={{
+                                                                width: 180,
+                                                              }}
+                                                              onClick={() => {
+                                                                navigator.clipboard.writeText(
+                                                                  `${
+                                                                    document
+                                                                      .location
+                                                                      .origin
+                                                                  }/invite/${
                                                                     inviteLinks.find(
                                                                       (f) =>
                                                                         f.role ===
                                                                         this
                                                                           .state
                                                                           .role,
-                                                                    ),
-                                                                  )
-                                                                },
-                                                              )
-                                                            }}
-                                                          >
-                                                            Regenerate
-                                                          </Button>
-                                                        </Row>
-                                                      </>
+                                                                    ).hash
+                                                                  }`,
+                                                                )
+                                                                toast(
+                                                                  'Link copied',
+                                                                )
+                                                              }}
+                                                            >
+                                                              Copy Invite Link
+                                                            </Button>
+                                                            <Button
+                                                              className='ml-4'
+                                                              type='button'
+                                                              onClick={() => {
+                                                                openConfirm(
+                                                                  'Regenerate Invite Link',
+                                                                  'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?',
+                                                                  () => {
+                                                                    invalidateInviteLink(
+                                                                      inviteLinks.find(
+                                                                        (f) =>
+                                                                          f.role ===
+                                                                          this
+                                                                            .state
+                                                                            .role,
+                                                                      ),
+                                                                    )
+                                                                  },
+                                                                )
+                                                              }}
+                                                            >
+                                                              Regenerate
+                                                            </Button>
+                                                          </Row>
+                                                        </>
+                                                      )}
+                                                    </Row>
+                                                  </div>
+                                                  <p className='mt-3'>
+                                                    Anyone with link can join as
+                                                    a standard user, once they
+                                                    have joined you can edit
+                                                    their role from the team
+                                                    members panel.{' '}
+                                                    <Button
+                                                      theme='text'
+                                                      target='_blank'
+                                                      href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                    >
+                                                      Learn about User Roles.
+                                                    </Button>
+                                                  </p>
+                                                  <div className='text-right mt-2'>
+                                                    {error && (
+                                                      <ErrorMessage
+                                                        error={error}
+                                                      />
                                                     )}
-                                                  </Row>
-                                                </div>
-                                                <p className='mt-3'>
-                                                  Anyone with link can join as a
-                                                  standard user, once they have
-                                                  joined you can edit their role
-                                                  from the team members panel.{' '}
-                                                  <ButtonLink
-                                                    target='_blank'
-                                                    href='https://docs.flagsmith.com/advanced-use/permissions'
-                                                  >
-                                                    Learn about User Roles.
-                                                  </ButtonLink>
-                                                </p>
-                                                <div className='text-right mt-2'>
-                                                  {error && (
-                                                    <ErrorMessage
-                                                      error={error}
-                                                    />
-                                                  )}
-                                                </div>
-                                              </form>
-                                            )}
+                                                  </div>
+                                                </form>
+                                              )}
                                             <PanelSearch
                                               id='org-members-list'
                                               title='Members'
                                               className='no-pad'
                                               header={
                                                 <Row className='table-header'>
-                                                  <Flex>
-                                                    <strong>User</strong>
+                                                  <Flex className='table-column px-3'>
+                                                    User
+                                                  </Flex>
+                                                  <Flex className='table-column'>
+                                                    Role
                                                   </Flex>
                                                   <div
                                                     style={{ width: widths[0] }}
+                                                    className='table-column'
                                                   >
-                                                    Role
+                                                    Action
                                                   </div>
                                                   <div
                                                     style={{ width: widths[1] }}
+                                                    className='table-column'
                                                   >
                                                     Last logged in
                                                   </div>
                                                   <div
                                                     style={{ width: widths[2] }}
+                                                    className='table-column text-center'
                                                   >
                                                     Remove
                                                   </div>
@@ -874,31 +897,26 @@ const OrganisationSettingsPage = class extends Component {
                                                     className='list-item clickable'
                                                     key={id}
                                                   >
-                                                    <Flex onClick={onEditClick}>
+                                                    <Flex
+                                                      onClick={onEditClick}
+                                                      className='table-column px-3 font-weight-medium'
+                                                    >
                                                       {`${first_name} ${last_name}`}{' '}
                                                       {id ===
                                                         AccountStore.getUserId() &&
                                                         '(You)'}
-                                                      <div className='list-item-footer faint'>
+                                                      <div className='list-item-subtitle'>
                                                         {email}
                                                       </div>
                                                     </Flex>
 
-                                                    <Row
-                                                      style={{
-                                                        width: widths[0],
-                                                      }}
-                                                    >
+                                                    <Flex className='table-column'>
                                                       <div>
                                                         {organisation.role ===
                                                           'ADMIN' &&
                                                         id !==
                                                           AccountStore.getUserId() ? (
-                                                          <div
-                                                            style={{
-                                                              width: 250,
-                                                            }}
-                                                          >
+                                                          <div>
                                                             <Select
                                                               data-test='select-role'
                                                               placeholder='Select a role'
@@ -952,38 +970,52 @@ const OrganisationSettingsPage = class extends Component {
                                                               }
                                                               menuPosition='absolute'
                                                               menuPlacement='auto'
+                                                              className='react-select select-xsm'
                                                             />
                                                           </div>
                                                         ) : (
-                                                          <div className='mr-2'>
+                                                          <div className='mr-2 fs-small lh-sm'>
                                                             {Constants.roles[
                                                               role
                                                             ] || ''}
                                                           </div>
                                                         )}
                                                       </div>
-
-                                                      {role !== 'ADMIN' && (
-                                                        <div
-                                                          className='ml-2'
-                                                          style={{
-                                                            width: widths[2],
-                                                          }}
-                                                          onClick={onEditClick}
+                                                    </Flex>
+                                                    {role !== 'ADMIN' ? (
+                                                      <div
+                                                        style={{
+                                                          width: widths[0],
+                                                        }}
+                                                        onClick={onEditClick}
+                                                        className='table-column'
+                                                      >
+                                                        <Button
+                                                          theme='text'
+                                                          size='small'
                                                         >
-                                                          <Button className='btn--link'>
-                                                            Edit Permissions
-                                                          </Button>
-                                                        </div>
-                                                      )}
-                                                    </Row>
-
+                                                          <Icon
+                                                            name='edit'
+                                                            width={18}
+                                                            fill='#6837FC'
+                                                          />{' '}
+                                                          Edit Permissions
+                                                        </Button>
+                                                      </div>
+                                                    ) : (
+                                                      <div
+                                                        style={{
+                                                          width: widths[0],
+                                                        }}
+                                                      ></div>
+                                                    )}
                                                     <div
                                                       style={{
                                                         width: widths[1],
                                                       }}
+                                                      className='table-column'
                                                     >
-                                                      <div>
+                                                      <div className='fs-small lh-sm'>
                                                         {this.formatLastLoggedIn(
                                                           last_login,
                                                         )}
@@ -993,8 +1025,9 @@ const OrganisationSettingsPage = class extends Component {
                                                       style={{
                                                         width: widths[2],
                                                       }}
+                                                      className='table-column text-center'
                                                     >
-                                                      <button
+                                                      <Button
                                                         id='delete-invite'
                                                         type='button'
                                                         onClick={() =>
@@ -1012,10 +1045,14 @@ const OrganisationSettingsPage = class extends Component {
                                                             email,
                                                           )
                                                         }
-                                                        className='btn btn--with-icon ml-auto btn--remove'
+                                                        className='btn btn-with-icon'
                                                       >
-                                                        <RemoveIcon />
-                                                      </button>
+                                                        <Icon
+                                                          name='trash-2'
+                                                          width={20}
+                                                          fill='#656D7B'
+                                                        />
+                                                      </Button>
                                                     </div>
                                                   </Row>
                                                 )
@@ -1051,6 +1088,29 @@ const OrganisationSettingsPage = class extends Component {
                                                   invites,
                                                   'email',
                                                 )}
+                                                header={
+                                                  <Row className='table-header'>
+                                                    <Flex className='table-column px-3'>
+                                                      User
+                                                    </Flex>
+                                                    <div
+                                                      style={{
+                                                        width: widths[0],
+                                                      }}
+                                                      className='table-column'
+                                                    >
+                                                      Action
+                                                    </div>
+                                                    <div
+                                                      style={{
+                                                        width: widths[2],
+                                                      }}
+                                                      className='table-column text-center'
+                                                    >
+                                                      Remove
+                                                    </div>
+                                                  </Row>
+                                                }
                                                 renderRow={(
                                                   {
                                                     date_created,
@@ -1066,16 +1126,16 @@ const OrganisationSettingsPage = class extends Component {
                                                     className='list-item'
                                                     key={id}
                                                   >
-                                                    <div className='flex flex-1'>
+                                                    <div className='flex flex-1 px-3'>
                                                       {email || link}
-                                                      <div className='list-item-footer faint'>
+                                                      <div className='list-item-subtitle'>
                                                         Created{' '}
                                                         {moment(
                                                           date_created,
                                                         ).format('DD/MMM/YYYY')}
                                                       </div>
                                                       {invited_by ? (
-                                                        <div className='list-item-footer faint'>
+                                                        <div className='list-item-subtitle'>
                                                           Invited by{' '}
                                                           {invited_by.first_name
                                                             ? `${invited_by.first_name} ${invited_by.last_name}`
@@ -1083,40 +1143,51 @@ const OrganisationSettingsPage = class extends Component {
                                                         </div>
                                                       ) : null}
                                                     </div>
-                                                    <Row>
-                                                      <Column>
-                                                        {link ? (
-                                                          ' '
-                                                        ) : (
-                                                          <button
-                                                            id='resend-invite'
-                                                            type='button'
-                                                            onClick={() =>
-                                                              AppActions.resendInvite(
-                                                                id,
-                                                              )
-                                                            }
-                                                            className='btn btn--link'
-                                                          >
-                                                            Resend
-                                                          </button>
-                                                        )}
-                                                      </Column>
-                                                      <Column>
-                                                        <button
-                                                          id='delete-invite'
+                                                    <div
+                                                      style={{
+                                                        width: widths[0],
+                                                      }}
+                                                      className='table-column'
+                                                    >
+                                                      {link ? (
+                                                        ' '
+                                                      ) : (
+                                                        <Button
+                                                          id='resend-invite'
                                                           type='button'
                                                           onClick={() =>
-                                                            this.deleteInvite(
+                                                            AppActions.resendInvite(
                                                               id,
                                                             )
                                                           }
-                                                          className='btn btn--with-icon ml-auto btn--remove'
+                                                          theme='text'
+                                                          size='small'
                                                         >
-                                                          <RemoveIcon />
-                                                        </button>
-                                                      </Column>
-                                                    </Row>
+                                                          Resend
+                                                        </Button>
+                                                      )}
+                                                    </div>
+                                                    <div
+                                                      className='table-column text-center'
+                                                      style={{
+                                                        width: widths[2],
+                                                      }}
+                                                    >
+                                                      <Button
+                                                        id='delete-invite'
+                                                        type='button'
+                                                        onClick={() =>
+                                                          this.deleteInvite(id)
+                                                        }
+                                                        className='btn btn-with-icon'
+                                                      >
+                                                        <Icon
+                                                          name='trash-2'
+                                                          width={20}
+                                                          fill='#656D7B'
+                                                        />
+                                                      </Button>
+                                                    </div>
                                                   </Row>
                                                 )}
                                                 filterRow={(item, search) =>
@@ -1133,9 +1204,9 @@ const OrganisationSettingsPage = class extends Component {
                                         <TabItem tabLabel='Groups'>
                                           <div>
                                             <Row space className='mt-4'>
-                                              <h3 className='m-b-0'>
+                                              <h5 className='m-b-0'>
                                                 User Groups
-                                              </h3>
+                                              </h5>
                                               <Button
                                                 className='mr-2'
                                                 id='btn-invite'
@@ -1145,11 +1216,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <CreateGroupModal
                                                       orgId={organisation.id}
                                                     />,
-                                                    null,
-                                                    {
-                                                      className:
-                                                        'side-modal fade create-feature-modal in',
-                                                    },
+                                                    'side-modal',
                                                   )
                                                 }
                                                 type='button'
@@ -1157,7 +1224,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 Create Group
                                               </Button>
                                             </Row>
-                                            <p>
+                                            <p className='fs-small lh-sm'>
                                               Groups allow you to manage
                                               permissions for viewing and
                                               editing projects, features and
@@ -1183,24 +1250,27 @@ const OrganisationSettingsPage = class extends Component {
                           </FormGroup>
                         </TabItem>
 
-                        <TabItem tabLabel='Webhooks' tabIcon='ion-md-cloud'>
+                        <TabItem tabLabel='Webhooks'>
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
-                            <Row className='mb-3' space>
-                              <h3 className='m-b-0'>Audit Webhooks</h3>
+                            <Column className='mb-3 ml-0'>
+                              <h5 className='m-b-0'>Audit Webhooks</h5>
+                              <p className='fs-small lh-sm mb-4'>
+                                Audit webhooks let you know when audit logs
+                                occur, you can configure 1 or more audit
+                                webhooks per organisation.{' '}
+                                <Button
+                                  theme='text'
+                                  href='https://docs.flagsmith.com/system-administration/webhooks'
+                                >
+                                  Learn about Audit Webhooks.
+                                </Button>
+                              </p>
                               <Button onClick={this.createWebhook}>
                                 Create audit webhook
                               </Button>
-                            </Row>
-                            <p>
-                              Audit webhooks let you know when audit logs occur,
-                              you can configure 1 or more audit webhooks per
-                              organisation.{' '}
-                              <ButtonLink href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/'>
-                                Learn about Audit Webhooks.
-                              </ButtonLink>
-                            </p>
+                            </Column>
                             {webhooksLoading && !webhooks ? (
                               <Loader />
                             ) : (
@@ -1209,18 +1279,15 @@ const OrganisationSettingsPage = class extends Component {
                                 title={
                                   <Tooltip
                                     title={
-                                      <h6 className='mb-0'>
-                                        Webhooks{' '}
-                                        <span className='icon ion-ios-information-circle' />
-                                      </h6>
+                                      <h5 className='mb-0'>
+                                        Webhooks <Icon name='info' />
+                                      </h5>
                                     }
                                     place='right'
                                   >
                                     {Constants.strings.WEBHOOKS_DESCRIPTION}
                                   </Tooltip>
                                 }
-                                className='no-pad'
-                                icon='ion-md-cloud'
                                 items={webhooks}
                                 renderRow={(webhook) => (
                                   <Row
@@ -1231,18 +1298,24 @@ const OrganisationSettingsPage = class extends Component {
                                     className='list-item clickable cursor-pointer'
                                     key={webhook.id}
                                   >
-                                    <div>
-                                      <ButtonLink>{webhook.url}</ButtonLink>
-                                      <div className='list-item-footer faint'>
-                                        Created{' '}
-                                        {moment(webhook.created_date).format(
-                                          'DD/MMM/YYYY',
-                                        )}
+                                    <Flex className='table-column px-3'>
+                                      <div className='font-weight-medium mb-1'>
+                                        {webhook.url}
                                       </div>
-                                    </div>
-                                    <Row>
+                                      {webhook.created_at ? (
+                                        <div className='list-item-description'>
+                                          Created{' '}
+                                          {moment(webhook.created_at).format(
+                                            'DD/MMM/YYYY',
+                                          )}
+                                        </div>
+                                      ) : null}
+                                    </Flex>
+                                    <div className='table-column'>
                                       <Switch checked={webhook.enabled} />
-                                      <button
+                                    </div>
+                                    <div className='table-column'>
+                                      <Button
                                         id='delete-invite'
                                         type='button'
                                         onClick={(e) => {
@@ -1250,23 +1323,27 @@ const OrganisationSettingsPage = class extends Component {
                                           e.preventDefault()
                                           this.deleteWebhook(webhook)
                                         }}
-                                        className='btn btn--with-icon ml-auto btn--remove'
+                                        className='btn btn-with-icon'
                                       >
-                                        <RemoveIcon />
-                                      </button>
-                                    </Row>
+                                        <Icon
+                                          name='trash-2'
+                                          width={20}
+                                          fill='#656D7B'
+                                        />
+                                      </Button>
+                                    </div>
                                   </Row>
                                 )}
                                 renderNoResults={
                                   <Panel
-                                    icon='ion-md-cloud'
+                                    className='no-pad'
                                     title={
                                       <Tooltip
                                         title={
-                                          <h6 className='mb-0'>
+                                          <h5 className='mb-0'>
                                             Webhooks{' '}
-                                            <span className='icon ion-ios-information-circle' />
-                                          </h6>
+                                            <Icon name='info-outlined' />
+                                          </h5>
                                         }
                                         place='right'
                                       >
@@ -1277,8 +1354,12 @@ const OrganisationSettingsPage = class extends Component {
                                       </Tooltip>
                                     }
                                   >
-                                    You currently have no webhooks configured
-                                    for this organisation.
+                                    <div className='search-list'>
+                                      <Row className='list-item p-3 text-muted'>
+                                        You currently have no webhooks
+                                        configured for this organisation.
+                                      </Row>
+                                    </div>
                                   </Panel>
                                 }
                                 isLoading={this.props.webhookLoading}
@@ -1286,21 +1367,17 @@ const OrganisationSettingsPage = class extends Component {
                             )}
                           </FormGroup>
                         </TabItem>
-                        {Utils.getFlagsmithHasFeature('usage_chart') &&
-                          !Project.disableAnalytics && (
-                            <TabItem
-                              tabLabel='Usage'
-                              tabIcon='ion-md-analytics'
-                            >
-                              {this.state.tab === 4 && (
-                                <OrganisationUsage
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                />
-                              )}
-                            </TabItem>
-                          )}
+                        {!Project.disableAnalytics && (
+                          <TabItem tabLabel='Usage'>
+                            {this.state.tab === 4 && (
+                              <OrganisationUsage
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                              />
+                            )}
+                          </TabItem>
+                        )}
                       </Tabs>
                     </div>
                   )

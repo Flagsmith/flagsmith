@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+import { type } from 'common/data/base/_data'
 import UserGroupList from 'components/UserGroupList'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {
@@ -12,12 +13,19 @@ export type PagedResponse<T> = {
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
+export type Operator = {
+  value: string | null
+  label: string
+  hideValue?: boolean
+  warning?: string
+  valuePlaceholder?: string
+}
 export type SegmentCondition = {
+  delete?: boolean
+  description?: string
   operator: string
   property: string
-
-  delete?: boolean
-  value: string
+  value: string | number | null
 }
 export type SegmentRule = {
   type: string
@@ -163,9 +171,9 @@ export type MultivariateFeatureStateValue = {
 }
 
 export type FeatureStateValue = {
-  boolean_value?: boolean
-  float_value?: number
-  integer_value?: boolean
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value?: boolean | null
   string_value: string
   type: string
 }
@@ -185,7 +193,6 @@ export type FeatureState = {
   feature_state_value: string
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   identity?: string
-  identity_uuid?: string
   uuid: string
   enabled: boolean
   created_at: string
@@ -284,7 +291,30 @@ export type Res = {
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroupSummary>
   group: UserGroup
-  projectAuditLogs: PagedResponse<AuditLogItem>
-  identityFeatureState: { id: string }
+  myGroups: PagedResponse<UserGroupSummary>
+  createSegmentOverride: {
+    id: number
+    segment: number
+    priority: number
+    uuid: string
+    environment: number
+    feature: number
+    feature_segment_value: {
+      id: number
+      environment: number
+      enabled: boolean
+      feature: number
+      feature_state_value: FeatureStateValue
+      deleted_at: string
+      uuid: string
+      created_at: string
+      updated_at: string
+      version: number
+      live_from: string
+      identity: string
+      change_request: string
+    }
+    value: string
+  }
   // END OF TYPES
 }
