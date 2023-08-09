@@ -527,7 +527,10 @@ const UserPage = class extends Component {
                                       }
                                     }
 
-                                    if (name === this.state.preselect) {
+                                    if (
+                                      name === this.state.preselect &&
+                                      actualFlags
+                                    ) {
                                       this.state.preselect = null
                                       onClick()
                                     }
