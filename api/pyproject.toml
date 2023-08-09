@@ -38,7 +38,7 @@ addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 
 [tool.poetry]
 name = "flagsmith-api"
-version = "2.52.0"
+version = "0.1.0"
 description = "The API component for the Flagsmith application."
 authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
