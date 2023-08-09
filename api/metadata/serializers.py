@@ -116,10 +116,6 @@ class SerializerWithMetadata(serializers.BaseSerializer):
             )
 
     def validate_required_metadata(self, data):
-        if view := self.context.get("view"):
-            if view.action == "partial_update":
-                return
-
         metadata = data.get("metadata", [])
 
         content_type = ContentType.objects.get_for_model(self.Meta.model)
