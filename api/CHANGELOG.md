@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.67.0](https://github.com/dabeeeenster/flagsmith/compare/v2.66.0...v2.67.0) (2023-08-09)
+
+
+### Features
+
+* test8 ([#12](https://github.com/dabeeeenster/flagsmith/issues/12)) ([cfb4997](https://github.com/dabeeeenster/flagsmith/commit/cfb4997b5d023578e53f3b9d6f8db6fec8756057))
+* test9 ([#14](https://github.com/dabeeeenster/flagsmith/issues/14)) ([32a0eb9](https://github.com/dabeeeenster/flagsmith/commit/32a0eb92dccb4fea750d3c28cb17f62d0e873478))
+
 ## 0.1.0 (2023-08-09)
 
 
