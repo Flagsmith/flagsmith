@@ -681,12 +681,11 @@ class FeatureState(
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
-        if self.environment.use_v2_feature_versioning:
-            # We don't need to do anything since, with the new behaviour, the expectation is that the
-            # FE will create the initial version.
-            return
-
-        if self.version is not None and self.live_from is None:
+        if (
+            self.environment.use_v2_feature_versioning is False
+            and self.version is not None
+            and self.live_from is None
+        ):
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
