@@ -220,7 +220,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       />
                     )}
                     items={sortBy(segments, (v) => {
-                      return `${v.feature ? 'z' : 'a'}${v.name}`
+                      return `${v.feature ? 'a' : 'z'}${v.name}`
                     })}
                     renderRow={(
                       { description, feature, id, name }: Segment,
