@@ -5,14 +5,18 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from environments.models import Environment
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureSegment, FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import EnvironmentFeatureVersion
 from segments.models import Segment
 
 if typing.TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
     from features.models import Feature
     from projects.models import Project
+    from users.models import FFAdminUser
 
 now = timezone.now()
 
@@ -152,7 +156,12 @@ def test_get_previous_version_ignores_unpublished_version(
     assert version_3.get_previous_version() == version_1
 
 
-def test_publish(feature: "Feature", project: "Project", admin_user) -> None:
+def test_publish(
+    feature: "Feature",
+    project: "Project",
+    admin_user: "FFAdminUser",
+    mocker: "MockerFixture",
+) -> None:
     # Given
     environment = Environment.objects.create(
         name="Test", project=project, use_v2_feature_versioning=True
@@ -161,12 +170,23 @@ def test_publish(feature: "Feature", project: "Project", admin_user) -> None:
         environment=environment, feature=feature
     )
 
+    mocked_rebuild_environment_document = mocker.patch(
+        "features.versioning.signals.rebuild_environment_document",
+        autospec=rebuild_environment_document,
+    )
+
     # When
     with freeze_time(now):
         version_2.publish(published_by=admin_user)
+        version_2.save()
 
     # Then
     assert version_2.is_live
     assert version_2.live_from == now
     assert version_2.published is True
     assert version_2.published_by == admin_user
+
+    mocked_rebuild_environment_document.delay.assert_called_once_with(
+        kwargs={"environment_id": environment.id},
+        delay_until=version_2.live_from,
+    )

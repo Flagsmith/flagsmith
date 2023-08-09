@@ -59,7 +59,7 @@ class EnvironmentFeatureVersion(
         return self.is_live and (not other.is_live or self.live_from > other.live_from)
 
     @property
-    def is_live(self):
+    def is_live(self) -> bool:
         return self.published and self.live_from <= timezone.now()
 
     @classmethod
