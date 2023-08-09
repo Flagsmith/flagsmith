@@ -33,6 +33,8 @@ const App = class extends Component {
 
   state = {
     asideIsVisible: !isMobile,
+    lastEnvironmentId: '',
+    lastProjectId: '',
     pin: '',
     totalApiCalls: 0,
   }
@@ -46,6 +48,15 @@ const App = class extends Component {
     getBuildVersion()
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     window.addEventListener('scroll', this.handleScroll)
+    AsyncStorage.getItem('lastEnv').then((res) => {
+      if (res) {
+        const lastEnv = JSON.parse(res)
+        this.setState({
+          lastEnvironmentId: lastEnv.environmentId,
+          lastProjectId: lastEnv.projectId,
+        })
+      }
+    })
   }
 
   toggleDarkMode = () => {
@@ -64,6 +75,15 @@ const App = class extends Component {
         this.setState({ asideIsVisible: false })
       }
       this.hideMobileNav()
+      AsyncStorage.getItem('lastEnv').then((res) => {
+        if (res) {
+          const { environmentId, projectId } = JSON.parse(res)
+          this.setState({
+            lastEnvironmentId: environmentId,
+            lastProjectId: projectId,
+          })
+        }
+      })
     }
   }
 
@@ -179,7 +199,7 @@ const App = class extends Component {
     }
     const { location } = this.props
     const pathname = location.pathname
-    const { asideIsVisible } = this.state
+    const { asideIsVisible, lastEnvironmentId, lastProjectId } = this.state
     const match = matchPath(pathname, {
       exact: false,
       path: '/project/:projectId/environment/:environmentId',
@@ -193,7 +213,9 @@ const App = class extends Component {
     const projectId =
       _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
     const environmentId = _.get(match, 'params.environmentId')
-    const pageHasAside = environmentId || projectId
+
+    const storageHasParams = lastEnvironmentId || lastProjectId
+    const pageHasAside = environmentId || projectId || storageHasParams
     const isHomepage =
       pathname === '/' ||
       pathname === '/login' ||
@@ -274,7 +296,7 @@ const App = class extends Component {
               <div>
                 <div
                   className={
-                    pageHasAside
+                    !isHomepage
                       ? `aside-body${
                           isMobile && !asideIsVisible ? '-full-width' : ''
                         }`
@@ -295,22 +317,6 @@ const App = class extends Component {
                                 >
                                   <span className='icon ion-md-menu' />
                                 </div>
-                              )}
-                              {!projectId && (
-                                <a
-                                  href={
-                                    user ? '/projects' : 'https://flagsmith.com'
-                                  }
-                                  className='mr-4'
-                                >
-                                  <img
-                                    title='Flagsmith'
-                                    height={24}
-                                    src='/static/images/nav-logo.svg'
-                                    className='brand'
-                                    alt='Flagsmith logo'
-                                  />
-                                </a>
                               )}
                             </div>
                           </div>
@@ -439,13 +445,13 @@ const App = class extends Component {
                         </Flex>
                       </nav>
                     )}
-
-                  {pageHasAside && (
+                  {!isHomepage && (
                     <Aside
-                      projectId={projectId}
-                      environmentId={environmentId}
+                      projectId={projectId || lastProjectId}
+                      environmentId={environmentId || lastEnvironmentId}
                       toggleAside={this.toggleAside}
                       asideIsVisible={asideIsVisible}
+                      disabled={!pageHasAside}
                     />
                   )}
                   {isMobile && pageHasAside && asideIsVisible ? null : (

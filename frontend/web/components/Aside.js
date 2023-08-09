@@ -29,24 +29,28 @@ const Aside = class extends Component {
     super(props, context)
     this.state = { isOpenProject: true }
     ES6Component(this)
-    AppActions.getProject(this.props.projectId)
-    if (this.props.environmentId && this.props.environmentId !== 'create') {
-      AppActions.getChangeRequests(this.props.environmentId, {})
-    }
-    this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
-    this.listenTo(ProjectStore, 'loaded', () => {
-      const environment = ProjectStore.getEnvironment(this.props.environmentId)
-      if (environment) {
-        AppActions.getChangeRequests(
-          this.props.environmentId,
-          Utils.changeRequestsEnabled(
-            environment.minimum_change_request_approvals,
-          )
-            ? {}
-            : { live_from_after: new Date().toISOString() },
-        )
+    if (!this.props.disabled) {
+      AppActions.getProject(this.props.projectId)
+      if (this.props.environmentId && this.props.environmentId !== 'create') {
+        AppActions.getChangeRequests(this.props.environmentId, {})
       }
-    })
+      this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
+      this.listenTo(ProjectStore, 'loaded', () => {
+        const environment = ProjectStore.getEnvironment(
+          this.props.environmentId,
+        )
+        if (environment) {
+          AppActions.getChangeRequests(
+            this.props.environmentId,
+            Utils.changeRequestsEnabled(
+              environment.minimum_change_request_approvals,
+            )
+              ? {}
+              : { live_from_after: new Date().toISOString() },
+          )
+        }
+      })
+    }
   }
 
   componentDidMount() {
@@ -56,20 +60,22 @@ const Aside = class extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const environment = ProjectStore.getEnvironment(this.props.environmentId)
-    if (this.props.projectId !== prevProps.projectId) {
-      AppActions.getProject(prevProps.projectId)
-    }
-    if (this.props.environmentId !== prevProps.environmentId) {
-      if (environment) {
-        AppActions.getChangeRequests(
-          this.props.environmentId,
-          Utils.changeRequestsEnabled(
-            environment.minimum_change_request_approvals,
+    if (!this.props.disabled) {
+      const environment = ProjectStore.getEnvironment(this.props.environmentId)
+      if (this.props.projectId !== prevProps.projectId) {
+        AppActions.getProject(this.props.projectId)
+      }
+      if (this.props.environmentId !== prevProps.environmentId) {
+        if (environment) {
+          AppActions.getChangeRequests(
+            this.props.environmentId,
+            Utils.changeRequestsEnabled(
+              environment.minimum_change_request_approvals,
+            )
+              ? {}
+              : { live_from_after: new Date().toISOString() },
           )
-            ? {}
-            : { live_from_after: new Date().toISOString() },
-        )
+        }
       }
     }
   }
@@ -79,7 +85,7 @@ const Aside = class extends Component {
   }
 
   render() {
-    const { asideIsVisible, toggleAside } = this.props
+    const { asideIsVisible, disabled, toggleAside } = this.props
     let integrations = Utils.getFlagsmithValue('integrations') || '[]'
     integrations = JSON.parse(integrations)
     const environmentId =
@@ -137,7 +143,11 @@ const Aside = class extends Component {
                   <div className='row ml-0 mr-0 aside__wrapper'>
                     {
                       <React.Fragment>
-                        <div className='aside__main-content px-0'>
+                        <div
+                          className={`aside__main-content px-0 ${
+                            disabled ? 'disabled' : ''
+                          }`}
+                        >
                           <a href={'/projects'} className='nav-logo'>
                             <Icon name='nav-logo' />
                           </a>

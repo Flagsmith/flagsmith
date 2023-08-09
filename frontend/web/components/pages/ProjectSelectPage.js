@@ -140,7 +140,7 @@ const ProjectSelectPage = class extends Component {
                         return (
                           <>
                             {i === 0 && (
-                              <div className='mr-3'>
+                              <div>
                                 <Permission
                                   level='organisation'
                                   permission='CREATE_PROJECT'
@@ -183,7 +183,7 @@ const ProjectSelectPage = class extends Component {
                                   ? `${environments[0].api_key}/features`
                                   : 'create'
                               }`}
-                              className='clickable mr-3'
+                              className='clickable'
                             >
                               <Button className='btn-project'>
                                 <Row>
