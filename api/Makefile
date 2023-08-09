@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 1.5.0
+POETRY_VERSION ?= 1.5.1
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -26,10 +26,6 @@ install-packages:
 
 .PHONY: install
 install: install-pip install-poetry install-packages
-
-.PHONY: generate-requirements-file
-generate-requirements-file: 
-	poetry export -f requirements.txt --output requirements.txt --only $(opts)
 
 .PHONY: lint-black
 lint-black:

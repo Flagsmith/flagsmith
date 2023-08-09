@@ -127,7 +127,7 @@ const EnvironmentSettingsPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         save={this.props.createWebhook}
-      />,
+      />, 'side-modal'
     )
   }
 
@@ -141,7 +141,7 @@ const EnvironmentSettingsPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         save={this.props.saveWebhook}
-      />,
+      />, 'side-modal'
     )
   }
 
