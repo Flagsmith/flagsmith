@@ -417,3 +417,38 @@ def test_create_environment_creates_feature_states_in_all_environments_and_envir
         EnvironmentFeatureVersion.objects.filter(environment=environment).count() == 2
     )
     assert environment.feature_states.count() == 2
+
+
+def test_update_environment_to_v2_versioning_creates_initial_environment_feature_versions(
+    project: "Project", environment: Environment, feature: Feature
+) -> None:
+    """
+    Test which exercises the AFTER_UPDATE hook on the environment model and the
+    create_initial_versions task from features.versioning.tasks.
+    """
+
+    # Given
+    another_feature = Feature.objects.create(project=project, name="another_feature")
+
+    assert EnvironmentFeatureVersion.objects.count() == 0
+
+    # When
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    # Then
+    assert (
+        EnvironmentFeatureVersion.objects.filter(environment=environment).count() == 2
+    )
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment, feature=feature
+        ).count()
+        == 1
+    )
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment, feature=another_feature
+        ).count()
+        == 1
+    )
