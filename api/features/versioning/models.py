@@ -22,9 +22,6 @@ class EnvironmentFeatureVersion(
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
-    # TODO:
-    #  - verify that sha can be used as primary key in oracle / mysql
-    #  - are there any performance impacts to consider with such a large primary key?
     sha = models.CharField(primary_key=True, max_length=64)
     environment = models.ForeignKey(
         "environments.Environment", on_delete=models.CASCADE
