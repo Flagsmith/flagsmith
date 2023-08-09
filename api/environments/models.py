@@ -18,6 +18,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_UPDATE,
     LifecycleModel,
     hook,
 )
@@ -41,6 +42,7 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.tasks import create_initial_feature_versions
 from metadata.models import Metadata
 from segments.models import Segment
@@ -141,6 +143,10 @@ class Environment(
     @hook(AFTER_UPDATE, when="use_v2_feature_versioning", was=False, is_now=True)
     def create_initial_versions(self):
         create_initial_feature_versions.delay(kwargs={"environment_id": self.id})
+
+    @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
+    def validate_use_v2_feature_versioning(self):
+        raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
