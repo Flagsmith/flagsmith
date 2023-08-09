@@ -41,6 +41,7 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.tasks import create_initial_feature_versions
 from metadata.models import Metadata
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
@@ -139,9 +140,6 @@ class Environment(
 
     @hook(AFTER_UPDATE, when="use_v2_feature_versioning", was=False, is_now=True)
     def create_initial_versions(self):
-        # TODO: only import if module is installed?
-        from features.versioning.tasks import create_initial_feature_versions
-
         create_initial_feature_versions.delay(kwargs={"environment_id": self.id})
 
     def __str__(self):

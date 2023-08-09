@@ -1,13 +1,14 @@
 from django.utils import timezone
 
-from environments.models import Environment
-from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from task_processor.decorators import register_task_handler
 
 
 @register_task_handler()
 def create_initial_feature_versions(environment_id: int):
+    from environments.models import Environment
+    from features.models import Feature, FeatureState
+
     environment = Environment.objects.get(id=environment_id)
     assert environment.use_v2_feature_versioning
 
