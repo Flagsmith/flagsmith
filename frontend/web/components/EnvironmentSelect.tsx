@@ -44,23 +44,25 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     return <div className='mb-2'>{foundValue?.name}</div>
   }
   return (
-    <Select
-      value={
-        foundValue
-          ? { label: foundValue.name, value: `${foundValue.id}` }
-          : {
-              label: showAll ? 'All Environments' : 'Select an Environment',
-              value: '',
-            }
-      }
-      options={(showAll
-        ? [{ label: 'All Environments', value: '' }]
-        : []
-      ).concat(environments)}
-      onChange={(value: { value: string; label: string }) =>
-        onChange(value?.value || '')
-      }
-    />
+    <div>
+      <Select
+        value={
+          foundValue
+            ? { label: foundValue.name, value: `${foundValue.id}` }
+            : {
+                label: showAll ? 'All Environments' : 'Select an Environment',
+                value: '',
+              }
+        }
+        options={(showAll
+          ? [{ label: 'All Environments', value: '' }]
+          : []
+        ).concat(environments)}
+        onChange={(value: { value: string; label: string }) =>
+          onChange(value?.value || '')
+        }
+      />
+    </div>
   )
 }
 

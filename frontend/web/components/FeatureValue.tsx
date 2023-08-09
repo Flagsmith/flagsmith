@@ -15,7 +15,7 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
 
   return (
     <span
-      className={`feature-value-container ${type} ${props.className || ''}`}
+      className={`chip ${props.className || ''}`}
       onClick={props.onClick}
       data-test={props['data-test']}
     >

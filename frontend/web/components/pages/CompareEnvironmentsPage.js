@@ -46,7 +46,7 @@ class TheComponent extends Component {
             </div>
           </TabItem>
           {Utils.getFlagsmithHasFeature('compare_identities') && (
-            <TabItem tabLabel='Feature Values'>
+            <TabItem tabLabel='Identities'>
               <div className='mt-2'>
                 <CompareIdentities
                   environmentId={this.props.match.params.environmentId}

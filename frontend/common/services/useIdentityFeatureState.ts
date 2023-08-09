@@ -1,50 +1,54 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import Utils from 'common/utils/utils'
 
 export const identityFeatureStateService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityFeatureState'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      getIdentityFeatureState: builder.query<
-        Res['identityFeatureState'],
-        Req['getIdentityFeatureState']
+      getIdentityFeatureStates: builder.query<
+        Res['identityFeatureStates'],
+        Req['getIdentityFeatureStates']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'IdentityFeatureState' }],
-        query: (query: Req['getIdentityFeatureState']) => ({
-          url: `identityFeatureState/${query.id}`,
+        providesTags: (res, _, req) => [
+          { id: req.user, type: 'IdentityFeatureState' },
+        ],
+        query: (query: Req['getIdentityFeatureStates']) => ({
+          url: `environments/${
+            query.environment
+          }/${Utils.getIdentitiesEndpoint()}/${
+            query.user
+          }/${Utils.getFeatureStatesEndpoint()}/all/`,
         }),
       }),
       // END OF ENDPOINTS
     }),
   })
 
-export async function getIdentityFeatureState(
+export async function getIdentityFeatureStates(
   store: any,
-  data: Req['getIdentityFeatureState'],
+  data: Req['getIdentityFeatureStates'],
   options?: Parameters<
-    typeof identityFeatureStateService.endpoints.getIdentityFeatureState.initiate
+    typeof identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate
   >[1],
 ) {
-  store.dispatch(
-    identityFeatureStateService.endpoints.getIdentityFeatureState.initiate(
+  return store.dispatch(
+    identityFeatureStateService.endpoints.getIdentityFeatureStates.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(identityFeatureStateService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useGetIdentityFeatureStateQuery,
+  useGetIdentityFeatureStatesQuery,
   // END OF EXPORTS
 } = identityFeatureStateService
 
 /* Usage examples:
-const { data, isLoading } = useGetIdentityFeatureStateQuery({ id: 2 }, {}) //get hook
-const [createIdentityFeatureState, { isLoading, data, isSuccess }] = useCreateIdentityFeatureStateMutation() //create hook
-identityFeatureStateService.endpoints.getIdentityFeatureState.select({id: 2})(store.getState()) //access data from any function
+const { data, isLoading } = useGetIdentityFeatureStatesQuery({ id: 2 }, {}) //get hook
+const [createIdentityFeatureStates, { isLoading, data, isSuccess }] = useCreateIdentityFeatureStatesMutation() //create hook
+identityFeatureStateService.endpoints.getIdentityFeatureStates.select({id: 2})(store.getState()) //access data from any function
 */

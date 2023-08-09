@@ -99,5 +99,10 @@ export type Req = {
     feature_segment: featureSegment
     feature_state_value: FeatureStateValue
   }
+  getIdentityFeatureStates: {
+    environment: string
+    user: string
+  }
+  getProjectFlags: { project: string }
   // END OF TYPES
 }

@@ -10,6 +10,7 @@ import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
+import FeatureValue from './FeatureValue'
 
 export const width = [190, 65, 48, 75]
 class TheComponent extends Component {
