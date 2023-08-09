@@ -19,9 +19,11 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
+import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 
-const widths = [170, 150, 80]
+const widths = [450, 150, 100]
+const rolesWidths = [100, 230]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -269,6 +271,10 @@ const OrganisationSettingsPage = class extends Component {
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
+    const roles = [
+      { 'id': 4, 'name': 'Viewers', 'organisation': 'Org A' },
+      { 'id': 5, 'name': 'Support', 'organisation': 'Org B' },
+    ]
 
     return (
       <div className='app-container container'>
@@ -1236,6 +1242,98 @@ const OrganisationSettingsPage = class extends Component {
                                               orgId={
                                                 organisation && organisation.id
                                               }
+                                            />
+                                          </div>
+                                        </TabItem>
+                                        <TabItem tabLabel='Roles'>
+                                          <div>
+                                            <Row space className='mt-4'>
+                                              <h5 className='m-b-0'>Roles</h5>
+                                              <Button
+                                                className='mr-2'
+                                                id='btn-invite'
+                                                onClick={() =>
+                                                  openModal(
+                                                    'Create Role',
+                                                    <CreateRole />,
+                                                    'side-modal',
+                                                  )
+                                                }
+                                                type='button'
+                                              >
+                                                Create Role
+                                              </Button>
+                                            </Row>
+                                            <p className='fs-small lh-sm'>
+                                              Some description about roles.
+                                            </p>
+                                            <PanelSearch
+                                              id='role-list'
+                                              title={'Roles'}
+                                              className='no-pad'
+                                              icon='ion-md-cloud'
+                                              items={roles}
+                                              header={
+                                                <Row className='table-header'>
+                                                  <div
+                                                    style={{
+                                                      width: 150,
+                                                    }}
+                                                  >
+                                                    Roles
+                                                  </div>
+                                                  <div
+                                                    style={{
+                                                      width: rolesWidths[1],
+                                                    }}
+                                                  >
+                                                    Description
+                                                  </div>
+                                                </Row>
+                                              }
+                                              renderRow={(role) => (
+                                                <Row
+                                                  onClick={() => {
+                                                    console.log('click')
+                                                  }}
+                                                  space
+                                                  className='list-item clickable cursor-pointer'
+                                                  key={role.id}
+                                                >
+                                                  <Row style={{
+                                                      width: 150,
+                                                    }}
+                                                  >{role.name}</Row>
+                                                  <Row
+                                                    style={{
+                                                      width: rolesWidths[1],
+                                                      color: 'black',
+                                                    }}
+                                                  >
+                                                    Manage user groups
+                                                  </Row>
+                                                  <Row>
+                                                    <button
+                                                      id='delete-invite'
+                                                      type='button'
+                                                      className='btn btn--with-icon ml-auto btn--remove'
+                                                    >
+                                                      <RemoveIcon />
+                                                    </button>
+                                                  </Row>
+                                                </Row>
+                                              )}
+                                              renderNoResults={
+                                                <Panel
+                                                  icon='ion-md-cloud'
+                                                  className='fs-small lh-sm'
+                                                  title={'Organisation roles'}
+                                                >
+                                                  You currently have no
+                                                  organisation roles
+                                                </Panel>
+                                              }
+                                              isLoading={false}
                                             />
                                           </div>
                                         </TabItem>
