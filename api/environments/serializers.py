@@ -10,7 +10,7 @@ from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
-from projects.serializers import ProjectListSerializer
+from projects.serializers import ProjectSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -18,7 +18,7 @@ from util.drf_writable_nested.serializers import (
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
     feature_states = FeatureStateSerializerFull(many=True)
-    project = ProjectListSerializer()
+    project = ProjectSerializer()
 
     class Meta:
         model = Environment
@@ -80,16 +80,6 @@ class EnvironmentSerializerWithMetadata(
 
     def get_project_from_validated_data(self, validated_data) -> Project:
         return validated_data.get("project")
-
-
-class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):
-    total_segment_overrides = serializers.IntegerField()
-
-    class Meta(EnvironmentSerializerWithMetadata.Meta):
-        fields = EnvironmentSerializerWithMetadata.Meta.fields + (
-            "total_segment_overrides",
-        )
-        read_only_fields = ("total_segment_overrides",)
 
 
 class CreateUpdateEnvironmentSerializer(
