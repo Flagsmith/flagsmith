@@ -157,7 +157,11 @@ class TheComponent extends Component {
             <div className='app-container container'>
               <Row space className='py-2'>
                 <h4 className='mb-0'>Account</h4>
-                <Button theme='secondary' onClick={AppActions.logout}>
+                <Button
+                  id='logout-link'
+                  theme='secondary'
+                  onClick={AppActions.logout}
+                >
                   Log Out
                 </Button>
               </Row>

@@ -143,6 +143,13 @@ const Aside = class extends Component {
                           </a>
                           <hr className='my-0 py-0' />
                           <Collapsible
+                            data-test={
+                              project?.name
+                                ? `switch-project-${project?.name
+                                    ?.replace(/ /g, '-')
+                                    .toLowerCase()}`
+                                : ''
+                            }
                             title={
                               project && project.name ? (
                                 <Row>
