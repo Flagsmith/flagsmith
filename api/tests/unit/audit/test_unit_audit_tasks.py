@@ -10,6 +10,7 @@ from audit.tasks import (
     create_feature_state_went_live_audit_log,
     create_segment_priorities_changed_audit_log,
 )
+from environments.models import Environment
 from features.models import FeatureSegment
 from segments.models import Segment
 
@@ -151,9 +152,10 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     related_object_id = 1
     related_object_type = RelatedObjectType.ENVIRONMENT
 
-    mock_environment = mocker.MagicMock()
+    mock_environment = mocker.MagicMock(spec=Environment)
 
     instance = mocker.MagicMock()
+    instance.get_skip_create_audit_log.return_value = False
     instance.get_audit_log_author.return_value = None
     instance.get_create_log_message.return_value = log_message
     instance.get_environment_and_project.return_value = mock_environment, None

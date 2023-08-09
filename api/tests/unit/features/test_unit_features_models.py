@@ -83,29 +83,6 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncommitted_change_request(
-    environment, feature, admin_user, mocker
-):
-    # Given
-    change_request = ChangeRequest.objects.create(
-        environment=environment, title="Test CR", user=admin_user
-    )
-    feature_state = FeatureState.objects.create(
-        environment=environment,
-        feature=feature,
-        change_request=change_request,
-        version=None,
-    )
-
-    # When
-    related_object_id = feature_state.get_audit_log_related_object_id(
-        mocker.MagicMock(id="history_instance")
-    )  # history instance is irrelevant here
-
-    # Then
-    assert related_object_id is None
-
-
 def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
     environment, feature, admin_user
 ):
