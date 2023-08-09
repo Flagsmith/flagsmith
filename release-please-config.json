@@ -2,6 +2,10 @@
     "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
     "release-type": "python",
     "packages": {
+        ".": {
+            "release-type": "python",
+            "changelog-path": "CHANGELOG.md"
+          },
         "frontend": {
             "release-type": "node",
             "changelog-path": "../CHANGELOG.md",
