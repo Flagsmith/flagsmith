@@ -6,7 +6,6 @@ export type EnvironmentSelectType = {
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
-
   readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]

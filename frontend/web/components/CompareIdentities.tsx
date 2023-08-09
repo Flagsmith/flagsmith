@@ -2,11 +2,9 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import FeatureRow from './FeatureRow'
 import { useGetIdentityFeatureStatesQuery } from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
-import ProjectStore from 'common/stores/project-store'
 import PanelSearch from './PanelSearch'
 import { ProjectFlag, Res } from 'common/types/responses'
 import Icon from './Icon'
@@ -198,7 +196,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                 <Flex className={'flex-row list-item'}>
                   <div
                     style={{ width: featureNameWidth }}
-                    className={`table-column`}
+                    className={`table-column ${
+                      !enabledDifferent && !valueDifferent && 'faded'
+                    }`}
                   >
                     <span className='font-weight-medium'>
                       {description ? (
@@ -231,6 +231,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     {featureStateLeft && (
                       <FeatureValue
+                        includeEmpty={false}
                         value={featureStateLeft?.feature_state_value}
                       />
                     )}

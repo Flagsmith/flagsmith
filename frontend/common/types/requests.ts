@@ -3,6 +3,7 @@ import { Account, Segment, Tag, FeatureStateValue } from './responses'
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
+  q?: string
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
