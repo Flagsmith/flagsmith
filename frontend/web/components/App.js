@@ -321,8 +321,8 @@ const App = class extends Component {
                                 <Row>
                                   {!!AccountStore.getOrganisation() && (
                                     <NavLink
-                                      id='account-settings-link'
-                                      data-test='account-settings-link'
+                                      id='projects-link'
+                                      data-test='projects-link'
                                       activeClassName='active'
                                       className='nav-link'
                                       to={'/projects'}
