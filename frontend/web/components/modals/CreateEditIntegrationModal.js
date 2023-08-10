@@ -163,6 +163,7 @@ const CreateEditIntegration = class extends Component {
                 Flagsmith Environment
               </label>
               <EnvironmentSelect
+                projectId={this.props.projectId}
                 readOnly={!!this.props.data || this.props.readOnly}
                 value={this.state.data.flagsmithEnvironment}
                 onChange={(environment) =>

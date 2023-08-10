@@ -76,7 +76,7 @@ const CreateWebhook = class extends Component {
                     placeholder='https://example.com/feature-changed/'
                   />
                 </Flex>
-                <Row className="ms-4">
+                <Row className='ms-4'>
                   <Switch
                     defaultChecked={enabled}
                     checked={enabled}

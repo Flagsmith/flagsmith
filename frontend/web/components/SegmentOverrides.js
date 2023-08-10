@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { Component, Fragment } from 'react';
+import React, { Component, Fragment } from 'react'
 import { SortableContainer, SortableElement } from 'react-sortable-hoc'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'

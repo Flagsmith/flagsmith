@@ -18,6 +18,7 @@ import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/Icon'
+import FeatureValue from 'components/FeatureValue'
 
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
@@ -526,7 +527,10 @@ const UserPage = class extends Component {
                                       }
                                     }
 
-                                    if (name === this.state.preselect) {
+                                    if (
+                                      name === this.state.preselect &&
+                                      actualFlags
+                                    ) {
                                       this.state.preselect = null
                                       onClick()
                                     }

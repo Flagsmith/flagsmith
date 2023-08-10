@@ -3,7 +3,7 @@ import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
 import ModalHR from './modals/ModalHR'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 
 class CreateServerSideKeyModal extends Component {
   state = {}

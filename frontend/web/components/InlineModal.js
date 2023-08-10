@@ -11,13 +11,13 @@ class InlineModal extends PureComponent {
   static displayName = 'Popover'
 
   static propTypes = {
+    bottom: propTypes.node,
     children: propTypes.node,
     isOpen: propTypes.bool,
     onBack: propTypes.func,
     onClose: propTypes.func,
     showBack: propTypes.bool,
     title: propTypes.string,
-    bottom: propTypes.node,
   }
 
   handleClickOutside() {

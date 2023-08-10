@@ -180,7 +180,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 </div>
               ) : null}
               {noTags && (
-                <div className='text-center text-dark mt-4'>You have no tags yet</div>
+                <div className='text-center text-dark mt-4'>
+                  You have no tags yet
+                </div>
               )}
             </div>
           </div>

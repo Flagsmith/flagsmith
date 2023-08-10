@@ -56,7 +56,10 @@ const PermissionError = () => {
   )
 }
 
-type OrganisationWrapperType = { projectId: string | undefined; children: ReactNode }
+type OrganisationWrapperType = {
+  projectId: string | undefined
+  children: ReactNode
+}
 const OrganisationWrapper = class extends Component<OrganisationWrapperType> {
   constructor(props: any, context: any) {
     super(props, context)
