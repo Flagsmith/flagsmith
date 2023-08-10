@@ -108,4 +108,4 @@ jobs:
           context: .
           build-args: |
             SAML_INSTALLED=1
-            POETRY_OPTS="--with saml,auth-controller"
+            POETRY_OPTS=--with saml,auth-controller
