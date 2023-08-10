@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - '*'
+    branches:
+      - fix/poetry-opts-private-cloud-build
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
@@ -103,7 +105,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           file: Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           context: .
           build-args: |
