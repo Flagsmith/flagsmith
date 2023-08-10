@@ -76,9 +76,8 @@ class FFAdminUserViewSet(UserViewSet):
         user = serializer.get_user()
 
         if user and user.can_send_password_reset_email:
+            super().reset_password(request, *args, **kwargs)
             user.password_reset_email_sent()
             user.save()
-
-            super().reset_password(request, *args, **kwargs)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
