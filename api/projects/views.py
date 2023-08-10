@@ -89,7 +89,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         else:
             queryset = self.request.user.get_permitted_projects(
                 permission_key=VIEW_PROJECT
-            ).annotate(
+            )
+
+        organisation_id = self.request.query_params.get("organisation")
+        if organisation_id:
+            queryset = queryset.filter(organisation__id=organisation_id)
+
+        project_uuid = self.request.query_params.get("uuid")
+        if project_uuid:
+            queryset = queryset.filter(uuid=project_uuid)
+
+        if self.action == "retrieve":
+            queryset = queryset.annotate(
                 total_features=Count(
                     "features",
                     filter=Q(features__deleted_at__isnull=True),
@@ -101,14 +112,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 ),
             )
-
-        organisation_id = self.request.query_params.get("organisation")
-        if organisation_id:
-            queryset = queryset.filter(organisation__id=organisation_id)
-
-        project_uuid = self.request.query_params.get("uuid")
-        if project_uuid:
-            queryset = queryset.filter(uuid=project_uuid)
 
         return queryset
 

@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
 from projects.models import Project
@@ -8,8 +9,10 @@ list_url = reverse("api-v1:projects:project-list")
 PROJECT_NAME = "Test project"
 
 
-@pytest.mark.django_db
-def test_get_project_list_data(admin_client, organisation):
+@pytest.mark.parametrize(
+    "client", (lazy_fixture("admin_client"), lazy_fixture("master_api_key_client"))
+)
+def test_get_project_list_data(client, organisation):
     # Given
     hide_disabled_flags = False
     enable_dynamo_db = False
@@ -28,7 +31,7 @@ def test_get_project_list_data(admin_client, organisation):
     )
 
     # When
-    response = admin_client.get(list_url)
+    response = client.get(list_url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -48,8 +51,10 @@ def test_get_project_list_data(admin_client, organisation):
     assert "total_segments" not in response.json()[0].keys()
 
 
-@pytest.mark.django_db
-def test_get_project_data_by_id(admin_client, organisation):
+@pytest.mark.parametrize(
+    "client", (lazy_fixture("admin_client"), lazy_fixture("master_api_key_client"))
+)
+def test_get_project_data_by_id(client, organisation):
     # Given
     project = Project.objects.create(
         name=PROJECT_NAME,
@@ -58,7 +63,7 @@ def test_get_project_data_by_id(admin_client, organisation):
     url = reverse("api-v1:projects:project-detail", args=[project.id])
 
     # When
-    response = admin_client.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
