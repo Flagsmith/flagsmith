@@ -3,11 +3,33 @@
     "packages": {
         ".": {
             "release-type": "python",
+            "changelog-path": "CHANGELOG.md"
+        },
+        "frontend": {
+            "release-as": "",
+            "release-type": "node",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false,
+            "include-component-in-tag": false
+        },
+        "api": {
+            "release-as": "",
+            "release-type": "python",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "include-component-in-tag": false
+        },
+        "docs": {
+            "release-as": "",
+            "release-type": "node",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
             "include-component-in-tag": false
         }
     },
