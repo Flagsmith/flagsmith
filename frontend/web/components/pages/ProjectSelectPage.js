@@ -140,7 +140,10 @@ const ProjectSelectPage = class extends Component {
                         return (
                           <>
                             {i === 0 && (
-                              <div>
+                              <div
+                                className='col-sm-6 col-md-3 pr-3'
+                                style={{ minWidth: '190px' }}
+                              >
                                 <Permission
                                   level='organisation'
                                   permission='CREATE_PROJECT'
@@ -157,7 +160,7 @@ const ProjectSelectPage = class extends Component {
                                         onClick={this.newProject}
                                         className='btn-project btn-project-create'
                                       >
-                                        <Row>
+                                        <Row className='flex-nowrap'>
                                           <div className='btn-project-icon'>
                                             <Icon
                                               name='plus'
@@ -165,7 +168,7 @@ const ProjectSelectPage = class extends Component {
                                               fill='#9DA4AE'
                                             />
                                           </div>
-                                          <div className='font-weight-medium'>
+                                          <div className='font-weight-medium btn-project-title'>
                                             Create Project
                                           </div>
                                         </Row>
@@ -183,10 +186,11 @@ const ProjectSelectPage = class extends Component {
                                   ? `${environments[0].api_key}/features`
                                   : 'create'
                               }`}
-                              className='clickable'
+                              className='clickable col-sm-6 col-md-3 pr-3'
+                              style={{ minWidth: '190px' }}
                             >
                               <Button className='btn-project'>
-                                <Row>
+                                <Row className='flex-nowrap'>
                                   <h2 className='btn-project-letter mb-0'>
                                     {name[0]}
                                   </h2>

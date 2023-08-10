@@ -257,7 +257,7 @@ button.btn {
     background-color: $bg-light200;
     color: $text-icon-dark;
     padding: 0px 8px;
-    width: 257px;
+    width: 100%;
     height: 76px;
     border-radius: $border-radius-lg;
     &.btn-project-create {
@@ -301,7 +301,6 @@ button.btn {
       justify-content: center;
     }
     &-title {
-      width: 169px;
       white-space: normal;
       line-height: $line-height-base;
       text-align: left;
