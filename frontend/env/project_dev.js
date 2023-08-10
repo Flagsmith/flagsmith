@@ -1,6 +1,6 @@
 const globalThis = typeof window === 'undefined' ? global : window
 module.exports = global.Project = {
-  api: 'https://api-staging.flagsmith.com/api/v1/',
+  api: 'https://pr-2382-deployment-30242-flagsmith.app.uffizzi.com/api/v1/',
 
   chargebee: {
     site: 'flagsmith-test',

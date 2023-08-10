@@ -154,7 +154,7 @@
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "nodemon": "^3.0.1",
     "raw-loader": "0.5.1",
-    "ssgrtk": "^0.3.4",
+    "ssgrtk": "^0.3.5",
     "testcafe": "^3.1.0",
     "typescript": "4.6.4"
   },

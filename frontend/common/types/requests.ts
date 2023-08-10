@@ -1,4 +1,10 @@
-import { Account, Segment, Tag, FeatureStateValue } from './responses'
+import {
+  Account,
+  Segment,
+  Tag,
+  FeatureStateValue,
+  FeatureState,
+} from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -98,6 +104,15 @@ export type Req = {
     enabled: boolean
     feature_segment: featureSegment
     feature_state_value: FeatureStateValue
+  }
+  createAndPublishFeatureVersion: {
+    environmentId: string
+    featureId: string
+    featureStates: FeatureState[]
+  }
+  createFeatureVersion: {
+    environmentId: string
+    featureId: string
   }
   // END OF TYPES
 }

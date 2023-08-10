@@ -52,6 +52,7 @@ export type Environment = {
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
   hide_sensitive_data: boolean
+  use_v2_feature_versioning: boolean
 }
 export type Project = {
   id: number
@@ -316,5 +317,6 @@ export type Res = {
     }
     value: string
   }
+  featureVersion: { id: string }
   // END OF TYPES
 }
