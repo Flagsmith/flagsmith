@@ -110,7 +110,6 @@ class LaunchDarklyWrapper:
             self._create_feature(ld_flag, environments, project)
 
         self.logger.completed_at(datetime.now())
-        self.logger.completed = True
         self.logger.save()
 
         self.logger.info("Finished importing")
@@ -147,7 +146,7 @@ class LaunchDarklyWrapper:
                 project=project,
                 initial_value=None,  # todo
                 description=ld_flag.get("description"),
-                default_enabled=None,  # todo
+                default_enabled=False,  # default to false and set per environment based on LD values
                 type=STANDARD,
                 # tags=None,  # todo
                 is_archived=ld_flag.get("archived", False),
@@ -158,13 +157,12 @@ class LaunchDarklyWrapper:
             for environment in environments:
                 ld_environment = ld_flag.get("environments", {}).get(environment.name)
                 if ld_environment:
-                    feature_state = FeatureState.objects.create(
+                    feature_state = FeatureState.objects.filter(
                         feature=feature,
                         environment=environment,
                         identity=None,  # todo
                         feature_segment=None,  # todo
-                        enabled=ld_environment.get("_summary").get("on"),
-                    )
+                    ).update(enabled=ld_environment.get("_summary").get("on"))
                     FeatureStateValue.objects.create(feature_state=feature_state)
                 else:
                     self.logger.error(
@@ -228,7 +226,6 @@ class LaunchDarklyWrapper:
                     feature_segment=None,  # todo
                     enabled=ld_environment.get("_summary").get("on"),
                     multivariate_feature_option=env_feature_option,
-                    updated_at=ld_environment.get("_summary").get("lastModified"),
                 )
 
     def _get_multivariant_kind(self, value: any) -> str:
@@ -247,8 +244,14 @@ class LaunchDarklyWrapper:
     ) -> (Optional[bool], Optional[int], Optional[str]):
         if type == BOOLEAN:
             return (value, None, None)
-        if type in [INTEGER, FLOAT]:
+        if type == INTEGER:
+            return (None, value, None)
+        if type == FLOAT:
+            self.logger.warning(
+                f"Flag value:{value}, is being cast from a float to an int, some data may be lost"
+            )
             return (None, int(value), None)
         if type == STRING:
             return (None, None, value)
+
         raise Exception()

@@ -6,7 +6,7 @@ from organisations.models import Organisation
 from projects.models import Project
 
 
-class LaunchDarklyImportLogs(AbstractBaseExportableModel):
+class LaunchDarklyImportLog(AbstractBaseExportableModel):
     launch_darkly_import = models.ForeignKey(
         "LaunchDarklyImport", on_delete=models.CASCADE
     )
@@ -23,11 +23,18 @@ class LaunchDarklyImport(AbstractBaseExportableModel):
     )
     started_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def completed(self) -> bool:
+        return self.completed_at is not None
+
+    @property
+    def errors(self) -> int:
+        return self.launchdarklyimportlog_set.filter(log_level=LogLevel.ERROR).count()
+
     def log(self, log_level, log_message):
-        return LaunchDarklyImportLogs.objects.create(
+        return LaunchDarklyImportLog.objects.create(
             launch_darkly_import=self, log_level=log_level, log_message=log_message
         )
 
