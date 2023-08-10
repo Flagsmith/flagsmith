@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
@@ -45,8 +44,7 @@ from projects.serializers import (
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
-    ProjectListSerializer,
-    ProjectRetrieveSerializer,
+    ProjectSerializer,
 )
 
 
@@ -72,11 +70,7 @@ from projects.serializers import (
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    def get_serializer_class(self):
-        if self.action == "retrieve":
-            return ProjectRetrieveSerializer
-        return ProjectListSerializer
-
+    serializer_class = ProjectSerializer
     permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 
@@ -98,20 +92,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project_uuid = self.request.query_params.get("uuid")
         if project_uuid:
             queryset = queryset.filter(uuid=project_uuid)
-
-        if self.action == "retrieve":
-            queryset = queryset.annotate(
-                total_features=Count(
-                    "features",
-                    filter=Q(features__deleted_at__isnull=True),
-                    distinct=True,
-                ),
-                total_segments=Count(
-                    "segments",
-                    filter=Q(segments__deleted_at__isnull=True),
-                    distinct=True,
-                ),
-            )
 
         return queryset
 
