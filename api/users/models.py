@@ -1,5 +1,6 @@
 import logging
 import typing
+from contextlib import suppress
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -7,6 +8,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
@@ -107,6 +109,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
+    last_password_reset_email_at = models.DateTimeField(null=True, blank=True)
+    num_of_password_reset_emails_sent = models.IntegerField(default=0)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
@@ -135,6 +139,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             self.delete_orphan_organisations()
         super().delete()
 
+    def set_password(self, raw_password):
+        super().set_password(raw_password)
+
+        self.last_password_reset_email_at = None
+        self.num_of_password_reset_emails_sent = 0
+
     @property
     def auth_type(self):
         if self.google_user_id:
@@ -157,6 +167,24 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if not self.first_name:
             return None
         return " ".join([self.first_name, self.last_name]).strip()
+
+    @property
+    def can_send_password_reset_email(self) -> bool:
+        with suppress(TypeError):
+            if self.last_password_reset_email_at < timezone.now() - timezone.timedelta(
+                seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
+            ):
+                return True
+            return (
+                self.num_of_password_reset_emails_sent
+                < settings.MAX_PASSWORD_RESET_EMAILS
+            )
+
+        return True
+
+    def password_reset_email_sent(self):
+        self.num_of_password_reset_emails_sent += 1
+        self.last_password_reset_email_at = timezone.now()
 
     def join_organisation_from_invite_email(self, invite_email: "Invite"):
         if invite_email.email.lower() != self.email.lower():
