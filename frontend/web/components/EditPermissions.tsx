@@ -22,7 +22,7 @@ import { PermissionLevel } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ModalHR from './modals/ModalHR'
+import Icon from './Icon'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -197,12 +197,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     </div>
   ) : (
     <div>
-      <div className='modal-body'>
-        <div className='mb-2'>
+      <div className='modal-body px-4'>
+        <div className='mb-2 mt-4'>
           {level !== 'organisation' && (
             <Row>
               <Flex>
-                <strong>Administrator</strong>
+                <h5>Administrator</h5>
                 <div className='list-item-footer faint'>
                   {hasRbacPermission ? (
                     `Full View and Write permissions for the given ${Format.camelCase(
@@ -230,7 +230,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
         </div>
         <PanelSearch
           title='Permissions'
-          className='no-pad mb-4'
+          className='no-pad mb-2'
           items={permissions}
           renderRow={(p: AvailablePermission) => {
             const levelUpperCase = level.toUpperCase()
@@ -239,17 +239,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
               p.key !== `VIEW_${levelUpperCase}` &&
               !hasPermission(`VIEW_${levelUpperCase}`)
             return (
-              <div
+              <Row
                 key={p.key}
                 style={admin() ? { opacity: 0.5 } : undefined}
-                className='list-item'
+                className='list-item list-item-sm px-3'
               >
-                <Row>
+                <Row space>
                   <Flex>
                     <strong>{Format.enumeration.get(p.key)}</strong>
-                    <div className='list-item-footer faint'>
-                      {p.description}
-                    </div>
+                    <div className='list-item-subtitle'>{p.description}</div>
                   </Flex>
                   <Switch
                     onChange={() => togglePermission(p.key)}
@@ -257,15 +255,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
                     checked={!disabled && hasPermission(p.key)}
                   />
                 </Row>
-              </div>
+              </Row>
             )
           }}
         />
 
-        <p className='text-right mt-2'>
+        <div className='text-right pt-4 mb-4'>
           This will edit the permissions for{' '}
           <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
-        </p>
+        </div>
 
         {parentError && (
           <InfoMessage>
@@ -287,8 +285,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           </InfoMessage>
         )}
       </div>
-      <ModalHR />
-
       <div className='modal-footer'>
         <Button className='mr-2' onClick={closeModal} theme='secondary'>
           Cancel
@@ -336,7 +332,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         user={user}
         push={router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -355,7 +351,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         group={group}
         push={router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -389,9 +385,22 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                       <div className={tabClassName}>
                         <PanelSearch
                           id='org-members-list'
-                          title=''
+                          title='Users'
                           className='panel--transparent'
                           items={users}
+                          itemHeight={64}
+                          header={
+                            <Row className='table-header'>
+                              <Flex className='table-column px-3'>User</Flex>
+                              <Flex className='table-column'>Role</Flex>
+                              <div
+                                style={{ width: '80px' }}
+                                className='table-column text-center'
+                              >
+                                Action
+                              </div>
+                            </Row>
+                          }
                           renderRow={({
                             email,
                             first_name,
@@ -423,40 +432,51 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 }`}
                                 key={id}
                               >
-                                <div>
-                                  <strong>
-                                    {`${first_name} ${last_name}`}
-                                  </strong>{' '}
-                                  {id == AccountStore.getUserId() && '(You)'}
-                                  <div className='list-item-footer faint'>
+                                <Flex className='table-column px-3'>
+                                  <div className='mb-1 font-weight-medium'>
+                                    {`${first_name} ${last_name}`}{' '}
+                                    {id == AccountStore.getUserId() && '(You)'}
+                                  </div>
+                                  <div className='list-item-subtitle'>
                                     {email}
                                   </div>
-                                </div>
+                                </Flex>
                                 {role === 'ADMIN' ? (
-                                  <Tooltip
-                                    html
-                                    title='Organisation Administrator'
-                                  >
-                                    {
-                                      'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
-                                    }
-                                  </Tooltip>
+                                  <Flex className='table-column fs-small lh-sm'>
+                                    <Tooltip
+                                      html
+                                      title={'Organisation Administrator'}
+                                    >
+                                      {
+                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                      }
+                                    </Tooltip>
+                                  </Flex>
                                 ) : (
-                                  <div onClick={onClick} className='flex-row'>
-                                    <span className='mr-3'>
-                                      {matchingPermissions &&
-                                      matchingPermissions.admin
-                                        ? `${Format.camelCase(
-                                            level,
-                                          )} Administrator`
-                                        : 'Regular User'}
-                                    </span>
-                                    <span
-                                      style={{ fontSize: 24 }}
-                                      className='icon--primary ion ion-md-settings'
-                                    />
-                                  </div>
+                                  <Flex
+                                    onClick={onClick}
+                                    className='table-column fs-small lh-sm'
+                                  >
+                                    {matchingPermissions &&
+                                    matchingPermissions.admin
+                                      ? `${Format.camelCase(
+                                          level,
+                                        )} Administrator`
+                                      : 'Regular User'}
+                                  </Flex>
                                 )}
+                                <div
+                                  style={{ width: '80px' }}
+                                  className='text-center'
+                                >
+                                  {role !== 'ADMIN' && (
+                                    <Icon
+                                      name='setting'
+                                      width={20}
+                                      fill='#656D7B'
+                                    />
+                                  )}
+                                </div>
                               </Row>
                             )
                           }}

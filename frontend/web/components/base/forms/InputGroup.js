@@ -31,8 +31,7 @@ const InputGroup = class extends Component {
             title={
               <label htmlFor={id} className='cols-sm-2 control-label'>
                 <div>
-                  {props.title}{' '}
-                  <Icon name='info-outlined'/>{' '}
+                  {props.title} <Icon name='info-outlined' />{' '}
                   {props.unsaved && <div className='unread'>Unsaved</div>}
                 </div>
               </label>
@@ -44,7 +43,7 @@ const InputGroup = class extends Component {
         ) : (
           <Row>
             {!!props.title && (
-              <Flex >
+              <Flex>
                 <label htmlFor={id} className='cols-sm-2 control-label'>
                   <div>
                     {props.title}{' '}

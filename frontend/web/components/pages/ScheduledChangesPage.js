@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/Icon'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -102,17 +103,16 @@ const ChangeRequestsPage = class extends Component {
                     renderSearchWithNoResults
                     id='users-list'
                     title='Scheduled Changes'
-                    className='mt-4'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !dataScheduled ||
                       !OrganisationStore.model
                     }
-                    icon='ion-ios-timer'
                     items={dataScheduled}
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={dataScheduled}
                       />
@@ -148,21 +148,24 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-ios-timer' />
-                            <div>
-                              <Button theme='text'>{title}</Button>
-                              <div className='list-item-footer faint'>
-                                Created at{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>{title}</div>
+                            <div className='list-item-subtitle'>
+                              Created at{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
                             </div>
-                          </Row>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}

@@ -7,6 +7,8 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
+POETRY_VERSION ?= 1.5.1
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
@@ -14,24 +16,28 @@ DOTENV_OVERRIDE_FILE ?= .env
 install-pip:
 	python -m pip install --upgrade pip
 
+.PHONY: install-poetry
+install-poetry:
+	curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION}
+
 .PHONY: install-packages
 install-packages:
-	pip install -r requirements-all.txt
+	poetry install $(opts)
 
 .PHONY: install
-install: install-pip install-packages
+install: install-pip install-poetry install-packages
 
 .PHONY: lint-black
 lint-black:
-	black --check .
+	poetry run black --check .
 
 .PHONY: lint-isort
 lint-isort:
-	isort  --check-only --diff .
+	poetry run isort  --check-only --diff .
 
 .PHONY: lint-flake8
 lint-flake8:
-	flake8
+	poetry run flake8
 
 .PHONY: lint
 lint: lint-black lint-isort lint-flake8
@@ -58,22 +64,22 @@ docker-build:
 
 .PHONY: test
 test:
-	pytest $(opts)
+	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
 django-make-migrations:
-	python manage.py waitfordb
-	python manage.py makemigrations $(opts)
+	poetry run python manage.py waitfordb
+	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-migrate
 django-migrate:
-	python manage.py waitfordb
-	python manage.py migrate
+	poetry run python manage.py waitfordb
+	poetry run python manage.py migrate
 
 .PHONY: django-collect-static
 django-collect-static:
-	python manage.py collectstatic --noinput
+	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
 serve:
-	gunicorn --bind 0.0.0.0:8000 app.wsgi --reload
+	poetry run gunicorn --bind 0.0.0.0:8000 app.wsgi --reload

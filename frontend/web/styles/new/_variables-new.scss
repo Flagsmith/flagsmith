@@ -12,9 +12,12 @@ $success: #27ab95;
 $info: #0aaddf;
 $warning: #ff9f43;
 $secondary400: #fae392;
+$secondary600: #d4b050;
+$secondary: #fae392;
 $text-icon-dark: #1a2634;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
-$text-icon-grey: rgba(101, 109, 123, 1);
+$text-icon-grey: #656d7b;
+$text-muted: $text-icon-grey;
 $text-icon-light: #ffffff;
 $link-color: $primary;
 $info-alfa-8: rgba(10, 173, 223, 0.08);
@@ -37,14 +40,15 @@ $white-alpha-32: rgba(255, 255, 255, 0.32);
 $white-alpha-48: rgba(255, 255, 255, 0.48);
 $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
+$secondary-alfa-16: rgba(247, 213, 110, 0.16);
 $theme-colors: (
-    primary: $primary,
-    danger: $danger,
-    success: $success,
-    info: $info,
-    warning: $warning,
-    dark:$text-icon-dark,
-    // add any additional color below
+  primary: $primary,
+  danger: $danger,
+  success: $success,
+  info: $info,
+  warning: $warning,
+  dark: $text-icon-dark,
+  // add any additional color below
 );
 $bg-light200: #fafafb;
 $bg-light300: #eff1f4;
@@ -100,12 +104,13 @@ $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
 $btn-border-width: 0;
 
+$link-hover-color: $primary;
 //HR
 $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-    border-color: $bg-dark500;
+  border-color: $bg-dark500;
 }
 
 //Modal
@@ -127,25 +132,25 @@ $modal-footer-margin-between: 0;
 
 //Breakpoints
 $grid-breakpoints: (
-    xs: 0,
-    sm: 544px,
-    md: 768px,
-    lg: 992px,
-    xl: 1200px,
-    xxl: 1201px,
+  xs: 0,
+  sm: 544px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
 );
 
 $container-max-widths: (
-    sm: 576px,
-    md: 720px,
-    lg: 940px,
-    xl: 1140px,
-    xxl: 1141px,
+  sm: 576px,
+  md: 720px,
+  lg: 940px,
+  xl: 1140px,
+  xxl: 1141px,
 );
 
 //Typography
 $font-family-base: 'OpenSans', sans-serif;
-$font-size-sm: 0.825rem;
+$font-size-sm: 0.875rem;
 $line-height-base: 1.375;
 $line-height-sm: 20px;
 $line-height-lg: 24px;
@@ -158,10 +163,10 @@ $font-caption: 13px;
 $font-caption-sm: 12px;
 $font-caption-xs: 11px;
 $font-sizes: (
-    small: $font-sm,
-    caption: $font-caption,
-    captionSmall: $font-caption-sm,
-    captionXSmall: $font-caption-xs,
+  small: $font-sm,
+  caption: $font-caption,
+  captionSmall: $font-caption-sm,
+  captionXSmall: $font-caption-xs,
 );
 
 $h1-font-size: 42px;
@@ -183,7 +188,7 @@ $input-bg-dark: $bg-dark200;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
-$input-height: 50px;
+$input-height: 48px;
 $input-height-sm: 42px;
 $input-height-xsm: 34px;
 $input-height-lg: 58px;
@@ -255,7 +260,21 @@ $pill-bg: $bg-light300;
 $tab-line-color: $primary;
 
 //CodeHelp
-$code-btn-bg: $secondary400;
-$code-btn-description-color: $primary;
+$code-btn-bg: $secondary-alfa-16;
+$code-btn-description-color: $secondary600;
 $code-color: $text-icon-light;
 $code-bg: $bg-dark200;
+
+//Panels
+$panel-border-color: $basic-alpha-16;
+$panel-border-radius: $border-radius-lg;
+$panel-table-header-bc: $bg-light200;
+$panel-table-header-color: $text-icon-grey;
+$panel-table-header-font-size: $font-caption;
+$panel-table-header-line-height: $line-height-xsm;
+$panel-table-header-min-height: 44px;
+$panel-list-item-min-height: 72px;
+$panel-list-item-color: $text-icon-dark;
+$panel-list-item-sub-font-size: $font-caption;
+$panel-list-item-sub-line-height: $line-height-xsm;
+$panel-list-item-sub-color: $text-icon-grey;

@@ -30,6 +30,7 @@ import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
+import FeatureValue from 'components/FeatureValue'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1219,13 +1220,18 @@ const CreateFlag = class extends Component {
                                       <FormGroup className='mb-4'>
                                         <PanelSearch
                                           id='users-list'
+                                          className='no-pad identity-overrides-title'
                                           title={
                                             <Tooltip
                                               title={
-                                                <h6 className='mb-0'>
+                                                <h5 className='mb-0'>
                                                   Identity Overrides{' '}
-                                                  <span className='icon ion-ios-information-circle' />
-                                                </h6>
+                                                  <Icon
+                                                    name='info-outlined'
+                                                    width={20}
+                                                    fill='#9DA4AE'
+                                                  />
+                                                </h5>
                                               }
                                               place='right'
                                             >
@@ -1243,16 +1249,14 @@ const CreateFlag = class extends Component {
                                                 )
                                               }
                                               type='button'
-                                              className={`btn--outline${
-                                                enabledIndentity ? '' : '-red'
-                                              }`}
+                                              theme='secondary'
+                                              size='small'
                                             >
                                               {enabledIndentity
                                                 ? 'Enable All'
                                                 : 'Disable All'}
                                             </Button>
                                           }
-                                          icon='ion-md-person'
                                           items={this.state.userOverrides}
                                           paging={
                                             this.state.userOverridesPaging
@@ -1319,36 +1323,49 @@ const CreateFlag = class extends Component {
                                                     '_blank',
                                                   )
                                                 }}
+                                                className='font-weight-medium table-column px-3 fs-small lh-sm'
                                               >
                                                 {identity.identifier}
                                               </Flex>
-                                              <Switch
-                                                checked={enabled}
-                                                onChange={() =>
-                                                  this.toggleUserFlag({
-                                                    enabled,
-                                                    id,
-                                                    identity,
-                                                  })
-                                                }
-                                              />
-                                              <div className='ml-2'>
+                                              <div
+                                                className='table-column'
+                                                style={{ width: '65px' }}
+                                              >
+                                                <Switch
+                                                  checked={enabled}
+                                                  onChange={() =>
+                                                    this.toggleUserFlag({
+                                                      enabled,
+                                                      id,
+                                                      identity,
+                                                    })
+                                                  }
+                                                />
+                                              </div>
+                                              <div
+                                                className='table-column'
+                                                style={{ width: '188px' }}
+                                              >
                                                 {feature_state_value && (
                                                   <FeatureValue
                                                     value={feature_state_value}
                                                   />
                                                 )}
                                               </div>
-
-                                              <a
-                                                target='_blank'
-                                                href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                className='ml-2 btn btn-link'
-                                                onClick={() => {}}
-                                                rel='noreferrer'
-                                              >
-                                                Edit
-                                              </a>
+                                              <div className='table-column'>
+                                                <Button
+                                                  target='_blank'
+                                                  href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                                                  className='btn btn-link fs-small lh-sm fw-normal'
+                                                >
+                                                  <Icon
+                                                    name='edit-outlined'
+                                                    width={20}
+                                                    fill='#6837FC'
+                                                  />{' '}
+                                                  Edit
+                                                </Button>
+                                              </div>
                                             </Row>
                                           )}
                                           renderNoResults={
@@ -1516,7 +1533,7 @@ const CreateFlag = class extends Component {
                                 )}
                               </div>
                             )}
-                            
+
                             {identity && (
                               <div className='pr-3'>
                                 {identity ? (
