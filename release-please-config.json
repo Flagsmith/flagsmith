@@ -6,7 +6,6 @@
             "changelog-path": "CHANGELOG.md"
         },
         "frontend": {
-            "release-as": "",
             "release-type": "node",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
@@ -15,7 +14,6 @@
             "include-component-in-tag": false
         },
         "api": {
-            "release-as": "",
             "release-type": "python",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
@@ -24,7 +22,6 @@
             "include-component-in-tag": false
         },
         "docs": {
-            "release-as": "",
             "release-type": "node",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
