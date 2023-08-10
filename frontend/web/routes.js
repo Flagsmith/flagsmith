@@ -28,7 +28,7 @@ import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage'
 import WidgetPage from './components/pages/WidgetPage'
-import BrokenPage from './components/pages/BrokenPage';
+import BrokenPage from './components/pages/BrokenPage'
 
 export default (
   <App>
