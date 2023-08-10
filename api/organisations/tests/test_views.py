@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.urls import reverse
+from freezegun import freeze_time
 from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
@@ -642,14 +643,14 @@ class ChargeBeeWebhookTestCase(TestCase):
     @mock.patch("organisations.views.extract_subscription_metadata")
     def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
         self,
-        mock_get_subscription_metadata,
+        mock_extract_subscription_metadata,
     ):
         # Given
         self.subscription.cancellation_date = datetime.now(tz=UTC) - timedelta(days=1)
         self.subscription.save()
         mail.outbox.clear()
 
-        mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
+        mock_extract_subscription_metadata.return_value = ChargebeeObjMetadata(
             seats=3,
             api_calls=100,
             projects=1,
@@ -960,6 +961,7 @@ def test_organisation_get_influx_data(
     assert response.json() == {"events_list": []}
 
 
+@freeze_time("2023-07-31 12:00:00")
 @pytest.mark.parametrize(
     "plan_id, max_seats, max_api_calls, max_projects, is_updated",
     [
@@ -970,7 +972,7 @@ def test_organisation_get_influx_data(
 @mock.patch("organisations.models.get_plan_meta_data")
 @mock.patch("organisations.views.extract_subscription_metadata")
 def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
-    mock_get_subscription_metadata,
+    mock_extract_subscription_metadata,
     mock_get_plan_meta_data,
     subscription,
     admin_client,
@@ -992,7 +994,7 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         "seats": max_seats,
         "api_calls": max_api_calls,
     }
-    mock_get_subscription_metadata.return_value = ChargebeeObjMetadata(
+    mock_extract_subscription_metadata.return_value = ChargebeeObjMetadata(
         seats=max_seats,
         api_calls=max_api_calls,
         projects=max_projects,
@@ -1031,8 +1033,6 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
     )
 
     subscription.refresh_from_db()
-    subscription_information_cache.refresh_from_db()
-
     # Then
     assert res.status_code == status.HTTP_200_OK
     assert subscription.plan == plan_id
@@ -1046,7 +1046,7 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
     assert subscription_information_cache.chargebee_updated_at
     assert subscription_information_cache.influx_updated_at is None
     if is_updated:
-        assert subscription_information_cache.chargebee_updated_at != updated_at
+        assert subscription_information_cache.chargebee_updated_at > updated_at
 
 
 def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database(
