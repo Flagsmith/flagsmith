@@ -98,10 +98,10 @@ class MetadataSerializer(serializers.ModelSerializer):
 
 
 class SerializerWithMetadata(serializers.BaseSerializer):
-    def get_organisation_from_validated_data(self, validated_data) -> Organisation:
-        raise NotImplementedError()
+    def get_organisation(self, validated_data: dict = None) -> Organisation:
+        return self.get_project(validated_data).organisation
 
-    def get_project_from_validated_data(self, validated_data) -> Project:
+    def get_project(self, validated_data: dict = None) -> Project:
         raise NotImplementedError()
 
     def get_required_for_object(
@@ -109,7 +109,7 @@ class SerializerWithMetadata(serializers.BaseSerializer):
     ) -> Model:
         model_name = requirement.content_type.model
         try:
-            return getattr(self, f"get_{model_name}_from_validated_data")(data)
+            return getattr(self, f"get_{model_name}")(data)
         except AttributeError:
             raise ValueError(
                 f"`get_{model_name}_from_validated_data` method does not exist"
@@ -120,7 +120,7 @@ class SerializerWithMetadata(serializers.BaseSerializer):
 
         content_type = ContentType.objects.get_for_model(self.Meta.model)
 
-        organisation = self.get_organisation_from_validated_data(data)
+        organisation = self.get_organisation(data)
 
         requirements = MetadataModelFieldRequirement.objects.filter(
             model_field__content_type=content_type,
