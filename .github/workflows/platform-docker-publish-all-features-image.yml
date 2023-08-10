@@ -76,17 +76,6 @@ jobs:
           echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
           echo '' > ENTERPRISE_VERSION
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            flagsmith/flagsmith-private-cloud
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -106,7 +95,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: Dockerfile
           push: false
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: testing-build
           context: .
           build-args: |
             SAML_INSTALLED=1
