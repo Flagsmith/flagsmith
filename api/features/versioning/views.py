@@ -66,6 +66,9 @@ class EnvironmentFeatureVersionViewSet(
         request.environment = environment
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return EnvironmentFeatureVersion.objects.none()
+
         return EnvironmentFeatureVersion.objects.filter(
             environment=self.request.environment, feature_id=self.request.feature
         )
@@ -105,6 +108,9 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     pagination_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         environment_feature_version_sha = self.kwargs["environment_feature_version_pk"]
 
         return FeatureState.objects.filter(
@@ -130,8 +136,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["environment"] = self.request.environment
-        context["feature"] = self.request.feature
+        context["environment"] = getattr(self.request, "environment", None)
+        context["feature"] = getattr(self.request, "feature", None)
         return context
 
     def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
