@@ -403,7 +403,9 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 
 class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
     feature_state_value = FeatureStateValueSerializer()
-    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
 
     class Meta:
         model = FeatureState
