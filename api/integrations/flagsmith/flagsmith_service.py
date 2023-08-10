@@ -38,10 +38,8 @@ def update_environment_json(environment_key: str = None, api_url: str = None) ->
         )
 
     environment_json = _get_masked_environment_data(response.json())
-    sorted_environment_json = dict(sorted(environment_json.items()))
-
     with open(ENVIRONMENT_JSON_PATH, "w+") as defaults:
-        defaults.write(json.dumps(sorted_environment_json, indent=2))
+        defaults.write(json.dumps(environment_json, indent=2, sort_keys=True))
 
 
 def _get_masked_environment_data(environment_document: dict) -> dict:
