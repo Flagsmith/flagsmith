@@ -58,22 +58,22 @@ class CreateOrganisationPage extends Component {
     return (
       <div id='create-org-page' className='container app-container'>
         <PageTitle title={'Create your organisation'}>
-          Organisations allow you to manage multiple projects within a team.
+            Organisations allow you to manage multiple projects within a team.
         </PageTitle>
-        <AccountProvider onSave={this.onSave}>
-          {({ isSaving }, { createOrganisation }) => (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (Project.capterraKey) {
-                  const parts = Project.capterraKey.split(',')
-                  Utils.appendImage(
-                    `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                  )
-                }
-                createOrganisation(this.state.name)
-              }}
-            >
+          <AccountProvider onSave={this.onSave}>
+            {({ isSaving }, { createOrganisation }) => (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (Project.capterraKey) {
+                    const parts = Project.capterraKey.split(',')
+                    Utils.appendImage(
+                      `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+                    )
+                  }
+                  createOrganisation(this.state.name)
+                }}
+              >
               <CondensedRow>
                 <InputGroup
                   ref={(e) => (this.input = e)}
@@ -83,20 +83,22 @@ class CreateOrganisationPage extends Component {
                   onChange={(e) =>
                     this.setState({ name: Utils.safeParseEventValue(e) })
                   }
+                  className='mb-5'
                 />
-                <div className='text-right mt-2'>
+                <div className='text-right'>
                   <Button
                     type='submit'
                     disabled={isSaving || !this.state.name}
                     id='create-org-btn'
                   >
-                    Create
+                    Create Organisation
                   </Button>
                 </div>
               </CondensedRow>
-            </form>
-          )}
-        </AccountProvider>
+              </form>
+            )}
+          </AccountProvider>
+        </div>
       </div>
     )
   }

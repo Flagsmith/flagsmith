@@ -269,6 +269,26 @@ $animation-timing-function: ease-in-out;
     display: flex;
     flex-direction: column;
     @include customScroll();
+
+    &.disabled {
+      .collapsible__header {
+        color: $text-icon-grey !important;
+        pointer-events: none;
+        path {
+          fill: $text-icon-grey !important;
+        }
+      }
+      .aside__nav-item,
+      .aside__environment-list-item,
+      .aside__title-wrapper,
+      .aside__link-text {
+        color: $white-alpha-32 !important;
+        pointer-events: none;
+        path {
+          fill: $white-alpha-32 !important;
+        }
+      }
+    }
   }
 
   .nav-logo {
@@ -281,7 +301,11 @@ $animation-timing-function: ease-in-out;
     font-size: $font-size-base;
     line-height: $line-height-base;
     &.disabled {
-      opacity: 0.5;
+      color: $text-icon-grey !important;
+      pointer-events: none;
+      path {
+        fill: $text-icon-grey !important;
+      }
       &.active,
       &.active:hover {
         color: $aside-nav-active-color;
@@ -417,8 +441,9 @@ $animation-timing-function: ease-in-out;
     //position: absolute;
     //top: 15px;
     position: absolute;
-    left: 40px;
-    top: 10px;
+    right: 40px;
+    top: 18px;
+    z-index: 9999999;
 
     > .icon {
       color: white;
