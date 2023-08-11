@@ -163,7 +163,7 @@ const ProjectSettingsPage = class extends Component {
               typeof this.state.feature_name_regex === 'string'
             return (
               <div>
-                <PageTitle className="mb-2" title={'Project Settings'} />
+                <PageTitle className='mb-2' title={'Project Settings'} />
                 {
                   <Tabs uncontrolled>
                     <TabItem tabLabel='General'>
