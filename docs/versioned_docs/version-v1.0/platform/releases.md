@@ -229,8 +229,8 @@ Released **9 Nov 2020**
 We've added a bunch of new features and bug fixes.
 
 - You can now tag flags with user-defined tags. You can use these tags to manage flags and organise them.
-- Beta release of both [Data Dog](https://docs.flagsmith.com/integrations/datadog/) and
-  [Amplitude](https://docs.flagsmith.com/integrations/amplitude/) integrations.
+- Beta release of both [Data Dog](/integrations/apm/datadog) and [Amplitude](/integrations/analytics/amplitude)
+  integrations.
 - You can now set multiple traits in a single call
 - For a given feature, show which Identities have it individually overridden
 - When viewing an Identity, show the segments and test whether the identity is a member of each segment

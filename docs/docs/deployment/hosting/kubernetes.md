@@ -196,8 +196,8 @@ running pods, but this will change upon redeployment, which you probably don't w
 :::
 
 The chart handles most environment variables required, but see the
-[API readme](https://docs.flagsmith.com/deployment/hosting/locally-api#environment-variables) for all available
-configuration options. These can be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
+[API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can
+be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -270,8 +270,8 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 
 ### Task Processor
 
-The task processor itself is documented [here](https://docs.flagsmith.com/deployment/configuration/task-processor). See
-the table below for the values to set to configure the task processor using the helm chart.
+The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the
+values to set to configure the task processor using the helm chart.
 
 ## Chart Values
 
