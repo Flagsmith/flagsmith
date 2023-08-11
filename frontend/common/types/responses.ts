@@ -316,5 +316,10 @@ export type Res = {
     }
     value: string
   }
+  roles: {
+    id: number
+    name: string
+    organisation: number
+  }
   // END OF TYPES
 }

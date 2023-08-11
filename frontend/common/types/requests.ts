@@ -99,5 +99,7 @@ export type Req = {
     feature_segment: featureSegment
     feature_state_value: FeatureStateValue
   }
+  getRoles: { organisationId: string }
+  createRoles: {}
   // END OF TYPES
 }
