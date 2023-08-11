@@ -101,7 +101,6 @@ const InputGroup = class extends Component {
             </div>
           )}
         </div>
-
         {inputProps && inputProps.error && (
           <span>
             <span

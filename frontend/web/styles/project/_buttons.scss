@@ -132,6 +132,20 @@ button.btn {
     &:disabled {
       background-color: $basic-alpha-8 !important;
     }
+    &.btn-remove {
+      background-color: $danger-alfa-8;
+      &:hover,
+      &:active,
+      &:disabled,
+      &:focus {
+        background-color: $danger-alfa-8 !important;
+        svg {
+          path {
+            fill: $danger;
+          }
+        }
+      }
+    }
   }
   &--with-icon {
     background: none !important;
@@ -215,24 +229,6 @@ button.btn {
 
 $remove-btn-size: 24px;
 $add-btn-size: 34px;
-.btn.btn-remove {
-  line-height: $remove-btn-size;
-  height: $remove-btn-size;
-  padding: 0;
-  width: $remove-btn-size;
-  align-items: center;
-  text-align: center;
-  color: #929292;
-  background-color: #f7f7f7;
-  &:hover {
-    background-color: #aaa;
-    color: #929292;
-  }
-  font-size: 1em;
-  span {
-    line-height: $remove-btn-size;
-  }
-}
 .btn-radio {
   cursor: pointer;
   width: 20px;
