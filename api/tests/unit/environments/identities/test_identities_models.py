@@ -1,7 +1,12 @@
+import typing
+
 from django.utils import timezone
 
 from environments.identities.models import Identity
 from features.models import Feature, FeatureState
+
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
 
 
 def test_identity_get_all_feature_states_gets_latest_committed_version(environment):
@@ -66,3 +71,19 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
         identity.id
     )
+
+
+def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(
+    identity: Identity, environment_v2_versioning: "Environment", feature: Feature
+):
+    # Given
+    identity_override = FeatureState.objects.create(
+        environment=environment_v2_versioning, identity=identity, feature=feature
+    )
+
+    # When
+    all_feature_states = identity.get_all_feature_states()
+
+    # Then
+    assert len(all_feature_states) == 1
+    assert all_feature_states[0] == identity_override

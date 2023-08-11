@@ -84,8 +84,11 @@ class Identity(models.Model):
 
         if self.environment.use_v2_feature_versioning:
             full_query &= Q(
-                environment_feature_version__live_from__isnull=False,
-                environment_feature_version__live_from__lte=timezone.now(),
+                Q(identity=self)  # identity overrides are not versioned
+                | Q(
+                    environment_feature_version__live_from__isnull=False,
+                    environment_feature_version__live_from__lte=timezone.now(),
+                ),
             )
         else:
             full_query &= Q(live_from__lte=timezone.now(), version__isnull=False)
