@@ -231,7 +231,7 @@ const EnvironmentSettingsPage = class extends Component {
                   </div>
                 )}
                 {!isLoading && (
-                  <Tabs uncontrolled>
+                  <Tabs className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference title={'Environment'} json={env} />
