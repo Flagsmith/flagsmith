@@ -1268,13 +1268,13 @@ const OrganisationSettingsPage = class extends Component {
                                               Some description about roles.
                                             </p>
                                             <PanelSearch
-                                              id='role-list'
+                                              id='org-members-list'
                                               title={'Roles'}
                                               className='no-pad'
-                                              icon='ion-md-cloud'
                                               items={roles}
+                                              itemHeight={65}
                                               header={
-                                                <Row className='table-header'>
+                                                <Row className='table-header px-3'>
                                                   <div
                                                     style={{
                                                       width: 150,
@@ -1300,32 +1300,37 @@ const OrganisationSettingsPage = class extends Component {
                                                   className='list-item clickable cursor-pointer'
                                                   key={role.id}
                                                 >
-                                                  <Row style={{
-                                                      width: 150,
-                                                    }}
-                                                  >{role.name}</Row>
-                                                  <Row
-                                                    style={{
-                                                      width: rolesWidths[1],
-                                                      color: 'black',
-                                                    }}
-                                                  >
+                                                  <Row className='table-column px-3'>
+                                                    {role.name}
+                                                  </Row>
+                                                  <Row style={{}}>
                                                     Manage user groups
                                                   </Row>
-                                                  <Row>
-                                                    <button
-                                                      id='delete-invite'
+                                                  <div
+                                                    style={{ width: '80px' }}
+                                                    className='table-column text-center'
+                                                  >
+                                                    <Button
+                                                      id='remove-role'
                                                       type='button'
-                                                      className='btn btn--with-icon ml-auto btn--remove'
+                                                      onClick={() =>
+                                                        console.log(
+                                                          'DEBUG: remove role',
+                                                        )
+                                                      }
+                                                      className='btn btn-with-icon'
                                                     >
-                                                      <RemoveIcon />
-                                                    </button>
-                                                  </Row>
+                                                      <Icon
+                                                        name='trash-2'
+                                                        width={20}
+                                                        fill='#656D7B'
+                                                      />
+                                                    </Button>
+                                                  </div>
                                                 </Row>
                                               )}
                                               renderNoResults={
                                                 <Panel
-                                                  icon='ion-md-cloud'
                                                   className='fs-small lh-sm'
                                                   title={'Organisation roles'}
                                                 >

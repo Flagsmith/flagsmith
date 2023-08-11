@@ -112,7 +112,7 @@ const CreateRole: FC<CreateRoleType> = ({}) => {
         <TabItem tabLabel='Organisation permission'>
           <PanelSearch
             title='Edit Permissions'
-            className='no-pad mb-4'
+            className='no-pad my-4'
             items={orgPerm}
             renderRow={(p: AvailablePermission) => {
               return (
@@ -147,11 +147,8 @@ const CreateRole: FC<CreateRoleType> = ({}) => {
           </div>
         </TabItem>
         <TabItem tabLabel='Project permission'>
-        <h5 className='m-b-4 title'>Edit Permissions</h5>
-          <div className='m-4'>
+        <h5 className='my-4 title'>Edit Permissions</h5>
           <CollapsibleNestedList mainItems={projectData} isButtonVisible />
-          </div>
-
           <div className='text-right mb-2'>
             <Button
               onClick={() => console.log('DEBUG save')}
@@ -164,7 +161,7 @@ const CreateRole: FC<CreateRoleType> = ({}) => {
           </div>
         </TabItem>
         <TabItem tabLabel='Environment permission'>
-          <div className='my-4' />
+          <h5 className='my-4 title'>Edit Permissions</h5>
           <CollapsibleNestedList mainItems={envData} />
           <div className='text-right mb-2'>
             <Button

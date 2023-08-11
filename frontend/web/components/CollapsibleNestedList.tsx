@@ -29,7 +29,8 @@ const CollapsibleNestedList: React.FC<Props> = ({
   }
 
   return (
-    <div>
+    <div style={{ minHeight: "60px",
+    border: "1px solid rgba(101, 109, 123, 0.16)"}}>
       {mainItems.map((mainItem, index) => (
         <div>
           <Row
@@ -58,9 +59,10 @@ const CollapsibleNestedList: React.FC<Props> = ({
           </Row>
           <div>
             {expandedItems.includes(mainItem.title) && (
-              <ul>
+              <ul className="m-0 p-0">
                 {mainItem.subItems.map((subItem, subIndex) => (
-                  <Row className='my-4'>
+                  <Row className='px-3' style={{ minHeight: "60px",
+                  border: "1px solid rgba(101, 109, 123, 0.16)"}}>
                     <Flex>
                       <div className='list-item-subtitle'>{subItem.title}</div>
                     </Flex>
