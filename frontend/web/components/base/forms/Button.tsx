@@ -56,7 +56,7 @@ export const Button: FC<ButtonType> = ({
       {!!iconLeft && (
         <Icon
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
-          className='me-1'
+          className='me-2'
           name={iconLeft}
         />
       )}
