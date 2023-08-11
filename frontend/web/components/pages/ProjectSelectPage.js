@@ -209,26 +209,28 @@ const ProjectSelectPage = class extends Component {
                                 Constants.environmentPermissions(
                                   'Create Project',
                                 ),
-                                <Button
-                                  disabled={!permission}
-                                  onClick={this.newProject}
-                                  data-test='create-first-project-btn'
-                                  id='create-first-project-btn'
-                                  className='btn-project btn-project-create'
-                                >
-                                  <Row>
-                                    <div className='btn-project-icon'>
-                                      <Icon
-                                        name='plus'
-                                        width={32}
-                                        fill='#9DA4AE'
-                                      />
-                                    </div>
-                                    <div className='font-weight-medium'>
-                                      Create Project
-                                    </div>
-                                  </Row>
-                                </Button>,
+                                <div className='col-md-6 col-xl-3'>
+                                  <Button
+                                    disabled={!permission}
+                                    onClick={this.newProject}
+                                    data-test='create-first-project-btn'
+                                    id='create-first-project-btn'
+                                    className='btn-project btn-project-create'
+                                  >
+                                    <Row>
+                                      <div className='btn-project-icon'>
+                                        <Icon
+                                          name='plus'
+                                          width={32}
+                                          fill='#9DA4AE'
+                                        />
+                                      </div>
+                                      <div className='font-weight-medium'>
+                                        Create Project
+                                      </div>
+                                    </Row>
+                                  </Button>
+                                </div>,
                               )
                             }}
                           </Permission>
