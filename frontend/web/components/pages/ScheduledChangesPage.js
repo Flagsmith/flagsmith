@@ -98,15 +98,11 @@ const ChangeRequestsPage = class extends Component {
                 </div>
               ) : (
                 <>
-                  <p>
-                    Manage feature state changes that have been scheduled to go
-                    live.
-                  </p>
                   <PanelSearch
                     renderSearchWithNoResults
                     id='users-list'
                     title='Scheduled Changes'
-                    className='mt-4 no-pad'
+                    className='no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !dataScheduled ||
