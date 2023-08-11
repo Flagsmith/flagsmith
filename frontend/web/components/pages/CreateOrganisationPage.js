@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import PageTitle from 'components/PageTitle'
+import CondensedRow from 'components/CondensedRow'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'
@@ -55,28 +57,24 @@ class CreateOrganisationPage extends Component {
     }
     return (
       <div id='create-org-page' className='container app-container'>
-        <div className='container-mw-700'>
-          <h5 className='mb-2'>Create your organisation</h5>
-          <p className='mb-0'>
-            Organisations allow you to manage multiple projects within a team.
-          </p>
-        </div>
-        <hr className='my-0 py-0 mt-2 mb-3' />
-        <div className='container-mw-700'>
-          <AccountProvider onSave={this.onSave}>
-            {({ isSaving }, { createOrganisation }) => (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (Project.capterraKey) {
-                    const parts = Project.capterraKey.split(',')
-                    Utils.appendImage(
-                      `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                    )
-                  }
-                  createOrganisation(this.state.name)
-                }}
-              >
+        <PageTitle title={'Create your organisation'}>
+          Organisations allow you to manage multiple projects within a team.
+        </PageTitle>
+        <AccountProvider onSave={this.onSave}>
+          {({ isSaving }, { createOrganisation }) => (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (Project.capterraKey) {
+                  const parts = Project.capterraKey.split(',')
+                  Utils.appendImage(
+                    `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+                  )
+                }
+                createOrganisation(this.state.name)
+              }}
+            >
+              <CondensedRow>
                 <InputGroup
                   ref={(e) => (this.input = e)}
                   inputProps={{ className: 'full-width', name: 'orgName' }}
@@ -96,10 +94,10 @@ class CreateOrganisationPage extends Component {
                     Create Organisation
                   </Button>
                 </div>
-              </form>
-            )}
-          </AccountProvider>
-        </div>
+              </CondensedRow>
+            </form>
+          )}
+        </AccountProvider>
       </div>
     )
   }

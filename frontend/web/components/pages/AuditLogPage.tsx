@@ -6,6 +6,7 @@ import { Project } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
+import PageTitle from 'components/PageTitle'
 
 type AuditLogType = {
   router: RouterChildContext['router']
@@ -35,13 +36,12 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
   }
   return (
     <div className='app-container container'>
+      <PageTitle title={'Audit Log'}>
+        View all activity that occured generically across the project and
+        specific to this environment.
+      </PageTitle>
       <div>
         <div>
-          <h4>Audit Log</h4>
-          <p>
-            View all activity that occured generically across the project and
-            specific to this environment.
-          </p>
           <FormGroup>
             <div>
               <div className='audit'>
