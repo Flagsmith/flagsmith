@@ -20,6 +20,7 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const widths = [170, 150, 80]
 const OrganisationSettingsPage = class extends Component {
@@ -274,8 +275,7 @@ const OrganisationSettingsPage = class extends Component {
 
     return (
       <div className='app-container container'>
-        <h4 className='m-0 py-3'>Manage</h4>
-        <hr className='my-0 py-0' />
+        <PageTitle title='Manage' />
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
@@ -310,7 +310,7 @@ const OrganisationSettingsPage = class extends Component {
                       <Tabs
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
-                        className='mt-3'
+                        className='mt-0'
                       >
                         <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
