@@ -3,7 +3,7 @@ import { FixedSizeList as List } from 'react-window'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './Icon'
-
+import classNames from 'classnames'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -13,6 +13,7 @@ const PanelSearch = class extends Component {
     goToPage: OptionalFunc,
     isLoading: OptionalBool,
     items: propTypes.any,
+    listClassName: OptionalString,
     nextPage: OptionalFunc,
     noResultsText: OptionalString,
     paging: OptionalObject,
@@ -273,7 +274,7 @@ const PanelSearch = class extends Component {
         {this.props.searchPanel}
         <div
           id={this.props.id}
-          className='search-list'
+          className={classNames('search-list', this.props.listClassName)}
           style={isLoading ? { opacity: 0.5 } : {}}
         >
           {this.props.header}

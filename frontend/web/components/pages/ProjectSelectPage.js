@@ -129,16 +129,14 @@ const ProjectSelectPage = class extends Component {
                     <PanelSearch
                       id='projects-list'
                       className='no-pad panel-projects'
+                      listClassName="row gy-4"
                       title='Projects'
                       items={projects}
                       renderRow={({ environments, id, name }, i) => {
                         return (
                           <>
                             {i === 0 && (
-                              <div
-                                className='col-sm-6 col-md-3 pr-3'
-                                style={{ minWidth: '190px' }}
-                              >
+                              <div className='col-md-6 col-xl-3'>
                                 <Permission
                                   level='organisation'
                                   permission='CREATE_PROJECT'
@@ -181,7 +179,7 @@ const ProjectSelectPage = class extends Component {
                                   ? `${environments[0].api_key}/features`
                                   : 'create'
                               }`}
-                              className='clickable col-sm-6 col-md-3 pr-3'
+                              className='clickable col-md-6 col-xl-3'
                               style={{ minWidth: '190px' }}
                             >
                               <Button className='btn-project'>
