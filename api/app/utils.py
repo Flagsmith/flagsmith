@@ -1,3 +1,5 @@
+import json
+import os
 import pathlib
 
 import shortuuid
@@ -10,11 +12,25 @@ def create_hash():
 
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
+    release_please_manifest_location = "./.release-please-manifest.json"
+    manifest_versions = None
+
+    if os.path.isfile(release_please_manifest_location):
+        manifest_versions = json.loads(
+            _get_file_contents(release_please_manifest_location)
+        )
+        image_tag = manifest_versions["."]
+    else:
+        image_tag = "unknown"
+
     version_json = {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": _get_file_contents("./IMAGE_TAG"),
+        "image_tag": image_tag,
         "is_enterprise": pathlib.Path("./ENTERPRISE_VERSION").exists(),
     }
+
+    if manifest_versions:
+        version_json["package_versions"] = manifest_versions
 
     return version_json
 

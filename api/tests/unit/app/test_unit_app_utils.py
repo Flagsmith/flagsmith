@@ -1,3 +1,4 @@
+import json
 import pathlib
 
 from pytest_mock import MockerFixture
@@ -19,8 +20,16 @@ def test_get_version_info(mocker: MockerFixture) -> None:
 
     mocked_pathlib.Path.side_effect = path_side_effect
 
+    manifest_mocked_file = {
+        ".": "2.66.2",
+        "frontend": "2.66.2",
+        "api": "2.66.2",
+        "docs": "2.66.2",
+    }
+    mock_is_file = mocker.patch("os.path.isfile")
+    mock_is_file.side_effect = (True,)
     mock_get_file_contents = mocker.patch("app.utils._get_file_contents")
-    mock_get_file_contents.side_effect = ("some_sha", "v1.0.0")
+    mock_get_file_contents.side_effect = (json.dumps(manifest_mocked_file), "some_sha")
 
     # When
     result = get_version_info()
@@ -28,6 +37,12 @@ def test_get_version_info(mocker: MockerFixture) -> None:
     # Then
     assert result == {
         "ci_commit_sha": "some_sha",
-        "image_tag": "v1.0.0",
+        "image_tag": "2.66.2",
         "is_enterprise": True,
+        "package_versions": {
+            ".": "2.66.2",
+            "api": "2.66.2",
+            "docs": "2.66.2",
+            "frontend": "2.66.2",
+        },
     }

@@ -3,7 +3,7 @@
 FROM python:3.11 as build-python
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock Makefile ./
+COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 
 ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
@@ -29,7 +29,8 @@ COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/
 # Copy the bin folder as well to copy the executables created in package installation
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
-COPY . .
+COPY api/ .
+COPY .release-please-manifest.json .
 
 # Compile static Django assets
 RUN python manage.py collectstatic --no-input

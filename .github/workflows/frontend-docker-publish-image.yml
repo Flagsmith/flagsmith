@@ -31,7 +31,6 @@ jobs:
         run: |
           cd frontend
           echo ${{ github.sha }} > CI_COMMIT_SHA
-          echo '${{ github.ref_name }}' > IMAGE_TAG
 
       - name: Download features
         run: >
