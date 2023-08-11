@@ -20,7 +20,7 @@ textarea {
     color: $input-placeholder-color !important;
     font-weight: normal;
   }
-  &:hover{
+  &:hover {
     border-color: $basic-alpha-48;
   }
   &:focus {
@@ -41,12 +41,12 @@ textarea {
     padding: $input-padding-lg;
     height: $textarea-height-lg;
   }
-  &.textarea-container{
+  &.textarea-container {
     resize: none;
     overflow: hidden;
     min-height: 50px;
-    &.invalid{
-      border-color: $danger
+    &.invalid {
+      border-color: $danger;
     }
   }
 }
@@ -55,120 +55,120 @@ textarea {
 
 .input-container,
 .react-datepicker-wrapper .react-datepicker__input-container {
-    font-family: $font-family;
-    font-size: $input-font-size;
-    display: inline-block;
+  font-family: $font-family;
+  font-size: $input-font-size;
+  display: inline-block;
+  position: relative;
+  transition: height 200ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
+  background-color: transparent !important;
+  &.invalid hr,
+  &.invalid hr.highlight {
+    border-color: $alert-danger-border;
+  }
+
+  label {
+    position: absolute;
+    line-height: 22px;
+    top: 38px;
+    transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
+    z-index: 1;
+    cursor: text;
+    transform: perspective(1px) scale(0.75) translate3d(0px, -28px, 0px);
+    transform-origin: left top 0px;
+    pointer-events: none;
+    margin-bottom: 0.5rem;
+    -webkit-user-select: none;
+  }
+  input.input,
+  input[type='text'],
+  input[type='password'] {
+    width: 100%;
+    border: 1px solid $input-border-color;
+    outline: none;
+    box-shadow: none;
+    background-image: none;
+    padding: $input-padding;
+    -webkit-appearance: none;
+    background-image: none;
+    border-radius: $border-radius;
+
+    &:read-only {
+      color: #777;
+    }
+    &:disabled {
+      border: 1px solid $basic-alpha-8;
+      color: $text-icon-light-grey;
+      & + .input-icon-right {
+        path {
+          fill: $text-icon-light-grey;
+          opacity: $btn-disabled-opacity;
+        }
+      }
+    }
+  }
+
+  input,
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    font-weight: $input-font-weight;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    padding: 0px;
     position: relative;
-    transition: height 200ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-    background-color: transparent !important;
-    &.invalid hr,
-    &.invalid hr.highlight {
-        border-color: $alert-danger-border;
+    width: 100%;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background-image: none;
+    -webkit-appearance: none;
+    background-image: none;
+    color: rgba(0, 0, 0, 0.870588);
+    height: 100%;
+    background-color: $input-bg;
+    &::-webkit-input-placeholder {
+      font-family: $font-family;
+      font-weight: 400;
     }
+  }
 
-    label {
-        position: absolute;
-        line-height: 22px;
-        top: 38px;
-        transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-        z-index: 1;
-        cursor: text;
-        transform: perspective(1px) scale(0.75) translate3d(0px, -28px, 0px);
-        transform-origin: left top 0px;
-        pointer-events: none;
-        margin-bottom: 0.5rem;
-        -webkit-user-select: none;
+  hr {
+    border-bottom-width: 1px;
+    border-style: none none solid;
+    border-color: $input-border-color;
+    bottom: 8px;
+    box-sizing: content-box;
+    margin: 0px;
+    position: absolute;
+    width: 100%;
+    &.highlight {
+      border-bottom-width: 2px;
+      border-color: $input-border-highlight-color;
+      transform: scaleX(0);
+      transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
     }
-    input.input,
-    input[type='text'],
-    input[type='password'] {
-        width: 100%;
-        border: 1px solid $input-border-color;
-        outline: none;
-        box-shadow: none;
-        background-image: none;
-        padding: $input-padding;
-        -webkit-appearance: none;
-        background-image: none;
-        border-radius: $border-radius;
+  }
 
-        &:read-only {
-            color: #777;
-        }
-        &:disabled {
-            border: 1px solid $basic-alpha-8;
-            color: $text-icon-light-grey;
-            & + .input-icon-right {
-                path {
-                    fill: $text-icon-light-grey;
-                    opacity: $btn-disabled-opacity;
-                }
-            }
-        }
-    }
+  &.error hr {
+    border-color: $alert-danger-border;
+  }
 
-    input,
-    input:-webkit-autofill,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        font-weight: $input-font-weight;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-        padding: 0px;
-        position: relative;
-        width: 100%;
-        border: none;
-        outline: none;
-        box-shadow: none;
-        background-image: none;
-        -webkit-appearance: none;
-        background-image: none;
-        color: rgba(0, 0, 0, 0.870588);
-        height: 100%;
-        background-color: $input-bg;
-        &::-webkit-input-placeholder {
-            font-family: $font-family;
-            font-weight: 400;
-        }
+  &.error,
+  &.focused {
+    hr.highlight {
+      transform: scaleX(1);
     }
-
-    hr {
-        border-bottom-width: 1px;
-        border-style: none none solid;
-        border-color: $input-border-color;
-        bottom: 8px;
-        box-sizing: content-box;
-        margin: 0px;
-        position: absolute;
-        width: 100%;
-        &.highlight {
-            border-bottom-width: 2px;
-            border-color: $input-border-highlight-color;
-            transform: scaleX(0);
-            transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-        }
-    }
-
-    &.error hr {
-        border-color: $alert-danger-border;
-    }
-
-    &.error,
-    &.focused {
-        hr.highlight {
-            transform: scaleX(1);
-        }
-    }
+  }
 }
 
 .dark .input-container,
 .dark .react-datepicker-wrapper .react-datepicker__input-container {
-    input,
-    input:-webkit-autofill,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        background-color: $input-bg-dark;
-        color: $body-text-dark;
-    }
+  input,
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    background-color: $input-bg-dark;
+    color: $body-text-dark;
+  }
 }
 .dark textarea {
   background-color: $input-bg-dark;
@@ -177,175 +177,182 @@ textarea {
   &::placeholder {
     color: $input-placeholder-color-dark !important;
   }
-  &:hover{
+  &:hover {
     border-color: $white-alpha-8;
   }
-  &:focus{
+  &:focus {
     border-color: $primary;
   }
 }
 
 .input-container.password,
 .input-container.search {
-    input.input {
-        padding-right: 46px;
-        &-sm {
-            padding-right: 40px;
-        }
-        &-xsm {
-            padding-right: 36px;
-        }
-        &-lg {
-            padding-right: 48px;
-        }
+  input.input {
+    padding-right: 46px;
+    &-sm {
+      padding-right: 40px;
     }
+    &-xsm {
+      padding-right: 36px;
+    }
+    &-lg {
+      padding-right: 48px;
+    }
+  }
 }
 
 .input-icon-right {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    &.input-sm {
-        top: 8px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  &:hover {
+    path {
+      fill: $primary;
     }
-    &.input-xsm {
-        top: 4px;
-    }
-    &.input-lg {
-        top: 16px;
-    }
+  }
+  &.input-sm {
+    top: 8px;
+  }
+  &.input-xsm {
+    top: 4px;
+  }
+  &.input-lg {
+    top: 16px;
+  }
 }
 .react-datepicker-time__input input {
+  border: 1px solid $input-border-color;
+  padding: 2px;
+  border-radius: $border-radius;
+  color: white;
+  background-color: $bt-brand-primary;
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
+      brightness(200%) contrast(80%);
+  }
+}
+.dark {
+  .react-datepicker-time__input input {
     border: 1px solid $input-border-color;
     padding: 2px;
     border-radius: $border-radius;
     color: white;
-    background-color: $bt-brand-primary;
+    background-color: $bt-brand-primary-dark;
     &::-webkit-calendar-picker-indicator {
-        filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg) brightness(200%) contrast(80%);
+      filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
+        brightness(200%) contrast(80%);
     }
-}
-.dark {
-    .react-datepicker-time__input input {
-        border: 1px solid $input-border-color;
-        padding: 2px;
-        border-radius: $border-radius;
-        color: white;
-        background-color: $bt-brand-primary-dark;
-        &::-webkit-calendar-picker-indicator {
-            filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg) brightness(200%) contrast(80%);
-        }
-    }
+  }
 }
 
 .dark {
-    .MuiFormControl-root > div {
-        &:hover:before {
-            border-color: $bt-input-border-dark !important;
-        }
-        &:before {
-            border-color: $bt-input-border-dark;
-        }
-        &:before {
-            border-color: $bt-input-border-dark;
-        }
+  .MuiFormControl-root > div {
+    &:hover:before {
+      border-color: $bt-input-border-dark !important;
     }
-    .MuiInputBase-input {
-        color: $body-text-dark;
+    &:before {
+      border-color: $bt-input-border-dark;
     }
-    .MuiChip-root {
-        color: $dark-highlight-color;
-        background: $panel-bg-dark;
+    &:before {
+      border-color: $bt-input-border-dark;
+    }
+  }
+  .MuiInputBase-input {
+    color: $body-text-dark;
+  }
+  .MuiChip-root {
+    color: $dark-highlight-color;
+    background: $panel-bg-dark;
 
-        &:hover {
-            background: $panel-bg-dark;
-            svg {
-                color: $dark-color;
-            }
-        }
-        svg {
-            color: $panel-bg-darker;
-        }
+    &:hover {
+      background: $panel-bg-dark;
+      svg {
+        color: $dark-color;
+      }
     }
+    svg {
+      color: $panel-bg-darker;
+    }
+  }
 }
 
 .dark {
-    input[type='checkbox'] {
-        & + label .checkbox {
-            border: 1px solid $checkbox-border-color-dark;
-            background-color: transparent;
-        }
-        &:checked + label .checkbox {
-            border: none;
-            background-color: white;
-        }
-        & + label {
-            color: $text-icon-light;
-        }
+  input[type='checkbox'] {
+    & + label .checkbox {
+      border: 1px solid $checkbox-border-color-dark;
+      background-color: transparent;
     }
+    &:checked + label .checkbox {
+      border: none;
+      background-color: white;
+    }
+    & + label {
+      color: $text-icon-light;
+    }
+  }
 }
 
 input[type='checkbox'] {
-    display: none;
+  display: none;
 
-    & + label {
-        font-size: $font-sm;
-        font-weight: normal;
-        line-height: $line-height-sm;
-    }
+  & + label {
+    font-size: $font-sm;
+    font-weight: normal;
+    line-height: $line-height-sm;
+  }
 
-    &:focus + label .checkbox {
-        background-color: $checkbox-focus-bg;
-        border: 1px solid $checkbox-focus-border-color;
-        box-shadow: 0px 0px 0px 3px rgba(51, 102, 255, 0.32);
-    }
+  &:focus + label .checkbox {
+    background-color: $checkbox-focus-bg;
+    border: 1px solid $checkbox-focus-border-color;
+    box-shadow: 0px 0px 0px 3px rgba(51, 102, 255, 0.32);
+  }
 
-    &:disabled + label {
-        opacity: $btn-disabled-opacity;
-        &:hover .checkbox {
-            border: 1px solid $checkbox-border-color;
-        }
+  &:disabled + label {
+    opacity: $btn-disabled-opacity;
+    &:hover .checkbox {
+      border: 1px solid $checkbox-border-color;
     }
-    &:checked:disabled + label {
-        opacity: $btn-disabled-opacity;
-        &:hover .checkbox {
-            border: none;
-            path {
-                fill: $primary;
-            }
-        }
+  }
+  &:checked:disabled + label {
+    opacity: $btn-disabled-opacity;
+    &:hover .checkbox {
+      border: none;
+      path {
+        fill: $primary;
+      }
     }
+  }
 
-    & + label:hover .checkbox {
-        border: 1px solid $checkbox-hover-border-color;
-    }
+  & + label:hover .checkbox {
+    border: 1px solid $checkbox-hover-border-color;
+  }
 
-    &:checked + label .checkbox {
-        border: none;
-    }
+  &:checked + label .checkbox {
+    border: none;
+  }
 
-    &:checked + label:hover .checkbox {
-        path {
-            fill: $checkbox-checked-hover-border-color;
-        }
+  &:checked + label:hover .checkbox {
+    path {
+      fill: $checkbox-checked-hover-border-color;
     }
-    &:checked:focus + label .checkbox {
-        box-shadow: none;
-        path {
-            fill: $checkbox-focus-border-color;
-        }
+  }
+  &:checked:focus + label .checkbox {
+    box-shadow: none;
+    path {
+      fill: $checkbox-focus-border-color;
     }
+  }
 
-    & + label .checkbox {
-        display: inline-block;
-        width: $checkbox-width;
-        height: $checkbox-width;
-        border: 1px solid $checkbox-border-color;
-        border-radius: $border-radius-sm;
-        vertical-align: bottom;
-        background-color: white;
-        svg {
-            vertical-align: baseline;
-        }
+  & + label .checkbox {
+    display: inline-block;
+    width: $checkbox-width;
+    height: $checkbox-width;
+    border: 1px solid $checkbox-border-color;
+    border-radius: $border-radius-sm;
+    vertical-align: bottom;
+    background-color: white;
+    svg {
+      vertical-align: baseline;
     }
+  }
 }
