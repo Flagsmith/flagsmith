@@ -46,6 +46,21 @@ def get_identity_flags_response_json(
     return _get_identity_flags_response_json
 
 
+@pytest.fixture()
+def environment_v2_versioning(
+    admin_client: "APIClient", environment: int, environment_api_key: str
+) -> int:
+    environment_update_url = reverse(
+        "api-v1:environments:environment-detail", args=[environment_api_key]
+    )
+    data = {"use_v2_feature_versioning": True}
+    environment_update_response = admin_client.patch(
+        environment_update_url, data=json.dumps(data), content_type="application/json"
+    )
+    assert environment_update_response.status_code == status.HTTP_200_OK
+    return environment
+
+
 def test_v2_versioning(
     admin_client: "APIClient",
     environment: int,
@@ -209,3 +224,111 @@ def test_v2_versioning(
         identity_response_standard_feature_data["feature_state_value"]
         == "v2-segment-override-value"
     )
+
+
+def test_v2_versioning_mv_feature(
+    admin_client: "APIClient",
+    environment_v2_versioning: int,
+    environment_api_key: str,
+    sdk_client: "APIClient",
+    feature: int,
+    mv_feature: int,
+    mv_feature_option: int,
+    mv_feature_option_value: str,
+    get_environment_flags_response_json: GetResponseJSONCallable,
+    get_identity_flags_response_json: GetResponseJSONCallable,
+):
+    # First, let's get a baseline for a flags response for the environment and an identity
+    # to make sure that the response before and after we enable v2 versioning is the same.
+    get_environment_flags_response_v1_json = get_environment_flags_response_json(
+        num_expected_flags=2
+    )
+    get_identity_flags_response_v1_json = get_identity_flags_response_json(
+        num_expected_flags=2
+    )
+
+    def verify_consistent_responses(num_expected_flags: int) -> None:
+        new_flags_response = get_environment_flags_response_json(num_expected_flags)
+        new_identities_response = get_identity_flags_response_json(num_expected_flags)
+
+        assert new_flags_response == get_environment_flags_response_v1_json
+        assert new_identities_response == get_identity_flags_response_v1_json
+
+    # Now, let's create a new version of the mv feature that we can update
+    environment_feature_version_list_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning, mv_feature],
+    )
+    create_environment_feature_version_response = admin_client.post(
+        environment_feature_version_list_url
+    )
+    assert (
+        create_environment_feature_version_response.status_code
+        == status.HTTP_201_CREATED
+    )
+    ef_version_sha = create_environment_feature_version_response.json()["sha"]
+
+    verify_consistent_responses(2)
+
+    # Let's check to see that a new feature state has been created in the new
+    # version we created
+    ef_version_featurestates_url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[environment_v2_versioning, mv_feature, ef_version_sha],
+    )
+    list_ef_version_featurestates_response = admin_client.get(
+        ef_version_featurestates_url
+    )
+    assert list_ef_version_featurestates_response.status_code == status.HTTP_200_OK
+    list_ef_version_featurestates_response_json = (
+        list_ef_version_featurestates_response.json()
+    )
+    assert len(list_ef_version_featurestates_response_json) == 1
+    new_ef_version_mv_feature_state_json = list_ef_version_featurestates_response_json[
+        0
+    ]
+    assert new_ef_version_mv_feature_state_json["feature"] == mv_feature
+    new_ef_version_feature_state_id = new_ef_version_mv_feature_state_json["id"]
+
+    # add now let's add some changes to the new version - let's
+    # change the percentages of the mv value on the feature state
+    update_ef_version_feature_state_url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[
+            environment_v2_versioning,
+            mv_feature,
+            ef_version_sha,
+            new_ef_version_feature_state_id,
+        ],
+    )
+    new_ef_version_mv_feature_state_json["multivariate_feature_state_values"][0][
+        "percentage_allocation"
+    ] = 100
+    update_ef_version_feature_state_response = admin_client.patch(
+        update_ef_version_feature_state_url,
+        data=json.dumps(new_ef_version_mv_feature_state_json),
+        content_type="application/json",
+    )
+    assert update_ef_version_feature_state_response.status_code == status.HTTP_200_OK
+
+    # Let's verify that the responses are still the same since we haven't published
+    # the new version
+    verify_consistent_responses(2)
+
+    # Now, let's publish the new version
+    publish_ef_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-publish",
+        args=[environment_v2_versioning, mv_feature, ef_version_sha],
+    )
+    publish_ef_version_response = admin_client.post(publish_ef_version_url)
+    assert publish_ef_version_response.status_code == status.HTTP_200_OK
+
+    # now we should see that the value of the feature state when we retrieve the flags
+    # for the identity is that of the multivariate option
+    identity_flags_response = get_identity_flags_response_json(2)
+    mv_flag = next(
+        filter(
+            lambda f: f["feature"]["id"] == mv_feature, identity_flags_response["flags"]
+        )
+    )
+    assert mv_flag["feature_state_value"] == mv_feature_option_value

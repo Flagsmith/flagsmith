@@ -193,6 +193,31 @@ def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
 
 
 @pytest.fixture()
+def mv_feature_option_value():
+    return "foo"
+
+
+@pytest.fixture()
+def mv_feature_option(
+    project: int,
+    admin_client: "APIClient",
+    mv_feature: int,
+    mv_feature_option_value: str,
+) -> int:
+    data = {
+        "string_value": mv_feature_option_value,
+        "type": "unicode",
+        "default_percentage_allocation": 0,
+        "feature": mv_feature,
+    }
+    url = reverse("api-v1:projects:feature-mv-options-list", args=[project, mv_feature])
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def feature_2(admin_client, project, default_feature_value, feature_2_name):
     data = {
         "name": feature_2_name,

@@ -406,6 +406,9 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
 
     class Meta:
         model = FeatureState
@@ -423,6 +426,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "multivariate_feature_state_values",
         )
 
         read_only_fields = (
