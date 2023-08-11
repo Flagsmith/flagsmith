@@ -152,6 +152,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         context = super().get_serializer_context()
         context["environment"] = self.environment
         context["feature"] = self.feature
+        context["environment_feature_version"] = self.environment_feature_version
         return context
 
     def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):

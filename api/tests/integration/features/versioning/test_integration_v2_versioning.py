@@ -4,8 +4,14 @@ import typing
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from tests.test_helpers import generate_segment_data
 
-from .types import GetResponseJSONCallable
+from segments.models import EQUAL
+
+from .types import (
+    GetEnvironmentFlagsResponseJSONCallable,
+    GetIdentityFlagsResponseJSONCallable,
+)
 
 if typing.TYPE_CHECKING:
     from rest_framework.test import APIClient
@@ -14,7 +20,7 @@ if typing.TYPE_CHECKING:
 @pytest.fixture()
 def get_environment_flags_response_json(
     sdk_client: "APIClient",
-) -> GetResponseJSONCallable:
+) -> GetEnvironmentFlagsResponseJSONCallable:
     get_environment_flags_url = reverse("api-v1:flags")
 
     def _get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:
@@ -29,15 +35,22 @@ def get_environment_flags_response_json(
 
 @pytest.fixture()
 def get_identity_flags_response_json(
-    sdk_client: "APIClient", identity_identifier: str
-) -> GetResponseJSONCallable:
-    get_identity_flags_url = "%s?identifier=%s" % (
-        reverse("api-v1:sdk-identities"),
-        identity_identifier,
-    )
+    sdk_client: "APIClient", identity_identifier
+) -> GetIdentityFlagsResponseJSONCallable:
+    identities_url = reverse("api-v1:sdk-identities")
 
-    def _get_identity_flags_response_json(num_expected_flags: int) -> typing.Dict:
-        _response = sdk_client.get(get_identity_flags_url)
+    def _get_identity_flags_response_json(
+        num_expected_flags: int, identifier: str = identity_identifier, **traits
+    ) -> typing.Dict:
+        traits = traits or {}
+        data = {
+            "identifier": identifier,
+            "traits": [{"trait_key": k, "trait_value": v} for k, v in traits.items()],
+        }
+
+        _response = sdk_client.post(
+            identities_url, data=json.dumps(data), content_type="application/json"
+        )
         assert _response.status_code == status.HTTP_200_OK
         _response_json = _response.json()
         assert len(_response_json["flags"]) == num_expected_flags
@@ -70,8 +83,8 @@ def test_v2_versioning(
     identity_with_traits_matching_segment: int,
     mv_feature: int,
     segment: int,
-    get_environment_flags_response_json: GetResponseJSONCallable,
-    get_identity_flags_response_json: GetResponseJSONCallable,
+    get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
+    get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
@@ -235,8 +248,8 @@ def test_v2_versioning_mv_feature(
     mv_feature: int,
     mv_feature_option: int,
     mv_feature_option_value: str,
-    get_environment_flags_response_json: GetResponseJSONCallable,
-    get_identity_flags_response_json: GetResponseJSONCallable,
+    get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
+    get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
@@ -266,7 +279,7 @@ def test_v2_versioning_mv_feature(
         create_environment_feature_version_response.status_code
         == status.HTTP_201_CREATED
     )
-    ef_version_sha = create_environment_feature_version_response.json()["sha"]
+    ef_version_uuid = create_environment_feature_version_response.json()["uuid"]
 
     verify_consistent_responses(2)
 
@@ -274,7 +287,7 @@ def test_v2_versioning_mv_feature(
     # version we created
     ef_version_featurestates_url = reverse(
         "api-v1:versioning:environment-feature-version-featurestates-list",
-        args=[environment_v2_versioning, mv_feature, ef_version_sha],
+        args=[environment_v2_versioning, mv_feature, ef_version_uuid],
     )
     list_ef_version_featurestates_response = admin_client.get(
         ef_version_featurestates_url
@@ -297,7 +310,7 @@ def test_v2_versioning_mv_feature(
         args=[
             environment_v2_versioning,
             mv_feature,
-            ef_version_sha,
+            ef_version_uuid,
             new_ef_version_feature_state_id,
         ],
     )
@@ -318,7 +331,7 @@ def test_v2_versioning_mv_feature(
     # Now, let's publish the new version
     publish_ef_version_url = reverse(
         "api-v1:versioning:environment-feature-versions-publish",
-        args=[environment_v2_versioning, mv_feature, ef_version_sha],
+        args=[environment_v2_versioning, mv_feature, ef_version_uuid],
     )
     publish_ef_version_response = admin_client.post(publish_ef_version_url)
     assert publish_ef_version_response.status_code == status.HTTP_200_OK
@@ -332,3 +345,163 @@ def test_v2_versioning_mv_feature(
         )
     )
     assert mv_flag["feature_state_value"] == mv_feature_option_value
+
+
+def test_v2_versioning_multiple_segment_overrides(
+    admin_client: "APIClient",
+    environment_v2_versioning: int,
+    environment_api_key: str,
+    sdk_client: "APIClient",
+    project: int,
+    feature: int,
+    get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
+    get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
+):
+    # Firstly, let's define an identity and their traits
+    identifier = "identity"
+    trait_key_1 = "trait_key_1"
+    trait_value_1 = "trait_value_1"
+    trait_key_2 = "trait_key_2"
+    trait_value_2 = "trait_value_2"
+
+    # now, let's create 2 segments which both match this identity
+    create_segment_url = reverse(
+        "api-v1:projects:project-segments-list", args=[project]
+    )
+    segment_1_response = admin_client.post(
+        create_segment_url,
+        data=json.dumps(
+            generate_segment_data(
+                segment_name="segment_1",
+                project_id=project,
+                condition_tuples=[(trait_key_1, EQUAL, trait_value_1)],
+            )
+        ),
+        content_type="application/json",
+    )
+    segment_1_id = segment_1_response.json()["id"]
+
+    segment_2_response = admin_client.post(
+        create_segment_url,
+        data=json.dumps(
+            generate_segment_data(
+                segment_name="segment_2",
+                project_id=project,
+                condition_tuples=[(trait_key_2, EQUAL, trait_value_2)],
+            )
+        ),
+        content_type="application/json",
+    )
+    segment_2_id = segment_2_response.json()["id"]
+
+    # Now, let's create a new version to add some segment overrides to
+    environment_feature_version_list_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning, feature],
+    )
+    create_environment_feature_version_response = admin_client.post(
+        environment_feature_version_list_url
+    )
+    assert (
+        create_environment_feature_version_response.status_code
+        == status.HTTP_201_CREATED
+    )
+    ef_version_uuid = create_environment_feature_version_response.json()["uuid"]
+
+    # and let's add an override for each of the segments
+    ef_version_featurestates_url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[environment_v2_versioning, feature, ef_version_uuid],
+    )
+
+    segment_1_override_value = "segment_1_override"
+    segment_2_override_value = "segment_2_override"
+
+    feature_segment_id_priority_pairs = []
+
+    for segment_id, feature_state_value in (
+        (segment_1_id, segment_1_override_value),
+        (segment_2_id, segment_2_override_value),
+    ):
+        create_ef_version_segment_override_response = admin_client.post(
+            ef_version_featurestates_url,
+            data=json.dumps(
+                {
+                    "enabled": True,
+                    "feature_state_value": {
+                        "string_value": feature_state_value,
+                        "value_type": "unicode",
+                    },
+                    "feature_segment": {"segment": segment_id},
+                }
+            ),
+            content_type="application/json",
+        )
+        assert (
+            create_ef_version_segment_override_response.status_code
+            == status.HTTP_201_CREATED
+        )
+        create_segment_override_response_json = (
+            create_ef_version_segment_override_response.json()
+        )
+        feature_segment_data = create_segment_override_response_json["feature_segment"]
+        feature_segment_id_priority_pairs.append(
+            (feature_segment_data["id"], feature_segment_data["priority"])
+        )
+
+    # now, let's publish the new version
+    publish_ef_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-publish",
+        args=[environment_v2_versioning, feature, ef_version_uuid],
+    )
+    publish_ef_version_response = admin_client.post(publish_ef_version_url)
+    assert publish_ef_version_response.status_code == status.HTTP_200_OK
+
+    # now, let's get the flags for the identity
+    identity_flags_response_json = get_identity_flags_response_json(
+        num_expected_flags=1,
+        identifier=identifier,
+        **{trait_key_1: trait_value_1, trait_key_2: trait_value_2},
+    )
+
+    # and verify that we get the value from the override for segment 1,
+    # since that was added first, and should have a higher priority
+    assert (
+        identity_flags_response_json["flags"][0]["feature_state_value"]
+        == segment_1_override_value
+    )
+
+    # now lets re-order the segment overrides
+    re_order_segment_overrides_url = reverse(
+        "api-v1:features:feature-segment-update-priorities"
+    )
+    data = [
+        {
+            "id": feature_segment_id_priority_pairs[1][0],
+            "priority": feature_segment_id_priority_pairs[0][1],
+        },
+        {
+            "id": feature_segment_id_priority_pairs[0][0],
+            "priority": feature_segment_id_priority_pairs[1][1],
+        },
+    ]
+    reorder_segment_overrides_response = admin_client.post(
+        re_order_segment_overrides_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    assert reorder_segment_overrides_response.status_code == status.HTTP_200_OK
+
+    # finally, let's get the flags for the identity
+    identity_flags_response_json = get_identity_flags_response_json(
+        num_expected_flags=1,
+        identifier=identifier,
+        **{trait_key_1: trait_value_1, trait_key_2: trait_value_2},
+    )
+
+    # and verify that we get the value from the override for segment 2,
+    # since we just re-ordered the overrides
+    assert (
+        identity_flags_response_json["flags"][0]["feature_state_value"]
+        == segment_2_override_value
+    )

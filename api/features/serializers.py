@@ -447,6 +447,9 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
         if field_name == "feature_segment":
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
+            kwargs["environment_feature_version"] = self.context.get(
+                "environment_feature_version"
+            )
         return kwargs
 
     def create(self, validated_data: dict) -> FeatureState:

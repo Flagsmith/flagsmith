@@ -195,6 +195,13 @@ class FeatureSegment(
         on_delete=models.CASCADE,
         related_name="feature_segments",
     )
+    environment_feature_version = models.ForeignKey(
+        "feature_versioning.EnvironmentFeatureVersion",
+        on_delete=models.CASCADE,
+        related_name="feature_segments",
+        null=True,
+        blank=True,
+    )
 
     _enabled = models.BooleanField(
         default=False,
@@ -220,12 +227,17 @@ class FeatureSegment(
     # specific attributes for managing the order of feature segments
     priority = models.PositiveIntegerField(editable=False, db_index=True)
     order_field_name = "priority"
-    order_with_respect_to = ("feature", "environment")
+    order_with_respect_to = ("feature", "environment", "environment_feature_version")
 
     objects = FeatureSegmentManager()
 
     class Meta:
-        unique_together = ("feature", "environment", "segment")
+        unique_together = (
+            "feature",
+            "environment",
+            "segment",
+            "environment_feature_version",
+        )
         ordering = ("priority",)
 
     def __str__(self):

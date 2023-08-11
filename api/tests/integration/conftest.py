@@ -78,6 +78,7 @@ def environment(admin_client, project, environment_api_key, settings) -> int:
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
+        "allow_client_traits": True,
     }
     url = reverse("api-v1:environments:environment-list")
 
