@@ -63,6 +63,7 @@ const InputGroup = class extends Component {
             )}
           </Row>
         )}
+
         <div>
           {this.props.component ? (
             this.props.component
