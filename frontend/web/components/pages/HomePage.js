@@ -133,7 +133,7 @@ const HomePage = class extends React.Component {
           <div className={oauthClasses}>
             <Button
               theme='secondary'
-              className='full-width'
+              className='full-width flex-row justify-content-center align-items-center'
               key='github'
               iconLeft='github'
               href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
@@ -153,7 +153,7 @@ const HomePage = class extends React.Component {
               }
             >
               <GoogleButton
-                className='full-width'
+                className='full-width flex-row justify-content-center align-items-center'
                 onSuccess={(e) => {
                   document.location = `${document.location.origin}/oauth/google?code=${e.access_token}`
                 }}
