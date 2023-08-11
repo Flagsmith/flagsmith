@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Icon from 'components/Icon'
 
 type SubItem = {
   title: string
@@ -29,8 +30,12 @@ const CollapsibleNestedList: React.FC<Props> = ({
   }
 
   return (
-    <div style={{ minHeight: "60px",
-    border: "1px solid rgba(101, 109, 123, 0.16)"}}>
+    <div
+      style={{
+        border: '1px solid rgba(101, 109, 123, 0.16)',
+        minHeight: '60px',
+      }}
+    >
       {mainItems.map((mainItem, index) => (
         <div>
           <Row
@@ -56,13 +61,22 @@ const CollapsibleNestedList: React.FC<Props> = ({
                 {'Go to environments'}
               </Button>
             )}
+            <Icon
+              name={expandedItems.includes(mainItem.title) ? 'chevron-down' : 'chevron-right'}
+              width={25}
+            />
           </Row>
           <div>
             {expandedItems.includes(mainItem.title) && (
-              <ul className="m-0 p-0">
+              <ul className='m-0 p-0'>
                 {mainItem.subItems.map((subItem, subIndex) => (
-                  <Row className='px-3' style={{ minHeight: "60px",
-                  border: "1px solid rgba(101, 109, 123, 0.16)"}}>
+                  <Row
+                    className='px-3'
+                    style={{
+                      border: '1px solid rgba(101, 109, 123, 0.16)',
+                      minHeight: '60px',
+                    }}
+                  >
                     <Flex>
                       <div className='list-item-subtitle'>{subItem.title}</div>
                     </Flex>
