@@ -47,16 +47,14 @@ const Tabs = class extends React.Component {
             )
           })}
         </div>
-        {this.props.theme === 'tab' && <ModalHR />}
+        {this.props.theme === 'tab' && <ModalHR className='tab-nav-hr' />}
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item ${
-                  this.props.theme === 'tab' ? 'px-4' : ''
-                }${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item ${isSelected ? ' tab-active' : ''}`}
               >
                 {child}
               </div>

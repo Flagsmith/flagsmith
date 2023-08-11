@@ -155,7 +155,18 @@ class TheComponent extends Component {
             </div>
           ) : (
             <div className='app-container container'>
-              <Tabs uncontrolled>
+              <Row space className='py-2'>
+                <h4 className='mb-0'>Account</h4>
+                <Button
+                  id='logout-link'
+                  theme='secondary'
+                  onClick={AppActions.logout}
+                >
+                  Log Out
+                </Button>
+              </Row>
+              <hr className='my-0 py-0' />
+              <Tabs uncontrolled className='mt-3'>
                 <TabItem tabLabel='General'>
                   <div className='mt-4'>
                     <h5 className='mb-5'>General Settings</h5>

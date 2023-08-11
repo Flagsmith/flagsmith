@@ -32,6 +32,7 @@ class CreateOrganisationPage extends Component {
 
   onSave = (id) => {
     AppActions.selectOrganisation(id)
+    API.setCookie('organisation', `${id}`)
     this.context.router.history.push('/projects')
   }
 
@@ -56,23 +57,23 @@ class CreateOrganisationPage extends Component {
     }
     return (
       <div id='create-org-page' className='container app-container'>
-        <PageTitle title={'Create your organisation'}>
-          Organisations allow you to manage multiple projects within a team.
-        </PageTitle>
-        <AccountProvider onSave={this.onSave}>
-          {({ isSaving }, { createOrganisation }) => (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (Project.capterraKey) {
-                  const parts = Project.capterraKey.split(',')
-                  Utils.appendImage(
-                    `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                  )
-                }
-                createOrganisation(this.state.name)
-              }}
-            >
+          <PageTitle title={'Create your organisation'}>
+              Organisations allow you to manage multiple projects within a team.
+          </PageTitle>
+          <AccountProvider onSave={this.onSave}>
+            {({ isSaving }, { createOrganisation }) => (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (Project.capterraKey) {
+                    const parts = Project.capterraKey.split(',')
+                    Utils.appendImage(
+                      `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+                    )
+                  }
+                  createOrganisation(this.state.name)
+                }}
+              >
               <CondensedRow>
                 <InputGroup
                   ref={(e) => (this.input = e)}
@@ -83,13 +84,13 @@ class CreateOrganisationPage extends Component {
                     this.setState({ name: Utils.safeParseEventValue(e) })
                   }
                 />
-                <div className='text-right mt-2'>
+              <div className='text-right mt-2'>
                   <Button
                     type='submit'
                     disabled={isSaving || !this.state.name}
                     id='create-org-btn'
                   >
-                    Create
+                  Create
                   </Button>
                 </div>
               </CondensedRow>
