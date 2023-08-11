@@ -71,7 +71,7 @@ export default class TheComponent extends Component {
             </Row>
             <div>
               <InputGroup
-                className='mb-2'
+                className='mb-2 mt-3'
                 inputProps={{
                   className: 'full-width',
                   error: error && 'Invalid code',
