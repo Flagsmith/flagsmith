@@ -154,20 +154,22 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     >
       <PageTitle
         cta={
-          <>
-            {renderWithPermission(
-              manageSegmentsPermission,
-              'Manage segments',
-              <Button
-                disabled={hasNoOperators || !manageSegmentsPermission}
-                id='show-create-segment-btn'
-                data-test='show-create-segment-btn'
-                onClick={newSegment}
-              >
-                Create Segment
-              </Button>,
-            )}
-          </>
+          segments && (segments.length || searchInput) ? (
+            <>
+              {renderWithPermission(
+                manageSegmentsPermission,
+                'Manage segments',
+                <Button
+                  disabled={hasNoOperators || !manageSegmentsPermission}
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={newSegment}
+                >
+                  Create Segment
+                </Button>,
+              )}
+            </>
+          ) : null
         }
         title={'Segments'}
       >

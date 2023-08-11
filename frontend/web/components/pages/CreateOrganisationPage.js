@@ -58,22 +58,22 @@ class CreateOrganisationPage extends Component {
     return (
       <div id='create-org-page' className='container app-container'>
         <PageTitle title={'Create your organisation'}>
-            Organisations allow you to manage multiple projects within a team.
+          Organisations allow you to manage multiple projects within a team.
         </PageTitle>
-          <AccountProvider onSave={this.onSave}>
-            {({ isSaving }, { createOrganisation }) => (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (Project.capterraKey) {
-                    const parts = Project.capterraKey.split(',')
-                    Utils.appendImage(
-                      `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                    )
-                  }
-                  createOrganisation(this.state.name)
-                }}
-              >
+        <AccountProvider onSave={this.onSave}>
+          {({ isSaving }, { createOrganisation }) => (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (Project.capterraKey) {
+                  const parts = Project.capterraKey.split(',')
+                  Utils.appendImage(
+                    `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+                  )
+                }
+                createOrganisation(this.state.name)
+              }}
+            >
               <CondensedRow>
                 <InputGroup
                   ref={(e) => (this.input = e)}
@@ -95,10 +95,9 @@ class CreateOrganisationPage extends Component {
                   </Button>
                 </div>
               </CondensedRow>
-              </form>
-            )}
-          </AccountProvider>
-        </div>
+            </form>
+          )}
+        </AccountProvider>
       </div>
     )
   }

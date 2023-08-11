@@ -6,6 +6,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const ProjectSelectPage = class extends Component {
   static displayName = 'ProjectSelectPage'
@@ -54,16 +55,10 @@ const ProjectSelectPage = class extends Component {
         id='project-select-page'
         className='app-container container'
       >
-        <div className='col-md-9 px-0 py-2'>
-          <div className='container-mw-700'>
-            <h4 className='mb-1'>Your projects</h4>
-            <p className='mb-0'>
-              Projects let you create and manage a set of features and configure
-              them between multiple app environments.
-            </p>
-          </div>
-        </div>
-        <hr className='my-0 py-0' />
+        <PageTitle title={'Your projects'}>
+          Projects let you create and manage a set of features and configure
+          them between multiple app environments.
+        </PageTitle>
         <Panel title='Organisation' className='no-pad'>
           <Row space>
             <AccountProvider>
@@ -82,7 +77,7 @@ const ProjectSelectPage = class extends Component {
               (!Project.superUserCreateOnly ||
                 (Project.superUserCreateOnly &&
                   AccountStore.model.is_superuser)) && (
-                <div className='pl-3 pr-3 mt-2 mb-2'>
+                <div className='pl-3 pr-3 mb-2'>
                   <Flex className='text-center'>
                     <Button onClick={this.newOrganisation}>
                       Create Organisation
