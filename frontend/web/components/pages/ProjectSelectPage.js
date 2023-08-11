@@ -129,7 +129,7 @@ const ProjectSelectPage = class extends Component {
                     <PanelSearch
                       id='projects-list'
                       className='no-pad panel-projects'
-                      listClassName="row gy-4"
+                      listClassName='row mt-2 gy-4'
                       title='Projects'
                       items={projects}
                       renderRow={({ environments, id, name }, i) => {
