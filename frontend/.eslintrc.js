@@ -51,6 +51,7 @@ module.exports = {
     'OptionalNumber': true,
     'OptionalObject': true,
     'OptionalString': true,
+    'dtrum': true,
     'OrganisationProvider': true,
     'OrganisationSelect': true,
     'Paging': true,

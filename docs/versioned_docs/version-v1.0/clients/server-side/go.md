@@ -32,8 +32,6 @@ page.
 
 ## Retrieving feature flags for your project
 
-For full documentation visit [https://docs.flagsmith.com](https://docs.flagsmith.com)
-
 Sign Up and create account at [https://flagsmith.com/](https://www.flagsmith.com/)
 
 In your application initialise the Flagsmith client with your API key

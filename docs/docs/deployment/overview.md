@@ -125,8 +125,8 @@ DJANGO_DB_PORT_ANALYTICS (e.g. 5432)
 
 Note that you don't have to use the same database or database server as the core Flagsmith DB.
 
-You will also need to be running the [Task Processor](https://docs.flagsmith.com/deployment/task-processor) for
-downsampling to work and the stats to start showing up in the dashboard. This process can take up to 1 hour.
+You will also need to be running the [Task Processor](/deployment/configuration/task-processor) for downsampling to work
+and the stats to start showing up in the dashboard. This process can take up to 1 hour.
 
 ## API Telemetry
 

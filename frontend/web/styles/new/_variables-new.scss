@@ -116,7 +116,7 @@ $hr-opacity: 1;
 //Modal
 $modal-content-color: $text-icon-grey;
 $modal-content-color-dark: $text-icon-light-grey;
-$modal-sm: 440px;
+$modal-sm: 500px;
 $modal-md: 620px;
 $modal-lg: 900px;
 $modal-bg-dark: $bg-dark100;
@@ -278,3 +278,5 @@ $panel-list-item-color: $text-icon-dark;
 $panel-list-item-sub-font-size: $font-caption;
 $panel-list-item-sub-line-height: $line-height-xsm;
 $panel-list-item-sub-color: $text-icon-grey;
+$panel-grey-background:$bg-light200;
+$panel-grey-background-dark:$bg-dark300;
