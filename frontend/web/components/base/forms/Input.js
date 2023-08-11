@@ -137,6 +137,7 @@ const Input = class extends React.Component {
           <span
             className={cn(
               {
+                'clickable': true,
                 'input-icon-right': true,
               },
               sizeClassNames[size],
