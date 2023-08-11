@@ -101,5 +101,8 @@ export type Req = {
   }
   getRoles: { organisationId: string }
   createRoles: {}
+  getRolesById: { organisationId: string; roleId: number; }
+  updateRolesById: { organisationId: string; roleId: number;}
+  deleteRolesById: { organisationId: string; roleId: number; }
   // END OF TYPES
 }

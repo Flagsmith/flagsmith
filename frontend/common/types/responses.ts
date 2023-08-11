@@ -321,5 +321,6 @@ export type Res = {
     name: string
     organisation: number
   }
+  rolesById: { id: string }
   // END OF TYPES
 }

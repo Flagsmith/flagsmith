@@ -14,29 +14,35 @@ export const roleService = service
           url: `organisations/roles/`,
         }),
       }),
-      deleteRoles: builder.mutation<Res['roles'], Req['deleteRoles']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Role' }],
-        query: (query: Req['deleteRoles']) => ({
+      deleteRolesById: builder.mutation<Res['roles'], Req['deleteRolesById']>({
+        invalidatesTags: [{ id: 'LIST', type: 'RolesById' }],
+        query: (query: Req['deleteRolesById']) => ({
           body: query,
           method: 'DELETE',
-          url: `organisations/${query.id}/roles/`,
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}`,
         }),
       }),
       getRoles: builder.query<Res['roles'], Req['getRoles']>({
         providesTags: (res) => [{ id: res?.id, type: 'Role' }],
         query: (query: Req['getRoles']) => ({
-          url: `organisations/${query.id}/roles/`,
+          url: `organisations/${query.organisation_id}/roles/`,
         }),
       }),
-      updateRoles: builder.mutation<Res['roles'], Req['updateRoles']>({
+      getRolesById: builder.query<Res['roles'], Req['getRolesById']>({
+        providesTags: (res) => [{ id: res?.id, type: 'RolesById' }],
+        query: (query: Req['getRolesById']) => ({
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}`,
+        }),
+      }),
+      updateRolesById: builder.mutation<Res['roles'], Req['updateRolesById']>({
         invalidatesTags: (res) => [
-          { id: 'LIST', type: 'Role' },
-          { id: res?.id, type: 'Role' },
+          { id: 'LIST', type: 'RolesById' },
+          { id: res?.id, type: 'RolesById' },
         ],
-        query: (query: Req['updateRoles']) => ({
+        query: (query: Req['updateRolesById']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${query.id}/roles/`,
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}`,
         }),
       }),
       // END OF ENDPOINTS
@@ -51,14 +57,6 @@ export async function createRoles(
   store.dispatch(roleService.endpoints.createRoles.initiate(data, options))
   return Promise.all(store.dispatch(roleService.util.getRunningQueriesThunk()))
 }
-export async function deleteRoles(
-  store: any,
-  data: Req['deleteRoles'],
-  options?: Parameters<typeof roleService.endpoints.deleteRoles.initiate>[1],
-) {
-  store.dispatch(roleService.endpoints.deleteRoles.initiate(data, options))
-  return Promise.all(store.dispatch(roleService.util.getRunningQueriesThunk()))
-}
 export async function getRoles(
   store: any,
   data: Req['getRoles'],
@@ -67,21 +65,56 @@ export async function getRoles(
   store.dispatch(roleService.endpoints.getRoles.initiate(data, options))
   return Promise.all(store.dispatch(roleService.util.getRunningQueriesThunk()))
 }
-export async function updateRoles(
+export async function deleteRolesById(
   store: any,
-  data: Req['updateRoles'],
-  options?: Parameters<typeof roleService.endpoints.updateRoles.initiate>[1],
+  data: Req['deleteRolesById'],
+  options?: Parameters<
+    typeof rolesByIdService.endpoints.deleteRolesById.initiate
+  >[1],
 ) {
-  store.dispatch(roleService.endpoints.updateRoles.initiate(data, options))
-  return Promise.all(store.dispatch(roleService.util.getRunningQueriesThunk()))
+  store.dispatch(
+    rolesByIdService.endpoints.deleteRolesById.initiate(data, options),
+  )
+  return Promise.all(
+    store.dispatch(rolesByIdService.util.getRunningQueriesThunk()),
+  )
+}
+export async function getRolesById(
+  store: any,
+  data: Req['getRolesById'],
+  options?: Parameters<
+    typeof rolesByIdService.endpoints.getRolesById.initiate
+  >[1],
+) {
+  store.dispatch(
+    rolesByIdService.endpoints.getRolesById.initiate(data, options),
+  )
+  return Promise.all(
+    store.dispatch(rolesByIdService.util.getRunningQueriesThunk()),
+  )
+}
+export async function updateRolesById(
+  store: any,
+  data: Req['updateRolesById'],
+  options?: Parameters<
+    typeof rolesByIdService.endpoints.updateRolesById.initiate
+  >[1],
+) {
+  store.dispatch(
+    rolesByIdService.endpoints.updateRolesById.initiate(data, options),
+  )
+  return Promise.all(
+    store.dispatch(rolesByIdService.util.getRunningQueriesThunk()),
+  )
 }
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateRolesMutation,
-  useDeleteRolesMutation,
+  useDeleteRolesByIdMutation,
+  useGetRolesByIdQuery,
   useGetRolesQuery,
-  useUpdateRolesMutation,
+  useUpdateRolesByIdMutation,
   // END OF EXPORTS
 } = roleService
 
