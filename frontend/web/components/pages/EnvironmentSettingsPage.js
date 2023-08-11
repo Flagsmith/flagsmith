@@ -16,6 +16,7 @@ import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -222,7 +223,8 @@ const EnvironmentSettingsPage = class extends Component {
               }, 10)
             }
             return (
-              <div className='container'>
+              <div className='app-container container'>
+                <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
                     <Loader />

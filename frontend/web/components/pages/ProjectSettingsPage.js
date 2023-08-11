@@ -10,6 +10,7 @@ import RegexTester from 'components/RegexTester'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
+import PageTitle from 'components/PageTitle'
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -162,6 +163,7 @@ const ProjectSettingsPage = class extends Component {
               typeof this.state.feature_name_regex === 'string'
             return (
               <div>
+                <PageTitle className="mb-2" title={'Project Settings'} />
                 {
                   <Tabs uncontrolled>
                     <TabItem tabLabel='General'>

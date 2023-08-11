@@ -17,9 +17,7 @@ const Tabs = class extends React.Component {
     return (
       <div className={`tabs ${this.props.className || ''}`}>
         <div
-          className={`tabs-nav ${
-            this.props.theme === 'tab' ? 'mx-4 mt-3 ' : ''
-          }${this.props.theme}`}
+          className={`tabs-nav ${this.props.theme}`}
           style={isMobile ? { flexWrap: 'wrap' } : {}}
         >
           {children.map((child, i) => {
@@ -49,7 +47,7 @@ const Tabs = class extends React.Component {
             )
           })}
         </div>
-        {this.props.theme === 'tab' && <ModalHR className='mx-4' />}
+        {this.props.theme === 'tab' && <ModalHR />}
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i

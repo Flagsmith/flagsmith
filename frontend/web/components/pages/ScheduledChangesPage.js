@@ -6,6 +6,7 @@ import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -61,8 +62,10 @@ const ChangeRequestsPage = class extends Component {
         id='change-requests-page'
         className='app-container container'
       >
+        <PageTitle title={'Scheduling'}>
+          Manage feature state changes that have been scheduled to go live.
+        </PageTitle>
         <Flex>
-          <h4>Scheduled Changes</h4>
           {
             <div>
               {!hasSchedulePlan ? (
