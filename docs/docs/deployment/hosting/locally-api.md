@@ -10,14 +10,11 @@ Before running the application, you'll need to configure a database for the appl
 found in the following section entitled 'Databases'.
 
 ```bash
-virtualenv .venv
-source .venv/bin/activate
-pip install pip-tools
 cd api
-pip-sync requirements.txt requirements-dev.txt
-python manage.py migrate
+make install
+make django-migrate
 python manage.py createcachetable
-python manage.py runserver --nostatic
+make serve
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and
@@ -462,23 +459,4 @@ The Django `collectstatic` command then copies all the additional static assets 
 
 ### Development Environment for Contributers
 
-We're using [pip-tools](https://github.com/jazzband/pip-tools) to manage packages and dependencies.
-
-To upgrade packages or add new ones:
-
-```bash
-pip install -r requirements-dev.txt
-pip-compile
-```
-
-### Requirements with pip-tools
-
-We are using [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies.
-
-To add a new library to the project, edit requirements.in, then:
-
-```bash
-# This step will overwrite requirements.txt
-pip-compile requirements.in
-pip install -r requirements.txt
-```
+We're using [Poetry](https://python-poetry.org/) to manage packages and dependencies, using Poetry standard workflows.
