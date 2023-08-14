@@ -14,7 +14,7 @@ def get_overrides_data(
     Get the number of identity / segment overrides in a given environment for each feature in the
     project.
 
-    :param environment_id: the id of the environment to get the overrides data for
+    :param environment: the environment to get the overrides data for
     :return: dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
     environment_feature_states_list = get_environment_flags_list(environment)
@@ -30,4 +30,4 @@ def get_overrides_data(
             env_feature_overrides_data.add_identity_override()
         all_overrides_data[feature_state.feature_id] = env_feature_overrides_data
 
-    return all_overrides_data  # noqa
+    return all_overrides_data
