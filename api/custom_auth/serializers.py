@@ -1,8 +1,10 @@
 from django.conf import settings
+from djoser.constants import Messages
 from djoser.serializers import UserCreateSerializer, UserDeleteSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.validators import UniqueValidator
 
 from organisations.invites.models import Invite
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -18,6 +20,8 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
+    key = serializers.SerializerMethodField()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["key"] = serializers.SerializerMethodField()
@@ -26,9 +30,21 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
             "marketing_consent_given",
+            "key",
         )
         read_only_fields = ("is_active",)
         write_only_fields = ("sign_up_type",)
+        extra_kwargs = {
+            "email": {
+                "validators": [
+                    UniqueValidator(
+                        queryset=FFAdminUser.objects.all(),
+                        lookup="iexact",
+                        message=Messages.CANNOT_CREATE_USER_ERROR,
+                    )
+                ]
+            }
+        }
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -42,8 +58,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                 self.context.get("request"), email=email, raise_exception=True
             )
 
-        if FFAdminUser.objects.filter(email__iexact=email).count() != 0:
-            raise serializers.ValidationError({"detail": "Unable to create account"})
         attrs["email"] = email.lower()
         return attrs
 
