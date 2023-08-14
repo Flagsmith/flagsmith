@@ -32,7 +32,7 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ../
       dockerfile: Dockerfile.e2e
     platform: linux/amd64
     environment:

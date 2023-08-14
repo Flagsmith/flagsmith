@@ -263,8 +263,7 @@ app.get('/version', (req, res) => {
 
   try {
     imageTag = fs
-      .readFileSync('IMAGE_TAG', 'utf8')
-      .replace(/(\r\n|\n|\r)/gm, '')
+      .readFileSync('./.release-please-manifest.json', 'utf8')
   } catch (err) {
     // eslint-disable-next-line
     console.log('Unable to read IMAGE_TAG')
