@@ -36,7 +36,6 @@ runs:
 
     - name: Run the API
       id: run-api-container
-      working-directory: .
       env:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
         DATABASE_URL: ${{ inputs.database_url }}
