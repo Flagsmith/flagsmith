@@ -262,14 +262,13 @@ app.get('/version', (req, res) => {
   }
 
   try {
-    imageTag = fs
-      .readFileSync('./.release-please-manifest.json', 'utf8')
+    releasePleaseManifest = JSON.parse(fs.readFileSync('./.release-please-manifest.json', 'utf8'))
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': releasePleaseManifest["."], 'package_versions': releasePleaseManifest })
   } catch (err) {
     // eslint-disable-next-line
-    console.log('Unable to read IMAGE_TAG')
+    console.log('Unable to read release-please-manifest.json')
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag})
   }
-
-  res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag })
 })
 
 app.use(bodyParser.json())
