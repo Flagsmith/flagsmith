@@ -142,7 +142,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: api/Dockerfile
-          context: api/
+          context: .
           push: false
           tags: flagsmith/flagsmith-api:testing
 
