@@ -19,6 +19,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
+import Switch from 'components/Switch'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -56,6 +57,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
+  const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
+
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
     page,
     page_size: 100,
@@ -199,6 +202,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
                 <FormGroup>
                   <PanelSearch
+                    filterElement={
+                      <div className='text-right'>
+                        <label className='me-2'>Include Feature-Specific</label>
+                        <Switch onChange={setShowFeatureSpecific} />
+                      </div>
+                    }
                     renderSearchWithNoResults
                     className='no-pad'
                     id='segment-list'
@@ -211,7 +220,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       />
                     )}
                     items={sortBy(segments, (v) => {
-                      return `${v.feature ? 'z' : 'a'}${v.name}`
+                      return `${v.feature ? 'a' : 'z'}${v.name}`
                     })}
                     renderRow={(
                       { description, feature, id, name }: Segment,
@@ -223,6 +232,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           !manageSegmentsPermission,
                         )
                         preselect.current = null
+                      }
+                      if (feature && !showFeatureSpecific) {
+                        return null
                       }
                       return renderWithPermission(
                         manageSegmentsPermission,
