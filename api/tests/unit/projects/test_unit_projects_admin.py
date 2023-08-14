@@ -1,6 +1,7 @@
 import typing
 from unittest.mock import MagicMock
 
+import pytest
 from django.contrib.admin import AdminSite
 
 from environments.models import Environment
@@ -10,6 +11,8 @@ from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 
 if typing.TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
+
     from organisations.models import Organisation
 
 
@@ -57,3 +60,21 @@ def test_project_admin_delete_all_segments(organisation: "Organisation"):
     assert FeatureState.objects.filter(
         feature=feature, environment__project=project_2, feature_segment__isnull=False
     ).exists()
+
+
+@pytest.mark.parametrize(
+    "is_superuser, expected_result", ((True, True), (False, False))
+)
+def test_project_admin_has_delete_all_segments_permission(
+    is_superuser: bool, expected_result: bool, django_user_model: type["AbstractUser"]
+):
+    # Given
+    request = MagicMock(user=django_user_model(is_superuser=is_superuser))
+
+    # Then
+    assert (
+        ProjectAdmin(Project, AdminSite()).has_delete_all_segments_permission(
+            request=request
+        )
+        is expected_result
+    )
