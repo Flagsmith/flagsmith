@@ -30,12 +30,12 @@ runs:
 
   steps:
     - name: Build temporary Docker image for running the API
-      working-directory: api
-      run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} .
+      run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} -f api/Dockerfile .
       shell: bash
 
     - name: Run the API
       id: run-api-container
+      working-directory: api
       env:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
         DATABASE_URL: ${{ inputs.database_url }}
@@ -54,7 +54,6 @@ runs:
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
         -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
         -e ACCESS_LOG_LOCATION=- \
-        -f api/Dockerfile \
         -d flagsmith/flagsmith-api:e2e-${{ github.sha }} )
         echo "containerId=$CONTAINER_ID" >> "$GITHUB_OUTPUT"
       shell: bash
