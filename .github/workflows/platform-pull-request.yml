@@ -142,7 +142,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: api/Dockerfile
-          context: .
           push: false
           tags: flagsmith/flagsmith-api:testing
 
@@ -166,6 +165,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: frontend/Dockerfile
-          context: frontend/
           push: false
           tags: flagsmith/flagsmith-frontend:testing
