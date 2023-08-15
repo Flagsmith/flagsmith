@@ -1,6 +1,5 @@
 import logging
 import typing
-from contextlib import suppress
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -109,9 +108,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
-    last_password_reset_email_at = models.DateTimeField(null=True, blank=True)
-    num_of_password_reset_emails_sent = models.IntegerField(default=0)
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
@@ -141,9 +137,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
-
-        self.last_password_reset_email_at = None
-        self.num_of_password_reset_emails_sent = 0
+        self.password_reset_requests.all().delete()
 
     @property
     def auth_type(self):
@@ -168,19 +162,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return None
         return " ".join([self.first_name, self.last_name]).strip()
 
-    @property
     def can_send_password_reset_email(self) -> bool:
-        with suppress(TypeError):
-            if self.last_password_reset_email_at < timezone.now() - timezone.timedelta(
-                seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
-            ):
-                return True
-            return (
-                self.num_of_password_reset_emails_sent
-                < settings.MAX_PASSWORD_RESET_EMAILS
-            )
-
-        return True
+        limit = timezone.now() - timezone.timedelta(
+            seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
+        )
+        return (
+            self.password_reset_requests.filter(requested_at__gte=limit).count()
+            < settings.MAX_PASSWORD_RESET_EMAILS
+        )
 
     def password_reset_email_sent(self):
         self.num_of_password_reset_emails_sent += 1

@@ -16,6 +16,8 @@ from trench.views.authtoken import (
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 
+from .models import UserPasswordResetRequest
+
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     """
@@ -74,10 +76,8 @@ class FFAdminUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
-
-        if user and user.can_send_password_reset_email:
+        if user and user.can_send_password_reset_email():
             super().reset_password(request, *args, **kwargs)
-            user.password_reset_email_sent()
-            user.save()
+            UserPasswordResetRequest.objects.create(user=user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
