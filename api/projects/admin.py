@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import typing
-
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
-
-if typing.TYPE_CHECKING:
-    from django.db.models import QuerySet
-    from django.http import HttpRequest
 
 
 class EnvironmentInline(admin.StackedInline):
@@ -79,10 +75,10 @@ class ProjectAdmin(admin.ModelAdmin):
         description="Delete all segments for project",
         permissions=["delete_all_segments"],
     )
-    def delete_all_segments(self, request: "HttpRequest", queryset: "QuerySet"):
+    def delete_all_segments(self, request: HttpRequest, queryset: QuerySet):
         Segment.objects.filter(project__in=queryset).delete()
 
     def has_delete_all_segments_permission(
-        self, request: "HttpRequest", obj: Project = None
+        self, request: HttpRequest, obj: Project = None
     ) -> bool:
         return request.user.is_superuser
