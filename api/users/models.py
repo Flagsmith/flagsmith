@@ -172,10 +172,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             < settings.MAX_PASSWORD_RESET_EMAILS
         )
 
-    def password_reset_email_sent(self):
-        self.num_of_password_reset_emails_sent += 1
-        self.last_password_reset_email_at = timezone.now()
-
     def join_organisation_from_invite_email(self, invite_email: "Invite"):
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
