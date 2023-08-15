@@ -108,6 +108,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
