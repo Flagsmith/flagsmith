@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             name='HistoricalEnvironmentFeatureVersion',
             fields=[
                 ('deleted_at', models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True)),
-                ('sha', models.CharField(db_index=True, max_length=64)),
+                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4)),
                 ('created_at', models.DateTimeField(blank=True, editable=False)),
                 ('updated_at', models.DateTimeField(blank=True, editable=False)),
                 ('published', models.BooleanField(default=False)),
@@ -51,8 +51,7 @@ class Migration(migrations.Migration):
             name='EnvironmentFeatureVersion',
             fields=[
                 ('deleted_at', models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True)),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('sha', models.CharField(max_length=64, primary_key=True, serialize=False)),
+                ('uuid', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('published', models.BooleanField(default=False)),

@@ -100,7 +100,7 @@ def test_v2_versioning(
         create_environment_feature_version_response.status_code
         == status.HTTP_201_CREATED
     )
-    ef_version_sha = create_environment_feature_version_response.json()["sha"]
+    ef_version_uuid = create_environment_feature_version_response.json()["uuid"]
 
     # again, we should still get the same response on the flags endpoints
     verify_consistent_responses(num_expected_flags=2)
@@ -109,7 +109,7 @@ def test_v2_versioning(
     # version we created
     ef_version_featurestates_url = reverse(
         "api-v1:versioning:environment-feature-version-featurestates-list",
-        args=[environment, feature, ef_version_sha],
+        args=[environment, feature, ef_version_uuid],
     )
     list_ef_version_featurestates_response = admin_client.get(
         ef_version_featurestates_url
@@ -128,7 +128,7 @@ def test_v2_versioning(
     # let's change the value of the feature state
     update_ef_version_feature_state_url = reverse(
         "api-v1:versioning:environment-feature-version-featurestates-detail",
-        args=[environment, feature, ef_version_sha, new_ef_version_feature_state_id],
+        args=[environment, feature, ef_version_uuid, new_ef_version_feature_state_id],
     )
     update_ef_version_feature_state_response = admin_client.patch(
         update_ef_version_feature_state_url,
@@ -172,7 +172,7 @@ def test_v2_versioning(
     # finally, let's publish the new version and verify that we get a different response
     publish_ef_version_url = reverse(
         "api-v1:versioning:environment-feature-versions-publish",
-        args=[environment, feature, ef_version_sha],
+        args=[environment, feature, ef_version_uuid],
     )
     publish_ef_version_response = admin_client.post(publish_ef_version_url)
     assert publish_ef_version_response.status_code == status.HTTP_200_OK

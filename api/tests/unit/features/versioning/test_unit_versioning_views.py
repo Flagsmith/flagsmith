@@ -61,9 +61,11 @@ def test_get_versions_for_a_feature_and_environment(
     response_json = response.json()
     assert response_json["count"] == 3
 
-    shas = {result["sha"] for result in response_json["results"]}
-    assert len(shas) == 3
-    assert all(version.sha in shas for version in (version_1, version_2, draft_version))
+    uuids = {result["uuid"] for result in response_json["results"]}
+    assert len(uuids) == 3
+    assert all(
+        str(version.uuid) in uuids for version in (version_1, version_2, draft_version)
+    )
 
 
 def test_create_new_feature_version(
@@ -100,7 +102,7 @@ def test_delete_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -130,7 +132,7 @@ def test_cannot_delete_live_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -162,7 +164,7 @@ def test_publish_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -197,7 +199,7 @@ def test_list_environment_feature_version_feature_states(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -228,7 +230,7 @@ def test_add_environment_feature_version_feature_state(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -268,7 +270,7 @@ def test_cannot_add_feature_state_to_published_environment_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
         ],
     )
 
@@ -317,7 +319,7 @@ def test_update_environment_feature_version_feature_state(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
             feature_state.id,
         ],
     )
@@ -360,7 +362,7 @@ def test_cannot_update_feature_state_in_published_environment_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
             feature_state.id,
         ],
     )
@@ -407,7 +409,7 @@ def test_delete_environment_feature_version_feature_state(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
             segment_override.id,
         ],
     )
@@ -454,7 +456,7 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
             segment_override.id,
         ],
     )
@@ -497,7 +499,7 @@ def test_cannot_delete_environment_default_feature_state_for_unpublished_environ
         args=[
             environment_v2_versioning.id,
             feature.id,
-            environment_feature_version.sha,
+            environment_feature_version.uuid,
             segment_override.id,
         ],
     )

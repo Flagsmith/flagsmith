@@ -111,18 +111,19 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         if getattr(self, "swagger_fake_view", False):
             return FeatureState.objects.none()
 
-        environment_feature_version_sha = self.kwargs["environment_feature_version_pk"]
+        environment_feature_version_uuid = self.kwargs["environment_feature_version_pk"]
 
         return FeatureState.objects.filter(
             environment=self.request.environment,
             feature=self.request.feature,
-            environment_feature_version_id=environment_feature_version_sha,
+            environment_feature_version_id=environment_feature_version_uuid,
         )
 
     def initial(self, request: Request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         environment_feature_version = get_object_or_404(
-            EnvironmentFeatureVersion, sha=self.kwargs["environment_feature_version_pk"]
+            EnvironmentFeatureVersion,
+            uuid=self.kwargs["environment_feature_version_pk"],
         )
         if self.action != "list" and environment_feature_version.published is True:
             raise FeatureVersionDeleteError("Cannot modify published version.")

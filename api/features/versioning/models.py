@@ -1,5 +1,6 @@
 import datetime
 import typing
+import uuid
 
 from core.models import (
     SoftDeleteExportableModel,
@@ -20,9 +21,9 @@ if typing.TYPE_CHECKING:
 
 class EnvironmentFeatureVersion(
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(),
 ):
-    sha = models.CharField(primary_key=True, max_length=64)
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4)
     environment = models.ForeignKey(
         "environments.Environment", on_delete=models.CASCADE
     )
@@ -90,7 +91,7 @@ class EnvironmentFeatureVersion(
                 published=True,
             )
             .order_by("-live_from")
-            .exclude(sha=self.sha)
+            .exclude(uuid=self.uuid)
             .first()
         )
 

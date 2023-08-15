@@ -1,6 +1,3 @@
-import hashlib
-import time
-
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -24,16 +21,6 @@ def add_existing_feature_states(
         feature_state.clone(
             env=instance.environment, environment_feature_version=instance
         )
-
-
-@receiver(pre_save, sender=EnvironmentFeatureVersion)
-def generate_sha(instance: EnvironmentFeatureVersion, **kwargs):
-    if not instance.sha:
-        instance.sha = hashlib.sha256(
-            f"{instance.environment.id}{instance.feature.id}{time.time()}".encode(
-                "utf-8"
-            )
-        ).hexdigest()
 
 
 @receiver(pre_save, sender=EnvironmentFeatureVersion)

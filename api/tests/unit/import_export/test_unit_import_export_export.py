@@ -271,7 +271,6 @@ def test_export_features_with_environment_feature_version(
 
     for item in export:
         if item["model"] == "versioning.EnvironmentFeatureVersion":
-            assert item["fields"]["sha"]
             assert item["fields"]["uuid"]
         elif item["model"] == "features.FeatureState":
             assert item["fields"]["environment_feature_version"]

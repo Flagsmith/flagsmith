@@ -46,8 +46,8 @@ def test_create_new_environment_feature_version_clones_feature_states_from_previ
     )
 
     # Then
-    # the version is given a sha
-    assert new_version.sha
+    # the version is given a uuid
+    assert new_version.uuid
 
     # and the correct feature states are cloned and added to the new version
     assert new_version.feature_states.count() == 2
