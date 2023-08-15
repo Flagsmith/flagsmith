@@ -2,10 +2,10 @@ import React, { Component } from 'react'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import PaymentModal from 'components/modals/Payment'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import { Link } from 'react-router-dom'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -70,19 +70,8 @@ const ChangeRequestsPage = class extends Component {
                   <InfoMessage>
                     Schedule feature state changes with a Change Request flow
                     with our{' '}
-                    <Button
-                      theme='text'
-                      onClick={() => {
-                        openModal(
-                          'Payment plans',
-                          <PaymentModal viewOnly={false} />,
-                          'modal-lg',
-                        )
-                      }}
-                    >
-                      Start-up plan
-                    </Button>
-                    . Find out more{' '}
+                    <Link to='/organisation-settings'>Start-up plan</Link>. Find
+                    out more{' '}
                     <Button
                       theme='text'
                       href='https://docs.flagsmith.com/advanced-use/scheduled-flags#creating-a-stand-alone-scheduled-flag-change'

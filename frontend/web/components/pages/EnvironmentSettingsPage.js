@@ -8,7 +8,6 @@ import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
 import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
-import PaymentModal from 'components/modals/Payment'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -16,6 +15,7 @@ import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
+import { Link } from 'react-router-dom'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -411,18 +411,12 @@ const EnvironmentSettingsPage = class extends Component {
                                 <p className='fs-small lh-sm'>
                                   View and manage your feature changes with a
                                   Change Request flow with our{' '}
-                                  <Button
-                                    theme='text'
-                                    onClick={() => {
-                                      openModal(
-                                        'Payment plans',
-                                        <PaymentModal viewOnly={false} />,
-                                        'modal-lg',
-                                      )
-                                    }}
+                                  <Link
+                                    to='/organisation-settings'
+                                    className='btn-link'
                                   >
                                     Scale-up plan
-                                  </Button>
+                                  </Link>
                                   . Find out more{' '}
                                   <Button
                                     theme='text'

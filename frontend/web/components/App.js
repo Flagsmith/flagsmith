@@ -5,7 +5,6 @@ import amplitude from 'amplitude-js'
 import NavLink from 'react-router-dom/NavLink'
 import Aside from './Aside'
 import Popover from './base/Popover'
-import PaymentModal from './modals/Payment'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
 import Blocked from './Blocked'
@@ -324,9 +323,10 @@ const App = class extends Component {
                                     Utils.getFlagsmithHasFeature(
                                       'payments_enabled',
                                     ) && (
-                                      <a
-                                        href='#'
-                                        className='cursor-pointer nav-link p-2'
+                                      <NavLink
+                                        to='/organisation-settings'
+                                        activeClassName='active'
+                                        className='nav-link'
                                         style={
                                           Utils.calculaterRemainingCallsPercentage(
                                             totalApiCalls,
@@ -345,13 +345,6 @@ const App = class extends Component {
                                               }
                                             : {}
                                         }
-                                        onClick={() => {
-                                          openModal(
-                                            'Payment plans',
-                                            <PaymentModal viewOnly={false} />,
-                                            'modal-lg',
-                                          )
-                                        }}
                                       >
                                         {Utils.calculaterRemainingCallsPercentage(
                                           totalApiCalls,
@@ -381,7 +374,7 @@ const App = class extends Component {
                                             <span>Upgrade</span>
                                           </>
                                         )}
-                                      </a>
+                                      </NavLink>
                                     )}
                                   <Headway className='nav-link cursor-pointer' />
                                   <a

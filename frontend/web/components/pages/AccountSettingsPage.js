@@ -5,7 +5,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import TwoFactor from 'components/TwoFactor'
-import PaymentModal from 'components/modals/Payment'
 import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
@@ -15,6 +14,7 @@ import { getStore } from 'common/store'
 import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
+import { Link } from 'react-router-dom'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -425,19 +425,12 @@ class TheComponent extends Component {
                         <TwoFactor />
                       ) : (
                         <div className='text-right'>
-                          <button
-                            type='button'
+                          <Link
+                            to='/organisation-settings'
                             className='btn btn-primary text-center ml-auto mt-2 mb-2'
-                            onClick={() => {
-                              openModal(
-                                'Payment plans',
-                                <PaymentModal viewOnly={false} />,
-                                'modal-lg',
-                              )
-                            }}
                           >
                             Manage payment plan
-                          </button>
+                          </Link>
                         </div>
                       )}
                     </div>

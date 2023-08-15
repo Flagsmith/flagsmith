@@ -9,9 +9,11 @@ $primary700: #3919b7;
 $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
+$success600: #13787b;
 $info: #0aaddf;
 $warning: #ff9f43;
 $secondary400: #fae392;
+$secondary500: #f7d56e;
 $secondary600: #d4b050;
 $secondary: #fae392;
 $text-icon-dark: #1a2634;
@@ -267,6 +269,7 @@ $code-bg: $bg-dark200;
 
 //Panels
 $panel-border-color: $basic-alpha-16;
+$panel-border-color-dark: $white-alpha-16;
 $panel-border-radius: $border-radius-lg;
 $panel-table-header-bc: $bg-light200;
 $panel-table-header-color: $text-icon-grey;
@@ -278,5 +281,5 @@ $panel-list-item-color: $text-icon-dark;
 $panel-list-item-sub-font-size: $font-caption;
 $panel-list-item-sub-line-height: $line-height-xsm;
 $panel-list-item-sub-color: $text-icon-grey;
-$panel-grey-background:$bg-light200;
-$panel-grey-background-dark:$bg-dark300;
+$panel-grey-background: $bg-light200;
+$panel-grey-background-dark: $bg-dark300;

@@ -35,10 +35,13 @@
   .list-item {
     color: $text-icon-light;
     &.clickable:hover .btn-link {
-      color: white;
+      color: $primary400;
     }
     .btn-link {
-      color: white;
+      color: $primary400;
+      path {
+        fill: $primary400;
+      }
     }
   }
 }

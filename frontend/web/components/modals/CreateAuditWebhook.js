@@ -123,7 +123,7 @@ const CreateAuditWebhook = class extends Component {
                 )}
                 <div className={isEdit ? 'footer' : ''}>
                   <div className='mb-3'>
-                    <p className='text-right'>
+                    <p className='text-dark fw-bold'>
                       This will {isEdit ? 'update' : 'create'} a webhook for the
                       Organisation{' '}
                       <strong>{AccountStore.getOrganisation().name}</strong>
@@ -136,18 +136,20 @@ const CreateAuditWebhook = class extends Component {
                     />
                     {isEdit ? (
                       <Button
-                        className='ml-4'
+                        className='ml-3'
                         data-test='update-feature-btn'
                         id='update-feature-btn'
                         disabled={isSaving || !url}
+                        size='small'
                       >
                         {isSaving ? 'Creating' : 'Update Webhook'}
                       </Button>
                     ) : (
                       <Button
-                        className='ml-4'
+                        className='ml-3'
                         type='submit'
                         disabled={isSaving || !url}
+                        size='small'
                       >
                         {isSaving ? 'Creating' : 'Create Webhook'}
                       </Button>
@@ -157,8 +159,8 @@ const CreateAuditWebhook = class extends Component {
               </Flex>
               <FormGroup className='ml-1'>
                 <div>
-                  <Row className={'mb-4'} space>
-                    <h6>Example Payload </h6>
+                  <Row className='mb-3' space>
+                    <div className='font-weight-medium'>Example Payload </div>
                     <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks' />
                   </Row>
 

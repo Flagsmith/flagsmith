@@ -137,6 +137,15 @@
         background-color: $bg-dark200;
       }
     }
+    .panel-content {
+      .search-list {
+        border: 1px solid $panel-border-color-dark;
+        .list-item {
+          border-top: 1px solid $panel-border-color-dark;
+          background-color: $bg-dark400;
+        }
+      }
+    }
   }
 }
 

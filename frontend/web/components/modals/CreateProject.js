@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
 import InfoMessage from 'components/InfoMessage'
-import PaymentModal from './Payment'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
-import ModalHR from './ModalHR'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -64,11 +62,7 @@ const CreateProject = class extends Component {
                       <a
                         href='#'
                         onClick={() => {
-                          openModal(
-                            'Payment plans',
-                            <PaymentModal viewOnly={false} />,
-                            'modal-lg',
-                          )
+                          document.location.replace('/organisation-settings')
                         }}
                       >
                         Startup plan
