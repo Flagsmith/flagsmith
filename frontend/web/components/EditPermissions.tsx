@@ -202,7 +202,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           {level !== 'organisation' && (
             <Row>
               <Flex>
-                <h5>Administrator</h5>
+                <div className='font-weight-medium text-dark mb-1'>
+                  Administrator
+                </div>
                 <div className='list-item-footer faint'>
                   {hasRbacPermission ? (
                     `Full View and Write permissions for the given ${Format.camelCase(
@@ -212,7 +214,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
                     <span>
                       Role-based access is not available on our Free Plan.
                       Please visit{' '}
-                      <a href='https://flagsmith.com/pricing/'>
+                      <a
+                        href='https://flagsmith.com/pricing/'
+                        className='text-primary'
+                      >
                         our Pricing Page
                       </a>{' '}
                       for more information on our licensing options.
@@ -260,7 +265,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           }}
         />
 
-        <div className='text-right pt-4 mb-4'>
+        <div className='text-right mt-5 text-dark'>
           This will edit the permissions for{' '}
           <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
         </div>
@@ -295,7 +300,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           id='update-feature-btn'
           disabled={saving || !hasRbacPermission}
         >
-          {saving ? 'Saving' : 'Save'}
+          {saving ? 'Saving' : 'Save Permissions'}
         </Button>
       </div>
     </div>
@@ -358,13 +363,14 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <h5>Manage Users and Permissions</h5>
-      <p className='fs-small lh-sm'>
+      <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
+          className='fw-normal'
         >
           Learn about User Roles.
         </Button>
@@ -471,7 +477,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 >
                                   {role !== 'ADMIN' && (
                                     <Icon
-                                      name='setting'
+                                      name='settings-2'
                                       width={20}
                                       fill='#656D7B'
                                     />

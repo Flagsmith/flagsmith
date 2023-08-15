@@ -50,10 +50,13 @@ const UserGroupsList: FC<UserGroupsListType> = ({
 
   return (
     <FormGroup>
-      <InfoMessage>
-        Group admins and users with the organisation permission{' '}
-        <strong>Manage Groups</strong> can invite additional members to groups.
-      </InfoMessage>
+      <div className='col-md-6'>
+        <InfoMessage>
+          Group admins and users with the organisation permission{' '}
+          <strong>Manage Groups</strong> can invite additional members to
+          groups.
+        </InfoMessage>
+      </div>
       <PanelSearch
         id='users-list'
         title={noTitle ? '' : 'Groups'}
@@ -146,7 +149,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
                   style={{ width: '72px' }}
                   className='px-3 text-center'
                 >
-                  <Icon name='setting' width={20} fill='#656D7B' />
+                  <Icon name='settings-2' width={20} fill='#656D7B' />
                 </div>
               )}
             </Row>

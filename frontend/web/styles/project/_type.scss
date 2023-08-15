@@ -80,6 +80,9 @@ a {
   .text-primary {
     color: $bt-brand-primary-dark;
   }
+  .text-dark {
+    color: $text-icon-light !important;
+  }
 }
 * {
   -webkit-font-smoothing: antialiased;
