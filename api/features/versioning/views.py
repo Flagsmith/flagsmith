@@ -39,6 +39,13 @@ class EnvironmentFeatureVersionViewSet(
     serializer_class = EnvironmentFeatureVersionSerializer
     permission_classes = [IsAuthenticated, EnvironmentFeatureVersionPermissions]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # populated during the request to use across multiple view methods
+        self.feature = None
+        self.environment = None
+
     def get_serializer_class(self):
         match self.action:
             case "publish":
@@ -62,21 +69,19 @@ class EnvironmentFeatureVersionViewSet(
             pk=self.kwargs["environment_pk"],
         )
 
-        request.feature = feature
-        request.environment = environment
+        self.feature = feature
+        self.environment = environment
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return EnvironmentFeatureVersion.objects.none()
 
         return EnvironmentFeatureVersion.objects.filter(
-            environment=self.request.environment, feature_id=self.request.feature
+            environment=self.environment, feature_id=self.feature
         )
 
     def perform_create(self, serializer: Serializer) -> None:
-        serializer.save(
-            environment=self.request.environment, feature=self.request.feature
-        )
+        serializer.save(environment=self.environment, feature=self.feature)
 
     def perform_destroy(self, instance: EnvironmentFeatureVersion) -> None:
         if instance.is_live:
@@ -107,6 +112,14 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     ]
     pagination_class = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # populated during the request to use across multiple view methods
+        self.feature = None
+        self.environment = None
+        self.environment_feature_version = None
+
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return FeatureState.objects.none()
@@ -114,8 +127,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         environment_feature_version_uuid = self.kwargs["environment_feature_version_pk"]
 
         return FeatureState.objects.filter(
-            environment=self.request.environment,
-            feature=self.request.feature,
+            environment=self.environment,
+            feature=self.feature,
             environment_feature_version_id=environment_feature_version_uuid,
         )
 
@@ -128,31 +141,31 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         if self.action != "list" and environment_feature_version.published is True:
             raise FeatureVersionDeleteError("Cannot modify published version.")
 
-        # patch the objects onto the request
-        request.environment_feature_version = environment_feature_version
-        request.environment = get_object_or_404(
+        # patch the objects onto the view to use in other methods
+        self.environment_feature_version = environment_feature_version
+        self.environment = get_object_or_404(
             Environment, pk=self.kwargs["environment_pk"]
         )
-        request.feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
+        self.feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["environment"] = getattr(self.request, "environment", None)
-        context["feature"] = getattr(self.request, "feature", None)
+        context["environment"] = self.environment
+        context["feature"] = self.feature
         return context
 
     def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
         serializer.save(
-            feature=self.request.feature,
-            environment=self.request.environment,
-            environment_feature_version=self.request.environment_feature_version,
+            feature=self.feature,
+            environment=self.environment,
+            environment_feature_version=self.environment_feature_version,
         )
 
     def perform_update(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
         serializer.save(
-            feature=self.request.feature,
-            environment=self.request.environment,
-            environment_feature_version=self.request.environment_feature_version,
+            feature=self.feature,
+            environment=self.environment,
+            environment_feature_version=self.environment_feature_version,
         )
 
     def perform_destroy(self, instance):
