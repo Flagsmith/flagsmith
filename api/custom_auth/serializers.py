@@ -1,5 +1,5 @@
 from django.conf import settings
-from djoser.constants import Messages
+from djoser.conf import settings as djoser_settings
 from djoser.serializers import UserCreateSerializer, UserDeleteSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
@@ -39,7 +39,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                     UniqueValidator(
                         queryset=FFAdminUser.objects.all(),
                         lookup="iexact",
-                        message=Messages.CANNOT_CREATE_USER_ERROR,
+                        message=djoser_settings.CONSTANTS.messages.CANNOT_CREATE_USER_ERROR,
                     )
                 ]
             }
