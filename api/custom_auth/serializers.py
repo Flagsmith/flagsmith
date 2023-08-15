@@ -22,9 +22,6 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 class CustomUserCreateSerializer(UserCreateSerializer):
     key = serializers.SerializerMethodField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     class Meta(UserCreateSerializer.Meta):
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
