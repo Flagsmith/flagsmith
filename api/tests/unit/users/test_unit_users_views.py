@@ -2,7 +2,11 @@ import json
 
 import pytest
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
 from django.urls import reverse
+from djoser import utils
+from djoser.email import PasswordResetEmail
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -117,3 +121,84 @@ def test_change_email_address_api(mocker):
     assert len(args) == 0
     assert len(kwargs) == 1
     assert kwargs["args"] == (first_name, settings.DEFAULT_FROM_EMAIL, old_email)
+
+
+@pytest.mark.django_db
+def test_send_reset_password_emails_rate_limit(settings, client, test_user):
+    # Given
+    settings.MAX_PASSWORD_RESET_EMAILS = 2
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 60
+
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password")
+    data = {"email": test_user.email}
+
+    # When
+    for _ in range(5):
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Then - we should only have two emails
+    assert len(mail.outbox) == 2
+    isinstance(mail.outbox[0], PasswordResetEmail)
+    isinstance(mail.outbox[1], PasswordResetEmail)
+
+    # clear the outbox
+    mail.outbox.clear()
+
+    # Next, let's reduce the cooldown to 1 second and try again
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 0.001
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then - we should receive another email
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert len(mail.outbox) == 1
+    isinstance(mail.outbox[0], PasswordResetEmail)
+
+
+@pytest.mark.django_db
+def test_send_reset_password_emails_rate_limit_resets_after_password_reset(
+    settings, client, test_user
+):
+    # Given
+    settings.MAX_PASSWORD_RESET_EMAILS = 2
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 60 * 60 * 24
+
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password")
+    data = {"email": test_user.email}
+
+    # First, let's hit the limit of emails we can send
+    for _ in range(5):
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Then - we should only have two emails
+    assert len(mail.outbox) == 2
+    mail.outbox.clear()
+
+    # Next, let's reset the password
+    reset_password_data = {
+        "new_password": "new_password",
+        "re_new_password": "new_password",
+        "uid": utils.encode_uid(test_user.pk),
+        "token": default_token_generator.make_token(test_user),
+    }
+    reset_password_confirm_url = reverse(
+        "api-v1:custom_auth:ffadminuser-reset-password-confirm"
+    )
+    response = client.post(
+        reset_password_confirm_url,
+        data=json.dumps(reset_password_data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Finally, let's try to send another email
+    client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then - we should receive another email
+    assert len(mail.outbox) == 1
