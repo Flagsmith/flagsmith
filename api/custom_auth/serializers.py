@@ -24,7 +24,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
         fields = UserCreateSerializer.Meta.fields + (
