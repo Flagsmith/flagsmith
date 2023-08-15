@@ -12,6 +12,12 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export type CreateVersionFeatureState = {
+  environmentId: string
+  featureId: string
+  sha: string
+  featureState: FeatureState
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -111,6 +117,18 @@ export type Req = {
     featureStates: FeatureState[]
   }
   createFeatureVersion: {
+    environmentId: string
+    featureId: string
+  }
+  publishFeatureVersion: {
+    sha: string
+    environmentId: string
+    featureId: string
+  }
+  createVersionFeatureState: CreateVersionFeatureState
+  updateVersionFeatureState: CreateVersionFeatureState & { id: number }
+  getVersionFeatureState: {
+    sha: string
     environmentId: string
     featureId: string
   }

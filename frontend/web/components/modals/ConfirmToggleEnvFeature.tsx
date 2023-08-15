@@ -17,14 +17,14 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
   return (
     <div id='confirm-toggle-feature-modal'>
       <p>
-        This will turn <strong>{feature}</strong> to{' '}
+        This will turn <strong>{feature}</strong>{' '}
         {featureValue ? (
           <span className='feature--off'>
-            <strong>"Off"</strong>
+            <strong>Off</strong>
           </span>
         ) : (
           <span className='feature--on'>
-            <strong>"On"</strong>
+            <strong>On</strong>
           </span>
         )}
         . <span>{description}</span>
