@@ -214,6 +214,33 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       actionType: Actions.ENABLE_TWO_FACTOR,
     })
   },
+  createRole(organisationId, body) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.CREATE_ROLE,
+      organisationId,
+      body,
+    })
+  },
+  getRoles(organisationId) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.GET_ROLES,
+      organisationId,
+    })
+  },
+  deleteRole(organisationId, roleId) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.DELETE_ROLE,
+      organisationId,
+      roleId,
+    })
+  },
+  editRole(organisationId, roleId, body) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.UPDATE_ROLE,
+      organisationId,
+      roleId,
+    })
+  },
   getChangeRequest(id, projectId, environmentId) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_CHANGE_REQUEST,

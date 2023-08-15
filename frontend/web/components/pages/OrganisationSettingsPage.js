@@ -7,6 +7,7 @@ import CreateGroupModal from 'components/modals/CreateGroup'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
+import ConfirmDeleteRole from 'components/modals/ConfirmDeleteRole'
 import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import AdminAPIKeys from 'components/AdminAPIKeys'
@@ -23,7 +24,7 @@ import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 
 const widths = [450, 150, 100]
-const rolesWidths = [100, 230]
+const rolesWidths = [250, 680, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -45,6 +46,7 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   componentDidMount = () => {
+    AppActions.getRoles(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
     if (
@@ -261,6 +263,37 @@ const OrganisationSettingsPage = class extends Component {
     return 'Within 30 days'
   }
 
+  createRole = (organisationId) => {
+    openModal(
+      'Create Role',
+      <CreateRole
+        organisationId={organisationId}
+        onComplete={() => {
+          AppActions.getRoles(organisationId)
+          closeModal()
+        }}
+      />,
+      'side-modal',
+    )
+  }
+  deleteRole = (role) => {
+    openModal('Remove Role', <ConfirmDeleteRole role={role} />, 'p-0')
+  }
+  editRole = (role) => {
+    openModal(
+      'Edit Role',
+      <CreateRole
+        isEdit
+        role={role}
+        onComplete={() => {
+          AppActions.getRoles(role.organisation)
+          closeModal()
+        }}
+      />,
+      'side-modal',
+    )
+  }
+
   render() {
     const {
       props: { webhooks, webhooksLoading },
@@ -271,10 +304,6 @@ const OrganisationSettingsPage = class extends Component {
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
-    const roles = [
-      { 'id': 4, 'name': 'Viewers', 'organisation': 'Org A' },
-      { 'id': 5, 'name': 'Support', 'organisation': 'Org B' },
-    ]
 
     return (
       <div className='app-container container'>
@@ -289,6 +318,7 @@ const OrganisationSettingsPage = class extends Component {
                   invites,
                   isLoading,
                   name,
+                  roles,
                   subscriptionMeta,
                   users,
                 }) => {
@@ -1253,10 +1283,8 @@ const OrganisationSettingsPage = class extends Component {
                                                 className='mr-2'
                                                 id='btn-invite'
                                                 onClick={() =>
-                                                  openModal(
-                                                    'Create Role',
-                                                    <CreateRole />,
-                                                    'side-modal',
+                                                  this.createRole(
+                                                    organisation.id,
                                                   )
                                                 }
                                                 type='button'
@@ -1277,7 +1305,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <Row className='table-header px-3'>
                                                   <div
                                                     style={{
-                                                      width: 150,
+                                                      width: rolesWidths[0],
                                                     }}
                                                   >
                                                     Roles
@@ -1289,35 +1317,50 @@ const OrganisationSettingsPage = class extends Component {
                                                   >
                                                     Description
                                                   </div>
+                                                  <div className='table-column text-center'>
+                                                    Remove
+                                                  </div>
                                                 </Row>
                                               }
                                               renderRow={(role) => (
                                                 <Row
-                                                  onClick={() => {
-                                                    console.log('click')
-                                                  }}
-                                                  space
                                                   className='list-item clickable cursor-pointer'
                                                   key={role.id}
                                                 >
-                                                  <Row className='table-column px-3'>
+                                                  <Row
+                                                    onClick={() => {
+                                                      this.editRole(role)
+                                                    }}
+                                                    className='table-column px-3'
+                                                    style={{
+                                                      width: rolesWidths[0],
+                                                    }}
+                                                  >
                                                     {role.name}
                                                   </Row>
-                                                  <Row style={{}}>
+                                                  <Row
+                                                    className='table-column px-3'
+                                                    onClick={() => {
+                                                      this.editRole(role)
+                                                    }}
+                                                    style={{
+                                                      width: rolesWidths[1],
+                                                    }}
+                                                  >
                                                     Manage user groups
                                                   </Row>
                                                   <div
-                                                    style={{ width: '80px' }}
-                                                    className='table-column text-center'
+                                                    style={{
+                                                      width: rolesWidths[2],
+                                                    }}
+                                                    className='table-column text-center px-3'
                                                   >
                                                     <Button
                                                       id='remove-role'
                                                       type='button'
-                                                      onClick={() =>
-                                                        console.log(
-                                                          'DEBUG: remove role',
-                                                        )
-                                                      }
+                                                      onClick={() => {
+                                                        this.deleteRole(role)
+                                                      }}
                                                       className='btn btn-with-icon'
                                                     >
                                                       <Icon

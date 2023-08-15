@@ -1,4 +1,4 @@
-import { Account, Segment, Tag, FeatureStateValue } from './responses'
+import { Account, Segment, Tag, FeatureStateValue, Role } from './responses'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -100,9 +100,9 @@ export type Req = {
     feature_state_value: FeatureStateValue
   }
   getRoles: { organisationId: string }
-  createRoles: {}
-  getRolesById: { organisationId: string; roleId: number; }
-  updateRolesById: { organisationId: string; roleId: number;}
-  deleteRolesById: { organisationId: string; roleId: number; }
+  createRole: { organisationId: string; body: Role }
+  getRole: { organisationId: string; roleId: number }
+  updateRole: { organisationId: string; roleId: number; body: Role }
+  deleteRole: { organisation_id: string; role_id: number }
   // END OF TYPES
 }
