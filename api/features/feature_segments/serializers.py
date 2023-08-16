@@ -114,7 +114,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
 
         environment = feature_segments[0].environment
         if environment.use_v2_feature_versioning:
-            self._validate_single_environment_feature_version(feature_segments)
+            self._validate_unique_environment_feature_version(feature_segments)
 
         return validated_attrs
 
@@ -123,7 +123,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
         return FeatureSegment.update_priorities(id_priority_pairs)
 
     @staticmethod
-    def _validate_single_environment_feature_version(
+    def _validate_unique_environment_feature_version(
         feature_segments: list[FeatureSegment],
     ) -> None:
         feature_states = []
