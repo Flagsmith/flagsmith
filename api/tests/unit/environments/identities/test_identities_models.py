@@ -1,7 +1,8 @@
 from django.utils import timezone
 
 from environments.identities.models import Identity
-from features.models import Feature, FeatureState
+from environments.models import Environment
+from features.models import Feature, FeatureSegment, FeatureState
 
 
 def test_identity_get_all_feature_states_gets_latest_committed_version(environment):
@@ -66,3 +67,52 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
         identity.id
     )
+
+
+def test_get_all_feature_states_where_feature_segment_has_more_than_one_feature_state(
+    feature: Feature,
+    environment: Environment,
+    identity: Identity,
+    identity_matching_segment: Identity,
+):
+    """
+    Test to verify what happens in the case that the data model is somehow abused
+    and we end up with more than one feature state for a single feature segment.
+
+    TODO: find out _how_ the data model is being abused and we are ending up with
+     these duplicates.
+    """
+
+    # Given
+    # 2 segment overrides for the same feature segment
+    feature_segment = FeatureSegment.objects.create(
+        environment=environment, segment=identity_matching_segment, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=1,
+    )
+    feature_state_2 = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=2,
+    )
+    # update the feature state to get around the BEFORE_CREATE validation...
+    feature_state_2.version = 1
+    feature_state_2.save()
+
+    # When
+    results = []
+    num_iterations = 10
+    for _ in range(num_iterations):
+        results.extend(identity.get_all_feature_states())
+
+    # Then
+    assert len(results) == num_iterations
+
+    unique_feature_states = set(results)
+    assert len(unique_feature_states) == 1
+    assert unique_feature_states.pop() == feature_state_2

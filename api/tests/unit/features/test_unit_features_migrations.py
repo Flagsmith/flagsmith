@@ -6,6 +6,11 @@ from django.utils import timezone
 
 from features.feature_types import MULTIVARIATE, STANDARD
 
+now = timezone.now()
+one_hour_ago = now - timedelta(hours=1)
+two_hours_ago = now - timedelta(hours=2)
+yesterday = now - timedelta(days=1)
+
 
 @pytest.mark.skipif(
     settings.SKIP_MIGRATION_TESTS is True,
@@ -170,19 +175,19 @@ def test_revert_feature_state_versioning_migrations(migrator):
         environment=environment,
         feature=feature,
         version=1,
-        live_from=timezone.now() - timedelta(days=1),
+        live_from=yesterday,
     )
     v2 = FeatureState.objects.create(
         environment=environment,
         feature=feature,
         version=2,
-        live_from=timezone.now() - timedelta(days=1),
+        live_from=yesterday,
     )
     v3 = FeatureState.objects.create(
         environment=environment,
         feature=feature,
         version=3,
-        live_from=timezone.now() + timedelta(days=1),
+        live_from=yesterday,
     )
 
     # When
@@ -241,3 +246,88 @@ def test_fix_feature_type_migration(migrator):
     )
     assert NewFeature.objects.get(id=standard_feature.id).type == STANDARD
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
+
+
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_remove_redundant_feature_segments(migrator):
+    old_state = migrator.apply_initial_migration(("features", "0059_fix_feature_type"))
+
+    # get all the model classes we need
+    organisation_model = old_state.apps.get_model("organisations", "organisation")
+    project_model = old_state.apps.get_model("projects", "project")
+    environment_model = old_state.apps.get_model("environments", "environment")
+    feature_model = old_state.apps.get_model("features", "feature")
+    feature_state_model = old_state.apps.get_model("features", "featurestate")
+    feature_segment_model = old_state.apps.get_model("features", "featuresegment")
+    segment_model = old_state.apps.get_model("segments", "segment")
+
+    # set up the scaffolding data
+    organisation = organisation_model.objects.create(name="test")
+    project = project_model.objects.create(name="test", organisation_id=organisation.id)
+    environment = environment_model.objects.create(name="test", project_id=project.id)
+    feature = feature_model.objects.create(name="test", project_id=project.id)
+    segment_1 = segment_model.objects.create(name="test1", project_id=project.id)
+
+    # create a feature segment with 2 feature states
+    feature_segment_1 = feature_segment_model.objects.create(
+        feature_id=feature.id, environment_id=environment.id, segment_id=segment_1.id, priority=1
+    )
+    feature_state_1 = feature_state_model.objects.create(
+        feature_id=feature.id,
+        environment_id=environment.id,
+        feature_segment_id=feature_segment_1.id,
+        version=1,
+        live_from=one_hour_ago,
+    )
+    feature_state_2 = feature_state_model.objects.create(
+        feature_id=feature.id,
+        environment_id=environment.id,
+        feature_segment_id=feature_segment_1.id,
+        version=None,
+        live_from=two_hours_ago,
+    )
+    feature_state_2.version = 1
+    feature_state_2.save()
+
+    # and one with a single feature state which shouldn't be affected
+    segment_2 = segment_model.objects.create(name="test2", project_id=project.id)
+    feature_segment_2 = feature_segment_model.objects.create(
+        feature_id=feature.id,
+        environment_id=environment.id,
+        segment_id=segment_2.id,
+        priority=1,
+    )
+    feature_state_3 = feature_state_model.objects.create(
+        feature_id=feature.id,
+        environment_id=environment.id,
+        feature_segment_id=feature_segment_2.id,
+        version=1,
+        live_from=one_hour_ago,
+    )
+
+    # now let's run the migration
+    new_state = migrator.apply_tested_migration(
+        ("features", "0060_remove_redundant_segment_override_feature_states")
+    )
+
+    # and we should see that only one feature state is left for the feature segment that had
+    # 2 feature states - the one with the most recent live from
+    new_feature_segment_model = new_state.apps.get_model("features", "featuresegment")
+
+    feature_segment_1_post_migration = new_feature_segment_model.objects.get(
+        feature_id=feature.id, environment_id=environment.id, segment_id=segment_1.id
+    )
+    assert feature_segment_1_post_migration.feature_states.count() == 1
+    assert (
+        feature_segment_1_post_migration.feature_states.first().id == feature_state_1.id
+    )
+
+    # and the feature segment which only had one, still has it
+    feature_segment_2_post_migration = new_feature_segment_model.objects.get(
+        feature_id=feature.id, environment_id=environment.id, segment_id=segment_2.id
+    )
+    assert feature_segment_2_post_migration.feature_states.count() == 1
+    assert feature_segment_2_post_migration.feature_states.first().id == feature_state_3.id
