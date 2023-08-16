@@ -12,7 +12,7 @@ def test_is_authenticated(master_api_key):
     user = APIKeyUser(master_api_key)
 
     # Then
-    assert user.is_authenticated() is True
+    assert user.is_authenticated is True
 
 
 @pytest.mark.parametrize(

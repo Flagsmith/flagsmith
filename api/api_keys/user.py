@@ -10,6 +10,7 @@ from permissions.permission_service import (
     is_master_api_key_project_admin,
     master_api_key_has_organisation_permission,
 )
+from users.abc import UserABC
 
 from .models import MasterAPIKey
 
@@ -18,10 +19,11 @@ if typing.TYPE_CHECKING:
     from projects.models import Project
 
 
-class APIKeyUser:
+class APIKeyUser(UserABC):
     def __init__(self, key: MasterAPIKey):
         self.key = key
 
+    @property
     def is_authenticated(self):
         return True
 
