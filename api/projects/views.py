@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from api_keys.user import APIKeyUser
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
@@ -134,7 +133,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request: Request, pk: int = None):
-        if isinstance(request.user, APIKeyUser):
+        if hasattr(request.user, "is_master_api_key_user"):
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={

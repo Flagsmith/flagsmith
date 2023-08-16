@@ -24,7 +24,11 @@ class APIKeyUser(UserABC):
         self.key = key
 
     @property
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
+        return True
+
+    @property
+    def is_master_api_key_user(self) -> bool:
         return True
 
     def belongs_to(self, organisation_id: int) -> bool:

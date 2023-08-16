@@ -136,12 +136,12 @@ class _AbstractBaseAuditableModel(models.Model):
 def get_history_user(
     instance: typing.Any, request: HttpRequest
 ) -> typing.Optional["FFAdminUser"]:
-    from api_keys.user import APIKeyUser
-
-    try:
-        return None if isinstance(request.user, APIKeyUser) else request.user
-    except AttributeError:
-        return None
+    return (
+        request.user
+        if hasattr(request, "user")
+        and not hasattr(request.user, "is_master_api_key_user")
+        else None
+    )
 
 
 def abstract_base_auditable_model_factory(

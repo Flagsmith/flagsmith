@@ -5,7 +5,6 @@ from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.sdk.serializers_mixins import (
@@ -130,8 +129,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-
-        if user and not isinstance(user, APIKeyUser):
+        if user and not hasattr(user, "is_master_api_key_user"):
             instance.owners.add(user)
         return instance
 

@@ -12,7 +12,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api_keys.user import APIKeyUser
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -174,7 +173,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
-        if isinstance(request.user, APIKeyUser):
+        if hasattr(request.user, "is_master_api_key_user"):
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={
