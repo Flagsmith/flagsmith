@@ -8,7 +8,8 @@ const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
   static propTypes = {
-    action: OptionalNode,
+    actionButton: OptionalNode,
+    filterElement: OptionalNode,
     filterRow: OptionalFunc,
     goToPage: OptionalFunc,
     isLoading: OptionalBool,
@@ -141,8 +142,11 @@ const PanelSearch = class extends Component {
         action={
           this.props.filterRow ||
           this.props.sorting ||
+          this.props.filterElement ||
           this.props.actionButton ? (
             <Row>
+              {!!this.props.filterElement && this.props.filterElement}
+
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover
