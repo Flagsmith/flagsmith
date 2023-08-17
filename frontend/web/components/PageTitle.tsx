@@ -12,11 +12,13 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
       <div className='flex-row align-items-center'>
         <Flex>
           <h4 className='mb-0'>{title}</h4>
-          <div className='row'>
-            <div className='col-xl-8 col-12'>
-              <div>{children}</div>
-            </div>
-          </div>
+          {children && (
+            <Row>
+              <div className='col-xl-8 col-12 mt-1'>
+                <div>{children}</div>
+              </div>
+            </Row>
+          )}
         </Flex>
         {!!cta && <div className='float-right ms-2'>{cta}</div>}
       </div>

@@ -212,12 +212,11 @@ $animation-timing-function: ease-in-out;
 
       .collapsible__header {
         font-weight: bold;
-        margin: 13px 0px;
+        margin: 20px 0px 16px;
       }
     }
     &__header {
       color: $text-icon-light;
-      padding: 14px 0px;
       svg {
         path {
           fill: $text-icon-light;
@@ -249,6 +248,19 @@ $animation-timing-function: ease-in-out;
         svg {
           path {
             fill: $aside-nav-color;
+          }
+        }
+      }
+    }
+  }
+  &__environments-wrapper {
+    .collapsible__header {
+      padding: 16px 0px;
+      &:hover {
+        color: $aside-nav-hover;
+        svg {
+          path {
+            fill: $aside-nav-hover;
           }
         }
       }
@@ -300,6 +312,9 @@ $animation-timing-function: ease-in-out;
     color: $aside-nav-color;
     font-size: $font-size-base;
     line-height: $line-height-base;
+    svg {
+      vertical-align: bottom;
+  }
     &.disabled {
       color: $text-icon-grey !important;
       pointer-events: none;
@@ -315,7 +330,7 @@ $animation-timing-function: ease-in-out;
       fill: $aside-nav-color;
     }
 
-    padding: 14px 0 14px 16px;
+    padding: 12px 0 12px 16px;
     border-radius: $border-radius-lg;
     cursor: pointer;
     display: flex;
@@ -344,11 +359,14 @@ $animation-timing-function: ease-in-out;
   }
   &__title-wrapper {
     text-decoration: none;
-    padding: 14px 0px 14px 16px;
+    padding: 1rem 0px 1rem 1rem;
     &:hover {
       .aside__link-text {
         text-decoration: none;
       }
+    }
+    svg {
+      vertical-align: bottom;
     }
   }
   .aside__header-link {
@@ -397,10 +415,13 @@ $animation-timing-function: ease-in-out;
     position: relative;
     display: block;
     color: $aside-nav-color;
+    svg {
+      vertical-align: bottom;
+    }
     &:hover {
       color: $aside-nav-inactive-hover-color;
     }
-    padding: 9px 32px;
+    padding: 9px 16px;
     margin: 0 32px;
     cursor: pointer;
     &.active,
@@ -409,14 +430,20 @@ $animation-timing-function: ease-in-out;
       background-color: $aside-nav-active;
       color: $aside-nav-active-color;
       opacity: 1;
+      path {
+        fill: $text-icon-light;
+      }
     }
 
     &:hover {
       color: $text-icon-light;
-      background-color:$primary-alfa-8;
+      background-color: $primary-alfa-8;
       border-radius: $border-radius;
       opacity: 1;
       text-decoration: none;
+      path {
+        fill: $text-icon-light;
+      }
     }
     &:focus {
       text-decoration: none;

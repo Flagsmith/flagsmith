@@ -20,10 +20,14 @@ const Collapsible = class extends PureComponent {
           className='collapsible__header ml-5 mr-3'
           onClick={this.props.onClick}
         >
-          <div className='flex-row no-wrap space clickable'>
+          <Row space className='no-wrap clickable'>
             <div>{this.props.title}</div>
-            <Icon name={this.props.active ? 'chevron-down' : 'chevron-right'} />
-          </div>
+            <div className='align-self-start'>
+              <Icon
+                name={this.props.active ? 'chevron-down' : 'chevron-right'}
+              />
+            </div>
+          </Row>
         </div>
         {this.props.active ? (
           <div className='collapsible__content'>{this.props.children}</div>

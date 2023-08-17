@@ -162,18 +162,15 @@ const Aside = class extends Component {
                             }
                             title={
                               project && project.name ? (
-                                <Row>
-                                  {project.name}{' '}
+                                <Column className='mx-0'>
+                                  <div>{project.name}</div>
                                   {Utils.getFlagsmithHasFeature(
                                     'edge_identities',
                                   ) && (
-                                    <div className='text-center'>
+                                    <div className='mt-2'>
                                       <span
                                         style={{
                                           border: 'none',
-                                          bottom: 2,
-                                          left: 5,
-                                          position: 'relative',
                                         }}
                                         className='chip chip--active bg-secondary'
                                       >
@@ -202,7 +199,7 @@ const Aside = class extends Component {
                                       </span>
                                     </div>
                                   )}
-                                </Row>
+                                </Column>
                               ) : (
                                 'No Project'
                               )
@@ -397,6 +394,12 @@ const Aside = class extends Component {
                                                   id='features-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                                 >
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='rocket'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Features
                                                 </NavLink>
                                                 <NavLink
@@ -405,6 +408,12 @@ const Aside = class extends Component {
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                 >
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='timer'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Scheduling
                                                   {scheduled ? (
                                                     <span className='ml-1 unread'>
@@ -418,6 +427,12 @@ const Aside = class extends Component {
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                 >
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='request'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Change Requests{' '}
                                                   {changeRequests ? (
                                                     <span className='unread'>
@@ -432,6 +447,12 @@ const Aside = class extends Component {
                                                     exact
                                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                   >
+                                                    <span className='mr-2'>
+                                                      <Icon
+                                                        name='people'
+                                                        fill='#9DA4AE'
+                                                      />
+                                                    </span>
                                                     Identities
                                                   </NavLink>
                                                 )}
@@ -442,6 +463,12 @@ const Aside = class extends Component {
                                                     className='aside__environment-list-item mt-1'
                                                     to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                                   >
+                                                    <span className='mr-2'>
+                                                      <Icon
+                                                        name='settings-2'
+                                                        fill='#9DA4AE'
+                                                      />
+                                                    </span>
                                                     Settings
                                                   </NavLink>
                                                 )}
