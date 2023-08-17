@@ -104,5 +104,9 @@ export type Req = {
   getRole: { organisationId: string; roleId: number }
   updateRole: { organisationId: string; roleId: number; body: Role }
   deleteRole: { organisation_id: string; role_id: number }
+  getRolePermission: { id: string }
+  updateRolePermission: { id: string }
+  deleteRolePermission: { id: string }
+  createRolePermission: {}
   // END OF TYPES
 }

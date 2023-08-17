@@ -5,7 +5,6 @@ const data = require('../data/base/_data')
 const controller = {
   createRole: (organisationId, body) => {
     store.loading()
-    console.log('DEBUG: role:', body)
     const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/`
     return data
       .post(endpoint, body)
@@ -28,7 +27,6 @@ const controller = {
             ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6))
             : 1
         store.model.roles = res.results && _.sortBy(res.results, (r) => r.name)
-        console.log('DEBUG:  store.model.roles:', store.model.roles)
         store.loaded()
       })
       .catch((e) => API.ajaxHandler(store, e))

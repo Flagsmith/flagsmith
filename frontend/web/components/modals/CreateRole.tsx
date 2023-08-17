@@ -2,8 +2,6 @@ import React, { FC, useEffect, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import PanelSearch from 'components/PanelSearch'
-import { AvailablePermission } from 'common/types/responses'
 import CollapsibleNestedList from 'components/CollapsibleNestedList'
 import {
   useGetRoleQuery,
@@ -11,8 +9,10 @@ import {
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import EditPermissions from 'components/EditPermissions'
-
+import { EditPermissionsModal } from 'components/EditPermissions'
+import OrganisationStore from 'common/stores/organisation-store'
+import ProjectFilter from 'components/ProjectFilter'
+import { Environment } from 'common/types/responses'
 
 type CreateRoleType = {
   organisationId?: string
@@ -26,60 +26,28 @@ const CreateRole: FC<CreateRoleType> = ({
   organisationId,
   role,
 }) => {
-  console.log('DEBUG role:', role)
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
+  const [project, setProject] = useState<string>('')
+  const [environments, setEnvironments] = useState<Environment[]>([])
+
   const isSaving = false
-  const projectData = [
-    {
-      subItems: [
-        { title: 'permission 1-1' },
-        { title: 'permission 1-2' },
-        { title: 'Permission 1-3' },
-      ],
-      title: 'Project 1',
-    },
-    {
-      subItems: [
-        { title: 'permission 2-1' },
-        { title: 'permission 2-2' },
-        { title: 'permission 2-3' },
-      ],
-      title: 'Project 2',
-    },
-  ]
+  const projectData = OrganisationStore.getProjects()
 
-  const envData = [
-    {
-      subItems: [
-        { title: 'permission 1-1' },
-        { title: 'permission 1-2' },
-        { title: 'Permission 1-3' },
-      ],
-      title: 'Env 1',
-    },
-    {
-      subItems: [{ title: 'permission 2-1' }],
-      title: 'Env 2',
-    },
-  ]
+  useEffect(() => {
+    if (project) {
+      const environments = projectData.find(
+        (p) => p.id === parseInt(project),
+      ).environments
+      setEnvironments(environments)
+    }
+  }, [project])
 
-  const orgPerm = [
-    {
-      'description': 'Allows the user to create projects in this organisation.',
-      'key': 'CREATE_PROJECT',
-    },
-    {
-      'description': 'Allows the user to invite users to the organisation.',
-      'key': 'MANAGE_USERS',
-    },
-    {
-      'description':
-        'Allows the user to manage the groups in the organisation and their members.',
-      'key': 'MANAGE_USER_GROUPS',
-    },
-  ]
-
+  const selectProject = (project) => {
+    console.log('DEBUG: selectProject:', project, 'tab:', tab)
+    setProject(project)
+    setTab(3)
+  }
   const Tab1 = () => {
     const { data: roleData, isLoading } = useGetRoleQuery(
       {
@@ -114,7 +82,6 @@ const CreateRole: FC<CreateRoleType> = ({
     }, [createSuccess, updateSuccess])
 
     const save = () => {
-      console.log('DEBUG: isEdit:', isEdit)
       if (isEdit) {
         editRole({
           body: { name: roleName },
@@ -185,78 +152,40 @@ const CreateRole: FC<CreateRoleType> = ({
         <TabItem tabLabel='Rol'>
           <Tab1 />
         </TabItem>
-        <TabItem tabLabel='Organisation permission'>
-        <EditPermissions
-            tabClassName='flat-panel'
-            parentId='test-idpar'
-            parentLevel='project'
-            parentSettingsLink={`/project/test-id/settings`}
-            id='test-id'
-            level='environment'
+        <TabItem tabLabel='Organisation permissions'>
+          <EditPermissionsModal
+            id={'id'}
+            level={'organisation'}
+            parentId={'parentId'}
+            parentLevel={'parentLevel'}
+            parentSettingsLink={'parentSettingsLink'}
+            role={role}
           />
-          {/* <PanelSearch
-            title='Edit Permissions'
-            className='no-pad my-2'
-            items={orgPerm}
-            renderRow={(p: AvailablePermission) => {
-              return (
-                <Row
-                  key={p.key}
-                  style={{ opacity: 1 }}
-                  className='list-item list-item-sm px-3'
-                >
-                  <Row space>
-                    <Flex>
-                      <div className='list-item-subtitle'>{p.description}</div>
-                    </Flex>
-                    <Switch
-                      onChange={() => console.log('DEBUG swicht')}
-                      disabled={false}
-                      checked={true}
-                    />
-                  </Row>
-                </Row>
-              )
-            }}
-          /> */}
-          <div className='text-right mb-2'>
-            <Button
-              onClick={() => console.log('DEBUG save')}
-              data-test='update-role-btn'
-              id='update-role-btn'
-              //   disabled={isSaving || !name || invalid}
-            >
-              {isSaving ? 'Updating' : 'Update Permissions'}
-            </Button>
-          </div>
         </TabItem>
-        <TabItem tabLabel='Project permission'>
+        <TabItem tabLabel='Project permissions'>
           <h5 className='my-4 title'>Edit Permissions</h5>
-          <CollapsibleNestedList mainItems={projectData} isButtonVisible />
-          <div className='text-right mb-2'>
-            <Button
-              onClick={() => console.log('DEBUG save')}
-              data-test='update-role-btn'
-              id='update-role-btn'
-              //   disabled={isSaving || !name || invalid}
-            >
-              {isSaving ? 'Updating' : 'Update Permissions'}
-            </Button>
-          </div>
+          <CollapsibleNestedList
+            mainItems={projectData}
+            // isButtonVisible
+            role={role}
+            level={'project'}
+            // selectProject={(project) => selectProject(project)}
+          />
         </TabItem>
-        <TabItem tabLabel='Environment permission'>
+        <TabItem tabLabel='Environment permissions'>
           <h5 className='my-4 title'>Edit Permissions</h5>
-          <CollapsibleNestedList mainItems={envData} />
-          <div className='text-right mb-2'>
-            <Button
-              onClick={() => console.log('DEBUG save')}
-              data-test='update-role-btn'
-              id='update-role-btn'
-              //   disabled={isSaving || !name || invalid}
-            >
-              {isSaving ? 'Updating' : 'Update Permissions'}
-            </Button>
-          </div>
+          <ProjectFilter
+            organisationId={role.organisation}
+            onChange={setProject}
+            value={project}
+          />
+          {environments && (
+            <CollapsibleNestedList
+              mainItems={environments}
+              role={role}
+              level={'environment'}
+            />
+          )}
         </TabItem>
       </Tabs>
     ) : (

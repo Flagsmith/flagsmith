@@ -323,5 +323,6 @@ export type Res = {
     value: string
   }
   roles: Roles
+  rolePermission: { id: string }
   // END OF TYPES
 }

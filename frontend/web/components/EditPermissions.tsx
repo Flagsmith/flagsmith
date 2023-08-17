@@ -24,6 +24,17 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ModalHR from './modals/ModalHR'
 import Icon from './Icon'
+import {
+  useCreateRoleEnvironmentPermissionMutation,
+  useCreateRoleOrganisationPermissionMutation,
+  useCreateRoleProjectPermissionMutation,
+  useGetRoleEnvironmentPermissionsQuery,
+  useGetRoleOrganisationPermissionsQuery,
+  useGetRoleProjectPermissionsQuery,
+  useUpdateRoleEnvironmentPermissionMutation,
+  useUpdateRoleOrganisationPermissionMutation,
+  useUpdateRoleProjectPermissionMutation,
+} from 'common/services/useRolePermission'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -41,6 +52,8 @@ type EditPermissionModalType = {
   permissions?: UserPermission[]
   push: (route: string) => void
   user?: User
+  role?: Role
+  hasPermissions: () => void
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -74,35 +87,108 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     parentLevel,
     parentSettingsLink,
     push,
+    role,
     user,
+    hasPermissions,
   } = props
 
   const { data: permissions } = useGetAvailablePermissionsQuery({ level })
+  const processResults = (results: (UserPermission & GroupPermission)[]) => {
+    let entityPermissions:
+      | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
+          user?: any
+          group?: any
+          role?: any
+        })
+      | undefined = isGroup
+      ? find(results || [], (r) => r.group.id === group?.id)
+      : role
+      ? find(results || [], (r) => r.role === role?.id)
+      : find(results || [], (r) => r.user?.id === user?.id)
+
+    if (!entityPermissions) {
+      entityPermissions = { admin: false, permissions: [] }
+    }
+    if (user) {
+      entityPermissions.user = user.id
+    }
+    if (group) {
+      entityPermissions.group = group.id
+    }
+    return entityPermissions
+  }
+
+  const [updateRoleEnvironmentPermission] =
+    useUpdateRoleEnvironmentPermissionMutation()
+  const [updateRoleOrganisationPermission] =
+    useUpdateRoleOrganisationPermissionMutation()
+  const [updateRoleProjectPermission] = useUpdateRoleProjectPermissionMutation()
+
+  const [createRoleEnvironmentPermission] =
+    useCreateRoleEnvironmentPermissionMutation()
+  const [createRoleProjectPermission] =
+    useCreateRoleProjectPermissionMutation()
+  const [createRoleOrganisationPermission] =
+    useCreateRoleOrganisationPermissionMutation()
+
+  const { data, isLoading } = useGetRoleOrganisationPermissionsQuery(
+    {
+      organisation_id: role?.organisation,
+      role_id: role?.id,
+    },
+    { skip: !role },
+  )
+
+  const { data: projectPermissions, isLoading: projectIsLoading } =
+    useGetRoleProjectPermissionsQuery(
+      {
+        organisation_id: role?.organisation,
+        project_id: id,
+        role_id: role?.id,
+      },
+      { skip: !role },
+    )
+
+  const { data: envPermissions, isLoading: envIsLoading } =
+    useGetRoleEnvironmentPermissionsQuery(
+      {
+        env_id: id,
+        organisation_id: role?.organisation,
+        role_id: role?.id,
+      },
+      { skip: !role },
+    )
+
+  useEffect(() => {
+    if (!isLoading && data && level === 'organisation') {
+      const entityPermissions = processResults(data.results)
+      setEntityPermissions(entityPermissions)
+    }
+  }, [data, isLoading])
+
+  useEffect(() => {
+    if (!projectIsLoading && projectPermissions && level === 'project') {
+      const entityPermissions = processResults(projectPermissions?.results)
+      setEntityPermissions(entityPermissions)
+      hasPermissions?.(
+        entityPermissions.permissions.length > 0 || entityPermissions.admin,
+      )
+    }
+  }, [projectPermissions, projectIsLoading])
+
+  useEffect(() => {
+    if (!envIsLoading && envPermissions && level === 'environment') {
+      const entityPermissions = processResults(envPermissions?.results)
+      setEntityPermissions(entityPermissions)
+      hasPermissions?.(
+        entityPermissions.permissions.length > 0 || entityPermissions.admin,
+      )
+    }
+  }, [envPermissions, envIsLoading])
 
   useEffect(() => {
     let parentGet = Promise.resolve()
-    const processResults = (results: (UserPermission & GroupPermission)[]) => {
-      let entityPermissions:
-        | (Omit<EntityPermissions, 'user' | 'group'> & {
-            user?: any
-            group?: any
-          })
-        | undefined = isGroup
-        ? find(results || [], (r) => r.group.id === group?.id)
-        : find(results || [], (r) => r.user?.id === user?.id)
-
-      if (!entityPermissions) {
-        entityPermissions = { admin: false, permissions: [] }
-      }
-      if (user) {
-        entityPermissions.user = user.id
-      }
-      if (group) {
-        entityPermissions.group = group.id
-      }
-      return entityPermissions
-    }
-    if (parentLevel) {
+    if (!role && parentLevel) {
       const parentUrl = isGroup
         ? `${parentLevel}s/${parentId}/user-group-permissions/`
         : `${parentLevel}s/${parentId}/user-permissions/`
@@ -123,22 +209,24 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           }
         })
     }
-    parentGet
-      .then(() => {
-        const url = isGroup
-          ? `${level}s/${id}/user-group-permissions/`
-          : `${level}s/${id}/user-permissions/`
-        _data
-          .get(`${Project.api}${url}`)
-          .then((results: (UserPermission & GroupPermission)[]) => {
-            // @ts-ignore
-            const entityPermissions = processResults(results)
-            setEntityPermissions(entityPermissions)
-          })
-      })
-      .catch(() => {
-        setParentError(true)
-      })
+    if (!role) {
+      parentGet
+        .then(() => {
+          const url = isGroup
+            ? `${level}s/${id}/user-group-permissions/`
+            : `${level}s/${id}/user-permissions/`
+          _data
+            .get(`${Project.api}${url}`)
+            .then((results: (UserPermission & GroupPermission)[]) => {
+              // @ts-ignore
+              const entityPermissions = processResults(results)
+              setEntityPermissions(entityPermissions)
+            })
+        })
+        .catch(() => {
+          setParentError(true)
+        })
+    }
     //eslint-disable-next-line
   }, [])
 
@@ -156,30 +244,126 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
   const save = () => {
     const entityId =
       typeof entityPermissions.id === 'undefined' ? '' : entityPermissions.id
-    const url = isGroup
-      ? `${level}s/${id}/user-group-permissions/${entityId}`
-      : `${level}s/${id}/user-permissions/${entityId}`
-    setSaving(true)
-    const action = entityId ? 'put' : 'post'
-    _data[action](`${Project.api}${url}${entityId && '/'}`, entityPermissions)
-      .then(() => {
-        onSave && onSave()
-        close()
-      })
-      .catch(() => {
-        setSaving(false)
-      })
+    if (!role) {
+      const url = isGroup
+        ? `${level}s/${id}/user-group-permissions/${entityId}`
+        : `${level}s/${id}/user-permissions/${entityId}`
+      setSaving(true)
+      const action = entityId ? 'put' : 'post'
+      _data[action](`${Project.api}${url}${entityId && '/'}`, entityPermissions)
+        .then(() => {
+          onSave && onSave()
+          close()
+        })
+        .catch(() => {
+          setSaving(false)
+        })
+    } else {
+      if (entityId) {
+        switch (level) {
+          case 'organisation':
+            updateRoleOrganisationPermission({
+              body: {
+                permissions: entityPermissions.permissions,
+              },
+              id: entityId,
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          case 'project':
+            updateRoleProjectPermission({
+              body: {
+                admin: entityPermissions.admin,
+                permissions: entityPermissions.permissions,
+                project: id,
+              },
+              id: entityPermissions.id,
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          case 'environment':
+            updateRoleEnvironmentPermission({
+              body: {
+                admin: entityPermissions.admin,
+                environment: id,
+                permissions: entityPermissions.permissions,
+              },
+              id: entityPermissions.id,
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          default:
+            break
+        }
+      } else {
+        switch (level) {
+          case 'organisation':
+            createRoleOrganisationPermission({
+              body: {
+                permissions: entityPermissions.permissions,
+              },
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          case 'project':
+            createRoleProjectPermission({
+              body: {
+                admin: entityPermissions.admin,
+                permissions: entityPermissions.permissions,
+                project: id,
+              },
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          case 'environment':
+            createRoleEnvironmentPermission({
+              body: {
+                admin: entityPermissions.admin,
+                environment: id,
+                permissions: entityPermissions.permissions,
+              },
+              organisation_id: role.organisation,
+              role_id: role.id,
+            })
+            break
+          default:
+            break
+        }
+      }
+    }
   }
 
   const togglePermission = (key: string) => {
-    const newEntityPermissions = { ...entityPermissions }
-    const index = newEntityPermissions.permissions.indexOf(key)
-    if (index === -1) {
-      newEntityPermissions.permissions.push(key)
+    if (role) {
+      const updatedPermissions = [...entityPermissions.permissions]
+      const index = updatedPermissions.indexOf(key)
+      if (index === -1) {
+        updatedPermissions.push(key)
+      } else {
+        updatedPermissions.splice(index, 1)
+      }
+
+      setEntityPermissions({
+        ...entityPermissions,
+        permissions: updatedPermissions,
+      })
     } else {
-      newEntityPermissions.permissions.splice(index, 1)
+      const newEntityPermissions = { ...entityPermissions }
+
+      const index = newEntityPermissions.permissions.indexOf(key)
+
+      if (index === -1) {
+        newEntityPermissions.permissions.push(key)
+      } else {
+        newEntityPermissions.permissions.splice(index, 1)
+      }
+      setEntityPermissions(newEntityPermissions)
     }
-    setEntityPermissions(newEntityPermissions)
   }
 
   const toggleAdmin = () => {
@@ -201,7 +385,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       <div className='modal-body'>
         <div className='mb-2'>
           {level !== 'organisation' && (
-            <Row>
+            <Row className={role ? 'px-3 py-2' : ''}>
               <Flex>
                 <strong>Administrator</strong>
                 <div className='list-item-footer faint'>
@@ -263,10 +447,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
 
         <p className='text-right mt-2'>
           This will edit the permissions for{' '}
-          <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
+          <strong>
+            {isGroup
+              ? `the ${name} group`
+              : role
+              ? ` ${role.name}`
+              : ` ${name}`}
+          </strong>
+          .
         </p>
 
-        {parentError && (
+        {parentError && !role && (
           <InfoMessage>
             The selected {isGroup ? 'group' : 'user'} does not have explicit
             user permissions to view this {parentLevel}. If the user does not
@@ -289,9 +480,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       <ModalHR />
 
       <div className='modal-footer'>
-        <Button className='mr-2' onClick={closeModal} theme='secondary'>
-          Cancel
-        </Button>
+        {!role && (
+          <Button className='mr-2' onClick={closeModal} theme='secondary'>
+            Cancel
+          </Button>
+        )}
         <Button
           onClick={save}
           data-test='update-feature-btn'

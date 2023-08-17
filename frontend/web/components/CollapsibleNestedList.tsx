@@ -1,25 +1,29 @@
 import React, { useState } from 'react'
 import Icon from 'components/Icon'
-
-type SubItem = {
-  title: string
-}
+import { EditPermissionsModal } from 'components/EditPermissions'
 
 type MainItem = {
-  title: string
-  subItems: SubItem[]
+  name: string
 }
 
-type Props = {
+type CollapsibleNestedListProps = {
   mainItems: MainItem[]
   isButtonVisible: boolean
+  selectProject: (project) => void
+  role: Role
+  level: string
+  id: string
 }
 
-const CollapsibleNestedList: React.FC<Props> = ({
+const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
   isButtonVisible,
+  level,
   mainItems,
+  role,
+  selectProject,
 }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const [hasPermissions, setHasPermissions] = useState<boolean>(false)
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prevExpanded) =>
@@ -37,7 +41,7 @@ const CollapsibleNestedList: React.FC<Props> = ({
       }}
     >
       {mainItems.map((mainItem, index) => (
-        <div>
+        <div key={index}>
           <Row
             key={index}
             style={{
@@ -46,15 +50,22 @@ const CollapsibleNestedList: React.FC<Props> = ({
               opacity: 1,
             }}
             className='list-item clickable cursor-pointer list-item-sm px-3'
-            onClick={() => toggleExpand(mainItem.title)}
           >
-            <Flex>
-              <div className='list-item-subtitle'>{mainItem.title}</div>
+            <Flex onClick={() => toggleExpand(mainItem.title)}>
+              <div
+                className={
+                  hasPermissions
+                    ? 'list-item-subtitle font-weight-medium'
+                    : 'list-item-subtitle'
+                }
+              >
+                {mainItem.name}
+              </div>
             </Flex>
             {isButtonVisible && (
               <Button
                 theme='text'
-                onClick={() => console.log('DEBUG go to env')}
+                // onClick={selectProject?.(mainItem.id)}
                 disabled={false}
                 checked={true}
               >
@@ -62,32 +73,22 @@ const CollapsibleNestedList: React.FC<Props> = ({
               </Button>
             )}
             <Icon
-              name={expandedItems.includes(mainItem.title) ? 'chevron-down' : 'chevron-right'}
+              name={
+                expandedItems.includes(mainItem.title)
+                  ? 'chevron-down'
+                  : 'chevron-right'
+              }
               width={25}
             />
           </Row>
           <div>
             {expandedItems.includes(mainItem.title) && (
-              <ul className='m-0 p-0'>
-                {mainItem.subItems.map((subItem, subIndex) => (
-                  <Row
-                    className='px-3'
-                    style={{
-                      border: '1px solid rgba(101, 109, 123, 0.16)',
-                      minHeight: '60px',
-                    }}
-                  >
-                    <Flex>
-                      <div className='list-item-subtitle'>{subItem.title}</div>
-                    </Flex>
-                    <Switch
-                      onChange={() => console.log('DEBUG swicht')}
-                      disabled={false}
-                      checked={true}
-                    />
-                  </Row>
-                ))}
-              </ul>
+              <EditPermissionsModal
+                id={mainItem.id}
+                level={level}
+                role={role}
+                hasPermissions={(hasPermissions) => setHasPermissions(hasPermissions)}
+              />
             )}
           </div>
         </div>
