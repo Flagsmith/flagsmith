@@ -36,6 +36,11 @@ const OrganisationProvider = class extends Component {
         users: OrganisationStore.getUsers(),
       })
     })
+    this.listenTo(RoleStore, 'change', () => {
+      this.setState({
+        roles: RoleStore.getRoles(),
+      })
+    })
     this.listenTo(OrganisationStore, 'saved', () => {
       this.props.onSave && this.props.onSave(OrganisationStore.savedId)
     })

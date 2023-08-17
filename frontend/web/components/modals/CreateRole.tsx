@@ -41,7 +41,7 @@ const CreateRole: FC<CreateRoleType> = ({
       ).environments
       setEnvironments(environments)
     }
-  }, [project])
+  }, [project, projectData])
 
   const selectProject = (project) => {
     console.log('DEBUG: selectProject:', project, 'tab:', tab)

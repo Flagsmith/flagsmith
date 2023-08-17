@@ -3,16 +3,6 @@ const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 
 const controller = {
-  createRole: (organisationId, body) => {
-    store.loading()
-    const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/`
-    return data
-      .post(endpoint, body)
-      .then((res) => {
-        store.loaded()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
   getRoles: (organisationId) => {
     store.loading()
     const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/`
@@ -31,14 +21,6 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  deleteRole: (organisationId, roleId) => {
-    store.loading()
-    const endpoint =` http://localhost:8000/api/v1/organisations/${organisationId}/roles/${roleId}`
-    return data
-      .get(endpoint)
-      .then((res) => {console.log('DEBUG: delete:', res)})
-      .catch((e) => API.ajaxHandler(store, e))
-  },
   getRole: (organisationId, roleId) => {
     store.loading()
     const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/${roleId}`
@@ -46,17 +28,6 @@ const controller = {
       .get(endpoint)
       .then((res) => {
         console.log('DEBUG: res:', res)
-        store.loaded()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  updateRole: (organisationId, roleId, body) => {
-    store.loading()
-    const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/${roleId}`
-    return data
-      .get(endpoint)
-      .then((res) => {
-        console.log('DEBUG: res update:', res)
         store.loaded()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -76,9 +47,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   switch (action.actionType) {
     case Actions.GET_ROLES:
       controller.getRoles(action.organisationId)
-      break
-    case Actions.CREATE_ROLE:
-      controller.createRole(action.organisationId, action.body)
       break
     default:
     // Handle other actions if needed

@@ -277,7 +277,16 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
   deleteRole = (role) => {
-    openModal('Remove Role', <ConfirmDeleteRole role={role} />, 'p-0')
+    openModal(
+      'Remove Role',
+      <ConfirmDeleteRole
+        role={role}
+        onComplete={() => {
+          AppActions.getRoles(role.organisation)
+        }}
+      />,
+      'p-0',
+    )
   }
   editRole = (role) => {
     openModal(
@@ -336,7 +345,6 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
-
                   return (
                     <div>
                       <Tabs

@@ -7,16 +7,17 @@ import ErrorMessage from 'components/ErrorMessage'
 
 type ConfirmDeleteRoleType = {
   role: Role
+  onComplete?: () => void
 }
-const ConfirmDeleteRole: FC<ConfirmDeleteRoleType> = ({ role }) => {
-  const [deleteRole, { isError, isSuccess: deletedSuccess }] =
-    useDeleteRoleMutation()
+const ConfirmDeleteRole: FC<ConfirmDeleteRoleType> = ({ onComplete, role }) => {
+  const [deleteRole, { isError, isSuccess: deleted }] = useDeleteRoleMutation()
 
   useEffect(() => {
-    if (deletedSuccess) {
+    if (deleted) {
+      onComplete?.()
       closeModal()
     }
-  }, [deletedSuccess])
+  }, [deleted, onComplete])
 
   const ModalBody: FC<ConfirmDeleteRoleType> = ({ role }) => {
     return (

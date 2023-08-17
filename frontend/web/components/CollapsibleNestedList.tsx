@@ -20,7 +20,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
   level,
   mainItems,
   role,
-  selectProject,
+  // selectProject,
 }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const [hasPermissions, setHasPermissions] = useState<boolean>(false)
