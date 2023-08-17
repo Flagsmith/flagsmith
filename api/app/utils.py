@@ -3,6 +3,9 @@ import pathlib
 
 import shortuuid
 
+UNKNOWN = "unknown"
+VERSIONS_INFO_FILE_LOCATION = ".versions.json"
+
 
 def create_hash():
     """Helper function to create a short hash"""
@@ -11,14 +14,13 @@ def create_hash():
 
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
-    release_please_manifest_location = ".versions.json"
     version_json = {}
-    image_tag = "unknown"
+    image_tag = UNKNOWN
 
-    manifest_versions_string = _get_file_contents(release_please_manifest_location)
+    manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
 
-    if manifest_versions_string != "unknown":
-        manifest_versions = json.loads(manifest_versions_string)
+    if manifest_versions_content != UNKNOWN:
+        manifest_versions = json.loads(manifest_versions_content)
         version_json["package_versions"] = manifest_versions
         image_tag = manifest_versions["."]
 
