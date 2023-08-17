@@ -67,11 +67,11 @@ but are happy to take pull requests!
 
 ### Per-Identity overrides do not trigger an update
 
-This is being worked on and we hope to release this capability in Q2 2023.
+This is being worked on and we hope to release this capability across all our SDKs in Q4 2023.
 
 ### Identity Trait updates do not trigger an update
 
-This is being worked on and we hope to release this capability in Q2 2023.
+This is being worked on and we hope to release this capability across all our SDKs in Q4 2023.
 
 ## How it works under the hood
 
