@@ -11,14 +11,14 @@ def create_hash():
 
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
-    release_please_manifest_location = "./.versions.json"
-    manifest_versions = None
+    release_please_manifest_location = ".versions.json"
     version_json = {}
     image_tag = "unknown"
 
-    manifest_versions = json.loads(_get_file_contents(release_please_manifest_location))
+    manifest_versions_string = _get_file_contents(release_please_manifest_location)
 
-    if manifest_versions:
+    if manifest_versions_string != "unknown":
+        manifest_versions = json.loads(manifest_versions_string)
         version_json["package_versions"] = manifest_versions
         image_tag = manifest_versions["."]
 
