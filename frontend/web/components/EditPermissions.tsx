@@ -53,7 +53,7 @@ type EditPermissionModalType = {
   push: (route: string) => void
   user?: User
   role?: Role
-  hasPermissions: () => void
+  // hasPermissions: () => void
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -89,7 +89,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     push,
     role,
     user,
-    hasPermissions,
+    // hasPermissions,
   } = props
 
   const { data: permissions } = useGetAvailablePermissionsQuery({ level })
@@ -148,6 +148,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       setSaving(true)
     }
     if (isEnvPermUpdated || isEnvPermCreated) {
+      refetchEnvPerm()
       toast('Environment permissions Saved')
       setSaving(false)
     }
@@ -158,6 +159,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       setSaving(true)
     }
     if (isOrgPermUpdated || isOrgPermCreated) {
+      refetchOrgPerm()
       toast('Organisation permissions Saved')
       setSaving(false)
     }
@@ -168,6 +170,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       setSaving(true)
     }
     if (isProjectPermUpdated || isProjectPermCreated) {
+      refetchProjectPerm()
       toast('Project permissions Saved')
       setSaving(false)
     }
@@ -178,7 +181,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     isProjectPermCreated,
   ])
 
-  const { data, isLoading } = useGetRoleOrganisationPermissionsQuery(
+  const {
+    data,
+    isLoading,
+    refetch: refetchOrgPerm,
+  } = useGetRoleOrganisationPermissionsQuery(
     {
       organisation_id: role?.organisation,
       role_id: role?.id,
@@ -186,25 +193,31 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     { skip: !role },
   )
 
-  const { data: projectPermissions, isLoading: projectIsLoading } =
-    useGetRoleProjectPermissionsQuery(
-      {
-        organisation_id: role?.organisation,
-        project_id: id,
-        role_id: role?.id,
-      },
-      { skip: !role },
-    )
+  const {
+    data: projectPermissions,
+    isLoading: projectIsLoading,
+    refetch: refetchProjectPerm,
+  } = useGetRoleProjectPermissionsQuery(
+    {
+      organisation_id: role?.organisation,
+      project_id: id,
+      role_id: role?.id,
+    },
+    { skip: !role },
+  )
 
-  const { data: envPermissions, isLoading: envIsLoading } =
-    useGetRoleEnvironmentPermissionsQuery(
-      {
-        env_id: id,
-        organisation_id: role?.organisation,
-        role_id: role?.id,
-      },
-      { skip: !role },
-    )
+  const {
+    data: envPermissions,
+    isLoading: envIsLoading,
+    refetch: refetchEnvPerm,
+  } = useGetRoleEnvironmentPermissionsQuery(
+    {
+      env_id: id,
+      organisation_id: role?.organisation,
+      role_id: role?.id,
+    },
+    { skip: !role },
+  )
 
   useEffect(() => {
     if (!isLoading && data && level === 'organisation') {
@@ -217,9 +230,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     if (!projectIsLoading && projectPermissions && level === 'project') {
       const entityPermissions = processResults(projectPermissions?.results)
       setEntityPermissions(entityPermissions)
-      hasPermissions?.(
-        entityPermissions.permissions.length > 0 || entityPermissions.admin,
-      )
+      // hasPermissions?.(
+      //   entityPermissions.permissions.length > 0 || entityPermissions.admin,
+      // )
     }
   }, [projectPermissions, projectIsLoading])
 
@@ -227,9 +240,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     if (!envIsLoading && envPermissions && level === 'environment') {
       const entityPermissions = processResults(envPermissions?.results)
       setEntityPermissions(entityPermissions)
-      hasPermissions?.(
-        entityPermissions.permissions.length > 0 || entityPermissions.admin,
-      )
+      // hasPermissions?.(
+      //   entityPermissions.permissions.length > 0 || entityPermissions.admin,
+      // )
     }
   }, [envPermissions, envIsLoading])
 
@@ -339,7 +352,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
               },
               id: entityPermissions.id,
               organisation_id: role.organisation,
-              role_id: role.id,
+              role_id: 89,
             })
             break
           default:

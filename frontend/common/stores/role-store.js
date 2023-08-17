@@ -1,22 +1,22 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
+const { getRoles } = require('../services/useRole')
+const { getStore } = require('../store')
 
 const controller = {
   getRoles: (organisationId) => {
     store.loading()
-    const endpoint = `http://localhost:8000/api/v1/organisations/${organisationId}/roles/`
-    return data
-      .get(endpoint)
+    return getRoles(
+      getStore(),
+      { organisation_id: `${organisationId}` },
+      { forceRefetch: true },
+    )
       .then((res) => {
-        store.paging.next = res.next
-        store.paging.count = res.count
-        store.paging.previous = res.previous
-        store.paging.currentPage =
-          endpoint.indexOf('?page=') !== -1
-            ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6))
-            : 1
-        store.model.roles = res.results && _.sortBy(res.results, (r) => r.name)
+        store.paging.next = res.data.next
+        store.paging.count = res.data.count
+        store.paging.previous = res.data.previous
+        store.model.roles = res.data.results && _.sortBy(res.data.results, (r) => r.name)
         store.loaded()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -27,7 +27,6 @@ const controller = {
     return data
       .get(endpoint)
       .then((res) => {
-        console.log('DEBUG: res:', res)
         store.loaded()
       })
       .catch((e) => API.ajaxHandler(store, e))

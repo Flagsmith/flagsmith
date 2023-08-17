@@ -270,6 +270,7 @@ const OrganisationSettingsPage = class extends Component {
         organisationId={organisationId}
         onComplete={() => {
           AppActions.getRoles(organisationId)
+          toast('Role created')
           closeModal()
         }}
       />,
@@ -283,6 +284,7 @@ const OrganisationSettingsPage = class extends Component {
         role={role}
         onComplete={() => {
           AppActions.getRoles(role.organisation)
+          toast('Role Deleted')
         }}
       />,
       'p-0',
@@ -296,6 +298,7 @@ const OrganisationSettingsPage = class extends Component {
         role={role}
         onComplete={() => {
           AppActions.getRoles(role.organisation)
+          toast('Role updated')
           closeModal()
         }}
       />,

@@ -21,16 +21,16 @@ export const roleService = service
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/`,
         }),
       }),
-      getRoles: builder.query<Res['roles'], Req['getRoles']>({
-        providesTags: (res) => [{ id: res?.id, type: 'Role' }],
-        query: (query: Req['getRoles']) => ({
-          url: `organisations/${query.organisation_id}/roles/`,
-        }),
-      }),
       getRole: builder.query<Res['roles'], Req['getRolesById']>({
         providesTags: (res) => [{ id: res?.id, type: 'RolesById' }],
         query: (query: Req['getRolesById']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/`,
+        }),
+      }),
+      getRoles: builder.query<Res['roles'], Req['getRoles']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Role' }],
+        query: (query: Req['getRoles']) => ({
+          url: `organisations/${query.organisation_id}/roles/`,
         }),
       }),
       updateRole: builder.mutation<Res['roles'], Req['updateRolesById']>({
@@ -61,8 +61,7 @@ export async function getRoles(
   data: Req['getRoles'],
   options?: Parameters<typeof roleService.endpoints.getRoles.initiate>[1],
 ) {
-  store.dispatch(roleService.endpoints.getRoles.initiate(data, options))
-  return Promise.all(store.dispatch(roleService.util.getRunningQueriesThunk()))
+  return store.dispatch(roleService.endpoints.getRoles.initiate(data, options))
 }
 export async function deleteRole(
   store: any,

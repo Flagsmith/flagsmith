@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import { useDeleteRoleMutation } from 'common/services/useRole'

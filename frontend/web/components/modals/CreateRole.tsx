@@ -153,14 +153,7 @@ const CreateRole: FC<CreateRoleType> = ({
           <Tab1 />
         </TabItem>
         <TabItem tabLabel='Organisation permissions'>
-          <EditPermissionsModal
-            id={'id'}
-            level={'organisation'}
-            parentId={'parentId'}
-            parentLevel={'parentLevel'}
-            parentSettingsLink={'parentSettingsLink'}
-            role={role}
-          />
+          <EditPermissionsModal level={'organisation'} role={role} />
         </TabItem>
         <TabItem tabLabel='Project permissions'>
           <h5 className='my-4 title'>Edit Permissions</h5>
@@ -178,8 +171,9 @@ const CreateRole: FC<CreateRoleType> = ({
             organisationId={role.organisation}
             onChange={setProject}
             value={project}
+            className='mb-2'
           />
-          {environments && (
+          {environments.length > 0 && (
             <CollapsibleNestedList
               mainItems={environments}
               role={role}

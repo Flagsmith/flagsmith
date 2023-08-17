@@ -23,7 +23,6 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
   // selectProject,
 }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
-  const [hasPermissions, setHasPermissions] = useState<boolean>(false)
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prevExpanded) =>
@@ -36,7 +35,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
   return (
     <div
       style={{
-        border: '1px solid rgba(101, 109, 123, 0.16)',
+        borderRadius: '10px',
         minHeight: '60px',
       }}
     >
@@ -44,23 +43,17 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
         <div key={index}>
           <Row
             key={index}
+            onClick={() => toggleExpand(mainItem.id)}
             style={{
               backgroundColor: '#fafafb',
               border: '1px solid rgba(101, 109, 123, 0.16)',
+              borderRadius: '10px',
               opacity: 1,
             }}
-            className='list-item clickable cursor-pointer list-item-sm px-3'
+            className='clickable cursor-pointer list-item-sm px-3'
           >
-            <Flex onClick={() => toggleExpand(mainItem.id)}>
-              <div
-                className={
-                  hasPermissions
-                    ? 'list-item-subtitle font-weight-medium'
-                    : 'list-item-subtitle'
-                }
-              >
-                {mainItem.name}
-              </div>
+            <Flex>
+              <div className={'list-item-subtitle'}>{mainItem.name}</div>
             </Flex>
             {isButtonVisible && (
               <Button
@@ -87,9 +80,9 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
                 id={mainItem.id}
                 level={level}
                 role={role}
-                hasPermissions={(hasPermissions) =>
-                  setHasPermissions(hasPermissions)
-                }
+                // hasPermissions={(hasPermissions) =>
+                //   setHasPermissions(hasPermissions)
+                // }
               />
             )}
           </div>
