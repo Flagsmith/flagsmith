@@ -22,11 +22,17 @@ ACTION_PERMISSIONS_MAP = {
     "partial_update": CREATE_FEATURE,
 }
 
+TAG_PERMISSION_SUPPORTED_ACTIONS = ["destroy"]
+
 
 class FeaturePermissions(IsAuthenticated):
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
+
+        if view.detail:
+            # handled by has_object_permission
+            return True
 
         try:
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
@@ -44,10 +50,14 @@ class FeaturePermissions(IsAuthenticated):
             return False
 
     def has_object_permission(self, request, view, obj):
+        tag_ids = []
+        if view.action in TAG_PERMISSION_SUPPORTED_ACTIONS:
+            tag_ids = list(obj.tags.values_list("id", flat=True))
+
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
             return request.user.has_project_permission(
-                ACTION_PERMISSIONS_MAP[view.action], obj.project
+                ACTION_PERMISSIONS_MAP[view.action], obj.project, tag_ids=tag_ids
             )
 
         if view.action == "segments":

@@ -246,13 +246,17 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 % (self.id, getattr(organisation, "id", organisation))
             )
 
-    def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
-        return get_permitted_projects_for_user(self, permission_key)
+    def get_permitted_projects(
+        self, permission_key: str, tag_ids: typing.List[int] = None
+    ) -> QuerySet[Project]:
+        return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
-    def has_project_permission(self, permission: str, project: Project) -> bool:
+    def has_project_permission(
+        self, permission: str, project: Project, tag_ids: typing.List[int] = None
+    ) -> bool:
         if self.is_project_admin(project):
             return True
-        return project in self.get_permitted_projects(permission)
+        return project in self.get_permitted_projects(permission, tag_ids=tag_ids)
 
     def has_environment_permission(
         self, permission: str, environment: Environment

@@ -59,7 +59,7 @@ def is_master_api_key_environment_admin(
 
 
 def get_permitted_projects_for_user(
-    user: "FFAdminUser", permission_key: str
+    user: "FFAdminUser", permission_key: str, tag_ids: list = None
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -71,7 +71,9 @@ def get_permitted_projects_for_user(
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions
     """
-    base_filter = get_base_permission_filter(user, Project, permission_key)
+    base_filter = get_base_permission_filter(
+        user, Project, permission_key, tag_ids=tag_ids
+    )
 
     organisation_filter = Q(
         organisation__userorganisation__user=user,
@@ -173,12 +175,13 @@ def get_base_permission_filter(
     for_model: Union[Organisation, Project, Environment] = None,
     permission_key: str = None,
     allow_admin: bool = True,
+    tag_ids=None,
 ) -> Q:
     user_filter = get_user_permission_filter(user, permission_key, allow_admin)
     group_filter = get_group_permission_filter(user, permission_key, allow_admin)
 
     role_filter = get_role_permission_filter(
-        user, for_model, permission_key, allow_admin
+        user, for_model, permission_key, allow_admin, tag_ids
     )
 
     return user_filter | group_filter | role_filter
