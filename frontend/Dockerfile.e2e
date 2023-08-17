@@ -3,7 +3,7 @@ FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 # Build Flagsmith
 WORKDIR /srv/flagsmith
 COPY frontend .
-COPY .release-please-manifest.json .
+COPY .release-please-manifest.json ./.versions.json
 
 RUN npm cache clean --force
 RUN npm ci

@@ -30,7 +30,7 @@ COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
 COPY api/ .
-COPY .release-please-manifest.json .
+COPY .release-please-manifest.json ./.versions.json
 
 # Compile static Django assets
 RUN python manage.py collectstatic --no-input

@@ -262,11 +262,11 @@ app.get('/version', (req, res) => {
   }
 
   try {
-    releasePleaseManifest = JSON.parse(fs.readFileSync('./.release-please-manifest.json', 'utf8'))
+    releasePleaseManifest = JSON.parse(fs.readFileSync('./.versions.json', 'utf8'))
     res.send({ 'ci_commit_sha': commitSha, 'image_tag': releasePleaseManifest["."], 'package_versions': releasePleaseManifest })
   } catch (err) {
     // eslint-disable-next-line
-    console.log('Unable to read release-please-manifest.json')
+    console.log('Unable to read .versions.json file')
     res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag})
   }
 })

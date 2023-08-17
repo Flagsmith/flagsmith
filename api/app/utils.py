@@ -12,7 +12,7 @@ def create_hash():
 
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
-    release_please_manifest_location = "./.release-please-manifest.json"
+    release_please_manifest_location = "./.versions.json"
     manifest_versions = None
 
     if os.path.isfile(release_please_manifest_location):
