@@ -118,18 +118,65 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     return entityPermissions
   }
 
-  const [updateRoleEnvironmentPermission] =
-    useUpdateRoleEnvironmentPermissionMutation()
-  const [updateRoleOrganisationPermission] =
-    useUpdateRoleOrganisationPermissionMutation()
-  const [updateRoleProjectPermission] = useUpdateRoleProjectPermissionMutation()
+  const [
+    updateRoleEnvironmentPermission,
+    { isLoading: isEnvPermUpdating, isSuccess: isEnvPermUpdated },
+  ] = useUpdateRoleEnvironmentPermissionMutation()
+  const [
+    updateRoleOrganisationPermission,
+    { isLoading: isOrgPermUpdating, isSuccess: isOrgPermUpdated },
+  ] = useUpdateRoleOrganisationPermissionMutation()
+  const [
+    updateRoleProjectPermission,
+    { isLoading: isProjectPermUpdating, isSuccess: isProjectPermUpdated },
+  ] = useUpdateRoleProjectPermissionMutation()
+  const [
+    createRoleEnvironmentPermission,
+    { isLoading: isEnvPermCreating, isSuccess: isEnvPermCreated },
+  ] = useCreateRoleEnvironmentPermissionMutation()
+  const [
+    createRoleProjectPermission,
+    { isLoading: isProjectPermCreating, isSuccess: isProjectPermCreated },
+  ] = useCreateRoleProjectPermissionMutation()
+  const [
+    createRoleOrganisationPermission,
+    { isLoading: isOrgPermCreating, isSuccess: isOrgPermCreated },
+  ] = useCreateRoleOrganisationPermissionMutation()
 
-  const [createRoleEnvironmentPermission] =
-    useCreateRoleEnvironmentPermissionMutation()
-  const [createRoleProjectPermission] =
-    useCreateRoleProjectPermissionMutation()
-  const [createRoleOrganisationPermission] =
-    useCreateRoleOrganisationPermissionMutation()
+  useEffect(() => {
+    if (isEnvPermUpdating || isEnvPermCreating) {
+      setSaving(true)
+    }
+    if (isEnvPermUpdated || isEnvPermCreated) {
+      toast('Environment permissions Saved')
+      setSaving(false)
+    }
+  }, [isEnvPermUpdating, isEnvPermCreating, isEnvPermUpdated, isEnvPermCreated])
+
+  useEffect(() => {
+    if (isOrgPermUpdating || isOrgPermCreating) {
+      setSaving(true)
+    }
+    if (isOrgPermUpdated || isOrgPermCreated) {
+      toast('Organisation permissions Saved')
+      setSaving(false)
+    }
+  }, [isOrgPermUpdating, isOrgPermCreating, isOrgPermUpdated, isOrgPermCreated])
+
+  useEffect(() => {
+    if (isProjectPermUpdating || isProjectPermCreating) {
+      setSaving(true)
+    }
+    if (isProjectPermUpdated || isProjectPermCreated) {
+      toast('Project permissions Saved')
+      setSaving(false)
+    }
+  }, [
+    isProjectPermUpdating,
+    isProjectPermCreating,
+    isProjectPermUpdated,
+    isProjectPermCreated,
+  ])
 
   const { data, isLoading } = useGetRoleOrganisationPermissionsQuery(
     {

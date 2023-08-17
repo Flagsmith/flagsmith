@@ -25,11 +25,11 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const [hasPermissions, setHasPermissions] = useState<boolean>(false)
 
-  const toggleExpand = (title: string) => {
+  const toggleExpand = (id: string) => {
     setExpandedItems((prevExpanded) =>
-      prevExpanded.includes(title)
-        ? prevExpanded.filter((item) => item !== title)
-        : [...prevExpanded, title],
+      prevExpanded.includes(id)
+        ? prevExpanded.filter((item) => item !== id)
+        : [...prevExpanded, id],
     )
   }
 
@@ -51,7 +51,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
             }}
             className='list-item clickable cursor-pointer list-item-sm px-3'
           >
-            <Flex onClick={() => toggleExpand(mainItem.title)}>
+            <Flex onClick={() => toggleExpand(mainItem.id)}>
               <div
                 className={
                   hasPermissions
@@ -74,7 +74,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
             )}
             <Icon
               name={
-                expandedItems.includes(mainItem.title)
+                expandedItems.includes(mainItem.id)
                   ? 'chevron-down'
                   : 'chevron-right'
               }
@@ -82,12 +82,14 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
             />
           </Row>
           <div>
-            {expandedItems.includes(mainItem.title) && (
+            {expandedItems.includes(mainItem.id) && (
               <EditPermissionsModal
                 id={mainItem.id}
                 level={level}
                 role={role}
-                hasPermissions={(hasPermissions) => setHasPermissions(hasPermissions)}
+                hasPermissions={(hasPermissions) =>
+                  setHasPermissions(hasPermissions)
+                }
               />
             )}
           </div>
