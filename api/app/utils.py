@@ -1,5 +1,4 @@
 import json
-import os
 import pathlib
 
 import shortuuid
@@ -14,23 +13,20 @@ def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
     release_please_manifest_location = "./.versions.json"
     manifest_versions = None
+    version_json = {}
+    image_tag = "unknown"
 
-    if os.path.isfile(release_please_manifest_location):
-        manifest_versions = json.loads(
-            _get_file_contents(release_please_manifest_location)
-        )
+    manifest_versions = json.loads(_get_file_contents(release_please_manifest_location))
+
+    if manifest_versions:
+        version_json["package_versions"] = manifest_versions
         image_tag = manifest_versions["."]
-    else:
-        image_tag = "unknown"
 
-    version_json = {
+    version_json = version_json | {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
         "image_tag": image_tag,
         "is_enterprise": pathlib.Path("./ENTERPRISE_VERSION").exists(),
     }
-
-    if manifest_versions:
-        version_json["package_versions"] = manifest_versions
 
     return version_json
 
