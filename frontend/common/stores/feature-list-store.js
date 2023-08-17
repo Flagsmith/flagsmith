@@ -536,7 +536,6 @@ const controller = {
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
-      store.loading()
       store.envId = environmentId
       store.projectId = projectId
       store.environmentId = environmentId
