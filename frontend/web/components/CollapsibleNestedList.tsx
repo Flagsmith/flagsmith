@@ -56,12 +56,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
               <div className={'list-item-subtitle'}>{mainItem.name}</div>
             </Flex>
             {isButtonVisible && (
-              <Button
-                theme='text'
-                // onClick={selectProject?.(mainItem.id)}
-                disabled={false}
-                checked={true}
-              >
+              <Button theme='text' disabled={false} checked={true}>
                 {'Go to environments'}
               </Button>
             )}
@@ -80,9 +75,6 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
                 id={mainItem.id}
                 level={level}
                 role={role}
-                // hasPermissions={(hasPermissions) =>
-                //   setHasPermissions(hasPermissions)
-                // }
               />
             )}
           </div>

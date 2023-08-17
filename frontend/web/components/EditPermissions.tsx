@@ -120,27 +120,51 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
 
   const [
     updateRoleEnvironmentPermission,
-    { isLoading: isEnvPermUpdating, isSuccess: isEnvPermUpdated },
+    {
+      isError: envUpdatedError,
+      isLoading: isEnvPermUpdating,
+      isSuccess: isEnvPermUpdated,
+    },
   ] = useUpdateRoleEnvironmentPermissionMutation()
   const [
     updateRoleOrganisationPermission,
-    { isLoading: isOrgPermUpdating, isSuccess: isOrgPermUpdated },
+    {
+      isError: orgUpdatedError,
+      isLoading: isOrgPermUpdating,
+      isSuccess: isOrgPermUpdated,
+    },
   ] = useUpdateRoleOrganisationPermissionMutation()
   const [
     updateRoleProjectPermission,
-    { isLoading: isProjectPermUpdating, isSuccess: isProjectPermUpdated },
+    {
+      isError: projectUpdatedError,
+      isLoading: isProjectPermUpdating,
+      isSuccess: isProjectPermUpdated,
+    },
   ] = useUpdateRoleProjectPermissionMutation()
   const [
     createRoleEnvironmentPermission,
-    { isLoading: isEnvPermCreating, isSuccess: isEnvPermCreated },
+    {
+      isError: envCreatedError,
+      isLoading: isEnvPermCreating,
+      isSuccess: isEnvPermCreated,
+    },
   ] = useCreateRoleEnvironmentPermissionMutation()
   const [
     createRoleProjectPermission,
-    { isLoading: isProjectPermCreating, isSuccess: isProjectPermCreated },
+    {
+      isError: orgCreatedError,
+      isLoading: isProjectPermCreating,
+      isSuccess: isProjectPermCreated,
+    },
   ] = useCreateRoleProjectPermissionMutation()
   const [
     createRoleOrganisationPermission,
-    { isLoading: isOrgPermCreating, isSuccess: isOrgPermCreated },
+    {
+      isError: projectCreatedError,
+      isLoading: isOrgPermCreating,
+      isSuccess: isOrgPermCreated,
+    },
   ] = useCreateRoleOrganisationPermissionMutation()
 
   useEffect(() => {
@@ -152,7 +176,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       toast('Environment permissions Saved')
       setSaving(false)
     }
-  }, [isEnvPermUpdating, isEnvPermCreating, isEnvPermUpdated, isEnvPermCreated])
+    if (envUpdatedError || envCreatedError) {
+      toast('Failed to Save')
+      setSaving(false)
+    }
+  }, [
+    isEnvPermUpdating,
+    isEnvPermCreating,
+    isEnvPermUpdated,
+    isEnvPermCreated,
+    envUpdatedError,
+    envCreatedError,
+  ])
 
   useEffect(() => {
     if (isOrgPermUpdating || isOrgPermCreating) {
@@ -163,7 +198,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       toast('Organisation permissions Saved')
       setSaving(false)
     }
-  }, [isOrgPermUpdating, isOrgPermCreating, isOrgPermUpdated, isOrgPermCreated])
+    if (orgUpdatedError || orgCreatedError) {
+      toast('Failed to Save')
+      setSaving(false)
+    }
+  }, [
+    isOrgPermUpdating,
+    isOrgPermCreating,
+    isOrgPermUpdated,
+    isOrgPermCreated,
+    orgUpdatedError,
+    orgCreatedError,
+  ])
 
   useEffect(() => {
     if (isProjectPermUpdating || isProjectPermCreating) {
@@ -174,11 +220,17 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       toast('Project permissions Saved')
       setSaving(false)
     }
+    if (projectUpdatedError || projectCreatedError) {
+      toast('Failed to Save')
+      setSaving(false)
+    }
   }, [
     isProjectPermUpdating,
     isProjectPermCreating,
     isProjectPermUpdated,
     isProjectPermCreated,
+    projectUpdatedError,
+    projectCreatedError
   ])
 
   const {
@@ -203,7 +255,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       project_id: id,
       role_id: role?.id,
     },
-    { skip: !role },
+    { skip: !role || !id },
   )
 
   const {
@@ -216,7 +268,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
       organisation_id: role?.organisation,
       role_id: role?.id,
     },
-    { skip: !role },
+    { skip: !role || !id },
   )
 
   useEffect(() => {
@@ -230,9 +282,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     if (!projectIsLoading && projectPermissions && level === 'project') {
       const entityPermissions = processResults(projectPermissions?.results)
       setEntityPermissions(entityPermissions)
-      // hasPermissions?.(
-      //   entityPermissions.permissions.length > 0 || entityPermissions.admin,
-      // )
     }
   }, [projectPermissions, projectIsLoading])
 
@@ -240,9 +289,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     if (!envIsLoading && envPermissions && level === 'environment') {
       const entityPermissions = processResults(envPermissions?.results)
       setEntityPermissions(entityPermissions)
-      // hasPermissions?.(
-      //   entityPermissions.permissions.length > 0 || entityPermissions.admin,
-      // )
     }
   }, [envPermissions, envIsLoading])
 
