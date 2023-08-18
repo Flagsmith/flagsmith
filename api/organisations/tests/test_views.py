@@ -850,6 +850,27 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     )
 
 
+def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
+    mocker, organisation, admin_client
+):
+    # Given
+    get_subscription_metadata = mocker.patch(
+        "organisations.models.get_subscription_metadata_from_id"
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-get-subscription-metadata",
+        args=[organisation.pk],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    get_subscription_metadata.assert_not_called()
+
+
 def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
     organisation, admin_client, chargebee_subscription
 ):
@@ -872,27 +893,6 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "payment_source": None,
         "chargebee_email": None,
     }
-
-
-def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
-    mocker, organisation, admin_client
-):
-    # Given
-    get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata_from_id"
-    )
-
-    url = reverse(
-        "api-v1:organisations:organisation-get-subscription-metadata",
-        args=[organisation.pk],
-    )
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    get_subscription_metadata.assert_not_called()
 
 
 def test_can_invite_user_with_permission_groups(
