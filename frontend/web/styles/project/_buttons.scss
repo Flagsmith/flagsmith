@@ -289,7 +289,7 @@ button.btn {
       }
     }
     &-letter {
-      width: 60px;
+      min-width: 60px;
       height: 60px;
       background-color: $primary400;
       border-radius: $border-radius;
