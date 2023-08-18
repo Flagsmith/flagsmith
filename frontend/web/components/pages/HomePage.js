@@ -103,7 +103,7 @@ const HomePage = class extends React.Component {
           toast('Please check your email to reset your password.')
         }}
       />,
-      'p-0',
+      'p-0 modal-sm',
     )
   }
 
@@ -172,7 +172,7 @@ const HomePage = class extends React.Component {
             <Button
               onClick={() => {
                 if (!Utils.getFlagsmithValue('sso_idp')) {
-                  openModal('Single Sign-On', <SamlForm />)
+                  openModal('Single Sign-On', <SamlForm />, 'p-0 modal-sm')
                 } else {
                   data
                     .post(
