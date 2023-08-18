@@ -62,6 +62,7 @@ const CreateRole: FC<CreateRoleType> = ({
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
         setRoleName(roleData.name)
+        setRoleDesc(roleData.description)
       }
     }, [roleData, isLoading])
 
@@ -84,12 +85,13 @@ const CreateRole: FC<CreateRoleType> = ({
     const save = () => {
       if (isEdit) {
         editRole({
-          body: { name: roleName },
+          body: { description: roleDesc, name: roleName },
           organisation_id: role.organisation,
           role_id: role.id,
         })
       } else {
         createRole({
+          description: roleDesc,
           name: roleName,
           organisation_id: organisationId,
         })

@@ -1358,7 +1358,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       width: rolesWidths[1],
                                                     }}
                                                   >
-                                                    Manage user groups
+                                                    {role.description}
                                                   </Row>
                                                   <div
                                                     style={{
