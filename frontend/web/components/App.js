@@ -21,6 +21,7 @@ import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from 'components/Icon'
+import AccountStore from 'common/stores/account-store'
 
 const App = class extends Component {
   static propTypes = {
@@ -32,6 +33,7 @@ const App = class extends Component {
   }
 
   state = {
+    activeOrganisation: 0,
     asideIsVisible: !isMobile,
     lastEnvironmentId: '',
     lastProjectId: '',
@@ -47,6 +49,8 @@ const App = class extends Component {
   componentDidMount = () => {
     getBuildVersion()
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
+    this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
+    this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
     AsyncStorage.getItem('lastEnv').then((res) => {
       if (res) {
@@ -57,6 +61,22 @@ const App = class extends Component {
         })
       }
     })
+  }
+
+  getOrganisationUsage = () => {
+    if (
+      AccountStore.getOrganisation()?.id &&
+      this.state.activeOrganisation !== AccountStore.getOrganisation().id
+    ) {
+      getOrganisationUsage(getStore(), {
+        organisationId: AccountStore.getOrganisation()?.id,
+      }).then((res) => {
+        this.setState({
+          activeOrganisation: AccountStore.getOrganisation().id,
+          totalApiCalls: res?.data?.totals.total,
+        })
+      })
+    }
   }
 
   toggleDarkMode = () => {
@@ -256,17 +276,7 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    if (
-      AccountStore.getOrganisation() &&
-      AccountStore.getOrganisation().id &&
-      this.state.totalApiCalls == 0
-    ) {
-      getOrganisationUsage(getStore(), {
-        organisationId: AccountStore.getOrganisation()?.id,
-      }).then((res) => {
-        this.setState({ totalApiCalls: res[0]?.data?.totals.total })
-      })
-    }
+
     return (
       <Provider store={getStore()}>
         <AccountProvider
