@@ -389,6 +389,7 @@ const OrganisationSettingsPage = class extends Component {
                                 'restrict_project_create_to_admin',
                               ) && (
                                 <FormGroup className='mt-4 col-md-6'>
+                                  <h5>Admin Settings</h5>
                                   <Row className='mb-2'>
                                     <Switch
                                       checked={
@@ -400,14 +401,11 @@ const OrganisationSettingsPage = class extends Component {
                                         )
                                       }
                                     />
-                                    <h5 className='mb-0 ml-3'>
-                                      Admin Settings
-                                    </h5>
+                                    <p className='fs-small ml-3 mb-0 lh-sm'>
+                                      Only allow organisation admins to create
+                                      projects
+                                    </p>
                                   </Row>
-                                  <p className='fs-small lh-sm'>
-                                    Only allow organisation admins to create
-                                    projects
-                                  </p>
                                 </FormGroup>
                               )}
                               {paymentsEnabled && !isAWS && (
