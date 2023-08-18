@@ -57,14 +57,11 @@ export async function getOrganisationUsage(
     typeof organisationUsageService.endpoints.getOrganisationUsage.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     organisationUsageService.endpoints.getOrganisationUsage.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(organisationUsageService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS
