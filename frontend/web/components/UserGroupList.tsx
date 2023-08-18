@@ -50,10 +50,13 @@ const UserGroupsList: FC<UserGroupsListType> = ({
 
   return (
     <FormGroup>
-      <InfoMessage>
-        Group admins and users with the organisation permission{' '}
-        <strong>Manage Groups</strong> can invite additional members to groups.
-      </InfoMessage>
+      <div className='col-md-6'>
+        <InfoMessage>
+          Group admins and users with the organisation permission{' '}
+          <strong>Manage Groups</strong> can invite additional members to
+          groups.
+        </InfoMessage>
+      </div>
       <PanelSearch
         id='users-list'
         title={noTitle ? '' : 'Groups'}
