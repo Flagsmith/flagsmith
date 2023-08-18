@@ -11,6 +11,14 @@ export type PagedResponse<T> = {
   results: T[]
 }
 export type FlagsmithValue = string | number | boolean | null
+
+export type FeatureVersionState = {
+  enabled: boolean
+  feature_state_value: FeatureStateValue
+  feature_segment: null | {
+    segment: number
+  }
+}
 export type Operator = {
   value: string | null
   label: string
@@ -215,6 +223,7 @@ export type FeatureState = {
   enabled: boolean
   created_at: string
   updated_at: string
+  environment_feature_version: string
   version?: number
   live_from?: string
   hide_from_client?: string
@@ -273,6 +282,17 @@ export type Account = {
   email: string
   auth_type: AuthType
   is_superuser: boolean
+}
+
+export type FeatureVersion = {
+  created_at: string
+  updated_at: string
+  published: boolean
+  live_from: string
+  sha: string
+  is_live: boolean
+  published_by: string
+  created_by: string
 }
 
 export type Res = {
@@ -334,6 +354,8 @@ export type Res = {
     }
     value: string
   }
+  featureVersion: FeatureVersion
+  versionFeatureState: FeatureState[]
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]

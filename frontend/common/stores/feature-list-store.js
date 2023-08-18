@@ -1,6 +1,7 @@
 import Constants from 'common/constants'
 import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
+import { createAndPublishFeatureVersion } from 'common/services/useFeatureVersion'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -198,74 +199,86 @@ const controller = {
     onComplete,
   ) => {
     let prom
-    const segmentOverridesProm = (segmentOverrides || [])
-      .map((v, i) => () => {
-        if (v.toRemove) {
-          return (
-            v.id
-              ? data.delete(`${Project.api}features/feature-segments/${v.id}/`)
-              : Promise.resolve()
-          ).then(() => {
-            segmentOverrides = segmentOverrides.filter((s) => v.id !== s.id)
-          })
-        }
-        if (!v.id) {
-          const featureFlagId = v.feature
-          return createSegmentOverride(
-            getStore(),
-            {
-              enabled: !!v.enabled,
-              environmentId,
-              featureId: featureFlagId,
-              feature_segment: {
-                segment: v.segment,
-              },
-              feature_state_value: {
-                boolean_value:
-                  v.feature_segment_value.feature_state_value.boolean_value,
-                integer_value:
-                  v.feature_segment_value.feature_state_value.integer_value,
-                string_value:
-                  v.feature_segment_value.feature_state_value.string_value,
-                type: v.feature_segment_value.feature_state_value.type,
-              },
-            },
-            { forceRefetch: true },
-          ).then((segmentOverride) => {
-            const newValue = {
-              environment: segmentOverride.data.environment,
-              feature: featureFlagId,
-              feature_segment_value: {
-                change_request: segmentOverride.data.change_request,
-                created_at: segmentOverride.data.created_at,
-                deleted_at: segmentOverride.data.deleted_at,
-                enabled: segmentOverride.data.enabled,
-                environment: segmentOverride.data.environment,
-                feature: featureFlagId,
-                feature_state_value: segmentOverride.data.feature_state_value,
-                id: segmentOverride.data.id,
-                identity: segmentOverride.data.identity,
-                live_from: segmentOverride.data.live_from,
-                updated_at: segmentOverride.data.updated_at,
-                uuid: segmentOverride.data.uuid,
-              },
-              id: segmentOverride.data.feature_segment.id,
-              multivariate_options: segmentOverrides[i].multivariate_options,
-              priority: segmentOverride.data.feature_segment.priority,
-              segment: segmentOverride.data.feature_segment.segment,
-              segment_name: v.segment_name,
-              uuid: segmentOverride.data.feature_segment.uuid,
-              value: segmentOverrides[i].value,
-            }
-            segmentOverrides[i] = newValue
-          })
-        }
-        return Promise.resolve()
-      })
-      .reduce(
-        (promise, currPromise) => promise.then((val) => currPromise(val)),
-        Promise.resolve(),
-      )
+    const segmentOverridesProm =
+      mode === 'SEGMENT'
+        ? (segmentOverrides || [])
+            .map((v, i) => () => {
+              if (v.toRemove) {
+                return (
+                  v.id
+                    ? data.delete(
+                        `${Project.api}features/feature-segments/${v.id}/`,
+                      )
+                    : Promise.resolve()
+                ).then(() => {
+                  segmentOverrides = segmentOverrides.filter(
+                    (s) => v.id !== s.id,
+                  )
+                })
+              }
+              if (!v.id) {
+                const featureFlagId = v.feature
+                return createSegmentOverride(
+                  getStore(),
+                  {
+                    enabled: !!v.enabled,
+                    environmentId,
+                    featureId: featureFlagId,
+                    feature_segment: {
+                      segment: v.segment,
+                    },
+                    feature_state_value: {
+                      boolean_value:
+                        v.feature_segment_value.feature_state_value
+                          .boolean_value,
+                      integer_value:
+                        v.feature_segment_value.feature_state_value
+                          .integer_value,
+                      string_value:
+                        v.feature_segment_value.feature_state_value
+                          .string_value,
+                      type: v.feature_segment_value.feature_state_value.type,
+                    },
+                  },
+                  { forceRefetch: true },
+                ).then((segmentOverride) => {
+                  const newValue = {
+                    environment: segmentOverride.data.environment,
+                    feature: featureFlagId,
+                    feature_segment_value: {
+                      change_request: segmentOverride.data.change_request,
+                      created_at: segmentOverride.data.created_at,
+                      deleted_at: segmentOverride.data.deleted_at,
+                      enabled: segmentOverride.data.enabled,
+                      environment: segmentOverride.data.environment,
+                      feature: featureFlagId,
+                      feature_state_value:
+                        segmentOverride.data.feature_state_value,
+                      id: segmentOverride.data.id,
+                      identity: segmentOverride.data.identity,
+                      live_from: segmentOverride.data.live_from,
+                      updated_at: segmentOverride.data.updated_at,
+                      uuid: segmentOverride.data.uuid,
+                    },
+                    id: segmentOverride.data.feature_segment.id,
+                    multivariate_options:
+                      segmentOverrides[i].multivariate_options,
+                    priority: segmentOverride.data.feature_segment.priority,
+                    segment: segmentOverride.data.feature_segment.segment,
+                    segment_name: v.segment_name,
+                    uuid: segmentOverride.data.feature_segment.uuid,
+                    value: segmentOverrides[i].value,
+                  }
+                  segmentOverrides[i] = newValue
+                })
+              }
+              return Promise.resolve()
+            })
+            .reduce(
+              (promise, currPromise) => promise.then((val) => currPromise(val)),
+              Promise.resolve(),
+            )
+        : Promise.resolve()
 
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
@@ -295,14 +308,29 @@ const controller = {
               )
             environmentFlag.multivariate_feature_state_values =
               multivariate_feature_state_values
-            return data.put(
-              `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
-              Object.assign({}, environmentFlag, {
+
+            return ProjectStore.getEnvironmentIdFromKeyAsync(
+              projectId,
+              environmentId,
+            ).then((res) => {
+              const data = Object.assign({}, environmentFlag, {
                 enabled: flag.default_enabled,
                 feature_state_value: flag.initial_value,
                 hide_from_client: flag.hide_from_client,
-              }),
-            )
+              })
+              return createAndPublishFeatureVersion(getStore(), {
+                environmentId: res,
+                featureId: projectFlag.id,
+                featureStates: [data],
+              }).then((res) => {
+                debugger
+                if (res.error) {
+                  throw res.error
+                }
+                debugger
+                return res.data[0].data
+              })
+            })
           })
       } else {
         prom = data.post(

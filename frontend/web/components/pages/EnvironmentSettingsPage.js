@@ -99,12 +99,14 @@ const EnvironmentSettingsPage = class extends Component {
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
+        use_v2_feature_versioning: !!this.state.use_v2_feature_versioning,
         minimum_change_request_approvals: has4EyesPermission
           ? this.state.minimum_change_request_approvals
           : null,
         name: name || env.name,
         use_identity_composite_key_for_hashing:
           !!this.state.use_identity_composite_key_for_hashing,
+        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
       }),
     )
   }
@@ -160,15 +162,15 @@ const EnvironmentSettingsPage = class extends Component {
     )
   }
 
-  confirmToggle = (description, feature, featureValue) => {
+  confirmToggle = (title, description, feature) => {
     openModal(
-      'Enable "Hide Sensitive Data"',
+      title,
       <ConfirmToggleEnvFeature
-        description={description}
+        description={`${description} Are you sure that you want to change this value?`}
         feature={feature}
-        featureValue={featureValue}
+        featureValue={this.state[feature]}
         onToggleChange={(value) => {
-          this.setState({ hide_sensitive_data: value }, this.saveEnv)
+          this.setState({ [feature]: value }, this.saveEnv)
           closeModal()
         }}
       />,
@@ -183,6 +185,7 @@ const EnvironmentSettingsPage = class extends Component {
         hide_sensitive_data,
         name,
         use_identity_composite_key_for_hashing,
+        use_v2_feature_versioning,
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
@@ -218,6 +221,7 @@ const EnvironmentSettingsPage = class extends Component {
                   name: env.name,
                   use_identity_composite_key_for_hashing:
                     !!env.use_identity_composite_key_for_hashing,
+                  use_v2_feature_versioning: !!env.use_v2_feature_versioning,
                 })
               }, 10)
             }
@@ -357,6 +361,38 @@ const EnvironmentSettingsPage = class extends Component {
                             </Row>
                           )}
                         </div>
+                        {Utils.getFlagsmithHasFeature('feature_versioning') && (
+                          <div>
+                            <Row space style={{ marginTop: '1.5rem' }}>
+                              <div className='col-md-8 pl-0'>
+                                <h5 className='m-b-0'>Feature versioning</h5>
+                                <p className='fs-small lh-sm'>
+                                  Allows you to attach versions to updating
+                                  feature values and segment overrides.
+                                  <br />
+                                  <strong>
+                                    Warning! Enabling this is irreversable
+                                  </strong>
+                                </p>
+                              </div>
+                              <div className='col-md-4 pr-0 text-right'>
+                                <div>
+                                  <Switch
+                                    className='float-right'
+                                    checked={use_v2_feature_versioning}
+                                    onChange={(v) => {
+                                      this.confirmToggle(
+                                        'Enable "Feature Versioning"',
+                                        'Allows you to attach versions to updating feature values and segment overrides.',
+                                        'use_v2_feature_versioning',
+                                      )
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </Row>
+                          </div>
+                        )}
                         {Utils.getFlagsmithHasFeature(
                           'configure_hide_sensitive_data',
                         ) && (
@@ -392,9 +428,9 @@ const EnvironmentSettingsPage = class extends Component {
                                     checked={hide_sensitive_data}
                                     onChange={(v) => {
                                       this.confirmToggle(
-                                        'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                        'Enable "Hide Sensitive Data"',
+                                        'The data returned from the API will change and could break your existing code.',
                                         'hide_sensitive_data',
-                                        hide_sensitive_data,
                                       )
                                     }}
                                   />
