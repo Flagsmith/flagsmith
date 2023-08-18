@@ -24,6 +24,7 @@ import Format from 'common/utils/format'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
+import AccountStore from 'common/stores/account-store'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -34,6 +35,7 @@ const App = class extends Component {
   }
 
   state = {
+    activeOrganisation: 0,
     asideIsVisible: !isMobile,
     pin: '',
     totalApiCalls: 0,
@@ -47,7 +49,25 @@ const App = class extends Component {
   componentDidMount = () => {
     getBuildVersion()
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
+    this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
+    this.getOrganisationUsage()
     window.addEventListener('scroll', this.handleScroll)
+  }
+
+  getOrganisationUsage = () => {
+    if (
+      AccountStore.getOrganisation()?.id &&
+      this.state.activeOrganisation !== AccountStore.getOrganisation().id
+    ) {
+      getOrganisationUsage(getStore(), {
+        organisationId: AccountStore.getOrganisation()?.id,
+      }).then((res) => {
+        this.setState({
+          activeOrganisation: AccountStore.getOrganisation().id,
+          totalApiCalls: res?.data?.totals.total,
+        })
+      })
+    }
   }
 
   toggleDarkMode = () => {
@@ -236,17 +256,7 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    if (
-      AccountStore.getOrganisation() &&
-      AccountStore.getOrganisation().id &&
-      this.state.totalApiCalls == 0
-    ) {
-      getOrganisationUsage(getStore(), {
-        organisationId: AccountStore.getOrganisation()?.id,
-      }).then((res) => {
-        this.setState({ totalApiCalls: res[0]?.data?.totals.total })
-      })
-    }
+
     return (
       <Provider store={getStore()}>
         <AccountProvider

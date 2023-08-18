@@ -49,7 +49,7 @@ from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
 )
-from projects.serializers import ProjectSerializer
+from projects.serializers import ProjectListSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
@@ -118,7 +118,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def projects(self, request, pk):
         organisation = self.get_object()
         projects = organisation.projects.all()
-        return Response(ProjectSerializer(projects, many=True).data)
+        return Response(ProjectListSerializer(projects, many=True).data)
 
     @action(detail=True, methods=["POST"])
     def invite(self, request, pk):

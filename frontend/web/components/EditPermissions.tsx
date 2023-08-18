@@ -271,23 +271,25 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
         </div>
 
         {parentError && (
-          <InfoMessage>
-            The selected {isGroup ? 'group' : 'user'} does not have explicit
-            user permissions to view this {parentLevel}. If the user does not
-            belong to any groups with this permissions, you may have to adjust
-            their permissions in{' '}
-            <a
-              onClick={() => {
-                if (parentSettingsLink) {
-                  push(parentSettingsLink)
-                }
-                closeModal()
-              }}
-            >
-              <strong>{parentLevel} settings</strong>
-            </a>
-            .
-          </InfoMessage>
+          <div className='mt-4'>
+            <InfoMessage>
+              The selected {isGroup ? 'group' : 'user'} does not have explicit
+              user permissions to view this {parentLevel}. If the user does not
+              belong to any groups with this permissions, you may have to adjust
+              their permissions in{' '}
+              <a
+                onClick={() => {
+                  if (parentSettingsLink) {
+                    push(parentSettingsLink)
+                  }
+                  closeModal()
+                }}
+              >
+                <strong>{parentLevel} settings</strong>
+              </a>
+              .
+            </InfoMessage>
+          </div>
         )}
       </div>
       <div className='modal-footer'>
@@ -363,13 +365,14 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <h5>Manage Users and Permissions</h5>
-      <p className='fs-small lh-sm'>
+      <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
+          className='fw-normal'
         >
           Learn about User Roles.
         </Button>
