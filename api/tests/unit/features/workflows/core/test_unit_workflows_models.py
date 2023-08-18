@@ -13,7 +13,7 @@ from audit.constants import (
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
-from features.versioning.versioning import get_environment_flags_list
+from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestNotApprovedError,

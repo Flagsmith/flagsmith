@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from environments.identities.models import Identity
 from features.models import Feature, FeatureState
-from features.versioning.versioning import (
+from features.versioning.versioning_service import (
     get_environment_flags_list,
     get_environment_flags_queryset,
 )

@@ -1,7 +1,7 @@
 import typing
 
 from features.dataclasses import EnvironmentFeatureOverridesData
-from features.versioning.versioning import get_environment_flags_list
+from features.versioning.versioning_service import get_environment_flags_list
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment

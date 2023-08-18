@@ -71,7 +71,7 @@ from .serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
-from .versioning.versioning import (
+from .versioning.versioning_service import (
     get_environment_flags_list,
     get_environment_flags_queryset,
 )
