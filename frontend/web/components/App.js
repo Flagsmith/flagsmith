@@ -190,7 +190,6 @@ const App = class extends Component {
     if (document.location.href.includes('saml?')) {
       return
     }
-    document.body.classList.remove('dark')
     this.context.router.history.replace('/')
   }
 

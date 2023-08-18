@@ -39,6 +39,7 @@ const HomePage = class extends React.Component {
   }
 
   componentDidMount() {
+    document.body.classList.remove('dark')
     if (document.location.href.includes('oauth')) {
       const parts = location.href.split('oauth/')
       const params = parts[1]
