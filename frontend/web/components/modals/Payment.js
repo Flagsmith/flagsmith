@@ -16,7 +16,7 @@ const PaymentButton = (props) => {
     activeSubscription
   ) {
     return (
-      <Button
+      <a
         onClick={() => {
           Chargebee.getInstance().openCheckout({
             hostedPage() {
@@ -35,22 +35,21 @@ const PaymentButton = (props) => {
           })
         }}
         className={props.className}
-        size='large'
+        href='#'
       >
         {props.children}
-      </Button>
+      </a>
     )
   }
   return (
-    <Button
+    <a
       href='javascript:void(0)'
       data-cb-type='checkout'
       data-cb-plan-id={props['data-cb-plan-id']}
       className={props.className}
-      size='large'
     >
       {props.children}
-    </Button>
+    </a>
   )
 }
 const Payment = class extends Component {

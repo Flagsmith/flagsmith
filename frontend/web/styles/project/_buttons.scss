@@ -100,11 +100,11 @@ button.btn {
       color: $text-icon-dark;
     }
   }
-  &-success{
+  &-success {
     background-color: $success;
     &:hover,
     &:focus {
-      background-color: $success600;
+      background-color: $success400;
       color: $text-icon-light;
     }
 
@@ -361,6 +361,13 @@ $add-btn-size: 34px;
       &:active {
         color: white;
         background-color: $btn-secondary-active-bg-dark;
+      }
+    }
+    &.btn-success {
+      &:hover,
+      &:focus {
+        background-color: $success400;
+        color: $text-icon-light;
       }
     }
 
