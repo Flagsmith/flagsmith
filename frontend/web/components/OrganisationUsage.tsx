@@ -195,7 +195,7 @@ const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
                     }}
                   />
                   <span className='text-muted ml-2'>
-                    Traits: {payload[dataKey]}
+                    Traits: {Utils.numberWithCommas(payload[dataKey])}
                   </span>
                 </Row>
               )
@@ -213,7 +213,7 @@ const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
                     }}
                   />
                   <span className='text-muted ml-2'>
-                    Flags: {payload[dataKey]}
+                    Flags: {Utils.numberWithCommas(payload[dataKey])}
                   </span>
                 </Row>
               )
@@ -231,7 +231,7 @@ const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
                     }}
                   />
                   <span className='text-muted ml-2'>
-                    Identities: {payload[dataKey]}
+                    Identities: {Utils.numberWithCommas(payload[dataKey])}
                   </span>
                 </Row>
               )
@@ -249,7 +249,8 @@ const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
                     }}
                   />
                   <span className='text-muted ml-2'>
-                    Environment Document: {payload[dataKey]}
+                    Environment Document:{' '}
+                    {Utils.numberWithCommas(payload[dataKey])}
                   </span>
                 </Row>
               )
