@@ -25,7 +25,7 @@ To install pre-commit:
 
 ```bash
 # From the repository root
-pip install pre-commit
+make install
 pre-commit install
 ```
 
@@ -48,7 +48,5 @@ DJANGO_SETTINGS_MODULE=app.settings.test pytest
 
 ## Adding Dependencies
 
-To add a python dependency:
-
-- Add to `requirements.in` or `requirements-dev.in`
-- Run `pip-compile` or `pip-compile requirements-dev.in`
+We use [Poetry](https://python-poetry.org/) for dependency management - please follow
+[their docs on adding dependencies](https://python-poetry.org/docs/basic-usage/#specifying-dependencies).

@@ -134,6 +134,7 @@ class TheComponent extends Component {
           <InputGroup
             component={
               <EnvironmentSelect
+                projectId={this.props.projectId}
                 value={environment.api_key}
                 onChange={(selectedEnv) =>
                   this.setState({

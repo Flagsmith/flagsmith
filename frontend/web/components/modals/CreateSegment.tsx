@@ -509,6 +509,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     title='Environment'
                     component={
                       <EnvironmentSelect
+                        projectId={`${projectId}`}
                         value={environmentId}
                         onChange={(environmentId: string) => {
                           setEnvironmentId(environmentId)

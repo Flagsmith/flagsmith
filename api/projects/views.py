@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
@@ -98,20 +97,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project_uuid = self.request.query_params.get("uuid")
         if project_uuid:
             queryset = queryset.filter(uuid=project_uuid)
-
-        if self.action == "retrieve":
-            queryset = queryset.annotate(
-                total_features=Count(
-                    "features",
-                    filter=Q(features__deleted_at__isnull=True),
-                    distinct=True,
-                ),
-                total_segments=Count(
-                    "segments",
-                    filter=Q(segments__deleted_at__isnull=True),
-                    distinct=True,
-                ),
-            )
 
         return queryset
 

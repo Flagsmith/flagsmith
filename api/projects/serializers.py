@@ -57,8 +57,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
-    total_features = serializers.IntegerField()
-    total_segments = serializers.IntegerField()
+    total_features = serializers.SerializerMethodField()
+    total_segments = serializers.SerializerMethodField()
 
     class Meta(ProjectListSerializer.Meta):
         fields = ProjectListSerializer.Meta.fields + (
@@ -76,6 +76,16 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "total_features",
             "total_segments",
         )
+
+    def get_total_features(self, instance: Project) -> int:
+        # added here to prevent need for annotate(Count("features", distinct=True))
+        # which causes performance issues.
+        return instance.features.count()
+
+    def get_total_segments(self, instance: Project) -> int:
+        # added here to prevent need for annotate(Count("segments", distinct=True))
+        # which causes performance issues.
+        return instance.segments.count()
 
 
 class CreateUpdateUserProjectPermissionSerializer(

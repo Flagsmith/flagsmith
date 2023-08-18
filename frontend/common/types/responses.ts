@@ -1,6 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-import { type } from 'common/data/base/_data'
-import UserGroupList from 'components/UserGroupList'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
@@ -189,6 +187,25 @@ export type MultivariateOption = {
   default_percentage_allocation: number
 }
 
+export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
+
+export type IdentityFeatureState = {
+  feature: {
+    id: number
+    name: string
+    type: FeatureType
+  }
+  enabled: boolean
+  feature_state_value: FlagsmithValue
+  segment: null
+  multivariate_feature_state_values?: {
+    multivariate_feature_option: {
+      value: number
+    }
+    percentage_allocation: number
+  }[]
+}
+
 export type FeatureState = {
   id: number
   feature_state_value: string
@@ -317,6 +334,9 @@ export type Res = {
     }
     value: string
   }
+
+  projectFlags: PagedResponse<ProjectFlag>
+  identityFeatureStates: IdentityFeatureState[]
   featureVersion: { id: string }
   // END OF TYPES
 }
