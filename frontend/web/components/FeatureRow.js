@@ -325,7 +325,9 @@ class TheComponent extends Component {
                   <div
                     onClick={() => {
                       this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                        Utils.getFlagsmithHasFeature('feature_versioning')
+                          ? `/project/${projectId}/environment/${environmentId}/feature-history?feature=${projectFlag.id}`
+                          : `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
                     }}
                     data-test={`feature-history-${this.props.index}`}

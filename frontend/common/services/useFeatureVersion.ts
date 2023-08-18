@@ -15,6 +15,7 @@ import {
   updateVersionFeatureState,
 } from './useVersionFeatureState'
 import { deleteFeatureSegment } from './useFeatureSegment'
+import transformCorePaging from 'common/transformCorePaging'
 
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
@@ -80,7 +81,7 @@ export const featureVersionService = service
             sha: versionRes.data.uuid,
           })
 
-          return ret
+          return ret as any
         },
       }),
       createFeatureVersion: builder.mutation<
@@ -93,6 +94,22 @@ export const featureVersionService = service
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
+      }),
+      getFeatureVersions: builder.query<
+        Res['featureVersions'],
+        Req['getFeatureVersions']
+      >({
+        providesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+        query: (query) => ({
+          url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
+        }),
+        transformResponse: (
+          baseQueryReturnValue: Res['featureVersions'],
+          meta,
+          req,
+        ) => {
+          return transformCorePaging(req, baseQueryReturnValue)
+        },
       }),
       publishFeatureVersion: builder.mutation<
         Res['featureVersion'],
@@ -151,11 +168,23 @@ export async function createAndPublishFeatureVersion(
     ),
   )
 }
+export async function getFeatureVersions(
+  store: any,
+  data: Req['getFeatureVersions'],
+  options?: Parameters<
+    typeof featureVersionService.endpoints.getFeatureVersions.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureVersionService.endpoints.getFeatureVersions.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateAndPublishFeatureVersionMutation,
   useCreateFeatureVersionMutation,
+  useGetFeatureVersionsQuery,
   // END OF EXPORTS
 } = featureVersionService
 

@@ -141,5 +141,10 @@ export type Req = {
   }
   updateSegmentPriorities: { id: number; priority: number }[]
   deleteFeatureSegment: { id: number }
+  getFeatureVersions: PagedRequest<{
+    featureId: number
+    environmentId: string
+  }>
+  getUsers: { organisationId: number }
   // END OF TYPES
 }

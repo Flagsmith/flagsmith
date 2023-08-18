@@ -294,8 +294,8 @@ export type FeatureVersion = {
   live_from: string
   uuid: string
   is_live: boolean
-  published_by: string
-  created_by: string
+  published_by: number | null
+  created_by: number | null
 }
 
 export type Res = {
@@ -364,5 +364,8 @@ export type Res = {
   identityFeatureStates: IdentityFeatureState[]
   segmentPriorities: {}
   featureSegment: { id: string }
+  featureVersions: PagedResponse<FeatureVersion>
+
+  users: User[]
   // END OF TYPES
 }
