@@ -293,7 +293,7 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                         <hr className='py-0 my-4' />
                         <div className='col-md-6 mt-4'>
-                          <Row>
+                          <Row className='mb-2'>
                             <Switch
                               onChange={(value) =>
                                 this.setState(
@@ -309,7 +309,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 typeof this.state.banner_text === 'string'
                               }
                             />
-                            <h5 className='mb-2 ml-3'>Environment Banner</h5>
+                            <h5 className='mb-0 ml-3'>Environment Banner</h5>
                           </Row>
                           <p className='fs-small lh-sm mb-0'>
                             This will show a banner whenever you view its pages,
@@ -346,9 +346,8 @@ const EnvironmentSettingsPage = class extends Component {
                           'configure_hide_sensitive_data',
                         ) && (
                           <div className='col-md-6 mt-4'>
-                            <Row>
+                            <Row className='mb-2'>
                               <Switch
-                                className='float-right'
                                 checked={hide_sensitive_data}
                                 onChange={(v) => {
                                   this.confirmToggle(
@@ -382,7 +381,7 @@ const EnvironmentSettingsPage = class extends Component {
                           </div>
                         )}
                         <FormGroup className='mt-4 col-md-6'>
-                          <Row>
+                          <Row className='mb-2'>
                             <Switch
                               disabled={!has4EyesPermission}
                               checked={
@@ -402,7 +401,7 @@ const EnvironmentSettingsPage = class extends Component {
                                 )
                               }
                             />
-                            <h5 className='mb-2 ml-3'>Change Requests</h5>
+                            <h5 className='mb-0 ml-3'>Change Requests</h5>
                           </Row>
                           {!has4EyesPermission ? (
                             <p className='fs-small lh-sm mb-0'>
@@ -583,7 +582,7 @@ const EnvironmentSettingsPage = class extends Component {
                               </div>
                             )}
                             <div className='mt-4'>
-                              <Row>
+                              <Row className='mb-2'>
                                 <Switch
                                   checked={allow_client_traits}
                                   onChange={(v) => {
@@ -593,7 +592,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     )
                                   }}
                                 />
-                                <h5 className='mb-2 ml-3'>
+                                <h5 className='mb-0 ml-3'>
                                   Allow client SDKs to set user traits
                                 </h5>
                               </Row>
@@ -606,7 +605,7 @@ const EnvironmentSettingsPage = class extends Component {
                               'consistent_hashing_setting',
                             ) && (
                               <div className='mt-4'>
-                                <Row>
+                                <Row className='mb-2'>
                                   <Switch
                                     checked={
                                       use_identity_composite_key_for_hashing
@@ -621,7 +620,7 @@ const EnvironmentSettingsPage = class extends Component {
                                       )
                                     }}
                                   />
-                                  <h5 className='mb-2 ml-3'>
+                                  <h5 className='mb-0 ml-3'>
                                     Use Consistent Hashing
                                   </h5>
                                 </Row>
