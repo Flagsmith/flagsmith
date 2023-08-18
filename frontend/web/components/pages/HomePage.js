@@ -112,12 +112,15 @@ const HomePage = class extends React.Component {
     const redirect = Utils.fromParam().redirect
       ? `?redirect=${Utils.fromParam().redirect}`
       : ''
-    const isInvite = document.location.pathname.indexOf('invite') !== -1
+    const location = `${document.location.pathname}${
+      document.location.search || ''
+    }`
+    const isInvite = location.indexOf('invite') !== -1
     const preventSignup = Project.preventSignup && !isInvite
     const isSignup =
       !preventSignup &&
-      ((isInvite && document.location.pathname.indexOf('login') === -1) ||
-        document.location.pathname.indexOf('signup') !== -1)
+      ((isInvite && location.indexOf('login') === -1) ||
+        location.indexOf('signup') !== -1)
     const disableSignup = preventSignup && isSignup
     const preventEmailPassword = Project.preventEmailPassword
     const disableForgotPassword = Project.preventForgotPassword
