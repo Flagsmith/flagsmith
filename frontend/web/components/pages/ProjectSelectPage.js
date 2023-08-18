@@ -184,7 +184,13 @@ const ProjectSelectPage = class extends Component {
                             >
                               <Button className='btn-project'>
                                 <Row className='flex-nowrap'>
-                                  <h2 className='btn-project-letter mb-0'>
+                                  <h2
+                                    style={{
+                                      backgroundColor:
+                                        Utils.getProjectColour(i),
+                                    }}
+                                    className='btn-project-letter mb-0'
+                                  >
                                     {name[0]}
                                   </h2>
                                   <div className='font-weight-medium btn-project-title'>
