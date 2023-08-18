@@ -6,11 +6,7 @@ import Utils from 'common/utils/utils'
 const convertFeatureState = (featureState: FeatureState) => {
   const res: FeatureVersionState = {
     enabled: featureState.enabled,
-    feature_segment: featureState.feature_segment
-      ? {
-          segment: featureState.feature_segment,
-        }
-      : null,
+    feature_segment: featureState.feature_segment,
     feature_state_value: Utils.valueToFeatureState(
       featureState.feature_state_value,
     ),
@@ -29,7 +25,18 @@ export const versionFeatureStateService = service
         query: (query: Req['createVersionFeatureState']) => ({
           body: convertFeatureState(query.featureState),
           method: 'POST',
-          url: `environments/${query.environmentId}/features/${query.featureId}/versions/featurestates/`,
+          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.sha}/featurestates/`,
+        }),
+      }),
+      deleteVersionFeatureState: builder.mutation<
+        Res['versionFeatureState'],
+        Req['deleteVersionFeatureState']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'VersionFeatureState' }],
+        query: (query: Req['deleteVersionFeatureState']) => ({
+          body: {},
+          method: 'DELETE',
+          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.sha}/featurestates/${query.id}/`,
         }),
       }),
       getVersionFeatureState: builder.query<
@@ -81,6 +88,20 @@ export async function updateVersionFeatureState(
 ) {
   return store.dispatch(
     versionFeatureStateService.endpoints.updateVersionFeatureState.initiate(
+      data,
+      options,
+    ),
+  )
+}
+export async function deleteVersionFeatureState(
+  store: any,
+  data: Req['deleteVersionFeatureState'],
+  options?: Parameters<
+    typeof versionFeatureStateService.endpoints.deleteVersionFeatureState.initiate
+  >[1],
+) {
+  return store.dispatch(
+    versionFeatureStateService.endpoints.deleteVersionFeatureState.initiate(
       data,
       options,
     ),

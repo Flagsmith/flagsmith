@@ -10,9 +10,11 @@ import { awaitExpression } from '@babel/types'
 import { getStore } from 'common/store'
 import {
   createVersionFeatureState,
+  deleteVersionFeatureState,
   getVersionFeatureState,
   updateVersionFeatureState,
 } from './useVersionFeatureState'
+import { deleteFeatureSegment } from './useFeatureSegment'
 
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
@@ -30,36 +32,43 @@ export const featureVersionService = service
               environmentId: query.environmentId,
               featureId: query.featureId,
             })
-          debugger
           const currentFeatureStates: { data: FeatureState[] } =
             await getVersionFeatureState(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
-              sha: versionRes.data.sha,
+              sha: versionRes.data.uuid,
             })
           const res = await Promise.all(
             query.featureStates.map((featureState) => {
               const matchingVersionState = currentFeatureStates.data.find(
                 (feature) => {
                   return (
-                    feature.feature_segment === featureState.feature_segment
+                    feature.feature_segment?.segment ===
+                    featureState.feature_segment?.segment
                   )
                 },
               )
               if (matchingVersionState) {
+                if (featureState.toRemove) {
+                  if (featureState.feature_segment) {
+                    return deleteFeatureSegment(getStore(), {
+                      id: featureState.feature_segment.id,
+                    })
+                  }
+                }
                 return updateVersionFeatureState(getStore(), {
                   environmentId: query.environmentId,
                   featureId: query.featureId,
                   featureState,
                   id: matchingVersionState.id,
-                  sha: versionRes.data.sha,
+                  sha: versionRes.data.uuid,
                 })
               } else {
                 return createVersionFeatureState(getStore(), {
                   environmentId: query.environmentId,
                   featureId: query.featureId,
                   featureState,
-                  sha: versionRes.data.sha,
+                  sha: versionRes.data.uuid,
                 })
               }
             }),
@@ -68,7 +77,7 @@ export const featureVersionService = service
           await publishFeatureVersion(getStore(), {
             environmentId: query.environmentId,
             featureId: query.featureId,
-            sha: versionRes.data.sha,
+            sha: versionRes.data.uuid,
           })
 
           return ret

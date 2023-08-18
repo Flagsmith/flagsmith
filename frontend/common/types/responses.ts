@@ -15,9 +15,7 @@ export type FlagsmithValue = string | number | boolean | null
 export type FeatureVersionState = {
   enabled: boolean
   feature_state_value: FeatureStateValue
-  feature_segment: null | {
-    segment: number
-  }
+  feature_segment: null | FeatureState['feature_segment']
 }
 export type Operator = {
   value: string | null
@@ -229,7 +227,12 @@ export type FeatureState = {
   hide_from_client?: string
   feature: number
   environment: number
-  feature_segment?: number
+  feature_segment?: {
+    id: number
+    priority?: number
+    segment: number
+    uuid: string
+  }
   change_request?: number
 }
 
@@ -289,7 +292,7 @@ export type FeatureVersion = {
   updated_at: string
   published: boolean
   live_from: string
-  sha: string
+  uuid: string
   is_live: boolean
   published_by: string
   created_by: string
@@ -359,6 +362,7 @@ export type Res = {
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
-  featureVersion: { id: string }
+  segmentPriorities: {}
+  featureSegment: { id: string }
   // END OF TYPES
 }

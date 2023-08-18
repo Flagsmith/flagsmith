@@ -69,7 +69,6 @@ class TheComponent extends Component {
         projectFlag.name
       }`,
       <CreateFlagModal
-        isEdit
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}

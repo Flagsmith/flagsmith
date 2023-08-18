@@ -120,7 +120,7 @@ export type Req = {
   createAndPublishFeatureVersion: {
     environmentId: string
     featureId: string
-    featureStates: FeatureState[]
+    featureStates: (FeatureState & { toRemove: boolean })[]
   }
   createFeatureVersion: {
     environmentId: string
@@ -132,11 +132,14 @@ export type Req = {
     featureId: string
   }
   createVersionFeatureState: CreateVersionFeatureState
+  deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
   updateVersionFeatureState: CreateVersionFeatureState & { id: number }
   getVersionFeatureState: {
     sha: string
     environmentId: string
     featureId: string
   }
+  updateSegmentPriorities: { id: number; priority: number }[]
+  deleteFeatureSegment: { id: number }
   // END OF TYPES
 }

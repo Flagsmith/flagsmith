@@ -437,7 +437,6 @@ class TheComponent extends Component {
       }
       return
     }
-    this.setState({ isLoading: true })
     openConfirm(
       'Delete Segment Override',
       <div>
@@ -447,10 +446,9 @@ class TheComponent extends Component {
       </div>,
       () => {
         this.props.value[i].toRemove = true
+        this.forceUpdate()
       },
-      () => {
-        this.setState({ isLoading: false })
-      },
+      () => {},
     )
   }
 
@@ -485,7 +483,6 @@ class TheComponent extends Component {
   render() {
     const {
       props: { multivariateOptions, value },
-      state: { isLoading },
     } = this
     const filter = (segment) => {
       if (segment.feature && segment.feature !== this.props.feature)
@@ -588,10 +585,7 @@ class TheComponent extends Component {
           {visibleValues &&
             !!visibleValues.length &&
             !this.props.showCreateSegment && (
-              <div
-                style={isLoading ? { opacity: 0.5 } : null}
-                className='mt-4 overflow-visible'
-              >
+              <div className='mt-4 overflow-visible'>
                 {!this.props.id && (
                   <div>
                     <InfoMessage className='mb-4 text-left faint'>
@@ -615,7 +609,7 @@ class TheComponent extends Component {
                 {value && (
                   <>
                     <InnerComponent
-                      disabled={isLoading || this.props.readOnly}
+                      disabled={this.props.readOnly}
                       id={this.props.id}
                       name={this.props.name}
                       controlValue={this.props.controlValue}

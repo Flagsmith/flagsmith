@@ -116,7 +116,6 @@ const ChangeRequestsPage = class extends Component {
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        isEdit
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}

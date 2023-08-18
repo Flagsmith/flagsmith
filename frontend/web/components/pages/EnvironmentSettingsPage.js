@@ -99,7 +99,6 @@ const EnvironmentSettingsPage = class extends Component {
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
-        use_v2_feature_versioning: !!this.state.use_v2_feature_versioning,
         minimum_change_request_approvals: has4EyesPermission
           ? this.state.minimum_change_request_approvals
           : null,
@@ -107,6 +106,7 @@ const EnvironmentSettingsPage = class extends Component {
         use_identity_composite_key_for_hashing:
           !!this.state.use_identity_composite_key_for_hashing,
         use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
+        use_v2_feature_versioning: !!this.state.use_v2_feature_versioning,
       }),
     )
   }
