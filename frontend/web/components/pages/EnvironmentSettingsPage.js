@@ -404,15 +404,15 @@ const EnvironmentSettingsPage = class extends Component {
                             <h5 className='mb-0 ml-3'>Change Requests</h5>
                           </Row>
                           {!has4EyesPermission ? (
-                                <p className='fs-small lh-sm'>
-                                  View and manage your feature changes with a
-                                  Change Request flow with our{' '}
-                                  <Link
-                                    to='/organisation-settings'
-                                    className='btn-link'
+                            <p className='fs-small lh-sm'>
+                              View and manage your feature changes with a Change
+                              Request flow with our{' '}
+                              <Link
+                                to='/organisation-settings'
+                                className='btn-link'
                               >
                                 Scale-up plan
-                                  </Link>
+                              </Link>
                               . Find out more{' '}
                               <Button
                                 theme='text'
