@@ -9,18 +9,14 @@ type MainItem = {
 type CollapsibleNestedListProps = {
   mainItems: MainItem[]
   isButtonVisible: boolean
-  selectProject: (project) => void
   role: Role
   level: string
-  id: string
 }
 
 const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
-  isButtonVisible,
   level,
   mainItems,
   role,
-  // selectProject,
 }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
 
@@ -55,11 +51,11 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
             <Flex>
               <div className={'list-item-subtitle'}>{mainItem.name}</div>
             </Flex>
-            {isButtonVisible && (
-              <Button theme='text' disabled={false} checked={true}>
-                {'Go to environments'}
-              </Button>
-            )}
+            <Flex>
+              <div className={'list-item-subtitle'}>
+                {'perm1, perm2, perm3'}
+              </div>
+            </Flex>
             <Icon
               name={
                 expandedItems.includes(mainItem.id)

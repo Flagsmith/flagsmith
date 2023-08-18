@@ -89,7 +89,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
     push,
     role,
     user,
-    // hasPermissions,
   } = props
 
   const { data: permissions } = useGetAvailablePermissionsQuery({ level })

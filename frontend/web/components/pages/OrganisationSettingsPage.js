@@ -299,7 +299,6 @@ const OrganisationSettingsPage = class extends Component {
         onComplete={() => {
           AppActions.getRoles(role.organisation)
           toast('Role updated')
-          closeModal()
         }}
       />,
       'side-modal',
@@ -1287,114 +1286,124 @@ const OrganisationSettingsPage = class extends Component {
                                           </div>
                                         </TabItem>
                                         <TabItem tabLabel='Roles'>
-                                          <div>
-                                            <Row space className='mt-4'>
-                                              <h5 className='m-b-0'>Roles</h5>
-                                              <Button
-                                                className='mr-2'
-                                                id='btn-invite'
-                                                onClick={() =>
-                                                  this.createRole(
-                                                    organisation.id,
-                                                  )
-                                                }
-                                                type='button'
-                                              >
-                                                Create Role
-                                              </Button>
-                                            </Row>
-                                            <p className='fs-small lh-sm'>
-                                              Some description about roles.
-                                            </p>
-                                            <PanelSearch
-                                              id='org-members-list'
-                                              title={'Roles'}
-                                              className='no-pad'
-                                              items={roles}
-                                              itemHeight={65}
-                                              header={
-                                                <Row className='table-header px-3'>
-                                                  <div
-                                                    style={{
-                                                      width: rolesWidths[0],
-                                                    }}
-                                                  >
-                                                    Roles
-                                                  </div>
-                                                  <div
-                                                    style={{
-                                                      width: rolesWidths[1],
-                                                    }}
-                                                  >
-                                                    Description
-                                                  </div>
-                                                  <div className='table-column text-center'>
-                                                    Remove
-                                                  </div>
-                                                </Row>
-                                              }
-                                              renderRow={(role) => (
-                                                <Row
-                                                  className='list-item clickable cursor-pointer'
-                                                  key={role.id}
+                                          {hasRbacPermission ? (
+                                            <>
+                                              <Row space className='mt-4'>
+                                                <h5 className='m-b-0'>Roles</h5>
+                                                <Button
+                                                  className='mr-2'
+                                                  id='btn-invite'
+                                                  onClick={() =>
+                                                    this.createRole(
+                                                      organisation.id,
+                                                    )
+                                                  }
+                                                  type='button'
                                                 >
-                                                  <Row
-                                                    onClick={() => {
-                                                      this.editRole(role)
-                                                    }}
-                                                    className='table-column px-3'
-                                                    style={{
-                                                      width: rolesWidths[0],
-                                                    }}
-                                                  >
-                                                    {role.name}
-                                                  </Row>
-                                                  <Row
-                                                    className='table-column px-3'
-                                                    onClick={() => {
-                                                      this.editRole(role)
-                                                    }}
-                                                    style={{
-                                                      width: rolesWidths[1],
-                                                    }}
-                                                  >
-                                                    {role.description}
-                                                  </Row>
-                                                  <div
-                                                    style={{
-                                                      width: rolesWidths[2],
-                                                    }}
-                                                    className='table-column text-center px-3'
-                                                  >
-                                                    <Button
-                                                      id='remove-role'
-                                                      type='button'
-                                                      onClick={() => {
-                                                        this.deleteRole(role)
+                                                  Create Role
+                                                </Button>
+                                              </Row>
+                                              <p className='fs-small lh-sm'>
+                                                Some description about roles.
+                                              </p>
+                                              <PanelSearch
+                                                id='org-members-list'
+                                                title={'Roles'}
+                                                className='no-pad'
+                                                items={roles}
+                                                itemHeight={65}
+                                                header={
+                                                  <Row className='table-header px-3'>
+                                                    <div
+                                                      style={{
+                                                        width: rolesWidths[0],
                                                       }}
-                                                      className='btn btn-with-icon'
                                                     >
-                                                      <Icon
-                                                        name='trash-2'
-                                                        width={20}
-                                                        fill='#656D7B'
-                                                      />
-                                                    </Button>
-                                                  </div>
-                                                </Row>
-                                              )}
-                                              renderNoResults={
-                                                <Panel
-                                                  className='fs-small lh-sm'
-                                                  title={'Organisation roles'}
-                                                >
-                                                  You currently have no
-                                                  organisation roles
-                                                </Panel>
-                                              }
-                                              isLoading={false}
-                                            />
-                                          </div>
+                                                      Roles
+                                                    </div>
+                                                    <div
+                                                      style={{
+                                                        width: rolesWidths[1],
+                                                      }}
+                                                    >
+                                                      Description
+                                                    </div>
+                                                    <div className='table-column text-center'>
+                                                      Remove
+                                                    </div>
+                                                  </Row>
+                                                }
+                                                renderRow={(role) => (
+                                                  <Row
+                                                    className='list-item clickable cursor-pointer'
+                                                    key={role.id}
+                                                  >
+                                                    <Row
+                                                      onClick={() => {
+                                                        this.editRole(role)
+                                                      }}
+                                                      className='table-column px-3'
+                                                      style={{
+                                                        width: rolesWidths[0],
+                                                      }}
+                                                    >
+                                                      {role.name}
+                                                    </Row>
+                                                    <Row
+                                                      className='table-column px-3'
+                                                      onClick={() => {
+                                                        this.editRole(role)
+                                                      }}
+                                                      style={{
+                                                        width: rolesWidths[1],
+                                                      }}
+                                                    >
+                                                      {role.description}
+                                                    </Row>
+                                                    <div
+                                                      style={{
+                                                        width: rolesWidths[2],
+                                                      }}
+                                                      className='table-column text-center px-3'
+                                                    >
+                                                      <Button
+                                                        id='remove-role'
+                                                        type='button'
+                                                        onClick={() => {
+                                                          this.deleteRole(role)
+                                                        }}
+                                                        className='btn btn-with-icon'
+                                                      >
+                                                        <Icon
+                                                          name='trash-2'
+                                                          width={20}
+                                                          fill='#656D7B'
+                                                        />
+                                                      </Button>
+                                                    </div>
+                                                  </Row>
+                                                )}
+                                                renderNoResults={
+                                                  <Panel
+                                                    className='fs-small lh-sm'
+                                                    title={'Organisation roles'}
+                                                  >
+                                                    You currently have no
+                                                    organisation roles
+                                                  </Panel>
+                                                }
+                                                isLoading={false}
+                                              />
+                                            </>
+                                          ) : (
+                                            <div className='mt-4'>
+                                              <InfoMessage>
+                                                To use <strong>role</strong>{' '}
+                                                features you have to upgrade
+                                                your plan.
+                                              </InfoMessage>
+                                            </div>
+                                          )}
                                         </TabItem>
                                       </Tabs>
                                     </div>

@@ -58,7 +58,6 @@ export const rolePermissionService = service
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
       }),
-
       getRoleOrganisationPermissions: builder.query<
         Res['rolePermission'],
         Req['getRolePermission']
@@ -68,8 +67,27 @@ export const rolePermissionService = service
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
         }),
       }),
-
       getRoleProjectPermissions: builder.query<
+        Res['rolePermission'],
+        Req['getRolePermission']
+      >({
+        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        query: (query: Req['getRolePermission']) => ({
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
+        }),
+      }),
+
+      getRolesEnvironmentPermissions: builder.query<
+        Res['rolePermission'],
+        Req['getRolePermission']
+      >({
+        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        query: (query: Req['getRolePermission']) => ({
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
+        }),
+      }),
+
+      getRolesProjectPermissions: builder.query<
         Res['rolePermission'],
         Req['getRolePermission']
       >({

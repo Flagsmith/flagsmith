@@ -13,6 +13,10 @@ import { EditPermissionsModal } from 'components/EditPermissions'
 import OrganisationStore from 'common/stores/organisation-store'
 import ProjectFilter from 'components/ProjectFilter'
 import { Environment } from 'common/types/responses'
+import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import {
+  useGetRoleProjectPermissionsQuery
+} from 'common/services/useRolePermission'
 
 type CreateRoleType = {
   organisationId?: string
@@ -30,6 +34,7 @@ const CreateRole: FC<CreateRoleType> = ({
   const [tab, setTab] = useState<number>(0)
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
+  const [valueChanged, setValueChanged] = useState<boolean>(false)
 
   const isSaving = false
   const projectData = OrganisationStore.getProjects()
@@ -43,11 +48,6 @@ const CreateRole: FC<CreateRoleType> = ({
     }
   }, [project, projectData])
 
-  const selectProject = (project) => {
-    console.log('DEBUG: selectProject:', project, 'tab:', tab)
-    setProject(project)
-    setTab(3)
-  }
   const Tab1 = () => {
     const { data: roleData, isLoading } = useGetRoleQuery(
       {
@@ -58,6 +58,29 @@ const CreateRole: FC<CreateRoleType> = ({
     )
     const [roleName, setRoleName] = useState<string>('')
     const [roleDesc, setRoleDesc] = useState<string>('')
+
+    const onClosing = () => {
+      if (valueChanged) {
+        return new Promise((resolve) => {
+          openConfirm(
+            'Are you sure?',
+            'Closing this will discard your unsaved changes.',
+            () => resolve(true),
+            () => resolve(false),
+            'Ok',
+            'Cancel',
+          )
+        })
+      } else {
+        return Promise.resolve(true)
+      }
+    }
+
+    useEffect(() => {
+      if (isEdit && valueChanged) {
+        setInterceptClose(onClosing)
+      }
+    }, [valueChanged])
 
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
@@ -78,6 +101,7 @@ const CreateRole: FC<CreateRoleType> = ({
 
     useEffect(() => {
       if (createSuccess || updateSuccess) {
+        setValueChanged(false)
         onComplete?.()
       }
     }, [createSuccess, updateSuccess])
@@ -112,6 +136,7 @@ const CreateRole: FC<CreateRoleType> = ({
           }}
           value={roleName}
           onChange={(event) => {
+            setValueChanged(true)
             setRoleName(Utils.safeParseEventValue(event))
           }}
           id='roleName'
@@ -125,6 +150,7 @@ const CreateRole: FC<CreateRoleType> = ({
           }}
           value={roleDesc}
           onChange={(event) => {
+            setValueChanged(true)
             setRoleDesc(Utils.safeParseEventValue(event))
           }}
           id='description'
@@ -151,23 +177,44 @@ const CreateRole: FC<CreateRoleType> = ({
   const TabValue = () => {
     return isEdit ? (
       <Tabs value={tab} onChange={setTab}>
-        <TabItem tabLabel='Rol'>
+        <TabItem
+          tabLabel={
+            <Row className='justify-content-center'>
+              Role
+              {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
+            </Row>
+          }
+        >
           <Tab1 />
         </TabItem>
-        <TabItem tabLabel='Organisation permissions'>
+        <TabItem
+          tabLabel={
+            <Row className='justify-content-center'>
+              Organisation permissions
+            </Row>
+          }
+        >
           <EditPermissionsModal level={'organisation'} role={role} />
         </TabItem>
-        <TabItem tabLabel='Project permissions'>
+        <TabItem
+          tabLabel={
+            <Row className='justify-content-center'>Project permissions</Row>
+          }
+        >
           <h5 className='my-4 title'>Edit Permissions</h5>
           <CollapsibleNestedList
             mainItems={projectData}
-            // isButtonVisible
             role={role}
             level={'project'}
-            // selectProject={(project) => selectProject(project)}
           />
         </TabItem>
-        <TabItem tabLabel='Environment permissions'>
+        <TabItem
+          tabLabel={
+            <Row className='justify-content-center'>
+              Environment permissions
+            </Row>
+          }
+        >
           <h5 className='my-4 title'>Edit Permissions</h5>
           <ProjectFilter
             organisationId={role.organisation}
