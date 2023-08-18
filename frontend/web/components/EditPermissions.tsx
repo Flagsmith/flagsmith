@@ -477,7 +477,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 >
                                   {role !== 'ADMIN' && (
                                     <Icon
-                                      name='settings-2'
+                                      name='setting'
                                       width={20}
                                       fill='#656D7B'
                                     />

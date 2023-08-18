@@ -149,7 +149,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
                   style={{ width: '72px' }}
                   className='px-3 text-center'
                 >
-                  <Icon name='settings-2' width={20} fill='#656D7B' />
+                  <Icon name='setting' width={20} fill='#656D7B' />
                 </div>
               )}
             </Row>
