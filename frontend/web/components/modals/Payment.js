@@ -528,7 +528,6 @@ const Payment = class extends Component {
                               Utils.openChat()
                             }}
                             className='full-width mt-3'
-                            size='large'
                           >
                             Contact Us
                           </Button>
