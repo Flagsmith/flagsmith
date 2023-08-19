@@ -315,9 +315,8 @@ const controller = {
       data.setToken(null)
       store.model = user
       store.organisation = null
-      API.reset().finally(() => {
-        store.trigger('logout')
-      })
+      store.trigger('logout')
+      API.reset()
     }
   },
 
