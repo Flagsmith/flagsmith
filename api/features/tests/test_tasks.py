@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 
 from environments.models import Environment
@@ -11,8 +9,7 @@ from webhooks.webhooks import WebhookEventType
 
 
 @pytest.mark.django_db
-@mock.patch("features.tasks.Thread")
-def test_trigger_feature_state_change_webhooks(MockThread):
+def test_trigger_feature_state_change_webhooks(mocker):
     # Given
     initial_value = "initial"
     new_value = "new"
@@ -30,16 +27,19 @@ def test_trigger_feature_state_change_webhooks(MockThread):
     feature_state.feature_state_value.save()
     feature_state.save()
 
-    MockThread.reset_mock()  # reset mock as it will have been called when setting up the data
+    mock_call_environment_webhooks = mocker.patch(
+        "features.tasks.call_environment_webhooks.delay"
+    )
+    mock_call_organisation_webhooks = mocker.patch(
+        "features.tasks.call_organisation_webhooks.delay"
+    )
 
     # When
     trigger_feature_state_change_webhooks(feature_state)
 
     # Then
-    call_list = MockThread.call_args_list
-
-    environment_webhook_call_args = call_list[0]
-    organisation_webhook_call_args = call_list[1]
+    environment_webhook_call_args = mock_call_environment_webhooks.call_args
+    organisation_webhook_call_args = mock_call_organisation_webhooks.call_args
 
     # verify that the data for both calls is the same
     assert (
@@ -51,13 +51,12 @@ def test_trigger_feature_state_change_webhooks(MockThread):
     event_type = environment_webhook_call_args[1]["args"][2]
     assert data["new_state"]["feature_state_value"] == new_value
     assert data["previous_state"]["feature_state_value"] == initial_value
-    assert event_type == WebhookEventType.FLAG_UPDATED
+    assert event_type == WebhookEventType.FLAG_UPDATED.value
 
 
 @pytest.mark.django_db
-@mock.patch("features.tasks.Thread")
 def test_trigger_feature_state_change_webhooks_for_deleted_flag(
-    MockThread, organisation, project, environment, feature
+    mocker, organisation, project, environment, feature
 ):
     # Given
     new_value = "new"
@@ -68,14 +67,18 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(
     feature_state.feature_state_value.save()
     feature_state.save()
 
-    MockThread.reset_mock()  # reset mock as it will have been called when setting up the data
+    mock_call_environment_webhooks = mocker.patch(
+        "features.tasks.call_environment_webhooks.delay"
+    )
+    mock_call_organisation_webhooks = mocker.patch(
+        "features.tasks.call_organisation_webhooks.delay"
+    )
+
     trigger_feature_state_change_webhooks(feature_state, WebhookEventType.FLAG_DELETED)
 
     # Then
-    call_list = MockThread.call_args_list
-
-    environment_webhook_call_args = call_list[0]
-    organisation_webhook_call_args = call_list[1]
+    environment_webhook_call_args = mock_call_environment_webhooks.call_args
+    organisation_webhook_call_args = mock_call_organisation_webhooks.call_args
 
     # verify that the data for both calls is the same
     assert (
@@ -87,4 +90,4 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(
     event_type = environment_webhook_call_args[1]["args"][2]
     assert data["new_state"] is None
     assert data["previous_state"]["feature_state_value"] == new_value
-    assert event_type == WebhookEventType.FLAG_DELETED
+    assert event_type == WebhookEventType.FLAG_DELETED.value

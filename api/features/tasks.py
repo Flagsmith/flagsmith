@@ -37,7 +37,9 @@ def trigger_feature_state_change_webhooks(
     if previous_state:
         data.update(previous_state=previous_state)
 
-    call_environment_webhooks.delay(args=(instance.environment, data, event_type))
+    call_environment_webhooks.delay(
+        args=(instance.environment.id, data, event_type.value)
+    )
 
     call_organisation_webhooks.delay(args=(
         instance.environment.project.organisation,

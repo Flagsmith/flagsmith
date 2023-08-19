@@ -45,9 +45,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then
@@ -70,9 +70,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then
@@ -124,9 +124,9 @@ class WebhooksTestCase(TestCase):
         ).hexdigest()
 
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
         # When
         _, kwargs = mock_requests.post.call_args_list[0]
@@ -144,9 +144,9 @@ class WebhooksTestCase(TestCase):
         )
         # When
         call_environment_webhooks(
-            environment=self.environment,
+            environment_id=self.environment.id,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
         )
 
         # Then

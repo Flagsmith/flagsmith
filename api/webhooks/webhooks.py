@@ -11,8 +11,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 
-from environments.models import Webhook
+from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
+from projects.models import Organisation
 from task_processor.decorators import register_task_handler
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
@@ -53,28 +54,28 @@ def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
 
 
 @register_task_handler()
-def call_environment_webhooks(environment, data, event_type):
+def call_environment_webhooks(environment_id, data, event_type):
     if settings.DISABLE_WEBHOOKS:
         return
-
+    environment = Environment.objects.get(id=environment_id)
     _call_webhooks(
-        environment.webhooks.filter(enabled=True),
+        (webhook.id for webhook in environment.webhooks.filter(enabled=True)),
         data,
         event_type,
-        WebhookType.ENVIRONMENT,
+        WebhookType.ENVIRONMENT.value,
     )
 
 
 @register_task_handler()
-def call_organisation_webhooks(organisation, data, event_type):
+def call_organisation_webhooks(organisation_id, data, event_type):
     if settings.DISABLE_WEBHOOKS:
         return
-
+    organisation = Organisation.objects.get(id=organisation_id)
     _call_webhooks(
-        organisation.webhooks.filter(enabled=True),
+        (webhook.id for webhook in organisation.webhooks.filter(enabled=True)),
         data,
         event_type,
-        WebhookType.ORGANISATION,
+        WebhookType.ORGANISATION.value,
     )
 
 
@@ -95,7 +96,7 @@ def trigger_sample_webhook(
 @backoff.on_exception(
     backoff.expo,
     requests.exceptions.RequestException,
-    max_tries=8,
+    max_tries=5,
     jitter=backoff.full_jitter,
 )
 def _call_webhook(
@@ -113,8 +114,12 @@ def _call_webhook(
 
 @register_task_handler()
 def _call_webhook_email_on_error(
-    webhook: WebhookModels, data: typing.Mapping, webhook_type: WebhookType
+    webhook_id: WebhookModels, data: typing.Mapping, webhook_type: WebhookType
 ):
+    if webhook_type == WebhookType.ORGANISATION.value:
+        webhook = OrganisationWebhook.objects.get(id=webhook_id)
+    else:
+        webhook = Webhook.objects.get(id=webhook_id)
     try:
         res = _call_webhook(webhook, data)
     except requests.exceptions.RequestException as exc:
@@ -130,13 +135,13 @@ def _call_webhook_email_on_error(
         send_failure_email(webhook, data, webhook_type, res.status_code)
 
 
-def _call_webhooks(webhooks, data, event_type, webhook_type):
-    webhook_data = {"event_type": event_type.value, "data": data}
+def _call_webhooks(webhooks_id, data, event_type, webhook_type):
+    webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
-    for webhook in webhooks:
+    for webhook_id in webhooks_id:
         _call_webhook_email_on_error.delay(
-            args=(webhook, serializer.data, webhook_type)
+            args=(webhook_id, serializer.data, webhook_type)
         )
 
 
@@ -146,7 +151,7 @@ def send_failure_email(webhook, data, webhook_type, status_code=None):
     )
     organisation = (
         webhook.organisation
-        if webhook_type == WebhookType.ORGANISATION
+        if webhook_type == WebhookType.ORGANISATION.value
         else webhook.environment.project.organisation
     )
 
@@ -170,7 +175,7 @@ def _get_failure_email_template_data(webhook, data, webhook_type, status_code=No
         "webhook_url": webhook.url,
     }
 
-    if webhook_type == WebhookType.ENVIRONMENT:
+    if webhook_type == WebhookType.ENVIRONMENT.value:
         data["project_name"] = webhook.environment.project.name
         data["environment_name"] = webhook.environment.name
 
