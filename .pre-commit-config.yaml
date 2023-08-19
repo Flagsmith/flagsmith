@@ -4,56 +4,30 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
+
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.7.0
     hooks:
       - id: black
         language_version: python3
         exclude: migrations
+
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
         name: flake8
         args: [--config, api/.flake8]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: check-yaml
+      - id: check-json
+      - id: check-toml
+
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.0.0
     hooks:
       - id: prettier
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: 'v8.44.0'
-    hooks:
-      - id: eslint
-        files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx]
-        types: [file]
-        args: [--fix]
-        exclude: |
-          (?x)(
-              .idea|
-              ^frontend/node_modules/|
-              ^frontend/reports/|
-              ^frontend/public/|
-              ^frontend/tests_output/|
-              ^frontend/web/static/|
-              ^frontend/web/project/libs.js/|
-              ^frontend/e2e/|
-              ^frontend/webpack/|
-              ^frontend/api/
-          )$
-        additional_dependencies:
-          - eslint@8.44.0
-          - eslint-plugin-react@7.32.2
-          - eslint-plugin-react-hooks@4.6.0
-          - eslint-plugin-sort-keys-fix@1.1.2
-          - '@typescript-eslint/eslint-plugin@6.0.0'
-          - eslint-config-prettier@8.8.0
-          - eslint-plugin-prettier@5.0.0
-          - '@dword-design/eslint-plugin-import-alias@4.0.8'
-          - '@typescript-eslint/parser@6.0.0'
-          - eslint-plugin-import@2.27.5
-          - eslint-plugin-sort-destructure-keys@1.4.0
-          - eslint-plugin-sort-keys-fix@1.1.2
+        exclude: ^(frontend/|CHANGELOG.md)

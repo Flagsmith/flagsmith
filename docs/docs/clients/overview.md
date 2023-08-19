@@ -146,3 +146,29 @@ In circumstances where you need to target a specific identity, you can do this b
 specific user and subsequently adding a segment override for that segment.
 
 :::
+
+## SDK Compatibility
+
+### `In` Segment operator
+
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+Only these SDK versions support segments with the `In` operator in [local evaluation mode](#2---local-evaluation):
+
+- Python SDK: `3.3.0` and later.
+- Java SDK: `7.1.0` and later.
+- .NET SDK: `5.0.0` and later.
+- NodeJS SDK: `2.5.0` and later.
+- Ruby SDK: `3.2.0` and later.
+- PHP SDK: `4.1.0` and later.
+- Go SDK: `3.1.0` and later.
+- Rust SDK: `1.3.0` and later.
+- Elixir SDK: `2.0.0` and later.

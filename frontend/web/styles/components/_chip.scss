@@ -20,6 +20,10 @@
     .chip-icon {
       color: $primary400;
     }
+
+    &.chip-user {
+      color: $text-icon-light;
+    }
   }
 }
 .chip {
@@ -28,10 +32,11 @@
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;
   border-radius: $border-radius;
-  margin-right: $input-padding-x;
+  margin-right: .5rem;
   font-size: $font-sm;
   line-height: $line-height-sm;
   font-weight: normal;
+  text-wrap: nowrap;
   color: $primary600;
   .icon-check {
     border: 1px solid $primary-alfa-24;
@@ -43,6 +48,7 @@
       vertical-align: baseline;
     }
   }
+
   .chip-icon {
     font-size: 2em;
     cursor: pointer;
@@ -70,6 +76,37 @@
       margin-right: 5px;
     }
   }
+  &--xs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: $border-radius;
+    font-size: $font-caption-sm;
+    line-height: $line-height-xsm;
+    height: 20px;
+    padding: 0px 6px;
+    margin-right: 5px;
+    .chip-svg-icon {
+      display: block;
+      width: 12px;
+      margin-right: 5px;
+    }
+  }
+  &.chip-user {
+    background-color: $basic-alpha-8;
+    color: $text-icon-dark;
+    border-color: $basic-alpha-24;
+    .chip-icon {
+      color: $text-icon-light-grey;
+    }
+    &-icon {
+      line-height: $line-height-xxsm;
+      font-size: $font-caption-sm;
+      svg {
+        vertical-align: sub;
+      }
+    }
+  }
 }
 .mui-root {
   .MuiChip-root {
@@ -95,4 +132,25 @@
   .MuiChip-label {
     padding-right: 0;
   }
+}
+
+.WAMuiChipInput-underline-14:before {
+  display: none;
+}
+.WAMuiChipInput-underline-14:after {
+  display: none;
+}
+
+.MuiFormControl-root {
+  border: 1px solid $input-border-color !important;
+  padding: $input-padding !important;
+  border-radius: $border-radius;
+}
+
+.WAMuiChipInput-chip-16 {
+  margin: 0 8px 0 0 !important;
+}
+.WAMuiChipInput-chipContainer-4 {
+  min-height: auto !important;
+  row-gap: 4px;
 }

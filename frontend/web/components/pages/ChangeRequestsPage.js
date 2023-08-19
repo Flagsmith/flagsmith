@@ -8,6 +8,7 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/Icon'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -140,13 +141,12 @@ const ChangeRequestsPage = class extends Component {
                     renderSearchWithNoResults
                     id='users-list'
                     title='Change Requests'
-                    className='mt-4 mx-2'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !data ||
                       !OrganisationStore.model
                     }
-                    icon='ion-md-git-pull-request'
                     items={data}
                     paging={dataPaging}
                     nextPage={() =>
@@ -172,7 +172,7 @@ const ChangeRequestsPage = class extends Component {
                     }
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={data}
                       />
@@ -196,26 +196,29 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
-                            <div>
-                              <Button theme='text'>
-                                {title}
-                                {isScheduled && (
-                                  <span className='ml-1 mr-4 ion ion-md-time' />
-                                )}
-                              </Button>
-                              <div className='list-item-footer faint'>
-                                Created at{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>
+                              {title}
+                              {isScheduled && (
+                                <span className='ml-1 mr-4 ion ion-md-time' />
+                              )}
                             </div>
-                          </Row>
+                            <div className='list-item-subtitle'>
+                              Created at{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
+                            </div>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}
@@ -225,11 +228,6 @@ const ChangeRequestsPage = class extends Component {
                   tabLabel={
                     <span className='flex-row justify-content-center'>
                       Closed
-                      {dataClosedPaging && !!dataClosedPaging.count && (
-                        <div className='counter-value ml-1'>
-                          {dataClosedPaging.count}
-                        </div>
-                      )}
                     </span>
                   }
                 >
@@ -237,13 +235,12 @@ const ChangeRequestsPage = class extends Component {
                     renderSearchWithNoResults
                     id='users-list'
                     title='Change Requests'
-                    className='mt-4 mx-2'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !data ||
                       !OrganisationStore.model
                     }
-                    icon='ion-md-git-pull-request'
                     items={dataClosed}
                     paging={dataClosedPaging}
                     nextPage={() =>
@@ -269,7 +266,7 @@ const ChangeRequestsPage = class extends Component {
                     }
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={dataClosed}
                       />
@@ -283,21 +280,24 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
-                            <div>
-                              <Button theme='text'>{title}</Button>
-                              <div className='list-item-footer faint'>
-                                Live from{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>{title}</div>
+                            <div className='list-item-subtitle'>
+                              Live from{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
                             </div>
-                          </Row>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}

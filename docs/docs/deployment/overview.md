@@ -4,11 +4,16 @@ sidebar_label: Overview
 sidebar_position: 1
 ---
 
-## Paid Hosting
+## Flagsmith SaaS Platform
 
 If you would rather skip the hosting and jump straight to integrating Flagsmith with your own application, you can use
 [https://flagsmith.com/](https://flagsmith.com/) right now. We have
 [paid plans with pricing to suit both startups and enterprise customers alike](https://flagsmith.com/pricing).
+
+## Terraform Templates
+
+We have a number of example deployments across different providers and orchestration frameworks in our
+[Terraform Examples](https://github.com/Flagsmith/terraform-examples) repository.
 
 ## One Click Installers
 
@@ -16,7 +21,7 @@ If you would rather skip the hosting and jump straight to integrating Flagsmith 
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/flagsmith/flagsmith/tree/main)
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FFlagsmith%2Fflagsmith&plugins=postgresql&envs=DJANGO_ALLOWED_HOSTS%2CGUNICORN_THREADS%2CGUNICORN_WORKERS%2CPORT%2Cenv&DJANGO_ALLOWED_HOSTSDefault=%5B%27*%27%5D&GUNICORN_THREADSDefault=1&GUNICORN_WORKERSDefault=1&PORTDefault=8000&envDefault=prod)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/36mGw8?referralCode=DGxv1S)
 
 ![Fly.io](/img/logos/fly.io.svg)
 
@@ -120,8 +125,8 @@ DJANGO_DB_PORT_ANALYTICS (e.g. 5432)
 
 Note that you don't have to use the same database or database server as the core Flagsmith DB.
 
-You will also need to be running the [Task Processor](https://docs.flagsmith.com/deployment/task-processor) for
-downsampling to work and the stats to start showing up in the dashboard. This process can take up to 1 hour.
+You will also need to be running the [Task Processor](/deployment/configuration/task-processor) for downsampling to work
+and the stats to start showing up in the dashboard. This process can take up to 1 hour.
 
 ## API Telemetry
 

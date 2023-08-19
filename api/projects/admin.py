@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 
 from environments.models import Environment
 from features.models import Feature
@@ -47,6 +49,7 @@ class TagInline(admin.StackedInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
+    actions = ["delete_all_segments"]
     date_hierarchy = "created_date"
     inlines = [EnvironmentInline, FeatureInline, SegmentInline, TagInline]
     list_display = (
@@ -63,4 +66,19 @@ class ProjectAdmin(admin.ModelAdmin):
         "hide_disabled_flags",
         "enable_dynamo_db",
         "enable_realtime_updates",
+        "max_segments_allowed",
+        "max_features_allowed",
+        "max_segment_overrides_allowed",
     )
+
+    @admin.action(
+        description="Delete all segments for project",
+        permissions=["delete_all_segments"],
+    )
+    def delete_all_segments(self, request: HttpRequest, queryset: QuerySet):
+        Segment.objects.filter(project__in=queryset).delete()
+
+    def has_delete_all_segments_permission(
+        self, request: HttpRequest, obj: Project = None
+    ) -> bool:
+        return request.user.is_superuser

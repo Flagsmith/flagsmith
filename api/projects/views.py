@@ -24,6 +24,7 @@ from permissions.serializers import (
 from projects.exceptions import (
     DynamoNotEnabledError,
     ProjectMigrationError,
+    ProjectTooLargeError,
     TooManyIdentitiesError,
 )
 from projects.models import (
@@ -43,7 +44,8 @@ from projects.serializers import (
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
-    ProjectSerializer,
+    ProjectListSerializer,
+    ProjectRetrieveSerializer,
 )
 
 
@@ -69,7 +71,11 @@ from projects.serializers import (
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProjectRetrieveSerializer
+        return ProjectListSerializer
+
     permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 
@@ -163,6 +169,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise DynamoNotEnabledError()
 
         project = self.get_object()
+        if project.is_too_large:
+            raise ProjectTooLargeError()
+
         identity_count = Identity.objects.filter(environment__project=project).count()
 
         if identity_count > settings.MAX_SELF_MIGRATABLE_IDENTITIES:
