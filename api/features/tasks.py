@@ -41,11 +41,13 @@ def trigger_feature_state_change_webhooks(
         args=(instance.environment.id, data, event_type.value)
     )
 
-    call_organisation_webhooks.delay(args=(
-        instance.environment.project.organisation,
-        data,
-        event_type,
-    ))
+    call_organisation_webhooks.delay(
+        args=(
+            instance.environment.project.organisation.id,
+            data,
+            event_type.value,
+        )
+    )
 
 
 def _get_previous_state(

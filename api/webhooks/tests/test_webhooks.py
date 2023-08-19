@@ -179,34 +179,35 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
     expected_data = {}
-    expected_event_type = WebhookEventType.FLAG_UPDATED
+    expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
-        "event_type": expected_event_type.value,
+        "event_type": expected_event_type,
         "data": expected_data,
     }
     expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
 
     # When
     call_environment_webhooks(
-        environment=environment,
+        environment_id=environment.id,
         data=expected_data,
         event_type=expected_event_type,
     )
 
     # Then
     assert send_failure_email_mock.call_count == 2
+    print("ARG LIST", send_failure_email_mock.mock_calls)
     send_failure_email_mock.assert_has_calls(
         [
             mocker.call(
                 webhook_2,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT,
+                WebhookType.ENVIRONMENT.value,
                 expected_send_failure_status_code,
             ),
             mocker.call(
                 webhook_1,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT,
+                WebhookType.ENVIRONMENT.value,
                 expected_send_failure_status_code,
             ),
         ],
