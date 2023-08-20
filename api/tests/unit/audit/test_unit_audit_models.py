@@ -5,7 +5,7 @@ from integrations.datadog.models import DataDogConfiguration
 
 def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     # Given
-    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks")
+    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks.delay")
 
     audit_log = AuditLog(project=project, log="Some audit log")
 
