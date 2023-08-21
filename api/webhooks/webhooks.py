@@ -120,7 +120,7 @@ def _call_webhook(
 
 @register_task_handler()
 def _call_webhook_email_on_error(
-    webhook_id: WebhookModels, data: typing.Mapping, webhook_type: WebhookType
+    webhook_id: int, data: typing.Mapping, webhook_type: WebhookType
 ):
     if webhook_type == WebhookType.ORGANISATION.value:
         webhook = OrganisationWebhook.objects.get(id=webhook_id)
