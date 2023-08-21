@@ -24,10 +24,9 @@ const ConfirmHideFlags: FC<ConfirmHideFlagsType> = ({ cb, project, value }) => {
   return (
     <form onSubmit={submit}>
       <div className='modal-body'>
-        <p>
-          This will <strong>{value ? 'show' : 'hide'}</strong> disabled flags
-          for <strong>all environments</strong> within the project{' '}
-          <strong>{project.name}</strong>.
+        <p className='mb-4'>
+          This will {value ? 'show' : 'hide'} disabled flags for all
+          environments within the project {project.name}.
         </p>
         <InputGroup
           data-test='js-project-name'

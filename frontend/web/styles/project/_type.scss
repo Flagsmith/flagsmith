@@ -19,7 +19,6 @@ h2 {
   line-height: $h2-line-height;
 }
 
-
 h3 {
   font-size: $h3-font-size;
   line-height: $h3-line-height;
@@ -79,6 +78,9 @@ a {
 .dark {
   .text-primary {
     color: $bt-brand-primary-dark;
+  }
+  .text-dark {
+    color: $text-icon-light !important;
   }
 }
 * {
