@@ -1,6 +1,7 @@
 import enum
 import json
 import typing
+from typing import Type, Union
 
 import backoff
 import requests
@@ -46,7 +47,9 @@ WEBHOOK_SAMPLE_DATA = {
 }
 
 
-def get_webhook_model(webhook_type: WebhookType) -> WebhookModels:
+def get_webhook_model(
+    webhook_type: WebhookType,
+) -> Type[Union[OrganisationWebhook, Webhook]]:
     if webhook_type == WebhookType.ORGANISATION:
         return OrganisationWebhook
     if webhook_type == WebhookType.ENVIRONMENT:
@@ -124,7 +127,7 @@ def _call_webhook(
 
 @register_task_handler()
 def _call_webhook_email_on_error(
-    webhook_id: int, data: typing.Mapping, webhook_type: WebhookType
+    webhook_id: int, data: typing.Mapping, webhook_type: str
 ):
     if webhook_type == WebhookType.ORGANISATION.value:
         webhook = OrganisationWebhook.objects.get(id=webhook_id)
@@ -149,7 +152,7 @@ def _call_webhooks(
     webhook_ids: typing.Iterable[int],
     data: typing.Mapping,
     event_type: str,
-    webhook_type: WebhookModels,
+    webhook_type: WebhookType,
 ):
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
@@ -163,7 +166,7 @@ def _call_webhooks(
 def send_failure_email(
     webhook: WebhookModels,
     data: typing.Mapping,
-    webhook_type: WebhookType,
+    webhook_type: str,
     status_code: typing.Union[int, str] = None,
 ):
     template_data = _get_failure_email_template_data(
@@ -171,7 +174,7 @@ def send_failure_email(
     )
     organisation = (
         webhook.organisation
-        if webhook_type == WebhookType.ORGANISATION
+        if webhook_type == WebhookType.ORGANISATION.value
         else webhook.environment.project.organisation
     )
 
@@ -191,7 +194,7 @@ def send_failure_email(
 def _get_failure_email_template_data(
     webhook: WebhookModels,
     data: typing.Mapping,
-    webhook_type: WebhookType,
+    webhook_type: str,
     status_code: typing.Union[int, str] = None,
 ):
     data = {
