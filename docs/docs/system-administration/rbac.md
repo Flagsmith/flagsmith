@@ -7,7 +7,7 @@ environments.
 
 Permissions are assigned to individual team members or to groups.
 
-:::caution
+:::info
 
 The Permissions/Role Based Access features of Flagsmith are _not_ part of the Open Source version. If you want to use
 these features as part of a self hosted/on premise solution, please [get in touch](https://flagsmith.com/contact-us/).

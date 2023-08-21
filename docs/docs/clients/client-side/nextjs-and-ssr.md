@@ -26,8 +26,7 @@ npm i flagsmith --save
 
 ## Basic Usage
 
-The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
-for example, the Development or Production environment. You can find your Client-side Environment Key in the Environment
+The SDK is initialised against a single environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
 ![Image](/img/api-key.png)
@@ -39,10 +38,10 @@ SDK. The main difference is that Flagsmith should be imported from `flagsmith/is
 
 The main flow with Next.js and any JavaScript-based SSR can be as follows:
 
-- 1: Fetch the flags on the server, optionally passing an identity to
-  [flagsmith.init({})](/clients/javascript#initialisation-options)
-- 2: Pass the resulting state to the client with [flagsmith.getState()](/clients/javascript#available-functions)
-- 3: Initialise flagsmith on the client with [flagsmith.setState(state)](/clients/javascript#available-functions)
+1. Fetch the flags on the server, optionally passing an identity to
+   [`flagsmith.init({})`](/clients/javascript#initialisation-options)
+2. Pass the resulting state to the client with [`flagsmith.getState()`](/clients/javascript#available-functions)
+3. Initialise flagsmith on the client with [`flagsmith.setState(state)`](/clients/javascript#available-functions)
 
 ### Example: Initialising the SDK with Next.js
 
