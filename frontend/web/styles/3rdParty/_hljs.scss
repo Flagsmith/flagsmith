@@ -1,3 +1,5 @@
+@import "../mixins/custom-scrollbar";
+
 @mixin transition($transition...) {
   -moz-transition: $transition;
   -o-transition: $transition;
@@ -297,8 +299,15 @@ code.txt {
     background: $input-bg-dark !important;
     color: white;
   }
+  .hljs-header {
+    color: white;
+    path {
+      fill: white;
+    }
+  }
 }
 
 code[contenteditable='false'].hljs {
   cursor: default !important;
+  @include customScrollDark();
 }

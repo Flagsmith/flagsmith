@@ -4,7 +4,7 @@ import _data from 'common/data/base/_data'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
 import Button from 'components/base/forms/Button'
-
+import classNames from 'classnames'
 const CreateEditIntegration = class extends Component {
   static displayName = 'CreateEditIntegration'
 
@@ -150,12 +150,20 @@ const CreateEditIntegration = class extends Component {
 
   render() {
     return (
-      <form onSubmit={this.submit}>
-        <div className={this.props.modal ? 'modal-body' : ''}>
+      <form
+        className={classNames({
+          'px-4 h-100': !!this.props.modal,
+        })}
+        onSubmit={this.submit}
+      >
+        <div className={classNames({ 'pt-4': !!this.props.modal })}>
           {this.props.integration.perEnvironment && (
-            <div className='mb-2'>
-              <label>Flagsmith Environment</label>
+            <div className='mb-3'>
+              <label className={!this.props.modal ? 'mb-1 fw-bold' : ''}>
+                Flagsmith Environment
+              </label>
               <EnvironmentSelect
+                projectId={this.props.projectId}
                 readOnly={!!this.props.data || this.props.readOnly}
                 value={this.state.data.flagsmithEnvironment}
                 onChange={(environment) =>
@@ -168,16 +176,15 @@ const CreateEditIntegration = class extends Component {
             this.state.fields.map((field) => (
               <>
                 <div>
-                  <label htmlFor={field.label.replace(/ /g, '')}>
-                    {this.props.readOnly ? (
-                      <Button theme='text'>{field.label}</Button>
-                    ) : (
-                      field.label
-                    )}
+                  <label
+                    htmlFor={field.label.replace(/ /g, '')}
+                    className={!this.props.modal ? 'mb-1 fw-bold' : ''}
+                  >
+                    {field.label}
                   </label>
                 </div>
                 {this.props.readOnly ? (
-                  <div className='mb-2'>{this.state.data[field.key]}</div>
+                  <div className='mb-3'>{this.state.data[field.key]}</div>
                 ) : field.options ? (
                   <div className='full-width mb-2'>
                     <Select
@@ -231,9 +238,8 @@ const CreateEditIntegration = class extends Component {
           <ErrorMessage error={this.state.error} />
         </div>
 
-        {!!this.props.modal && <ModalHR />}
         {!this.props.readOnly && (
-          <div className={this.props.modal ? 'modal-footer' : 'text-right'}>
+          <div className={'text-right mt-2'}>
             {!!this.props.modal && (
               <Button onClick={closeModal} className='mr-2' theme='secondary'>
                 Cancel

@@ -820,3 +820,19 @@ def test_environment_my_permissions_reruns_400_for_master_api_key(
         response.json()["detail"]
         == "This endpoint can only be used with a user and not Master API Key"
     )
+
+
+def test_partial_environment_update(
+    admin_client: APIClient, environment: "Environment"
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+    new_name = "updated!"
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps({"name": new_name}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

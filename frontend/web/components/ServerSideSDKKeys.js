@@ -3,6 +3,7 @@ import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
 import ModalHR from './modals/ModalHR'
+import Icon from './Icon'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -141,37 +142,33 @@ class ServerSideSDKKeys extends Component {
 
   render() {
     return (
-      <FormGroup className='m-y-3'>
-        <Row className='mb-3' space>
-          <div className='col-md-8 pl-0'>
-            <h5 className='m-b-0'>Server-side Environment Keys</h5>
-            <p className='fs-small lh-sm'>
-              Flags can be evaluated locally within your own Server environments
-              using our{' '}
-              <Button
-                theme='text'
-                href='https://docs.flagsmith.com/clients/overview'
-                target='__blank'
-              >
-                Server-side Environment Keys
-              </Button>
-              .
-            </p>
-            <p className='fs-small lh-sm'>
-              Server-side SDKs should be initialised with a Server-side
-              Environment Key.
-            </p>
-          </div>
-          <div className='col-md-4 pr-0'>
+      <FormGroup className='my-4'>
+        <div className='col-md-6'>
+          <h5 className='mb-2'>Server-side Environment Keys</h5>
+          <p className='fs-small lh-sm mb-0'>
+            Flags can be evaluated locally within your own Server environments
+            using our{' '}
             <Button
-              onClick={this.createKey}
-              className='float-right'
-              disabled={this.state.isSaving}
+              theme='text'
+              href='https://docs.flagsmith.com/clients/overview'
+              target='__blank'
             >
-              Create Server-side Environment Key
+              Server-side Environment Keys
             </Button>
-          </div>
-        </Row>
+            .
+          </p>
+          <p className='fs-small lh-sm mb-0'>
+            Server-side SDKs should be initialised with a Server-side
+            Environment Key.
+          </p>
+          <Button
+            onClick={this.createKey}
+            className='my-4'
+            disabled={this.state.isSaving}
+          >
+            Create Server-side Environment Key
+          </Button>
+        </div>
         {this.state.isLoading && (
           <div className='text-center'>
             <Loader />
@@ -190,20 +187,24 @@ class ServerSideSDKKeys extends Component {
               )
             }}
             renderRow={({ id, key, name }) => (
-              <div className='list-item'>
-                <Row>
-                  <Flex>{name}</Flex>
+              <Row className='list-item'>
+                <Flex className='table-column px-3 font-weight-medium'>
+                  {name}
+                </Flex>
+                <div className='table-column'>
                   <Token style={{ width: 280 }} token={key} />
-                  <button
+                </div>
+                <div className='table-column'>
+                  <Button
                     onClick={() => this.remove(id, name)}
                     disabled={this.state.isSaving}
                     id='remove-feature'
-                    className='btn btn--with-icon'
+                    className='btn btn-with-icon'
                   >
-                    <RemoveIcon />
-                  </button>
-                </Row>
-              </div>
+                    <Icon name='trash-2' width={20} fill='#656D7B' />
+                  </Button>
+                </div>
+              </Row>
             )}
           />
         )}

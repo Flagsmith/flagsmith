@@ -428,13 +428,13 @@ SWAGGER_SETTINGS = {
             "type": "apiKey",
             "in": "header",
             "name": "Authorization",
-            "description": "Every time you create a new Project Environment, an environment API key is automatically generated for you. This is all you need to pass in to get access to Flags etc. <br />Example value: <br />Token 884b1b4c6b4ddd112e7a0a139f09eb85e8c254ff",  # noqa
+            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
         },
         "Public": {
             "type": "apiKey",
             "in": "header",
             "name": "X-Environment-Key",
-            "description": "Things like creating new flags, environments, toggle flags or indeed anything that is possible from the administrative front end. <br />Example value: <br />FFnVjhp7xvkT5oTLq4q788",  # noqa
+            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
         },
     },
 }
@@ -641,6 +641,7 @@ TRENCH_AUTH = {
             "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
         },
     },
+    "SECRET_KEY_LENGTH": 32,
 }
 
 USER_CREATE_PERMISSIONS = env.list(
@@ -902,3 +903,9 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+# Define the cooldown duration, in seconds, for password reset emails
+PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
+
+# Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
+MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)

@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-frontend",
-  "version": "2.2.3",
+  "version": "2.67.0",
   "description": "The frontend application for Flagsmith",
   "main": "index.js",
   "scripts": {
@@ -85,7 +85,7 @@
     "mini-css-extract-plugin": "^2.6.0",
     "moment": "2.29.4",
     "node-fetch": "2.6.7",
-    "node-sass": "^7.0.1",
+    "node-sass": "^9.0.0",
     "pipedrive": "^20.3.0",
     "polyfill-react-native": "1.0.5",
     "postcss-loader": "4.3.0",
@@ -152,7 +152,7 @@
     "eslint-plugin-react-hooks": "4.3.0",
     "eslint-plugin-sort-destructure-keys": "^1.4.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
-    "nodemon": "^2.0.16",
+    "nodemon": "^3.0.1",
     "raw-loader": "0.5.1",
     "ssgrtk": "^0.3.4",
     "testcafe": "^3.1.0",
