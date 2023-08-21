@@ -29,6 +29,8 @@ class EnvironmentFeatureVersion(
     )
     feature = models.ForeignKey("features.Feature", on_delete=models.CASCADE)
 
+    description = models.TextField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,6 +54,7 @@ class EnvironmentFeatureVersion(
 
     class Meta:
         indexes = [Index(fields=("environment", "feature"))]
+        ordering = ("-live_from",)
 
     def __gt__(self, other):
         return self.is_live and (not other.is_live or self.live_from > other.live_from)

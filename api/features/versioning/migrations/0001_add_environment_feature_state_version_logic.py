@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('deleted_at', models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True)),
                 ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4)),
+                ('description', models.TextField(blank=True, null=True)),
                 ('created_at', models.DateTimeField(blank=True, editable=False)),
                 ('updated_at', models.DateTimeField(blank=True, editable=False)),
                 ('published', models.BooleanField(default=False)),
@@ -52,6 +53,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('deleted_at', models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True)),
                 ('uuid', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
+                ("description", models.TextField(blank=True, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('published', models.BooleanField(default=False)),
@@ -62,6 +64,7 @@ class Migration(migrations.Migration):
                 ('published_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='published_environment_feature_versions', to=settings.AUTH_USER_MODEL)),
             ],
             bases=(django_lifecycle.mixins.LifecycleModelMixin, models.Model),
+            options={'ordering': ('-live_from',)}
         ),
         migrations.AddIndex(
             model_name='environmentfeatureversion',

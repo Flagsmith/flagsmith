@@ -26,6 +26,7 @@ class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
             "is_live",
             "published_by",
             "created_by",
+            "description",
         )
         read_only_fields = (
             "updated_at",
