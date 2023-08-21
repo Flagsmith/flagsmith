@@ -1,6 +1,11 @@
 import React, { useState } from 'react'
 import Icon from 'components/Icon'
 import { EditPermissionsModal } from 'components/EditPermissions'
+import {
+  useGetRoleProjectPermissionsQuery,
+  useGetRoleEnvironmentPermissionsQuery,
+} from 'common/services/useRolePermission'
+import Format from 'common/utils/format'
 
 type MainItem = {
   name: string
@@ -25,6 +30,45 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
       prevExpanded.includes(id)
         ? prevExpanded.filter((item) => item !== id)
         : [...prevExpanded, id],
+    )
+  }
+
+  const PermissionsSummary = ({ levelId }) => {
+    const { data: projectPermissions, isLoading: projectIsLoading } =
+      useGetRoleProjectPermissionsQuery(
+        {
+          organisation_id: role?.organisation,
+          project_id: levelId,
+          role_id: role?.id,
+        },
+        { skip: !levelId || level !== 'project' },
+      )
+
+    const { data: envPermissions, isLoading: envIsLoading } =
+      useGetRoleEnvironmentPermissionsQuery(
+        {
+          env_id: levelId,
+          organisation_id: role?.organisation,
+          role_id: role?.id,
+        },
+        { skip: !levelId || level !== 'environment' },
+      )
+
+    const permissions = projectPermissions || envPermissions
+    const isAdmin = permissions?.results[0]?.admin || false
+    const permissionsSummary =
+      permissions?.results[0]?.permissions
+        .map((item) => Format.enumeration.get(item))
+        .join(', ') || ''
+
+    return projectIsLoading || envIsLoading ? (
+      <div className='modal-body text-center'>
+        <Loader />
+      </div>
+    ) : (
+      <div>
+        <strong>{isAdmin ? 'Administrator' : permissionsSummary}</strong>
+      </div>
     )
   }
 
@@ -53,7 +97,7 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = ({
             </Flex>
             <Flex>
               <div className={'list-item-subtitle'}>
-                {'perm1, perm2, perm3'}
+                <PermissionsSummary levelId={mainItem.id} />
               </div>
             </Flex>
             <Icon

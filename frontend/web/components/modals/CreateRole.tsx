@@ -14,9 +14,6 @@ import OrganisationStore from 'common/stores/organisation-store'
 import ProjectFilter from 'components/ProjectFilter'
 import { Environment } from 'common/types/responses'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
-import {
-  useGetRoleProjectPermissionsQuery
-} from 'common/services/useRolePermission'
 
 type CreateRoleType = {
   organisationId?: string
@@ -89,15 +86,9 @@ const CreateRole: FC<CreateRoleType> = ({
       }
     }, [roleData, isLoading])
 
-    const [
-      createRole,
-      { isError: createError, isLoading: creating, isSuccess: createSuccess },
-    ] = useCreateRoleMutation()
+    const [createRole, { isSuccess: createSuccess }] = useCreateRoleMutation()
 
-    const [
-      editRole,
-      { isError: updateError, isLoading: updating, isSuccess: updateSuccess },
-    ] = useUpdateRoleMutation()
+    const [editRole, { isSuccess: updateSuccess }] = useUpdateRoleMutation()
 
     useEffect(() => {
       if (createSuccess || updateSuccess) {
