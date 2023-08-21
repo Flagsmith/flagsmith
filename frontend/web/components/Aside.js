@@ -11,6 +11,8 @@ import getBuildVersion from 'project/getBuildVersion'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from './Icon'
+import ProjectSelect from './ProjectSelect'
+import AsideProjectButton from './AsideProjectButton'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -27,7 +29,7 @@ const Aside = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { isOpenProject: true }
+    this.state = { isOpenProject: false }
     ES6Component(this)
     if (!this.props.disabled) {
       AppActions.getProject(this.props.projectId)
@@ -214,117 +216,156 @@ const Aside = class extends Component {
                             active={this.state.isOpenProject}
                             className='collapsible-project'
                           >
+                            <ProjectSelect
+                              renderRow={(_project, onClick) => {
+                                if (project.id !== _project.id) {
+                                  return (
+                                    <AsideProjectButton
+                                      key={_project.id}
+                                      onClick={() => {
+                                        this.setState({ isOpenProject: false })
+                                        onClick()
+                                      }}
+                                      name={_project.name}
+                                    />
+                                  )
+                                }
+                              }}
+                              projectId={this.props.projectId}
+                              environmentId={environmentId}
+                              onChange={(project) => {
+                                AppActions.getProject(project.id)
+                                if (project.environments[0]) {
+                                  this.context.router.history.push(
+                                    `/project/${project.id}/environment/${project.environments[0].api_key}/features`,
+                                  )
+                                } else {
+                                  this.context.router.history.push(
+                                    `/project/${project.id}/environment/create`,
+                                  )
+                                }
+                                AsyncStorage.setItem(
+                                  'lastEnv',
+                                  JSON.stringify({
+                                    environmentId:
+                                      project.environments[0].api_key,
+                                    orgId: AccountStore.getOrganisation().id,
+                                    projectId: project.id,
+                                  }),
+                                )
+                              }}
+                            />
+                          </Collapsible>
+                          <Permission
+                            level='project'
+                            permission='ADMIN'
+                            id={this.props.projectId}
+                          >
+                            {({ permission }) =>
+                              permission && (
+                                <NavLink
+                                  id='project-settings-link'
+                                  activeClassName='active'
+                                  className='aside__nav-item mx-3 mt-2'
+                                  to={`/project/${this.props.projectId}/settings`}
+                                >
+                                  <span className='mr-2'>
+                                    <Icon name='options-2' />
+                                  </span>
+                                  Project Settings
+                                </NavLink>
+                              )
+                            }
+                          </Permission>
+
+                          <NavLink
+                            to={`/project/${project.id}/environment/${environmentId}/segments`}
+                            id='segments-link'
+                            className='aside__nav-item mx-3'
+                          >
+                            <span className='mr-2'>
+                              <Icon name='pie-chart' />
+                            </span>
+                            Segments
+                          </NavLink>
+                          <NavLink
+                            id='integrations-link'
+                            activeClassName='active'
+                            className='aside__nav-item mx-3'
+                            to={`/project/${project.id}/environment/${environmentId}/compare`}
+                            exact
+                          >
+                            <span className='mr-2'>
+                              <Icon name='bar-chart' />
+                            </span>
+                            Compare
+                          </NavLink>
+
+                          <Permission
+                            level='project'
+                            permission='VIEW_AUDIT_LOG'
+                            id={this.props.projectId}
+                          >
+                            {({ permission }) =>
+                              permission &&
+                              hasRbacPermission && (
+                                <NavLink
+                                  id='audit-log-link'
+                                  activeClassName='active'
+                                  className='aside__nav-item mx-3'
+                                  to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
+                                >
+                                  <span className='mr-2'>
+                                    <Icon name='list' />
+                                  </span>
+                                  Audit Log
+                                </NavLink>
+                              )
+                            }
+                          </Permission>
+
+                          {!hasRbacPermission && (
+                            <Tooltip
+                              title={
+                                <a
+                                  href='#'
+                                  className='aside__nav-item disabled mx-3'
+                                >
+                                  <span className='mr-2'>
+                                    <Icon name='list' />
+                                  </span>
+                                  Audit Log
+                                </a>
+                              }
+                            >
+                              This feature is available with our scaleup plan
+                            </Tooltip>
+                          )}
+                          {!!integrations.length && (
                             <Permission
                               level='project'
-                              permission='ADMIN'
+                              permission='CREATE_ENVIRONMENT'
                               id={this.props.projectId}
                             >
                               {({ permission }) =>
                                 permission && (
                                   <NavLink
-                                    id='project-settings-link'
+                                    id='integrations-link'
                                     activeClassName='active'
                                     className='aside__nav-item mx-3'
-                                    to={`/project/${this.props.projectId}/settings`}
+                                    to={`/project/${this.props.projectId}/integrations`}
+                                    exact
                                   >
                                     <span className='mr-2'>
-                                      <Icon name='options-2' />
+                                      <Icon name='layers' />
                                     </span>
-                                    Project Settings
+                                    Integrations
                                   </NavLink>
                                 )
                               }
                             </Permission>
-
-                            <NavLink
-                              to={`/project/${project.id}/environment/${environmentId}/segments`}
-                              id='segments-link'
-                              className='aside__nav-item mx-3'
-                            >
-                              <span className='mr-2'>
-                                <Icon name='pie-chart' />
-                              </span>
-                              Segments
-                            </NavLink>
-                            <NavLink
-                              id='integrations-link'
-                              activeClassName='active'
-                              className='aside__nav-item mx-3'
-                              to={`/project/${project.id}/environment/${environmentId}/compare`}
-                              exact
-                            >
-                              <span className='mr-2'>
-                                <Icon name='bar-chart' />
-                              </span>
-                              Compare
-                            </NavLink>
-
-                            <Permission
-                              level='project'
-                              permission='VIEW_AUDIT_LOG'
-                              id={this.props.projectId}
-                            >
-                              {({ permission }) =>
-                                permission &&
-                                hasRbacPermission && (
-                                  <NavLink
-                                    id='audit-log-link'
-                                    activeClassName='active'
-                                    className='aside__nav-item mx-3'
-                                    to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
-                                  >
-                                    <span className='mr-2'>
-                                      <Icon name='list' />
-                                    </span>
-                                    Audit Log
-                                  </NavLink>
-                                )
-                              }
-                            </Permission>
-
-                            {!hasRbacPermission && (
-                              <Tooltip
-                                title={
-                                  <a
-                                    href='#'
-                                    className='aside__nav-item disabled mx-3'
-                                  >
-                                    <span className='mr-2'>
-                                      <Icon name='list' />
-                                    </span>
-                                    Audit Log
-                                  </a>
-                                }
-                              >
-                                This feature is available with our scaleup plan
-                              </Tooltip>
-                            )}
-                            {!!integrations.length && (
-                              <Permission
-                                level='project'
-                                permission='CREATE_ENVIRONMENT'
-                                id={this.props.projectId}
-                              >
-                                {({ permission }) =>
-                                  permission && (
-                                    <NavLink
-                                      id='integrations-link'
-                                      activeClassName='active'
-                                      className='aside__nav-item mx-3'
-                                      to={`/project/${this.props.projectId}/integrations`}
-                                      exact
-                                    >
-                                      <span className='mr-2'>
-                                        <Icon name='layers' />
-                                      </span>
-                                      Integrations
-                                    </NavLink>
-                                  )
-                                }
-                              </Permission>
-                            )}
-                          </Collapsible>
-                          <hr className='my-0 py-0' />
+                          )}
+                          <hr className='my-0 py-0 mt-2' />
                           <Permission
                             level='project'
                             permission='CREATE_ENVIRONMENT'

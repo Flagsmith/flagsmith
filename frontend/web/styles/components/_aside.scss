@@ -82,6 +82,9 @@ $animation-timing-function: ease-in-out;
           }
         }
       }
+      .project-select {
+        background-color: $bg-dark400;
+      }
     }
 
     &__projects-item {
@@ -208,11 +211,10 @@ $animation-timing-function: ease-in-out;
     &-project {
       line-height: $h5-line-height;
       font-size: $line-height-sm;
-      margin-bottom: 0.5rem;
 
       .collapsible__header {
         font-weight: bold;
-        margin: 20px 0px 16px;
+        margin: 20px 0px 8px;
       }
     }
     &__header {
@@ -249,6 +251,30 @@ $animation-timing-function: ease-in-out;
           path {
             fill: $aside-nav-color;
           }
+        }
+      }
+    }
+
+    .project-select {
+      background-color: $bg-dark300;
+      border-radius: $border-radius-lg;
+      font-size: $font-size-base;
+      line-height: $line-height-base;
+      &-header {
+        padding: 8px 12px;
+        background-color: $bg-dark200;
+        border-top-left-radius: $border-radius-lg;
+        border-top-right-radius: $border-radius-lg;
+        input {
+          background-color: $bg-dark300;
+          color: $text-icon-light;
+        }
+      }
+      &-btn {
+        padding: 9px 16px;
+        color: $text-icon-light;
+        &:hover {
+          background-color: $bg-dark200;
         }
       }
     }
@@ -314,7 +340,7 @@ $animation-timing-function: ease-in-out;
     line-height: $line-height-base;
     svg {
       vertical-align: bottom;
-  }
+    }
     &.disabled {
       color: $text-icon-grey !important;
       pointer-events: none;
