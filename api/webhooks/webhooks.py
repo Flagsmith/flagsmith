@@ -26,7 +26,7 @@ from .serializers import WebhookSerializer
 if typing.TYPE_CHECKING:
     import environments  # noqa
 
-WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
+WebhookModels = typing.Union[OrganisationWebhook, Webhook]
 
 
 class WebhookEventType(enum.Enum):
@@ -46,7 +46,7 @@ WEBHOOK_SAMPLE_DATA = {
 }
 
 
-def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
+def get_webhook_model(webhook_type: WebhookType) -> WebhookModels:
     if webhook_type == WebhookType.ORGANISATION:
         return OrganisationWebhook
     if webhook_type == WebhookType.ENVIRONMENT:
@@ -54,7 +54,9 @@ def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
 
 
 @register_task_handler()
-def call_environment_webhooks(environment_id, data, event_type):
+def call_environment_webhooks(
+    environment_id: int, data: typing.Mapping, event_type: str
+):
     if settings.DISABLE_WEBHOOKS:
         return
     try:
@@ -65,12 +67,14 @@ def call_environment_webhooks(environment_id, data, event_type):
         (webhook.id for webhook in environment.webhooks.filter(enabled=True)),
         data,
         event_type,
-        WebhookType.ENVIRONMENT.value,
+        WebhookType.ENVIRONMENT,
     )
 
 
 @register_task_handler()
-def call_organisation_webhooks(organisation_id, data, event_type):
+def call_organisation_webhooks(
+    organisation_id: int, data: typing.Mapping, event_type: str
+):
     if settings.DISABLE_WEBHOOKS:
         return
     try:
@@ -81,7 +85,7 @@ def call_organisation_webhooks(organisation_id, data, event_type):
         (webhook.id for webhook in organisation.webhooks.filter(enabled=True)),
         data,
         event_type,
-        WebhookType.ORGANISATION.value,
+        WebhookType.ORGANISATION,
     )
 
 
@@ -141,23 +145,33 @@ def _call_webhook_email_on_error(
         send_failure_email(webhook, data, webhook_type, res.status_code)
 
 
-def _call_webhooks(webhooks_id, data, event_type, webhook_type):
+def _call_webhooks(
+    webhook_ids: typing.Iterable[int],
+    data: typing.Mapping,
+    event_type: str,
+    webhook_type: WebhookModels,
+):
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
-    for webhook_id in webhooks_id:
+    for webhook_id in webhook_ids:
         _call_webhook_email_on_error.delay(
-            args=(webhook_id, serializer.data, webhook_type)
+            args=(webhook_id, serializer.data, webhook_type.value)
         )
 
 
-def send_failure_email(webhook, data, webhook_type, status_code=None):
+def send_failure_email(
+    webhook: WebhookModels,
+    data: typing.Mapping,
+    webhook_type: WebhookType,
+    status_code: typing.Union[int, str] = None,
+):
     template_data = _get_failure_email_template_data(
         webhook, data, webhook_type, status_code
     )
     organisation = (
         webhook.organisation
-        if webhook_type == WebhookType.ORGANISATION.value
+        if webhook_type == WebhookType.ORGANISATION
         else webhook.environment.project.organisation
     )
 
@@ -174,7 +188,12 @@ def send_failure_email(webhook, data, webhook_type, status_code=None):
     msg.send()
 
 
-def _get_failure_email_template_data(webhook, data, webhook_type, status_code=None):
+def _get_failure_email_template_data(
+    webhook: WebhookModels,
+    data: typing.Mapping,
+    webhook_type: WebhookType,
+    status_code: typing.Union[int, str] = None,
+):
     data = {
         "status_code": status_code,
         "data": json.dumps(data, sort_keys=True, indent=2, cls=DjangoJSONEncoder),

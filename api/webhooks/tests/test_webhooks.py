@@ -195,7 +195,6 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
 
     # Then
     assert send_failure_email_mock.call_count == 2
-    print("ARG LIST", send_failure_email_mock.mock_calls)
     send_failure_email_mock.assert_has_calls(
         [
             mocker.call(
