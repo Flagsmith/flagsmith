@@ -211,11 +211,13 @@ $animation-timing-function: ease-in-out;
     &-project {
       line-height: $h5-line-height;
       font-size: $line-height-sm;
-      position: relative;
       .collapsible__header {
         font-weight: bold;
         margin: 20px 0px 8px;
       }
+    }
+    &__content {
+      position: relative;
     }
     &__header {
       color: $text-icon-light;
@@ -261,7 +263,7 @@ $animation-timing-function: ease-in-out;
       font-size: $font-size-base;
       line-height: $line-height-base;
       position: absolute;
-      top: 55px;
+      top: -40px;
       &-header {
         padding: 8px 12px;
         background-color: $bg-dark200;
