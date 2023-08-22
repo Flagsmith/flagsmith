@@ -24,8 +24,4 @@ class Migration(migrations.Migration):
             name='environment_feature_version',
             field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='feature_versioning.environmentfeatureversion'),
         ),
-        migrations.AlterUniqueTogether(
-            name='featuresegment',
-            unique_together={('feature', 'environment', 'segment', 'environment_feature_version')},
-        ),
     ]
