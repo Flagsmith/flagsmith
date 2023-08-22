@@ -113,7 +113,7 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $bg-dark500;
+  border-color: $basic-alpha-16;
 }
 
 //Modal
@@ -122,7 +122,7 @@ $modal-content-color-dark: $text-icon-light-grey;
 $modal-sm: 500px;
 $modal-md: 620px;
 $modal-lg: 900px;
-$modal-bg-dark: $bg-dark100;
+$modal-bg-dark: $bg-dark400;
 $modal-border-radius: 18px;
 $modal-footer-border-width: 0;
 $modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
