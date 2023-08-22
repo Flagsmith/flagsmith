@@ -44,15 +44,7 @@ $white-alpha-48: rgba(255, 255, 255, 0.48);
 $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 $secondary-alfa-16: rgba(247, 213, 110, 0.16);
-$theme-colors: (
-  primary: $primary,
-  danger: $danger,
-  success: $success,
-  info: $info,
-  warning: $warning,
-  dark: $text-icon-dark,
-  // add any additional color below
-);
+
 $bg-light200: #fafafb;
 $bg-light300: #eff1f4;
 $bg-dark100: #2d3443;
@@ -248,9 +240,11 @@ $alert-info-bg: $info-alfa-8;
 $alert-info-border-color: $info;
 $alert-danger-bg: $danger-alfa-8;
 $alert-danger-border-color: $danger;
-$alert-color: $text-icon-grey;
+$alert-color: $body-text;
+$alert-font-weight: 500;
 $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
+$alert-color-dark: $body-text-dark;
 
 //Tabs
 $tab-btn-line-height: 42px;
@@ -282,5 +276,16 @@ $panel-list-item-color: $text-icon-dark;
 $panel-list-item-sub-font-size: $font-caption;
 $panel-list-item-sub-line-height: $line-height-xsm;
 $panel-list-item-sub-color: $text-icon-grey;
-$panel-grey-background: $bg-light200;
-$panel-grey-background-dark: $bg-dark300;
+$panel-grey-background:$bg-light200;
+$panel-grey-background-dark:$bg-dark300;
+
+$theme-colors: (
+        light200: $bg-light200,
+        primary: $primary,
+        danger: $danger,
+        success: $success,
+        info: $info,
+        warning: $warning,
+        dark: $text-icon-dark,
+  // add any additional color below
+);
