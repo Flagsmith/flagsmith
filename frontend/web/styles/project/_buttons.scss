@@ -128,9 +128,24 @@ button.btn {
     border-radius: $border-radius;
     &:hover,
     &:active,
-    &:focus,
     &:disabled {
       background-color: $basic-alpha-8 !important;
+      svg {
+        path {
+          fill: $primary;
+        }
+      }
+    }
+    &:focus {
+      background-color: $basic-alpha-8 !important;
+      svg {
+        path {
+          fill: $text-icon-dark;
+        }
+      }
+    }
+    &.btn-sm {
+      padding: 0 10px;
     }
     &.btn-remove {
       background-color: $danger-alfa-8;
@@ -180,6 +195,59 @@ button.btn {
     &--small {
       position: relative;
       height: 20px;
+    }
+  }
+  &-project {
+    background-color: $bg-light200;
+    color: $text-icon-dark;
+    padding: 0px 8px;
+    width: 100%;
+    height: 76px;
+    border-radius: $border-radius-lg;
+    &.btn-project-create {
+      background-color: transparent;
+      border: 1px dashed $basic-alpha-24;
+      &:hover {
+        background-color: transparent;
+        & .btn-project-icon {
+          background-color: $primary-alfa-8;
+          path {
+            fill: $primary;
+          }
+        }
+      }
+      .btn-project-icon {
+        background-color: $bg-light300;
+        padding: 6px 14px;
+        margin-right: 12px;
+        border-radius: $border-radius;
+      }
+    }
+    &.btn:hover,
+    &.btn:active,
+    &.btn:focus {
+      background-color: $bg-light200;
+      color: $text-icon-dark;
+      & .btn-project-letter {
+        background-color: $primary;
+      }
+    }
+    &-letter {
+      min-width: 60px;
+      height: 60px;
+      background-color: $primary400;
+      border-radius: $border-radius;
+      color: $text-icon-light;
+      text-transform: uppercase;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    &-title {
+      white-space: normal;
+      line-height: $line-height-base;
+      text-align: left;
     }
   }
   &-lg {
@@ -343,6 +411,33 @@ $add-btn-size: 34px;
     }
     .btn-radio {
       border-color: $white-alpha-24;
+    }
+
+    &-project {
+      background-color: $bg-dark200;
+      color: $text-icon-light;
+      &.btn-project-create {
+        &:hover {
+          background-color: transparent;
+          & .btn-project-icon {
+            background-color: $primary-alfa-8;
+            path {
+              fill: $primary;
+            }
+          }
+        }
+        & .btn-project-icon {
+          background-color: $basic-alpha-8;
+        }
+      }
+
+      &.btn:hover {
+        background-color: $bg-dark200;
+        color: $text-icon-light;
+        & .btn-project-letter {
+          background-color: $primary;
+        }
+      }
     }
   }
 

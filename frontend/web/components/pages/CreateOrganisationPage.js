@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import PageTitle from 'components/PageTitle'
+import CondensedRow from 'components/CondensedRow'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'
@@ -30,6 +32,7 @@ class CreateOrganisationPage extends Component {
 
   onSave = (id) => {
     AppActions.selectOrganisation(id)
+    API.setCookie('organisation', `${id}`)
     this.context.router.history.push('/projects')
   }
 
@@ -54,10 +57,9 @@ class CreateOrganisationPage extends Component {
     }
     return (
       <div id='create-org-page' className='container app-container'>
-        <h3 className='pt-5'>Create your organisation</h3>
-        <p>
+        <PageTitle title={'Create your organisation'}>
           Organisations allow you to manage multiple projects within a team.
-        </p>
+        </PageTitle>
         <AccountProvider onSave={this.onSave}>
           {({ isSaving }, { createOrganisation }) => (
             <form
@@ -72,24 +74,27 @@ class CreateOrganisationPage extends Component {
                 createOrganisation(this.state.name)
               }}
             >
-              <InputGroup
-                ref={(e) => (this.input = e)}
-                inputProps={{ className: 'full-width', name: 'orgName' }}
-                title='Organisation Name'
-                placeholder='E.g. ACME Ltd'
-                onChange={(e) =>
-                  this.setState({ name: Utils.safeParseEventValue(e) })
-                }
-              />
-              <div className='text-right mt-2'>
-                <Button
-                  type='submit'
-                  disabled={isSaving || !this.state.name}
-                  id='create-org-btn'
-                >
-                  Create
-                </Button>
-              </div>
+              <CondensedRow>
+                <InputGroup
+                  ref={(e) => (this.input = e)}
+                  inputProps={{ className: 'full-width', name: 'orgName' }}
+                  title='Organisation Name'
+                  placeholder='E.g. ACME Ltd'
+                  onChange={(e) =>
+                    this.setState({ name: Utils.safeParseEventValue(e) })
+                  }
+                  className='mb-5'
+                />
+                <div className='text-right'>
+                  <Button
+                    type='submit'
+                    disabled={isSaving || !this.state.name}
+                    id='create-org-btn'
+                  >
+                    Create Organisation
+                  </Button>
+                </div>
+              </CondensedRow>
             </form>
           )}
         </AccountProvider>

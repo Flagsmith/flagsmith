@@ -207,15 +207,11 @@ $aside-base-link-dark: $dark-bg-10;
 $aside-base-link-color: $body-text-faint;
 $aside-base-link-color-dark: $body-text-faint-dark;
 // Environment link
-$aside-nav-color:$body-text;
-$aside-nav-color-active:transparentize($header-color,0.0);
 $aside-nav-color-dark:$body-text-dark;
 $aside-nav-inactive-color:transparentize($header-color,0.0);
 $aside-nav-inactive-color-dark:transparentize($body-text-dark, 0.25);
 $aside-nav-inactive-hover-color:transparentize($header-color, 0.25);
 $aside-nav-inactive-hover-color-dark:transparentize($header-color-dark, 0.25);
-$aside-nav-hover:$header-color;
-$aside-nav-hover-dark:$header-color-dark;
 // Background of other links e.g. acreate environment/organisation
 $aside-link-alt-color:$bt-brand-secondary-faint;
 $aside-link-alt-color-dark:$dark-highlight-color;
@@ -225,8 +221,6 @@ $aside-add-color-dark:white;
 
 
 
-//Aside
-$aside-width:330px;
 
 // Shadows
 $aside-box-shadow: 0 6px 13px 0 transparentize($bt-brand-primary-dark-desaturated-light,.75); // Box shadow right menu
@@ -235,16 +229,12 @@ $aside-project-link-active-box-shadow: none;
 
 
 // Backgrounds
-$aside-bg:$aside-base-background;  // left aside menu
-$aside-bg-dark:$aside-base-background-dark;  // left aside menu
 $aside-left-bg:$bt-brand-primary-dark-alt; // main aside menu
 $aside-left-bg-dark:$dark-bg-5; // main aside menu
 $aside-left-color:white; // main aside menu
 $aside-left-color-dark:white; // main aside menu
 $aside-left-color-active:white; // main aside menu
 $aside-left-color-active-dark:white; // main aside menu
-$aside-nav-collapse:darken($aside-base-background,2); // selected environment background
-$aside-nav-collapse-dark:lighten($aside-base-background-dark,2); // selected environment background
 
 // project link
 $aside-project-link-color: $aside-base-link-color;
@@ -259,19 +249,8 @@ $aside-project-link-color-active-dark:$aside-base-highlight-color-dark;
 
 
 // Active environment link
-$aside-nav-active:$aside-base-highlight;
-$aside-nav-active-dark:$aside-base-highlight-dark;
-$aside-nav-active-color:$aside-base-highlight-alt-color;
-$aside-nav-active-color-dark:$aside-base-highlight-color-dark;
 $aside-nav-collapse-border:$aside-base-highlight-alt;
 $aside-nav-collapse-border-dark:$aside-base-highlight-dark;
 
 
-// Aside scrollbar
-$bt-scrollbar-track: rgba(0,0,0,0.1);
-$bt-scrollbar-thumb: rgba(0, 0, 0, 0.2);
-$bt-scrollbar-thumb-hover: rgba(243,236,255,0.6);
 
-$bt-scrollbar-track-dark: rgba(243,236,255,0.1);
-$bt-scrollbar-thumb-dark: rgba(243, 236, 255, 0.2);
-$bt-scrollbar-thumb-dark-hover: rgba(243,236,255,0.6);

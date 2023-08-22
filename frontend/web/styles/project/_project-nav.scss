@@ -1,5 +1,7 @@
 .navbar {
   background-color: $navbar-background;
+  padding-right: 2rem;
+  padding-left: 2rem;
   //background: linear-gradient(to right, $bt-brand-secondary-light, #1d2d3e);
   &.homepage {
     position: absolute;
@@ -11,19 +13,11 @@
     font-size: 18px;
     color: $nav-icon-color;
   }
-  nav svg {
-    height: 18px;
-    max-width: 21px;
-    margin-right: 5px;
-    path {
-      fill: $nav-icon-color;
-    }
-  }
 }
 
 .navbar-right nav {
   display: flex;
-  a {
+  .nav-link {
     display: flex;
     align-items: center;
   }
@@ -88,31 +82,48 @@
 }
 .dark {
   .navbar {
-    .ion {
-      color: $nav-icon-color-dark;
-    }
-    nav svg {
-      path {
-        fill: $nav-icon-color-dark;
+    background-color: $nav-background-dark;
+    .btn-with-icon {
+      background-color: $bg-dark200;
+      svg {
+          path {
+            fill: $nav-icon-color-dark;
+          }
+        }
+      &:hover,
+      &:active,
+      &:disabled {
+        background-color: $bg-dark200 !important;
+        svg {
+          path {
+            fill: $primary;
+          }
+        }
       }
     }
   }
 
   .nav-link {
     color: $nav-link-color-dark;
-    .nav-link-featured {
-      color: $header-color-dark;
-      background-color: $button-bg-dark;
-      &:hover {
-        background-color: $button-bg-dark-hover;
+    svg {
+      path {
+        fill: $nav-icon-color-dark;
       }
     }
-
     &.active {
       color: $nav-link-color-active-dark;
+      svg {
+        path {
+          fill: $text-icon-light;
+        }
+      }
     }
     &:hover {
-      color: $nav-link-color-hover-dark;
+      svg {
+        path {
+          fill: $primary;
+        }
+      }
     }
   }
 }
@@ -120,13 +131,21 @@
   img {
     max-height: 21px;
   }
+  svg {
+    vertical-align: sub;
+  }
   padding: 0;
   font-weight: 500;
   margin-right: 1rem;
   color: $nav-link-color;
   @include transition(opacity, 200ms);
   &:hover {
-    color: $nav-link-color-hover;
+    color: $primary;
+    svg {
+      path {
+        fill: $primary;
+      }
+    }
   }
   &.nav-faint {
     opacity: 0.5;
@@ -135,28 +154,24 @@
     }
   }
   &.active {
-    color: $nav-link-color-active;
+    color: $text-icon-dark;
+    svg {
+      path {
+        fill: $text-icon-dark;
+      }
+    }
+    &:hover {
+      color: $primary;
+      svg {
+        path {
+          fill: $primary;
+        }
+      }
+    }
   }
-  .nav-link-featured {
-    height: $switch-dark-mode-height;
-    border-radius: $btn-border-radius;
-    background-color: $switch-dark-mode-bg;
-    &:hover {
-      background-color: $bt-brand-faint-hover;
-    }
-
-    color: $header-color;
-    padding: 5px 20px;
-    -moz-transition: opacity 200ms;
-    -o-transition: opacity 200ms;
-    -webkit-transition: opacity 200ms;
-    transition: opacity 200ms;
-
-    transition-property: opacity;
-
-    &:hover {
-      border-color: white;
-    }
+  &.disabled-link {
+    opacity: 0.32;
+    pointer-events: none;
   }
 }
 
