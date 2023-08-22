@@ -276,6 +276,9 @@ $animation-timing-function: ease-in-out;
         &:hover {
           background-color: $bg-dark200;
         }
+        &.active {
+          background-color: $primary-alfa-16;
+        }
       }
     }
   }

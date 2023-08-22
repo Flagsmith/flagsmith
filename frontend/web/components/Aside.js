@@ -218,18 +218,17 @@ const Aside = class extends Component {
                           >
                             <ProjectSelect
                               renderRow={(_project, onClick) => {
-                                if (project.id !== _project.id) {
-                                  return (
-                                    <AsideProjectButton
-                                      key={_project.id}
-                                      onClick={() => {
-                                        this.setState({ isOpenProject: false })
-                                        onClick()
-                                      }}
-                                      name={_project.name}
-                                    />
-                                  )
-                                }
+                                return (
+                                  <AsideProjectButton
+                                    key={_project.id}
+                                    onClick={() => {
+                                      this.setState({ isOpenProject: false })
+                                      onClick()
+                                    }}
+                                    name={_project.name}
+                                    active={project.id === _project.id}
+                                  />
+                                )
                               }}
                               projectId={this.props.projectId}
                               environmentId={environmentId}

@@ -39,7 +39,7 @@ const ProjectSelect = class extends Component {
                   el.name
                     .toLowerCase()
                     .includes(this.state.search.toLowerCase()),
-                ).length > 1 ? (
+                ).length ? (
                   projects.map((project) => {
                     if (
                       project.name

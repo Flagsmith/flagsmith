@@ -8,7 +8,11 @@ const AsideProjectButton = class extends PureComponent {
     const truncated = Format.truncateText(this.props.name, 26)
     const children = (
       <div onClick={this.props.onClick}>
-        <div className='clickable project-select-btn'>
+        <div
+          className={`clickable project-select-btn ${
+            this.props.active ? 'active' : ''
+          }`}
+        >
           <div className={`${this.props.className}`}>{truncated}</div>
         </div>
       </div>
