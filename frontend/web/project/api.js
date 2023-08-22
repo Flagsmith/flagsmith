@@ -218,7 +218,7 @@ global.API = {
     if (Project.mixpanel) {
       mixpanel.reset()
     }
-    flagsmith.logout()
+    return flagsmith.logout()
   },
   setCookie(key, v) {
     try {

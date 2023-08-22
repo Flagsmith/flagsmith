@@ -5,6 +5,7 @@ import Utils from 'common/utils/utils'
 import Project from 'common/project'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import ModalHR from './ModalHR'
 
 type ForgotPasswordModalType = {
   initialValue?: string
@@ -51,7 +52,11 @@ const ForgotPasswordModal: FC<ForgotPasswordModalType> = ({
 
         <ErrorMessage>{error}</ErrorMessage>
       </div>
-      <div className='modal-footer pt-0'>
+      <ModalHR />
+      <div className='modal-footer'>
+        <Button onClick={closeModal} theme='secondary' className='mr-2'>
+          Cancel
+        </Button>
         <Button
           type='submit'
           disabled={!Utils.isValidEmail(email)}

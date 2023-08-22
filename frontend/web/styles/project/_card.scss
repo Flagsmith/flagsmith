@@ -4,10 +4,8 @@ pre {
 
 .panel-card {
   box-shadow: none;
-  border: 1px solid darken($bt-brand-faint-alt, 2);
   border-radius: $border-radius-lg;
   .panel-content {
-    background-color: $bt-brand-faint-alt;
   }
 }
 
@@ -18,7 +16,7 @@ pre {
       background-color: $bt-brand-faint-alt-dark;
     }
   }
-  
+
 }
 
 .card-link-wrapper {

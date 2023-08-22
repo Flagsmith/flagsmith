@@ -1,7 +1,5 @@
 @import '../variables';
 @import '../new/variables-new';
-$google: #c53d23;
-$github: #eeefee;
 
 .btn,
 button.btn {
@@ -184,60 +182,6 @@ button.btn {
       height: 20px;
     }
   }
-  &__oauth {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-    &:last-child {
-      margin-right: 0;
-    }
-    border-radius: $border-radius;
-    color: #000 !important;
-    font-weight: bold;
-    text-align: left;
-    &:hover {
-      text-decoration: none;
-    }
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
-    position: relative;
-    padding-left: $spacer * 3.5;
-    svg {
-      position: absolute;
-      left: 20px;
-      height: 24px;
-    }
-    margin-bottom: $spacer;
-    &--github {
-      background-color: $github;
-      &:hover {
-        background-color: darken($github, 5);
-      }
-    }
-    &--google {
-      background-color: $google;
-      color: white !important;
-      &:hover {
-        background-color: lighten($google, 5);
-      }
-    }
-    &--saml {
-      color: white !important;
-      padding-left: 20px;
-    }
-    &--microsoft {
-      background-color: #339af4;
-      color: white !important;
-      &:hover {
-        background-color: #327ed6;
-      }
-      img {
-        height: 20px;
-      }
-    }
-  }
   &-lg {
     line-height: $btn-line-height-lg;
   }
@@ -322,9 +266,6 @@ $add-btn-size: 34px;
     &__md-full {
       width: 100%;
     }
-    &__oauth {
-      margin-right: 12px;
-    }
   }
 }
 
@@ -398,12 +339,6 @@ $add-btn-size: 34px;
       &:focus {
         background-color: transparent;
         color: $dark-highlight-color;
-      }
-    }
-    &__oauth {
-      color: $header-color-dark !important;
-      svg path {
-        fill: $header-color-dark !important;
       }
     }
     .btn-radio {

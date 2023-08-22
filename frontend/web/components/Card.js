@@ -6,11 +6,11 @@ const Card = class extends PureComponent {
   render() {
     return (
       <div
-        className={`panel-card panel panel-default ${
+        className={`rounded-3 panel panel-default ${
           this.props.className || ''
         }`}
       >
-        <div className='panel-content py-3'>{this.props.children}</div>
+        <div className='panel-content p-4'>{this.props.children}</div>
       </div>
     )
   }
