@@ -7,6 +7,25 @@ const Collapsible = class extends PureComponent {
   static displayName = 'Collapsible'
 
   static propTypes = {}
+  constructor(props) {
+    super(props)
+    this.ref = React.createRef()
+  }
+  handleClickOutside = (event) => {
+    if (this.ref.current && !this.ref.current.contains(event.target)) {
+      this.props.isProjectSelect &&
+        this.props.onClickOutside &&
+        this.props.onClickOutside()
+    }
+  }
+
+  componentDidMount() {
+    document.addEventListener('click', this.handleClickOutside, true)
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.handleClickOutside, true)
+  }
 
   render() {
     return (
@@ -15,6 +34,7 @@ const Collapsible = class extends PureComponent {
         className={cn('collapsible', this.props.className, {
           active: this.props.active,
         })}
+        ref={this.ref}
       >
         <div
           className='collapsible__header ml-5 mr-3'
@@ -24,7 +44,11 @@ const Collapsible = class extends PureComponent {
             <div>{this.props.title}</div>
             <div className='align-self-start'>
               <Icon
-                name={this.props.active ? 'chevron-down' : 'chevron-right'}
+                name={
+                  this.props.active || this.props.isProjectSelect
+                    ? 'chevron-down'
+                    : 'chevron-right'
+                }
               />
             </div>
           </Row>

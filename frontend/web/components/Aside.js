@@ -206,6 +206,9 @@ const Aside = class extends Component {
                                 'No Project'
                               )
                             }
+                            onClickOutside={() => {
+                              this.setState({ isOpenProject: false })
+                            }}
                             onClick={() => {
                               this.setState((prev) => {
                                 return {
@@ -214,6 +217,7 @@ const Aside = class extends Component {
                               })
                             }}
                             active={this.state.isOpenProject}
+                            isProjectSelect
                             className='collapsible-project'
                           >
                             <ProjectSelect

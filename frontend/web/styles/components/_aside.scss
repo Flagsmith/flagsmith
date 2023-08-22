@@ -211,7 +211,7 @@ $animation-timing-function: ease-in-out;
     &-project {
       line-height: $h5-line-height;
       font-size: $line-height-sm;
-
+      position: relative;
       .collapsible__header {
         font-weight: bold;
         margin: 20px 0px 8px;
@@ -260,6 +260,8 @@ $animation-timing-function: ease-in-out;
       border-radius: $border-radius-lg;
       font-size: $font-size-base;
       line-height: $line-height-base;
+      position: absolute;
+      top: 55px;
       &-header {
         padding: 8px 12px;
         background-color: $bg-dark200;
@@ -269,6 +271,11 @@ $animation-timing-function: ease-in-out;
           background-color: $bg-dark300;
           color: $text-icon-light;
         }
+      }
+      &-body {
+        max-height: 240px;
+        overflow-x: auto;
+        @include customScroll();
       }
       &-btn {
         padding: 9px 16px;
