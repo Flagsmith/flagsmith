@@ -38,6 +38,7 @@ const App = class extends Component {
   state = {
     activeOrganisation: 0,
     asideIsVisible: !isMobile,
+    maxApiCalls: 0,
     pin: '',
     totalApiCalls: 0,
   }
@@ -202,7 +203,7 @@ const App = class extends Component {
     }
     const { location } = this.props
     const pathname = location.pathname
-    const { asideIsVisible, totalApiCalls } = this.state
+    const { asideIsVisible, maxApiCalls, totalApiCalls } = this.state
     const match = matchPath(pathname, {
       exact: false,
       path: '/project/:projectId/environment/:environmentId',
@@ -340,8 +341,7 @@ const App = class extends Component {
                                         style={
                                           Utils.calculaterRemainingCallsPercentage(
                                             totalApiCalls,
-                                            organisation.subscription
-                                              ?.max_api_calls,
+                                            maxApiCalls,
                                           ) &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
@@ -365,8 +365,7 @@ const App = class extends Component {
                                       >
                                         {Utils.calculaterRemainingCallsPercentage(
                                           totalApiCalls,
-                                          organisation.subscription
-                                            ?.max_api_calls,
+                                          maxApiCalls,
                                         ) &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
@@ -376,8 +375,7 @@ const App = class extends Component {
                                               {`You used ${Format.shortenNumber(
                                                 totalApiCalls,
                                               )}/${Format.shortenNumber(
-                                                organisation.subscription
-                                                  ?.max_api_calls,
+                                                maxApiCalls,
                                               )} requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade'}
