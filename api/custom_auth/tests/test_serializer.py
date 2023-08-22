@@ -25,7 +25,7 @@ def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
 
     # When
     assert serializer.is_valid() is False
-    assert serializer.errors["email"][0].title() == "Unable To Create Account."
+    assert serializer.errors["email"][0] == "Invalid email address."
 
 
 def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(
