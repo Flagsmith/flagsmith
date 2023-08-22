@@ -16,6 +16,7 @@ import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -223,14 +224,15 @@ const EnvironmentSettingsPage = class extends Component {
               }, 10)
             }
             return (
-              <div className='container'>
+              <div className='app-container container'>
+                <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
                     <Loader />
                   </div>
                 )}
                 {!isLoading && (
-                  <Tabs uncontrolled>
+                  <Tabs className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <h5 className='mb-5'>General Settings</h5>

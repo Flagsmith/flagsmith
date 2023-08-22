@@ -10,6 +10,6 @@ export default async function() {
     await click('#project-settings-link');
     await setText("[name='proj-name']", 'Test Project');
     await click('#save-proj-btn');
-    await waitForElementVisible(byId('switch-project-test project-active'));
+    await waitForElementVisible(byId('switch-project-test-project'));
 
 }

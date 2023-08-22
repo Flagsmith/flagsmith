@@ -6,6 +6,7 @@ import CompareEnvironments from 'components/CompareEnvironments'
 import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CompareIdentities from 'components/CompareIdentities'
+import PageTitle from 'components/PageTitle'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -26,14 +27,18 @@ class TheComponent extends Component {
   render() {
     return (
       <div className='app-container container'>
+        <PageTitle className='mb-2' title={'Compare'}>
+          Compare data across your environments, features and identities.
+        </PageTitle>
         <Tabs
+          className='mt-0'
           value={this.state.tab}
           onChange={(tab) => {
             this.setState({ tab })
           }}
         >
           <TabItem tabLabel='Environments'>
-            <div className='mt-2'>
+            <div className='mt-4'>
               <CompareEnvironments
                 projectId={this.props.match.params.projectId}
                 environmentId={this.props.match.params.environmentId}
@@ -41,13 +46,13 @@ class TheComponent extends Component {
             </div>
           </TabItem>
           <TabItem tabLabel='Feature Values'>
-            <div className='mt-2'>
+            <div className='mt-4'>
               <CompareFeatures projectId={this.props.match.params.projectId} />
             </div>
           </TabItem>
           {Utils.getFlagsmithHasFeature('compare_identities') && (
             <TabItem tabLabel='Identities'>
-              <div className='mt-2'>
+              <div className='mt-4'>
                 <CompareIdentities
                   environmentId={this.props.match.params.environmentId}
                   projectId={this.props.match.params.projectId}

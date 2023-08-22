@@ -115,8 +115,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
   return (
     <div>
-      <h3>Compare Identities</h3>
-      <p>Compare feature states between 2 identities</p>
+      <h5 className='mb-0'>Compare Identities</h5>
+      <p className='fs-small mb-4 lh-sm'>
+        Compare feature states between 2 identities.
+      </p>
       <div className='mb-2' style={{ width: selectWidth }}>
         <EnvironmentSelect
           value={environmentId}

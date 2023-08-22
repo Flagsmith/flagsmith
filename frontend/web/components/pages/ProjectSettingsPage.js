@@ -10,6 +10,7 @@ import RegexTester from 'components/RegexTester'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
+import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
 
 const ProjectSettingsPage = class extends Component {
@@ -164,8 +165,9 @@ const ProjectSettingsPage = class extends Component {
               typeof this.state.feature_name_regex === 'string'
             return (
               <div>
+                <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs uncontrolled>
+                  <Tabs className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference

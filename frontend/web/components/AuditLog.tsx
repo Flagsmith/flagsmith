@@ -101,7 +101,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             <Row>
               <Tag
                 tag={{
-                  color: Constants.tagColors[colour],
+                  color: Utils.getTagColour(colour),
                   label: environment?.name,
                 }}
                 className='chip--sm'

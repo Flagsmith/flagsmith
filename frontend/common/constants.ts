@@ -428,6 +428,14 @@ export default {
     'USERS': 'Users Page',
     'WHAT_ARE_FEATURE_FLAGS': 'What are feature flags Page',
   },
+  projectColors: [
+    '#906AF6',
+    '#FAE392',
+    '#42D0EB',
+    '#56CCAD',
+    '#FFBE71',
+    '#F57C78',
+  ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
   roles: {

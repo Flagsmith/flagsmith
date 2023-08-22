@@ -26,7 +26,7 @@ import ChangeRequestsPage from './components/pages/ChangeRequestsPage'
 import ChangeRequestPage from './components/pages/ChangeRequestPage'
 import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
-import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage'
+import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 
@@ -115,7 +115,7 @@ export default (
       <Route
         path='/project/:projectId/environment/:environmentId/compare'
         exact
-        component={CompareEnvironmentsPage}
+        component={ComparePage}
       />
       <Route
         path='/project/:projectId/settings'

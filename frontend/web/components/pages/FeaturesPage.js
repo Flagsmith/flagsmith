@@ -12,6 +12,7 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import PageTitle from 'components/PageTitle'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -176,48 +177,51 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
-                        <Row>
-                          <Flex>
-                            <h4>Features</h4>
-                            <p>
-                              View and manage{' '}
-                              <Tooltip
-                                title={
-                                  <Button theme='text'>feature flags</Button>
-                                }
-                                place='right'
-                              >
-                                {Constants.strings.FEATURE_FLAG_DESCRIPTION}
-                              </Tooltip>{' '}
-                              and{' '}
-                              <Tooltip
-                                title={
-                                  <Button theme='text'>remote config</Button>
-                                }
-                                place='right'
-                              >
-                                {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
-                              </Tooltip>{' '}
-                              for your selected environment.
-                            </p>
-                          </Flex>
-                          <FormGroup className='float-right'>
-                            {projectFlags && projectFlags.length
-                              ? this.createFeaturePermission((perm) => (
-                                  <div className='text-right'>
-                                    <Button
-                                      disabled={!perm || readOnly}
-                                      data-test='show-create-feature-btn'
-                                      id='show-create-feature-btn'
-                                      onClick={this.newFlag}
-                                    >
-                                      Create Feature
-                                    </Button>
-                                  </div>
-                                ))
-                              : null}
-                          </FormGroup>
-                        </Row>
+                        <PageTitle
+                          title={'Features'}
+                          cta={
+                            <>
+                              {projectFlags && projectFlags.length
+                                ? this.createFeaturePermission((perm) => (
+                                    <div className='text-right'>
+                                      <Button
+                                        disabled={!perm || readOnly}
+                                        data-test='show-create-feature-btn'
+                                        id='show-create-feature-btn'
+                                        onClick={this.newFlag}
+                                      >
+                                        Create Feature
+                                      </Button>
+                                    </div>
+                                  ))
+                                : null}
+                            </>
+                          }
+                        >
+                          View and manage{' '}
+                          <Tooltip
+                            title={
+                              <Button className='fw-normal' theme='text'>
+                                feature flags
+                              </Button>
+                            }
+                            place='right'
+                          >
+                            {Constants.strings.FEATURE_FLAG_DESCRIPTION}
+                          </Tooltip>{' '}
+                          and{' '}
+                          <Tooltip
+                            title={
+                              <Button className='fw-normal' theme='text'>
+                                remote config
+                              </Button>
+                            }
+                            place='right'
+                          >
+                            {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+                          </Tooltip>{' '}
+                          for your selected environment.
+                        </PageTitle>
                         <Permission
                           level='environment'
                           permission={Utils.getManageFeaturePermission(

@@ -174,7 +174,7 @@ export const login = async (email:string, password:string) => {
     await waitForElementVisible('#project-select-page');
 };
 export const logout = async () => {
-    await click('#org-menu');
+    await click('#account-settings-link');
     await click('#logout-link');
     await waitForElementVisible('#login-page');
 };

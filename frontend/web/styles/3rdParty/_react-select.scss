@@ -38,6 +38,7 @@
     margin: 0;
     padding: 0;
     line-height: $input-line-height;
+    font-weight: 500;
     & + div {
       margin: 0;
       padding: 0;
@@ -144,9 +145,12 @@
     color: $body-text !important;
     background: white !important;
     padding: 9px 16px;
+    cursor: pointer;
     &:hover {
-      background: $primary !important;
-      color: white !important;
+      background: $bg-light200 !important;
+    }
+    &--is-selected {
+      background-color: $primary-alfa-8 !important;
     }
   }
   &__menu {
@@ -157,7 +161,7 @@
   }
 }
 .dark {
-  .react-select {
+  .react-select .react-select {
     input[type='text'] {
       color: white !important;
       border: none !important;

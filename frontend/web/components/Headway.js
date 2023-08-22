@@ -1,5 +1,6 @@
 import React from 'react'
-import SparklesIcon from './svg/SparklesIcon'
+import Button from './base/forms/Button'
+import Icon from './Icon'
 
 let prom
 class _Headway extends React.Component {
@@ -31,15 +32,18 @@ class _Headway extends React.Component {
     }
     return (
       <Row className={this.props.className}>
-        <Row
+        <Button
           onClick={() => {
             Headway.show()
           }}
+          className='btn-with-icon'
+          size='small'
         >
-          <SparklesIcon />
-          Updates
-        </Row>
-        <span id='headway' />
+          <Icon name='bell' width={20} fill='#9DA4AE' />
+        </Button>
+        <span id='headway'>
+          <span />
+        </span>
       </Row>
     )
   }

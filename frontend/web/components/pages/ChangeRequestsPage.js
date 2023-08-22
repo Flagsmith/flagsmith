@@ -9,6 +9,7 @@ import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -70,9 +71,10 @@ const ChangeRequestsPage = class extends Component {
         id='change-requests-page'
         className='app-container container'
       >
+        <PageTitle title={'Change Requests'}>
+          View and manage proposed feature state changes.
+        </PageTitle>
         <Flex>
-          <h4>Change Requests</h4>
-          <p>View and manage proposed feature state changes.</p>
           {!has4EyesPermission ? (
             <div className='mt-2'>
               <InfoMessage>
