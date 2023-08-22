@@ -313,9 +313,9 @@ const controller = {
       AsyncStorage.clear()
       API.setCookie('t', '')
       data.setToken(null)
-      store.model = user
-      store.organisation = null
       API.reset().finally(() => {
+        store.model = user
+        store.organisation = null
         store.trigger('logout')
       })
     }
