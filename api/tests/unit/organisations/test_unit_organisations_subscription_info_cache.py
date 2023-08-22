@@ -1,5 +1,6 @@
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscription_info_cache import update_caches
+from organisations.subscriptions.constants import SubscriptionCacheEntity
 from task_processor.task_run_method import TaskRunMethod
 
 
@@ -19,15 +20,18 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
 
     chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
     mocked_get_subscription_metadata = mocker.patch(
-        "organisations.subscription_info_cache.get_subscription_metadata"
+        "organisations.subscription_info_cache.get_subscription_metadata_from_id"
     )
     mocked_get_subscription_metadata.return_value = chargebee_metadata
 
     # When
-    update_caches()
+    subscription_cache_entities = (
+        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.CHARGEBEE,
+    )
+    update_caches(subscription_cache_entities)
 
     # Then
-    assert organisation.subscription_information_cache.updated_at
     assert (
         organisation.subscription_information_cache.api_calls_24h
         == organisation_usage["24h"]

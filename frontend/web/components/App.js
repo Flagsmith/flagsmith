@@ -330,7 +330,6 @@ const App = class extends Component {
                               )}
                             </div>
                           </div>
-
                           {user ? (
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>

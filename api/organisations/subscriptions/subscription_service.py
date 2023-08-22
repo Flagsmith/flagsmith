@@ -1,6 +1,4 @@
-from organisations.chargebee import (
-    get_subscription_metadata as get_chargebee_subscription_metadata,
-)
+from organisations.chargebee import get_subscription_metadata_from_id
 from organisations.models import Organisation
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
@@ -14,7 +12,7 @@ def get_subscription_metadata(organisation: Organisation) -> BaseSubscriptionMet
         seats=max_seats, api_calls=max_api_calls, projects=max_projects
     )
     if organisation.subscription.payment_method == CHARGEBEE:
-        chargebee_subscription_metadata = get_chargebee_subscription_metadata(
+        chargebee_subscription_metadata = get_subscription_metadata_from_id(
             organisation.subscription.subscription_id
         )
         if chargebee_subscription_metadata is not None:
