@@ -45,6 +45,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       multivariateOptions,
       name,
       onSortEnd,
+      projectFlag,
       projectId,
       readOnly,
       setSegmentEditId,
@@ -97,13 +98,49 @@ const SegmentOverrideInner = class Override extends React.Component {
       >
         <Row className='panel-content' space>
           <div className='flex flex-1 text-left'>
-            <strong>
-              {name || v.segment_name}
-              {v.is_feature_specific && (
-                <div className='unread ml-2 px-2'>Feature-Specific</div>
-              )}
-              {changed && <div className='unread ml-2 px-2'>Unsaved</div>}
-            </strong>
+            {this.props.id ? (
+              <>
+                <Row className='font-weight-medium text-dark mb-1'>
+                  {projectFlag.description ? (
+                    <Tooltip
+                      title={
+                        <Row>
+                          {projectFlag.name}
+                          <span className={'ms-1'}></span>
+                          <Icon name='info-outlined' />
+                        </Row>
+                      }
+                    >
+                      {projectFlag.description}
+                    </Tooltip>
+                  ) : (
+                    projectFlag.name
+                  )}
+                  {v.is_feature_specific && (
+                    <div className='chip chip--xs ml-2'>Feature-Specific</div>
+                  )}
+                  {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
+                </Row>
+                <div className='list-item-footer faint'>
+                  <Row>
+                    <div>
+                      Created{' '}
+                      {moment(projectFlag.created_date).format(
+                        'Do MMM YYYY HH:mma',
+                      )}
+                    </div>
+                  </Row>
+                </div>
+              </>
+            ) : (
+              <Row className='font-weight-medium text-dark'>
+                {name || v.segment_name}
+                {v.is_feature_specific && (
+                  <div className='chip chip--xs ml-2'>Feature-Specific</div>
+                )}
+                {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
+              </Row>
+            )}
           </div>
           <div>
             <Row>
@@ -139,18 +176,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               )}
 
-              {!readOnly && (
-                <button
-                  disabled={disabled}
-                  id='remove-feature'
-                  onClick={confirmRemove}
-                  className='btn btn-with-icon'
-                >
-                  <span className='no-pointer'>
-                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
-                  </span>
-                </button>
-              )}
               {!!v.id && (
                 <Permission
                   id={projectId}
@@ -164,15 +189,16 @@ const SegmentOverrideInner = class Override extends React.Component {
                       <>
                         {v.is_feature_specific ? (
                           <Button
-                            theme='text'
                             disabled={!permission}
                             onClick={() => {
                               setShowCreateSegment(true)
                               setSegmentEditId(v.segment)
                             }}
-                            className='ml-2 dark-link'
+                            className='btn btn-with-icon'
                           >
-                            Edit Segment
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
                           </Button>
                         ) : (
                           <Button
@@ -180,16 +206,29 @@ const SegmentOverrideInner = class Override extends React.Component {
                             disabled={!permission}
                             target='_blank'
                             href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='ml-2 dark-link'
+                            className='btn btn-with-icon'
                           >
-                            Edit Segment
-                            <i className={'ion ml-1 ion-md-open'} />
+                            <span className='no-pointer'>
+                              <Icon name='edit' fill={'#656D7B'} width={20} />
+                            </span>
                           </Button>
                         )}
                       </>,
                     )
                   }
                 </Permission>
+              )}
+              {!readOnly && (
+                <Button
+                  disabled={disabled}
+                  id='remove-feature'
+                  onClick={confirmRemove}
+                  className='btn btn-with-icon ml-2'
+                >
+                  <span className='no-pointer'>
+                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
+                  </span>
+                </Button>
               )}
             </Row>
           </div>
@@ -320,6 +359,7 @@ const SegmentOverrideListInner = ({
   multivariateOptions,
   name,
   onSortEnd,
+  projectFlag,
   projectId,
   readOnly,
   setSegmentEditId,
@@ -363,6 +403,7 @@ const SegmentOverrideListInner = ({
               }
               setVariations(index, newValue)
             }}
+            projectFlag={projectFlag}
           />
           <div className='text-left'>
             <JSONReference
@@ -590,10 +631,10 @@ class TheComponent extends Component {
             !this.props.showCreateSegment && (
               <div
                 style={isLoading ? { opacity: 0.5 } : null}
-                className='mt-4 overflow-visible'
+                className='overflow-visible'
               >
                 {!this.props.id && (
-                  <div>
+                  <div className='my-4'>
                     <InfoMessage className='mb-4 text-left faint'>
                       Prioritise a segment override by dragging it to the top of
                       the list.
@@ -634,6 +675,7 @@ class TheComponent extends Component {
                       }))}
                       setSegmentEditId={this.setSegmentEditId}
                       onSortEnd={this.onSortEnd}
+                      projectFlag={this.props.projectFlag}
                     />
                     <div className='text-left mt-4'>
                       <JSONReference
