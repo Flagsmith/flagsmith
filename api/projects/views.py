@@ -43,7 +43,8 @@ from projects.serializers import (
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
-    ProjectSerializer,
+    ProjectListSerializer,
+    ProjectRetrieveSerializer,
 )
 from users.models import FFAdminUser
 
@@ -70,8 +71,14 @@ from users.models import FFAdminUser
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
     permission_classes = [ProjectPermissions]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProjectRetrieveSerializer
+        return ProjectListSerializer
+
+    
     pagination_class = None
 
     def get_queryset(self):

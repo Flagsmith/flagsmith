@@ -7,6 +7,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
@@ -136,6 +137,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             self.delete_orphan_organisations()
         super().delete()
 
+    def set_password(self, raw_password):
+        super().set_password(raw_password)
+        self.password_reset_requests.all().delete()
+
     @property
     def auth_type(self):
         if self.google_user_id:
@@ -158,6 +163,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if not self.first_name:
             return None
         return " ".join([self.first_name, self.last_name]).strip()
+
+    def can_send_password_reset_email(self) -> bool:
+        limit = timezone.now() - timezone.timedelta(
+            seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
+        )
+        return (
+            self.password_reset_requests.filter(requested_at__gte=limit).count()
+            < settings.MAX_PASSWORD_RESET_EMAILS
+        )
 
     def join_organisation_from_invite_email(self, invite_email: "Invite"):
         if invite_email.email.lower() != self.email.lower():

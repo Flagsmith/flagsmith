@@ -7,8 +7,9 @@ on:
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
-  FLAGSMITH_RBAC_REVISION: v0.3.0
+  FLAGSMITH_RBAC_REVISION: v0.3.1
   FLAGSMITH_WORKFLOWS_REVISION: v1.2.5
+  FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
 
 jobs:
   build-dockerhub:
@@ -46,8 +47,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: flagsmith/flagsmith-auth-controller
-          token: ${{ inputs.github_access_token }}
-          ref: ${{ inputs.flagsmith_auth_controller_revision }}
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          ref: ${{ env.FLAGSMITH_AUTH_CONTROLLER_REVISION }}
           path: ./flagsmith-auth-controller
 
       - name: Integrate Auth Controller module
@@ -107,4 +108,4 @@ jobs:
           context: .
           build-args: |
             SAML_INSTALLED=1
-            POETRY_OPTS="--with saml,auth-controller"
+            POETRY_OPTS=--with saml,auth-controller

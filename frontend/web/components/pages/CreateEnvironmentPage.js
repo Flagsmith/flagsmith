@@ -3,6 +3,8 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
+import PageTitle from 'components/PageTitle'
+import CondensedRow from 'components/CondensedRow'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
@@ -41,6 +43,9 @@ const CreateEnvironmentPage = class extends Component {
     const { name } = this.state
     return (
       <div className='app-container container'>
+        <PageTitle title={'Create Environment'}>
+          {Constants.strings.ENVIRONMENT_DESCRIPTION}
+        </PageTitle>
         <Permission
           level='project'
           permission='CREATE_ENVIRONMENT'
@@ -53,8 +58,6 @@ const CreateEnvironmentPage = class extends Component {
               <div>
                 {permission ? (
                   <div>
-                    <h4>Create Environment</h4>
-                    <p>{Constants.strings.ENVIRONMENT_DESCRIPTION}</p>
                     <ProjectProvider
                       id={this.props.match.params.projectId}
                       onSave={this.onSave}
@@ -84,127 +87,128 @@ const CreateEnvironmentPage = class extends Component {
                                 )
                             }}
                           >
-                            <div className='no-pad'>
-                              <div className='row'>
-                                <div className='col-md-8'>
-                                  <InputGroup
-                                    ref={(e) => {
-                                      if (e) this.input = e
-                                    }}
-                                    inputProps={{
-                                      className: 'full-width',
-                                      name: 'envName',
-                                    }}
-                                    onChange={(e) =>
-                                      this.setState({
-                                        name: Utils.safeParseEventValue(e),
-                                      })
-                                    }
-                                    isValid={name}
-                                    type='text'
-                                    title='Name*'
-                                    placeholder='An environment name e.g. Develop'
-                                  />
-                                </div>
-                                <div className='col-md-12'>
-                                  <InputGroup
-                                    textarea
-                                    ref={(e) => (this.input = e)}
-                                    value={this.state.description}
-                                    inputProps={{
-                                      className: 'input--wide textarea-lg',
-                                    }}
-                                    onChange={(e) =>
-                                      this.setState({
-                                        description:
-                                          Utils.safeParseEventValue(e),
-                                      })
-                                    }
-                                    isValid={name && name.length}
-                                    type='text'
-                                    title='Description'
-                                    placeholder='Environment Description'
-                                  />
-                                </div>
-                                <div className='col-md-6'>
-                                  {project &&
-                                    project.environments &&
-                                    !!project.environments.length && (
-                                      <InputGroup
-                                        tooltip='This will copy feature enabled states and remote config values from the selected environment.'
-                                        title='Clone from environment'
-                                        component={
-                                          <Select
-                                            onChange={(env) => {
-                                              this.setState({
-                                                selectedEnv:
-                                                  project.environments.find(
-                                                    (v) =>
-                                                      v.api_key === env.value,
-                                                  ),
-                                              })
-                                            }}
-                                            options={project.environments.map(
-                                              (env) => ({
-                                                label: env.name,
-                                                value: env.api_key,
-                                              }),
-                                            )}
-                                            value={
-                                              this.state.selectedEnv
-                                                ? {
-                                                    label:
-                                                      this.state.selectedEnv
-                                                        .name,
-                                                    value:
-                                                      this.state.selectedEnv
-                                                        .api_key,
-                                                  }
-                                                : {
-                                                    label:
-                                                      'Please select an environment',
-                                                  }
-                                            }
-                                          />
-                                        }
-                                      />
-                                    )}
-                                </div>
-                              </div>
+                            <div>
+                              <CondensedRow>
+                                <InputGroup
+                                  ref={(e) => {
+                                    if (e) this.input = e
+                                  }}
+                                  inputProps={{
+                                    className: 'full-width',
+                                    name: 'envName',
+                                  }}
+                                  onChange={(e) =>
+                                    this.setState({
+                                      name: Utils.safeParseEventValue(e),
+                                    })
+                                  }
+                                  isValid={name}
+                                  type='text'
+                                  title='Name*'
+                                  placeholder='An environment name e.g. Develop'
+                                />
+                              </CondensedRow>
+                              <CondensedRow>
+                                <InputGroup
+                                  textarea
+                                  ref={(e) => (this.input = e)}
+                                  value={this.state.description}
+                                  inputProps={{
+                                    className: 'input--wide textarea-lg',
+                                  }}
+                                  onChange={(e) =>
+                                    this.setState({
+                                      description: Utils.safeParseEventValue(e),
+                                    })
+                                  }
+                                  isValid={name && name.length}
+                                  type='text'
+                                  title='Description'
+                                  placeholder='Environment Description'
+                                />
+                              </CondensedRow>
+                              <CondensedRow>
+                                {project &&
+                                  project.environments &&
+                                  !!project.environments.length && (
+                                    <InputGroup
+                                      tooltip='This will copy feature enabled states and remote config values from the selected environment.'
+                                      title='Clone from environment'
+                                      component={
+                                        <Select
+                                          onChange={(env) => {
+                                            this.setState({
+                                              selectedEnv:
+                                                project.environments.find(
+                                                  (v) =>
+                                                    v.api_key === env.value,
+                                                ),
+                                            })
+                                          }}
+                                          options={project.environments.map(
+                                            (env) => ({
+                                              label: env.name,
+                                              value: env.api_key,
+                                            }),
+                                          )}
+                                          value={
+                                            this.state.selectedEnv
+                                              ? {
+                                                  label:
+                                                    this.state.selectedEnv.name,
+                                                  value:
+                                                    this.state.selectedEnv
+                                                      .api_key,
+                                                }
+                                              : {
+                                                  label:
+                                                    'Please select an environment',
+                                                }
+                                          }
+                                        />
+                                      }
+                                    />
+                                  )}
+                              </CondensedRow>
                             </div>
 
                             {error && <ErrorMessage error={error} />}
-                            <div className='text-right'>
-                              {permission ? (
-                                <Button
-                                  id='create-env-btn'
-                                  className='mt-3'
-                                  type='submit'
-                                  disabled={isSaving || !name}
-                                >
-                                  {isSaving ? 'Creating' : 'Create Environment'}
-                                </Button>
-                              ) : (
-                                <Tooltip
-                                  html
-                                  title={
-                                    <Button
-                                      id='create-env-btn'
-                                      type='submit'
-                                      disabled={isSaving || !name}
-                                    >
-                                      Create Environment
-                                    </Button>
-                                  }
-                                  place='right'
-                                >
-                                  {Constants.projectPermissions(
-                                    'Create Environment',
-                                  )}
-                                </Tooltip>
-                              )}
-                            </div>
-                            <p className='text-center faint mt-2'>
+                            <CondensedRow>
+                              <div className='text-right'>
+                                {permission ? (
+                                  <Button
+                                    id='create-env-btn'
+                                    className='mt-3'
+                                    type='submit'
+                                    disabled={isSaving || !name}
+                                  >
+                                    {isSaving
+                                      ? 'Creating'
+                                      : 'Create Environment'}
+                                  </Button>
+                                ) : (
+                                  <Tooltip
+                                    html
+                                    title={
+                                      <Button
+                                        id='create-env-btn'
+                                        type='submit'
+                                        disabled={isSaving || !name}
+                                      >
+                                        Create Environment
+                                      </Button>
+                                    }
+                                    place='right'
+                                  >
+                                    {Constants.projectPermissions(
+                                      'Create Environment',
+                                    )}
+                                  </Tooltip>
+                                )}
+                              </div>
+                            </CondensedRow>
+                            <hr />
+                            <p className='faint mt-2'>
                               Not seeing an environment? Check that your project
                               administrator has invited you to it.
                             </p>

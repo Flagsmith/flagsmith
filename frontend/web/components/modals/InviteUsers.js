@@ -124,7 +124,7 @@ const InviteUsers = class extends Component {
                       />
                     </Flex>
                     {invites.length > 1 ? (
-                      <div className="ml-2">
+                      <div className='ml-2'>
                         <Button
                           id='delete-invite'
                           type='button'

@@ -1,22 +1,28 @@
-import React, { FC, useEffect, useState } from 'react';
-import { find } from 'lodash';
-import _data from 'common/data/base/_data';
-import { AvailablePermission, GroupPermission, User, UserGroup, UserPermission } from 'common/types/responses';
-import Utils from 'common/utils/utils';
-import AccountStore from 'common/stores/account-store';
-import Format from 'common/utils/format';
-import PanelSearch from './PanelSearch';
-import Button from './base/forms/Button';
-import InfoMessage from './InfoMessage';
-import Switch from './Switch';
-import TabItem from './base/forms/TabItem';
-import Tabs from './base/forms/Tabs';
-import UserGroupList from './UserGroupList';
-import { PermissionLevel } from 'common/types/requests';
-import { RouterChildContext } from 'react-router';
-import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions';
-import ConfigProvider from 'common/providers/ConfigProvider';
-import Icon from './Icon';
+import React, { FC, useEffect, useState } from 'react'
+import { find } from 'lodash'
+import _data from 'common/data/base/_data'
+import {
+  AvailablePermission,
+  GroupPermission,
+  User,
+  UserGroup,
+  UserPermission,
+} from 'common/types/responses'
+import Utils from 'common/utils/utils'
+import AccountStore from 'common/stores/account-store'
+import Format from 'common/utils/format'
+import PanelSearch from './PanelSearch'
+import Button from './base/forms/Button'
+import InfoMessage from './InfoMessage'
+import Switch from './Switch'
+import TabItem from './base/forms/TabItem'
+import Tabs from './base/forms/Tabs'
+import UserGroupList from './UserGroupList'
+import { PermissionLevel } from 'common/types/requests'
+import { RouterChildContext } from 'react-router'
+import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import Icon from './Icon'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -196,7 +202,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           {level !== 'organisation' && (
             <Row>
               <Flex>
-                <h5>Administrator</h5>
+                <div className='font-weight-medium text-dark mb-1'>
+                  Administrator
+                </div>
                 <div className='list-item-footer faint'>
                   {hasRbacPermission ? (
                     `Full View and Write permissions for the given ${Format.camelCase(
@@ -206,7 +214,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
                     <span>
                       Role-based access is not available on our Free Plan.
                       Please visit{' '}
-                      <a href='https://flagsmith.com/pricing/'>
+                      <a
+                        href='https://flagsmith.com/pricing/'
+                        className='text-primary'
+                      >
                         our Pricing Page
                       </a>{' '}
                       for more information on our licensing options.
@@ -254,29 +265,31 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           }}
         />
 
-        <div className='text-right pt-4 mb-4'>
+        <div className='text-right mt-5 text-dark'>
           This will edit the permissions for{' '}
           <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
         </div>
 
         {parentError && (
-          <InfoMessage>
-            The selected {isGroup ? 'group' : 'user'} does not have explicit
-            user permissions to view this {parentLevel}. If the user does not
-            belong to any groups with this permissions, you may have to adjust
-            their permissions in{' '}
-            <a
-              onClick={() => {
-                if (parentSettingsLink) {
-                  push(parentSettingsLink)
-                }
-                closeModal()
-              }}
-            >
-              <strong>{parentLevel} settings</strong>
-            </a>
-            .
-          </InfoMessage>
+          <div className='mt-4'>
+            <InfoMessage>
+              The selected {isGroup ? 'group' : 'user'} does not have explicit
+              user permissions to view this {parentLevel}. If the user does not
+              belong to any groups with this permissions, you may have to adjust
+              their permissions in{' '}
+              <a
+                onClick={() => {
+                  if (parentSettingsLink) {
+                    push(parentSettingsLink)
+                  }
+                  closeModal()
+                }}
+              >
+                <strong>{parentLevel} settings</strong>
+              </a>
+              .
+            </InfoMessage>
+          </div>
         )}
       </div>
       <div className='modal-footer'>
@@ -289,7 +302,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
           id='update-feature-btn'
           disabled={saving || !hasRbacPermission}
         >
-          {saving ? 'Saving' : 'Save'}
+          {saving ? 'Saving' : 'Save Permissions'}
         </Button>
       </div>
     </div>
@@ -352,13 +365,14 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <h5>Manage Users and Permissions</h5>
-      <p className='fs-small lh-sm'>
+      <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
+          className='fw-normal'
         >
           Learn about User Roles.
         </Button>

@@ -1,0 +1,17 @@
+#headway {
+  .HW_badge_cont {
+    width: auto;
+    height: 40px;
+    .HW_badge {
+      height: 12px;
+      width: 12px;
+      top: 8px;
+      right: 8px;
+      left: auto;
+      background: $danger;
+      &.HW_softHidden {
+        background: $bg-light500;
+      }
+    }
+  }
+}

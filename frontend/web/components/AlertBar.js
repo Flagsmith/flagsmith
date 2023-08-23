@@ -1,5 +1,5 @@
 import React from 'react'
-import ModalClose from './modals/base/ModalClose';
+import ModalClose from './modals/base/ModalClose'
 
 const AlertBar = class extends React.Component {
   state = {}

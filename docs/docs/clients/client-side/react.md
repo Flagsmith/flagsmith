@@ -49,8 +49,8 @@ npm i react-native-flagsmith --save
 
 ## Basic Usage
 
-The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
-for example, the Development or Production environment. ![Image](/img/api-key.png)
+The SDK is initialised against a single environment. You can find your Client-side Environment Key in the Environment
+settings page.
 
 ### Step 1: Wrapping your application with Flagsmith Provider
 
@@ -73,11 +73,13 @@ export function AppRoot() {
 Providing options to the Flagsmith provider will initialise the client, the API reference for these options can be found
 [here](/clients/javascript#initialisation-options).
 
-**Advanced usage: Initialising before rendering the FlagsmithProvider**
+:::tip Initialising before rendering the FlagsmithProvider
 
 If you wish to initialise the Flagsmith client before React rendering (e.g. in redux, or SSR) you can do so by calling
-[flagsmith.init](https://docs.flagsmith.com/clients/javascript#example-initialising-the-sdk) and provide no options
-property to the FlagsmithProvider component.
+[flagsmith.init](/clients/javascript#example-initialising-the-sdk) and provide no options property to the
+FlagsmithProvider component.
+
+:::
 
 ### Step 2: Using useFlags to access feature values and enabled state
 

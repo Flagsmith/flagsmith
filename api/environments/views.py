@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -41,6 +42,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
+    EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
@@ -73,6 +75,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return DeleteAllTraitKeysSerializer
         if self.action == "clone":
             return CloneEnvironmentSerializer
+        if self.action == "retrieve":
+            return EnvironmentRetrieveSerializerWithMetadata
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
@@ -93,13 +97,20 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 project = Project.objects.get(id=project_id)
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
-
+                
             return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
             )
 
         # Permission class handles validation of permissions for other actions
-        return Environment.objects.all()
+        queryset = Environment.objects.all()
+
+        if self.action == "retrieve":
+            queryset = queryset.annotate(
+                total_segment_overrides=Count("feature_segments")
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         environment = serializer.save()

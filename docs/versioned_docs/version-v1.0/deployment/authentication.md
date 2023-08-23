@@ -8,7 +8,7 @@ sidebar_position: 78
 
 To allow an Organisation on the Flagsmith platform to login using SAML authentication, you'll need to access the admin
 interface. Instructions on how to access the admin interface can be found
-[here](https://docs.flagsmith.com/deployment/configuration/django-admin).
+[here](/deployment/configuration/django-admin).
 
 Once you've logged into the django admin interface, you'll need to click on the 'Saml Configurations' option in the menu
 on the left. From here, you should see a list of existing SAML configuration entities. To create a new one, click on the

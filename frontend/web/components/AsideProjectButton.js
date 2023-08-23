@@ -1,6 +1,5 @@
 import { PureComponent } from 'react'
 import Format from 'common/utils/format'
-import Button from './base/forms/Button'
 
 const AsideProjectButton = class extends PureComponent {
   static displayName = 'AsideProjectButton'
@@ -8,22 +7,13 @@ const AsideProjectButton = class extends PureComponent {
   render() {
     const truncated = Format.truncateText(this.props.name, 26)
     const children = (
-      <div
-        className='aside__projects-item clickable'
-        data-test={this.props['data-test']}
-        onClick={this.props.onClick}
-      >
-        <div className='flex-row justify-content-center'>
-          <div className='flex-column'>
-            <Button theme='project' className={this.props.className}>
-              {this.props.projectLetter}
-            </Button>
-          </div>
-          <div className='flex-column'>
-            <p className={`aside__projects-item-title ${this.props.className}`}>
-              {truncated}
-            </p>
-          </div>
+      <div onClick={this.props.onClick}>
+        <div
+          className={`clickable project-select-btn ${
+            this.props.active ? 'active' : ''
+          }`}
+        >
+          <div className={`${this.props.className}`}>{truncated}</div>
         </div>
       </div>
     )

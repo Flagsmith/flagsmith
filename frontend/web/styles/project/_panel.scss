@@ -1,6 +1,5 @@
 .dark {
     .panel {
-        box-shadow: $card-default-dark;
         input {
             background-color: $input-bg-dark;
             color: $input-color-dark;
@@ -39,7 +38,7 @@
 
     &--grey{
         background:$panel-grey-background;
-        border-radius: $border-radius-sm;
+        border-radius: $border-radius-lg;
 
         padding:20px;
 
