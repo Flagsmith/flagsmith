@@ -251,6 +251,7 @@ def test_add_environment_feature_version_feature_state(
     assert response.status_code == status.HTTP_201_CREATED
 
     assert environment_feature_version.feature_states.count() == 2
+    assert environment_feature_version.feature_segments.count() == 1
 
 
 def test_cannot_add_feature_state_to_published_environment_feature_version(

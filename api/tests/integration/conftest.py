@@ -78,6 +78,7 @@ def environment(admin_client, project, environment_api_key, settings) -> int:
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
+        "allow_client_traits": True,
     }
     url = reverse("api-v1:environments:environment-list")
 
@@ -189,6 +190,31 @@ def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
     url = reverse("api-v1:projects:project-features-list", args=[project])
 
     response = admin_client.post(url, data=data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def mv_feature_option_value():
+    return "foo"
+
+
+@pytest.fixture()
+def mv_feature_option(
+    project: int,
+    admin_client: "APIClient",
+    mv_feature: int,
+    mv_feature_option_value: str,
+) -> int:
+    data = {
+        "string_value": mv_feature_option_value,
+        "type": "unicode",
+        "default_percentage_allocation": 0,
+        "feature": mv_feature,
+    }
+    url = reverse("api-v1:projects:feature-mv-options-list", args=[project, mv_feature])
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
     return response.json()["id"]
 
 
