@@ -7,7 +7,7 @@ on:
 
 jobs:
   run-e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: macos-12-xl
     name: Full E2E tests
 
     services:
