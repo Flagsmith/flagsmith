@@ -112,6 +112,7 @@ const FeaturesPage = class extends Component {
       // Could not determine field level error, show generic toast.
       toast(
         'We could not create this feature, please check the name is not in use.',
+        'danger',
       )
     }
   }

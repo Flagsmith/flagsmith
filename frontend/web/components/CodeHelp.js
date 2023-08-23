@@ -92,7 +92,10 @@ const CodeHelp = class extends Component {
 
   copy = (s) => {
     const res = Clipboard.setString(s)
-    toast(res ? 'Clipboard set' : 'Could not set clipboard :(')
+    toast(
+      res ? 'Clipboard set' : 'Could not set clipboard :(',
+      res ? '' : 'danger',
+    )
   }
 
   render() {

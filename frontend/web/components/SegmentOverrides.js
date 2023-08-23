@@ -144,21 +144,19 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           <div>
             <Row>
-              <Column>
-                <div>
-                  <Switch
-                    data-test={`segment-override-toggle-${index}`}
-                    disabled={disabled}
-                    checked={v.enabled}
-                    onChange={(v) => {
-                      if (!readOnly) {
-                        this.setState({ changed: true })
-                        toggle(v)
-                      }
-                    }}
-                  />
-                </div>
-              </Column>
+              <div>
+                <Switch
+                  data-test={`segment-override-toggle-${index}`}
+                  disabled={disabled}
+                  checked={v.enabled}
+                  onChange={(v) => {
+                    if (!readOnly) {
+                      this.setState({ changed: true })
+                      toggle(v)
+                    }
+                  }}
+                />
+              </div>
 
               {/* Input to adjust order without drag for E2E */}
               {E2E && (
@@ -194,7 +192,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                               setShowCreateSegment(true)
                               setSegmentEditId(v.segment)
                             }}
-                            className='btn btn-with-icon'
+                            className='btn btn-with-icon ml-2'
                           >
                             <span className='no-pointer'>
                               <Icon name='edit' fill={'#656D7B'} width={20} />
@@ -206,7 +204,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                             disabled={!permission}
                             target='_blank'
                             href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='btn btn-with-icon'
+                            className='btn btn-with-icon ml-2'
                           >
                             <span className='no-pointer'>
                               <Icon name='edit' fill={'#656D7B'} width={20} />

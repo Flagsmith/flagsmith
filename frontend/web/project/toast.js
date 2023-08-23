@@ -1,5 +1,10 @@
 import cn from 'classnames'
 
+const themeClassNames = {
+  danger: 'alert-danger',
+  success: 'alert',
+}
+
 const Message = class extends React.Component {
   static displayName = 'Message'
 
@@ -8,19 +13,24 @@ const Message = class extends React.Component {
   }
 
   render() {
-    const className = cn({
-      'alert alert-warning fade': true,
-      'removing out': this.props.isRemoving,
-      'show': !this.props.isRemoving,
-      'toast-message': true,
-    })
+    const className = cn(
+      {
+        'alert': true,
+        'removing out': this.props.isRemoving,
+        'show': !this.props.isRemoving,
+        'toast-message': true,
+      },
+      themeClassNames[this.props.theme],
+    )
 
     return (
       <div className={className}>
-        <a onClick={this.props.remove} className='pull-xs-right'>
-          <span className='icon ion-md-close' />
-        </a>
-        {this.props.children}
+        <Row space className={'flex-nowrap'}>
+          <span>{this.props.children}</span>
+          <a onClick={this.props.remove}>
+            <span className='icon ion-md-close' />
+          </a>
+        </Row>
       </div>
     )
   }
@@ -28,6 +38,7 @@ const Message = class extends React.Component {
 
 Message.defaultProps = {
   expiry: 5000,
+  theme: 'success',
 }
 
 Message.propTypes = {
@@ -36,6 +47,7 @@ Message.propTypes = {
   expiry: OptionalNumber,
   isRemoving: OptionalBool,
   remove: RequiredFunc,
+  theme: OptionalString,
 }
 
 module.exports = Message
@@ -49,11 +61,11 @@ const Toast = class extends React.Component {
     window.toast = this.toast
   }
 
-  toast = (content, expiry) => {
+  toast = (content, theme, expiry) => {
     const { messages } = this.state
 
     const id = Utils.GUID()
-    messages.unshift({ content, expiry: E2E ? 1000 : expiry, id })
+    messages.unshift({ content, expiry: E2E ? 1000 : expiry, id, theme })
     this.setState({ messages })
   }
 
@@ -82,6 +94,7 @@ const Toast = class extends React.Component {
             isRemoving={message.isRemoving}
             remove={() => this.remove(message.id)}
             expiry={message.expiry}
+            theme={message.theme}
           >
             {message.content}
           </Message>
