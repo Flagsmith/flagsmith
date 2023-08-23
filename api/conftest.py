@@ -1,4 +1,4 @@
-from typing import Tuple
+import typing
 
 import pytest
 from django.contrib.contenttypes.models import ContentType

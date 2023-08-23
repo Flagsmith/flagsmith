@@ -46,7 +46,6 @@ from projects.serializers import (
     ProjectListSerializer,
     ProjectRetrieveSerializer,
 )
-from users.models import FFAdminUser
 
 
 @method_decorator(
@@ -98,7 +97,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         project = serializer.save()
-        if isinstance(self.request.user, FFAdminUser):
+        if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserProjectPermission.objects.create(
                 user=self.request.user, project=project, admin=True
             )
@@ -139,7 +138,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request: Request, pk: int = None):
-        if hasattr(request.user, "is_master_api_key_user"):
+        if getattr(request.user, "is_master_api_key_user", False) is True:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={

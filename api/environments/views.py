@@ -24,7 +24,6 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
-from users.models import FFAdminUser
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
@@ -114,7 +113,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         environment = serializer.save()
-        if isinstance(self.request.user, FFAdminUser):
+        if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=environment, admin=True
             )
@@ -148,7 +147,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         clone = serializer.save(source_env=self.get_object())
 
-        if isinstance(self.request.user, FFAdminUser):
+        if getattr(request.user, "is_master_api_key_user", False) is False:
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=clone, admin=True
             )
@@ -184,7 +183,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
-        if hasattr(request.user, "is_master_api_key_user"):
+        if getattr(request.user, "is_master_api_key_user", False) is True:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={
