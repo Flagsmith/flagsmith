@@ -2,20 +2,19 @@ import typing
 
 from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
-from django.utils import timezone
 
-from .chargebee import get_subscription_metadata
+from .chargebee import get_subscription_metadata_from_id
 from .models import Organisation, OrganisationSubscriptionInformationCache
-from .subscriptions.constants import CHARGEBEE
+from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
 
 OrganisationSubscriptionInformationCacheDict = typing.Dict[
     int, OrganisationSubscriptionInformationCache
 ]
 
 
-def update_caches():
+def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):
     """
-    Update the cache objects for all active organisations in the database.
+    Update the cache objects for an update_cache_entity in the database.
     """
 
     organisations = Organisation.objects.select_related(
@@ -30,14 +29,16 @@ def update_caches():
         for org in organisations
     }
 
-    _update_caches_with_influx_data(organisation_info_cache_dict)
-    _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
+    if SubscriptionCacheEntity.INFLUX in update_cache_entities:
+        _update_caches_with_influx_data(organisation_info_cache_dict)
+
+    if SubscriptionCacheEntity.CHARGEBEE in update_cache_entities:
+        _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
 
     to_update = []
     to_create = []
 
     for subscription_info_cache in organisation_info_cache_dict.values():
-        subscription_info_cache.updated_at = timezone.now()
         if subscription_info_cache.id:
             to_update.append(subscription_info_cache)
         else:
@@ -53,7 +54,8 @@ def update_caches():
             "allowed_seats",
             "allowed_30d_api_calls",
             "chargebee_email",
-            "updated_at",
+            "chargebee_updated_at",
+            "influx_updated_at",
         ],
     )
 
@@ -99,7 +101,7 @@ def _update_caches_with_chargebee_data(
         ):
             continue
 
-        metadata = get_subscription_metadata(subscription.subscription_id)
+        metadata = get_subscription_metadata_from_id(subscription.subscription_id)
         if not metadata:
             continue
 

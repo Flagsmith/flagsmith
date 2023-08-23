@@ -360,3 +360,26 @@ delete_identity_url = f"{BASE_URL}/environments/{ENV_KEY}/identities/{IDENTITY_I
 delete_identity_response = session.delete(delete_identity_url)
 assert delete_identity_response.status_code == 204
 ```
+
+### Bulk Uploading Identities and Traits
+
+You can achieve this with a `POST` to the `identities` endpoint:
+
+```bash
+curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/?identifier=<identity_id>" \
+     -H 'X-Environment-Key: <Your Environment Key>' \
+     -H 'Content-Type: application/json; charset=utf-8' \
+     -d $'{
+  "traits":   "traits": [
+    {
+      "trait_key": "this_key",
+      "trait_value": "this_value"
+    },
+    {
+      "trait_key": "this_key2",
+      "trait_value": "this_value2"
+    }
+  ],
+  "identifier": "<identity_id>"
+}'
+```

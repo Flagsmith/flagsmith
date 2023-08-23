@@ -1,13 +1,33 @@
 {
     "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
+    "group-pull-request-title-pattern": "chore: Platform release ${version}",
     "packages": {
         ".": {
+            "release-type": "python",
+            "changelog-path": "CHANGELOG.md"
+        },
+        "frontend": {
+            "release-type": "node",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "include-component-in-tag": false
+        },
+        "api": {
             "release-type": "python",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false,
+            "include-component-in-tag": false
+        },
+        "docs": {
+            "release-type": "node",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
             "include-component-in-tag": false
         }
     },

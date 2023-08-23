@@ -39,14 +39,14 @@ global.API = {
         }
       })
   },
-  alias(id, user={}) {
+  alias(id, user = {}) {
     if (id === Project.excludeAnalytics) return
     if (Project.mixpanel) {
       mixpanel.alias(id)
     }
 
     if (enableDynatrace && user?.id) {
-      dtrum.identifyUser( `${user.id}`)
+      dtrum.identifyUser(`${user.id}`)
     }
 
     if (Project.heap) {
@@ -147,7 +147,7 @@ global.API = {
       }
 
       if (enableDynatrace && user?.id) {
-        dtrum.identifyUser( `${user.id}`)
+        dtrum.identifyUser(`${user.id}`)
       }
 
       if (Project.heap) {
@@ -218,7 +218,7 @@ global.API = {
     if (Project.mixpanel) {
       mixpanel.reset()
     }
-    flagsmith.logout()
+    return flagsmith.logout()
   },
   setCookie(key, v) {
     try {

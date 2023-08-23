@@ -904,3 +904,9 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+# Define the cooldown duration, in seconds, for password reset emails
+PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
+
+# Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
+MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)

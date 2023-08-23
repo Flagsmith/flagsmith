@@ -24,12 +24,12 @@ type CreateEditTagType = {
 }
 
 const CreateEditTag: FC<CreateEditTagType> = ({
-  onComplete: _onComplete,
-  projectId,
-  tag: _tag,
   isOpen,
   onBack,
   onClose,
+  onComplete: _onComplete,
+  projectId,
+  tag: _tag,
   title,
 }) => {
   const [tag, setTag] = useState<Partial<TTag> | undefined>(_tag)
@@ -100,7 +100,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       onClose={onClose}
       className='inline-modal--tags pb-0'
       bottom={
-        <Row className="justify-content-end">
+        <Row className='justify-content-end'>
           <Button onClick={onClose} type='button' theme='secondary'>
             Cancel
           </Button>

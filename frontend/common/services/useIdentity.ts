@@ -58,12 +58,13 @@ export const identityService = service
             page_size = 10,
             pageType,
             pages,
+            q,
             search,
           } = baseQuery
           let url = `${getIdentityEndpoint(
             environmentId,
             isEdge,
-          )}/?q=${encodeURIComponent(search || '')}&page_size=${page_size}`
+          )}/?q=${encodeURIComponent(search || q || '')}&page_size=${page_size}`
           let last_evaluated_key = null
           if (!isEdge) {
             url += `&page=${page}`
