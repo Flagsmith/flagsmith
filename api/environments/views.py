@@ -97,7 +97,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 project = Project.objects.get(id=project_id)
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
-                
+
             return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
             )
