@@ -1,4 +1,11 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, {
+  FC,
+  useEffect,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
@@ -31,9 +38,7 @@ const CreateRole: FC<CreateRoleType> = ({
   const [tab, setTab] = useState<number>(0)
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
-  const [valueChanged, setValueChanged] = useState<boolean>(false)
 
-  const isSaving = false
   const projectData = OrganisationStore.getProjects()
 
   useEffect(() => {
@@ -45,7 +50,7 @@ const CreateRole: FC<CreateRoleType> = ({
     }
   }, [project, projectData])
 
-  const Tab1 = () => {
+  const Tab1 = forwardRef((props, ref) => {
     const { data: roleData, isLoading } = useGetRoleQuery(
       {
         organisation_id: role?.organisation,
@@ -55,30 +60,37 @@ const CreateRole: FC<CreateRoleType> = ({
     )
     const [roleName, setRoleName] = useState<string>('')
     const [roleDesc, setRoleDesc] = useState<string>('')
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [roleNameChanged, setRoleNameChanged] = useState<boolean>(false)
+    const [roleDescChanged, setRoleDescChanged] = useState<boolean>(false)
 
-    const onClosing = () => {
-      if (valueChanged) {
-        return new Promise((resolve) => {
-          openConfirm(
-            'Are you sure?',
-            'Closing this will discard your unsaved changes.',
-            () => resolve(true),
-            () => resolve(false),
-            'Ok',
-            'Cancel',
-          )
-        })
-      } else {
-        return Promise.resolve(true)
-      }
-    }
-
-    useEffect(() => {
-      if (isEdit && valueChanged) {
-        setInterceptClose(onClosing)
-      }
-    }, [valueChanged])
-
+    useImperativeHandle(
+      ref,
+      () => {
+        return {
+          onClosing() {
+            if (roleNameChanged || roleDescChanged) {
+              return new Promise((resolve) => {
+                openConfirm(
+                  'Are you sure?',
+                  'Closing this will discard your unsaved changes.',
+                  () => resolve(true),
+                  () => resolve(false),
+                  'Ok',
+                  'Cancel',
+                )
+              })
+            } else {
+              return Promise.resolve(true)
+            }
+          },
+          tabChanged() {
+            return roleNameChanged || roleDescChanged
+          },
+        }
+      },
+      [roleNameChanged, roleDescChanged],
+    )
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
         setRoleName(roleData.name)
@@ -92,7 +104,9 @@ const CreateRole: FC<CreateRoleType> = ({
 
     useEffect(() => {
       if (createSuccess || updateSuccess) {
-        setValueChanged(false)
+        setRoleNameChanged(false)
+        setRoleDescChanged(false)
+        setIsSaving(false)
         onComplete?.()
       }
     }, [createSuccess, updateSuccess])
@@ -126,8 +140,9 @@ const CreateRole: FC<CreateRoleType> = ({
             name: 'roleName',
           }}
           value={roleName}
+          unsaved={isEdit && roleNameChanged}
           onChange={(event) => {
-            setValueChanged(true)
+            setRoleNameChanged(true)
             setRoleName(Utils.safeParseEventValue(event))
           }}
           id='roleName'
@@ -140,8 +155,9 @@ const CreateRole: FC<CreateRoleType> = ({
             name: 'description',
           }}
           value={roleDesc}
+          unsaved={isEdit && roleDescChanged}
           onChange={(event) => {
-            setValueChanged(true)
+            setRoleDescChanged(true)
             setRoleDesc(Utils.safeParseEventValue(event))
           }}
           id='description'
@@ -163,20 +179,41 @@ const CreateRole: FC<CreateRoleType> = ({
         </div>
       </div>
     )
-  }
+  })
 
   const TabValue = () => {
+    const ref = useRef(null)
+    const ref2 = useRef(null)
+    useEffect(() => {
+      if (isEdit) {
+        setInterceptClose(() => ref.current.onClosing())
+      }
+    }, [])
+
+    const changeTab = (newTab) => {
+      const changed = ref.current.tabChanged()
+      if (changed && newTab !== tab) {
+        return new Promise((resolve) => {
+          openConfirm(
+            'Are you sure?',
+            'Changing this tab will discard your unsaved changes.',
+            () => {
+              resolve(true), setTab(newTab)
+            },
+            () => resolve(false),
+            'Ok',
+            'Cancel',
+          )
+        })
+      } else {
+        setTab(newTab)
+      }
+    }
+
     return isEdit ? (
-      <Tabs value={tab} onChange={setTab}>
-        <TabItem
-          tabLabel={
-            <Row className='justify-content-center'>
-              Role
-              {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
-            </Row>
-          }
-        >
-          <Tab1 />
+      <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
+        <TabItem tabLabel={<Row className='justify-content-center'>Role</Row>}>
+          <Tab1 ref={ref} />
         </TabItem>
         <TabItem
           tabLabel={
@@ -185,7 +222,7 @@ const CreateRole: FC<CreateRoleType> = ({
             </Row>
           }
         >
-          <EditPermissionsModal level={'organisation'} role={role} />
+          <EditPermissionsModal level={'organisation'} role={role} ref={ref2} />
         </TabItem>
         <TabItem
           tabLabel={
@@ -197,6 +234,7 @@ const CreateRole: FC<CreateRoleType> = ({
             mainItems={projectData}
             role={role}
             level={'project'}
+            ref={ref}
           />
         </TabItem>
         <TabItem
@@ -218,6 +256,7 @@ const CreateRole: FC<CreateRoleType> = ({
               mainItems={environments}
               role={role}
               level={'environment'}
+              ref={ref}
             />
           )}
         </TabItem>
