@@ -131,6 +131,8 @@
     }
 
     &.panel-integrations {
+      border: 1px solid $basic-alpha-16;
+      background-color: $bg-dark300;
       .list-integrations {
         background-color: $bg-dark200;
       }
