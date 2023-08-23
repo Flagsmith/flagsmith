@@ -96,7 +96,7 @@ const SegmentOverrideInner = class Override extends React.Component {
             : ' panel panel-without-heading panel--draggable p-3'
         }`}
       >
-        <Row className='panel-content' space>
+        <Row className='panel-content p-0' space>
           <div className='flex flex-1 text-left'>
             {this.props.id ? (
               <>
@@ -143,20 +143,18 @@ const SegmentOverrideInner = class Override extends React.Component {
             )}
           </div>
           <div>
-            <Row>
-              <div>
-                <Switch
-                  data-test={`segment-override-toggle-${index}`}
-                  disabled={disabled}
-                  checked={v.enabled}
-                  onChange={(v) => {
-                    if (!readOnly) {
-                      this.setState({ changed: true })
-                      toggle(v)
-                    }
-                  }}
-                />
-              </div>
+            <Row className='gap-3'>
+              <Switch
+                data-test={`segment-override-toggle-${index}`}
+                disabled={disabled}
+                checked={v.enabled}
+                onChange={(v) => {
+                  if (!readOnly) {
+                    this.setState({ changed: true })
+                    toggle(v)
+                  }
+                }}
+              />
 
               {/* Input to adjust order without drag for E2E */}
               {E2E && (
@@ -173,66 +171,67 @@ const SegmentOverrideInner = class Override extends React.Component {
                   type='text'
                 />
               )}
-
-              {!!v.id && (
-                <Permission
-                  id={projectId}
-                  permission={'MANAGE_SEGMENTS'}
-                  level={'project'}
-                >
-                  {({ permission }) =>
-                    Utils.renderWithPermission(
-                      permission,
-                      Constants.projectPermissions('Manage Segments'),
-                      <>
-                        {v.is_feature_specific ? (
-                          <Button
-                            disabled={!permission}
-                            onClick={() => {
-                              setShowCreateSegment(true)
-                              setSegmentEditId(v.segment)
-                            }}
-                            className='btn btn-with-icon ml-2'
-                          >
-                            <span className='no-pointer'>
-                              <Icon name='edit' fill={'#656D7B'} width={20} />
-                            </span>
-                          </Button>
-                        ) : (
-                          <Button
-                            theme='text'
-                            disabled={!permission}
-                            target='_blank'
-                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='btn btn-with-icon ml-2'
-                          >
-                            <span className='no-pointer'>
-                              <Icon name='edit' fill={'#656D7B'} width={20} />
-                            </span>
-                          </Button>
-                        )}
-                      </>,
-                    )
-                  }
-                </Permission>
-              )}
-              {!readOnly && (
-                <Button
-                  disabled={disabled}
-                  id='remove-feature'
-                  onClick={confirmRemove}
-                  className='btn btn-with-icon ml-2'
-                >
-                  <span className='no-pointer'>
-                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
-                  </span>
-                </Button>
-              )}
+              <Row className='gap-2'>
+                {!!v.id && (
+                  <Permission
+                    id={projectId}
+                    permission={'MANAGE_SEGMENTS'}
+                    level={'project'}
+                  >
+                    {({ permission }) =>
+                      Utils.renderWithPermission(
+                        permission,
+                        Constants.projectPermissions('Manage Segments'),
+                        <>
+                          {v.is_feature_specific ? (
+                            <Button
+                              disabled={!permission}
+                              onClick={() => {
+                                setShowCreateSegment(true)
+                                setSegmentEditId(v.segment)
+                              }}
+                              className='btn btn-with-icon'
+                            >
+                              <span className='no-pointer'>
+                                <Icon name='edit' fill={'#656D7B'} width={20} />
+                              </span>
+                            </Button>
+                          ) : (
+                            <Button
+                              theme='text'
+                              disabled={!permission}
+                              target='_blank'
+                              href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                              className='btn btn-with-icon'
+                            >
+                              <span className='no-pointer'>
+                                <Icon name='edit' fill={'#656D7B'} width={20} />
+                              </span>
+                            </Button>
+                          )}
+                        </>,
+                      )
+                    }
+                  </Permission>
+                )}
+                {!readOnly && (
+                  <Button
+                    disabled={disabled}
+                    id='remove-feature'
+                    onClick={confirmRemove}
+                    className='btn btn-with-icon'
+                  >
+                    <span className='no-pointer'>
+                      <Icon name='trash-2' fill={'#656D7B'} width={20} />
+                    </span>
+                  </Button>
+                )}
+              </Row>
             </Row>
           </div>
         </Row>
 
-        <div className='mx-2 text-left pb-2 mt-4'>
+        <div className='text-left pb-2 mt-4'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
