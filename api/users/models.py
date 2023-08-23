@@ -325,6 +325,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         ).update(group_admin=False)
 
 
+# Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
+# we use __subclasshook__[1] method on UserABC to check if FFAdminUser implements the required interface
+# [1]https://docs.python.org/3/library/abc.html#abc.ABCMeta.__subclasshook__
 assert issubclass(FFAdminUser, UserABC)
 
 
