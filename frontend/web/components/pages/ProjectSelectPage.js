@@ -91,7 +91,7 @@ const ProjectSelectPage = class extends Component {
         <OrganisationProvider>
           {({ isLoading, projects }) => (
             <div>
-              {projects && projects.length ? (
+              {(projects && projects.length) || isLoading ? (
                 <div className='flex-row pl-0 pr-0'></div>
               ) : isAdmin ? (
                 <div className='container-mw-700 mb-4'>
