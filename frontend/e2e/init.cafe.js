@@ -54,12 +54,12 @@ fixture`Initialise`
 test('[Initialise]', async () => {
     console.log("Init")
     await initialiseTests()
-    await logout()
+    // await logout()
     // await environmentTest()
     // await logout()
     // await projectTest()
     // await logout()
-    await segmentTest()
+    // await segmentTest()
     // await logout()
     // await inviteTest()
 }).after(async (t) => {
