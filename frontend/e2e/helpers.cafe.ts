@@ -53,6 +53,8 @@ export const gotoFeatures = async () => {
 export const click = async (selector:string) => {
     await waitForElementVisible(selector);
     await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
+    await t.scrollIntoView(Selector(selector))
+    await t.wait(100)
     await t.click(selector);
 };
 export const gotoSegments = async () => {
