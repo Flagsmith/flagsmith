@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
+from projects.permissions import CREATE_ENVIRONMENT
 
 
 def test_retrieve_environment(
@@ -45,3 +46,22 @@ def test_retrieve_environment(
         response_json["use_mv_v2_evaluation"]
         == environment.use_identity_composite_key_for_hashing
     )
+
+
+def test_can_clone_environment_with_create_environment_permission(
+    test_user,
+    test_user_client,
+    environment,
+    user_project_permission,
+):
+    # Given
+    env_name = "Cloned env"
+    user_project_permission.permissions.add(CREATE_ENVIRONMENT)
+
+    url = reverse("api-v1:environments:environment-clone", args=[environment.api_key])
+
+    # When
+    response = test_user_client.post(url, {"name": env_name})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

@@ -48,7 +48,7 @@ class EnvironmentPermissions(IsAuthenticated):
             return False
 
         if view.action == "clone":
-            return request.user.is_project_admin(obj.project)
+            return request.user.has_project_permission(CREATE_ENVIRONMENT, obj.project)
 
         return request.user.is_environment_admin(obj) or view.action in [
             "user_permissions"
