@@ -27,7 +27,6 @@
   border-radius: $border-radius-lg;
   line-height: $alert-line-height;
   color: $alert-color;
-  font-weight: $alert-font-weight;
   font-size: $alert-font-size;
   text-align: left;
   .icon-alert {
@@ -58,6 +57,9 @@
   }
 }
 .dark {
+  .alert {
+    color: $alert-color-dark;
+  }
   .alert-info {
     .title {
       color: $text-icon-light;
