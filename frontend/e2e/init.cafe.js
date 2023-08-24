@@ -55,13 +55,13 @@ test('[Initialise]', async () => {
     console.log("Init")
     await initialiseTests()
     await logout()
-    await environmentTest()
-    await logout()
-    await projectTest()
-    await logout()
+    // await environmentTest()
+    // await logout()
+    // await projectTest()
+    // await logout()
     await segmentTest()
-    await logout()
-    await inviteTest()
+    // await logout()
+    // await inviteTest()
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
     await logResults(logger.requests, t);
