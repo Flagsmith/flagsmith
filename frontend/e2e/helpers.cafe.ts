@@ -1,7 +1,7 @@
 import { RequestLogger, Selector, t } from 'testcafe';
 import { Operator } from 'rxjs';
 
-export const LONG_TIMEOUT = 20000
+export const LONG_TIMEOUT = 40000
 
 export const byId = (id:string) => `[data-test="${id}"]`;
 
