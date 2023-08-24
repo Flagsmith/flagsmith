@@ -28,7 +28,6 @@ import { PermissionLevel } from 'common/types/requests'
 import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ModalHR from './modals/ModalHR'
 import Icon from './Icon'
 import {
   useCreateRoleEnvironmentPermissionMutation,
@@ -528,12 +527,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       </div>
     ) : (
       <div>
-        <div className='modal-body'>
-          <div className='mb-2'>
+        <div className='modal-body px-4'>
+          <div className='mb-2 mt-4'>
             {level !== 'organisation' && (
               <Row className={role ? 'px-3 py-2' : ''}>
                 <Flex>
-                  <strong>Administrator</strong>
+                  <div className='font-weight-medium text-dark mb-1'>
+                    Administrator
+                  </div>
                   <div className='list-item-footer faint'>
                     {hasRbacPermission ? (
                       `Full View and Write permissions for the given ${Format.camelCase(
@@ -543,7 +544,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                       <span>
                         Role-based access is not available on our Free Plan.
                         Please visit{' '}
-                        <a href='https://flagsmith.com/pricing/'>
+                        <a 
+                          href='https://flagsmith.com/pricing/'
+                          className='text-primary'
+                        >
                           our Pricing Page
                         </a>{' '}
                         for more information on our licensing options.
@@ -561,7 +565,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           </div>
           <PanelSearch
             title='Permissions'
-            className='no-pad mb-4'
+            className='no-pad mb-2'
             items={permissions}
             renderRow={(p: AvailablePermission) => {
               const levelUpperCase = level.toUpperCase()
@@ -591,7 +595,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             }}
           />
 
-          <p className='text-right mt-2'>
+          <p className='text-right mt-5 text-dark'>
             This will edit the permissions for{' '}
             <strong>
               {isGroup
@@ -604,27 +608,27 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           </p>
 
           {parentError && !role && (
-            <InfoMessage>
-              The selected {isGroup ? 'group' : 'user'} does not have explicit
-              user permissions to view this {parentLevel}. If the user does not
-              belong to any groups with this permissions, you may have to adjust
-              their permissions in{' '}
-              <a
-                onClick={() => {
-                  if (parentSettingsLink) {
-                    push(parentSettingsLink)
-                  }
-                  closeModal()
-                }}
-              >
-                <strong>{parentLevel} settings</strong>
-              </a>
-              .
-            </InfoMessage>
+            <div className='mt-4'>
+              <InfoMessage>
+                The selected {isGroup ? 'group' : 'user'} does not have explicit
+                user permissions to view this {parentLevel}. If the user does not
+                belong to any groups with this permissions, you may have to adjust
+                their permissions in{' '}
+                <a
+                  onClick={() => {
+                    if (parentSettingsLink) {
+                      push(parentSettingsLink)
+                    }
+                    closeModal()
+                  }}
+                >
+                  <strong>{parentLevel} settings</strong>
+                </a>
+                .
+              </InfoMessage>
+            </div>
           )}
         </div>
-        <ModalHR />
-
         <div className='modal-footer'>
           {!role && (
             <Button className='mr-2' onClick={closeModal} theme='secondary'>
@@ -637,7 +641,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             id='update-feature-btn'
             disabled={saving || !hasRbacPermission}
           >
-            {saving ? 'Saving' : 'Save'}
+            {saving ? 'Saving' : 'Save Permissions'}
           </Button>
         </div>
       </div>
@@ -675,7 +679,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         user={user}
         push={router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -694,20 +698,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         group={group}
         push={router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
   return (
     <div className='mt-4'>
       <h5>Manage Users and Permissions</h5>
-      <p className='fs-small lh-sm'>
+      <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
+          className='fw-normal'
         >
           Learn about User Roles.
         </Button>

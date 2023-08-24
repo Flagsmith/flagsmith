@@ -35,6 +35,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
+import Icon from 'components/Icon'
 
 type PageType = {
   number: number
@@ -395,7 +396,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 text-dark'
+            className='mb-0 fs-small text-dark'
           >
             {showDescriptions
               ? 'Hide condition descriptions'
@@ -406,7 +407,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <label className='cols-sm-2 control-label mb-1'>
             Include users when the following rules apply:
           </label>
-          <span className='text-small text-faint'>
+          <span className='fs-caption text-faint'>
             Note: Trait names are case sensitive
           </span>
         </Flex>
@@ -509,6 +510,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     title='Environment'
                     component={
                       <EnvironmentSelect
+                        projectId={`${projectId}`}
                         value={environmentId}
                         onChange={(environmentId: string) => {
                           setEnvironmentId(environmentId)
@@ -583,17 +585,35 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                 <div className='font-weight-medium'>
                                   {identifier}
                                 </div>
-                                <div
-                                  className={`${
-                                    inSegment
-                                      ? 'font-weight-medium text-primary'
-                                      : 'text-muted fs-small lh-sm'
+                                <Row
+                                  className={`font-weight-medium fs-small lh-sm ${
+                                    inSegment ? 'text-primary' : 'faint'
                                   }`}
                                 >
-                                  {inSegment
-                                    ? 'User in segment'
-                                    : 'Not in segment'}
-                                </div>
+                                  {inSegment ? (
+                                    <>
+                                      <Icon
+                                        name='checkmark-circle'
+                                        width={20}
+                                        fill='#6837FC'
+                                      />
+                                      <span className='ml-1'>
+                                        User in segment
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Icon
+                                        name='minus-circle'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                      <span className='ml-1'>
+                                        Not in segment
+                                      </span>
+                                    </>
+                                  )}
+                                </Row>
                               </Row>
                             )
                           }}

@@ -3,6 +3,7 @@ import { Account, Segment, Tag, FeatureStateValue, Role } from './responses'
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
+  q?: string
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
@@ -108,5 +109,10 @@ export type Req = {
   updateRolePermission: { id: string }
   deleteRolePermission: { id: string }
   createRolePermission: {}
+  getIdentityFeatureStates: {
+    environment: string
+    user: string
+  }
+  getProjectFlags: { project: string }
   // END OF TYPES
 }

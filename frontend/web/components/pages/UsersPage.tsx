@@ -18,6 +18,7 @@ import Button from 'components/base/forms/Button' // we need this to make JSX co
 import JSONReference from 'components/JSONReference' // we need this to make JSX compile
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const CodeHelp = require('../CodeHelp')
 
@@ -84,32 +85,15 @@ const UsersPage: FC<UsersPageType> = (props) => {
     openModal(
       'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      'p-0',
+      'side-modal',
     )
   }
 
   return (
     <div className='app-container container'>
-      <div>
-        <div>
-          <Row>
-            <Flex>
-              <div style={{ maxWidth: '700px' }}>
-                <h4>Users</h4>
-                <p>
-                  View and manage features states for individual users. This
-                  will override individual default feature settings for your
-                  selected environment.{' '}
-                  <Button
-                    theme='text'
-                    target='_blank'
-                    href='https://docs.flagsmith.com/basic-features/managing-identities'
-                  >
-                    Learn more.
-                  </Button>
-                </p>
-              </div>
-            </Flex>
+      <PageTitle
+        cta={
+          <>
             {permission ? (
               <FormGroup className='float-right'>
                 <Button
@@ -139,152 +123,155 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 {Constants.environmentPermissions('Admin')}
               </Tooltip>
             )}
-          </Row>
-        </div>
+          </>
+        }
+        title={'Identities'}
+      >
+        View and manage features states for individual identities. This will override
+        individual default feature settings for your selected environment.{' '}
+        <Button
+          theme='text'
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-identities'
+        >
+          Learn more.
+        </Button>
+      </PageTitle>
+      <div>
         <FormGroup>
-          <div>
-            <FormGroup>
-              <PanelSearch
-                renderSearchWithNoResults
-                renderFooter={() => (
-                  <JSONReference
-                    className='mx-2 mt-4'
-                    title={'Users'}
-                    json={identities?.results}
-                  />
-                )}
-                id='users-list'
-                title='Users'
-                className='no-pad'
-                isLoading={isLoading}
-                filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
-                items={identities?.results}
-                paging={identities}
-                showExactFilter
-                nextPage={() => {
-                  setPage({
-                    number: page.number + 1,
-                    pageType: 'NEXT',
-                    pages: identities?.last_evaluated_key
-                      ? (page.pages || []).concat([
-                          identities?.last_evaluated_key,
-                        ])
-                      : undefined,
-                  })
-                }}
-                prevPage={() => {
-                  setPage({
-                    number: page.number - 1,
-                    pageType: 'PREVIOUS',
-                    pages: page.pages
-                      ? Utils.removeElementFromArray(
-                          page.pages,
-                          page.pages.length - 1,
-                        )
-                      : undefined,
-                  })
-                }}
-                goToPage={(newPage: number) => {
-                  setPage({
-                    number: newPage,
-                    pageType: undefined,
-                    pages: undefined,
-                  })
-                }}
-                renderRow={(
-                  { id, identifier, identity_uuid }: Identity,
-                  index: number,
-                ) =>
-                  permission ? (
-                    <Row
-                      space
-                      className='list-item clickable list-item-sm'
-                      key={id}
-                      data-test={`user-item-${index}`}
-                    >
-                      <Link
-                        to={`/project/${
-                          props.match.params.projectId
-                        }/environment/${
-                          props.match.params.environmentId
-                        }/users/${encodeURIComponent(identifier)}/${id}`}
-                        className='flex-row flex flex-1 table-column'
-                      >
-                        <div className='font-weight-medium'>{identifier}</div>
-                        <span style={{ marginTop: 2 }}>
-                          <Icon name='chevron-right' width={22} />
-                        </span>
-                      </Link>
-                      <div className='table-column'>
-                        <Button
-                          id='remove-feature'
-                          className='btn btn-with-icon'
-                          type='button'
-                          onClick={() => {
-                            if (id) {
-                              removeIdentity(id, identifier)
-                            } else if (identity_uuid) {
-                              removeIdentity(identity_uuid, identifier)
-                            }
-                          }}
-                        >
-                          <Icon name='trash-2' width={20} fill='#656D7B' />
-                        </Button>
-                      </div>
-                    </Row>
-                  ) : (
-                    <Row
-                      space
-                      className='list-item'
-                      key={id}
-                      data-test={`user-item-${index}`}
-                    >
-                      {identifier}
-                    </Row>
-                  )
-                }
-                renderNoResults={
-                  <Row className='list-item p-3'>
-                    You have no users in your project
-                    {search ? (
-                      <span>
-                        {' '}
-                        for <strong>"{search}"</strong>
-                      </span>
-                    ) : (
-                      ''
-                    )}
-                    .
-                  </Row>
-                }
-                filterRow={() => true}
-                search={searchInput}
-                onChange={(e: InputEvent) => {
-                  setSearchInput(Utils.safeParseEventValue(e))
-                }}
+          <PanelSearch
+            renderSearchWithNoResults
+            renderFooter={() => (
+              <JSONReference
+                className='mx-2 mt-4'
+                title={'Identites'}
+                json={identities?.results}
               />
-            </FormGroup>
-            <FormGroup>
-              <p className='faint mt-4'>
-                Users are created for your environment automatically when
-                calling identify/get flags from any of the SDKs.
-                <br />
-                We've created <strong>user_123456</strong> for you so you always
-                have an example user to test with on your environments.
-              </p>
-              <div className='row'>
-                <div className='col-md-12'>
-                  <CodeHelp
-                    showInitially
-                    title='Creating users and getting their feature settings'
-                    snippets={Constants.codeHelp.CREATE_USER(
-                      props.match.params.environmentId,
-                      identities?.results?.[0]?.identifier,
-                    )}
-                  />
-                </div>
-              </div>
-            </FormGroup>
+            )}
+            id='users-list'
+            title='Identities'
+            className='no-pad'
+            isLoading={isLoading}
+            filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
+            items={identities?.results}
+            paging={identities}
+            showExactFilter
+            nextPage={() => {
+              setPage({
+                number: page.number + 1,
+                pageType: 'NEXT',
+                pages: identities?.last_evaluated_key
+                  ? (page.pages || []).concat([identities?.last_evaluated_key])
+                  : undefined,
+              })
+            }}
+            prevPage={() => {
+              setPage({
+                number: page.number - 1,
+                pageType: 'PREVIOUS',
+                pages: page.pages
+                  ? Utils.removeElementFromArray(
+                      page.pages,
+                      page.pages.length - 1,
+                    )
+                  : undefined,
+              })
+            }}
+            goToPage={(newPage: number) => {
+              setPage({
+                number: newPage,
+                pageType: undefined,
+                pages: undefined,
+              })
+            }}
+            renderRow={(
+              { id, identifier, identity_uuid }: Identity,
+              index: number,
+            ) =>
+              permission ? (
+                <Row
+                  space
+                  className='list-item clickable list-item-sm'
+                  key={id}
+                  data-test={`user-item-${index}`}
+                >
+                  <Link
+                    to={`/project/${props.match.params.projectId}/environment/${
+                      props.match.params.environmentId
+                    }/users/${encodeURIComponent(identifier)}/${id}`}
+                    className='flex-row flex flex-1 table-column'
+                  >
+                    <div className='font-weight-medium'>{identifier}</div>
+                    <Icon name='chevron-right' width={22} />
+                  </Link>
+                  <div className='table-column'>
+                    <Button
+                      id='remove-feature'
+                      className='btn btn-with-icon'
+                      type='button'
+                      onClick={() => {
+                        if (id) {
+                          removeIdentity(id, identifier)
+                        } else if (identity_uuid) {
+                          removeIdentity(identity_uuid, identifier)
+                        }
+                      }}
+                    >
+                      <Icon name='trash-2' width={20} fill='#656D7B' />
+                    </Button>
+                  </div>
+                </Row>
+              ) : (
+                <Row
+                  space
+                  className='list-item'
+                  key={id}
+                  data-test={`user-item-${index}`}
+                >
+                  {identifier}
+                </Row>
+              )
+            }
+            renderNoResults={
+              <Row className='list-item p-3'>
+                You have no identities in this environment
+                {search ? (
+                  <span>
+                    {' '}
+                    for <strong>"{search}"</strong>
+                  </span>
+                ) : (
+                  ''
+                )}
+                .
+              </Row>
+            }
+            filterRow={() => true}
+            search={searchInput}
+            onChange={(e: InputEvent) => {
+              setSearchInput(Utils.safeParseEventValue(e))
+            }}
+          />
+        </FormGroup>
+        <FormGroup>
+          <p className='faint mt-4'>
+            Identities are created for your environment automatically when
+            calling identify/get flags from any of the SDKs.
+            <br />
+            We've created <strong>user_123456</strong> for you so you always
+            have an example identity to test with on your environments.
+          </p>
+          <div className='row'>
+            <div className='col-md-12'>
+              <CodeHelp
+                showInitially
+                title='Creating identities and getting their feature settings'
+                snippets={Constants.codeHelp.CREATE_USER(
+                  props.match.params.environmentId,
+                  identities?.results?.[0]?.identifier,
+                )}
+              />
+            </div>
           </div>
         </FormGroup>
       </div>

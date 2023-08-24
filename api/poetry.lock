@@ -1322,12 +1322,12 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "diff-cover (>=7.5)", "p
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "4.0.3"
+version = "4.0.4"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 files = [
-    {file = "flagsmith-flag-engine-4.0.3.tar.gz", hash = "sha256:adb73fe9ae92e5a38c1b802f790924b7e61760ead33f888fe7582c6d8b204092"},
+    {file = "flagsmith-flag-engine-4.0.4.tar.gz", hash = "sha256:603d4fc021ef94224900c93c8a14038a766ab20e1b51f8726f44e1a307ce9d7e"},
 ]
 
 [package.dependencies]
@@ -3818,4 +3818,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "235e26f83e60ed2432a8c42cd166b42e5cffbfbc140189fcd34051c9cf40e10b"
+content-hash = "4c0ee22cfcd33a22205e6744f14c8766ec80de6f7ac70e4c27dc7a946a6811ee"

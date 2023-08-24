@@ -1,12 +1,16 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { AuditLogItem } from 'common/types/responses'
+import { AuditLogItem, Environment, Project } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
+import ProjectProvider from 'common/providers/ProjectProvider'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
 import PanelSearch from './PanelSearch'
+import ProjectStore from 'common/stores/project-store'
+import Tag from './tags/Tag'
+import Constants from 'common/constants'
 
 type AuditLogType = {
   environmentId: string
@@ -70,6 +74,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
     environment,
     log,
   }: AuditLogItem) => {
+    const index = ProjectStore.getEnvs()?.findIndex((v) => {
+      return v.id === environment?.id
+    })
+    const colour = index === -1 ? 0 : index
     return (
       <Row className='list-item list-item-sm' key={created_date}>
         <div
@@ -91,7 +99,13 @@ const AuditLog: FC<AuditLogType> = (props) => {
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
             <Row>
-              <span className='flex-row chip'>{environment?.name}</span>
+              <Tag
+                tag={{
+                  color: Utils.getTagColour(colour),
+                  label: environment?.name,
+                }}
+                className='chip--sm'
+              />
             </Row>
           </Link>
         ) : (
@@ -128,7 +142,11 @@ const AuditLog: FC<AuditLogType> = (props) => {
       onChange={(e: InputEvent) => {
         setSearchInput(Utils.safeParseEventValue(e))
       }}
-      paging={{ ...(projectAuditLog || {}), page, pageSize: props.pageSize }}
+      paging={{
+        ...(projectAuditLog || {}),
+        page,
+        pageSize: props.pageSize,
+      }}
       nextPage={() => {
         setPage(page + 1)
       }}

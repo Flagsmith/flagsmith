@@ -22,6 +22,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
 import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const widths = [450, 150, 100]
 const rolesWidths = [250, 680, 100]
@@ -185,6 +186,7 @@ const OrganisationSettingsPage = class extends Component {
         router={this.context.router}
         save={this.props.createWebhook}
       />,
+      'side-modal',
     )
   }
 
@@ -197,6 +199,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         save={this.props.saveWebhook}
       />,
+      'side-modal',
     )
   }
 
@@ -223,7 +226,7 @@ const OrganisationSettingsPage = class extends Component {
         level='organisation'
         user={user}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -241,7 +244,7 @@ const OrganisationSettingsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
-      'p-0',
+      'p-0 side-modal',
     )
   }
 
@@ -318,6 +321,7 @@ const OrganisationSettingsPage = class extends Component {
 
     return (
       <div className='app-container container'>
+        <PageTitle title='Manage' />
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
@@ -352,6 +356,7 @@ const OrganisationSettingsPage = class extends Component {
                       <Tabs
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
+                        className='mt-0'
                       >
                         <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
@@ -633,7 +638,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 openModal(
                                                   'Invite Users',
                                                   <InviteUsersModal />,
-                                                  'p-0',
+                                                  'p-0 side-modal',
                                                 )
                                               }
                                               type='button'

@@ -18,8 +18,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Deploy API to Staging
         id: deploy-api
@@ -41,7 +39,7 @@ jobs:
           flagsmith_saml_revision: v1.1.0
           flagsmith_workflows_revision: v1.2.5
           flagsmith_auth_controller_revision: v0.0.1
-          flagsmith_rbac_revision: v0.2.0
+          flagsmith_rbac_revision: v0.3.1
 
       - name: Deploy task processor to Staging
         uses: ./.github/actions/task-processor-deploy-ecs
@@ -65,8 +63,6 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Run E2E tests against staging
         uses: ./.github/actions/e2e-tests

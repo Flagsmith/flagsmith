@@ -44,7 +44,8 @@ from projects.serializers import (
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
-    ProjectSerializer,
+    ProjectListSerializer,
+    ProjectRetrieveSerializer,
 )
 
 
@@ -70,7 +71,11 @@ from projects.serializers import (
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProjectRetrieveSerializer
+        return ProjectListSerializer
+
     permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 

@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ModalHR from './ModalHR'
+import Icon from 'components/Icon'
 
 const InviteUsers = class extends Component {
   static displayName = 'InviteUsers'
@@ -73,7 +74,15 @@ const InviteUsers = class extends Component {
                 AppActions.inviteUsers(invites)
               }}
             >
-              <div className='modal-body'>
+              <div className='modal-body px-4 pt-4'>
+                <Row>
+                  <Flex>
+                    <label>Email Address</label>
+                  </Flex>
+                  <Flex>
+                    <label>Select Role</label>
+                  </Flex>
+                </Row>
                 {_.map(invites, (invite, index) => (
                   <Row className='mb-2' key={index}>
                     <Flex>
@@ -115,25 +124,25 @@ const InviteUsers = class extends Component {
                       />
                     </Flex>
                     {invites.length > 1 ? (
-                      <Column style={{ width: 50 }}>
-                        <button
+                      <div className='ml-2'>
+                        <Button
                           id='delete-invite'
                           type='button'
                           onClick={() => this.deleteInvite(index)}
-                          className='btn btn--with-icon ml-auto btn--remove'
+                          className='btn btn-with-icon mb-2'
                         >
-                          <RemoveIcon />
-                        </button>
-                      </Column>
+                          <Icon name='trash-2' width={20} fill='#656D7B' />
+                        </Button>
+                      </div>
                     ) : (
-                      <Column style={{ width: 50 }} />
+                      <div />
                     )}
                   </Row>
                 ))}
 
-                <div className='text-center'>
+                <div className='text-right'>
                   <Button
-                    theme='text'
+                    theme='outline'
                     id='btn-add-invite'
                     disabled={isSaving || !this.isValid()}
                     type='button'
@@ -161,7 +170,6 @@ const InviteUsers = class extends Component {
                 </div>
                 {error && <Error error={error} />}
               </div>
-              <ModalHR />
               <div className='modal-footer'>
                 <Button onClick={closeModal} className='mr-2' theme='secondary'>
                   Cancel

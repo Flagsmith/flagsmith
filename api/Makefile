@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 1.5.0
+POETRY_VERSION ?= 1.5.1
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -75,6 +75,7 @@ django-make-migrations:
 django-migrate:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
+	poetry run python manage.py createcachetable
 
 .PHONY: django-collect-static
 django-collect-static:

@@ -8,6 +8,9 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
+import { getProjectFlags } from 'common/services/useProjectFlag'
+import { getStore } from 'common/store'
+import Icon from './Icon'
 
 const featureNameWidth = 300
 
@@ -45,8 +48,8 @@ class CompareEnvironments extends Component {
     return Promise.all([
       this.state.projectFlags
         ? Promise.resolve({ results: this.state.projectFlags })
-        : data.get(
-            `${Project.api}projects/${this.props.projectId}/features/?page_size=999`,
+        : getProjectFlags(getStore(), { project: this.props.projectId }).then(
+            (res) => res.data,
           ),
       data.get(
         `${Project.api}environments/${this.state.environmentLeft}/featurestates/?page_size=999`,
@@ -114,15 +117,22 @@ class CompareEnvironments extends Component {
   render() {
     return (
       <div>
-        <h5>Compare Environments</h5>
-        <p className='fs-small lh-sm'>
-          Compare feature flag changes across environments.
-        </p>
+        <div className='col-md-8'>
+          <h5 className='mb-1'>Compare Environments</h5>
+          <p className='fs-small mb-4 lh-sm'>
+            Compare feature flag changes across environments.
+          </p>
+        </div>
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>
               <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentRight}
+                ignoreAPIKey={
+                  this.state.environmentRight
+                    ? [this.state.environmentRight]
+                    : undefined
+                }
+                projectId={this.props.projectId}
                 onChange={(environmentLeft) =>
                   this.setState({ environmentLeft })
                 }
@@ -130,13 +140,24 @@ class CompareEnvironments extends Component {
               />
             </div>
 
-            <div>
-              <span className='icon ios ion-md-arrow-back mx-2' />
+            <div className='mx-3'>
+              <Icon
+                name='arrow-left'
+                width={20}
+                fill={
+                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+                }
+              />
             </div>
 
             <div style={{ width: featureNameWidth }}>
               <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentLeft}
+                projectId={this.props.projectId}
+                ignore={
+                  this.state.environmentLeft
+                    ? [this.state.environmentLeft]
+                    : undefined
+                }
                 onChange={(environmentRight) =>
                   this.setState({ environmentRight })
                 }
