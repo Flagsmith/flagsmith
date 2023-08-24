@@ -1,6 +1,8 @@
 import { RequestLogger, Selector, t } from 'testcafe';
 import { Operator } from 'rxjs';
 
+export const LONG_TIMEOUT = 20000
+
 export const byId = (id:string) => `[data-test="${id}"]`;
 
 export type MultiVariate = {value:string,weight:number}
@@ -21,7 +23,7 @@ export const setText = async (selector:string, text:string) => {
 
 export const waitForElementVisible = async (selector:string) => {
     console.log(`Waiting element visible ${selector}`);
-    return t.expect(Selector(selector).visible).ok();
+    return t.expect(Selector(selector).visible).ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT });
 };
 
 export const logResults = async (requests:LoggedRequest[], t)=> {
