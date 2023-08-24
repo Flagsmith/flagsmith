@@ -35,6 +35,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
+import Icon from 'components/Icon'
 
 type PageType = {
   number: number
@@ -584,17 +585,35 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                 <div className='font-weight-medium'>
                                   {identifier}
                                 </div>
-                                <div
-                                  className={`${
-                                    inSegment
-                                      ? 'font-weight-medium text-primary'
-                                      : 'text-muted fs-small lh-sm'
+                                <Row
+                                  className={`font-weight-medium fs-small lh-sm ${
+                                    inSegment ? 'text-primary' : 'faint'
                                   }`}
                                 >
-                                  {inSegment
-                                    ? 'User in segment'
-                                    : 'Not in segment'}
-                                </div>
+                                  {inSegment ? (
+                                    <>
+                                      <Icon
+                                        name='checkmark-circle'
+                                        width={20}
+                                        fill='#6837FC'
+                                      />
+                                      <span className='ml-1'>
+                                        User in segment
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Icon
+                                        name='minus-circle'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                      <span className='ml-1'>
+                                        Not in segment
+                                      </span>
+                                    </>
+                                  )}
+                                </Row>
                               </Row>
                             )
                           }}

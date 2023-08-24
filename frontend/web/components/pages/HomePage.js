@@ -369,7 +369,7 @@ const HomePage = class extends React.Component {
                                         {error && (
                                           <div
                                             id='error-alert'
-                                            className='mt-3'
+                                            className='mt-3 font-weight-medium'
                                           >
                                             <ErrorMessage
                                               error={
@@ -465,7 +465,10 @@ const HomePage = class extends React.Component {
                                 >
                                   {error && (
                                     <FormGroup>
-                                      <div id='error-alert'>
+                                      <div
+                                        id='error-alert'
+                                        className='font-weight-medium'
+                                      >
                                         <ErrorMessage
                                           error={
                                             typeof AccountStore.error ===

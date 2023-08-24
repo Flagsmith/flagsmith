@@ -252,6 +252,7 @@ const controller = {
           `Failed to send invite(s). ${
             e && e.error ? e.error : 'Please try again later'
           }`,
+          'danger',
         )
       })
   },
@@ -267,6 +268,7 @@ const controller = {
           `Failed to resend invite. ${
             e && e.error ? e.error : 'Please try again later'
           }`,
+          'danger',
         )
       })
   },
@@ -289,6 +291,7 @@ const controller = {
           `Failed to update this user's role. ${
             e && e.error ? e.error : 'Please try again later'
           }`,
+          'danger',
         )
       })
   },

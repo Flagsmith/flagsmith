@@ -182,6 +182,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
           theme='text'
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-segments'
+          className='fw-normal'
         >
           Learn more.
         </Button>
@@ -248,18 +249,17 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <div
+                            <Row
                               data-test={`segment-${i}-name`}
                               className='font-weight-medium'
                             >
                               {name}
                               {feature && (
-                                <div className='unread ml-2 px-2'>
-                                  {' '}
+                                <div className='chip chip--xs ml-2'>
                                   Feature-Specific
                                 </div>
                               )}
-                            </div>
+                            </Row>
                             <div className='list-item-subtitle'>
                               {description || 'No description'}
                             </div>

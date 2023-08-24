@@ -203,7 +203,7 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div style={{ width: 175 }}>
+                    <div style={{ width: 140 }}>
                       <Select
                         size='select-sm'
                         styles={{

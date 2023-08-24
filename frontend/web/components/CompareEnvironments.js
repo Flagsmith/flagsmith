@@ -10,6 +10,7 @@ import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
 import { getProjectFlags } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
+import Icon from './Icon'
 
 const featureNameWidth = 300
 
@@ -116,10 +117,12 @@ class CompareEnvironments extends Component {
   render() {
     return (
       <div>
-        <h5 className='mb-0'>Compare Environments</h5>
-        <p className='fs-small mb-4 lh-sm'>
-          Compare feature flag changes across environments.
-        </p>
+        <div className='col-md-8'>
+          <h5 className='mb-1'>Compare Environments</h5>
+          <p className='fs-small mb-4 lh-sm'>
+            Compare feature flag changes across environments.
+          </p>
+        </div>
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>
@@ -137,8 +140,14 @@ class CompareEnvironments extends Component {
               />
             </div>
 
-            <div>
-              <span className='icon ios ion-md-arrow-back mx-2' />
+            <div className='mx-3'>
+              <Icon
+                name='arrow-left'
+                width={20}
+                fill={
+                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+                }
+              />
             </div>
 
             <div style={{ width: featureNameWidth }}>
