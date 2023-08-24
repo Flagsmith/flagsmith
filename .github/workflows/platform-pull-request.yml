@@ -73,33 +73,33 @@ jobs:
           docker inspect $API_CONTAINER_ID | jq '.[0].State'
           docker logs $API_CONTAINER_ID
 
-#  run-e2e-tests-docker-unified:
-#    runs-on: ubuntu-latest
-#    name: Full E2E tests with unified image in Docker
-#
-#    steps:
-#      - name: Cloning repo
-#        uses: actions/checkout@v3
-#
-#      - name: Login to GitHub Container Registry
-#        uses: docker/login-action@v2
-#        with:
-#          registry: ghcr.io
-#          username: ${{github.actor}}
-#          password: ${{secrets.GITHUB_TOKEN}}
-#
-#      - name: Run docker-compose with unified-image
-#        working-directory: frontend
-#        env:
-#          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-#          ENV: staging
-#          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-#          STATIC_ASSET_CDN_URL: /
-#          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-#        run: |
-#          docker-compose -f docker-compose-e2e-tests.yml build
-#          docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
-#
+  run-e2e-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: Full E2E tests with unified image in Docker
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Run docker-compose with unified-image
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+          ENV: staging
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          STATIC_ASSET_CDN_URL: /
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker-compose -f docker-compose-e2e-tests.yml build
+          docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
+
 #  docker-build-unified:
 #    if: github.event.pull_request.draft == false
 #    name: Test unified docker image build
