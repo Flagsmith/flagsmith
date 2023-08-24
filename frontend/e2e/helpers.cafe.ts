@@ -32,9 +32,9 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
             return false
         }
-        if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
-            return false
-        }
+        // if (v.response && (v.response?.statusCode >= 200 && v.response?.statusCode < 300)) {
+        //     return false
+        // }
         return true
     }), null, 2));
     console.log("Session JavaScript Errors")
