@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+import { waitForReact } from 'testcafe-react-selectors'
+
 import Project from '../common/project';
 import {
     deleteFeature,
@@ -48,7 +50,10 @@ fixture`Initialise`
             console.error('\n', '\x1b[31m', 'e2e teardown failed - no available token', '\x1b[0m', '\n');
         }
     })
-    .page`${url}`;
+    .page`${url}`
+    .beforeEach(async () => {
+        await waitForReact();
+    });
 
 
 test('[Initialise]', async () => {

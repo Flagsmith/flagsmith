@@ -15,6 +15,7 @@ export default async function() {
     await click('#env-settings-link');
     await setText("[name='env-name']", 'Internal');
     await click('#save-env-btn');
+    await waitForElementVisible(byId('switch-environment-internal-active'));
     log('Delete environment', 'Environment Test');
     await click('#delete-env-btn');
     await setText("[name='confirm-env-name']", 'Internal');
