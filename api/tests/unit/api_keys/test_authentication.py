@@ -5,16 +5,16 @@ from rest_framework.exceptions import AuthenticationFailed
 from api_keys.authentication import MasterAPIKeyAuthentication
 
 
-def test_authenticate_returns_api_key_user_for_valid_key(master_api_key_and_obj, rf):
+def test_authenticate_returns_api_key_user_for_valid_key(master_api_key, rf):
     # Given
-    key, master_api_key_obj = master_api_key_and_obj
+    master_api_key, key = master_api_key
     request = rf.get("/some-endpoint", HTTP_AUTHORIZATION="Api-Key " + key)
 
     # When
     user, _ = MasterAPIKeyAuthentication().authenticate(request)
 
     # Then
-    assert user.key == master_api_key_obj
+    assert user.key == master_api_key
 
 
 def test_authenticate_returns_none_if_no_key_provider(rf):
@@ -25,13 +25,13 @@ def test_authenticate_returns_none_if_no_key_provider(rf):
     assert MasterAPIKeyAuthentication().authenticate(request) is None
 
 
-def test_authenticate_raises_error_for_expired_key(rf, master_api_key_and_obj):
+def test_authenticate_raises_error_for_expired_key(rf, master_api_key):
     # Given
-    key, master_api_key_obj = master_api_key_and_obj
+    master_api_key, key = master_api_key
 
     request = rf.get("/some-endpoint", HTTP_AUTHORIZATION="Api-Key " + key)
-    master_api_key_obj.expiry_date = timezone.now()
-    master_api_key_obj.save()
+    master_api_key.expiry_date = timezone.now()
+    master_api_key.save()
 
     # When
     with pytest.raises(AuthenticationFailed):
@@ -51,13 +51,13 @@ def test_authenticate_raises_error_for_invalid_key(rf, db):
     # Then - exception was raised
 
 
-def test_authenticate_raises_error_for_revoked_key(rf, master_api_key_and_obj):
+def test_authenticate_raises_error_for_revoked_key(rf, master_api_key):
     # Given
-    key, master_api_key_obj = master_api_key_and_obj
+    master_api_key, key = master_api_key
 
     request = rf.get("/some-endpoint", HTTP_AUTHORIZATION="Api-Key " + key)
-    master_api_key_obj.revoked = True
-    master_api_key_obj.save()
+    master_api_key.revoked = True
+    master_api_key.save()
 
     # When
     with pytest.raises(AuthenticationFailed):

@@ -34,7 +34,8 @@ def test_multivariate_feature_options_view_set_get_permissions():
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
     # Given
@@ -53,7 +54,8 @@ def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_mv_feature_option_by_uuid_returns_404_if_mv_option_does_not_exists(
     client, project

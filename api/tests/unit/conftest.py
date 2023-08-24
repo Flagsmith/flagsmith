@@ -168,17 +168,17 @@ def tag_two(project):
 
 
 @pytest.fixture()
-def project_two(organisation):
+def project_two(organisation: Organisation) -> Project:
     return Project.objects.create(name="Test Project Two", organisation=organisation)
 
 
 @pytest.fixture()
-def environment_two(project):
+def environment_two(project: Project) -> Environment:
     return Environment.objects.create(name="Test Environment two", project=project)
 
 
 @pytest.fixture
-def project_two_environment(project_two):
+def project_two_environment(project_two: Project) -> Environment:
     return Environment.objects.create(
         name="Test Project two Environment", project=project_two
     )

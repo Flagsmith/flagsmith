@@ -42,11 +42,11 @@ def test_creating_non_admin_master_api_key_without_rbac_returns_400(
     ]
 
 
-def test_delete_master_api_key(admin_client, organisation, master_api_key_prefix):
+def test_delete_master_api_key(admin_client, organisation, admin_master_api_key_prefix):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key_prefix],
+        args=[organisation, admin_master_api_key_prefix],
     )
 
     # When
@@ -56,7 +56,7 @@ def test_delete_master_api_key(admin_client, organisation, master_api_key_prefix
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_list_master_api_keys(admin_client, organisation, master_api_key_prefix):
+def test_list_master_api_keys(admin_client, organisation, admin_master_api_key_prefix):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -68,14 +68,16 @@ def test_list_master_api_keys(admin_client, organisation, master_api_key_prefix)
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["count"] == 1
-    assert response.json()["results"][0]["prefix"] == master_api_key_prefix
+    assert response.json()["results"][0]["prefix"] == admin_master_api_key_prefix
 
 
-def test_retrieve_master_api_key(admin_client, organisation, master_api_key_prefix):
+def test_retrieve_master_api_key(
+    admin_client, organisation, admin_master_api_key_prefix
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key_prefix],
+        args=[organisation, admin_master_api_key_prefix],
     )
 
     # When
@@ -83,22 +85,22 @@ def test_retrieve_master_api_key(admin_client, organisation, master_api_key_pref
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["prefix"] == master_api_key_prefix
+    assert response.json()["prefix"] == admin_master_api_key_prefix
 
 
 def test_update_master_api_key(
-    admin_client, organisation, master_api_key_prefix, settings
+    admin_client, organisation, admin_master_api_key_prefix, settings
 ):
     # Given
     settings.IS_RBAC_INSTALLED = True
 
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key_prefix],
+        args=[organisation, admin_master_api_key_prefix],
     )
     new_name = "updated_test_key"
     data = {
-        "prefix": master_api_key_prefix,
+        "prefix": admin_master_api_key_prefix,
         "revoked": True,
         "organisation": organisation,
         "name": new_name,
@@ -110,25 +112,25 @@ def test_update_master_api_key(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["prefix"] == master_api_key_prefix
+    assert response.json()["prefix"] == admin_master_api_key_prefix
     assert response.json()["revoked"] is True
     assert response.json()["name"] == new_name
     assert response.json()["is_admin"] is False
 
 
 def test_update_master_api_key_is_admin_returns_400_if_rbac_is_not_installed(
-    admin_client, organisation, master_api_key_prefix, settings
+    admin_client, organisation, admin_master_api_key_prefix, settings
 ):
     # Given
     settings.IS_RBAC_INSTALLED = False
 
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key_prefix],
+        args=[organisation, admin_master_api_key_prefix],
     )
     new_name = "updated_test_key"
     data = {
-        "prefix": master_api_key_prefix,
+        "prefix": admin_master_api_key_prefix,
         "organisation": organisation,
         "name": new_name,
         "is_admin": False,
@@ -188,8 +190,8 @@ def test_create_master_api_key_ignores_organisation_in_body(admin_client, organi
 def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
     admin_client: APIClient,
     organisation: int,
-    master_api_key_client: APIClient,
-    master_api_key_prefix: str,
+    admin_master_api_key_client: APIClient,
+    admin_master_api_key_prefix: str,
 ) -> None:
     # Given
     # the relevant URLs
@@ -199,7 +201,7 @@ def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
     )
     detail_url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
-        args=[organisation, master_api_key_prefix],
+        args=[organisation, admin_master_api_key_prefix],
     )
     list_projects_url = "%s?organisation=%s" % (
         reverse("api-v1:projects:project-list"),
@@ -208,7 +210,7 @@ def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
 
     # and we verify that before deletion, the master api key authenticated client
     # can retrieve the projects for the organisation
-    valid_response = master_api_key_client.get(list_projects_url)
+    valid_response = admin_master_api_key_client.get(list_projects_url)
     assert valid_response.status_code == 200
 
     # When
@@ -223,5 +225,5 @@ def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
 
     # And
     # it cannot be used to authenticate with the API anymore
-    invalid_response = master_api_key_client.get(list_projects_url)
+    invalid_response = admin_master_api_key_client.get(list_projects_url)
     assert invalid_response.status_code == 401

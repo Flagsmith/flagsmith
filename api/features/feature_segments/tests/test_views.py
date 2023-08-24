@@ -14,7 +14,10 @@ from segments.models import Segment
     "client, num_queries",
     [
         (lazy_fixture("admin_client"), 2),  # 1 for paging, 1 for result
-        (lazy_fixture("master_api_key_client"), 3),  # an extra one for master_api_key
+        (
+            lazy_fixture("admin_master_api_key_client"),
+            3,
+        ),  # an extra one for master_api_key
     ],
 )
 def test_list_feature_segments(
@@ -63,7 +66,7 @@ def test_list_feature_segments(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_client"), lazy_fixture("master_api_key_client")],
+    [lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")],
 )
 def test_list_feature_segments_is_feature_specific(
     segment,
@@ -94,7 +97,8 @@ def test_list_feature_segments_is_feature_specific(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_feature_segment(segment, feature, environment, client):
     # Given
@@ -135,7 +139,8 @@ def test_create_feature_segment_without_permission_returns_403(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_delete_feature_segment(segment, feature, environment, client):
     # Given
@@ -153,7 +158,8 @@ def test_delete_feature_segment(segment, feature, environment, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_priority_of_multiple_feature_segments(
     feature_segment,
@@ -215,7 +221,8 @@ def test_update_priority_returns_403_if_user_does_not_have_permission(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_priorities_empty_list(client):
     # Given
@@ -230,7 +237,8 @@ def test_update_priorities_empty_list(client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_feature_segment_by_uuid(
     feature_segment, project, client, environment, feature
@@ -266,7 +274,8 @@ def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_feature_segment_by_id(
     feature_segment, project, client, environment, feature
@@ -285,7 +294,8 @@ def test_get_feature_segment_by_id(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(
     client, feature_based_segment, project, environment
@@ -312,7 +322,8 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(
     client, feature_based_segment, project, environment, feature
@@ -332,7 +343,8 @@ def test_creating_segment_override_for_feature_based_segment_returns_201_for_cor
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_segment_override_reaching_max_limit(
     client, segment, environment, project, feature, feature_based_segment
