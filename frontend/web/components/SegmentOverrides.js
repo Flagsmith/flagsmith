@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { Component, Fragment } from 'react';
+import React, { Component, Fragment } from 'react'
 import { SortableContainer, SortableElement } from 'react-sortable-hoc'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
@@ -45,6 +45,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       multivariateOptions,
       name,
       onSortEnd,
+      projectFlag,
       projectId,
       readOnly,
       setSegmentEditId,
@@ -95,33 +96,65 @@ const SegmentOverrideInner = class Override extends React.Component {
             : ' panel panel-without-heading panel--draggable p-3'
         }`}
       >
-        <Row className='panel-content' space>
+        <Row className='panel-content p-0' space>
           <div className='flex flex-1 text-left'>
-            <strong>
-              {name || v.segment_name}
-              {v.is_feature_specific && (
-                <div className='unread ml-2 px-2'>Feature-Specific</div>
-              )}
-              {changed && <div className='unread ml-2 px-2'>Unsaved</div>}
-            </strong>
+            {this.props.id ? (
+              <>
+                <Row className='font-weight-medium text-dark mb-1'>
+                  {projectFlag.description ? (
+                    <Tooltip
+                      title={
+                        <Row>
+                          {projectFlag.name}
+                          <span className={'ms-1'}></span>
+                          <Icon name='info-outlined' />
+                        </Row>
+                      }
+                    >
+                      {projectFlag.description}
+                    </Tooltip>
+                  ) : (
+                    projectFlag.name
+                  )}
+                  {v.is_feature_specific && (
+                    <div className='chip chip--xs ml-2'>Feature-Specific</div>
+                  )}
+                  {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
+                </Row>
+                <div className='list-item-footer faint'>
+                  <Row>
+                    <div>
+                      Created{' '}
+                      {moment(projectFlag.created_date).format(
+                        'Do MMM YYYY HH:mma',
+                      )}
+                    </div>
+                  </Row>
+                </div>
+              </>
+            ) : (
+              <Row className='font-weight-medium text-dark'>
+                {name || v.segment_name}
+                {v.is_feature_specific && (
+                  <div className='chip chip--xs ml-2'>Feature-Specific</div>
+                )}
+                {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
+              </Row>
+            )}
           </div>
           <div>
-            <Row>
-              <Column>
-                <div>
-                  <Switch
-                    data-test={`segment-override-toggle-${index}`}
-                    disabled={disabled}
-                    checked={v.enabled}
-                    onChange={(v) => {
-                      if (!readOnly) {
-                        this.setState({ changed: true })
-                        toggle(v)
-                      }
-                    }}
-                  />
-                </div>
-              </Column>
+            <Row className='gap-3'>
+              <Switch
+                data-test={`segment-override-toggle-${index}`}
+                disabled={disabled}
+                checked={v.enabled}
+                onChange={(v) => {
+                  if (!readOnly) {
+                    this.setState({ changed: true })
+                    toggle(v)
+                  }
+                }}
+              />
 
               {/* Input to adjust order without drag for E2E */}
               {E2E && (
@@ -138,64 +171,67 @@ const SegmentOverrideInner = class Override extends React.Component {
                   type='text'
                 />
               )}
-
-              {!readOnly && (
-                <button
-                  disabled={disabled}
-                  id='remove-feature'
-                  onClick={confirmRemove}
-                  className='btn btn-with-icon'
-                >
-                  <span className='no-pointer'>
-                    <Icon name='trash-2' fill={'#656D7B'} width={20} />
-                  </span>
-                </button>
-              )}
-              {!!v.id && (
-                <Permission
-                  id={projectId}
-                  permission={'MANAGE_SEGMENTS'}
-                  level={'project'}
-                >
-                  {({ permission }) =>
-                    Utils.renderWithPermission(
-                      permission,
-                      Constants.projectPermissions('Manage Segments'),
-                      <>
-                        {v.is_feature_specific ? (
-                          <Button
-                            theme='text'
-                            disabled={!permission}
-                            onClick={() => {
-                              setShowCreateSegment(true)
-                              setSegmentEditId(v.segment)
-                            }}
-                            className='ml-2 dark-link'
-                          >
-                            Edit Segment
-                          </Button>
-                        ) : (
-                          <Button
-                            theme='text'
-                            disabled={!permission}
-                            target='_blank'
-                            href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
-                            className='ml-2 dark-link'
-                          >
-                            Edit Segment
-                            <i className={'ion ml-1 ion-md-open'} />
-                          </Button>
-                        )}
-                      </>,
-                    )
-                  }
-                </Permission>
-              )}
+              <Row className='gap-2'>
+                {!!v.id && (
+                  <Permission
+                    id={projectId}
+                    permission={'MANAGE_SEGMENTS'}
+                    level={'project'}
+                  >
+                    {({ permission }) =>
+                      Utils.renderWithPermission(
+                        permission,
+                        Constants.projectPermissions('Manage Segments'),
+                        <>
+                          {v.is_feature_specific ? (
+                            <Button
+                              disabled={!permission}
+                              onClick={() => {
+                                setShowCreateSegment(true)
+                                setSegmentEditId(v.segment)
+                              }}
+                              className='btn btn-with-icon'
+                            >
+                              <span className='no-pointer'>
+                                <Icon name='edit' fill={'#656D7B'} width={20} />
+                              </span>
+                            </Button>
+                          ) : (
+                            <Button
+                              theme='text'
+                              disabled={!permission}
+                              target='_blank'
+                              href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                              className='btn btn-with-icon'
+                            >
+                              <span className='no-pointer'>
+                                <Icon name='edit' fill={'#656D7B'} width={20} />
+                              </span>
+                            </Button>
+                          )}
+                        </>,
+                      )
+                    }
+                  </Permission>
+                )}
+                {!readOnly && (
+                  <Button
+                    disabled={disabled}
+                    id='remove-feature'
+                    onClick={confirmRemove}
+                    className='btn btn-with-icon'
+                  >
+                    <span className='no-pointer'>
+                      <Icon name='trash-2' fill={'#656D7B'} width={20} />
+                    </span>
+                  </Button>
+                )}
+              </Row>
             </Row>
           </div>
         </Row>
 
-        <div className='mx-2 text-left pb-2 mt-4'>
+        <div className='text-left pb-2 mt-4'>
           {showValue ? (
             <>
               <label>Value (optional)</label>
@@ -320,6 +356,7 @@ const SegmentOverrideListInner = ({
   multivariateOptions,
   name,
   onSortEnd,
+  projectFlag,
   projectId,
   readOnly,
   setSegmentEditId,
@@ -363,6 +400,7 @@ const SegmentOverrideListInner = ({
               }
               setVariations(index, newValue)
             }}
+            projectFlag={projectFlag}
           />
           <div className='text-left'>
             <JSONReference
@@ -601,10 +639,10 @@ class TheComponent extends Component {
             !this.props.showCreateSegment && (
               <div
                 style={isLoading ? { opacity: 0.5 } : null}
-                className='mt-4 overflow-visible'
+                className='overflow-visible'
               >
                 {!this.props.id && (
-                  <div>
+                  <div className='my-4'>
                     <InfoMessage className='mb-4 text-left faint'>
                       Prioritise a segment override by dragging it to the top of
                       the list.
@@ -646,6 +684,7 @@ class TheComponent extends Component {
                       }))}
                       setSegmentEditId={this.setSegmentEditId}
                       onSortEnd={this.onSortEnd}
+                      projectFlag={this.props.projectFlag}
                     />
                     <div className='text-left mt-4'>
                       <JSONReference

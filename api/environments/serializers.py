@@ -5,12 +5,12 @@ from rest_framework import serializers
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
-from organisations.models import Organisation, Subscription
+from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
-from projects.serializers import ProjectSerializer
+from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -18,7 +18,7 @@ from util.drf_writable_nested.serializers import (
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
     feature_states = FeatureStateSerializerFull(many=True)
-    project = ProjectSerializer()
+    project = ProjectListSerializer()
 
     class Meta:
         model = Environment
@@ -75,11 +75,15 @@ class EnvironmentSerializerWithMetadata(
     class Meta(EnvironmentSerializerLight.Meta):
         fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
 
-    def get_organisation_from_validated_data(self, validated_data) -> Organisation:
-        return validated_data.get("project").organisation
+    def get_project(self, validated_data: dict = None) -> Project:
+        if self.instance:
+            return self.instance.project
+        elif "project" in validated_data:
+            return validated_data["project"]
 
-    def get_project_from_validated_data(self, validated_data) -> Project:
-        return validated_data.get("project")
+        raise serializers.ValidationError(
+            "Unable to retrieve project for metadata validation."
+        )
 
 
 class CreateUpdateEnvironmentSerializer(

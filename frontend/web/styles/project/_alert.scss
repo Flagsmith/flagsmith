@@ -62,6 +62,9 @@
   }
 }
 .dark {
+  .alert {
+    color: $alert-color-dark;
+  }
   .alert-info {
     .title {
       color: $text-icon-light;

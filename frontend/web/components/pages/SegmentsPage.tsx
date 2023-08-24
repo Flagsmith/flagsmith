@@ -20,6 +20,8 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
+import Switch from 'components/Switch'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -57,6 +59,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
+  const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
+
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
     page,
     page_size: 100,
@@ -71,6 +75,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     ProjectStore.getTotalSegments(),
     ProjectStore.getMaxSegmentsAllowed(),
     THRESHOLD,
+  )
+  console.log(
+    'DEBUG: ProjectStore.getTotalSegments():',
+    ProjectStore.getTotalSegments(),
+    'ProjectStore.getMaxSegmentsAllowed():',
+    ProjectStore.getMaxSegmentsAllowed(),
   )
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -158,6 +168,41 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       id='segments-page'
       className='app-container container'
     >
+      <PageTitle
+        cta={
+          segments && (segments.length || searchInput) ? (
+            <>
+              {renderWithPermission(
+                manageSegmentsPermission,
+                'Manage segments',
+                <Button
+                  disabled={hasNoOperators ||
+                    !manageSegmentsPermission ||
+                    segmentsLimitAlert.percentage >= 100
+                  }
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={newSegment}
+                >
+                  Create Segment
+                </Button>,
+              )}
+            </>
+          ) : null
+        }
+        title={'Segments'}
+      >
+        Create and manage groups of users with similar traits. Segments can be
+        used to override features within the features page for any environment.{' '}
+        <Button
+          theme='text'
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          className='fw-normal'
+        >
+          Learn more.
+        </Button>
+      </PageTitle>
       <div className='segments-page'>
         {isLoading && !hasHadResults.current && !segments && !searchInput && (
           <div className='centered-container'>
@@ -166,51 +211,20 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
+            {Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row className='justify-content-between'>
-                  <Flex style={{ maxWidth: '700px' }}>
-                    <h4>Segments</h4>
-                    <p>
-                      Create and manage groups of users with similar traits.
-                      Segments can be used to override features within the
-                      features page for any environment.{' '}
-                      <Button
-                        theme='text'
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                      >
-                        Learn about Segments.
-                      </Button>
-                    </p>
-                  </Flex>
-                  <FormGroup className='float-right'>
-                    <div className='text-right'>
-                      {renderWithPermission(
-                        manageSegmentsPermission,
-                        'Manage segments',
-                        <Button
-                          disabled={
-                            hasNoOperators ||
-                            !manageSegmentsPermission ||
-                            segmentsLimitAlert.percentage >= 100
-                          }
-                          id='show-create-segment-btn'
-                          data-test='show-create-segment-btn'
-                          onClick={newSegment}
-                        >
-                          Create Segment
-                        </Button>,
-                      )}
-                    </div>
-                  </FormGroup>
-                </Row>
                 {hasNoOperators && <HowToUseSegmentsMessage />}
 
                 <FormGroup>
                   <PanelSearch
+                    filterElement={
+                      <div className='text-right'>
+                        <label className='me-2'>Include Feature-Specific</label>
+                        <Switch onChange={setShowFeatureSpecific} />
+                      </div>
+                    }
                     renderSearchWithNoResults
                     className='no-pad'
                     id='segment-list'
@@ -223,7 +237,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       />
                     )}
                     items={sortBy(segments, (v) => {
-                      return `${v.feature ? 'z' : 'a'}${v.name}`
+                      return `${v.feature ? 'a' : 'z'}${v.name}`
                     })}
                     renderRow={(
                       { description, feature, id, name }: Segment,
@@ -235,6 +249,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           !manageSegmentsPermission,
                         )
                         preselect.current = null
+                      }
+                      if (feature && !showFeatureSpecific) {
+                        return null
                       }
                       return renderWithPermission(
                         manageSegmentsPermission,
@@ -249,18 +266,17 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <div
+                            <Row
                               data-test={`segment-${i}-name`}
                               className='font-weight-medium'
                             >
                               {name}
                               {feature && (
-                                <div className='unread ml-2 px-2'>
-                                  {' '}
+                                <div className='chip chip--xs ml-2'>
                                   Feature-Specific
                                 </div>
                               )}
-                            </div>
+                            </Row>
                             <div className='list-item-subtitle'>
                               {description || 'No description'}
                             </div>

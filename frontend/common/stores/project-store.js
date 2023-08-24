@@ -101,12 +101,10 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
-          project.max_segments_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_features_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
+          project.max_segments_allowed = project.max_segments_allowed
+          project.max_features_allowed = project.max_features_allowed
           project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed || Number.MAX_SAFE_INTEGER
+            project.max_segment_overrides_allowed
           project.total_features = project.total_features || 0
           project.total_segments = project.total_segments || 0
           store.model = Object.assign(project, {
@@ -135,12 +133,10 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
-          project.max_segments_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
-          project.max_features_allowed =
-            project.max_segments_allowed || Number.MAX_SAFE_INTEGER
+          project.max_segments_allowed = project.max_segments_allowed
+          project.max_features_allowed = project.max_features_allowed
           project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed || Number.MAX_SAFE_INTEGER
+            project.max_segment_overrides_allowed
           project.total_features = project.total_features || 0
           project.total_segments = project.total_segments || 0
           store.model = Object.assign(project, {

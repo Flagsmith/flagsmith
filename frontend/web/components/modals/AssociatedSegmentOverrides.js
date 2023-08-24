@@ -145,6 +145,7 @@ class TheComponent extends Component {
           <InputGroup
             component={
               <EnvironmentSelect
+                projectId={this.props.projectId}
                 value={environment.api_key}
                 onChange={(selectedEnv) =>
                   this.setState({
@@ -182,22 +183,6 @@ class TheComponent extends Component {
                     // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
                   }}
                 >
-                  <div>
-                    <strong>{v.feature.name}</strong>
-                  </div>
-                  <div className='list-item-footer faint'>
-                    <Row>
-                      <div>
-                        Created{' '}
-                        {moment(v.feature.created_date).format(
-                          'Do MMM YYYY HH:mma',
-                        )}
-                        {' - '}
-                        {v.feature.description || 'No description'}
-                      </div>
-                    </Row>
-                  </div>
-
                   <WrappedSegmentOverrides
                     onSave={this.fetch}
                     projectFlag={v.feature}
@@ -371,6 +356,7 @@ export default class SegmentOverridesInner extends Component {
               )}
 
               <SegmentOverrides
+                projectFlag={projectFlag}
                 feature={projectFlag.id}
                 id={id}
                 name=' '

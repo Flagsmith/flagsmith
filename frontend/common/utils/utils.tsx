@@ -16,6 +16,7 @@ import { ReactNode } from 'react'
 import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
+import Constants from 'common/constants'
 
 const semver = require('semver')
 
@@ -323,7 +324,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
-
   getPlansPermission: (permission: string) => {
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
@@ -340,6 +340,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       (perm) => !!perm,
     )
     return !!found
+  },
+
+  getProjectColour(index: number) {
+    return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -388,6 +392,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
     return false
+  },
+
+  getTagColour(index: number) {
+    return Constants.tagColors[index % (Constants.tagColors.length - 1)]
   },
 
   getTraitEndpoint(environmentId: string, userId: string) {

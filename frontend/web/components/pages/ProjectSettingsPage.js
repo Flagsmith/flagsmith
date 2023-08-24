@@ -10,6 +10,9 @@ import RegexTester from 'components/RegexTester'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
+import PageTitle from 'components/PageTitle'
+import Icon from 'components/Icon'
+
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -74,7 +77,7 @@ const ProjectSettingsPage = class extends Component {
           })
         }}
       />,
-      'p-0',
+      'p-0 modal-sm',
     )
   }
 
@@ -162,16 +165,21 @@ const ProjectSettingsPage = class extends Component {
               typeof this.state.feature_name_regex === 'string'
             return (
               <div>
+                <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs uncontrolled>
+                  <Tabs className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
-                        <JSONReference title='Project' json={project} />
+                        <JSONReference
+                          title='Project'
+                          json={project}
+                          className='mb-3'
+                        />
                         <label>Project Name</label>
                         <FormGroup>
                           <form onSubmit={saveProject}>
-                            <Row className='align-items-start'>
-                              <Column className='ml-0'>
+                            <Row className='align-items-start col-md-8'>
+                              <Flex className='ml-0'>
                                 <Input
                                   ref={(e) => (this.input = e)}
                                   defaultValue={project.name}
@@ -188,11 +196,12 @@ const ProjectSettingsPage = class extends Component {
                                   title={<label>Project Name</label>}
                                   placeholder='My Project Name'
                                 />
-                              </Column>
+                              </Flex>
                               <Button
                                 type='submit'
                                 id='save-proj-btn'
                                 disabled={isSaving || !name}
+                                className='ml-3'
                               >
                                 {isSaving ? 'Updating' : 'Update Name'}
                               </Button>
@@ -200,82 +209,67 @@ const ProjectSettingsPage = class extends Component {
                           </form>
                         </FormGroup>
                       </div>
-
-                      <FormGroup className='mt-4'>
-                        <h5>Prevent flag defaults</h5>
-                        <div className='row'>
-                          <div className='col-md-10'>
-                            <p className='fs-small lh-sm'>
-                              By default, when you create a feature with a value
-                              and enabled state it acts as a default for your
-                              other environments. Enabling this setting forces
-                              the user to create a feature before setting its
-                              values per environment.
-                            </p>
-                          </div>
-                          <div className='col-md-2 text-right'>
-                            <Switch
-                              data-test='js-prevent-flag-defaults'
-                              disabled={isSaving}
-                              onChange={() =>
-                                this.togglePreventDefaults(project, editProject)
-                              }
-                              checked={project.prevent_flag_defaults}
-                            />
-                          </div>
-                        </div>
+                      <hr className='py-0 my-4' />
+                      <FormGroup className='mt-4 col-md-6'>
+                        <Row className='mb-2'>
+                          <Switch
+                            data-test='js-prevent-flag-defaults'
+                            disabled={isSaving}
+                            onChange={() =>
+                              this.togglePreventDefaults(project, editProject)
+                            }
+                            checked={project.prevent_flag_defaults}
+                          />
+                          <h5 className='mb-0 ml-3'>Prevent flag defaults</h5>
+                        </Row>
+                        <p className='fs-small lh-sm mb-0'>
+                          By default, when you create a feature with a value and
+                          enabled state it acts as a default for your other
+                          environments. Enabling this setting forces the user to
+                          create a feature before setting its values per
+                          environment.
+                        </p>
                       </FormGroup>
-                      <FormGroup className='mt-4'>
-                        <h5>Case sensitive features</h5>
-                        <div className='row'>
-                          <div className='col-md-10'>
-                            <p className='fs-small lh-sm'>
-                              By default, features are lower case in order to
-                              prevent human error. Enabling this will allow you
-                              to use upper case characters when creating
-                              features.
-                            </p>
-                          </div>
-                          <div className='col-md-2 text-right'>
-                            <Switch
-                              data-test='js-flag-case-sensitivity'
-                              disabled={isSaving}
-                              onChange={() =>
-                                this.toggleCaseSensitivity(project, editProject)
-                              }
-                              checked={
-                                !project.only_allow_lower_case_feature_names
-                              }
-                            />
-                          </div>
-                        </div>
+                      <FormGroup className='mt-4 col-md-6'>
+                        <Row className='mb-2'>
+                          <Switch
+                            data-test='js-flag-case-sensitivity'
+                            disabled={isSaving}
+                            onChange={() =>
+                              this.toggleCaseSensitivity(project, editProject)
+                            }
+                            checked={
+                              !project.only_allow_lower_case_feature_names
+                            }
+                          />
+                          <h5 className='mb-0 ml-3'>Case sensitive features</h5>
+                        </Row>
+                        <p className='fs-small lh-sm mb-0'>
+                          By default, features are lower case in order to
+                          prevent human error. Enabling this will allow you to
+                          use upper case characters when creating features.
+                        </p>
                       </FormGroup>
-                      <FormGroup className='mt-4'>
-                        <h5>Feature name RegEx</h5>
-                        <div className='row'>
-                          <div className='col-md-10'>
-                            <p className='fs-small lh-sm'>
-                              This allows you to define a regular expression
-                              that all feature names must adhere to.
-                            </p>
-                          </div>
-                          <div className='col-md-2 text-right'>
-                            <Switch
-                              data-test='js-flag-case-sensitivity'
-                              disabled={isSaving}
-                              onChange={() =>
-                                this.toggleFeatureValidation(
-                                  project,
-                                  editProject,
-                                )
-                              }
-                              checked={featureRegexEnabled}
-                            />
-                          </div>
-                        </div>
+                      <FormGroup className='mt-4 col-md-6'>
+                        <Row className='mb-2'>
+                          <Switch
+                            data-test='js-flag-case-sensitivity'
+                            disabled={isSaving}
+                            onChange={() =>
+                              this.toggleFeatureValidation(project, editProject)
+                            }
+                            checked={featureRegexEnabled}
+                          />
+                          <h5 className='mb-0 ml-3'>Feature name RegEx</h5>
+                        </Row>
+                        <p className='fs-small lh-sm mb-0'>
+                          This allows you to define a regular expression that
+                          all feature names must adhere to.
+                        </p>
                         {featureRegexEnabled && (
                           <InputGroup
                             title='Feature Name RegEx'
+                            className='mt-4'
                             component={
                               <form
                                 onSubmit={(e) => {
@@ -289,32 +283,36 @@ const ProjectSettingsPage = class extends Component {
                                 }}
                               >
                                 <Row>
-                                  <Input
-                                    ref={(e) => (this.input = e)}
-                                    value={this.state.feature_name_regex}
-                                    inputClassName='input input--wide'
-                                    name='feature-name-regex'
-                                    onClick={this.forceSelectionRange}
-                                    onKeyUp={this.forceSelectionRange}
-                                    showSuccess
-                                    onChange={(e) => {
-                                      let newRegex = Utils.safeParseEventValue(
-                                        e,
-                                      ).replace('$', '')
-                                      if (!newRegex.startsWith('^')) {
-                                        newRegex = `^${newRegex}`
-                                      }
-                                      if (!newRegex.endsWith('$')) {
-                                        newRegex = `${newRegex}$`
-                                      }
-                                      this.setState({
-                                        feature_name_regex: newRegex,
-                                      })
-                                    }}
-                                    isValid={regexValid}
-                                    type='text'
-                                    placeholder='Regular Expression'
-                                  />
+                                  <Flex>
+                                    <Input
+                                      ref={(e) => (this.input = e)}
+                                      value={this.state.feature_name_regex}
+                                      inputClassName='input input--wide'
+                                      name='feature-name-regex'
+                                      onClick={this.forceSelectionRange}
+                                      onKeyUp={this.forceSelectionRange}
+                                      showSuccess
+                                      onChange={(e) => {
+                                        let newRegex =
+                                          Utils.safeParseEventValue(e).replace(
+                                            '$',
+                                            '',
+                                          )
+                                        if (!newRegex.startsWith('^')) {
+                                          newRegex = `^${newRegex}`
+                                        }
+                                        if (!newRegex.endsWith('$')) {
+                                          newRegex = `${newRegex}$`
+                                        }
+                                        this.setState({
+                                          feature_name_regex: newRegex,
+                                        })
+                                      }}
+                                      isValid={regexValid}
+                                      type='text'
+                                      placeholder='Regular Expression'
+                                    />
+                                  </Flex>
                                   <Button
                                     className='ml-2'
                                     type='submit'
@@ -351,64 +349,73 @@ const ProjectSettingsPage = class extends Component {
                       </FormGroup>
                       {!Utils.getIsEdge() &&
                         this.props.hasFeature('edge_identities') && (
-                          <FormGroup className='mt-4'>
-                            <h5>Global Edge API Opt in</h5>
-                            <div className='row'>
-                              <div className='col-md-10'>
-                                <p className='fs-small lh-sm'>
-                                  Migrate your project onto our Global Edge API.
-                                  Existing Core API endpoints will continue to
-                                  work whilst the migration takes place. Find
-                                  out more{' '}
-                                  <a href='https://docs.flagsmith.com/advanced-use/edge-api'>
-                                    here
-                                  </a>
-                                  .
-                                </p>
-                              </div>
-                              <div className='col-md-2 text-right'>
-                                <Button
-                                  disabled={isSaving || Utils.isMigrating()}
-                                  onClick={() =>
-                                    openConfirm(
-                                      'Are you sure?',
-                                      'This will migrate your project to the Global Edge API.',
-                                      () => {
-                                        this.migrate(project)
-                                      },
-                                    )
-                                  }
-                                >
-                                  {this.state.migrating || Utils.isMigrating()
-                                    ? 'Migrating to Edge'
-                                    : 'Start Migration'}
-                                </Button>
-                              </div>
-                            </div>
+                          <FormGroup className='mt-4 col-md-6'>
+                            <Row className='mb-2'>
+                              <h5 className='mb-0 mr-3'>
+                                Global Edge API Opt in
+                              </h5>
+                              <Button
+                                disabled={isSaving || Utils.isMigrating()}
+                                onClick={() =>
+                                  openConfirm(
+                                    'Are you sure?',
+                                    'This will migrate your project to the Global Edge API.',
+                                    () => {
+                                      this.migrate(project)
+                                    },
+                                  )
+                                }
+                                size='xSmall'
+                                theme='outline'
+                              >
+                                {this.state.migrating || Utils.isMigrating()
+                                  ? 'Migrating to Edge'
+                                  : 'Start Migration'}{' '}
+                                <Icon
+                                  name='arrow-right'
+                                  width={16}
+                                  fill='#6837FC'
+                                />
+                              </Button>
+                            </Row>
+                            <p className='fs-small lh-sm'>
+                              Migrate your project onto our Global Edge API.
+                              Existing Core API endpoints will continue to work
+                              whilst the migration takes place. Find out more{' '}
+                              <a
+                                href='https://docs.flagsmith.com/advanced-use/edge-api'
+                                className='btn-link'
+                              >
+                                here
+                              </a>
+                              .
+                            </p>
                           </FormGroup>
                         )}
-                      <FormGroup className='mt-4'>
-                        <h5>Delete Project</h5>
-                        <div className='row'>
-                          <div className='col-md-10'>
-                            <p className='fs-small lh-sm'>
+                      <hr className='py-0 my-4' />
+                      <FormGroup className='mt-4 col-md-6'>
+                        <Row space>
+                          <div className='col-md-7'>
+                            <h5>Delete Project</h5>
+                            <p className='fs-small lh-sm mb-0'>
                               This project will be permanently deleted.
                             </p>
                           </div>
-                          <div className='col-md-2 text-right'>
-                            <Button
-                              onClick={() =>
-                                this.confirmRemove(project, () => {
-                                  deleteProject(
-                                    this.props.match.params.projectId,
-                                  )
-                                })
-                              }
-                              className='btn btn--with-icon ml-auto btn--remove'
-                            >
-                              <RemoveIcon />
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() =>
+                              this.confirmRemove(project, () => {
+                                deleteProject(this.props.match.params.projectId)
+                              })
+                            }
+                            className='btn btn-with-icon btn-remove'
+                          >
+                            <Icon name='trash-2' width={20} fill='#EF4D56' />
+                          </Button>
+                        </Row>
+
+                        <div className='row'>
+                          <div className='col-md-10'></div>
+                          <div className='col-md-2 text-right'></div>
                         </div>
                       </FormGroup>
                     </TabItem>
@@ -418,31 +425,29 @@ const ProjectSettingsPage = class extends Component {
                     >
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
-                          <FormGroup className='mt-4'>
-                            <h5>Hide disabled flags from SDKs</h5>
-                            <div className='row'>
-                              <div className='col-md-10'>
-                                <p className='fs-small lh-sm'>
-                                  To prevent letting your users know about your
-                                  upcoming features and to cut down on payload,
-                                  enabling this will prevent the API from
-                                  returning features that are disabled.
-                                </p>
-                              </div>
-                              <div className='col-md-2 text-right'>
-                                <Switch
-                                  data-test='js-hide-disabled-flags'
-                                  disabled={isSaving}
-                                  onChange={() =>
-                                    this.toggleHideDisabledFlags(
-                                      project,
-                                      editProject,
-                                    )
-                                  }
-                                  checked={project.hide_disabled_flags}
-                                />
-                              </div>
-                            </div>
+                          <FormGroup className='mt-4 col-md-6'>
+                            <Row className='mb-2'>
+                              <Switch
+                                data-test='js-hide-disabled-flags'
+                                disabled={isSaving}
+                                onChange={() =>
+                                  this.toggleHideDisabledFlags(
+                                    project,
+                                    editProject,
+                                  )
+                                }
+                                checked={project.hide_disabled_flags}
+                              />
+                              <h5 className='mb-0 ml-3'>
+                                Hide disabled flags from SDKs
+                              </h5>
+                            </Row>
+                            <p className='fs-small lh-sm mb-0'>
+                              To prevent letting your users know about your
+                              upcoming features and to cut down on payload,
+                              enabling this will prevent the API from returning
+                              features that are disabled.
+                            </p>
                           </FormGroup>
                         </form>
                       </div>

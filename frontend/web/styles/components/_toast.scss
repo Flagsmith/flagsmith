@@ -14,31 +14,10 @@
 }
 
 .toast-message {
-  top: 0;
-  right: 15px;
-  width: 250px;
-  background: $toast-bg;
-  color: $toast-color;
-  box-shadow:0 0 10px rgba(0,0,0,0.25);
-  border:none;
-}
-
-.close-icon {
-  position: absolute;
-  top: 1px;
-  right: 5px;
-}
-
-.toast-container {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.toast-warning {
-  padding: 10px;
-  margin-bottom: 10px;
-  width: 600px;
-  pointer-events: auto;
+	top: 0;
+	right: 15px;
+	width: 250px;
+	background: $success-alfa-8;
+	font-weight: 500;
+	border: 1px solid $success;
 }

@@ -12,7 +12,7 @@ from projects.models import (
 from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectListSerializer(serializers.ModelSerializer):
     migration_status = serializers.SerializerMethodField(
         help_text="Edge migration status of the project; can be one of: "
         + ", ".join([k.value for k in ProjectIdentityMigrationStatus])
@@ -56,6 +56,38 @@ class ProjectSerializer(serializers.ModelSerializer):
             self.context["migration_status"]
             == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
         )
+
+
+class ProjectRetrieveSerializer(ProjectListSerializer):
+    total_features = serializers.SerializerMethodField()
+    total_segments = serializers.SerializerMethodField()
+
+    class Meta(ProjectListSerializer.Meta):
+        fields = ProjectListSerializer.Meta.fields + (
+            "max_segments_allowed",
+            "max_features_allowed",
+            "max_segment_overrides_allowed",
+            "total_features",
+            "total_segments",
+        )
+
+        read_only_fields = (
+            "max_segments_allowed",
+            "max_features_allowed",
+            "max_segment_overrides_allowed",
+            "total_features",
+            "total_segments",
+        )
+
+    def get_total_features(self, instance: Project) -> int:
+        # added here to prevent need for annotate(Count("features", distinct=True))
+        # which causes performance issues.
+        return instance.features.count()
+
+    def get_total_segments(self, instance: Project) -> int:
+        # added here to prevent need for annotate(Count("segments", distinct=True))
+        # which causes performance issues.
+        return instance.segments.count()
 
 
 class CreateUpdateUserProjectPermissionSerializer(

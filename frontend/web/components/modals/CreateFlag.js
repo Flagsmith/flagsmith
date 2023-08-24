@@ -30,6 +30,7 @@ import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
+import FeatureValue from 'components/FeatureValue'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'

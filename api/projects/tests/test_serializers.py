@@ -4,10 +4,10 @@ import pytest
 from django.utils import timezone
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
-from projects.serializers import ProjectSerializer
+from projects.serializers import ProjectListSerializer
 
 
-def test_ProjectSerializer_get_migration_status_returns_migration_not_applicable_if_not_configured(
+def test_ProjectListSerializer_get_migration_status_returns_migration_not_applicable_if_not_configured(
     mocker, project, settings
 ):
     # Given
@@ -16,7 +16,7 @@ def test_ProjectSerializer_get_migration_status_returns_migration_not_applicable
         "projects.serializers.IdentityMigrator", autospec=True
     )
 
-    serializer = ProjectSerializer()
+    serializer = ProjectListSerializer()
 
     # When
     migration_status = serializer.get_migration_status(project)
@@ -26,7 +26,7 @@ def test_ProjectSerializer_get_migration_status_returns_migration_not_applicable
     mocked_identity_migrator.assert_not_called()
 
 
-def test_ProjectSerializer_get_migration_status_returns_migration_completed_for_new_projects(
+def test_ProjectListSerializer_get_migration_status_returns_migration_completed_for_new_projects(
     mocker, project, settings
 ):
     # Given
@@ -36,7 +36,7 @@ def test_ProjectSerializer_get_migration_status_returns_migration_completed_for_
         "projects.serializers.IdentityMigrator", autospec=True
     )
 
-    serializer = ProjectSerializer()
+    serializer = ProjectListSerializer()
 
     # When
     migration_status = serializer.get_migration_status(project)
@@ -46,7 +46,7 @@ def test_ProjectSerializer_get_migration_status_returns_migration_completed_for_
     mocked_identity_migrator.assert_not_called()
 
 
-def test_ProjectSerializer_get_migration_status_calls_migrator_with_correct_arguments_for_old_projects(
+def test_ProjectListSerializer_get_migration_status_calls_migrator_with_correct_arguments_for_old_projects(
     mocker, project, settings
 ):
     # Given
@@ -57,7 +57,7 @@ def test_ProjectSerializer_get_migration_status_calls_migrator_with_correct_argu
 
     settings.EDGE_RELEASE_DATETIME = timezone.now()
 
-    serializer = ProjectSerializer()
+    serializer = ProjectListSerializer()
 
     # When
     migration_status = serializer.get_migration_status(project)
@@ -78,9 +78,11 @@ def test_ProjectSerializer_get_migration_status_calls_migrator_with_correct_argu
         (ProjectIdentityMigrationStatus.NOT_APPLICABLE.value, False),
     ],
 )
-def test_ProjectSerializer_get_use_edge_identities(project, migration_status, expected):
+def test_ProjectListSerializer_get_use_edge_identities(
+    project, migration_status, expected
+):
     # Given
-    serializer = ProjectSerializer(context={"migration_status": migration_status})
+    serializer = ProjectListSerializer(context={"migration_status": migration_status})
 
     # When/Then
     assert expected is serializer.get_use_edge_identities(project)

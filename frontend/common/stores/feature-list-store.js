@@ -214,9 +214,9 @@ const controller = {
           return createSegmentOverride(
             getStore(),
             {
+              enabled: !!v.enabled,
               environmentId,
               featureId: featureFlagId,
-              enabled: !!v.enabled,
               feature_segment: {
                 segment: v.segment,
               },
@@ -235,10 +235,6 @@ const controller = {
             const newValue = {
               environment: segmentOverride.data.environment,
               feature: featureFlagId,
-              id: segmentOverride.data.feature_segment.id,
-              priority: segmentOverride.data.feature_segment.priority,
-              segment: segmentOverride.data.feature_segment.segment,
-              uuid: segmentOverride.data.feature_segment.uuid,
               feature_segment_value: {
                 change_request: segmentOverride.data.change_request,
                 created_at: segmentOverride.data.created_at,
@@ -253,8 +249,12 @@ const controller = {
                 updated_at: segmentOverride.data.updated_at,
                 uuid: segmentOverride.data.uuid,
               },
+              id: segmentOverride.data.feature_segment.id,
               multivariate_options: segmentOverrides[i].multivariate_options,
+              priority: segmentOverride.data.feature_segment.priority,
+              segment: segmentOverride.data.feature_segment.segment,
               segment_name: v.segment_name,
+              uuid: segmentOverride.data.feature_segment.uuid,
               value: segmentOverrides[i].value,
             }
             segmentOverrides[i] = newValue
@@ -536,7 +536,6 @@ const controller = {
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
-      store.loading()
       store.envId = environmentId
       store.projectId = projectId
       store.environmentId = environmentId

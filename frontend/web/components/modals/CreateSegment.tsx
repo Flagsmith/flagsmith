@@ -144,6 +144,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
     THRESHOLD,
   )
 
+  console.log(
+    'DEBUG: ProjectStore.getTotalSegments()c:',
+    ProjectStore.getTotalSegments(),
+    'ProjectStore.getMaxSegmentsAllowed()c:',
+    ProjectStore.getMaxSegmentsAllowed(),
+  )
+
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
     newRules[0].rules = newRules[0].rules.concat({
