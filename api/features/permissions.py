@@ -1,15 +1,13 @@
 from contextlib import suppress
 
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
 from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import Feature, FeatureState
 from projects.models import Project
 from projects.permissions import CREATE_FEATURE, DELETE_FEATURE, VIEW_PROJECT
 
@@ -46,9 +44,6 @@ class FeaturePermissions(IsAuthenticated):
             return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_anonymous:
-            return False
-
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
             return request.user.has_project_permission(
@@ -59,24 +54,6 @@ class FeaturePermissions(IsAuthenticated):
             return request.user.is_project_admin(obj.project)
 
         return False
-
-
-class MasterAPIKeyFeaturePermissions(BasePermission):
-    def has_permission(self, request: HttpRequest, view: str) -> bool:
-        master_api_key = getattr(request, "master_api_key", None)
-        if not master_api_key:
-            return False
-        with suppress(Project.DoesNotExist):
-            project_id = view.kwargs.get("project_pk") or request.data.get("project")
-            project = Project.objects.get(id=project_id)
-
-            return project.organisation_id == master_api_key.organisation_id
-        return False
-
-    def has_object_permission(
-        self, request: HttpRequest, view: str, obj: Feature
-    ) -> bool:
-        return self.has_permission(request, view)
 
 
 class FeatureStatePermissions(IsAuthenticated):
@@ -108,58 +85,9 @@ class FeatureStatePermissions(IsAuthenticated):
             return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_anonymous:
-            return False
-
         return request.user.has_environment_permission(
             UPDATE_FEATURE_STATE, environment=obj.environment
         )
-
-
-class MasterAPIKeyFeatureStatePermissions(BasePermission):
-    def has_permission(self, request: HttpRequest, view: str) -> bool:
-        master_api_key = getattr(request, "master_api_key", None)
-        if not master_api_key:
-            return False
-        environment = request.data.get("environment") or request.query_params.get(
-            "environment"
-        )
-        if environment and (isinstance(environment, int) or environment.isdigit()):
-            with suppress(Environment.DoesNotExist):
-                environment = Environment.objects.get(id=int(environment))
-                return environment.project.organisation == master_api_key.organisation
-        return False
-
-    def has_object_permission(
-        self, request: HttpRequest, view: str, obj: FeatureState
-    ) -> bool:
-        master_api_key = getattr(request, "master_api_key", None)
-        if master_api_key:
-            return obj.environment.project.organisation == master_api_key.organisation
-        return False
-
-
-class MasterAPIKeyEnvironmentFeatureStatePermissions(BasePermission):
-    def has_permission(self, request: HttpRequest, view: str) -> bool:
-        master_api_key = getattr(request, "master_api_key", None)
-        if not master_api_key:
-            return False
-        environment_api_key = view.kwargs.get("environment_api_key")
-        if not environment_api_key:
-            return False
-
-        with suppress(Environment.DoesNotExist):
-            environment = Environment.objects.get(api_key=environment_api_key)
-            return environment.project.organisation == master_api_key.organisation
-        return False
-
-    def has_object_permission(
-        self, request: HttpRequest, view: str, obj: FeatureState
-    ) -> bool:
-        master_api_key = getattr(request, "master_api_key", None)
-        if master_api_key:
-            return obj.environment.project.organisation == master_api_key.organisation
-        return False
 
 
 class EnvironmentFeatureStatePermissions(IsAuthenticated):
@@ -185,9 +113,6 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_anonymous:
-            return False
-
         action_permission_map = {"retrieve": VIEW_ENVIRONMENT}
 
         return request.user.has_environment_permission(
