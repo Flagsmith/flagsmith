@@ -36,7 +36,6 @@ from projects.models import (
 from projects.permissions import (
     VIEW_PROJECT,
     IsProjectAdmin,
-    MasterAPIKeyProjectPermissions,
     ProjectPermissions,
 )
 from projects.serializers import (
@@ -71,24 +70,20 @@ from projects.serializers import (
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
+    permission_classes = [ProjectPermissions]
+
     def get_serializer_class(self):
         if self.action == "retrieve":
             return ProjectRetrieveSerializer
         return ProjectListSerializer
 
-    permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
 
-        if hasattr(self.request, "master_api_key"):
-            queryset = self.request.master_api_key.organisation.projects.all()
-        else:
-            queryset = self.request.user.get_permitted_projects(
-                permission_key=VIEW_PROJECT
-            )
+        queryset = self.request.user.get_permitted_projects(permission_key=VIEW_PROJECT)
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
@@ -102,12 +97,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         project = serializer.save()
-        if self.request.user.is_anonymous:
-            return
-
-        UserProjectPermission.objects.create(
-            user=self.request.user, project=project, admin=True
-        )
+        if getattr(self.request.user, "is_master_api_key_user", False) is False:
+            UserProjectPermission.objects.create(
+                user=self.request.user, project=project, admin=True
+            )
 
     @action(
         detail=False,
@@ -145,7 +138,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request: Request, pk: int = None):
-        if request.user.is_anonymous:
+        if getattr(request.user, "is_master_api_key_user", False) is True:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={

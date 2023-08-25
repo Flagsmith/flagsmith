@@ -11,7 +11,8 @@ from tests.integration.helpers import (
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_clone_environment_clones_feature_states_with_value(
     client, project, environment, environment_api_key, feature

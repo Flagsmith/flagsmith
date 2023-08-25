@@ -9,7 +9,8 @@ from segments.models import Segment
 
 
 @pytest.mark.parametrize(
-    "client", (lazy_fixture("admin_client"), lazy_fixture("master_api_key_client"))
+    "client",
+    (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
 )
 def test_get_project_list_data(client, organisation):
     # Given
@@ -54,7 +55,8 @@ def test_get_project_list_data(client, organisation):
 
 
 @pytest.mark.parametrize(
-    "client", (lazy_fixture("admin_client"), lazy_fixture("master_api_key_client"))
+    "client",
+    (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
 )
 def test_get_project_data_by_id(client, organisation, project):
     # Given

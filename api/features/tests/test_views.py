@@ -717,7 +717,8 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
     # Given
@@ -736,7 +737,8 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_deleted_features_are_not_listed(client, project, environment, feature):
     # Given
@@ -752,7 +754,8 @@ def test_deleted_features_are_not_listed(client, project, environment, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_feature_evaluation_data(project, feature, environment, mocker, client):
     # Given

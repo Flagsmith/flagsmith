@@ -98,6 +98,7 @@ urlpatterns = [
 if settings.IS_RBAC_INSTALLED:
     from rbac.views import (
         GroupRoleViewSet,
+        MasterAPIKeyRoleViewSet,
         RoleEnvironmentPermissionsViewSet,
         RoleOrganisationPermissionViewSet,
         RoleProjectPermissionsViewSet,
@@ -126,7 +127,9 @@ if settings.IS_RBAC_INSTALLED:
     )
     nested_roles_router.register("groups", GroupRoleViewSet, basename="group-roles")
     nested_roles_router.register("users", UserRoleViewSet, basename="user-roles")
-
+    nested_roles_router.register(
+        "master-api-keys", MasterAPIKeyRoleViewSet, basename="master-api-key-roles"
+    )
     urlpatterns.extend(
         [
             url(r"^", include(organisations_router.urls)),

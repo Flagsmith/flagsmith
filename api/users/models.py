@@ -30,6 +30,7 @@ from permissions.permission_service import (
     user_has_organisation_permission,
 )
 from projects.models import Project, UserProjectPermission
+from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
@@ -322,6 +323,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         UserPermissionGroupMembership.objects.filter(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
+
+
+# Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
+# we use __subclasshook__[1] method on UserABC to check if FFAdminUser implements the required interface
+# [1]https://docs.python.org/3/library/abc.html#abc.ABCMeta.__subclasshook__
+assert issubclass(FFAdminUser, UserABC)
 
 
 class UserPermissionGroupMembership(models.Model):

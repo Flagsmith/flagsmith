@@ -1,18 +1,5 @@
 import pytest
 
-from environments.models import Environment
-from projects.models import Project
-
-
-@pytest.fixture()
-def project_two(organisation):
-    return Project.objects.create(name="Test Project Two", organisation=organisation)
-
-
-@pytest.fixture
-def project_two_environment(project_two):
-    return Environment.objects.create(name="Test Environment Two", project=project_two)
-
 
 @pytest.fixture
 def project_permission_using_user_permission(user_project_permission):

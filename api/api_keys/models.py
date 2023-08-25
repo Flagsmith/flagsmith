@@ -17,3 +17,4 @@ class MasterAPIKey(AbstractAPIKey, SoftDeleteObject):
     )
 
     objects = MasterAPIKeyManager()
+    is_admin = models.BooleanField(default=True)
