@@ -101,7 +101,7 @@ export const deleteTrait = async (index:number) => {
 let lastTestGroup = {};
 let lastTestName = undefined;
 // eslint-disable-next-line no-console
-export const log = (group:string|undefined, test:string|undefined, message?:string) => {
+export const log = (group:string|undefined, test?:string, message?:string) => {
     const testName = test ? `[${test}]` : t.test.name
     const groupName = group ?? lastTestGroup[testName];
 

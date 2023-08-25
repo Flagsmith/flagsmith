@@ -29,22 +29,23 @@ import {
 
 const email = 'nightwatch@solidstategroup.com'
 const password = 'str0ngp4ssw0rd!'
-export default async function () {
+
+export const testSegment1 = async () => {
   log('Login')
   await login(email, password)
 
-  log('Create Organisation');
-  await click(byId('create-organisation-btn'));
-  await setText('[name="orgName"]', 'Bullet Train Ltd 2');
-  await click('#create-org-btn');
-  await waitForElementVisible(byId('project-select-page'));
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', 'Bullet Train Ltd 2')
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-select-page'))
 
-  log('Create Project');
+  log('Create Project')
 
-  await click('.btn-project-create');
-  await setText(byId('projectName'), 'My Segment Test Project');
-  await click(byId('create-project-btn'));
-  await waitForElementVisible((byId('features-page')));
+  await click('.btn-project-create')
+  await setText(byId('projectName'), 'My Segment Test Project')
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
 
   log('Create Feature')
 
@@ -142,6 +143,24 @@ export default async function () {
   await deleteSegment(0, '18_or_19')
   await gotoFeatures()
   await deleteFeature(0, 'mv_flag')
+}
+
+export const testSegment2 = async () => {
+  log('Login')
+  await login(email, password)
+
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', 'Bullet Train Ltd 3')
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-select-page'))
+
+  log('Create Project')
+
+  await click('.btn-project-create')
+  await setText(byId('projectName'), 'My Segment Test Project 2')
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
 
   log('Create segments')
   await gotoSegments()
