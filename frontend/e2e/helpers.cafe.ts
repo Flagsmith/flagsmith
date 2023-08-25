@@ -53,9 +53,6 @@ export const gotoFeatures = async () => {
 };
 
 export const click = async (selector:string) => {
-    const field = Selector('input#developer-name[type="text"]')
-        .with({visibilityCheck: true})
-        .nth(0)
     await waitForElementVisible(selector);
     await t
         .expect(Selector(selector).hasAttribute('disabled'))
@@ -182,7 +179,7 @@ export const login = async (email:string, password:string) => {
     await click('#login-btn');
     await waitForElementVisible('#project-select-page');
 };
-export const logout = async () => {
+export const logout = async (t) => {
     await click('#account-settings-link');
     await click('#logout-link');
     await waitForElementVisible('#login-page');
