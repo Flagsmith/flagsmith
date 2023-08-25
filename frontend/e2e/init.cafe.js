@@ -73,8 +73,8 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     console.log('End of Initialise Requests')
   })
 
-const waitForInitTests = async () => {
-  log('Waiting for the initialization', 'Environment Test')
+const waitForInitTests = async (testName) => {
+  log('Waiting for the initialization', testName)
   while (e2eInitDone === undefined) {
     await t.wait(100)
   }
@@ -93,27 +93,26 @@ test('[Initialise]', async () => {
 })
 
 test('[Flag Tests]', async () => {
-  await waitForInitTests()
+  await waitForInitTests('Flag Tests')
   await flagTests()
   await logout()
 })
 
 test('[Segment Tests]', async () => {
-  await waitForInitTests()
+  await waitForInitTests('Segment Tests')
   await segmentTest()
   await logout()
 })
 
 test('[Environment Tests]', async () => {
-  await waitForInitTests()
+  await waitForInitTests('Environment Tests')
   await environmentTest()
   await logout()
   await inviteTest()
-  await logout()
 })
 
 test('[Project Tests]', async () => {
-  await waitForInitTests()
+  await waitForInitTests('Project Tests')
   await projectTest()
   await logout()
 })

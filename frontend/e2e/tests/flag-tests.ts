@@ -19,11 +19,11 @@ const email = 'nightwatch@solidstategroup.com'
 const password = 'str0ngp4ssw0rd!'
 
 export default async function () {
-  log('Login', 'Flag Test');
+  log('Login');
   await login(email, password);
   await click('#project-select-0');
 
-  log('Create Features', 'Flag Test')
+  log('Create Features')
   await click('#features-link')
 
   await createRemoteConfig(0, 'header_size', 'big')
@@ -33,14 +33,14 @@ export default async function () {
   ])
   await createFeature(1, 'header_enabled', false)
 
-  log('Create Short Life Feature', 'Flag Test')
+  log('Create Short Life Feature')
   await createFeature(3, 'short_life_feature', false)
   await deleteFeature(3, 'short_life_feature')
 
-  log('Toggle Feature', 'Flag Test')
+  log('Toggle Feature')
   await toggleFeature(0, true)
 
-  log('Try it', 'Flag Test')
+  log('Try it')
   await t.wait(2000)
   await click('#try-it-btn')
   await t.wait(1500)
@@ -55,7 +55,7 @@ export default async function () {
   await t.expect(json.mv_flag.value).eql('big')
   await t.expect(json.header_enabled.enabled).eql(true)
 
-  log('Update feature', 'Flag Test')
+  log('Update feature')
   await click(byId('feature-item-1'))
   await setText(byId('featureValue'), '12')
   await click('#update-feature-btn')
@@ -63,7 +63,7 @@ export default async function () {
   await t.pressKey('esc')
   await closeModal()
 
-  log('Try it again', 'Flag Test')
+  log('Try it again')
   await t.wait(2000)
   await click('#try-it-btn')
   await t.wait(1500)
@@ -75,14 +75,14 @@ export default async function () {
   }
   await t.expect(json.header_size.value).eql(12)
 
-  log('Change feature value to boolean', 'Flag Test')
+  log('Change feature value to boolean')
   await click(byId('feature-item-1'))
   await setText(byId('featureValue'), 'false')
   await click('#update-feature-btn')
   await assertTextContent(byId('feature-value-1'), 'false')
   await closeModal()
 
-  log('Try it again 2', 'Flag Test')
+  log('Try it again 2')
   await t.wait(2000)
   await click('#try-it-btn')
   await t.wait(1500)
@@ -94,14 +94,14 @@ export default async function () {
   }
   await t.expect(json.header_size.value).eql(false)
 
-  log('Switch environment', 'Flag Test')
+  log('Switch environment')
   await click(byId('switch-environment-production'))
 
-  log('Feature should be off under different environment', 'Flag Test')
+  log('Feature should be off under different environment')
   await waitForElementVisible(byId('switch-environment-production-active'))
   await waitForElementVisible(byId('feature-switch-0-off'))
 
-  log('Clear down features', 'Flag Test')
+  log('Clear down features')
   await deleteFeature(1, 'header_size')
   await deleteFeature(0, 'header_enabled')
 

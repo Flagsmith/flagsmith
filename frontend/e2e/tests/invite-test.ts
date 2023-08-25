@@ -17,7 +17,7 @@ const email = 'nightwatch@solidstategroup.com'
 const newEmail = 'changeMail@test.com'
 const password = 'str0ngp4ssw0rd!'
 export default async function () {
-  log('Login', 'Invite Test')
+  log('Login')
   await login(email, password)
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
@@ -54,11 +54,11 @@ export default async function () {
       }
     })
   }
-  log('Get Invite url', 'Invite Test')
+  log('Get Invite url')
   await t.navigateTo('http://localhost:3000/organisation-settings')
   const organisationName = await Selector(byId('organisation-name')).value
   const inviteLink = await Selector(byId('invite-link')).value
-  log('Accept invite', 'Invite Test')
+  log('Accept invite')
   await t.navigateTo(inviteLink)
   await setText('[name="email"]', inviteEmail)
   await setText(byId('firstName'), 'Bullet') // visit the url
@@ -67,14 +67,14 @@ export default async function () {
   await setText(byId('password'), password)
   await waitForElementVisible(byId('signup-btn'))
   await click(byId('signup-btn'))
-  log('Change email', 'Invite Test')
+  log('Change email')
   await click(byId('account-settings-link'))
   await click(byId('change-email-button'))
   await setText("[name='EmailAddress']", newEmail)
   await setText("[name='newPassword']", password)
   await click('#save-changes')
   await login(newEmail, password)
-  log('Delete invite user', 'Invite Test')
+  log('Delete invite user')
   await assertTextContent('[id=account-settings-link]', 'Account')
   await click(byId('account-settings-link'))
   await click(byId('delete-user-btn'))
