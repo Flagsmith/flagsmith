@@ -6,11 +6,12 @@ import logging
 from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.permissions.permissions import (
@@ -18,6 +19,7 @@ from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
+from features.versioning.tasks import enable_v2_versioning
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -202,6 +204,13 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
         return Response(Environment.get_environment_document(api_key))
+
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")
+    def enable_v2_versioning(self, request: Request, api_key: str) -> Response:
+        environment = self.get_object()
+        enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class NestedEnvironmentViewSet(viewsets.GenericViewSet):

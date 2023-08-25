@@ -1,4 +1,5 @@
 import json
+import time
 import typing
 
 import pytest
@@ -104,13 +105,14 @@ def test_v2_versioning(
 
     # Next, let's update the environment to use v2 versioning
     environment_update_url = reverse(
-        "api-v1:environments:environment-detail", args=[environment_api_key]
+        "api-v1:environments:environment-enable-v2-versioning",
+        args=[environment_api_key],
     )
-    data = {"use_v2_feature_versioning": True}
-    environment_update_response = admin_client.patch(
-        environment_update_url, data=json.dumps(data), content_type="application/json"
-    )
-    assert environment_update_response.status_code == status.HTTP_200_OK
+    environment_update_response = admin_client.post(environment_update_url)
+    assert environment_update_response.status_code == status.HTTP_202_ACCEPTED
+
+    # wait for the initial versions to have been created
+    time.sleep(0.5)
 
     # ... and let's verify that we get the same response on the flags / identities endpoints
     # before we change anything

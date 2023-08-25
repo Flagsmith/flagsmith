@@ -89,7 +89,6 @@ def _build_environment_flags_qs_filter(
             live_from__isnull=False,
             live_from__lte=now,
             version__isnull=False,
-            environment_feature_version__isnull=True,
         )
 
     if feature_name:

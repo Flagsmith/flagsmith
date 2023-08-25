@@ -54,6 +54,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "hide_sensitive_data",
             "use_v2_feature_versioning",
         )
+        read_only_fields = ("use_v2_feature_versioning",)
 
     def get_use_mv_v2_evaluation(self, instance: Environment) -> bool:
         """
