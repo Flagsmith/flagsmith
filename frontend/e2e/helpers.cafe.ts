@@ -53,10 +53,17 @@ export const gotoFeatures = async () => {
 };
 
 export const click = async (selector:string) => {
+    const field = Selector('input#developer-name[type="text"]')
+        .with({visibilityCheck: true})
+        .nth(0)
     await waitForElementVisible(selector);
-    await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
-    await t.click(selector);
+    await t
+        .expect(Selector(selector).hasAttribute('disabled'))
+        .notOk('ready for testing', { timeout: 5000 })
+        .hover(selector)
+        .click(selector);
 };
+
 export const gotoSegments = async () => {
     await click('#segments-link');
 };
