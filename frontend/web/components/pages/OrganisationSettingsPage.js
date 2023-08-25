@@ -25,7 +25,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 
 const widths = [450, 150, 100]
-const rolesWidths = [250, 680, 100]
+const rolesWidths = [250, 600, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,

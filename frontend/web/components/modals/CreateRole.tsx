@@ -270,7 +270,7 @@ const CreateRole: FC<CreateRoleType> = ({
 
   return (
     <div id='create-feature-modal'>
-      <TabValue isEdit={isEdit} />
+      <TabValue />
     </div>
   )
 }

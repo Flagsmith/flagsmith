@@ -30,15 +30,15 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import {
-  useCreateRoleEnvironmentPermissionMutation,
-  useCreateRoleOrganisationPermissionMutation,
-  useCreateRoleProjectPermissionMutation,
+  useCreateRoleEnvironmentPermissionsMutation,
+  useCreateRoleOrganisationPermissionsMutation,
+  useCreateRoleProjectPermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useUpdateRoleEnvironmentPermissionMutation,
-  useUpdateRoleOrganisationPermissionMutation,
-  useUpdateRoleProjectPermissionMutation,
+  useUpdateRoleEnvironmentPermissionsMutation,
+  useUpdateRoleOrganisationPermissionsMutation,
+  useUpdateRoleProjectPermissionsMutation,
 } from 'common/services/useRolePermission'
 
 const OrganisationProvider = require('common/providers/OrganisationProvider')
@@ -148,53 +148,53 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     }
 
     const [
-      updateRoleEnvironmentPermission,
+      updateRoleEnvironmentPermissions,
       {
         isError: envUpdatedError,
         isLoading: isEnvPermUpdating,
         isSuccess: isEnvPermUpdated,
       },
-    ] = useUpdateRoleEnvironmentPermissionMutation()
+    ] = useUpdateRoleEnvironmentPermissionsMutation()
     const [
-      updateRoleOrganisationPermission,
+      updateRoleOrganisationPermissions,
       {
         isError: orgUpdatedError,
         isLoading: isOrgPermUpdating,
         isSuccess: isOrgPermUpdated,
       },
-    ] = useUpdateRoleOrganisationPermissionMutation()
+    ] = useUpdateRoleOrganisationPermissionsMutation()
     const [
-      updateRoleProjectPermission,
+      updateRoleProjectPermissions,
       {
         isError: projectUpdatedError,
         isLoading: isProjectPermUpdating,
         isSuccess: isProjectPermUpdated,
       },
-    ] = useUpdateRoleProjectPermissionMutation()
+    ] = useUpdateRoleProjectPermissionsMutation()
     const [
-      createRoleEnvironmentPermission,
+      createRoleEnvironmentPermissions,
       {
         isError: envCreatedError,
         isLoading: isEnvPermCreating,
         isSuccess: isEnvPermCreated,
       },
-    ] = useCreateRoleEnvironmentPermissionMutation()
+    ] = useCreateRoleEnvironmentPermissionsMutation()
     const [
-      createRoleProjectPermission,
+      createRoleProjectPermissions,
       {
         isError: orgCreatedError,
         isLoading: isProjectPermCreating,
         isSuccess: isProjectPermCreated,
       },
-    ] = useCreateRoleProjectPermissionMutation()
+    ] = useCreateRoleProjectPermissionsMutation()
     const [
-      createRoleOrganisationPermission,
+      createRoleOrganisationPermissions,
       {
         isError: projectCreatedError,
         isLoading: isOrgPermCreating,
         isSuccess: isOrgPermCreated,
       },
-    ] = useCreateRoleOrganisationPermissionMutation()
+    ] = useCreateRoleOrganisationPermissionsMutation()
 
     useEffect(() => {
       if (isEnvPermUpdating || isEnvPermCreating) {
@@ -204,6 +204,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         refetchEnvPerm()
         toast('Environment permissions Saved')
         permissionChanged?.()
+        onSave?.()
         setSaving(false)
       }
       if (envUpdatedError || envCreatedError) {
@@ -405,7 +406,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         if (entityId) {
           switch (level) {
             case 'organisation':
-              updateRoleOrganisationPermission({
+              updateRoleOrganisationPermissions({
                 body: {
                   permissions: entityPermissions.permissions,
                 },
@@ -415,7 +416,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               })
               break
             case 'project':
-              updateRoleProjectPermission({
+              updateRoleProjectPermissions({
                 body: {
                   admin: entityPermissions.admin,
                   permissions: entityPermissions.permissions,
@@ -427,7 +428,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               })
               break
             case 'environment':
-              updateRoleEnvironmentPermission({
+              updateRoleEnvironmentPermissions({
                 body: {
                   admin: entityPermissions.admin,
                   environment: id,
@@ -444,7 +445,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         } else {
           switch (level) {
             case 'organisation':
-              createRoleOrganisationPermission({
+              createRoleOrganisationPermissions({
                 body: {
                   permissions: entityPermissions.permissions,
                 },
@@ -453,7 +454,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               })
               break
             case 'project':
-              createRoleProjectPermission({
+              createRoleProjectPermissions({
                 body: {
                   admin: entityPermissions.admin,
                   permissions: entityPermissions.permissions,
@@ -464,7 +465,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               })
               break
             case 'environment':
-              createRoleEnvironmentPermission({
+              createRoleEnvironmentPermissions({
                 body: {
                   admin: entityPermissions.admin,
                   environment: id,

@@ -6,7 +6,7 @@ export const rolePermissionService = service
   .enhanceEndpoints({ addTagTypes: ['RolePermission'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createRoleEnvironmentPermission: builder.mutation<
+      createRoleEnvironmentPermissions: builder.mutation<
         Res['rolePermission'],
         Req['createRolePermission']
       >({
@@ -20,7 +20,7 @@ export const rolePermissionService = service
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/`,
         }),
       }),
-      createRoleOrganisationPermission: builder.mutation<
+      createRoleOrganisationPermissions: builder.mutation<
         Res['rolePermission'],
         Req['createRolePermission']
       >({
@@ -35,7 +35,7 @@ export const rolePermissionService = service
         }),
       }),
 
-      createRoleProjectPermission: builder.mutation<
+      createRoleProjectPermissions: builder.mutation<
         Res['rolePermission'],
         Req['createRolePermission']
       >({
@@ -97,7 +97,7 @@ export const rolePermissionService = service
         }),
       }),
 
-      updateRoleEnvironmentPermission: builder.mutation<
+      updateRoleEnvironmentPermissions: builder.mutation<
         Res['rolePermission'],
         Req['updateRolePermission']
       >({
@@ -112,7 +112,7 @@ export const rolePermissionService = service
         }),
       }),
 
-      updateRoleOrganisationPermission: builder.mutation<
+      updateRoleOrganisationPermissions: builder.mutation<
         Res['rolePermission'],
         Req['updateRolePermission']
       >({
@@ -127,7 +127,7 @@ export const rolePermissionService = service
         }),
       }),
 
-      updateRoleProjectPermission: builder.mutation<
+      updateRoleProjectPermissions: builder.mutation<
         Res['rolePermission'],
         Req['updateRolePermission']
       >({
@@ -163,15 +163,15 @@ export async function getRoleOrganisationPermissions(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
-export async function updateRoleOrganisationPermission(
+export async function updateRoleOrganisationPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleOrganisationPermission.initiate
+    typeof rolePermissionService.endpoints.updateRoleOrganisationPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.updateRoleOrganisationPermission.initiate(
+    rolePermissionService.endpoints.updateRoleOrganisationPermissions.initiate(
       data,
       options,
     ),
@@ -198,15 +198,15 @@ export async function getRoleProjectPermissions(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
-export async function updateRoleProjectPermission(
+export async function updateRoleProjectPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleProjectPermission.initiate
+    typeof rolePermissionService.endpoints.updateRoleProjectPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.updateRoleProjectPermission.initiate(
+    rolePermissionService.endpoints.updateRoleProjectPermissions.initiate(
       data,
       options,
     ),
@@ -233,15 +233,15 @@ export async function getRoleEnvironmentPermissions(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
-export async function updateRoleEnvironmentPermission(
+export async function updateRoleEnvironmentPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleEnvironmentPermission.initiate
+    typeof rolePermissionService.endpoints.updateRoleEnvironmentPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.updateRoleEnvironmentPermission.initiate(
+    rolePermissionService.endpoints.updateRoleEnvironmentPermissions.initiate(
       data,
       options,
     ),
@@ -251,15 +251,15 @@ export async function updateRoleEnvironmentPermission(
   )
 }
 
-export async function createRoleOrganisationPermission(
+export async function createRoleOrganisationPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleOrganisationPermission.initiate
+    typeof rolePermissionService.endpoints.createRoleOrganisationPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.createRoleOrganisationPermission.initiate(
+    rolePermissionService.endpoints.createRoleOrganisationPermissions.initiate(
       data,
       options,
     ),
@@ -269,15 +269,15 @@ export async function createRoleOrganisationPermission(
   )
 }
 
-export async function createRoleProjectPermission(
+export async function createRoleProjectPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleProjectPermission.initiate
+    typeof rolePermissionService.endpoints.createRoleProjectPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.createRoleProjectPermission.initiate(
+    rolePermissionService.endpoints.createRoleProjectPermissions.initiate(
       data,
       options,
     ),
@@ -287,15 +287,15 @@ export async function createRoleProjectPermission(
   )
 }
 
-export async function createRoleEnvironmentPermission(
+export async function createRoleEnvironmentPermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleEnvironmentPermission.initiate
+    typeof rolePermissionService.endpoints.createRoleEnvironmentPermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.createRoleEnvironmentPermission.initiate(
+    rolePermissionService.endpoints.createRoleEnvironmentPermissions.initiate(
       data,
       options,
     ),
@@ -307,15 +307,15 @@ export async function createRoleEnvironmentPermission(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreateRoleEnvironmentPermissionMutation,
-  useCreateRoleOrganisationPermissionMutation,
-  useCreateRoleProjectPermissionMutation,
+  useCreateRoleEnvironmentPermissionsMutation,
+  useCreateRoleOrganisationPermissionsMutation,
+  useCreateRoleProjectPermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useUpdateRoleEnvironmentPermissionMutation,
-  useUpdateRoleOrganisationPermissionMutation,
-  useUpdateRoleProjectPermissionMutation,
+  useUpdateRoleEnvironmentPermissionsMutation,
+  useUpdateRoleOrganisationPermissionsMutation,
+  useUpdateRoleProjectPermissionsMutation,
   // END OF EXPORTS
 } = rolePermissionService
 

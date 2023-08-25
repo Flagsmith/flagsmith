@@ -100,15 +100,15 @@ export type Req = {
     feature_segment: featureSegment
     feature_state_value: FeatureStateValue
   }
-  getRoles: { organisationId: string }
-  createRole: { organisationId: string; body: Role }
-  getRole: { organisationId: string; roleId: number }
-  updateRole: { organisationId: string; roleId: number; body: Role }
-  deleteRole: { organisation_id: string; role_id: number }
-  getRolePermission: { id: string }
-  updateRolePermission: { id: string }
-  deleteRolePermission: { id: string }
-  createRolePermission: {}
+  getRoles: { organisation_id: string }
+  createRole: { organisation_id: string; body: Role }
+  getRole: { organisation_id: string; role_id: string }
+  updateRole: { organisation_id: string; role_id: string; body: Role }
+  deleteRole: { organisation_id: string; role_id: string }
+  getRolePermission: { organisation_id: string; role_id: string }
+  updateRolePermission: { organisation_id: string; role_id: string }
+  deleteRolePermission: { organisation_id: string; role_id: string }
+  createRolePermission: { organisation_id: string; role_id: string }
   getIdentityFeatureStates: {
     environment: string
     user: string
