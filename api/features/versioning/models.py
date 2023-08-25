@@ -52,6 +52,14 @@ class EnvironmentFeatureVersion(
         blank=True,
     )
 
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        related_name="environment_feature_versions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
     class Meta:
         indexes = [Index(fields=("environment", "feature"))]
         ordering = ("-live_from",)

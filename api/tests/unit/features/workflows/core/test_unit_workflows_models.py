@@ -12,7 +12,9 @@ from audit.constants import (
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from features.models import FeatureState
+from environments.models import Environment
+from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -24,6 +26,8 @@ from features.workflows.core.models import (
     ChangeRequestGroupAssignment,
 )
 from users.models import FFAdminUser
+
+now = timezone.now()
 
 
 def test_change_request_approve_by_required_approver(
@@ -573,3 +577,36 @@ def test_change_request_group_assignment_sends_notification_emails_to_group_user
             "change_request_group_assignment_id": change_request_group_assignment.id
         }
     )
+
+
+@pytest.mark.freeze_time(now)
+def test_commit_change_request_publishes_environment_feature_versions(
+    environment: Environment, feature: Feature, admin_user: FFAdminUser
+):
+    # Given
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    feature_state = environment.feature_states.first()
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=feature
+    )
+    environment_feature_version.feature_states.add(
+        feature_state.clone(env=environment, as_draft=True)
+    )
+
+    change_request.environment_feature_versions.add(environment_feature_version)
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    environment_feature_version.refresh_from_db()
+    assert environment_feature_version.published
+    assert environment_feature_version.published_by == admin_user
+    assert environment_feature_version.live_from == now
