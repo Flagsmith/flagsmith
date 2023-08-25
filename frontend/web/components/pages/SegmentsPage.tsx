@@ -76,12 +76,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     ProjectStore.getMaxSegmentsAllowed(),
     THRESHOLD,
   )
-  console.log(
-    'DEBUG: ProjectStore.getTotalSegments():',
-    ProjectStore.getTotalSegments(),
-    'ProjectStore.getMaxSegmentsAllowed():',
-    ProjectStore.getMaxSegmentsAllowed(),
-  )
+
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
   }, [])

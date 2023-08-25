@@ -4,7 +4,10 @@ import pytest
 from django.utils import timezone
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
-from projects.serializers import ProjectListSerializer
+from projects.serializers import (
+    ProjectListSerializer,
+    ProjectRetrieveSerializer,
+)
 
 
 def test_ProjectListSerializer_get_migration_status_returns_migration_not_applicable_if_not_configured(
@@ -83,6 +86,27 @@ def test_ProjectListSerializer_get_use_edge_identities(
 ):
     # Given
     serializer = ProjectListSerializer(context={"migration_status": migration_status})
+
+    # When/Then
+    assert expected is serializer.get_use_edge_identities(project)
+
+
+@pytest.mark.parametrize(
+    "migration_status, expected",
+    [
+        (ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value, True),
+        (ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.value, False),
+        (ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.value, False),
+        (ProjectIdentityMigrationStatus.NOT_APPLICABLE.value, False),
+    ],
+)
+def test_ProjectRetrieveSerializer_get_use_edge_identities(
+    project, migration_status, expected
+):
+    # Given
+    serializer = ProjectRetrieveSerializer(
+        context={"migration_status": migration_status}
+    )
 
     # When/Then
     assert expected is serializer.get_use_edge_identities(project)

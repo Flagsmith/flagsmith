@@ -174,7 +174,7 @@ const FeaturesPage = class extends Component {
             const isLoading = !FeatureListStore.hasLoaded
             const THRESHOLD = 90
             const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
-              100,
+              totalFeatures,
               maxFeaturesAllowed,
               THRESHOLD,
             )

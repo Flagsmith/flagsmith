@@ -39,10 +39,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
     def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
             migration_status = ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
-
         elif obj.is_edge_project_by_default:
             migration_status = ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
-
         else:
             migration_status = IdentityMigrator(obj.id).migration_status.value
 

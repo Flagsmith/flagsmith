@@ -71,7 +71,6 @@ def test_get_project_data_by_id(client, organisation, project):
 
     # When
     response = client.get(url)
-    print("DEBUG: response:", response.json())
 
     # Then
     assert response.status_code == status.HTTP_200_OK

@@ -86,6 +86,16 @@ class EnvironmentSerializerWithMetadata(
         )
 
 
+class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):
+    total_segment_overrides = serializers.IntegerField()
+
+    class Meta(EnvironmentSerializerWithMetadata.Meta):
+        fields = EnvironmentSerializerWithMetadata.Meta.fields + (
+            "total_segment_overrides",
+        )
+        read_only_fields = ("total_segment_overrides",)
+
+
 class CreateUpdateEnvironmentSerializer(
     ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerWithMetadata
 ):

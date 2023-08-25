@@ -36,6 +36,7 @@ import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
+import Icon from 'components/Icon'
 
 type PageType = {
   number: number
@@ -135,20 +136,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isError = createError || updateError
   const isLimitReached =
-    ProjectStore.getTotalSegments() >= ProjectStore.getMaxFeaturesAllowed()
+    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
 
   const THRESHOLD = 90
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
-    ProjectStore.getMaxFeaturesAllowed(),
-    THRESHOLD,
-  )
-
-  console.log(
-    'DEBUG: ProjectStore.getTotalSegments()c:',
-    ProjectStore.getTotalSegments(),
-    'ProjectStore.getMaxSegmentsAllowed()c:',
     ProjectStore.getMaxSegmentsAllowed(),
+    THRESHOLD,
   )
 
   const addRule = (type = 'ANY') => {
@@ -526,6 +520,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     title='Environment'
                     component={
                       <EnvironmentSelect
+                        projectId={`${projectId}`}
                         value={environmentId}
                         onChange={(environmentId: string) => {
                           setEnvironmentId(environmentId)
@@ -600,17 +595,35 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                 <div className='font-weight-medium'>
                                   {identifier}
                                 </div>
-                                <div
-                                  className={`${
-                                    inSegment
-                                      ? 'font-weight-medium text-primary'
-                                      : 'text-muted fs-small lh-sm'
+                                <Row
+                                  className={`font-weight-medium fs-small lh-sm ${
+                                    inSegment ? 'text-primary' : 'faint'
                                   }`}
                                 >
-                                  {inSegment
-                                    ? 'User in segment'
-                                    : 'Not in segment'}
-                                </div>
+                                  {inSegment ? (
+                                    <>
+                                      <Icon
+                                        name='checkmark-circle'
+                                        width={20}
+                                        fill='#6837FC'
+                                      />
+                                      <span className='ml-1'>
+                                        User in segment
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Icon
+                                        name='minus-circle'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                      <span className='ml-1'>
+                                        Not in segment
+                                      </span>
+                                    </>
+                                  )}
+                                </Row>
                               </Row>
                             )
                           }}
