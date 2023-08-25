@@ -87,7 +87,7 @@ const CreateEnvironmentPage = class extends Component {
                                 )
                             }}
                           >
-                            <div>
+                            <div className='mt-5'>
                               <CondensedRow>
                                 <InputGroup
                                   ref={(e) => {
