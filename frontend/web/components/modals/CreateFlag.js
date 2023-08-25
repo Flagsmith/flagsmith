@@ -342,7 +342,6 @@ const CreateFlag = class extends Component {
             textAnchor='end'
             allowDataOverflow={false}
             dataKey='day'
-            tickFormatter={(v) => moment(v).format('Do MMM')}
             tick={{ dx: -4, fill: '#656D7B' }}
             tickLine={false}
             axisLine={{ stroke: '#656D7B' }}
