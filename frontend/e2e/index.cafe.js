@@ -27,13 +27,14 @@ createTestCafe()
             });
         });
         const runner = testcafe.createRunner()
+        const args = process.argv;
+        args.splice(0,2)
+        console.log('Filter tests:', args)
+
         return runner
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .filter(testName => {
-                const args = process.argv;
-                args.splice(0,2)
-                console.log('Filter tests:', args)
                 if (!args.length) {
                     return true
                 } else {

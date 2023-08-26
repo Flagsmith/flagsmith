@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import { t, test } from 'testcafe'
+import { t, test, fixture } from 'testcafe'
 import { waitForReact } from 'testcafe-react-selectors'
 
 import Project from '../common/project'
@@ -80,7 +80,7 @@ const waitForInitTests = async (testName) => {
   }
 }
 
-test('[Initialise]', async () => {
+test('Initialise', async () => {
   console.log('Init')
   await initialiseTests()
   await logout()
@@ -92,32 +92,32 @@ test('[Initialise]', async () => {
   }
 })
 
-test('[Flag Tests]', async () => {
+test('Flag Tests', async () => {
   await waitForInitTests('Flag Tests')
   await flagTests()
   await logout()
 })
 
-test('[Segment Tests Part 1]', async () => {
+test('Segment Tests Part 1', async () => {
   await waitForInitTests('Segment Tests Part 1')
   await testSegment1()
   await logout()
 })
 
-test('[Segment Tests Part 2]', async () => {
+test('Segment Tests Part 2', async () => {
   await waitForInitTests('Segment Tests Part 2')
   await testSegment2()
   await logout()
 })
 
-test('[Environment Tests]', async () => {
+test('Environment Tests', async () => {
   await waitForInitTests('Environment Tests')
   await environmentTest()
   await logout()
   await inviteTest()
 })
 
-test('[Project Tests]', async () => {
+test('Project Tests', async () => {
   await waitForInitTests('Project Tests')
   await projectTest()
   await logout()
