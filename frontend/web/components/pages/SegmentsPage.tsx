@@ -260,7 +260,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 </div>
                               )}
                             </Row>
-                            <div className='list-item-subtitle'>
+                            <div className='list-item-subtitle mt-1'>
                               {description || 'No description'}
                             </div>
                           </Flex>

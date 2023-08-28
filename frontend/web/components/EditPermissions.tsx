@@ -252,7 +252,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
                 <Row space>
                   <Flex>
                     <strong>{Format.enumeration.get(p.key)}</strong>
-                    <div className='list-item-subtitle'>{p.description}</div>
+                    <div className='list-item-subtitle mt-1'>
+                      {p.description}
+                    </div>
                   </Flex>
                   <Switch
                     onChange={() => togglePermission(p.key)}

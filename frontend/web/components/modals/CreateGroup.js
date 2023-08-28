@@ -369,7 +369,7 @@ const CreateGroup = class extends Component {
                                     <div className='unread'>Unsaved</div>
                                   )}
                                 </div>
-                                <div className='list-item-subtitle'>
+                                <div className='list-item-subtitle mt-1'>
                                   {email}
                                 </div>
                               </Flex>
