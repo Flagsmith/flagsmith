@@ -99,23 +99,19 @@ const InputGroup = class extends Component {
                   size={size}
                 />
               )}
-              {inputProps && inputProps.error && (
-                <span>
-                  <span
-                    id={
-                      props.inputProps.name
-                        ? `${props.inputProps.name}-error`
-                        : ''
-                    }
-                    className='text-danger'
-                  >
-                    {inputProps.error}
-                  </span>
-                </span>
-              )}
             </div>
           )}
         </div>
+        {inputProps && inputProps.error && (
+          <span>
+            <span
+              id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
+              className='text-danger'
+            >
+              {inputProps.error}
+            </span>
+          </span>
+        )}
       </div>
     )
   }

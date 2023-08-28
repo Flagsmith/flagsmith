@@ -9,6 +9,7 @@ import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -70,9 +71,10 @@ const ChangeRequestsPage = class extends Component {
         id='change-requests-page'
         className='app-container container'
       >
+        <PageTitle title={'Change Requests'}>
+          View and manage proposed feature state changes.
+        </PageTitle>
         <Flex>
-          <h4>Change Requests</h4>
-          <p>View and manage proposed feature state changes.</p>
           {!has4EyesPermission ? (
             <div className='mt-2'>
               <InfoMessage>
@@ -205,7 +207,7 @@ const ChangeRequestsPage = class extends Component {
                                 <span className='ml-1 mr-4 ion ion-md-time' />
                               )}
                             </div>
-                            <div className='list-item-subtitle'>
+                            <div className='list-item-subtitle mt-1'>
                               Created at{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
                               by {user && user.first_name}{' '}
@@ -284,7 +286,7 @@ const ChangeRequestsPage = class extends Component {
                         >
                           <Flex className='table-column px-3'>
                             <div className='font-weight-medium'>{title}</div>
-                            <div className='list-item-subtitle'>
+                            <div className='list-item-subtitle mt-1'>
                               Live from{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
                               by {user && user.first_name}{' '}

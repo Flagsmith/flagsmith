@@ -37,7 +37,7 @@ pre-commit run --all-files
 
 ## Running Tests
 
-The application uses pytest for writing(appropritate use of fixtures) and running tests. Before running tests please
+The application uses pytest for writing (appropriate use of fixtures) and running tests. Before running tests please
 make sure that `DJANGO_SETTINGS_MODULE` env var is pointing to the right module, e.g. `app.settings.test`.
 
 To run tests:

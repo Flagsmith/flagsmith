@@ -19,6 +19,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/Icon'
 import FeatureValue from 'components/FeatureValue'
+import PageTitle from 'components/PageTitle'
 
 const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
@@ -264,7 +265,7 @@ const UserPage = class extends Component {
             id={environmentId}
           >
             {({ permission }) => (
-              <div className='app-container'>
+              <div className='app-container container'>
                 <IdentityProvider onSave={this.onSave}>
                   {(
                     {
@@ -287,20 +288,21 @@ const UserPage = class extends Component {
                         <Loader />
                       </div>
                     ) : (
-                      <div className='container'>
+                      <>
+                        <PageTitle
+                          title={
+                            (identity && identity.identity.identifier) ||
+                            this.props.match.params.id
+                          }
+                        >
+                          View and manage feature states and traits for this
+                          user. This will override any feature states you have
+                          for your current environment for this user only. Any
+                          features that are not overriden for this user will
+                          fallback to the environment defaults.
+                        </PageTitle>
                         <div className='row'>
                           <div className='col-md-12'>
-                            <h4>
-                              {(identity && identity.identity.identifier) ||
-                                this.props.match.params.id}
-                            </h4>
-                            <p>
-                              View and manage feature states and traits for this
-                              user. This will override any feature states you
-                              have for your current environment for this user
-                              only. Any features that are not overriden for this
-                              user will fallback to the environment defaults.
-                            </p>
                             <FormGroup>
                               <FormGroup>
                                 <PanelSearch
@@ -579,13 +581,13 @@ const UserPage = class extends Component {
                                                 />
                                               </Row>
                                               {hasUserOverride ? (
-                                                <div className='list-item-subtitle'>
+                                                <div className='list-item-subtitle mt-1'>
                                                   Overriding defaults
                                                 </div>
                                               ) : flagEnabledDifferent ? (
                                                 <div
                                                   data-test={`feature-override-${i}`}
-                                                  className='list-item-subtitle'
+                                                  className='list-item-subtitle mt-1'
                                                 >
                                                   <Row>
                                                     <Flex>
@@ -623,7 +625,7 @@ const UserPage = class extends Component {
                                                 isMultiVariateOverride ? (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle'
+                                                    className='list-item-subtitle mt-1'
                                                   >
                                                     <span className='flex-row'>
                                                       This feature is being
@@ -641,7 +643,7 @@ const UserPage = class extends Component {
                                                 ) : (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle'
+                                                    className='list-item-subtitle mt-1'
                                                   >
                                                     <span className='flex-row'>
                                                       This feature is being
@@ -657,7 +659,7 @@ const UserPage = class extends Component {
                                                   </div>
                                                 )
                                               ) : (
-                                                <div className='list-item-subtitle'>
+                                                <div className='list-item-subtitle mt-1'>
                                                   Using environment defaults
                                                 </div>
                                               )}
@@ -1048,7 +1050,7 @@ const UserPage = class extends Component {
                                                   {name}
                                                 </span>
                                               </div>
-                                              <div className='list-item-subtitle'>
+                                              <div className='list-item-subtitle mt-1'>
                                                 Created{' '}
                                                 {moment(created_date).format(
                                                   'DD/MMM/YYYY',
@@ -1115,7 +1117,7 @@ const UserPage = class extends Component {
                             </FormGroup>
                           </div>
                         </div>
-                      </div>
+                      </>
                     )
                   }
                 </IdentityProvider>

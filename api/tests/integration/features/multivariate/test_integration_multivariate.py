@@ -7,7 +7,8 @@ from rest_framework import status
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
     # Given
@@ -34,7 +35,8 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
     # Given
@@ -54,7 +56,8 @@ def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
     project, mv_option_50_percent, client, feature
@@ -83,7 +86,8 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_update_default_percentage_allocation(
     project, mv_option_50_percent, client, feature
@@ -112,7 +116,8 @@ def test_can_update_default_percentage_allocation(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(
     project, mv_option_50_percent, client, feature
@@ -161,7 +166,8 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
     # Given
@@ -192,7 +198,8 @@ def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     project, environment, environment_api_key, client, feature
@@ -286,7 +293,8 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_modify_weight_of_2_variations_in_single_request(
     project, environment, environment_api_key, client, feature

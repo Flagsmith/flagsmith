@@ -18,6 +18,7 @@ import JSONReference from 'components/JSONReference'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
+import PageTitle from 'components/PageTitle'
 
 const labelWidth = 200
 
@@ -308,6 +309,7 @@ const ChangeRequestsPage = class extends Component {
         permission={Utils.getApproveChangeRequestPermission(true)}
         id={this.props.match.params.environmentId}
       >
+
         {({ permission: approvePermission }) => (
           <Permission
             level='environment'
@@ -321,46 +323,34 @@ const ChangeRequestsPage = class extends Component {
                 id='change-requests-page'
                 className='app-container container-fluid'
               >
-                <Row>
-                  <Flex className='mb-2 ml-3'>
-                    <Row>
-                      <Flex>
-                        <h3 className='ml-0'>{changeRequest.title}</h3>
-                      </Flex>
-                    </Row>
-                    <div className='list-item-footer faint'>
-                      Created at{' '}
-                      {moment(changeRequest.created_at).format(
-                        'Do MMM YYYY HH:mma',
-                      )}{' '}
-                      by {changeRequest.user && user.first_name}{' '}
-                      {user && user.last_name}
-                    </div>
-                    <p className='mt-2'>{changeRequest.description}</p>
-                  </Flex>
-                  <div className='mr-4'>
-                    {(!committedBy || !committedBy.id || isScheduled) && (
+                <PageTitle
+                    cta={
                       <Row>
                         <Button
-                          theme='danger'
-                          onClick={this.deleteChangeRequest}
-                          size='small'
+                            theme='secondary'
+                            onClick={this.deleteChangeRequest}
+                            size='small'
                         >
                           Delete
                         </Button>
                         <Button
-                          onClick={() =>
-                            this.editChangeRequest(projectFlag, environmentFlag)
-                          }
-                          className='ml-2'
-                          size='small'
+                            onClick={() =>
+                                this.editChangeRequest(projectFlag, environmentFlag)
+                            }
+                            className='ml-2'
+                            size='small'
                         >
                           Edit
                         </Button>
                       </Row>
-                    )}
-                  </div>
-                </Row>
+                    }
+                    title={changeRequest.title}
+                >
+                  Created at{' '}
+                  {moment(changeRequest.created_at).format('Do MMM YYYY HH:mma')} by{' '}
+                  {changeRequest.user && user.first_name} {user && user.last_name}
+                </PageTitle>
+                <p className='mt-2'>{changeRequest.description}</p>
                 <div className='row'>
                   <div className='col-md-12'>
                     {isScheduled && (

@@ -65,8 +65,8 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     assert get_project_response.status_code == status.HTTP_200_OK
 
 
-def test_should_create_a_project_with_master_api_key_client(
-    settings, organisation, master_api_key_client
+def test_should_create_a_project_with_admin_master_api_key_client(
+    settings, organisation, admin_master_api_key_client
 ):
     # Given
     project_name = "project1"
@@ -75,7 +75,7 @@ def test_should_create_a_project_with_master_api_key_client(
     url = reverse("api-v1:projects:project-list")
 
     # When
-    response = master_api_key_client.post(url, data=data)
+    response = admin_master_api_key_client.post(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -88,7 +88,8 @@ def test_should_create_a_project_with_master_api_key_client(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_update_project(client, project, organisation):
     # Given
@@ -105,7 +106,8 @@ def test_can_update_project(client, project, organisation):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_list_project_permission(client, project):
     # Given
@@ -122,13 +124,13 @@ def test_can_list_project_permission(client, project):
 
 
 def test_my_permissions_for_a_project_return_400_with_master_api_key(
-    master_api_key_client, project, organisation
+    admin_master_api_key_client, project, organisation
 ):
     # Given
     url = reverse("api-v1:projects:project-my-permissions", args=[project.id])
 
     # When
-    response = master_api_key_client.get(url)
+    response = admin_master_api_key_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -637,7 +639,8 @@ def test_list_project_with_uuid_filter_returns_correct_project(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_project_by_uuid(client, project, mocker, settings, organisation):
     # Given
@@ -652,7 +655,8 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_enable_realtime_updates_for_project(
     client, project, mocker, settings, organisation
@@ -676,7 +680,8 @@ def test_can_enable_realtime_updates_for_project(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_update_project(client, project, mocker, settings, organisation):
     # Given

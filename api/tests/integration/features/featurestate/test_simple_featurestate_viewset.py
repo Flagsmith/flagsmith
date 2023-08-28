@@ -7,7 +7,8 @@ from rest_framework import status
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_create_feature_state_for_identity_override(
     client, environment, identity, feature
@@ -32,7 +33,8 @@ def test_create_feature_state_for_identity_override(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_create_feature_state_for_identity_with_identifier(
     client, environment, identity, feature, identity_identifier
@@ -57,7 +59,8 @@ def test_create_feature_state_for_identity_with_identifier(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_list_feature_states_for_environment(client, environment, feature):
     # Given
@@ -76,7 +79,8 @@ def test_list_feature_states_for_environment(client, environment, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_update_feature_state(client, environment, feature_state, feature, identity):
     # Given
@@ -100,7 +104,8 @@ def test_update_feature_state(client, environment, feature_state, feature, ident
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_update_feature_state_for_identity_with_identifier(
     client, environment, identity_featurestate, feature, identity, identity_identifier

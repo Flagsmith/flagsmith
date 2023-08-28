@@ -17,8 +17,7 @@
 	top: 0;
 	right: 15px;
 	width: 250px;
-	background: $toast-bg;
-	color: $toast-color;
-	box-shadow:0 0 10px rgba(0,0,0,0.25);
-	border:none;
+	background: $success-alfa-8;
+	font-weight: 500;
+	border: 1px solid $success;
 }
