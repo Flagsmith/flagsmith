@@ -151,7 +151,7 @@ const ChangeRequestsPage = class extends Component {
                         >
                           <Flex className='table-column px-3'>
                             <div className='font-weight-medium'>{title}</div>
-                            <div className='list-item-subtitle'>
+                            <div className='list-item-subtitle mt-1'>
                               Created at{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
                               by {user && user.first_name}{' '}

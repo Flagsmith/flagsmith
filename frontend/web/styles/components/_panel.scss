@@ -70,6 +70,7 @@
   &.segment-overrides {
     border: 1px solid $basic-alpha-16;
     border-radius: $border-radius-lg;
+    background-color: $text-icon-light;
   }
 
   &.no-pad {
@@ -136,6 +137,10 @@
       .list-integrations {
         background-color: $bg-dark200;
       }
+    }
+    &.segment-overrides {
+      background-color: $bg-dark100;
+      border: 1px solid $white-alpha-16;
     }
   }
 }

@@ -77,9 +77,9 @@ const ProjectSelectPage = class extends Component {
               (!Project.superUserCreateOnly ||
                 (Project.superUserCreateOnly &&
                   AccountStore.model.is_superuser)) && (
-                <div className='pl-3 pr-3 mb-2'>
+                <div>
                   <Flex className='text-center'>
-                    <Button onClick={this.newOrganisation}>
+                    <Button onClick={this.newOrganisation} size='large'>
                       Create Organisation
                     </Button>
                   </Flex>
@@ -129,7 +129,7 @@ const ProjectSelectPage = class extends Component {
                     <PanelSearch
                       id='projects-list'
                       className='no-pad panel-projects'
-                      listClassName='row mt-2 gy-4'
+                      listClassName='row mt-n2 gy-4'
                       title='Projects'
                       items={projects}
                       renderRow={({ environments, id, name }, i) => {

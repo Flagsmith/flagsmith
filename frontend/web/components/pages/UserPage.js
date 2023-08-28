@@ -582,13 +582,13 @@ const UserPage = class extends Component {
                                                 />
                                               </Row>
                                               {hasUserOverride ? (
-                                                <div className='list-item-subtitle'>
+                                                <div className='list-item-subtitle mt-1'>
                                                   Overriding defaults
                                                 </div>
                                               ) : flagEnabledDifferent ? (
                                                 <div
                                                   data-test={`feature-override-${i}`}
-                                                  className='list-item-subtitle'
+                                                  className='list-item-subtitle mt-1'
                                                 >
                                                   <Row>
                                                     <Flex>
@@ -626,7 +626,7 @@ const UserPage = class extends Component {
                                                 isMultiVariateOverride ? (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle'
+                                                    className='list-item-subtitle mt-1'
                                                   >
                                                     <span className='flex-row'>
                                                       This feature is being
@@ -644,7 +644,7 @@ const UserPage = class extends Component {
                                                 ) : (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle'
+                                                    className='list-item-subtitle mt-1'
                                                   >
                                                     <span className='flex-row'>
                                                       This feature is being
@@ -660,7 +660,7 @@ const UserPage = class extends Component {
                                                   </div>
                                                 )
                                               ) : (
-                                                <div className='list-item-subtitle'>
+                                                <div className='list-item-subtitle mt-1'>
                                                   Using environment defaults
                                                 </div>
                                               )}
@@ -1051,7 +1051,7 @@ const UserPage = class extends Component {
                                                   {name}
                                                 </span>
                                               </div>
-                                              <div className='list-item-subtitle'>
+                                              <div className='list-item-subtitle mt-1'>
                                                 Created{' '}
                                                 {moment(created_date).format(
                                                   'DD/MMM/YYYY',

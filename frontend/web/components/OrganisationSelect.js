@@ -32,13 +32,14 @@ const OrganisationSelect = class extends Component {
                     return { label: organisation.name, value: organisation.id }
                   })
                 }
+                className='select-lg react-select'
               />
             </div>
             {AccountStore.getOrganisationRole() === 'ADMIN' && (
               <NavLink
                 id='organisation-settings-link'
                 activeClassName='active'
-                className='btn btn-with-icon ml-3'
+                className='btn btn-with-icon ml-3 btn-lg px-3'
                 to='/organisation-settings'
               >
                 <Icon name='setting' fill='#656D7B' />
