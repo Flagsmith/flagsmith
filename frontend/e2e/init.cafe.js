@@ -114,7 +114,6 @@ test('Environment', async () => {
   await waitForInitTests()
   await environmentTest()
   await logout()
-  await inviteTest()
 })
 
 test('Invite', async () => {
