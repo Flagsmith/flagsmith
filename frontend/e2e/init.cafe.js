@@ -15,7 +15,6 @@ require('dotenv').config()
 
 const url = `http://localhost:${process.env.PORT || 8080}/`
 const logger = getLogger()
-let e2eInitDone = undefined
 
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
@@ -52,6 +51,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
           '\n',
         )
       }
+      console.log('Starting E2E tests')
     })
   } else {
     // eslint-disable-next-line no-console
@@ -73,56 +73,36 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     console.log('End of Initialise Requests')
   })
 
-const waitForInitTests = async () => {
-  log('Waiting for the initialization')
-  while (e2eInitDone === undefined) {
-    await t.wait(100)
-  }
-}
-
-test('Signup', async () => {
-  console.log('Init')
-  await initialiseTests()
-  await logout()
-  e2eInitDone = true
-}).after(async () => {
-  if (!e2eInitDone) {
-    e2eInitDone = false
-    throw new Error('not passed')
-  }
-})
-
-test('Flag', async () => {
-  await waitForInitTests()
-  await flagTests()
-  await logout()
-})
-
 test('Segment-part-1', async () => {
-  await waitForInitTests()
   await testSegment1()
   await logout()
 })
 
 test('Segment-part-2', async () => {
-  await waitForInitTests()
   await testSegment2()
   await logout()
 })
 
-test('Environment', async () => {
-  await waitForInitTests()
-  await environmentTest()
+test('Flag', async () => {
+  await flagTests()
+  await logout()
+})
+
+test('Signup', async () => {
+  await initialiseTests()
   await logout()
 })
 
 test('Invite', async () => {
-  await waitForInitTests()
   await inviteTest()
 })
 
+test('Environment', async () => {
+  await environmentTest()
+  await logout()
+})
+
 test('Project', async () => {
-  await waitForInitTests()
   await projectTest()
   await logout()
 })

@@ -14,10 +14,10 @@ export default async function() {
     await click(byId('jsSignup'));
     await setText(byId('firstName'), 'Bullet'); // visit the url
     await setText(byId('lastName'), 'Train'); // visit the url
-    await setText(byId('email'), email); // visit the url
+    await setText(byId('email'), email + '.io'); // visit the url
     await setText(byId('password'), password); // visit the url
     await click(byId('signup-btn'));
-    await setText('[name="orgName"]', 'Bullet Train Ltd');
+    await setText('[name="orgName"]', 'Bullet Train Ltd 0');
     await click('#create-org-btn');
     await waitForElementVisible(byId('project-select-page'));
 
