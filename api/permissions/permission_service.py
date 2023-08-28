@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, List, Union
 
 from django.db.models import Q, QuerySet
 
@@ -84,13 +84,13 @@ def get_permitted_projects_for_user(
 
 
 def get_permitted_projects_for_master_api_key(
-    master_api_key: "MasterAPIKey", permission_key: str
+    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: list = None
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
 
     return get_permitted_projects_for_master_api_key_using_roles(
-        master_api_key, permission_key
+        master_api_key, permission_key, tag_ids
     )
 
 
@@ -98,6 +98,7 @@ def get_permitted_environments_for_user(
     user: "FFAdminUser",
     project: Project,
     permission_key: str,
+    tag_ids: List[int] = None,
 ) -> QuerySet[Environment]:
     """
     Get all environments that the user has the given permissions for.
@@ -114,7 +115,9 @@ def get_permitted_environments_for_user(
     if is_user_project_admin(user, project):
         return project.environments.all()
 
-    base_filter = get_base_permission_filter(user, Environment, permission_key)
+    base_filter = get_base_permission_filter(
+        user, Environment, permission_key, tag_ids=tag_ids
+    )
     filter_ = base_filter & Q(project=project)
 
     return Environment.objects.filter(filter_).distinct().defer("description")
@@ -124,12 +127,13 @@ def get_permitted_environments_for_master_api_key(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
+    tag_ids: List[int] = None,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
         return project.environments.all()
 
     return get_permitted_environments_for_master_api_key_using_roles(
-        master_api_key, project, permission_key
+        master_api_key, project, permission_key, tag_ids
     )
 
 

@@ -864,3 +864,34 @@ def test_create_feature_reaching_max_limit(client, project, settings):
         response.json()["project"]
         == "The Project has reached the maximum allowed features limit."
     )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_cannot_update_feature_state_for_different_feature(
+    client, environment, feature_state, feature, identity, project
+):
+    # Given
+    another_feature = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+
+    feature_state_value = "New value"
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": feature_state_value},
+        "environment": environment.id,
+        "feature": another_feature.id,
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    # TODO: fix this test
+    assert another_feature.feature_states.count() == 1
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # assert response.json()["feature_state_value"]["string_value"] == feature_state_value

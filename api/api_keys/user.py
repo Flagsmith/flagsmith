@@ -40,14 +40,16 @@ class APIKeyUser(UserABC):
     def is_environment_admin(self, environment: "Environment") -> bool:
         return is_master_api_key_environment_admin(self.key, environment)
 
-    def has_project_permission(self, permission: str, project: "Project") -> bool:
-        return project in self.get_permitted_projects(permission)
+    def has_project_permission(
+        self, permission: str, project: "Project", tag_ids=None
+    ) -> bool:
+        return project in self.get_permitted_projects(permission, tag_ids)
 
     def has_environment_permission(
-        self, permission: str, environment: "Environment"
+        self, permission: str, environment: "Environment", tag_ids=None
     ) -> bool:
         return environment in self.get_permitted_environments(
-            permission, environment.project
+            permission, environment.project, tag_ids
         )
 
     def has_organisation_permission(
@@ -57,12 +59,16 @@ class APIKeyUser(UserABC):
             self.key, organisation, permission_key
         )
 
-    def get_permitted_projects(self, permission_key: str) -> QuerySet["Project"]:
-        return get_permitted_projects_for_master_api_key(self.key, permission_key)
+    def get_permitted_projects(
+        self, permission_key: str, tag_ids=None
+    ) -> QuerySet["Project"]:
+        return get_permitted_projects_for_master_api_key(
+            self.key, permission_key, tag_ids
+        )
 
     def get_permitted_environments(
-        self, permission_key: str, project: "Project"
+        self, permission_key: str, project: "Project", tag_ids=None
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(
-            self.key, project, permission_key
+            self.key, project, permission_key, tag_ids
         )
