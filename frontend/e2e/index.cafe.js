@@ -29,6 +29,8 @@ createTestCafe()
         const runner = testcafe.createRunner()
         const args = process.argv.splice(2).map(value => value.toLowerCase());
         console.log('Filter tests:', args)
+        const concurrentInstances = process.env.E2E_CONCURRENCY ?? 3
+        console.log('E2E Concurrency:', concurrentInstances)
 
         return runner
             .clientScripts('e2e/add-error-logs.js')
@@ -40,6 +42,7 @@ createTestCafe()
                 return args.includes(testName.toLowerCase())
                 }
             })
+            .concurrency(parseInt(concurrentInstances))
             .run(options)
     })
     .then(async (v) => {
