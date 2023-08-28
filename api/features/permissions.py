@@ -89,14 +89,13 @@ class FeatureStatePermissions(IsAuthenticated):
             if environment and (isinstance(environment, int) or environment.isdigit()):
                 environment = Environment.objects.get(id=int(environment))
 
-                feature_id = request.data.get("feature")
-                feature = Feature.objects.get(
-                    id=feature_id, project=environment.project
-                )
-                required_permission = action_permission_map.get(view.action)
-
                 tag_ids = None
+
+                required_permission = action_permission_map.get(view.action)
                 if required_permission in TAG_SUPPORTED_PERMISSIONS:
+                    feature_id = request.data.get("feature")
+                    feature = Feature.objects.get(id=feature_id)
+
                     tag_ids = list(feature.tags.values_list("id", flat=True))
 
                 return request.user.has_environment_permission(
