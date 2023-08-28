@@ -229,7 +229,7 @@ const EnvironmentSettingsPage = class extends Component {
             }
             return (
               <div className='app-container container'>
-                <PageTitle title='Settings' />
+                <PageTitle title='Environment Settings' />
                 {isLoading && (
                   <div className='centered-container'>
                     <Loader />
@@ -350,34 +350,34 @@ const EnvironmentSettingsPage = class extends Component {
                         </div>
                         {Utils.getFlagsmithHasFeature('feature_versioning') && (
                           <div>
-                            <Row space style={{ marginTop: '1.5rem' }}>
-                              <div className='col-md-8 pl-0'>
-                                <h5 className='m-b-0'>Feature versioning</h5>
-                                <p className='fs-small lh-sm'>
-                                  Allows you to attach versions to updating
-                                  feature values and segment overrides.
-                                  <br />
-                                  <strong>
-                                    Warning! Enabling this is irreversable
-                                  </strong>
-                                </p>
-                              </div>
-                              <div className='col-md-4 pr-0 text-right'>
-                                <div>
-                                  <Switch
-                                    className='float-right'
-                                    checked={use_v2_feature_versioning}
-                                    onChange={(v) => {
-                                      this.confirmToggle(
-                                        'Enable "Feature Versioning"',
-                                        'Allows you to attach versions to updating feature values and segment overrides.',
-                                        'use_v2_feature_versioning',
-                                      )
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </Row>
+                            <div className='col-md-6 mt-4'>
+                              <Row>
+                                <Switch
+                                  disabled={use_v2_feature_versioning}
+                                  className='float-right'
+                                  checked={use_v2_feature_versioning}
+                                  onChange={(v) => {
+                                    this.confirmToggle(
+                                      'Enable "Feature Versioning"',
+                                      'Allows you to attach versions to updating feature values and segment overrides.',
+                                      'use_v2_feature_versioning',
+                                    )
+                                  }}
+                                />
+                                <h5 className='mb-0 ml-3'>
+                                  Feature versioning
+                                </h5>
+                              </Row>
+
+                              <p className='fs-small lh-sm'>
+                                Allows you to attach versions to updating
+                                feature values and segment overrides.
+                                <br />
+                                <strong>
+                                  Warning! Enabling this is irreversable
+                                </strong>
+                              </p>
+                            </div>
                           </div>
                         )}
                         {Utils.getFlagsmithHasFeature(
@@ -421,8 +421,8 @@ const EnvironmentSettingsPage = class extends Component {
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <Switch
-                                className='float-right'
-                                disabled={!has4EyesPermission}
+                              className='float-right'
+                              disabled={!has4EyesPermission}
                               checked={
                                 has4EyesPermission &&
                                 Utils.changeRequestsEnabled(

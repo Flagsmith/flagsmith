@@ -20,7 +20,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 
 const App = class extends Component {

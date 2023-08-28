@@ -119,7 +119,7 @@ export default (
         component={ComparePage}
       />
       <Route
-        path='/project/:projectId/environment/:environmentId/feature-history'
+        path='/project/:projectId/environment/:environmentId/history'
         exact
         component={FeatureHistoryPage}
       />

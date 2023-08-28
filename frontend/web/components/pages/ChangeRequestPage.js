@@ -309,7 +309,6 @@ const ChangeRequestsPage = class extends Component {
         permission={Utils.getApproveChangeRequestPermission(true)}
         id={this.props.match.params.environmentId}
       >
-
         {({ permission: approvePermission }) => (
           <Permission
             level='environment'
@@ -324,31 +323,34 @@ const ChangeRequestsPage = class extends Component {
                 className='app-container container-fluid'
               >
                 <PageTitle
-                    cta={
-                      <Row>
-                        <Button
-                            theme='secondary'
-                            onClick={this.deleteChangeRequest}
-                            size='small'
-                        >
-                          Delete
-                        </Button>
-                        <Button
-                            onClick={() =>
-                                this.editChangeRequest(projectFlag, environmentFlag)
-                            }
-                            className='ml-2'
-                            size='small'
-                        >
-                          Edit
-                        </Button>
-                      </Row>
-                    }
-                    title={changeRequest.title}
+                  cta={
+                    <Row>
+                      <Button
+                        theme='secondary'
+                        onClick={this.deleteChangeRequest}
+                        size='small'
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          this.editChangeRequest(projectFlag, environmentFlag)
+                        }
+                        className='ml-2'
+                        size='small'
+                      >
+                        Edit
+                      </Button>
+                    </Row>
+                  }
+                  title={changeRequest.title}
                 >
                   Created at{' '}
-                  {moment(changeRequest.created_at).format('Do MMM YYYY HH:mma')} by{' '}
-                  {changeRequest.user && user.first_name} {user && user.last_name}
+                  {moment(changeRequest.created_at).format(
+                    'Do MMM YYYY HH:mma',
+                  )}{' '}
+                  by {changeRequest.user && user.first_name}{' '}
+                  {user && user.last_name}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
                 <div className='row'>

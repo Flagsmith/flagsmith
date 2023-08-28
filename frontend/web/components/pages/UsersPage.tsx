@@ -127,8 +127,9 @@ const UsersPage: FC<UsersPageType> = (props) => {
         }
         title={'Identities'}
       >
-        View and manage features states for individual identities. This will override
-        individual default feature settings for your selected environment.{' '}
+        View and manage features states for individual identities. This will
+        override individual default feature settings for your selected
+        environment.{' '}
         <Button
           theme='text'
           target='_blank'

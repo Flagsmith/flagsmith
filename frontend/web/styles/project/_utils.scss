@@ -171,3 +171,21 @@
         color: $bt-brand-primary-dark
     }
 }
+
+.mh-auto {
+    min-height: auto !important;
+}
+
+.git-diff {
+    padding:2px;
+    &--added {
+        background-color: rgba($success,0.16);
+        color: $success;
+    }
+
+    &--removed {
+        background-color: rgba($danger,0.16);
+        color: $danger;
+    }
+
+}

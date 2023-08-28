@@ -32,6 +32,12 @@ export const projectFlagService = service
   .enhanceEndpoints({ addTagTypes: ['ProjectFlag'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
+        providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: (query: Req['getProjectFlag']) => ({
+          url: `projects/${query.project}/features/${query.id}`,
+        }),
+      }),
       getProjectFlags: builder.query<
         Res['projectFlags'],
         Req['getProjectFlags']
@@ -62,9 +68,21 @@ export async function getProjectFlags(
     projectFlagService.endpoints.getProjectFlags.initiate(data, options),
   )
 }
+export async function getProjectFlag(
+  store: any,
+  data: Req['getProjectFlag'],
+  options?: Parameters<
+    typeof projectFlagService.endpoints.getProjectFlag.initiate
+  >[1],
+) {
+  return store.dispatch(
+    projectFlagService.endpoints.getProjectFlag.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   // END OF EXPORTS
 } = projectFlagService

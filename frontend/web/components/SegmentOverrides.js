@@ -623,9 +623,7 @@ class TheComponent extends Component {
           {visibleValues &&
             !!visibleValues.length &&
             !this.props.showCreateSegment && (
-              <div
-                className='overflow-visible'
-              >
+              <div className='overflow-visible'>
                 {!this.props.id && (
                   <div className='my-4'>
                     <InfoMessage className='mb-4 text-left faint'>

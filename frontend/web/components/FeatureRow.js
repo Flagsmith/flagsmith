@@ -326,11 +326,11 @@ class TheComponent extends Component {
                     onClick={() => {
                       this.context.router.history.push(
                         Utils.getFlagsmithHasFeature('feature_versioning')
-                          ? `/project/${projectId}/environment/${environmentId}/feature-history?feature=${projectFlag.id}`
+                          ? `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`
                           : `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
                     }}
-                    data-test={`feature-history-${this.props.index}`}
+                    data-test={`history-${this.props.index}`}
                   >
                     <Icon name='clock' width={24} fill='#9DA4AE' />
                   </div>

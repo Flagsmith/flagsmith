@@ -16,6 +16,7 @@ import {
 } from './useVersionFeatureState'
 import { deleteFeatureSegment } from './useFeatureSegment'
 import transformCorePaging from 'common/transformCorePaging'
+import Utils from 'common/utils/utils'
 
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
@@ -95,13 +96,24 @@ export const featureVersionService = service
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
       }),
+      getFeatureVersion: builder.query<
+        Res['featureVersion'],
+        Req['getFeatureVersion']
+      >({
+        providesTags: (res) => [{ id: res?.uuid, type: 'FeatureVersion' }],
+        query: (query: Req['getFeatureVersion']) => ({
+          url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.uuid}`,
+        }),
+      }),
       getFeatureVersions: builder.query<
         Res['featureVersions'],
         Req['getFeatureVersions']
       >({
         providesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         query: (query) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
+          url: `environments/${query.environmentId}/features/${
+            query.featureId
+          }/versions/?${Utils.toParam(query)}`,
         }),
         transformResponse: (
           baseQueryReturnValue: Res['featureVersions'],
@@ -179,11 +191,23 @@ export async function getFeatureVersions(
     featureVersionService.endpoints.getFeatureVersions.initiate(data, options),
   )
 }
+export async function getFeatureVersion(
+  store: any,
+  data: Req['getFeatureVersion'],
+  options?: Parameters<
+    typeof featureVersionService.endpoints.getFeatureVersion.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureVersionService.endpoints.getFeatureVersion.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateAndPublishFeatureVersionMutation,
   useCreateFeatureVersionMutation,
+  useGetFeatureVersionQuery,
   useGetFeatureVersionsQuery,
   // END OF EXPORTS
 } = featureVersionService

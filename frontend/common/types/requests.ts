@@ -146,5 +146,11 @@ export type Req = {
     environmentId: string
   }>
   getUsers: { organisationId: number }
+  getFeatureVersion: {
+    environmentId: string
+    featureId: string
+    uuid: string
+  }
+  getProjectFlag: { project: string; id: string }
   // END OF TYPES
 }

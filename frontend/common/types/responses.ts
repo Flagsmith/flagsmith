@@ -16,6 +16,7 @@ export type FeatureVersionState = {
   enabled: boolean
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
+  multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
 }
 export type Operator = {
   value: string | null
@@ -365,7 +366,7 @@ export type Res = {
   segmentPriorities: {}
   featureSegment: { id: string }
   featureVersions: PagedResponse<FeatureVersion>
-
   users: User[]
+  projectFlag: ProjectFlag
   // END OF TYPES
 }
