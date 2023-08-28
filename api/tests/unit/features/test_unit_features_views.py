@@ -891,7 +891,6 @@ def test_cannot_update_feature_state_for_different_feature(
     response = client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    # TODO: fix this test
     assert another_feature.feature_states.count() == 1
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    # assert response.json()["feature_state_value"]["string_value"] == feature_state_value
+    assert "Feature state already exists" in response.json()[0]

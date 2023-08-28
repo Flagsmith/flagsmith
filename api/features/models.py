@@ -23,6 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
+    BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
 )
@@ -671,6 +672,7 @@ class FeatureState(
         return getattr(self, "feature_state_value", None)
 
     @hook(BEFORE_CREATE)
+    @hook(BEFORE_SAVE)
     def check_for_existing_feature_state(self):
         # prevent duplicate feature states being created for an environment
         if self.version is None:
