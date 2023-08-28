@@ -30,7 +30,7 @@ jobs:
             test
 
   run-e2e-tests:
-    runs-on: e2e-runner-8c
+    runs-on: ubuntu-latest
     name: Full E2E tests
 
     services:
@@ -74,7 +74,7 @@ jobs:
           docker logs $API_CONTAINER_ID
 
   run-e2e-tests-docker-unified:
-    runs-on: e2e-runner-8c
+    runs-on: ubuntu-latest
     name: Full E2E tests with unified image in Docker
 
     steps:
