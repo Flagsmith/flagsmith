@@ -73,14 +73,14 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     console.log('End of Initialise Requests')
   })
 
-const waitForInitTests = async (testName) => {
-  log('Waiting for the initialization', testName)
+const waitForInitTests = async () => {
+  log('Waiting for the initialization')
   while (e2eInitDone === undefined) {
     await t.wait(100)
   }
 }
 
-test('Initialise', async () => {
+test('Signup', async () => {
   console.log('Init')
   await initialiseTests()
   await logout()
@@ -92,33 +92,38 @@ test('Initialise', async () => {
   }
 })
 
-test('Flag Tests', async () => {
-  await waitForInitTests('Flag Tests')
+test('Flag', async () => {
+  await waitForInitTests()
   await flagTests()
   await logout()
 })
 
-test('Segment Tests Part 1', async () => {
-  await waitForInitTests('Segment Tests Part 1')
+test('Segment-part-1', async () => {
+  await waitForInitTests()
   await testSegment1()
   await logout()
 })
 
-test('Segment Tests Part 2', async () => {
-  await waitForInitTests('Segment Tests Part 2')
+test('Segment-part-2', async () => {
+  await waitForInitTests()
   await testSegment2()
   await logout()
 })
 
-test('Environment Tests', async () => {
-  await waitForInitTests('Environment Tests')
+test('Environment', async () => {
+  await waitForInitTests()
   await environmentTest()
   await logout()
   await inviteTest()
 })
 
-test('Project Tests', async () => {
-  await waitForInitTests('Project Tests')
+test('Invite', async () => {
+  await waitForInitTests()
+  await inviteTest()
+})
+
+test('Project', async () => {
+  await waitForInitTests()
   await projectTest()
   await logout()
 })

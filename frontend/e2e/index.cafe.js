@@ -27,18 +27,17 @@ createTestCafe()
             });
         });
         const runner = testcafe.createRunner()
-        const args = process.argv;
-        args.splice(0,2)
+        const args = process.argv.splice(2).map(value => value.toLowerCase());
         console.log('Filter tests:', args)
 
         return runner
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .filter(testName => {
-                if (!args.length) {
+                if (!args.length || testName.toLowerCase() === 'signup') {
                     return true
                 } else {
-                    return args.includes(testName);
+                return args.includes(testName.toLowerCase())
                 }
             })
             .run(options)

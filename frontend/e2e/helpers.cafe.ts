@@ -107,7 +107,7 @@ export const log = (group:string|undefined, test?:string, message?:string) => {
 
     if (lastTestName !== testName || lastTestGroup[testName] !== groupName) {
         const ellipsis = group === groupName ? '' : '...';
-        console.log('\n', '\x1b[32m', `${testName ? `${ellipsis}[${testName}] ` : ''}${groupName}`, '\x1b[0m', '\n');
+        console.log('\n', '\x1b[32m', `${testName ? `${ellipsis}[${testName} tests] ` : ''}${groupName}`, '\x1b[0m', '\n');
         lastTestGroup[testName] = groupName;
         lastTestName = testName;
     }
