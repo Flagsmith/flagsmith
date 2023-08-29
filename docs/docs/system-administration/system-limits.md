@@ -4,6 +4,13 @@ title: System Limits
 
 In order to ensure consistent performance, Flagsmith has the following limitations.
 
+:::tip
+
+Both SaaS and self hosted versions of Flagsmith can override these limits if required. Please contact us if you want
+help with this.
+
+:::
+
 ## Entity Counts
 
 - **400** Features per Project
