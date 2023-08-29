@@ -117,10 +117,10 @@ The `In` operator lets you match a Trait value against a comma-separated list of
 value might read `21,682,8345`. This would then match against a Trait value of `682` but not against a Trait value of
 `683`.
 
-The `In` operator can be useful when building Segments to match against tenancies within your application. Let's say
-you wanted a Segment to evaluate as true for 5 different customer tenancies. Create a Segment rule where the `In`
-operator matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity
-that contains the tenancy ID of that user.
+The `In` operator can be useful when building Segments to match against tenancies within your application. Let's say you
+wanted a Segment to evaluate as true for 5 different customer tenancies. Create a Segment rule where the `In` operator
+matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity that
+contains the tenancy ID of that user.
 
 ### SemVer-aware operators
 
