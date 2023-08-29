@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.68.0](https://github.com/Flagsmith/flagsmith/compare/flagsmith-frontend-v2.67.1...flagsmith-frontend-v2.68.0) (2023-08-29)
+
+
+### Features
+
+* Use get-metadata-subscription to get max_api_calls ([#2279](https://github.com/Flagsmith/flagsmith/issues/2279)) ([42049fc](https://github.com/Flagsmith/flagsmith/commit/42049fcca8372dc32b4dab0fb350b9d8dc15ab34))
+
+
+### Bug Fixes
+
+* environment document totals ([#2671](https://github.com/Flagsmith/flagsmith/issues/2671)) ([33c9bf2](https://github.com/Flagsmith/flagsmith/commit/33c9bf22dce4ff50e0e01a9c1351b31aee41411d))
+
 ## [2.67.1](https://github.com/Flagsmith/flagsmith/compare/v2.67.0...v2.67.1) (2023-08-22)
 
 
