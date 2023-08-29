@@ -673,8 +673,7 @@ class FeatureState(
 
     @hook(BEFORE_CREATE)
     @hook(BEFORE_SAVE, when="deleted", is_not=True)
-    def check_for_existing_feature_state(self):
-        # prevent duplicate feature states being created for an environment
+    def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
         filter_ = Q(
@@ -686,6 +685,7 @@ class FeatureState(
         )
         if self.id:
             filter_ &= ~Q(id=self.id)
+
         if FeatureState.objects.filter(filter_).exists():
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
