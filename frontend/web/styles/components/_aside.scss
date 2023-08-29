@@ -293,7 +293,7 @@ $animation-timing-function: ease-in-out;
   }
   &__environments-wrapper {
     .collapsible__header {
-      padding: 16px 0px;
+      padding: 8px 0px;
       &:hover {
         color: $aside-nav-hover;
         svg {
@@ -368,7 +368,7 @@ $animation-timing-function: ease-in-out;
       fill: $aside-nav-color;
     }
 
-    padding: 12px 0 12px 16px;
+    padding: 8px 0 8px 16px;
     border-radius: $border-radius-lg;
     cursor: pointer;
     display: flex;
@@ -397,7 +397,7 @@ $animation-timing-function: ease-in-out;
   }
   &__title-wrapper {
     text-decoration: none;
-    padding: 1rem 0px 1rem 1rem;
+    padding: 8px 0px 8px 1rem;
     &:hover {
       .aside__link-text {
         text-decoration: none;
@@ -459,7 +459,7 @@ $animation-timing-function: ease-in-out;
     &:hover {
       color: $aside-nav-inactive-hover-color;
     }
-    padding: 9px 16px;
+    padding: 8px 16px;
     margin: 0 32px;
     cursor: pointer;
     &.active,

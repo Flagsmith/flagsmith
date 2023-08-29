@@ -460,7 +460,7 @@ const Aside = class extends Component {
                                                   </span>
                                                   Scheduling
                                                   {scheduled ? (
-                                                    <span className='ml-1 unread'>
+                                                    <span className='ml-1 unread d-inline'>
                                                       {scheduled}
                                                     </span>
                                                   ) : null}
@@ -479,7 +479,7 @@ const Aside = class extends Component {
                                                   </span>
                                                   Change Requests{' '}
                                                   {changeRequests ? (
-                                                    <span className='unread'>
+                                                    <span className='unread d-inline'>
                                                       {changeRequests}
                                                     </span>
                                                   ) : null}

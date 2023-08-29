@@ -266,7 +266,7 @@ const UserPage = class extends Component {
             id={environmentId}
           >
             {({ permission }) => (
-              <div className='app-container container'>
+              <div className='app-container container mt-1'>
                 <IdentityProvider onSave={this.onSave}>
                   {(
                     {
@@ -290,6 +290,26 @@ const UserPage = class extends Component {
                       </div>
                     ) : (
                       <>
+                        <nav aria-label='breadcrumb'>
+                          <ol className='breadcrumb mb-2 py-1"'>
+                            <li className='breadcrumb-item fs-small lh-sm'>
+                              <Link
+                                className='fw-normal'
+                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users`}
+                              >
+                                Identities
+                              </Link>
+                            </li>
+                            <li
+                              className='breadcrumb-item active fs-small lh-sm text-muted'
+                              aria-current='page'
+                              style={{ opacity: 0.6 }}
+                            >
+                              {(identity && identity.identity.identifier) ||
+                                this.props.match.params.id}
+                            </li>
+                          </ol>
+                        </nav>
                         <PageTitle
                           title={
                             (identity && identity.identity.identifier) ||
