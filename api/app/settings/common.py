@@ -606,6 +606,7 @@ CACHES = {
     BAD_ENVIRONMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": BAD_ENVIRONMENTS_CACHE_LOCATION,
+        "OPTIONS": {"MAX_ENTRIES": 50},
     },
     CHARGEBEE_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
