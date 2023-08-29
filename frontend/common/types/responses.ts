@@ -230,7 +230,7 @@ export type FeatureState = {
   environment: number
   feature_segment?: {
     id: number
-    priority?: number
+    priority: number
     segment: number
     uuid: string
   }

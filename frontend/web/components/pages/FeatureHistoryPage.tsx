@@ -124,6 +124,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                   </div>
                   {diff === v.uuid && (
                     <FeatureVersionDiff
+                      projectId={`${match.params.projectId}`}
                       featureId={feature}
                       environmentId={environmentId}
                       newUUID={v.uuid}

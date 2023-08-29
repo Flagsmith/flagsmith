@@ -35,7 +35,7 @@ export const projectFlagService = service
       getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
-          url: `projects/${query.project}/features/${query.id}`,
+          url: `projects/${query.project}/features/${query.id}/`,
         }),
       }),
       getProjectFlags: builder.query<

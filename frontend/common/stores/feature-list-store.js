@@ -556,24 +556,6 @@ const controller = {
           if (res.error) {
             throw res.error
           }
-
-          // Get the created / updated segment overrides in the order they were sent and update priorities
-          const overrides = segmentOverrides
-            .map((override) => {
-              const matching = res.data.find(
-                (v) => v.data?.feature_segment?.segment === override.segment,
-              )
-              return matching ? { id: matching.data.id } : null
-            })
-            .filter((v) => !!v)
-
-          return updateSegmentPriorities(
-            getStore(),
-            overrides.map((override, index) => ({
-              id: override.id,
-              priority: index,
-            })),
-          )
         })
       })
     } else if (environmentFlag) {

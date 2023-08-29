@@ -1,10 +1,12 @@
 import { FC } from 'react'
 import FeatureDiff from './FeatureDiff'
 import { useGetVersionFeatureStateQuery } from 'common/services/useVersionFeatureState'
+
 type VersionDiffType = {
   oldUUID: string
   newUUID: string
   environmentId: string
+  projectId: string
   featureId: string
 }
 
@@ -13,6 +15,7 @@ const FeatureVersionDiff: FC<VersionDiffType> = ({
   featureId,
   newUUID,
   oldUUID,
+  projectId,
 }) => {
   const { data: oldData } = useGetVersionFeatureStateQuery({
     environmentId,
@@ -31,7 +34,12 @@ const FeatureVersionDiff: FC<VersionDiffType> = ({
           <Loader />
         </div>
       ) : (
-        <FeatureDiff oldState={oldData} newState={newData} />
+        <FeatureDiff
+          projectId={projectId}
+          featureId={featureId}
+          oldState={oldData}
+          newState={newData}
+        />
       )}
     </div>
   )
