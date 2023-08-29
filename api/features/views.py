@@ -47,11 +47,11 @@ from .permissions import (
 )
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
+    EnvironmentFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
-    FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
@@ -295,9 +295,14 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return FeatureStateSerializerWithIdentity
         elif self.action in ["retrieve", "update", "create"]:
-            return FeatureStateSerializerBasic
+            return EnvironmentFeatureStateSerializer
         else:
             return FeatureStateSerializerCreate
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["environment"] = self.get_environment_from_request()
+        return context
 
     def get_queryset(self):
         """
@@ -354,25 +359,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
-        environment = self.get_environment_from_request()
-        if (
-            environment.project.organisation
-            not in self.request.user.organisations.all()
-        ):
-            return Response(status.HTTP_403_FORBIDDEN)
-
-        data["environment"] = environment.id
 
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        feature_id = int(data["feature"])
-
-        if feature_id not in [
-            feature.id for feature in environment.project.features.all()
-        ]:
-            error = {"detail": "Feature does not exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         identity_pk = self.kwargs.get("identity_pk")
@@ -390,7 +379,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 )
 
             return Response(
-                FeatureStateSerializerBasic(feature_state).data,
+                EnvironmentFeatureStateSerializer(feature_state).data,
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
@@ -476,7 +465,7 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
 
     def get_serializer_class(self):
         if self.action == "create_new_version":
-            return FeatureStateSerializerBasic
+            return EnvironmentFeatureStateSerializer
         return super().get_serializer_class()
 
 

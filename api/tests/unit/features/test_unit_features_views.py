@@ -864,3 +864,65 @@ def test_create_feature_reaching_max_limit(client, project, settings):
         response.json()["project"]
         == "The Project has reached the maximum allowed features limit."
     )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_create_segment_override_using_environment_viewset(
+    client, environment, feature, feature_segment
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    new_value = "new-value"
+    data = {
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": feature_segment.id,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response.json()["feature_state_value"] == new_value
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_update_feature_state_value_environment_field_is_read_only(
+    client, environment, feature, feature_state, environment_two
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment_two.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then - it did not change the environment field on the feature state
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["environment"] == environment.id
+    response.json()["feature_state_value"] == new_value

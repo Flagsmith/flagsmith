@@ -297,7 +297,12 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     class Meta:
         model = FeatureState
         fields = "__all__"
-        read_only_fields = ("version", "created_at", "updated_at", "status")
+        read_only_fields = (
+            "version",
+            "created_at",
+            "updated_at",
+            "status",
+        )
 
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
@@ -309,10 +314,15 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
             raise serializers.ValidationError(e.message)
 
     def validate(self, attrs):
-        environment = attrs.get("environment")
+        environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
+        feature = attrs.get("feature")
+        if feature.project_id != environment.project_id:
+            error = {"feature": "Feature does not exist in project"}
+            raise serializers.ValidationError(error)
+
         if identifier:
             try:
                 identity = Identity.objects.get(
@@ -339,7 +349,14 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return attrs
 
 
-class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
+class EnvironmentFeatureStateSerializer(FeatureStateSerializerBasic):
+    class Meta(FeatureStateSerializerBasic.Meta):
+        read_only_fields = FeatureStateSerializerBasic.Meta.read_only_fields + (
+            "environment",
+        )
+
+
+class FeatureStateSerializerWithIdentity(EnvironmentFeatureStateSerializer):
     class _IdentitySerializer(serializers.ModelSerializer):
         class Meta:
             model = Identity
