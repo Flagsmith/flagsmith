@@ -794,6 +794,74 @@ const controller = {
     environmentFlags,
     projectFlags,
   ) => {
+    const flag = (projectFlags || store.model.features)[index]
+    store.saving()
+
+    API.trackEvent(Constants.events.TOGGLE_FEATURE)
+    const versionedEnvironments = environments.filter(
+      (env) => env.use_v2_feature_versioning,
+    )
+    const nonVersionedEnvironments = environments.filter(
+      (env) => !env.use_v2_feature_versioning,
+    )
+    return controller
+      .toggleVersionedFlag(
+        index,
+        versionedEnvironments,
+        comment,
+        environmentFlags,
+        projectFlags,
+      )
+      .then(() => {
+        return Promise.all(
+          nonVersionedEnvironments.map((e) => {
+            if (store.hasFlagInEnvironment(flag.id, environmentFlags)) {
+              const environmentFlag = (environmentFlags ||
+                store.model.keyedEnvironmentFeatures)[flag.id]
+              return data
+                .put(
+                  `${Project.api}environments/${e.api_key}/featurestates/${environmentFlag.id}/`,
+                  Object.assign({}, environmentFlag, {
+                    enabled: !environmentFlag.enabled,
+                  }),
+                )
+                .then((res) => {
+                  store.model.keyedEnvironmentFeatures[flag.id] = res
+                })
+            }
+            return data
+              .post(
+                `${Project.api}environments/${e.api_key}/featurestates/`,
+                Object.assign(
+                  {},
+                  {
+                    comment,
+                    enabled: true,
+                    feature: flag.id,
+                  },
+                ),
+              )
+              .then((res) => {
+                store.model.keyedEnvironmentFeatures[flag.id] = res
+              })
+          }),
+        ).then(() => {
+          if (store.model) {
+            store.model.lastSaved = new Date().valueOf()
+          }
+        })
+      })
+      .then(() => {
+        store.saved()
+      })
+  },
+  toggleFlagVersioned: (
+    index,
+    environments,
+    comment,
+    environmentFlags,
+    projectFlags,
+  ) => {
     store.saving()
 
     API.trackEvent(Constants.events.TOGGLE_FEATURE)
@@ -833,6 +901,52 @@ const controller = {
               ),
             }
             store.saved()
+          })
+        })
+      }),
+    )
+  },
+  toggleVersionedFlag: (
+    index,
+    environments,
+    comment,
+    environmentFlags,
+    projectFlags,
+  ) => {
+    return Promise.all(
+      environments.map((v) => {
+        return ProjectStore.getEnvironmentIdFromKeyAsync(
+          v.project,
+          v.api_key,
+        ).then((res) => {
+          const projectFlag = (projectFlags || store.model.features)[index]
+
+          const environmentFlag = (environmentFlags ||
+            store.model.keyedEnvironmentFeatures)[projectFlag.id]
+
+          const data = Object.assign({}, environmentFlag, {
+            enabled: !environmentFlag.enabled,
+            hide_from_client: projectFlag.hide_from_client,
+          })
+          return createAndPublishFeatureVersion(getStore(), {
+            environmentId: res,
+            featureId: projectFlag.id,
+            featureStates: [data],
+          }).then((res) => {
+            if (res.error) {
+              throw res.error
+            }
+
+            if (store.model) {
+              store.model.lastSaved = new Date().valueOf()
+            }
+            const featureState = res.data[0].data
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+              ...featureState,
+              feature_state_value: Utils.featureStateToValue(
+                featureState.feature_state_value,
+              ),
+            }
           })
         })
       }),
