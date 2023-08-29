@@ -313,6 +313,13 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(e.message)
 
+    def validate_feature(self, feature):
+        if self.instance and self.instance.feature_id != feature.id:
+            raise serializers.ValidationError(
+                "Cannot change the feature of a feature state"
+            )
+        return feature
+
     def validate(self, attrs):
         environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")

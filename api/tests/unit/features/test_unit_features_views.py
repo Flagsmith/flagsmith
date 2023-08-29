@@ -926,3 +926,35 @@ def test_update_feature_state_value_environment_field_is_read_only(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["environment"] == environment.id
     response.json()["feature_state_value"] == new_value
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_cannot_update_feature_of_a_feature_state(
+    client, environment, feature_state, feature, identity, project
+):
+    # Given
+    another_feature = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+
+    feature_state_value = "New value"
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": feature_state_value},
+        "environment": environment.id,
+        "feature": another_feature.id,
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert another_feature.feature_states.count() == 1
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["feature"][0] == "Cannot change the feature of a feature state"
+    )
