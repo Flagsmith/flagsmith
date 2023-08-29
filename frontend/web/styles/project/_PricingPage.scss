@@ -100,7 +100,7 @@
 .dark {
 	.panel-footer {
 
-		background:darken($body-bg-dark,2)
+		background:$body-bg-dark;
 	}
 }
 .panel-footer{

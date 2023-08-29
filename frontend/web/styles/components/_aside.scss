@@ -175,7 +175,10 @@ $animation-timing-function: ease-in-out;
       }
 
       &:hover {
-        color: $aside-nav-hover-dark;
+        color: $aside-nav-active-color-dark;
+        path {
+          fill: $aside-nav-active-color-dark;
+        }
       }
     }
 
