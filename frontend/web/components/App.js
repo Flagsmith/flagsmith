@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { withRouter } from 'react-router-dom'
 import amplitude from 'amplitude-js'
@@ -22,6 +22,7 @@ import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from 'components/Icon'
 import AccountStore from 'common/stores/account-store'
+import InfoMessage from './InfoMessage'
 
 const App = class extends Component {
   static propTypes = {
@@ -38,6 +39,7 @@ const App = class extends Component {
     lastEnvironmentId: '',
     lastProjectId: '',
     pin: '',
+    showAnnouncement: true,
     totalApiCalls: 0,
   }
 
@@ -210,6 +212,10 @@ const App = class extends Component {
     this.context.router.history.replace('/')
   }
 
+  closeAnnouncement = () => {
+    this.setState({ showAnnouncement: !this.state.showAnnouncement })
+  }
+
   render() {
     if (
       Utils.getFlagsmithHasFeature('dark_mode') &&
@@ -276,6 +282,9 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
+    const announcementValue = JSON.parse(
+      Utils.getFlagsmithValue('announcement_manage'),
+    )
 
     return (
       <Provider store={getStore()}>
@@ -471,7 +480,27 @@ const App = class extends Component {
                           <Loader />
                         </div>
                       ) : (
-                        this.props.children
+                        <Fragment>
+                          {Utils.getFlagsmithHasFeature(
+                            'announcement_manage',
+                          ) &&
+                            this.state.showAnnouncement && (
+                              <Row>
+                                <InfoMessage
+                                  title={announcementValue.title}
+                                  infoMessageClass={'announcement '}
+                                  isClosable
+                                  close={this.closeAnnouncement}
+                                  buttonText={announcementValue.buttonText}
+                                >
+                                  <div>
+                                    <div>{announcementValue.description}</div>
+                                  </div>
+                                </InfoMessage>
+                              </Row>
+                            )}
+                          {this.props.children}
+                        </Fragment>
                       )}
                     </div>
                   )}
