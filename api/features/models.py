@@ -553,12 +553,13 @@ class FeatureState(
         clone.uuid = uuid.uuid4()
 
         if self.feature_segment:
-            # For now, we can only create a new feature segment if we are cloning to another environment
-            # TODO: with feature versioning, ensure that we clone regardless.
-            #  see this PR: https://github.com/Flagsmith/flagsmith/pull/2382
+            # We can only create a new feature segment if we are cloning to another environment,
+            # or we are creating the feature segment in a new version (versioning v2). This is
+            # due to the default unique constraint on the FeatureSegment model which means that
+            # the same feature, segment and environment combination cannot exist more than once.
             clone.feature_segment = (
                 self.feature_segment.clone(environment=env)
-                if env != self.environment
+                if env != self.environment or environment_feature_version is not None
                 else self.feature_segment
             )
 
