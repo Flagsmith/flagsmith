@@ -227,13 +227,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_CLASSES": ["core.throttling.DBBackedUserRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
-        "user": USER_THROTTLE_RATE,
+        "user": "10000000/day",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -633,6 +633,10 @@ CACHES = {
         "BACKEND": ENVIRONMENT_SEGMENTS_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_SEGMENTS_CACHE_LOCATION,
         "TIMEOUT": ENVIRONMENT_SEGMENTS_CACHE_SECONDS,
+    },
+    "throttle-cache": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "throttle-cache",
     },
 }
 
