@@ -563,6 +563,7 @@ class FeatureState(
         if self.feature_segment:
             # For now, we can only create a new feature segment if we are cloning to another environment
             # TODO: with feature versioning, ensure that we clone regardless.
+            #  see this PR: https://github.com/Flagsmith/flagsmith/pull/2382
             clone.feature_segment = (
                 self.feature_segment.clone(environment=env)
                 if env != self.environment
