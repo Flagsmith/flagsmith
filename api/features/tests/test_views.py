@@ -818,18 +818,18 @@ def test_create_segment_override(admin_client, feature, segment, environment):
     assert created_override.get_feature_state_value() == string_value
 
 
-def test_get_flags_is_not_throttled_from_user_throttle(
+def test_get_flags_is_not_throttled_by_user_throttle(
     api_client, environment, feature, settings
 ):
     # Given
-
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"] = "1/minute"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     url = reverse("api-v1:flags")
 
     # When
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    for _ in range(0, 10):
+    for _ in range(10):
         response = api_client.get(url)
+
         # Then
         assert response.status_code == status.HTTP_200_OK

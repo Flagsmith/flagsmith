@@ -989,3 +989,21 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["flags"]
+
+
+def test_get_identities_is_not_throttled_by_user_throttle(
+    environment, feature, identity, api_client, settings
+):
+    # Given
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"] = "1/minute"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}"
+
+    # When
+    for _ in range(10):
+        response = api_client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK

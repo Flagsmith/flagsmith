@@ -9,5 +9,5 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "mfa_code": "5/min",
     "invite": "10/min",
     "signup": "100/min",
-    "user": "10/seconds",
+    "user": "100000/day",
 }
