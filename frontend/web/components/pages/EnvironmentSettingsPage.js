@@ -190,7 +190,6 @@ const EnvironmentSettingsPage = class extends Component {
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
     return (
-      <div className='app-container'>
         <ProjectProvider
           onRemoveEnvironment={this.onRemoveEnvironment}
           id={this.props.match.params.projectId}
@@ -816,7 +815,6 @@ const EnvironmentSettingsPage = class extends Component {
             )
           }}
         </ProjectProvider>
-      </div>
     )
   }
 }
