@@ -484,7 +484,8 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
-                          {showBanner &&
+                          {user &&
+                            showBanner &&
                             Utils.getFlagsmithHasFeature('announcement') &&
                             this.state.showAnnouncement && (
                               <Row>
