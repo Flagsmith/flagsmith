@@ -96,6 +96,9 @@
             border-top: none;
           }
         }
+        &.change-request-list{
+          background-color: $bg-dark500;
+        }
       }
 
       .chip {

@@ -519,7 +519,7 @@ const ChangeRequestsPage = class extends Component {
                       }
                       className='no-pad'
                     >
-                      <div className='search-list'>
+                      <div className='search-list change-request-list'>
                         <Row className='list-item change-request-item px-4'>
                           <div
                             className='font-weight-medium mr-3'
