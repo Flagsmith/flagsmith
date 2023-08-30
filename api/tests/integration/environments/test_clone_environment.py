@@ -167,6 +167,9 @@ def test_env_clone_clones_segments_overrides(
             "feature_segment": feature_segment,
         },
     )
+    source_feature_segment_id = source_env_feature_states["results"][0][
+        "feature_segment"
+    ]
 
     # (fetch the feature segment id to filter feature states)
     clone_feature_segment_id = get_feature_segement_list_with_api(
@@ -205,7 +208,4 @@ def test_env_clone_clones_segments_overrides(
         clone_env_feature_states["results"][0]["feature_segment"]
         == clone_feature_segment_id
     )
-    assert (
-        clone_feature_segment_id
-        != source_env_feature_states["results"][0]["feature_segment"]
-    )
+    assert clone_feature_segment_id != source_feature_segment_id
