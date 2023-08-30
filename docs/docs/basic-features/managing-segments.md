@@ -90,7 +90,7 @@ Some of the operators in local evaluation mode are only supported in later SDK v
 The full set of Flagsmith rule operators are as follows:
 
 | Name                   | Condition                                                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
 | `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                            |
 | `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                        |
 | `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](#percentage-split-operator).                                                |
@@ -98,7 +98,7 @@ The full set of Flagsmith rule operators are as follows:
 | `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
 | `<`                    | Trait value is less than segment value.                                                                                                           |
 | `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Trait value is equal to one or more elements in a comma delimited list. E.g the rule value might read `21,682,8345`.                              |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](#the-in-operator).                                |     |
 | `Contains`             | Segment value is a substring of trait value.                                                                                                      |
 | `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
 | `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
@@ -110,6 +110,17 @@ The full set of Flagsmith rule operators are as follows:
 | `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
 
 Some of the operators also have special powers, described below.
+
+### The `In` operator
+
+The `In` operator lets you match a Trait value against a comma-separated list of values. For example, the Segment rule
+value might read `21,682,8345`. This would then match against a Trait value of `682` but not against a Trait value of
+`683`.
+
+The `In` operator can be useful when building Segments to match against tenancies within your application. Let's say you
+wanted a Segment to evaluate as true for 5 different customer tenancies. Create a Segment rule where the `In` operator
+matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity that
+contains the tenancy ID of that user.
 
 ### SemVer-aware operators
 

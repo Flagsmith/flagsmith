@@ -308,6 +308,26 @@ def feature_segment(admin_client, segment, feature, environment):
 
 
 @pytest.fixture()
+def segment_featurestate(
+    admin_client: APIClient,
+    segment: int,
+    feature: int,
+    environment: int,
+    feature_segment: int,
+) -> int:
+    data = {
+        "feature": feature,
+        "environment": environment,
+        "feature_segment": feature_segment,
+    }
+    url = reverse("api-v1:features:featurestates-list")
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def identity_traits():
     return [
         {"trait_value": "trait_value_1", "trait_key": "trait_key_1"},

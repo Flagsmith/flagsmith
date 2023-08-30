@@ -120,6 +120,7 @@ $side-width: 660px;
     .tabs {
       .tab-item {
         padding-top: 24px;
+        padding-bottom: 24px;
         overflow-y: auto;
         height: calc(100vh - 110px);
       }
