@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 from tests.integration.helpers import (
     get_env_feature_states_list_with_api,
     get_feature_segement_list_with_api,
@@ -98,7 +99,12 @@ def test_clone_environment_creates_admin_permission_with_the_current_user(
 
 
 def test_env_clone_creates_feature_segment(
-    admin_client, environment, environment_api_key, db, feature, feature_segment
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    feature_segment: int,
+    segment_featurestate: int,
 ):
     # Firstly, let's clone the environment
     env_name = "Cloned env"
