@@ -85,6 +85,7 @@ export const featureVersionService = service
                   featureId: query.featureId,
                   featureState: {
                     ...featureState,
+                    feature_segment: matchingVersionState.feature_segment,
                     multivariate_feature_state_values,
                   },
                   id: matchingVersionState.id,
@@ -116,7 +117,7 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         query: (query: Req['createFeatureVersion']) => ({
-          body: query,
+          body: {},
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/`,
         }),
