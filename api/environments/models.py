@@ -162,8 +162,6 @@ class Environment(
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
-        for feature_segment in self.feature_segments.all():
-            feature_segment.clone(clone)
 
         # Since identities are closely tied to the enviroment
         # it does not make much sense to clone them, hence
