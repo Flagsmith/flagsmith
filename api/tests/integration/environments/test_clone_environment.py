@@ -199,3 +199,7 @@ def test_env_clone_clones_segments_overrides(
         clone_env_feature_states["results"][0]["feature_segment"]
         == clone_feature_segment_id
     )
+    assert (
+        clone_feature_segment_id
+        != source_env_feature_states["results"][0]["feature_segment"]
+    )
