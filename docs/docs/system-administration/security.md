@@ -28,9 +28,7 @@ You can also stream your Audit Logs into your own infrastructure using
 ## Environment Banners
 
 You can optionally provide a coloured banner for your Environments in each Environment Settings page. This helps you
-identify sensitive Environments before toggling flags!
-
-![Environment Banners](/img/environment-banner.png)
+identify sensitive Environments before toggling Flags.
 
 ## Hide Sensitive Data
 
