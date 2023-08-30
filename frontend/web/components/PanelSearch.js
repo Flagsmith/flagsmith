@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { FixedSizeList as List } from 'react-window'
+import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './Icon'
@@ -91,20 +91,29 @@ const PanelSearch = class extends Component {
   }
 
   renderContainer = (children) => {
-    const renderRow = ({ index, style }) => (
-      <div style={style}>{this.props.renderRow(children[index])}</div>
-    )
+    const renderRow = ({ index, key, style }) => {
+      return (
+        <div key={key} style={style}>
+          {this.props.renderRow(children[index])}
+        </div>
+      )
+    }
     if (children && children.length > 100 && this.props.itemHeight) {
       return (
-        <List
-          style={{ overflowX: 'hidden' }}
-          height={this.props.itemHeight * 10}
-          itemCount={children.length}
-          itemSize={this.props.itemHeight}
-          width='100%'
-        >
-          {renderRow}
-        </List>
+        <div>
+          <AutoSizer disableHeight>
+            {({ width }) => (
+              <List
+                style={{ overflowX: 'hidden' }}
+                width={width}
+                height={this.props.itemHeight * 10}
+                rowCount={children.length}
+                rowHeight={this.props.itemHeight}
+                rowRenderer={renderRow}
+              />
+            )}
+          </AutoSizer>
+        </div>
       )
     }
     return children.map(this.props.renderRow)
