@@ -53,6 +53,7 @@ export const featureVersionService = service
               if (matchingVersionState) {
                 if (featureState.toRemove) {
                   if (featureState.feature_segment) {
+                    // todo: this should actually just delete the matchingVersionState feature state
                     return deleteFeatureSegment(getStore(), {
                       id: featureState.feature_segment.id,
                     })
