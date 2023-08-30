@@ -492,7 +492,7 @@ def test_v2_versioning_multiple_segment_overrides(
     )
     assert reorder_segment_overrides_response.status_code == status.HTTP_200_OK
 
-    # finally, let's get the flags for the identity
+    # now, let's get the flags for the identity
     identity_flags_response_json = get_identity_flags_response_json(
         num_expected_flags=1,
         identifier=identifier,
@@ -504,4 +504,14 @@ def test_v2_versioning_multiple_segment_overrides(
     assert (
         identity_flags_response_json["flags"][0]["feature_state_value"]
         == segment_2_override_value
+    )
+
+    # and finally, let's create a new version to ensure that it works as we
+    # expect
+    second_create_environment_feature_version_response = admin_client.post(
+        environment_feature_version_list_url
+    )
+    assert (
+        second_create_environment_feature_version_response.status_code
+        == status.HTTP_201_CREATED
     )

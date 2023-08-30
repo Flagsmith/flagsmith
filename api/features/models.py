@@ -255,11 +255,16 @@ class FeatureSegment(
         """
         return other and self.priority > other.priority
 
-    def clone(self, environment: "Environment") -> "FeatureSegment":
+    def clone(
+        self,
+        environment: "Environment",
+        environment_feature_version: "EnvironmentFeatureVersion" = None,
+    ) -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
         clone.environment = environment
+        clone.environment_feature_version = environment_feature_version
         clone.save()
         return clone
 
@@ -558,7 +563,10 @@ class FeatureState(
             # due to the default unique constraint on the FeatureSegment model which means that
             # the same feature, segment and environment combination cannot exist more than once.
             clone.feature_segment = (
-                self.feature_segment.clone(environment=env)
+                self.feature_segment.clone(
+                    environment=env,
+                    environment_feature_version=environment_feature_version,
+                )
                 if env != self.environment or environment_feature_version is not None
                 else self.feature_segment
             )
