@@ -22,7 +22,6 @@ const Message = class extends React.Component {
       },
       themeClassNames[this.props.theme],
     )
-    console.log('DEBUG: className:', className)
 
     return (
       <div className={className}>

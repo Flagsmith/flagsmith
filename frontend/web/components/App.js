@@ -212,8 +212,9 @@ const App = class extends Component {
     this.context.router.history.replace('/')
   }
 
-  closeAnnouncement = () => {
-    this.setState({ showAnnouncement: !this.state.showAnnouncement })
+  closeAnnouncement = (announcementId) => {
+    this.setState({ showAnnouncement: false })
+    flagsmith.setTrait(`dismissed_announcement`, announcementId)
   }
 
   render() {
@@ -283,8 +284,10 @@ const App = class extends Component {
       return <div>{this.props.children}</div>
     }
     const announcementValue = JSON.parse(
-      Utils.getFlagsmithValue('announcement_manage'),
+      Utils.getFlagsmithValue('announcement'),
     )
+    const dismissed = flagsmith.getTrait('dismissed_announcement')
+    const showBanner = !dismissed || dismissed !== announcementValue.id
 
     return (
       <Provider store={getStore()}>
@@ -481,17 +484,19 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
-                          {Utils.getFlagsmithHasFeature(
-                            'announcement_manage',
-                          ) &&
+                          {showBanner &&
+                            Utils.getFlagsmithHasFeature('announcement') &&
                             this.state.showAnnouncement && (
                               <Row>
                                 <InfoMessage
                                   title={announcementValue.title}
-                                  infoMessageClass={'announcement '}
-                                  isClosable
-                                  close={this.closeAnnouncement}
+                                  infoMessageClass={'announcement'}
+                                  isClosable={announcementValue.isClosable}
+                                  close={() =>
+                                    this.closeAnnouncement(announcementValue.id)
+                                  }
                                   buttonText={announcementValue.buttonText}
+                                  url={announcementValue.url}
                                 >
                                   <div>
                                     <div>{announcementValue.description}</div>
