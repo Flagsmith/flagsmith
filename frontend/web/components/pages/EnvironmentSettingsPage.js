@@ -190,6 +190,7 @@ const EnvironmentSettingsPage = class extends Component {
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
     return (
+      <div className='app-container'>
         <ProjectProvider
           onRemoveEnvironment={this.onRemoveEnvironment}
           id={this.props.match.params.projectId}
@@ -223,7 +224,7 @@ const EnvironmentSettingsPage = class extends Component {
               }, 10)
             }
             return (
-              <div className='app-container container'>
+              <>
                 <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
@@ -811,10 +812,11 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                   </Tabs>
                 )}
-              </div>
+              </>
             )
           }}
         </ProjectProvider>
+      </div>
     )
   }
 }
