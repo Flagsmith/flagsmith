@@ -37,18 +37,15 @@ Let's say that you want all your team to automatically be defined as `Beta Users
 are [identified](/basic-features/managing-identities.md) with their email address along with some other
 [traits](/basic-features/managing-identities.md#identity-traits).
 
-You create a new Segment, call it `Beta Users`, and define a single rule:
+You can create a new Segment by going navigating to Segments and clicking the "Create Segment" button, call it
+`Beta Users`, and define a single rule:
 
 - `email_address` contains `@flagsmith.com`
-
-![Image](/img/edit-segment.png)
 
 Once the Segment has been defined, you can then associate that Segment with a specific Feature Flag. To do this, open
 the Feature Flag that you want to connect the Segment to and navigate to the **Segment Overrides** tab. You then have
 the option of connecting a Segment to the Feature. This then allows you to override the flag value for Users that are
 within that Segment. If the Identified user is a member of that Segment, the flag will be overridden.
-
-![Image](/img/edit-feature-with-segment.png)
 
 For all the Feature Flags that relate to Beta features, you can associate this `Beta Users` segment with each Flag, and
 set the Flag value to `true` for that Segment. To do this, edit the Feature Flag and select the segment in the 'Segment
@@ -70,8 +67,6 @@ Now all users who log in with a `@solidstategroup.com` email address are automat
 You can also create Segments _within_ a Feature. This means that only that Feature can make use of that Segment. Feature
 Specific Segments are useful when you know you will only need to use that Segment definition once. Go to the Feature,
 then the Segment Overrides Tab, and click the "Create Feature-Specific Segment" button.
-
-![Image](/img/feature-specific-segment.png)
 
 ## Multi-Variate Values
 

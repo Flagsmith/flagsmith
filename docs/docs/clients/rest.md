@@ -101,10 +101,8 @@ curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
 
 ## JSON View
 
-You can enable the JSON view in your account settings page. This will then give you access to relevant object meta data
-in the Flag area of the dashboard:
-
-![JSON View](/img/json-view.png)
+You can enable the JSON view in your Account Settings page. This will then give you access to relevant object meta data
+in the Flag area of the dashboard.
 
 ## Code Examples
 

@@ -29,8 +29,6 @@ npm i flagsmith --save
 The SDK is initialised against a single environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-![Image](/img/api-key.png)
-
 ## Comparing SSR and client-side Flagsmith usage
 
 The SDK is initialised and used in the same way as the [JavaScript](/clients/javascript) and [React](/clients/react)

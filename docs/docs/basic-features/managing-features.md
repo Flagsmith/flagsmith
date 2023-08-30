@@ -53,8 +53,6 @@ float) values. The Flagsmith SDKs allow you to call both `hasFeature` as well as
 calls will retrive both the Boolean value as well as the String/Numerical value if specified. The SDKs generally return
 False/Null if the flag is missing or the value is not set, but there are variations between different languages.
 
-![Image](/img/create-feature.png)
-
 ## Multi-Variate Flags
 
 You can create a Multivariate Flag if you want the `Flag Value` to be one value out of a selection that you define. Each
@@ -78,8 +76,6 @@ the Control value.
 
 If you are getting the Flags for an Identity, the Flagsmith engine will send the value based on the defined Weightings,
 as specified within the Environment.
-
-![Image](/img/multi-variate-flags.png)
 
 In the screenshot above, roughly half our user population will receive the value `normal`, roughly one quarter (25%)
 will receive `large` and roughly one quarter (25%) will receive `huge`. Note that you can use 100% as a weighting to

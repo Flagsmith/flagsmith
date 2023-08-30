@@ -23,8 +23,6 @@ dependencies:
 
 The SDK is initialised against a single Environment. You can find your Environment key in the Environment settings page.
 
-![Image](/img/api-key.png)
-
 ### Retrieving feature flags for your project
 
 In your application, initialise the Flagsmith client with your API key:
