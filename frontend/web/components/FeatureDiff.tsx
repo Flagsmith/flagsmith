@@ -103,6 +103,7 @@ type TSegmentDiff = {
   enabled: Change[]
   totalChanges: number
 }
+const REMOVED_KEY = '$REMOVED'
 const getSegmentDiff = (
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
@@ -118,9 +119,9 @@ const getSegmentDiff = (
     : ''
   const newEnabled = newFeatureState
     ? `${!!newFeatureState?.enabled}`
-    : 'removed'
+    : REMOVED_KEY
 
-  const newName = newFeatureState ? segmentName : 'removed'
+  const newName = newFeatureState ? segmentName : REMOVED_KEY
 
   const diff = {
     enabled: Diff.diffLines(oldEnabled, newEnabled),
@@ -135,7 +136,7 @@ const getSegmentDiff = (
       `${Utils.getTypedValue(
         newFeatureState
           ? Utils.featureStateToValue(newFeatureState?.feature_state_value)
-          : 'removed',
+          : REMOVED_KEY,
       )}`,
     ),
   }

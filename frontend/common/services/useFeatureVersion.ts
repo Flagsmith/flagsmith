@@ -58,10 +58,35 @@ export const featureVersionService = service
                     })
                   }
                 }
+                const multivariate_feature_state_values =
+                  featureState.multivariate_feature_state_values
+                    ? featureState.multivariate_feature_state_values?.map(
+                        (featureStateValue) => {
+                          const newId =
+                            matchingVersionState?.multivariate_feature_state_values?.find(
+                              (v) => {
+                                return (
+                                  v.multivariate_feature_option ===
+                                  featureStateValue.multivariate_feature_option
+                                )
+                              },
+                            )
+
+                          return {
+                            ...featureStateValue,
+                            id: newId!.id,
+                          }
+                        },
+                      )
+                    : []
+
                 return updateVersionFeatureState(getStore(), {
                   environmentId: query.environmentId,
                   featureId: query.featureId,
-                  featureState,
+                  featureState: {
+                    ...featureState,
+                    multivariate_feature_state_values,
+                  },
                   id: matchingVersionState.id,
                   sha: versionRes.data.uuid,
                 })

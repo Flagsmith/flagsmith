@@ -12,6 +12,7 @@ const convertFeatureState = (featureState: FeatureState) => {
     ),
     multivariate_feature_state_values:
       featureState.multivariate_feature_state_values?.map((v) => ({
+        id: v.id,
         multivariate_feature_option: v.multivariate_feature_option,
         percentage_allocation: v.percentage_allocation,
       })),
