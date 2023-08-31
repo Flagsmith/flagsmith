@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 from unittest import TestCase, mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
@@ -581,6 +582,45 @@ class ChargeBeeWebhookTestCase(TestCase):
             max_seats=self.old_max_seats,
         )
         self.subscription = Subscription.objects.get(organisation=self.organisation)
+
+    @mock.patch("organisations.views.extract_subscription_metadata")
+    def test_chargebee_webhook(
+        self, mock_extract_subscription_metadata: MagicMock
+    ) -> None:
+        # Given
+        seats = 3
+        api_calls = 100
+        mock_extract_subscription_metadata.return_value = ChargebeeObjMetadata(
+            seats=seats,
+            api_calls=api_calls,
+            projects=None,
+            chargebee_email=self.cb_user.email,
+        )
+        data = {
+            "content": {
+                "subscription": {
+                    "status": "active",
+                    "id": self.subscription_id,
+                },
+                "customer": {"email": self.cb_user.email},
+            }
+        }
+
+        # When
+        response = self.client.post(
+            self.url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        self.subscription.refresh_from_db()
+        subscription_cache = OrganisationSubscriptionInformationCache.objects.get(
+            organisation=self.subscription.organisation
+        )
+        assert subscription_cache.allowed_projects is None
+        assert subscription_cache.allowed_30d_api_calls == api_calls
+        assert subscription_cache.allowed_seats == seats
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(
