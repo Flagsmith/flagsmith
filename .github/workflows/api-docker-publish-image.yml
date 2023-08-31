@@ -3,7 +3,7 @@ name: API Publish Docker Images
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - '*'
     paths:
       - api/**
       - .github/**
