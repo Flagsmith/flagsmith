@@ -892,7 +892,7 @@ def test_create_segment_override_using_environment_viewset(
     response = client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     response.json()["feature_state_value"] == new_value
 
 
@@ -900,7 +900,7 @@ def test_create_segment_override_using_environment_viewset(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state_value_environment_field_is_read_only(
+def test_cannot_update_environment_of_a_feature_state(
     client, environment, feature, feature_state, environment_two
 ):
     # Given
@@ -923,9 +923,11 @@ def test_update_feature_state_value_environment_field_is_read_only(
     response = client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then - it did not change the environment field on the feature state
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["environment"] == environment.id
-    response.json()["feature_state_value"] == new_value
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["environment"][0]
+        == "Cannot change the environment of a feature state"
+    )
 
 
 @pytest.mark.parametrize(

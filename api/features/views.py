@@ -47,11 +47,11 @@ from .permissions import (
 )
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
-    EnvironmentFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
+    FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
@@ -295,14 +295,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return FeatureStateSerializerWithIdentity
         elif self.action in ["retrieve", "update", "create"]:
-            return EnvironmentFeatureStateSerializer
+            return FeatureStateSerializerBasic
         else:
             return FeatureStateSerializerCreate
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["environment"] = self.get_environment_from_request()
-        return context
 
     def get_queryset(self):
         """
@@ -352,6 +347,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
+        environment = self.get_environment_from_request()
 
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
@@ -363,7 +359,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            feature_state = serializer.save()
+            feature_state = serializer.save(environment=environment)
             headers = self.get_success_headers(serializer.data)
 
             if "feature_state_value" in data:
@@ -372,7 +368,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 )
 
             return Response(
-                EnvironmentFeatureStateSerializer(feature_state).data,
+                FeatureStateSerializerBasic(feature_state).data,
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
@@ -458,7 +454,7 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
 
     def get_serializer_class(self):
         if self.action == "create_new_version":
-            return EnvironmentFeatureStateSerializer
+            return FeatureStateSerializerBasic
         return super().get_serializer_class()
 
 

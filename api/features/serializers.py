@@ -315,6 +315,13 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
             )
         return feature
 
+    def validate_environment(self, environment):
+        if self.instance and self.instance.environment_id != environment.id:
+            raise serializers.ValidationError(
+                "Cannot change the environment of a feature state"
+            )
+        return environment
+
     def validate(self, attrs):
         environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")
@@ -351,14 +358,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return attrs
 
 
-class EnvironmentFeatureStateSerializer(FeatureStateSerializerBasic):
-    class Meta(FeatureStateSerializerBasic.Meta):
-        read_only_fields = FeatureStateSerializerBasic.Meta.read_only_fields + (
-            "environment",
-        )
-
-
-class FeatureStateSerializerWithIdentity(EnvironmentFeatureStateSerializer):
+class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
     class _IdentitySerializer(serializers.ModelSerializer):
         class Meta:
             model = Identity
