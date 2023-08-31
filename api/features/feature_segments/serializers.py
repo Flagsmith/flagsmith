@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
+from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.models import FeatureSegment
 
 
@@ -109,6 +111,13 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
             raise serializers.ValidationError(
                 "All feature segments must belong to the same feature & environment."
             )
+
+        environment = environments.pop()
+
+        if not self.context["request"].user.has_environment_permission(
+            UPDATE_FEATURE_STATE, environment
+        ):
+            raise PermissionDenied("You do not have permission to perform this action.")
 
         return validated_attrs
 

@@ -21,12 +21,9 @@ def test_multivariate_feature_options_view_set_get_permissions():
     permissions = view_set.get_permissions()
 
     # Then
-    # NOTE: since we are using or(|) operator in the viewset `get_permission` returns
-    # an instance of `OR` object which store the permissions in attributes named `op1` and `op2`
-    # ref: https://github.com/encode/django-rest-framework/blob/3.9.x/rest_framework/permissions.py#L71
     assert len(permissions) == 1
-    assert isinstance(permissions[0].op1, NestedProjectPermissions)
-    assert permissions[0].op1.action_permission_map == {
+    assert isinstance(permissions[0], NestedProjectPermissions)
+    assert permissions[0].action_permission_map == {
         "list": VIEW_PROJECT,
         "detail": VIEW_PROJECT,
         "create": CREATE_FEATURE,
@@ -37,7 +34,8 @@ def test_multivariate_feature_options_view_set_get_permissions():
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
     # Given
@@ -56,7 +54,8 @@ def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_mv_feature_option_by_uuid_returns_404_if_mv_option_does_not_exists(
     client, project

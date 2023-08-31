@@ -1,4 +1,4 @@
-from typing import Tuple
+import typing
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
@@ -292,19 +292,44 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation) -> Tuple[MasterAPIKey, str]:
+def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation
+        name="test_key", organisation=organisation, is_admin=True
     )
     return master_api_key, key
 
 
 @pytest.fixture()
-def master_api_key_client(master_api_key):
+def master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
+    master_api_key, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation, is_admin=False
+    )
+    return master_api_key, key
+
+
+@pytest.fixture
+def master_api_key_object(
+    master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> MasterAPIKey:
+    return master_api_key[0]
+
+
+@pytest.fixture
+def admin_master_api_key_object(
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> MasterAPIKey:
+    return admin_master_api_key[0]
+
+
+@pytest.fixture()
+def admin_master_api_key_client(
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> APIClient:
+    key = admin_master_api_key[1]
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + key)
     return api_client
 
 
