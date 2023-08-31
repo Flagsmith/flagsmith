@@ -386,7 +386,7 @@ const App = class extends Component {
                                         {Utils.calculateRemainingLimitsPercentage(
                                           this.state.totalApiCalls,
                                           maxApiCalls,
-                                          30,
+                                          70,
                                         ).percentage &&
                                         Utils.getFlagsmithHasFeature(
                                           'max_api_calls_alert',
