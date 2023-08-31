@@ -19,7 +19,6 @@ h2 {
   line-height: $h2-line-height;
 }
 
-
 h3 {
   font-size: $h3-font-size;
   line-height: $h3-line-height;
@@ -64,12 +63,12 @@ a {
   h4,
   h5,
   h6 {
-    color: $header-color-dark;
+    color: $text-icon-light;
   }
 }
 
 .font-weight-medium {
-  font-weight: 500;
+  font-weight: 500  !important;
 }
 
 .text-primary {
@@ -79,6 +78,9 @@ a {
 .dark {
   .text-primary {
     color: $bt-brand-primary-dark;
+  }
+  .text-dark {
+    color: $text-icon-light !important;
   }
 }
 * {

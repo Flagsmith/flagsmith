@@ -56,7 +56,22 @@
     color: $text-icon-dark;
   }
 }
+
+.announcement {
+  margin: auto;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  .body {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+}
+
 .dark {
+  .alert {
+    color: $alert-color-dark;
+  }
   .alert-info {
     .title {
       color: $text-icon-light;

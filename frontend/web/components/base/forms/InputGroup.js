@@ -64,18 +64,6 @@ const InputGroup = class extends Component {
           </Row>
         )}
 
-        {inputProps && inputProps.error && (
-          <span>
-            <span> - </span>
-            <span
-              id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
-              className='text-danger'
-            >
-              {inputProps.error}
-            </span>
-          </span>
-        )}
-
         <div>
           {this.props.component ? (
             this.props.component
@@ -114,6 +102,16 @@ const InputGroup = class extends Component {
             </div>
           )}
         </div>
+        {inputProps && inputProps.error && (
+          <span>
+            <span
+              id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
+              className='text-danger'
+            >
+              {inputProps.error}
+            </span>
+          </span>
+        )}
       </div>
     )
   }

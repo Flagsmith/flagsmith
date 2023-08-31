@@ -9,6 +9,10 @@
       vertical-align: sub;
     }
   }
+  &.change-request-item{
+    min-height: auto;
+    padding: 20px 0px;
+  }
 
   &-subtitle {
     font-size: $panel-list-item-sub-font-size;

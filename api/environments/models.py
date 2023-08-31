@@ -51,6 +51,7 @@ logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
+bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -161,8 +162,6 @@ class Environment(
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
-        for feature_segment in self.feature_segments.all():
-            feature_segment.clone(clone)
 
         # Since identities are closely tied to the enviroment
         # it does not make much sense to clone them, hence
@@ -190,6 +189,9 @@ class Environment(
                 logger.warning("Requested environment with null api_key.")
                 return None
 
+            if cls.is_bad_key(api_key):
+                return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
@@ -213,6 +215,7 @@ class Environment(
                 )
             return environment
         except cls.DoesNotExist:
+            cls.set_bad_key(api_key)
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
@@ -260,6 +263,24 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    @staticmethod
+    def is_bad_key(environment_key: str) -> bool:
+        return (
+            settings.CACHE_BAD_ENVIRONMENTS_SECONDS > 0
+            and bad_environments_cache.get(environment_key, 0)
+            >= settings.CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES
+        )
+
+    @staticmethod
+    def set_bad_key(environment_key: str) -> None:
+        if settings.CACHE_BAD_ENVIRONMENTS_SECONDS:
+            current_count = bad_environments_cache.get(environment_key, 0)
+            bad_environments_cache.set(
+                environment_key,
+                current_count + 1,
+                timeout=settings.CACHE_BAD_ENVIRONMENTS_SECONDS,
+            )
 
     def trait_persistence_allowed(self, request: Request) -> bool:
         return (

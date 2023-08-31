@@ -4,7 +4,7 @@ from djoser.views import UserViewSet
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -15,6 +15,8 @@ from trench.views.authtoken import (
 
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+
+from .models import UserPasswordResetRequest
 
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
@@ -68,3 +70,14 @@ class FFAdminUserViewSet(UserViewSet):
                 DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
             )
         )
+
+    @action(["post"], detail=False)
+    def reset_password(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
+        if user and user.can_send_password_reset_email():
+            super().reset_password(request, *args, **kwargs)
+            UserPasswordResetRequest.objects.create(user=user)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

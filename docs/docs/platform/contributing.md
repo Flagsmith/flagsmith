@@ -25,7 +25,7 @@ To install pre-commit:
 
 ```bash
 # From the repository root
-pip install pre-commit
+make install
 pre-commit install
 ```
 
@@ -37,7 +37,7 @@ pre-commit run --all-files
 
 ## Running Tests
 
-The application uses pytest for writing(appropritate use of fixtures) and running tests. Before running tests please
+The application uses pytest for writing (appropriate use of fixtures) and running tests. Before running tests please
 make sure that `DJANGO_SETTINGS_MODULE` env var is pointing to the right module, e.g. `app.settings.test`.
 
 To run tests:
@@ -48,7 +48,5 @@ DJANGO_SETTINGS_MODULE=app.settings.test pytest
 
 ## Adding Dependencies
 
-To add a python dependency:
-
-- Add to `requirements.in` or `requirements-dev.in`
-- Run `pip-compile` or `pip-compile requirements-dev.in`
+We use [Poetry](https://python-poetry.org/) for dependency management - please follow
+[their docs on adding dependencies](https://python-poetry.org/docs/basic-usage/#specifying-dependencies).

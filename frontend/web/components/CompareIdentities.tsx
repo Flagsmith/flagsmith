@@ -115,8 +115,12 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
   return (
     <div>
-      <h3>Compare Identities</h3>
-      <p>Compare feature states between 2 identities</p>
+      <div className='col-md-8'>
+        <h5 className='mb-1'>Compare Identities</h5>
+        <p className='fs-small mb-4 lh-sm'>
+          Compare feature states between 2 identities.
+        </p>
+      </div>
       <div className='mb-2' style={{ width: selectWidth }}>
         <EnvironmentSelect
           value={environmentId}
@@ -136,7 +140,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
         />
       ) : (
         <Row>
-          <div className='mr-2' style={{ width: selectWidth }}>
+          <div style={{ width: selectWidth }}>
             <IdentitySelect
               value={leftId}
               isEdge={isEdge}
@@ -145,10 +149,16 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
               environmentId={environmentId}
             />
           </div>
-          <div>
-            <span className='icon ios ion-md-arrow-back mx-2' />
+          <div className='mx-3'>
+            <Icon
+              name='arrow-left'
+              width={20}
+              fill={
+                Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+              }
+            />
           </div>
-          <div className='mr-2' style={{ width: selectWidth }}>
+          <div style={{ width: selectWidth }}>
             <IdentitySelect
               value={rightId}
               ignoreIds={[`${leftId?.value}`]}
@@ -163,6 +173,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       {isReady && (
         <>
           <PanelSearch
+            className='no-pad mt-4'
             title={'Changed Flags'}
             searchPanel={
               <Row className='mb-2'>

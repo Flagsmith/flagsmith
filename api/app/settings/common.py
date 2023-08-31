@@ -222,6 +222,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+        "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -249,8 +250,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    # Add master api key object to request
-    "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -565,6 +564,12 @@ GET_IDENTITIES_ENDPOINT_CACHE_LOCATION = env.str(
     default=GET_IDENTITIES_ENDPOINT_CACHE_NAME,
 )
 
+BAD_ENVIRONMENTS_CACHE_LOCATION = "bad-environments"
+CACHE_BAD_ENVIRONMENTS_SECONDS = env.int("CACHE_BAD_ENVIRONMENTS_SECONDS", 0)
+CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES = env.int(
+    "CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES", 1
+)
+
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
@@ -598,6 +603,11 @@ CACHES = {
     PROJECT_SEGMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
+    },
+    BAD_ENVIRONMENTS_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": BAD_ENVIRONMENTS_CACHE_LOCATION,
+        "OPTIONS": {"MAX_ENTRIES": 50},
     },
     CHARGEBEE_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
@@ -904,6 +914,12 @@ SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_s
 DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
 # Used when no Django site is specified.
 DEFAULT_DOMAIN = "app.flagsmith.com"
+
+# Define the cooldown duration, in seconds, for password reset emails
+PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
+
+# Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
+MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
 
 FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = env.bool(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE", default=True

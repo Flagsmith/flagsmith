@@ -3,11 +3,11 @@ name: Publish Flagsmith Private Cloud Image
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
-  FLAGSMITH_RBAC_REVISION: v0.2.0
+  FLAGSMITH_RBAC_REVISION: v0.3.1
   FLAGSMITH_WORKFLOWS_REVISION: v1.2.5
   FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
 
@@ -108,4 +108,4 @@ jobs:
           context: .
           build-args: |
             SAML_INSTALLED=1
-            POETRY_OPTS="--with saml,auth-controller"
+            POETRY_OPTS=--with saml,auth-controller

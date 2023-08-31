@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-frontend",
-  "version": "2.2.3",
+  "version": "2.68.0",
   "description": "The frontend application for Flagsmith",
   "main": "index.js",
   "scripts": {

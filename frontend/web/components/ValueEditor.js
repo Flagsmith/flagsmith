@@ -198,7 +198,10 @@ class ValueEditor extends Component {
           <span
             onMouseDown={() => {
               const res = Clipboard.setString(this.props.value)
-              toast(res ? 'Clipboard set' : 'Could not set clipboard :(')
+              toast(
+                res ? 'Clipboard set' : 'Could not set clipboard :(',
+                res ? '' : 'danger',
+              )
             }}
             className={cx('txt primary')}
           >

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.db.models import Count
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -15,7 +16,6 @@ from rest_framework.response import Response
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
-    MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
 from permissions.permissions_calculator import get_environment_permission_data
@@ -41,6 +41,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
+    EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
@@ -64,7 +65,7 @@ logger = logging.getLogger(__name__)
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
-    permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
+    permission_classes = [EnvironmentPermissions]
 
     def get_serializer_class(self):
         if self.action == "trait_keys":
@@ -73,6 +74,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return DeleteAllTraitKeysSerializer
         if self.action == "clone":
             return CloneEnvironmentSerializer
+        if self.action == "retrieve":
+            return EnvironmentRetrieveSerializerWithMetadata
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
@@ -94,20 +97,23 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
 
-            if self.request.user.is_anonymous:
-                return (
-                    self.request.master_api_key.organisation.projects.environments.all()
-                )
             return self.request.user.get_permitted_environments(
                 "VIEW_ENVIRONMENT", project=project
             )
 
         # Permission class handles validation of permissions for other actions
-        return Environment.objects.all()
+        queryset = Environment.objects.all()
+
+        if self.action == "retrieve":
+            queryset = queryset.annotate(
+                total_segment_overrides=Count("feature_segments")
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         environment = serializer.save()
-        if not self.request.user.is_anonymous:
+        if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=environment, admin=True
             )
@@ -141,7 +147,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         clone = serializer.save(source_env=self.get_object())
 
-        if not self.request.user.is_anonymous:
+        if getattr(request.user, "is_master_api_key_user", False) is False:
             UserEnvironmentPermission.objects.create(
                 user=self.request.user, environment=clone, admin=True
             )
@@ -177,7 +183,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
+        if getattr(request.user, "is_master_api_key_user", False) is True:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={
