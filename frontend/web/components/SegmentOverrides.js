@@ -539,11 +539,9 @@ class TheComponent extends Component {
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
 
-    const THRESHOLD = 90
     const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
       ProjectStore.getTotalSegmentOverrides(),
       ProjectStore.getMaxSegmentOverridesAllowed(),
-      THRESHOLD,
     )
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&

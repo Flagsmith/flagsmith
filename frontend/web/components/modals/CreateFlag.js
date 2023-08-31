@@ -855,12 +855,10 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
-              const THRESHOLD = 90
               const featureLimitAlert =
                 Utils.calculateRemainingLimitsPercentage(
                   project.total_features,
                   project.max_features_allowed,
-                  THRESHOLD,
                 )
 
               return (

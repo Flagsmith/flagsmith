@@ -70,11 +70,9 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const [removeSegment] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
 
-  const THRESHOLD = 90
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
     ProjectStore.getMaxSegmentsAllowed(),
-    THRESHOLD,
   )
 
   useEffect(() => {

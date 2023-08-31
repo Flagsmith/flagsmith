@@ -110,11 +110,9 @@ class TheComponent extends Component {
         />
       </div>
     )
-    const THRESHOLD = 90
     const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
       ProjectStore.getTotalSegmentOverrides(),
       ProjectStore.getMaxSegmentOverridesAllowed(),
-      THRESHOLD,
     )
 
     return this.state.isLoading ? (

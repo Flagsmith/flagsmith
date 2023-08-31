@@ -59,12 +59,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   calculateRemainingLimitsPercentage(
     total: number | undefined,
     max: number | undefined,
-    threshold: number | undefined,
+    threshold = 90,
   ) {
     if (total === 0) {
       return 0
     }
-
     const percentage = (total / max) * 100
     if (percentage >= threshold) {
       return {

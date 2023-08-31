@@ -172,11 +172,9 @@ const FeaturesPage = class extends Component {
             { removeFlag, toggleFlag },
           ) => {
             const isLoading = !FeatureListStore.hasLoaded
-            const THRESHOLD = 90
             const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
               totalFeatures,
               maxFeaturesAllowed,
-              THRESHOLD,
             )
             return (
               <div className='features-page'>
