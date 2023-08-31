@@ -346,13 +346,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         return environment
 
-    def get_identity_from_request(self, environment):
-        """
-        Get identity object from URL parameters in request.
-        """
-        identity = Identity.objects.get(pk=self.kwargs["identity_pk"])
-        return identity
-
     def create(self, request, *args, **kwargs):
         """
         DEPRECATED: please use `/features/featurestates/` instead.
