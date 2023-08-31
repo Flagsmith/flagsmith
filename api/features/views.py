@@ -347,8 +347,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
-        environment = self.get_environment_from_request()
-
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
@@ -359,7 +357,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            feature_state = serializer.save(environment=environment)
+            feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
             if "feature_state_value" in data:
