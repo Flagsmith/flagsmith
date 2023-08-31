@@ -107,7 +107,6 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
         environment_api_key = view.kwargs.get("environment_api_key")
         with suppress(Environment.DoesNotExist):
             environment = Environment.objects.get(api_key=environment_api_key)
-
             return request.user.has_environment_permission(
                 action_permission_map.get(view.action), environment
             )
