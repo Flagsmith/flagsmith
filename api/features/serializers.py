@@ -323,13 +323,15 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return environment
 
     def validate(self, attrs):
-        environment = attrs.get("environment")
+        environment = (
+            attrs.get("environment")
+            or self.context["view"].get_environment_from_request()
+        )
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
         feature = attrs.get("feature")
-
-        if feature.project_id != environment.project_id:
+        if feature and feature.project_id != environment.project_id:
             error = {"feature": "Feature does not exist in project"}
             raise serializers.ValidationError(error)
 

@@ -108,12 +108,6 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
         with suppress(Environment.DoesNotExist):
             environment = Environment.objects.get(api_key=environment_api_key)
 
-            if (
-                view.action == "create"
-                and request.data["environment"] != environment.id
-            ):
-                return False
-
             return request.user.has_environment_permission(
                 action_permission_map.get(view.action), environment
             )

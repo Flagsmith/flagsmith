@@ -900,7 +900,37 @@ def test_create_segment_override_using_environment_viewset(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_create_feature_state_returns_403_if_different_environment_is_passed_in_data(
+def test_cannon_create_feature_state_for_feature_from_different_project(
+    client, environment, project_two_feature, feature_segment, project_two
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    new_value = "new-value"
+    data = {
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": project_two_feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": feature_segment.id,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["feature"][0] == "Feature does not exist in project"
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_create_feature_state_environment_is_read_only(
     client, environment, feature, feature_segment, environment_two
 ):
     # Given
@@ -921,7 +951,8 @@ def test_create_feature_state_returns_403_if_different_environment_is_passed_in_
     response = client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["environment"] == environment.id
 
 
 @pytest.mark.parametrize(

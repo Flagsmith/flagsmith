@@ -351,12 +351,16 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
+        environment = self.get_environment_from_request()
+        data["environment"] = environment.id
+
         identity_pk = self.kwargs.get("identity_pk")
         if identity_pk:
             data["identity"] = identity_pk
 
         serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
+
+        if serializer.is_valid(raise_exception=True):
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -370,10 +374,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
-        else:
-            logger.error(serializer.errors)
-            error = {"detail": "Couldn't create feature state."}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         """
