@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='organisationsubscriptioninformationcache',
             name='allowed_projects',
-            field=models.IntegerField(blank=True, null=True),
+            field=models.IntegerField(default=1, blank=True, null=True),
         ),
     ]
