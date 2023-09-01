@@ -263,7 +263,7 @@ class ChargeBeeTestCase(TestCase):
 
 
 def test_extract_subscription_metadata(
-    mock_subscription_response_with_addons,
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ):
     # Given
@@ -301,7 +301,7 @@ def test_extract_subscription_metadata(
 
 
 def test_extract_subscription_metadata_when_addon_list_is_empty(
-    mock_subscription_response_with_addons,
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ):
     # Given

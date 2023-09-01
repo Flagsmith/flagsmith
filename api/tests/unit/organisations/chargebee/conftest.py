@@ -86,10 +86,8 @@ def mock_subscription_response_with_addons(
 
 @pytest.fixture()
 def chargebee_cache_mocker(
-    mocker,
-) -> typing.Callable[
-    [dict[str, ChargebeeObjMetadata], dict[str, ChargebeeObjMetadata]], None
-]:
+    mocker: MockerFixture,
+) -> ChargebeeCacheMocker:
     def mock_chargebee_cache(
         plans_data: dict[str, ChargebeeObjMetadata] = None,
         addons_data: dict[str, ChargebeeObjMetadata] = None,
