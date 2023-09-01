@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -19,6 +20,9 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
+logger = logging.getLogger(__name__)
+
+
 class LaunchDarklyWrapper:
     def __init__(
         self,
@@ -36,9 +40,9 @@ class LaunchDarklyWrapper:
         )
         self.import_id = self.logger.uuid
 
-    def import_data(self):
+    def import_data(self) -> LaunchDarklyImport:
         self.logger.info(
-            f"Starting Launch Darkly feature importer with job id: {self.import_id}"
+            f"Starting Launch Darkly feature importer for job id: {self.import_id}"
         )
         organisation_id = self.request["organisation_id"]
         self.logger.info(
@@ -108,11 +112,11 @@ class LaunchDarklyWrapper:
         self.logger.info(f"Adding {len(ld_flags)} features")
         for ld_flag in ld_flags:
             self._create_feature(ld_flag, environments, project)
-
-        self.logger.completed_at(datetime.now())
+        self.logger.completed_at = datetime.now()
         self.logger.save()
 
         self.logger.info("Finished importing")
+        return self.logger
 
     def _create_project(self, organisation_id: int, ld_project: dict) -> Project:
         return Project.objects.create(
@@ -134,7 +138,7 @@ class LaunchDarklyWrapper:
             case "multivariate":
                 self._create_multivariate_feature(ld_flag, environments, project)
             case _:
-                raise Exception("Invalid flag type from Launch Darkly")
+                raise ("Invalid flag type from Launch Darkly")
 
     def _create_boolean_feature(
         self, ld_flag, environments: list[Environment], project: Project
@@ -144,26 +148,29 @@ class LaunchDarklyWrapper:
             feature = Feature.objects.create(
                 name=ld_flag.get("key"),
                 project=project,
-                initial_value=None,  # todo
                 description=ld_flag.get("description"),
                 default_enabled=False,  # default to false and set per environment based on LD values
                 type=STANDARD,
                 # tags=None,  # todo
                 is_archived=ld_flag.get("archived", False),
                 # owners=None,  # todo
-                is_server_key_only=None,  # todo
             )
 
             for environment in environments:
-                ld_environment = ld_flag.get("environments", {}).get(environment.name)
+                # todo: this won't work for all cases, we need the env key from ld not name
+                env_name = environment.name.lower()
+                ld_environment = ld_flag.get("environments", {}).get(env_name)
                 if ld_environment:
-                    feature_state = FeatureState.objects.filter(
+                    feature_state, created = FeatureState.objects.update_or_create(
                         feature=feature,
                         environment=environment,
-                        identity=None,  # todo
-                        feature_segment=None,  # todo
-                    ).update(enabled=ld_environment.get("_summary").get("on"))
-                    FeatureStateValue.objects.create(feature_state=feature_state)
+                        defaults={
+                            "enabled": ld_environment.get("on")
+                        }
+                    )
+                    FeatureStateValue.objects.update_or_create(feature_state=feature_state, defaults={
+                        "feature_state": feature_state
+                    })
                 else:
                     self.logger.error(
                         f"""
@@ -172,8 +179,18 @@ class LaunchDarklyWrapper:
                          for feature: {feature.name}
                         """
                     )
-        except IntegrityError:
-            # Feature with this name already exists
+        except IntegrityError as ie:
+            logger.error(str(ie))
+            self.logger.error(
+                f"Unable to create feature with name: {ld_flag.get('key')}"
+            )
+        except ValueError as ve:
+            logger.error(str(ve))
+            self.logger.error(
+                f"Unable to create feature with name: {ld_flag.get('key')}"
+            )
+        except Exception as e:
+            logger.error(str(e))
             self.logger.error(
                 f"Unable to create feature with name: {ld_flag.get('key')}"
             )
@@ -188,45 +205,74 @@ class LaunchDarklyWrapper:
                 project=project,
                 initial_value=None,  # todo
                 description=ld_flag.get("description"),
-                default_enabled=None,  # todo
                 type=STANDARD,
-                tags=None,  # todo
                 is_archived=ld_flag.get("archived", False),
-                owners=None,  # todo
-                is_server_key_only=None,  # todo
             )
-        except IntegrityError:
-            # Feature with this name already exists
+
+            feature_options = {}
+            for variant in ld_flag.get("variations"):
+                value = variant.get("value")
+                variant_type = self._get_multivariant_kind(value)
+                variant_values = self._get_multivariant_value(value, variant_type)
+                feature_option = MultivariateFeatureOption.objects.create(
+                    feature=feature,
+                    type=variant_type,
+                    boolean_value=variant_values[0],
+                    integer_value=variant_values[1],
+                    string_value=variant_values[2],
+                )
+                feature_options[value] = feature_option
+
+            for environment in environments:
+                # todo: this won't work for all cases, we need the env key from ld not name
+                env_name = environment.name.lower()
+                ld_environment = ld_flag.get("environments", {}).get(env_name)
+                if ld_environment:
+                    env_feature_options = ld_environment.get("_summary", {}).get("variations", [])
+                    for env_feature_key in env_feature_options.keys():
+                        feature_state, created = FeatureState.objects.update_or_create(
+                            feature=feature,
+                            environment=environment,
+                            defaults={
+                                "enabled": ld_environment.get("on")
+                            }
+                        )
+                        flag_value = ld_flag.get("variations", {})[int(env_feature_key)].get("value")
+                        env_feature_option = feature_options.get(flag_value)
+                        is_on = not env_feature_options.get(env_feature_key).get("isOff", False)
+                        percentage_allocation = 100 if is_on else 0
+                        MultivariateFeatureStateValue.objects.update_or_create(
+                            feature_state=feature_state,
+                            multivariate_feature_option=env_feature_option,
+                            defaults={
+                                "percentage_allocation": percentage_allocation
+                            }
+                        )
+                        self.logger.info("Successfully ")
+                else:
+                    self.logger.error(
+                        f"""
+                        There was a problem adding a multi variant feature state to
+                         environment: {environment.name},
+                         for feature: {feature.name}
+                        """
+                    )
+
+        except IntegrityError as ie:
+            logger.error(str(ie))
             self.logger.error(
                 f"Unable to create feature with name: {ld_flag.get('key')}"
             )
-
-        feature_options = {}
-        for variant in ld_flag.get("variations"):
-            value = variant.get("value")
-            variant_type = self._get_multivariant_kind(value)
-            variant_values = self._get_multivariant_value(value, variant_type)
-            feature_option = MultivariateFeatureOption.objects.create(
-                feature=feature,
-                type=variant_type,
-                boolean_value=variant_values[0],
-                integer_value=variant_values[1],
-                string_value=variant_values[2],
+        except ValueError as ve:
+            logger.error(str(ve))
+            self.logger.error(
+                f"Unable to create feature with name: {ld_flag.get('key')}"
             )
-            feature_options[value] = feature_option
-
-        for environment in environments:
-            ld_environment = ld_flag.get("environments", {}).get(environment.name)
-            if ld_environment:
-                env_feature_option = feature_options.get(ld_environment.get(""))
-                MultivariateFeatureStateValue.objects.create(
-                    feature=feature,
-                    environment=environment,
-                    identity=None,  # todo
-                    feature_segment=None,  # todo
-                    enabled=ld_environment.get("_summary").get("on"),
-                    multivariate_feature_option=env_feature_option,
-                )
+        except Exception as e:
+            logger.error(str(e))
+            self.logger.error(
+                f"Unable to create feature with name: {ld_flag.get('key')}"
+            )
 
     def _get_multivariant_kind(self, value: any) -> str:
         if isinstance(value, bool):

@@ -4,9 +4,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from environments.models import Environment
+from features.models import Feature, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue, MultivariateFeatureOption
 from integrations.launch_darkly.client import LaunchDarklyClient
+from integrations.launch_darkly.enums import LogLevel
 from integrations.launch_darkly.launch_darkly import LaunchDarklyWrapper
+from integrations.launch_darkly.models import LaunchDarklyImportLog
 from integrations.launch_darkly.serializers import LaunchDarklyImportSerializer
+from projects.models import Project
 
 
 @pytest.mark.parametrize(
@@ -36,12 +42,32 @@ def test_launch_darkly_import_into_new_project(
     serializer.is_valid()
 
     # When
-    LaunchDarklyWrapper(
+    response = LaunchDarklyWrapper(
         client=ld_client_mock, request=serializer, user=test_user
     ).import_data()
 
     # Then
-    assert False
+    assert response.completed_at
+    assert (
+        LaunchDarklyImportLog.objects.filter(
+            launch_darkly_import=response, log_level=LogLevel.ERROR
+        ).count()
+        == 0
+    )
+    assert (
+        LaunchDarklyImportLog.objects.filter(
+            launch_darkly_import=response, log_level=LogLevel.CRITICAL
+        ).count()
+        == 0
+    )
+
+    # And
+    assert Project.objects.count() == 1
+    assert Environment.objects.count() == 2
+    assert Feature.objects.count() == 3
+    assert FeatureStateValue.objects.count() == 6
+    assert MultivariateFeatureOption.objects.count() == 6
+    assert MultivariateFeatureStateValue.objects.count() == 12
 
 
 def _build_launch_darkly_client_mock(
