@@ -3,7 +3,7 @@ FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 # Build Flagsmith
 WORKDIR /srv/flagsmith
 COPY . .
-RUN npm cache clean --force
+# RUN npm cache clean --force
 RUN npm ci
 
 ENV ENV=e2e

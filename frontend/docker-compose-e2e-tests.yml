@@ -11,11 +11,28 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
     container_name: flagsmith_postgres
+    # build:
+    #   context: ../
+    #   dockerfile: Dockerfile
+    #   x-bake:
+    #     cache-from:
+    #       - type=gha
+    #     cache-to:
+    #       - type=gha,mode=max
+    #     tags:
+    #       - postgres:11.12-alpine
 
   flagsmith-api:
     build:
       context: ../
       dockerfile: Dockerfile
+      x-bake:
+        cache-from:
+          - type=gha
+        cache-to:
+          - type=gha,mode=max
+        tags:
+          - frontend_flagsmith-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
       FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
@@ -26,7 +43,8 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - db
+      db:
+        condition: service_started
     links:
       - db:db
 
@@ -34,6 +52,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.e2e
+      x-bake:
+        cache-from:
+          - type=gha,scope=unified-fe-$GITHUB_BASE_REF-$GITHUB_REF_NAME
+        cache-to:
+          - type=gha,mode=max,scope=unified-fe-$GITHUB_BASE_REF-$GITHUB_REF_NAME
+        tags:
+          - frontend_frontend
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
@@ -43,7 +68,9 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - flagsmith-api
+      flagsmith-api:
+        condition: service_started
+
     links:
       - flagsmith-api:flagsmith-api
     command: [npm, run, test]
