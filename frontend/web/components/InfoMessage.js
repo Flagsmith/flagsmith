@@ -7,9 +7,6 @@ export default class InfoMessage extends PureComponent {
 
   handleOpenNewWindow = () => {
     window.open(this.props.url, '_blank')
-    if (this.props.isClosable) {
-     this.props.close()
-    }
   }
 
   render() {
