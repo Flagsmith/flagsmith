@@ -190,8 +190,7 @@ def _convert_chargebee_subscription_to_dictionary(
 ) -> dict:
     chargebee_subscription_dict = vars(chargebee_subscription)
     # convert the addons into a list of dictionaries since vars don't do it recursively
-    chargebee_subscription_dict["addons"] = [
-        vars(addon) for addon in chargebee_subscription.addons
-    ]
+    addons = chargebee_subscription.addons or []
+    chargebee_subscription_dict["addons"] = [vars(addon) for addon in addons]
 
     return chargebee_subscription_dict
