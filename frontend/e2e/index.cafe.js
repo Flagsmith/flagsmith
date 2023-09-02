@@ -36,7 +36,7 @@ createTestCafe()
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .filter(testName => {
-                if (!args.length || testName.toLowerCase() === 'signup') {
+                if (!args.length) {
                     return true
                 } else {
                 return args.includes(testName.toLowerCase())

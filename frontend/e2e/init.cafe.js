@@ -1,9 +1,9 @@
 import fetch from 'node-fetch'
-import { t, test, fixture } from 'testcafe'
+import { test, fixture } from 'testcafe'
 import { waitForReact } from 'testcafe-react-selectors'
 
 import Project from '../common/project'
-import { getLogger, log, logout, logResults } from './helpers.cafe'
+import { getLogger, logout, logResults } from './helpers.cafe'
 import environmentTest from './tests/environment-test'
 import inviteTest from './tests/invite-test'
 import projectTest from './tests/project-test'
