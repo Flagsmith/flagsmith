@@ -30,7 +30,7 @@ jobs:
             test
 
   run-e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: e2e-runner-8c
     name: Full E2E tests
 
     services:
@@ -73,13 +73,19 @@ jobs:
           docker inspect $API_CONTAINER_ID | jq '.[0].State'
           docker logs $API_CONTAINER_ID
 
-  run-e2e-tests-docker-unified:
-    runs-on: ubuntu-latest
-    name: Full E2E tests with unified image in Docker
+  run-e2e-segments-1-tests-docker-unified:
+    runs-on: e2e-runner
+    name: E2E Segment Part 1 and environment tests with unified image in Docker
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v2
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -97,8 +103,74 @@ jobs:
           STATIC_ASSET_CDN_URL: /
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          docker-compose -f docker-compose-e2e-tests.yml build
-          docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
+          docker buildx bake -f docker-compose-e2e-tests.yml --load |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
+
+  run-e2e-segments-2-tests-docker-unified:
+    runs-on: e2e-runner
+    name: E2E Segment Part 2 tests with unified image in Docker
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Run docker-compose with unified-image
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+          ENV: staging
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          STATIC_ASSET_CDN_URL: /
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker buildx bake -f docker-compose-e2e-tests.yml --load |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
+
+  run-e2e-other-tests-docker-unified:
+    runs-on: e2e-runner
+    name: E2E segments-3, signup,flag, invite, project tests with in Docker
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build docker-compose with unified-image
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+          ENV: staging
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          STATIC_ASSET_CDN_URL: /
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker buildx bake -f docker-compose-e2e-tests.yml --load |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- segment-part-3 signup flag invite project
 
   docker-build-unified:
     if: github.event.pull_request.draft == false
@@ -117,9 +189,11 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: false
+          cache-from: type=gha,scope=image-unified-fb
+          cache-to: type=gha,mode=max,scope=image-unified-fb
           tags: flagsmith/flagsmith:testing
 
   docker-build-api:
@@ -139,11 +213,13 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: api/Dockerfile
           context: api/
           push: false
+          cache-from: type=gha,scope=image-api-fb
+          cache-to: type=gha,mode=max,scope=image-api-fb
           tags: flagsmith/flagsmith-api:testing
 
   docker-build-frontend:
@@ -163,9 +239,11 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: frontend/Dockerfile
           context: frontend/
           push: false
+          cache-from: type=gha,scope=image-frontend-fb
+          cache-to: type=gha,mode=max,scope=image-frontend-fb
           tags: flagsmith/flagsmith-frontend:testing

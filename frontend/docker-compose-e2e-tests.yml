@@ -16,6 +16,13 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
+      x-bake:
+        cache-from:
+          - type=gha,scope=image-e2e-unified-api
+        cache-to:
+          - type=gha,mode=max,scope=image-e2e-unified-api
+        tags:
+          - frontend_flagsmith-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
       FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
@@ -26,7 +33,8 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - db
+      db:
+        condition: service_started
     links:
       - db:db
 
@@ -34,6 +42,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.e2e
+      x-bake:
+        cache-from:
+          - type=gha,scope=image-e2e-unified-fe
+        cache-to:
+          - type=gha,mode=max,scope=image-e2e-unified-fe
+        tags:
+          - frontend_frontend
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
@@ -43,7 +58,9 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - flagsmith-api
+      flagsmith-api:
+        condition: service_started
+
     links:
       - flagsmith-api:flagsmith-api
     command: [npm, run, test]
