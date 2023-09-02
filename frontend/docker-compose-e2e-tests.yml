@@ -11,16 +11,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
     container_name: flagsmith_postgres
-    # build:
-    #   context: ../
-    #   dockerfile: Dockerfile
-    #   x-bake:
-    #     cache-from:
-    #       - type=gha
-    #     cache-to:
-    #       - type=gha,mode=max
-    #     tags:
-    #       - postgres:11.12-alpine
 
   flagsmith-api:
     build:
