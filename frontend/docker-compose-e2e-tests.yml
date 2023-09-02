@@ -28,9 +28,9 @@ services:
       dockerfile: Dockerfile
       x-bake:
         cache-from:
-          - type=gha
+          - type=gha,scope=image-e2e-unified-api
         cache-to:
-          - type=gha,mode=max
+          - type=gha,mode=max,scope=image-e2e-unified-api
         tags:
           - frontend_flagsmith-api
     environment:
@@ -54,9 +54,9 @@ services:
       dockerfile: Dockerfile.e2e
       x-bake:
         cache-from:
-          - type=gha,scope=unified-fe-$GITHUB_BASE_REF-$GITHUB_REF_NAME
+          - type=gha,scope=image-e2e-unified-fe
         cache-to:
-          - type=gha,mode=max,scope=unified-fe-$GITHUB_BASE_REF-$GITHUB_REF_NAME
+          - type=gha,mode=max,scope=image-e2e-unified-fe
         tags:
           - frontend_frontend
     platform: linux/amd64
