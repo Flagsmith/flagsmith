@@ -141,7 +141,7 @@ jobs:
 
   run-e2e-other-tests-docker-unified:
     runs-on: e2e-runner
-    name: E2E signup,flag, invite, and project tests with unified image in Docker
+    name: E2E segments-3, signup,flag, invite, project tests with in Docker
 
     steps:
       - name: Cloning repo
