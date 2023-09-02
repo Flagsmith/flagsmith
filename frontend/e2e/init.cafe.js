@@ -7,7 +7,7 @@ import { getLogger, logout, logResults } from './helpers.cafe'
 import environmentTest from './tests/environment-test'
 import inviteTest from './tests/invite-test'
 import projectTest from './tests/project-test'
-import {testSegment1, testSegment2} from './tests/segment-test'
+import { testSegment1, testSegment2, testSegment3 } from './tests/segment-test'
 import initialiseTests from './tests/initialise-tests'
 import flagTests from './tests/flag-tests'
 
@@ -80,6 +80,11 @@ test('Segment-part-1', async () => {
 
 test('Segment-part-2', async () => {
   await testSegment2()
+  await logout()
+})
+
+test('Segment-part-3', async () => {
+  await testSegment3()
   await logout()
 })
 

@@ -170,7 +170,7 @@ jobs:
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           docker buildx bake -f docker-compose-e2e-tests.yml --load |
-          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- signup flag invite project
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- segment-part-3 signup flag invite project
 
   docker-build-unified:
     if: github.event.pull_request.draft == false

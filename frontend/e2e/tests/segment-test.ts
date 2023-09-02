@@ -240,6 +240,24 @@ export const testSegment2 = async () => {
   await gotoFeatures()
   await deleteFeature(1, 'flag')
   await deleteFeature(0, 'config')
+}
+
+export const testSegment3 = async () => {
+  log('Login')
+  await login(email, password)
+
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', 'Bullet Train Ltd 4')
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-select-page'))
+
+  log('Create Project')
+
+  await click('.btn-project-create')
+  await setText(byId('projectName'), 'My Segment Test Project 3')
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
 
   log('Create features')
   await gotoFeatures()
