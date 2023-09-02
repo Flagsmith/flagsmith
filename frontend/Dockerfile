@@ -7,9 +7,13 @@ USER node
 
 WORKDIR /srv/bt
 
-COPY --chown=node:node . .
+COPY --chown=node:node package.json package-lock.json .npmrc .nvmrc ./
+COPY --chown=node:node bin/ ./bin/
+COPY --chown=node:node env/ ./env/
 
 RUN npm ci --quiet --production
+
+COPY --chown=node:node . .
 ENV ENV=prod
 RUN npm run bundle
 
