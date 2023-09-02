@@ -274,6 +274,12 @@ export type Account = {
   is_superuser: boolean
 }
 
+export type Role = {
+  id?: number
+  name?: string
+  organisation?: number
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -333,6 +339,8 @@ export type Res = {
     }
     value: string
   }
+  roles: Roles
+  rolePermission: { id: string }
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
