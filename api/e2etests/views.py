@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from organisations.models import Subscription
 from users.models import FFAdminUser
 
+from .e2e_seed_data import E2ESeedData
 from .permissions import E2ETestPermission
 
 
@@ -17,12 +18,9 @@ class Teardown(APIView):
     authentication_classes = (TokenAuthentication,)
 
     def post(self, request):
-        # delete users created for e2e test by front end
-        if os.environ["FE_E2E_TEST_USER_EMAIL"]:
-            FFAdminUser.objects.filter(
-                email=os.environ["FE_E2E_TEST_USER_EMAIL"]
-            ).delete()
-
+        e2e_seed_data = E2ESeedData()
+        e2e_seed_data.teardown()  # Llama al método teardown de E2ESeedData
+        e2e_seed_data.seed_data()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

@@ -79,7 +79,10 @@ const ProjectSelectPage = class extends Component {
                   AccountStore.model.is_superuser)) && (
                 <div>
                   <Flex className='text-center'>
-                    <Button onClick={this.newOrganisation} size='large'>
+                    <Button
+                      data-test='create-organisation-btn'
+                      onClick={this.newOrganisation}
+                    >
                       Create Organisation
                     </Button>
                   </Flex>

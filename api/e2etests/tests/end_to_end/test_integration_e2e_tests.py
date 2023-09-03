@@ -14,6 +14,7 @@ def test_e2e_teardown(settings, db):
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1000/min"
     token = "test-token"
     e2e_user_email = "test@example.com"
+    e2e_user2_email = e2e_user_email + ".io"
     register_url = "/api/v1/auth/users/"
 
     os.environ["E2E_TEST_AUTH_TOKEN"] = token
@@ -37,7 +38,8 @@ def test_e2e_teardown(settings, db):
     url = reverse("api-v1:e2etests:teardown")
     teardown_response = client.post(url)
     assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
-    assert not FFAdminUser.objects.filter(email=e2e_user_email).exists()
+    assert FFAdminUser.objects.filter(email=e2e_user_email).exists()
+    assert not FFAdminUser.objects.filter(email=e2e_user2_email).exists()
 
 
 def test_e2e_teardown_with_incorrect_token(settings, db):

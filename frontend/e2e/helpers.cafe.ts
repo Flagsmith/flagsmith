@@ -1,5 +1,6 @@
 import { RequestLogger, Selector, t } from 'testcafe';
-import { Operator } from 'rxjs';
+
+export const LONG_TIMEOUT = 40000
 
 export const byId = (id:string) => `[data-test="${id}"]`;
 
@@ -12,7 +13,7 @@ export type Rule = {
     ors?:Rule[]
 }
 export const setText = async (selector:string, text:string) => {
-    console.log(`Set text ${selector} : ${text}`);
+    log(undefined, undefined, `Set text ${selector} : ${text}`);
     return t.selectText(selector)
         .pressKey('delete')
         .selectText(selector) // Prevents issue where input tabs out of focus
@@ -20,15 +21,17 @@ export const setText = async (selector:string, text:string) => {
 };
 
 export const waitForElementVisible = async (selector:string) => {
-    console.log(`Waiting element visible ${selector}`);
-    return t.expect(Selector(selector).visible).ok();
+    log(undefined, undefined, `Waiting element visible ${selector}`);
+    return t.expect(Selector(selector).visible).ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT });
 };
 
 export const logResults = async (requests:LoggedRequest[], t)=> {
     if(!t.testRun?.errs?.length) {
+        log('Finished without errors')
         return // do not log anything for passed tests
     }
-    console.log(JSON.stringify(requests.filter((v)=>{
+    log('Start of Requests')
+    log(undefined, undefined, JSON.stringify(requests.filter((v)=>{
         if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
             return false
         }
@@ -37,12 +40,13 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
         }
         return true
     }), null, 2));
-    console.log("Session JavaScript Errors")
-    console.log(JSON.stringify((await t.getBrowserConsoleMessages())));
+    log(undefined, undefined, "Session JavaScript Errors")
+    log(undefined, undefined, JSON.stringify((await t.getBrowserConsoleMessages())));
+    log('End of Requests')
 }
 
 export const waitForElementNotExist = async (selector:string) => {
-    console.log(`Waiting element not visible ${selector}`);
+    log(undefined, undefined, `Waiting element not visible ${selector}`);
     return t.expect(Selector(selector).exists).notOk('', { timeout: 10000 });
 };
 export const gotoFeatures = async () => {
@@ -52,9 +56,13 @@ export const gotoFeatures = async () => {
 
 export const click = async (selector:string) => {
     await waitForElementVisible(selector);
-    await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
-    await t.click(selector);
+    await t
+        .expect(Selector(selector).hasAttribute('disabled'))
+        .notOk('ready for testing', { timeout: 5000 })
+        .hover(selector)
+        .click(selector);
 };
+
 export const gotoSegments = async () => {
     await click('#segments-link');
 };
@@ -93,8 +101,23 @@ export const deleteTrait = async (index:number) => {
     await waitForElementNotExist(byId(`user-trait-${index}`));
 };
 
+let lastTestGroup = {};
+let lastTestName = undefined;
 // eslint-disable-next-line no-console
-export const log = (message:string, group) => console.log('\n', '\x1b[32m', `${group ? `[${group}] ` : ''}${message}`, '\x1b[0m', '\n');
+export const log = (group:string|undefined, test?:string, message?:string) => {
+    const testName = test ? `[${test}]` : t.test.name
+    const groupName = group ?? lastTestGroup[testName];
+
+    if (lastTestName !== testName || lastTestGroup[testName] !== groupName) {
+        const ellipsis = group === groupName ? '' : '...';
+        console.log('\n', '\x1b[32m', `${testName ? `${ellipsis}[${testName} tests] ` : ''}${groupName}`, '\x1b[0m', '\n');
+        lastTestGroup[testName] = groupName;
+        lastTestName = testName;
+    }
+    if (message) {
+        console.log(message);
+    }
+}
 
 export const viewFeature = async (index:number) => {
     await click(byId(`feature-item-${index}`));
@@ -173,7 +196,7 @@ export const login = async (email:string, password:string) => {
     await click('#login-btn');
     await waitForElementVisible('#project-select-page');
 };
-export const logout = async () => {
+export const logout = async (t) => {
     await click('#account-settings-link');
     await click('#logout-link');
     await waitForElementVisible('#login-page');
@@ -267,7 +290,7 @@ export const createSegment = async (index:number, id:string, rules?:Rule[]) => {
 };
 
 export const waitAndRefresh = async (waitFor = 3000) => {
-    console.log(`Waiting for ${waitFor}ms, then refreshing.`);
+    log(undefined, undefined, `Waiting for ${waitFor}ms, then refreshing.`);
     await t.wait(waitFor);
     await t.eval(() => location.reload());
 };
