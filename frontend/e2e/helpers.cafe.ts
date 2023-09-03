@@ -27,8 +27,10 @@ export const waitForElementVisible = async (selector:string) => {
 
 export const logResults = async (requests:LoggedRequest[], t)=> {
     if(!t.testRun?.errs?.length) {
+        log('Finished without errors')
         return // do not log anything for passed tests
     }
+    log('Start of Requests')
     log(undefined, undefined, JSON.stringify(requests.filter((v)=>{
         if(v.request?.url?.includes("get-subscription-metadata") || v.request?.url?.includes("analytics/flags")) {
             return false
@@ -40,6 +42,7 @@ export const logResults = async (requests:LoggedRequest[], t)=> {
     }), null, 2));
     log(undefined, undefined, "Session JavaScript Errors")
     log(undefined, undefined, JSON.stringify((await t.getBrowserConsoleMessages())));
+    log('End of Requests')
 }
 
 export const waitForElementNotExist = async (selector:string) => {

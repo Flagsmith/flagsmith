@@ -67,10 +67,8 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
   .beforeEach(async () => {
     await waitForReact()
   })
-  .after(async (t) => {
-    console.log('Start of Initialise Requests')
+  .afterEach(async (t) => {
     await logResults(logger.requests, t)
-    console.log('End of Initialise Requests')
   })
 
 test('Segment-part-1', async () => {
