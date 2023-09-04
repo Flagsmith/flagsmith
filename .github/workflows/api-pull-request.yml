@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: e2e-runner
+    runs-on: ubuntu-latest
     name: API Unit Tests
 
     services:
