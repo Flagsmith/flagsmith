@@ -6,7 +6,10 @@ import pytest
 
 from environments.models import Environment
 from features.models import Feature, FeatureStateValue
-from features.multivariate.models import MultivariateFeatureStateValue, MultivariateFeatureOption
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.enums import LogLevel
 from integrations.launch_darkly.launch_darkly import LaunchDarklyWrapper

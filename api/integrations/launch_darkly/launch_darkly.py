@@ -19,7 +19,6 @@ from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -164,13 +163,12 @@ class LaunchDarklyWrapper:
                     feature_state, created = FeatureState.objects.update_or_create(
                         feature=feature,
                         environment=environment,
-                        defaults={
-                            "enabled": ld_environment.get("on")
-                        }
+                        defaults={"enabled": ld_environment.get("on")},
                     )
-                    FeatureStateValue.objects.update_or_create(feature_state=feature_state, defaults={
-                        "feature_state": feature_state
-                    })
+                    FeatureStateValue.objects.update_or_create(
+                        feature_state=feature_state,
+                        defaults={"feature_state": feature_state},
+                    )
                 else:
                     self.logger.error(
                         f"""
@@ -228,25 +226,27 @@ class LaunchDarklyWrapper:
                 env_name = environment.name.lower()
                 ld_environment = ld_flag.get("environments", {}).get(env_name)
                 if ld_environment:
-                    env_feature_options = ld_environment.get("_summary", {}).get("variations", [])
+                    env_feature_options = ld_environment.get("_summary", {}).get(
+                        "variations", []
+                    )
                     for env_feature_key in env_feature_options.keys():
                         feature_state, created = FeatureState.objects.update_or_create(
                             feature=feature,
                             environment=environment,
-                            defaults={
-                                "enabled": ld_environment.get("on")
-                            }
+                            defaults={"enabled": ld_environment.get("on")},
                         )
-                        flag_value = ld_flag.get("variations", {})[int(env_feature_key)].get("value")
+                        flag_value = ld_flag.get("variations", {})[
+                            int(env_feature_key)
+                        ].get("value")
                         env_feature_option = feature_options.get(flag_value)
-                        is_on = not env_feature_options.get(env_feature_key).get("isOff", False)
+                        is_on = not env_feature_options.get(env_feature_key).get(
+                            "isOff", False
+                        )
                         percentage_allocation = 100 if is_on else 0
                         MultivariateFeatureStateValue.objects.update_or_create(
                             feature_state=feature_state,
                             multivariate_feature_option=env_feature_option,
-                            defaults={
-                                "percentage_allocation": percentage_allocation
-                            }
+                            defaults={"percentage_allocation": percentage_allocation},
                         )
                         self.logger.info("Successfully ")
                 else:
