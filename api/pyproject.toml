@@ -101,6 +101,7 @@ django-ses = "~3.5.0"
 django-axes = "~5.32.0"
 pydantic = "~1.10.9"
 pyngo = "~1.6.0"
+flagsmith = "^3.4.0"
 
 [tool.poetry.group.auth-controller.dependencies]
 django-multiselectfield = "~0.1.12"
