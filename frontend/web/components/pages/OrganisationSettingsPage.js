@@ -1309,7 +1309,10 @@ const OrganisationSettingsPage = class extends Component {
                                                 </Button>
                                               </Row>
                                               <p className='fs-small lh-sm'>
-                                                Some description about roles.
+                                                Create custom roles, assign
+                                                permissions, and keys to the
+                                                role, and then you can assign
+                                                roles to users and/or groups.
                                               </p>
                                               <PanelSearch
                                                 id='org-members-list'
@@ -1390,11 +1393,15 @@ const OrganisationSettingsPage = class extends Component {
                                                 )}
                                                 renderNoResults={
                                                   <Panel
-                                                    className='fs-small lh-sm'
                                                     title={'Organisation roles'}
+                                                    className='no-pad'
                                                   >
-                                                    You currently have no
-                                                    organisation roles
+                                                    <div className='search-list'>
+                                                      <Row className='list-item p-3 text-muted'>
+                                                        You currently have no
+                                                        organisation roles
+                                                      </Row>
+                                                    </div>
                                                   </Panel>
                                                 }
                                                 isLoading={false}
