@@ -209,6 +209,11 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")
     def enable_v2_versioning(self, request: Request, api_key: str) -> Response:
         environment = self.get_object()
+        if environment.use_v2_feature_versioning is True:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Environment already using v2 versioning."},
+            )
         enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
