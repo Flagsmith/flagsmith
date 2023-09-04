@@ -111,7 +111,7 @@ jobs:
           concurrency: 2
 
   run-e2e-segments-1-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: e2e-runner
     name: Unified E2E Segment Part 1, environment
 
     steps:
@@ -134,7 +134,7 @@ jobs:
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
 
   run-e2e-segments-2-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: e2e-runner
     name: Unified E2E Segment Part 2
 
     steps:
@@ -157,7 +157,7 @@ jobs:
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
 
   run-e2e-other-tests-docker-unified:
-    runs-on: ubuntu-latest
+    runs-on: e2e-runner
     name: Unified E2E segments-3, signup,flag, invite, project
 
     steps:
