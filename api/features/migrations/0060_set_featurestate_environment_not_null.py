@@ -6,7 +6,7 @@ import django.db.models.deletion
 
 def delete_feature_states_without_environment(apps, schema_editor):
     FeatureState = apps.get_model("features", "FeatureState")
-    FeatureState.objects.filter(environment=None).delete()
+    FeatureState.objects.filter(environment__isnull=True).delete()
 
 
 class Migration(migrations.Migration):
