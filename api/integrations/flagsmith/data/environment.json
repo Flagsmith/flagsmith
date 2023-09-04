@@ -1,0 +1,34 @@
+{
+  "api_key": "masked",
+  "feature_states": [
+    {
+      "feature": {
+        "id": 51089,
+        "name": "test",
+        "type": "STANDARD"
+      },
+      "enabled": false,
+      "django_id": 286268,
+      "feature_segment": null,
+      "featurestate_uuid": "ec33a926-0b7e-4eb7-b02b-bf9df2ffa53e",
+      "feature_state_value": null,
+      "multivariate_feature_state_values": []
+    }
+  ],
+  "id": 0,
+  "name": "Development",
+  "project": {
+    "id": 0,
+    "name": "Flagsmith API",
+    "hide_disabled_flags": false,
+    "organisation": {
+      "id": 0,
+      "name": "Flagsmith",
+      "feature_analytics": false,
+      "stop_serving_flags": false,
+      "persist_trait_data": true
+    },
+    "segments": []
+  },
+  "use_identity_composite_key_for_hashing": true
+}

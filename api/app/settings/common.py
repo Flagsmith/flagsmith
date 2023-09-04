@@ -148,6 +148,7 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     "integrations.dynatrace",
+    "integrations.flagsmith",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -919,3 +920,13 @@ PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60
 
 # Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
 MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
+
+FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = env.bool(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE", default=True
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY", default=None
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
+)
