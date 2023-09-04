@@ -56,6 +56,26 @@
     color: $text-icon-dark;
   }
 }
+
+.announcement {
+  margin: auto;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  .body {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .close-btn {
+    margin-top: -3px;
+    font-size: 20px;
+    color: $alert-announcement-close-btn;
+  }
+  .info-icon {
+    margin-top: 15px;
+  }
+}
+
 .dark {
   .alert {
     color: $alert-color-dark;
@@ -69,6 +89,11 @@
     }
     strong {
       color: $text-icon-light;
+    }
+  }
+  .announcement {
+    .close-btn {
+      color: $alert-color-dark;
     }
   }
 }
