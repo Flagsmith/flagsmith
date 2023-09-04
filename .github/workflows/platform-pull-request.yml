@@ -29,9 +29,9 @@ jobs:
             style
             test
 
-  run-e2e-tests:
-    runs-on: e2e-runner-8c
-    name: Full E2E tests
+  run-e2e-tests-1:
+    runs-on: ubuntu-latest
+    name: E2E Segment Part 1 and environment tests
 
     services:
       postgres:
@@ -47,129 +47,136 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Run Local API
-        id: run-local-api
-        uses: ./.github/actions/run-local-api
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
         with:
-          e2e_test_token: some-token
-          # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
-          database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
           sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
           sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
-          disable_analytics_features: true
-
-      - name: Run E2E tests against local
-        uses: ./.github/actions/e2e-tests
-        with:
-          e2e_test_token: some-token
           slack_token: ${{ secrets.SLACK_TOKEN }}
-          environment: local
+          tests: segment-part-1 environment
+          concurrency: 1
 
-      - name: Output API container status and logs
-        if: failure()
+  run-e2e-tests-2:
+    runs-on: ubuntu-latest
+    name: E2E Segment Part 2
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
         env:
-          API_CONTAINER_ID: ${{ steps.run-local-api.outputs.containerId }}
-        run: |
-          docker inspect $API_CONTAINER_ID | jq '.[0].State'
-          docker logs $API_CONTAINER_ID
-
-  run-e2e-segments-1-tests-docker-unified:
-    runs-on: e2e-runner
-    name: E2E Segment Part 1 and environment tests with unified image in Docker
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
         with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
+          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
+          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          tests: segment-part-2
+          concurrency: 1
 
-      - name: Run docker-compose with unified-image
+  run-e2e-tests-3:
+    runs-on: ubuntu-latest
+    name: E2E segments-3, signup,flag, invite, project tests on local
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
+        with:
+          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
+          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          tests: segment-part-3 signup flag invite project
+          concurrency: 2
+
+  run-e2e-segments-1-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: Unified E2E Segment Part 1, environment
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
         working-directory: frontend
         env:
-          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-          ENV: staging
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          STATIC_ASSET_CDN_URL: /
+          SLACK_TOKEN: ${{ inputs.slack_token }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          docker buildx bake -f docker-compose-e2e-tests.yml --load |
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
 
   run-e2e-segments-2-tests-docker-unified:
-    runs-on: e2e-runner
-    name: E2E Segment Part 2 tests with unified image in Docker
+    runs-on: ubuntu-latest
+    name: Unified E2E Segment Part 2
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
         with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
-      - name: Run docker-compose with unified-image
+      - name: Run tests on unified docker image
         working-directory: frontend
         env:
-          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-          ENV: staging
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          STATIC_ASSET_CDN_URL: /
+          SLACK_TOKEN: ${{ inputs.slack_token }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          docker buildx bake -f docker-compose-e2e-tests.yml --load |
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
 
   run-e2e-other-tests-docker-unified:
-    runs-on: e2e-runner
-    name: E2E segments-3, signup,flag, invite, project tests with in Docker
+    runs-on: ubuntu-latest
+    name: Unified E2E segments-3, signup,flag, invite, project
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
         with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
 
-      - name: Build docker-compose with unified-image
+      - name: Run tests on unified docker image
         working-directory: frontend
         env:
-          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-          ENV: staging
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          STATIC_ASSET_CDN_URL: /
+          SLACK_TOKEN: ${{ inputs.slack_token }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          docker buildx bake -f docker-compose-e2e-tests.yml --load |
           docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- segment-part-3 signup flag invite project
 
   docker-build-unified:
