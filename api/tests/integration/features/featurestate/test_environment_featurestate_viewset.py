@@ -7,7 +7,8 @@ from rest_framework import status
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_update_feature_state_value_updates_feature_state_value(
     client, environment, environment_api_key, feature, feature_state

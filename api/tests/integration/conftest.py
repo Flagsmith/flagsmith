@@ -224,6 +224,26 @@ def feature_segment(admin_client, segment, feature, environment):
 
 
 @pytest.fixture()
+def segment_featurestate(
+    admin_client: APIClient,
+    segment: int,
+    feature: int,
+    environment: int,
+    feature_segment: int,
+) -> int:
+    data = {
+        "feature": feature,
+        "environment": environment,
+        "feature_segment": feature_segment,
+    }
+    url = reverse("api-v1:features:featurestates-list")
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def identity_traits():
     return [
         {"trait_value": "trait_value_1", "trait_key": "trait_key_1"},
@@ -329,7 +349,7 @@ def identity_document_without_fs(environment_api_key, identity_traits):
 
 
 @pytest.fixture()
-def master_api_key(organisation, admin_client):
+def admin_master_api_key(organisation: int, admin_client: APIClient) -> dict:
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
         args=[organisation],
@@ -341,16 +361,16 @@ def master_api_key(organisation, admin_client):
 
 
 @pytest.fixture()
-def master_api_key_prefix(master_api_key):
-    return master_api_key["prefix"]
+def admin_master_api_key_prefix(admin_master_api_key: dict) -> str:
+    return admin_master_api_key["prefix"]
 
 
 @pytest.fixture()
-def master_api_key_client(master_api_key):
+def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key["key"])
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + admin_master_api_key["key"])
     return api_client
 
 

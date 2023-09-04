@@ -2,7 +2,7 @@
     "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
     "packages": {
         ".": {
-            "release-type": "python",
+            "release-type": "simple",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,

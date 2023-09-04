@@ -19,7 +19,6 @@ h2 {
   line-height: $h2-line-height;
 }
 
-
 h3 {
   font-size: $h3-font-size;
   line-height: $h3-line-height;
@@ -53,80 +52,91 @@ h6 {
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .dark {
-    color: $body-text-dark;
-    h1,h2,h3,h4,h5,h6 {
-        color: $header-color-dark;
-    }
+  color: $body-text-dark;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: $text-icon-light;
+  }
+}
+
+.font-weight-medium {
+  font-weight: 500  !important;
 }
 
 .text-primary {
-    color: $bt-brand-primary;
+  color: $bt-brand-primary;
 }
 
-.dark{
-    .text-primary {
-        color: $bt-brand-primary-dark;
-    }
+.dark {
+  .text-primary {
+    color: $bt-brand-primary-dark;
+  }
+  .text-dark {
+    color: $text-icon-light !important;
+  }
 }
 * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a.link-dark {
-    color: $bt-brand-primary;
+  color: $bt-brand-primary;
 }
 
-a.dark{
-    color: $bt-brand-primary-dark;
-    text-decoration: underline;
-    &:hover {
-        color: lighten($bt-brand-primary-dark, 10);
-    }
+a.dark {
+  color: $bt-brand-primary-dark;
+  text-decoration: underline;
+  &:hover {
+    color: lighten($bt-brand-primary-dark, 10);
+  }
 }
 
-
-.text-small{
-    font-size:0.75rem!important;
+.text-small {
+  font-size: 0.75rem !important;
 }
 
 .text-white {
-    color: white;
+  color: white;
 }
 
 .text {
-    &__link {
-        color: $bt-brand-primary;
-        &:hover {
-            color: lighten($bt-brand-primary, 10)
-        }
+  &__link {
+    color: $bt-brand-primary;
+    &:hover {
+      color: lighten($bt-brand-primary, 10);
     }
+  }
 }
 
 .text-no-decoration {
+  text-decoration: none;
+  &:hover {
     text-decoration: none;
-    &:hover {
-        text-decoration: none;
-    }
+  }
 }
 
-.large-para{
-    font-size:1.25rem;
+.large-para {
+  font-size: 1.25rem;
 }
 
-.bold-link{
-    font-weight:bold!important;
+.bold-link {
+  font-weight: bold !important;
 }
 
 .feature {
-    &--off {
-        color: $bt-brand-red;
-    }
-    &--on {
-        color: $bt-brand-primary;
-    }
+  &--off {
+    color: $bt-brand-red;
+  }
+  &--on {
+    color: $bt-brand-primary;
+  }
 }

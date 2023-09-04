@@ -8,7 +8,7 @@ export type MultiVariate = {value:string,weight:number}
 export type Rule = {
     name: string,
     operator: string,
-    value: string,
+    value: string | number | boolean,
     ors?:Rule[]
 }
 export const setText = async (selector:string, text:string) => {
@@ -74,11 +74,11 @@ export const gotoTraits = async () => {
     await waitForElementVisible('#add-trait');
 };
 
-export const createTrait = async (index:number, id: string, value:string) => {
+export const createTrait = async (index:number, id: string, value:string|boolean|number) => {
     await click('#add-trait');
     await waitForElementVisible('#create-trait-modal');
     await setText('[name="traitID"]', id);
-    await setText('[name="traitValue"]', value);
+    await setText('[name="traitValue"]', `${value}`);
     await click('#create-trait-btn');
     await t.wait(2000);
     await t.eval(() => location.reload());
@@ -94,23 +94,23 @@ export const deleteTrait = async (index:number) => {
 };
 
 // eslint-disable-next-line no-console
-export const log = (message:string, group = '') => console.log('\n', '\x1b[32m', `${group ? `[${group}] ` : ''}${message}`, '\x1b[0m', '\n');
+export const log = (message:string, group) => console.log('\n', '\x1b[32m', `${group ? `[${group}] ` : ''}${message}`, '\x1b[0m', '\n');
 
 export const viewFeature = async (index:number) => {
     await click(byId(`feature-item-${index}`));
     await waitForElementVisible('#create-feature-modal');
 };
 
-export const addSegmentOverrideConfig = async (index:number, value:string, selectionIndex = 0) => {
+export const addSegmentOverrideConfig = async (index:number, value:string|boolean|number, selectionIndex = 0) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
 
     await waitForElementVisible(byId(`segment-override-value-${index}`));
-    await setText(byId(`segment-override-value-${0}`), value);
+    await setText(byId(`segment-override-value-${0}`), `${value}`);
     await click(byId('segment-override-toggle-0'));
 };
 
-export const addSegmentOverride = async (index:number, value:string, selectionIndex = 0, mvs:MultiVariate[]) => {
+export const addSegmentOverride = async (index:number, value:string|boolean|number, selectionIndex = 0, mvs:MultiVariate[] = []) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
     await waitForElementVisible(byId(`segment-override-value-${index}`));
@@ -173,13 +173,18 @@ export const login = async (email:string, password:string) => {
     await click('#login-btn');
     await waitForElementVisible('#project-select-page');
 };
+export const logout = async () => {
+    await click('#account-settings-link');
+    await click('#logout-link');
+    await waitForElementVisible('#login-page');
+};
 
-export const createRemoteConfig = async (index:number, name:string, value:string, description = 'description', defaultOff?:boolean, mvs:MultiVariate[] = []) => {
+export const createRemoteConfig = async (index:number, name:string, value:string|number|boolean, description = 'description', defaultOff?:boolean, mvs:MultiVariate[] = []) => {
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await gotoFeatures();
     await click('#show-create-feature-btn');
     await setText(byId('featureID'), name);
-    await setText(byId('featureValue'), value);
+    await setText(byId('featureValue'), `${value}`);
     await setText(byId('featureDesc'), description);
     if (!defaultOff) {
         await click(byId('toggle-feature-button'));
@@ -200,7 +205,7 @@ export const closeModal = async () => {
         offsetY: 50,
     });
 };
-export const createFeature = async (index:number, name:string, value:string, description = 'description') => {
+export const createFeature = async (index:number, name:string, value?:string|boolean|number, description = 'description') => {
     await gotoFeatures();
     await click('#show-create-feature-btn');
     await setText(byId('featureID'), name);
@@ -225,12 +230,12 @@ export const toggleFeature = async (index:number, toValue:boolean) => {
     await waitForElementVisible(byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`));
 };
 
-export const setSegmentRule = async (ruleIndex:number, orIndex:number, name:string, operator:string, value:string) => {
+export const setSegmentRule = async (ruleIndex:number, orIndex:number, name:string, operator:string, value:string|number|boolean) => {
     await setText(byId(`rule-${ruleIndex}-property-${orIndex}`), name);
     if (operator) {
         await setText(byId(`rule-${ruleIndex}-operator-${orIndex}`), operator);
     }
-    await setText(byId(`rule-${ruleIndex}-value-${orIndex}`), value);
+    await setText(byId(`rule-${ruleIndex}-value-${orIndex}`), `${value}`);
 };
 
 export const createSegment = async (index:number, id:string, rules?:Rule[]) => {

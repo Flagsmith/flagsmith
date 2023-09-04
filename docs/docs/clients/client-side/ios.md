@@ -36,8 +36,6 @@ The SDK is initialised against a single environment within a project on [https:/
 for example the Development or Production environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-![Image](/img/api-key.png)
-
 ### Initialization
 
 Within your application delegate (usually _AppDelegate.swift_) add:
@@ -102,10 +100,9 @@ Flagsmith.shared.getFeatureValue(withID: "test_feature2", forIdentity: nil) { (r
 ```
 
 These methods can also specify a particular identity to retrieve the values for a user registration. See
-[Identities](https://docs.flagsmith.com/managing-identities/) , using the **forIdentity** parameter.
+[Identities](/basic-features/managing-identities/) , using the **forIdentity** parameter.
 
-To retrieve a trait for a particular identity (see
-[Traits](https://docs.flagsmith.com/managing-identities/#identity-traits)):
+To retrieve a trait for a particular identity (see [Traits](/basic-features/managing-identities/#identity-traits)):
 
 ```swift
 Flagsmith.shared.getTraits(forIdentity: "test_user@test.com") {(result) in

@@ -8,6 +8,9 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
+import { getProjectFlags } from 'common/services/useProjectFlag'
+import { getStore } from 'common/store'
+import Icon from './Icon'
 
 const featureNameWidth = 300
 
@@ -45,8 +48,8 @@ class CompareEnvironments extends Component {
     return Promise.all([
       this.state.projectFlags
         ? Promise.resolve({ results: this.state.projectFlags })
-        : data.get(
-            `${Project.api}projects/${this.props.projectId}/features/?page_size=999`,
+        : getProjectFlags(getStore(), { project: this.props.projectId }).then(
+            (res) => res.data,
           ),
       data.get(
         `${Project.api}environments/${this.state.environmentLeft}/featurestates/?page_size=999`,
@@ -114,15 +117,22 @@ class CompareEnvironments extends Component {
   render() {
     return (
       <div>
-        <h5>Compare Environments</h5>
-        <p className='fs-small lh-sm'>
-          Compare feature flag changes across environments.
-        </p>
+        <div className='col-md-8'>
+          <h5 className='mb-1'>Compare Environments</h5>
+          <p className='fs-small mb-4 lh-sm'>
+            Compare feature flag changes across environments.
+          </p>
+        </div>
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>
               <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentRight}
+                ignoreAPIKey={
+                  this.state.environmentRight
+                    ? [this.state.environmentRight]
+                    : undefined
+                }
+                projectId={this.props.projectId}
                 onChange={(environmentLeft) =>
                   this.setState({ environmentLeft })
                 }
@@ -130,13 +140,24 @@ class CompareEnvironments extends Component {
               />
             </div>
 
-            <div>
-              <span className='icon ios ion-md-arrow-back mx-2' />
+            <div className='mx-3'>
+              <Icon
+                name='arrow-left'
+                width={20}
+                fill={
+                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+                }
+              />
             </div>
 
             <div style={{ width: featureNameWidth }}>
               <EnvironmentSelect
-                ignoreAPIKey={this.state.environmentLeft}
+                projectId={this.props.projectId}
+                ignore={
+                  this.state.environmentLeft
+                    ? [this.state.environmentLeft]
+                    : undefined
+                }
                 onChange={(environmentRight) =>
                   this.setState({ environmentRight })
                 }
@@ -157,89 +178,90 @@ class CompareEnvironments extends Component {
                   this.state.environmentRight,
                 )
                 return (
-                  <div className='list-item'>
-                    <Row>
-                      <div style={{ width: featureNameWidth }}>
-                        {p.projectFlag.description ? (
-                          <Tooltip
-                            title={
-                              <strong style={{ wordWrap: 'break-word' }}>
-                                {p.projectFlag.name}
-                              </strong>
-                            }
-                          >
-                            {p.projectFlag.description}
-                          </Tooltip>
-                        ) : (
-                          <strong style={{ wordWrap: 'break-word' }}>
-                            {p.projectFlag.name}
-                          </strong>
-                        )}
-                      </div>
-                      <Flex className='mr-2'>
-                        <Permission
-                          level='environment'
-                          permission={Utils.getManageFeaturePermission(
-                            Utils.changeRequestsEnabled(
-                              environmentLeft.minimum_change_request_approvals,
-                            ),
-                          )}
-                          id={environmentLeft.api_key}
+                  <Row className='list-item'>
+                    <div
+                      className='table-column px-3'
+                      style={{ width: featureNameWidth }}
+                    >
+                      {p.projectFlag.description ? (
+                        <Tooltip
+                          title={
+                            <div
+                              style={{ wordWrap: 'break-word' }}
+                              className='font-weight-medium'
+                            >
+                              {p.projectFlag.name}
+                            </div>
+                          }
                         >
-                          {({ permission }) => (
-                            <FeatureRow
-                              condensed
-                              isCompareEnv
-                              fadeEnabled={fadeEnabled}
-                              fadeValue={fadeValue}
-                              environmentFlags={this.state.environmentLeftFlags}
-                              projectFlags={this.state.projectFlags}
-                              permission={permission}
-                              environmentId={this.state.environmentLeft}
-                              projectId={this.props.projectId}
-                              index={i}
-                              canDelete={permission}
-                              toggleFlag={toggleFlag}
-                              removeFlag={removeFlag}
-                              projectFlag={p.projectFlag}
-                            />
-                          )}
-                        </Permission>
-                      </Flex>
-                      <Flex className='ml-2'>
-                        <Permission
-                          level='environment'
-                          permission={Utils.getManageFeaturePermission(
-                            Utils.changeRequestsEnabled(
-                              environmentRight.minimum_change_request_approvals,
-                            ),
-                          )}
-                          id={environmentRight.api_key}
+                          {p.projectFlag.description}
+                        </Tooltip>
+                      ) : (
+                        <div
+                          style={{ wordWrap: 'break-word' }}
+                          className='font-weight-medium'
                         >
-                          {({ permission }) => (
-                            <FeatureRow
-                              condensed
-                              isCompareEnv
-                              fadeEnabled={fadeEnabled}
-                              fadeValue={fadeValue}
-                              environmentFlags={
-                                this.state.environmentRightFlags
-                              }
-                              projectFlags={this.state.projectFlags}
-                              permission={permission}
-                              environmentId={this.state.environmentRight}
-                              projectId={this.props.projectId}
-                              index={i}
-                              canDelete={permission}
-                              toggleFlag={toggleFlag}
-                              removeFlag={removeFlag}
-                              projectFlag={p.projectFlag}
-                            />
-                          )}
-                        </Permission>
-                      </Flex>
-                    </Row>
-                  </div>
+                          {p.projectFlag.name}
+                        </div>
+                      )}
+                    </div>
+                    <Permission
+                      level='environment'
+                      permission={Utils.getManageFeaturePermission(
+                        Utils.changeRequestsEnabled(
+                          environmentLeft.minimum_change_request_approvals,
+                        ),
+                      )}
+                      id={environmentLeft.api_key}
+                    >
+                      {({ permission }) => (
+                        <FeatureRow
+                          condensed
+                          isCompareEnv
+                          fadeEnabled={fadeEnabled}
+                          fadeValue={fadeValue}
+                          environmentFlags={this.state.environmentLeftFlags}
+                          projectFlags={this.state.projectFlags}
+                          permission={permission}
+                          environmentId={this.state.environmentLeft}
+                          projectId={this.props.projectId}
+                          index={i}
+                          canDelete={permission}
+                          toggleFlag={toggleFlag}
+                          removeFlag={removeFlag}
+                          projectFlag={p.projectFlag}
+                        />
+                      )}
+                    </Permission>
+                    <Permission
+                      level='environment'
+                      permission={Utils.getManageFeaturePermission(
+                        Utils.changeRequestsEnabled(
+                          environmentRight.minimum_change_request_approvals,
+                        ),
+                      )}
+                      id={environmentRight.api_key}
+                    >
+                      {({ permission }) => (
+                        <FeatureRow
+                          condensed
+                          isCompareEnv
+                          fadeEnabled={fadeEnabled}
+                          fadeValue={fadeValue}
+                          environmentFlags={this.state.environmentRightFlags}
+                          projectFlags={this.state.projectFlags}
+                          permission={permission}
+                          environmentId={this.state.environmentRight}
+                          projectId={this.props.projectId}
+                          index={i}
+                          canDelete={permission}
+                          toggleFlag={toggleFlag}
+                          removeFlag={removeFlag}
+                          projectFlag={p.projectFlag}
+                        />
+                      )}
+                    </Permission>
+                  </Row>
                 )
               }
               return (
@@ -259,64 +281,56 @@ class CompareEnvironments extends Component {
                     this.state.changes &&
                     !!this.state.changes.length && (
                       <div className='mt-4' style={{ minWidth: 800 }}>
-                        <Row>
-                          <Tag
-                            selected={this.state.showArchived}
-                            onClick={() => {
-                              FeatureListStore.isLoading = true
-                              this.setState({
-                                showArchived: !this.state.showArchived,
-                              })
-                            }}
-                            className='px-2 py-2 ml-2 mr-2'
-                            tag={{ color: '#0AADDF', label: 'Archived' }}
-                          />
-                        </Row>
-
                         <PanelSearch
-                          title={
-                            <Row>
-                              <span style={{ width: featureNameWidth }}>
-                                Changed Flags
-                              </span>
+                          title={'Changed Flags'}
+                          searchPanel={
+                            <Row className='mb-2'>
+                              <Tag
+                                selected={this.state.showArchived}
+                                onClick={() => {
+                                  FeatureListStore.isLoading = true
+                                  this.setState({
+                                    showArchived: !this.state.showArchived,
+                                  })
+                                }}
+                                className='px-2 py-2 ml-2 mr-2'
+                                tag={{ color: '#0AADDF', label: 'Archived' }}
+                              />
                             </Row>
                           }
                           header={
-                            <Row
-                              className='mt-2'
-                              style={{
-                                marginLeft: '0.75rem',
-                                marginRight: '0.75rem',
-                              }}
-                            >
-                              <span style={{ width: featureNameWidth }} />
-                              <Flex>
-                                <strong
-                                  style={{
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                  }}
+                            <Row className='table-header'>
+                              <div
+                                className='table-column px-3'
+                                style={{ width: featureNameWidth }}
+                              >
+                                Name
+                              </div>
+                              <Flex className='flex-row'>
+                                <div
+                                  className='table-column'
+                                  style={{ width: '120px' }}
                                 >
                                   {
                                     ProjectStore.getEnvironment(
                                       this.state.environmentLeft,
                                     ).name
                                   }
-                                </strong>
+                                </div>
+                                <Flex className='table-column'>Value</Flex>
                               </Flex>
-                              <Flex>
-                                <strong
-                                  style={{
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                  }}
+                              <Flex className='flex-row'>
+                                <div
+                                  className='table-column'
+                                  style={{ width: '120px' }}
                                 >
                                   {
                                     ProjectStore.getEnvironment(
                                       this.state.environmentRight,
                                     ).name
                                   }
-                                </strong>
+                                </div>
+                                <Flex className='table-column'>Value</Flex>
                               </Flex>
                             </Row>
                           }
@@ -334,49 +348,40 @@ class CompareEnvironments extends Component {
                       <div style={{ minWidth: 800 }}>
                         <div className='mt-4'>
                           <PanelSearch
-                            title={
-                              <Row>
-                                <span style={{ width: featureNameWidth }}>
-                                  Unchanged Flags
-                                </span>
-                              </Row>
-                            }
+                            title={'Unchanged Flags'}
                             header={
-                              <Row
-                                className='mt-2'
-                                style={{
-                                  marginLeft: '0.75rem',
-                                  marginRight: '0.75rem',
-                                }}
-                              >
-                                <span style={{ width: featureNameWidth }} />
-                                <Flex>
-                                  <strong
-                                    style={{
-                                      display: 'flex',
-                                      justifyContent: 'center',
-                                    }}
+                              <Row className='table-header'>
+                                <div
+                                  className='table-column px-3'
+                                  style={{ width: featureNameWidth }}
+                                >
+                                  Name
+                                </div>
+                                <Flex className='flex-row'>
+                                  <div
+                                    className='table-column'
+                                    style={{ width: '120px' }}
                                   >
                                     {
                                       ProjectStore.getEnvironment(
                                         this.state.environmentLeft,
                                       ).name
                                     }
-                                  </strong>
+                                  </div>
+                                  <Flex className='table-column'>Value</Flex>
                                 </Flex>
-                                <Flex>
-                                  <strong
-                                    style={{
-                                      display: 'flex',
-                                      justifyContent: 'center',
-                                    }}
+                                <Flex className='flex-row'>
+                                  <div
+                                    className='table-column'
+                                    style={{ width: '120px' }}
                                   >
                                     {
                                       ProjectStore.getEnvironment(
                                         this.state.environmentRight,
                                       ).name
                                     }
-                                  </strong>
+                                  </div>
+                                  <Flex className='table-column'>Value</Flex>
                                 </Flex>
                               </Row>
                             }

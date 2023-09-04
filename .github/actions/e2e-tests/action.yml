@@ -36,6 +36,7 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         STATIC_ASSET_CDN_URL: /
         ENV: ${{ inputs.environment }}
+        GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       run: |
         node -v

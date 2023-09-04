@@ -7,8 +7,6 @@ Managing larger numbers of flags is made easier using some of the tools built in
 You can create tags within Flagsmith and tag Flags in order to organise them. Tags can also be used to filter the list
 of Flags in the event that you have a large number.
 
-![Image](/img/flag-tags.png)
-
 ## Server-side only Flags
 
 When creating a flag, you can optionally define it as "Server-Side Only". Enabling this option for the flag will prevent
@@ -47,8 +45,6 @@ flags to always be lower case, or camel case, or whatever your preference, you c
 You can specify members of your team as owners of individual Flags. This helps in larger teams when you need to identify
 who is responsible for a particular flag.
 
-<img width="75%" src="/img/flag-owners.png"/>
-
 ## Flag Defaults
 
 By default, when you create a feature with a value and enabled state it acts as a default for your other Environments.
@@ -65,10 +61,6 @@ You can compare Flags both across Environments and for individual Flags.
 
 Use the "Compare" menu item to get an overview of how flag values differ between any two Environments:
 
-![Image](/img/flag-compare-environment.png)
-
 ### Flag Comparison
 
 You can also view a the values of a single Flag against all the Environments within the Project:
-
-![Image](/img/flag-compare-flag.png)

@@ -37,7 +37,9 @@ class BaseSubscriptionMetadata:
 
     def __str__(self):
         return "%s Subscription Metadata (seats: %d, api_calls: %d, projects: %s)" % (
-            self.payment_source.title(),
+            self.payment_source.title()
+            if self.payment_source is not None
+            else "unknown payment source",
             self.seats,
             self.api_calls,
             str(self.projects) if self.projects is not None else "no limit",

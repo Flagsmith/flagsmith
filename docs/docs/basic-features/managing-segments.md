@@ -37,18 +37,15 @@ Let's say that you want all your team to automatically be defined as `Beta Users
 are [identified](/basic-features/managing-identities.md) with their email address along with some other
 [traits](/basic-features/managing-identities.md#identity-traits).
 
-You create a new Segment, call it `Beta Users`, and define a single rule:
+You can create a new Segment by going navigating to Segments and clicking the "Create Segment" button, call it
+`Beta Users`, and define a single rule:
 
 - `email_address` contains `@flagsmith.com`
-
-![Image](/img/edit-segment.png)
 
 Once the Segment has been defined, you can then associate that Segment with a specific Feature Flag. To do this, open
 the Feature Flag that you want to connect the Segment to and navigate to the **Segment Overrides** tab. You then have
 the option of connecting a Segment to the Feature. This then allows you to override the flag value for Users that are
 within that Segment. If the Identified user is a member of that Segment, the flag will be overridden.
-
-![Image](/img/edit-feature-with-segment.png)
 
 For all the Feature Flags that relate to Beta features, you can associate this `Beta Users` segment with each Flag, and
 set the Flag value to `true` for that Segment. To do this, edit the Feature Flag and select the segment in the 'Segment
@@ -71,8 +68,6 @@ You can also create Segments _within_ a Feature. This means that only that Featu
 Specific Segments are useful when you know you will only need to use that Segment definition once. Go to the Feature,
 then the Segment Overrides Tab, and click the "Create Feature-Specific Segment" button.
 
-![Image](/img/feature-specific-segment.png)
-
 ## Multi-Variate Values
 
 If you are using [Multi-Variate Flag Values](managing-features.md#multi-variate-flags), you can also override the
@@ -90,7 +85,7 @@ Some of the operators in local evaluation mode are only supported in later SDK v
 The full set of Flagsmith rule operators are as follows:
 
 | Name                   | Condition                                                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
 | `Exactly Matches (==)` | Trait value is equal to segment value.                                                                                                            |
 | `Does Not Match (!=)`  | Trait value is not equal to segment value.                                                                                                        |
 | `% Split`              | Identity is in the percentage bucket. See [Percentage Split Operator](#percentage-split-operator).                                                |
@@ -98,7 +93,7 @@ The full set of Flagsmith rule operators are as follows:
 | `>=`                   | Trait value is greater than or equal to segment value.                                                                                            |
 | `<`                    | Trait value is less than segment value.                                                                                                           |
 | `<=`                   | Trait value is less than or equal to segment value.                                                                                               |
-| `In`                   | Trait value is equal to one or more elements in a comma delimited list. E.g the rule value might read `21,682,8345`.                              |
+| `In`                   | Trait value is equal to one or more elements in a comma delimited list. See [The `In` operator](#the-in-operator).                                |     |
 | `Contains`             | Segment value is a substring of trait value.                                                                                                      |
 | `Does Not Contain`     | Segment value is not a substring of the trait value.                                                                                              |
 | `Matches Regex`        | Segment value, set to a valid Regex expression, is applied to trait value and matches it.                                                         |
@@ -110,6 +105,17 @@ The full set of Flagsmith rule operators are as follows:
 | `SemVer <=`            | Trait value is set to an older SemVer-formatted version than segment value or equal to it. See [SemVer-aware operators](#semver-aware-operators). |
 
 Some of the operators also have special powers, described below.
+
+### The `In` operator
+
+The `In` operator lets you match a Trait value against a comma-separated list of values. For example, the Segment rule
+value might read `21,682,8345`. This would then match against a Trait value of `682` but not against a Trait value of
+`683`.
+
+The `In` operator can be useful when building Segments to match against tenancies within your application. Let's say you
+wanted a Segment to evaluate as true for 5 different customer tenancies. Create a Segment rule where the `In` operator
+matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity that
+contains the tenancy ID of that user.
 
 ### SemVer-aware operators
 

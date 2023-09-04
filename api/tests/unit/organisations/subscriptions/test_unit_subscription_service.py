@@ -32,7 +32,7 @@ def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription
     projects = 20
     api_calls = 30
     mocked_get_chargebee_subscription_metadata = mocker.patch(
-        "organisations.subscriptions.subscription_service.get_chargebee_subscription_metadata",
+        "organisations.subscriptions.subscription_service.get_subscription_metadata_from_id",
         autospec=True,
         return_value=ChargebeePlanMetadata(
             seats=seats, projects=projects, api_calls=api_calls

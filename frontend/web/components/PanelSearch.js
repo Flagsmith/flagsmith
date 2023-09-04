@@ -2,16 +2,19 @@ import React, { Component } from 'react'
 import { FixedSizeList as List } from 'react-window'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-
+import Icon from './Icon'
+import classNames from 'classnames'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
   static propTypes = {
-    action: OptionalNode,
+    actionButton: OptionalNode,
+    filterElement: OptionalNode,
     filterRow: OptionalFunc,
     goToPage: OptionalFunc,
     isLoading: OptionalBool,
     items: propTypes.any,
+    listClassName: OptionalString,
     nextPage: OptionalFunc,
     noResultsText: OptionalString,
     paging: OptionalObject,
@@ -136,17 +139,29 @@ const PanelSearch = class extends Component {
       <Panel
         className={this.props.className}
         title={this.props.title}
-        icon={this.props.icon}
-        renderFooter={this.props.renderFooter}
         action={
-          this.props.filterRow || this.props.sorting ? (
+          this.props.filterRow ||
+          this.props.sorting ||
+          this.props.filterElement ||
+          this.props.actionButton ? (
             <Row>
+              {!!this.props.filterElement && this.props.filterElement}
+
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover
-                    renderTitle={(toggle) => (
-                      <a onClick={toggle}>
-                        <div className='flex-column ion ion-md-funnel' />
+                    renderTitle={(toggle, isActive) => (
+                      <a
+                        onClick={toggle}
+                        className='flex-row'
+                        style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      >
+                        <span className='mr-1'>
+                          <Icon
+                            name='height'
+                            fill={isActive ? '#6837FC' : '#656d7b'}
+                          />
+                        </span>
                         {currentSort ? currentSort.label : 'Unsorted'}
                       </a>
                     )}
@@ -163,19 +178,19 @@ const PanelSearch = class extends Component {
                               toggle()
                             }}
                           >
-                            <Row space>
-                              <Row className='flex-1'>{sortOption.label}</Row>
+                            <Row space className='px-3 py-2'>
+                              <div>{sortOption.label}</div>
                               {currentSort &&
                                 currentSort.value === sortOption.value && (
-                                  <Row>
-                                    <div
-                                      className={`flex-column ion ${
+                                  <div>
+                                    <Icon
+                                      name={
                                         sortOrder === 'asc'
-                                          ? 'ion-ios-arrow-up'
-                                          : 'ion-ios-arrow-down'
-                                      }`}
+                                          ? 'chevron-up'
+                                          : 'chevron-down'
+                                      }
                                     />
-                                  </Row>
+                                  </div>
                                 )}
                             </Row>
                           </a>
@@ -188,7 +203,7 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div className='mr-2' style={{ width: 200 }}>
+                    <div style={{ width: 140 }}>
                       <Select
                         size='select-sm'
                         styles={{
@@ -245,13 +260,15 @@ const PanelSearch = class extends Component {
                       }}
                       type='text'
                       value={search}
-                      className='pl-4'
+                      className='ml-3'
                       size='small'
+                      placeholder='Search'
                       search
                     />
                   </Row>
                 </Row>
               )}
+              {!!this.props.actionButton && this.props.actionButton}
             </Row>
           ) : (
             action || null
@@ -261,18 +278,9 @@ const PanelSearch = class extends Component {
         {this.props.searchPanel}
         <div
           id={this.props.id}
-          className='search-list'
+          className={classNames('search-list', this.props.listClassName)}
           style={isLoading ? { opacity: 0.5 } : {}}
         >
-          {!!paging && (
-            <Paging
-              paging={paging}
-              isLoading={isLoading}
-              nextPage={nextPage}
-              prevPage={prevPage}
-              goToPage={goToPage}
-            />
-          )}
           {this.props.header}
 
           {this.props.isLoading && (!filteredItems || !items) ? (
@@ -284,11 +292,11 @@ const PanelSearch = class extends Component {
           ) : renderNoResults && !search ? (
             renderNoResults
           ) : (
-            <Column>
+            <Row className='list-item'>
               {!isLoading && (
-                <div className='mx-2 pt-1 pb-2'>
+                <>
                   {this.props.noResultsText?.(search) || (
-                    <>
+                    <div className='table-column'>
                       {'No results '}
                       {search && (
                         <span>
@@ -296,16 +304,24 @@ const PanelSearch = class extends Component {
                           <strong>{` "${search}"`}</strong>
                         </span>
                       )}
-                    </>
+                    </div>
                   )}
-                </div>
+                </>
               )}
-            </Column>
+            </Row>
           )}
+          {!!paging && (
+            <Paging
+              paging={paging}
+              isLoading={isLoading}
+              nextPage={nextPage}
+              prevPage={prevPage}
+              goToPage={goToPage}
+            />
+          )}
+
+          {this.props.renderFooter && this.props.renderFooter()}
         </div>
-        {!!paging && filteredItems && filteredItems.length > 10 && (
-          <Paging paging={paging} isLoading={isLoading} goToPage={goToPage} />
-        )}
       </Panel>
     )
   }

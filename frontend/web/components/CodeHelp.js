@@ -92,7 +92,10 @@ const CodeHelp = class extends Component {
 
   copy = (s) => {
     const res = Clipboard.setString(s)
-    toast(res ? 'Clipboard set' : 'Could not set clipboard :(')
+    toast(
+      res ? 'Clipboard set' : 'Could not set clipboard :(',
+      res ? '' : 'danger',
+    )
   }
 
   render() {
@@ -170,58 +173,58 @@ const CodeHelp = class extends Component {
                   }),
                 }}
               />
-              <Tabs value={tab}>
-                {_.map(this.props.snippets, (s, key) => {
-                  const docs = getDocsLink(key)
-                  const github = getGithubLink(key)
-                  return (
-                    <TabItem key={key} tabLabel={key}>
-                      <div className='hljs-container mb-2'>
-                        <Highlight
-                          forceExpanded
-                          preventEscape
-                          className={Constants.codeHelp.keys[key]}
-                        >
-                          {s}
-                        </Highlight>
+              {_.map(this.props.snippets, (s, key) => {
+                const docs = getDocsLink(key)
+                const github = getGithubLink(key)
+                return (
+                  <div
+                    className={
+                      key !== language ? 'd-none' : 'hljs-container mt-2 mb-2'
+                    }
+                  >
+                    <Highlight
+                      forceExpanded
+                      preventEscape
+                      className={Constants.codeHelp.keys[key]}
+                    >
+                      {s}
+                    </Highlight>
 
-                        <Column className='hljs-docs'>
-                          <Button
-                            onClick={() => this.copy(s)}
-                            size='xSmall'
-                            iconLeft='copy'
-                            iconLeftColour='white'
-                          >
-                            Copy Code
-                          </Button>
-                          {docs && (
-                            <Button
-                              target='_blank'
-                              href={docs}
-                              className='btn btn-primary'
-                              size='xSmall'
-                            >
-                              <span className='icon ion ion-ios-document' />{' '}
-                              {key} Docs
-                            </Button>
-                          )}
-                          {github && (
-                            <Button
-                              target='_blank'
-                              href={github}
-                              className='btn btn-primary'
-                              size='xSmall'
-                            >
-                              <span className='icon ion ion-logo-github' />{' '}
-                              {key} GitHub
-                            </Button>
-                          )}
-                        </Column>
-                      </div>
-                    </TabItem>
-                  )
-                })}
-              </Tabs>
+                    <Column className='hljs-docs'>
+                      <Button
+                        onClick={() => this.copy(s)}
+                        size='xSmall'
+                        iconLeft='copy'
+                        iconLeftColour='white'
+                      >
+                        Copy Code
+                      </Button>
+                      {docs && (
+                        <Button
+                          target='_blank'
+                          href={docs}
+                          className='btn btn-primary'
+                          size='xSmall'
+                        >
+                          <span className='icon ion ion-ios-document' /> {key}{' '}
+                          Docs
+                        </Button>
+                      )}
+                      {github && (
+                        <Button
+                          target='_blank'
+                          href={github}
+                          className='btn btn-primary'
+                          size='xSmall'
+                        >
+                          <span className='icon ion ion-logo-github' /> {key}{' '}
+                          GitHub
+                        </Button>
+                      )}
+                    </Column>
+                  </div>
+                )
+              })}
             </div>
           </>
         )}

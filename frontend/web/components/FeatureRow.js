@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import TagValues from './tags/TagValues'
-import HistoryIcon from './HistoryIcon'
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
 import CreateFlagModal from './modals/CreateFlag'
@@ -10,7 +9,10 @@ import Constants from 'common/constants'
 import { hasProtectedTag } from 'common/utils/hasProtectedTag'
 import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
+import Icon from './Icon'
+import FeatureValue from './FeatureValue'
 
+export const width = [200, 65, 48, 75]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -108,17 +110,19 @@ class TheComponent extends Component {
         Constants.environmentPermissions(
           Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
         ),
-        <Row
+        <Flex
           onClick={() =>
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
           }
           style={{
-            overflow: 'hidden',
             ...(this.props.style || {}),
           }}
-          className={this.props.isCompareEnv ? 'column' : null}
+          className='flex-row'
         >
-          <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
+          <div
+            className={`table-column ${this.props.fadeEnabled && 'faded'}`}
+            style={{ width: '120px' }}
+          >
             <Switch
               disabled={!permission || readOnly}
               data-test={`feature-switch-${this.props.index}${
@@ -148,9 +152,10 @@ class TheComponent extends Component {
               }}
             />
           </div>
-          <div
-            className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}
-            style={this.props.isCompareEnv && { marginTop: '5px' }}
+          <Flex
+            className={`table-column clickable ${
+              this.props.fadeValue && 'faded'
+            }`}
           >
             <FeatureValue
               onClick={() =>
@@ -163,175 +168,184 @@ class TheComponent extends Component {
               }
               data-test={`feature-value-${this.props.index}`}
             />
-          </div>
-        </Row>,
+          </Flex>
+        </Flex>,
       )
     }
-
     return Utils.renderWithPermission(
       permission,
       Constants.environmentPermissions(
         Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
       ),
       <Row
-        style={{ flexWrap: 'nowrap' }}
         className={`list-item ${readOnly ? '' : 'clickable'} ${
           this.props.widget ? 'py-1' : 'py-2'
         }`}
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
+        onClick={() =>
+          !readOnly && this.editFeature(projectFlag, environmentFlags[id])
+        }
       >
-        <div
-          className='flex flex-1'
-          onClick={() =>
-            !readOnly && this.editFeature(projectFlag, environmentFlags[id])
-          }
-        >
-          <div>
-            <Row>
-              <Button
-                theme='text'
-                className={`mr-2 ${readOnly ? 'cursor-default' : ''}`}
-              >
-                {name}
-              </Button>
-              {projectFlag.owners && !!projectFlag.owners.length ? (
-                <Tooltip
-                  title={
-                    <Button theme='text'>
-                      <span className='ion ion-md-person pr-2' />
-                    </Button>
-                  }
-                  place='right'
-                >
-                  {`Flag assigned to ${projectFlag.owners
-                    .map((v) => `${v.first_name} ${v.last_name}`)
-                    .join(', ')}`}
-                </Tooltip>
-              ) : (
-                <span />
-              )}
-              {!!projectFlag.num_segment_overrides && (
-                <Tooltip
-                  title={
-                    <span
-                      className='chip ml-1 chip--sm bg-primary text-white'
-                      style={{ border: 'none' }}
-                    >
-                      <SegmentsIcon className='chip-svg-icon' />
-                      <span>{projectFlag.num_segment_overrides}</span>
-                    </span>
-                  }
-                  place='top'
-                >
-                  {`${projectFlag.num_segment_overrides} Segment Override${
-                    projectFlag.num_segment_overrides !== 1 ? 's' : ''
-                  }`}
-                </Tooltip>
-              )}
-              {!!projectFlag.num_identity_overrides && (
-                <Tooltip
-                  title={
-                    <span
-                      className='chip ml-1 chip--sm bg-primary text-white'
-                      style={{ border: 'none' }}
-                    >
-                      <UsersIcon className='chip-svg-icon' />
-                      <span>{projectFlag.num_identity_overrides}</span>
-                    </span>
-                  }
-                  place='top'
-                >
-                  {`${projectFlag.num_identity_overrides} Identity Override${
-                    projectFlag.num_identity_overrides !== 1 ? 's' : ''
-                  }`}
-                </Tooltip>
-              )}
-              <TagValues projectId={`${projectId}`} value={projectFlag.tags} />
-            </Row>
-            <span className='text-small text-muted'>
-              Created {moment(created_date).format('Do MMM YYYY HH:mma')}
-              {' - '}
-              {description || 'No description'}
-            </span>
-          </div>
-        </div>
-        <Row>
-          <Row
-            style={{
-              marginBottom: 5,
-              marginRight: 15,
-              marginTop: 5,
-            }}
-          >
-            <Column>
-              <FeatureValue
-                onClick={() =>
-                  !readOnly &&
-                  this.editFeature(projectFlag, environmentFlags[id])
-                }
-                value={
-                  environmentFlags[id] &&
-                  environmentFlags[id].feature_state_value
-                }
-                data-test={`feature-value-${this.props.index}`}
-              />
-            </Column>
-            <Column>
-              <Switch
-                disabled={!permission || readOnly}
-                data-test={`feature-switch-${this.props.index}${
-                  environmentFlags[id] && environmentFlags[id].enabled
-                    ? '-on'
-                    : '-off'
-                }`}
-                checked={environmentFlags[id] && environmentFlags[id].enabled}
-                onChange={() => {
-                  if (
-                    Utils.changeRequestsEnabled(
-                      environment.minimum_change_request_approvals,
-                    )
-                  ) {
-                    this.editFeature(projectFlag, environmentFlags[id])
-                    return
-                  }
-                  this.confirmToggle(
-                    projectFlag,
-                    environmentFlags[id],
-                    (environments) => {
-                      toggleFlag(
-                        _.findIndex(projectFlags, { id }),
-                        environments,
-                      )
-                    },
-                  )
+        <Flex className='table-column'>
+          <Row>
+            <Flex>
+              <Row
+                className='font-weight-medium mb-1'
+                style={{
+                  alignItems: 'start',
+                  lineHeight: 1,
+                  rowGap: 4,
+                  wordBreak: 'break-all',
                 }}
-              />
-            </Column>
-          </Row>
+              >
+                <span className='me-2'>
+                  {description ? (
+                    <Tooltip
+                      title={
+                        <span>
+                          {name}
+                          <span className={'ms-1'}></span>
+                          <Icon name='info-outlined' />
+                        </span>
+                      }
+                    >
+                      {description}
+                    </Tooltip>
+                  ) : (
+                    name
+                  )}
+                </span>
 
+                {!!projectFlag.num_segment_overrides && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <SegmentsIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_segment_overrides}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {`${projectFlag.num_segment_overrides} Segment Override${
+                      projectFlag.num_segment_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                )}
+                {!!projectFlag.num_identity_overrides && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <UsersIcon className='chip-svg-icon' />
+                        <span>{projectFlag.num_identity_overrides}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {`${projectFlag.num_identity_overrides} Identity Override${
+                      projectFlag.num_identity_overrides !== 1 ? 's' : ''
+                    }`}
+                  </Tooltip>
+                )}
+                <TagValues
+                  inline
+                  projectId={`${projectId}`}
+                  value={projectFlag.tags}
+                />
+              </Row>
+              <div className='list-item-subtitle'>
+                Created {moment(created_date).format('Do MMM YYYY HH:mma')}
+              </div>
+            </Flex>
+          </Row>
+        </Flex>
+        <div className='table-column' style={{ width: width[0] }}>
+          <FeatureValue
+            onClick={() =>
+              !readOnly && this.editFeature(projectFlag, environmentFlags[id])
+            }
+            value={
+              environmentFlags[id] && environmentFlags[id].feature_state_value
+            }
+            data-test={`feature-value-${this.props.index}`}
+          />
+        </div>
+        <div
+          className='table-column'
+          style={{ width: width[1] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <Switch
+            disabled={!permission || readOnly}
+            data-test={`feature-switch-${this.props.index}${
+              environmentFlags[id] && environmentFlags[id].enabled
+                ? '-on'
+                : '-off'
+            }`}
+            checked={environmentFlags[id] && environmentFlags[id].enabled}
+            onChange={() => {
+              if (
+                Utils.changeRequestsEnabled(
+                  environment.minimum_change_request_approvals,
+                )
+              ) {
+                this.editFeature(projectFlag, environmentFlags[id])
+                return
+              }
+              this.confirmToggle(
+                projectFlag,
+                environmentFlags[id],
+                (environments) => {
+                  toggleFlag(_.findIndex(projectFlags, { id }), environments)
+                },
+              )
+            }}
+          />
+        </div>
+        <div
+          className='table-column'
+          style={{ width: width[2] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
           {AccountStore.getOrganisationRole() === 'ADMIN' &&
             !this.props.hideAudit && (
               <Tooltip
                 html
                 title={
-                  <button
+                  <div
                     onClick={() => {
                       this.context.router.history.push(
                         `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
                     }}
-                    className='btn btn--with-icon'
                     data-test={`feature-history-${this.props.index}`}
                   >
-                    <HistoryIcon />
-                  </button>
+                    <Icon name='clock' width={24} fill='#9DA4AE' />
+                  </div>
                 }
               >
                 Feature history
               </Tooltip>
             )}
+        </div>
+        <div
+          className='table-column'
+          style={{ width: width[3] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
           {!this.props.hideRemove && (
             <Permission
               level='project'
@@ -342,36 +356,34 @@ class TheComponent extends Component {
                 Utils.renderWithPermission(
                   removeFeaturePermission,
                   Constants.projectPermissions('Delete Feature'),
-                  <Column>
-                    <Tooltip
-                      html
-                      title={
-                        <button
-                          disabled={
-                            !removeFeaturePermission || readOnly || isProtected
-                          }
-                          onClick={() =>
-                            this.confirmRemove(projectFlag, () => {
-                              removeFlag(projectId, projectFlag)
-                            })
-                          }
-                          className='btn btn--with-icon'
-                          data-test={`remove-feature-btn-${this.props.index}`}
-                        >
-                          <RemoveIcon />
-                        </button>
-                      }
-                    >
-                      {isProtected
-                        ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                        : 'Remove feature'}
-                    </Tooltip>
-                  </Column>,
+                  <Tooltip
+                    html
+                    title={
+                      <Button
+                        disabled={
+                          !removeFeaturePermission || readOnly || isProtected
+                        }
+                        onClick={() =>
+                          this.confirmRemove(projectFlag, () => {
+                            removeFlag(projectId, projectFlag)
+                          })
+                        }
+                        className='btn btn-with-icon'
+                        data-test={`remove-feature-btn-${this.props.index}`}
+                      >
+                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                      </Button>
+                    }
+                  >
+                    {isProtected
+                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
+                      : 'Remove feature'}
+                  </Tooltip>,
                 )
               }
             </Permission>
           )}
-        </Row>
+        </div>
       </Row>,
     )
   }

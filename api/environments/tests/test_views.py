@@ -501,14 +501,14 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
 
 @pytest.mark.parametrize(
-    "client, is_master_api_key_client",
+    "client, is_admin_master_api_key_client",
     [
-        (lazy_fixture("master_api_key_client"), True),
+        (lazy_fixture("admin_master_api_key_client"), True),
         (lazy_fixture("admin_client"), False),
     ],
 )
 def test_should_create_environments(
-    project, client, admin_user, is_master_api_key_client
+    project, client, admin_user, is_admin_master_api_key_client
 ):
     # Given
     url = reverse("api-v1:environments:environment-list")
@@ -529,14 +529,15 @@ def test_should_create_environments(
     assert response.json()["use_identity_composite_key_for_hashing"] is True
 
     # and user is admin
-    if not is_master_api_key_client:
+    if not is_admin_master_api_key_client:
         assert UserEnvironmentPermission.objects.filter(
             user=admin_user, admin=True, environment__id=response.json()["id"]
         ).exists()
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_environment_without_required_metadata_returns_400(
     project,
@@ -562,7 +563,8 @@ def test_create_environment_without_required_metadata_returns_400(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_environment_with_required_metadata_returns_201(
     project,
@@ -599,7 +601,8 @@ def test_create_environment_with_required_metadata_returns_201(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_environment_metadata(
     project,
@@ -643,7 +646,8 @@ def test_update_environment_metadata(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_audit_log_entry_created_when_environment_updated(environment, project, client):
     # Given
@@ -687,7 +691,8 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_document(environment, project, client, feature, segment):
     # Given
@@ -714,7 +719,8 @@ def test_get_document(environment, project, client, feature, segment):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     identity, client, trait, environment
@@ -755,7 +761,8 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     environment, client, identity, trait
@@ -787,7 +794,8 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_user_can_list_environment_permission(client, environment):
     # Given
@@ -804,7 +812,7 @@ def test_user_can_list_environment_permission(client, environment):
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(
-    master_api_key_client, environment
+    admin_master_api_key_client, environment
 ):
     # Given
     url = reverse(
@@ -812,7 +820,7 @@ def test_environment_my_permissions_reruns_400_for_master_api_key(
     )
 
     # When
-    response = master_api_key_client.get(url)
+    response = admin_master_api_key_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -820,3 +828,19 @@ def test_environment_my_permissions_reruns_400_for_master_api_key(
         response.json()["detail"]
         == "This endpoint can only be used with a user and not Master API Key"
     )
+
+
+def test_partial_environment_update(
+    admin_client: APIClient, environment: "Environment"
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+    new_name = "updated!"
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps({"name": new_name}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

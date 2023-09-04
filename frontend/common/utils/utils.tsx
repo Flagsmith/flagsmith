@@ -14,6 +14,7 @@ import {
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
+import Constants from 'common/constants'
 
 const semver = require('semver')
 
@@ -242,7 +243,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (plan && plan.includes('enterprise')) {
+    if (
+      global.flagsmithVersion?.backend.is_enterprise ||
+      (plan && plan.includes('enterprise'))
+    ) {
       return planNames.enterprise
     }
     return planNames.free
@@ -250,9 +254,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getPlanPermission: (plan: string, permission: string) => {
     let valid = true
     const planName = Utils.getPlanName(plan)
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
+
     if (!plan || planName === planNames.free) {
       return false
     }
@@ -304,11 +306,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
-
   getPlansPermission: (permission: string) => {
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
@@ -324,6 +322,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       (perm) => !!perm,
     )
     return !!found
+  },
+
+  getProjectColour(index: number) {
+    return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -372,6 +374,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
     return false
+  },
+
+  getTagColour(index: number) {
+    return Constants.tagColors[index % (Constants.tagColors.length - 1)]
   },
 
   getTraitEndpoint(environmentId: string, userId: string) {

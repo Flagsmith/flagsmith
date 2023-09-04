@@ -1,28 +1,27 @@
 pre {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .panel-card {
-    box-shadow: none;
-    border: 1px solid darken($bt-brand-faint-alt, 2);
-    .panel-content {
-        background-color: $bt-brand-faint-alt;
-    }
+  box-shadow: none;
+  border-radius: $border-radius-lg;
+  .panel-content {
+  }
 }
 
 .dark {
-    .panel-card {
-        border: 1px solid transparent;
-        .panel-content {
-            background-color: $bt-brand-faint-alt-dark;
-        }
+  .panel-card {
+    border: 1px solid transparent;
+    .panel-content {
+      background-color: $bt-brand-faint-alt-dark;
     }
+  }
 
 }
 
 .card-link-wrapper {
-    display: flex;
-    justify-content: center;
-    position: relative;
-    bottom: -25px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  bottom: -25px;
 }

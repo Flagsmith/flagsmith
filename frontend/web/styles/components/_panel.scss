@@ -21,23 +21,16 @@
 }
 
 .panel {
-  border: none !important;
-
   &.no-pad {
     padding: 0 !important;
     .panel-content {
       padding: 0 !important;
     }
   }
-  box-shadow: 0 10px 30px rgba(30, 13, 38, 0.1),
-    0 5px 10px rgba(30, 13, 38, 0.1) !important;
   .no-results {
     text-align: center;
     line-height: 44px;
   }
-  width: 100%;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  border-radius: $border-radius;
   .panel-heading {
     h1,
     h2,
@@ -45,32 +38,25 @@
     h4,
     h5,
     h6 {
-      color: $panel-heading-color;
+      color: $text-icon-dark;
       margin: 0;
     }
 
     font-weight: 500;
-    font-size: 1em;
-    border-top-right-radius: 8px;
-    border-top-left-radius: 8px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: $input-padding-x;
-    padding-right: $input-padding-x;
+    font-size: $font-size-base;
     flex: 1 1 0%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: $panel-heading-bg;
     text-transform: capitalize;
-    color: $panel-heading-color;
+    height: 56px;
 
     .title {
-      color: $panel-heading-color;
+      color: $text-icon-dark;
       font-family: $font-family-header;
       .subtitle {
         color: $text-icon-dark;
-        font-weight: 400;
+        font-weight: normal;
         text-transform: none;
       }
     }
@@ -79,53 +65,12 @@
   .panel-content {
     background-color: $panel-bg;
     padding: $input-padding-y $input-padding-x;
-    border-bottom-left-radius: $border-radius !important;
-    border-bottom-right-radius: $border-radius !important;
-  }
-  &.panel-without-heading {
-    .panel-content {
-      border-top-left-radius: $border-radius !important;
-      border-top-right-radius: $border-radius !important;
-    }
   }
 
-  .icon {
-    color: $panel-icon-color;
-    &.text-white {
-      color: white;
-    }
-  }
-  .panel-icon {
-    display: inline-block;
-    @include flexbox();
-    align-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    justify-content: center;
-    background-color: $panel-icon-background-color;
-    border: none;
-    margin-right: $input-padding-x/2;
-    .icon {
-      display: inline-block;
-      text-align: center;
-      font-size: 18px;
-      line-height: 18px;
-      color: $panel-icon-color;
-    }
-    &--disabled {
-      .icon {
-        color: lightgray;
-        font-size: 2em;
-      }
-    }
-    &--success {
-      border: 1px solid $bt-brand-primary;
-      .icon {
-        color: $bt-brand-primary;
-        font-size: 2em;
-      }
-    }
+  &.segment-overrides {
+    border: 1px solid $basic-alpha-16;
+    border-radius: $border-radius-lg;
+    background-color: $text-icon-light;
   }
 
   &.no-pad {
@@ -141,7 +86,7 @@
       color: $dark-color;
     }
     .panel-content {
-      background-color: $panel-bg-dark;
+      background-color: transparent;
       .chip {
         background-color: $panel-bg-darker;
       }
@@ -149,25 +94,23 @@
     .panel-heading {
       h1,
       h2,
-      h3 {
+      h3,
+      h4,
+      h5 {
         color: $panel-heading-color-dark;
         margin: 0;
       }
       .title {
-        color: $header-color-dark;
+        color: $text-icon-light;
         .subtitle {
-          color: white;
+          color: $text-icon-light;
         }
       }
-      color: $header-color-dark;
-
-      background-color: $panel-heading-bg-dark;
+      color: $text-icon-light;
       .ion-ios-information-circle {
         color: $panel-icon-background-color;
       }
     }
-    border: none;
-    color: $panel-heading-color-dark;
     a {
       color: $dark-highlight-color;
       &:hover {
@@ -188,11 +131,16 @@
       }
     }
 
-    .panel {
-      background-color: $panel-bg-darker;
-      .panel-content {
-        background-color: $panel-bg-darker;
+    &.panel-integrations {
+      border: 1px solid $basic-alpha-16;
+      background-color: $bg-dark300;
+      .list-integrations {
+        background-color: $bg-dark200;
       }
+    }
+    &.segment-overrides {
+      background-color: $bg-dark100;
+      border: 1px solid $white-alpha-16;
     }
   }
 }
@@ -200,5 +148,63 @@
 a.text-white {
   &:hover {
     color: white !important;
+  }
+}
+
+.panel {
+  &.panel-integrations {
+    border-radius: $panel-border-radius;
+    border: 1px solid $panel-border-color;
+
+    img {
+      width: fit-content;
+      height: 30px;
+    }
+    .list-integrations {
+      border-radius: $border-radius-xlg;
+      background-color: $bg-light200;
+      font-size: $font-sm;
+      line-height: $line-height-sm;
+    }
+  }
+  .panel-content {
+    .search-list {
+      border: 1px solid $panel-border-color;
+      border-radius: $panel-border-radius;
+      .list-item {
+        border-top: 1px solid $panel-border-color;
+        &:first-child {
+          border-top: none;
+        }
+      }
+    }
+  }
+  &.panel-override {
+    .panel-content {
+      .search-list {
+        border: none;
+        .list-item-override {
+          border: 1px solid $basic-alpha-16;
+          border-radius: $border-radius-lg;
+        }
+      }
+    }
+  }
+  &.panel-projects {
+    .panel-content {
+      .search-list {
+        border: none;
+      }
+    }
+  }
+}
+
+@include media-breakpoint-down(xxl) {
+  .owners-title {
+    display: none;
+  }
+  .table-column.assignees-column {
+    display: block;
+    width: 98px !important;
   }
 }

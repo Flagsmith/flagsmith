@@ -1,7 +1,5 @@
 @import '../variables';
 @import '../new/variables-new';
-$google: #c53d23;
-$github: #eeefee;
 
 .btn,
 button.btn {
@@ -58,6 +56,9 @@ button.btn {
     }
     &.btn-lg {
       line-height: calc($btn-line-height-lg - 2px);
+    }
+    &:disabled {
+      color: $primary;
     }
     &:hover,
     &:focus {
@@ -121,13 +122,47 @@ button.btn {
       fill: #d93939;
     }
   }
-  &-with-icon{
+  &-with-icon {
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
     &:hover,
-    &:active{
+    &:active,
+    &:disabled {
       background-color: $basic-alpha-8 !important;
+      svg {
+        path {
+          fill: $primary;
+        }
+      }
+    }
+    &:focus {
+      background-color: $basic-alpha-8 !important;
+      svg {
+        path {
+          fill: $text-icon-dark;
+        }
+      }
+    }
+    &.btn-sm {
+      padding: 0 10px;
+    }
+    &.btn-lg{
+      line-height: $btn-line-height-lg;
+    }
+    &.btn-remove {
+      background-color: $danger-alfa-8;
+      &:hover,
+      &:active,
+      &:disabled,
+      &:focus {
+        background-color: $danger-alfa-8 !important;
+        svg {
+          path {
+            fill: $danger;
+          }
+        }
+      }
     }
   }
   &--with-icon {
@@ -165,58 +200,57 @@ button.btn {
       height: 20px;
     }
   }
-  &__oauth {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-    &:last-child {
-      margin-right: 0;
-    }
-    border-radius: $border-radius;
-    color: #000 !important;
-    font-weight: bold;
-    text-align: left;
-    &:hover {
-      text-decoration: none;
-    }
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
-    position: relative;
-    padding-left: $spacer * 3.5;
-    svg {
-      position: absolute;
-      left: 20px;
-      height: 24px;
-    }
-    margin-bottom: $spacer;
-    &--github {
-      background-color: $github;
+  &-project {
+    background-color: $bg-light200;
+    color: $text-icon-dark;
+    padding: 0px 8px;
+    width: 100%;
+    height: 76px;
+    border-radius: $border-radius-lg;
+    &.btn-project-create {
+      background-color: transparent;
+      border: 1px dashed $basic-alpha-24;
       &:hover {
-        background-color: darken($github, 5);
+        background-color: transparent;
+        & .btn-project-icon {
+          background-color: $primary-alfa-8;
+          path {
+            fill: $primary;
+          }
+        }
+      }
+      .btn-project-icon {
+        background-color: $bg-light300;
+        padding: 6px 14px;
+        margin-right: 12px;
+        border-radius: $border-radius;
       }
     }
-    &--google {
-      background-color: $google;
-      color: white !important;
-      &:hover {
-        background-color: lighten($google, 5);
+    &.btn:hover,
+    &.btn:active,
+    &.btn:focus {
+      background-color: $bg-light200;
+      color: $text-icon-dark;
+      & .btn-project-letter {
+        background-color: $primary;
       }
     }
-    &--saml {
-      color: white !important;
-      padding-left: 20px;
+    &-letter {
+      min-width: 60px;
+      height: 60px;
+      background-color: $primary400;
+      border-radius: $border-radius;
+      color: $text-icon-light;
+      text-transform: uppercase;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    &--microsoft {
-      background-color: #339af4;
-      color: white !important;
-      &:hover {
-        background-color: #327ed6;
-      }
-      img {
-        height: 20px;
-      }
+    &-title {
+      white-space: normal;
+      line-height: $line-height-base;
+      text-align: left;
     }
   }
   &-lg {
@@ -262,28 +296,16 @@ button.btn {
     color: $text-icon-dark;
     font-weight: bold;
   }
+  &.btn-with-icon{
+    padding: 0 14px;
+    background-color: $basic-alpha-8;
+    border-radius: $border-radius;
+    line-height: $btn-line-height;
+  }
 }
 
 $remove-btn-size: 24px;
 $add-btn-size: 34px;
-.btn.btn-remove {
-  line-height: $remove-btn-size;
-  height: $remove-btn-size;
-  padding: 0;
-  width: $remove-btn-size;
-  align-items: center;
-  text-align: center;
-  color: #929292;
-  background-color: #f7f7f7;
-  &:hover {
-    background-color: #aaa;
-    color: #929292;
-  }
-  font-size: 1em;
-  span {
-    line-height: $remove-btn-size;
-  }
-}
 .btn-radio {
   cursor: pointer;
   width: 20px;
@@ -321,9 +343,6 @@ $add-btn-size: 34px;
     &__md-full {
       width: 100%;
     }
-    &__oauth {
-      margin-right: 12px;
-    }
   }
 }
 
@@ -354,7 +373,9 @@ $add-btn-size: 34px;
       background: transparent;
       border-color: $primary400;
       color: $primary400;
-
+      &:disabled {
+        color: $primary400;
+      }
       &:hover {
         color: $primary400;
         border-color: $primary400;
@@ -397,14 +418,38 @@ $add-btn-size: 34px;
         color: $dark-highlight-color;
       }
     }
-    &__oauth {
-      color: $header-color-dark !important;
-      svg path {
-        fill: $header-color-dark !important;
-      }
-    }
     .btn-radio {
       border-color: $white-alpha-24;
+    }
+
+    &-project {
+      background-color: $bg-dark200;
+      color: $text-icon-light;
+      &.btn-project-create {
+        &:hover {
+          background-color: transparent;
+          & .btn-project-icon {
+            background-color: $primary-alfa-8;
+            path {
+              fill: $primary;
+            }
+          }
+        }
+        & .btn-project-icon {
+          background-color: $basic-alpha-8;
+        }
+      }
+
+      &.btn:hover {
+        background-color: $bg-dark200;
+        color: $text-icon-light;
+        & .btn-project-letter {
+          background-color: $primary;
+        }
+      }
+    }
+    &.btn-with-icon{
+      background-color: $basic-alpha-8;
     }
   }
 

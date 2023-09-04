@@ -243,26 +243,30 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
 
 
 def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+    organisation,
     mocker,
 ):
     # Given
-    subscription = Subscription(
-        payment_method=CHARGEBEE, subscription_id="cb-subscription"
+    seats = 10
+    api_calls = 50000000
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation, allowed_seats=seats, allowed_30d_api_calls=api_calls
     )
 
-    expected_metadata = ChargebeePlanMetadata(seats=10, api_calls=50000000, projects=10)
+    expected_metadata = ChargebeePlanMetadata(
+        seats=seats, api_calls=api_calls, projects=10
+    )
     mock_cb_get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata"
+        "organisations.models.Subscription.get_subscription_metadata"
     )
     mock_cb_get_subscription_metadata.return_value = expected_metadata
 
     # When
-    subscription_metadata = subscription.get_subscription_metadata()
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     # Then
-    mock_cb_get_subscription_metadata.assert_called_once_with(
-        subscription.subscription_id
-    )
+    mock_cb_get_subscription_metadata.assert_called_once_with()
+
     assert subscription_metadata == expected_metadata
 
 

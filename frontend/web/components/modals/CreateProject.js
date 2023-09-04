@@ -3,7 +3,6 @@ import InfoMessage from 'components/InfoMessage'
 import PaymentModal from './Payment'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
-import ModalHR from './ModalHR'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -43,7 +42,7 @@ const CreateProject = class extends Component {
           const disableCreate = !canCreate && hasProject
 
           return (
-            <div>
+            <div className='p-4'>
               <form
                 style={{ opacity: disableCreate ? 0.5 : 1 }}
                 data-test='create-project-modal'
@@ -56,58 +55,49 @@ const CreateProject = class extends Component {
                   !isSaving && name && createProject(name)
                 }}
               >
-                <div className='modal-body'>
-                  {disableCreate && (
-                    <InfoMessage>
-                      View and manage multiple projects in your organisation
-                      with the{' '}
-                      <a
-                        href='#'
-                        onClick={() => {
-                          openModal(
-                            'Payment plans',
-                            <PaymentModal viewOnly={false} />,
-                            'modal-lg',
-                          )
-                        }}
-                      >
-                        Startup plan
-                      </a>
-                    </InfoMessage>
-                  )}
-                  <InputGroup
-                    ref={(e) => (this.input = e)}
-                    data-test='projectName'
-                    disabled={disableCreate}
-                    className='mb-0'
-                    inputProps={{
-                      className: 'full-width',
-                      name: 'projectName',
-                    }}
-                    onChange={(e) =>
-                      this.setState({ name: Utils.safeParseEventValue(e) })
-                    }
-                    isValid={name && name.length}
-                    type='text'
-                    title='Project Name*'
-                    placeholder='My Product Name'
-                  />
-                  {error && <ErrorMessage error={error} />}
-                </div>
-                <ModalHR />
-                <div className='modal-footer'>
-                  <Button
-                    onClick={closeModal}
-                    theme='secondary'
-                    className='mr-2'
-                  >
-                    Cancel
-                  </Button>
+                {disableCreate && (
+                  <InfoMessage>
+                    View and manage multiple projects in your organisation with
+                    the{' '}
+                    <a
+                      href='#'
+                      onClick={() => {
+                        openModal(
+                          'Payment plans',
+                          <PaymentModal viewOnly={false} />,
+                          'modal-lg',
+                        )
+                      }}
+                    >
+                      Startup plan
+                    </a>
+                  </InfoMessage>
+                )}
+                <InputGroup
+                  ref={(e) => (this.input = e)}
+                  data-test='projectName'
+                  disabled={disableCreate}
+                  className='mb-0'
+                  inputProps={{
+                    className: 'full-width',
+                    name: 'projectName',
+                  }}
+                  onChange={(e) =>
+                    this.setState({ name: Utils.safeParseEventValue(e) })
+                  }
+                  isValid={name && name.length}
+                  type='text'
+                  title='Project Name*'
+                  placeholder='My Product Name'
+                />
+                {error && <ErrorMessage error={error} />}
+                <div className='text-right mt-5'>
                   <Button
                     type='submit'
                     data-test='create-project-btn'
                     id='create-project-btn'
                     disabled={isSaving || !name}
+                    className='text-right'
                   >
                     {isSaving ? 'Creating' : 'Create Project'}
                   </Button>

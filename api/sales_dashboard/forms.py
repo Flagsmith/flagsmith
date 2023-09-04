@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from environments.models import Environment
 from features.models import Feature
 from organisations.chargebee import (
-    get_subscription_metadata as get_subscription_metadata_from_chargebee,
+    get_subscription_metadata_from_id as get_subscription_metadata_from_chargebee,
 )
 from organisations.models import Organisation
 from organisations.subscriptions.constants import CHARGEBEE

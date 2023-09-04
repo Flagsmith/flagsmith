@@ -80,10 +80,7 @@ runs:
         path: ./flagsmith-saml
 
     - name: Integrate SAML module
-      run: |
-        mv ./flagsmith-saml/saml ./api
-        cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
-        echo "" >> ./api/requirements.txt  # add a new line so that future concatenation works
+      run: mv ./flagsmith-saml/saml ./api
       shell: bash
 
     - name: Checkout Workflows Logic package
@@ -107,10 +104,7 @@ runs:
         path: ./flagsmith-auth-controller
 
     - name: Integrate Auth Controller module
-      run: |
-        mv ./flagsmith-auth-controller/auth_controller ./api
-        cat ./flagsmith-auth-controller/requirements.txt >> ./api/requirements.txt
-        echo "" >> ./api/requirements.txt # add a new line so that future concatenation works
+      run: mv ./flagsmith-auth-controller/auth_controller ./api
       shell: bash
 
     - name: Checkout RBAC module
@@ -127,7 +121,7 @@ runs:
 
     - name: Set ECR tag
       id: ecr-tag-variable
-      run: echo ::set-output name=tag::${{ inputs.image_tag }}
+      run: echo "tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Write git info to Docker image
@@ -157,9 +151,9 @@ runs:
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
         cd api
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 .
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+        echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Fill in the new image ID in the Amazon ECS API task definition
@@ -187,7 +181,7 @@ runs:
         AWS_DEFAULT_REGION: eu-west-2
         TASK_DEFINITION: ${{ steps.task-def-migration.outputs.task-definition }}
       run: |
-        echo "::set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
+        echo "task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')" >> $GITHUB_OUTPUT
         aws ecs run-task --cluster ${{ inputs.aws_ecs_cluster_name }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
           "awsvpcConfiguration": {
             "subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
