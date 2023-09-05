@@ -17,6 +17,9 @@ defaults:
   run:
     working-directory: api
 
+env:
+  FLAGSMITH_RBAC_REVISION: v0.3.2
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -47,6 +50,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
+          cache-dependency-path: flagsmtih
 
       - name: Install Dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
@@ -66,10 +70,20 @@ jobs:
           opts: --no-input --dry-run --check
         run: make django-make-migrations
 
+      - name: Checkout RBAC package
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-rbac
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
+          path: ./flagsmith-rbac
+
       - name: Run Tests
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
-        run: make test
+        run: |
+          ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
+          make test
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
