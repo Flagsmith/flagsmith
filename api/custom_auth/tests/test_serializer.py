@@ -1,5 +1,8 @@
+from django.test import RequestFactory
+from pytest_django.fixtures import SettingsWrapper
+
 from custom_auth.serializers import CustomUserCreateSerializer
-from users.models import FFAdminUser
+from users.models import FFAdminUser, SignUpType
 
 user_dict = {
     "email": "TestUser@mail.com",
@@ -53,3 +56,28 @@ def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correct
         email=user_dict["email"],
         raise_exception=True,
     )
+
+
+def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invite_link(
+    db: None,
+    settings: SettingsWrapper,
+    rf: RequestFactory,
+) -> None:
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+
+    data = {
+        **user_dict,
+        "sign_up_type": SignUpType.INVITE_LINK.value,
+    }
+
+    serializer = CustomUserCreateSerializer(
+        data=data, context={"request": rf.post("/v1/auth/users/")}
+    )
+    assert serializer.is_valid()
+
+    # When
+    user = serializer.save()
+
+    # Then
+    assert user

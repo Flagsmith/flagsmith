@@ -4,6 +4,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 
 from custom_auth.oauth.serializers import (
@@ -11,6 +13,7 @@ from custom_auth.oauth.serializers import (
     GoogleLoginSerializer,
     OAuthLoginSerializer,
 )
+from users.models import SignUpType
 
 UserModel = get_user_model()
 
@@ -131,3 +134,31 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
         email=user_email,
         raise_exception=True,
     )
+
+
+def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link(
+    settings: SettingsWrapper, rf: RequestFactory, mocker: MockerFixture, db: None
+):
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+
+    request = rf.post("/api/v1/auth/users/")
+    user_email = "test_user@test.com"
+
+    serializer = OAuthLoginSerializer(
+        data={
+            "access_token": "some_token",
+            "sign_up_type": SignUpType.INVITE_LINK.value,
+        },
+        context={"request": request},
+    )
+    # monkey patch the get_user_info method to return the mock user data
+    serializer.get_user_info = lambda: {"email": user_email}
+
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    user = serializer.save()
+
+    # Then
+    assert user

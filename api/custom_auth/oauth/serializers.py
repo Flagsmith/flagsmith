@@ -57,15 +57,15 @@ class OAuthLoginSerializer(serializers.Serializer):
         existing_user = UserModel.objects.filter(email=email).first()
 
         if not existing_user:
+            sign_up_type = self.validated_data.get("sign_up_type")
             if not (
                 settings.ALLOW_REGISTRATION_WITHOUT_INVITE
+                or sign_up_type == SignUpType.INVITE_LINK.value
                 or Invite.objects.filter(email=email).exists()
             ):
                 raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
-            return UserModel.objects.create(
-                **user_data, sign_up_type=self.validated_data.get("sign_up_type")
-            )
+            return UserModel.objects.create(**user_data, sign_up_type=sign_up_type)
 
         return existing_user
 
