@@ -67,14 +67,16 @@ def register_task_handler(task_name: str = None):
         f.run_in_thread = run_in_thread
         f.task_identifier = task_identifier
 
-        def _validate_inputs(*args, **kwargs):
-            try:
-                Task.serialize_data(args or tuple())
-                Task.serialize_data(kwargs or dict())
-            except TypeError as e:
-                raise InvalidArgumentsError("Inputs are not serializable.") from e
+        def _wrapper(*args, **kwargs):
+            """
+            Execute the function after validating the arguments. Ensures that, in unit testing,
+            the arguments are validated to prevent issues with serialization in an environment
+            that utilises the task processor.
+            """
+            _validate_inputs(*args, **kwargs)
+            return f(*args, **kwargs)
 
-        return f
+        return _wrapper
 
     return decorator
 
@@ -111,3 +113,11 @@ def register_recurring_task(
         return task
 
     return decorator
+
+
+def _validate_inputs(*args, **kwargs):
+    try:
+        Task.serialize_data(args or tuple())
+        Task.serialize_data(kwargs or dict())
+    except TypeError as e:
+        raise InvalidArgumentsError("Inputs are not serializable.") from e
