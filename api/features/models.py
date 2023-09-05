@@ -400,6 +400,7 @@ class FeatureState(
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="feature_states",
+        null=True,
         on_delete=models.CASCADE,
     )
     identity = models.ForeignKey(
