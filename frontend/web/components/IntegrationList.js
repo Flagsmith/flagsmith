@@ -24,7 +24,6 @@ class Integration extends Component {
 
   render() {
     const { description, docs, image, perEnvironment } = this.props.integration
-    console.log(this.props.integration)
     const activeIntegrations = this.props.activeIntegrations
     const showAdd = !(
       !perEnvironment &&
@@ -94,6 +93,7 @@ class Integration extends Component {
                 <Flex>
                   <CreateEditIntegration
                     readOnly
+                    projectId={this.props.projectId}
                     data={integration}
                     integration={this.props.integration}
                   />
