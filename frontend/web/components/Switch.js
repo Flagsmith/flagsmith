@@ -46,7 +46,7 @@ export default class Switch extends PureComponent {
           }}
         >
           <Icon name='sun' fill={checked ? '#656D7B' : '#1A2634'} />
-          <Icon name='moon' fill={checked ? '#FFFFFF' : '#656D7B'} />
+          <Icon name='moon' fill={checked ? '#FFFFFF' : '#9DA4AE'} />
         </button>
       )
     }

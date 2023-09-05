@@ -70,6 +70,7 @@
   &.segment-overrides {
     border: 1px solid $basic-alpha-16;
     border-radius: $border-radius-lg;
+    background-color: $text-icon-light;
   }
 
   &.no-pad {
@@ -100,18 +101,16 @@
         margin: 0;
       }
       .title {
-        color: $header-color-dark;
+        color: $text-icon-light;
         .subtitle {
-          color: white;
+          color: $text-icon-light;
         }
       }
-      color: $header-color-dark;
+      color: $text-icon-light;
       .ion-ios-information-circle {
         color: $panel-icon-background-color;
       }
     }
-    border: none;
-    color: $panel-heading-color-dark;
     a {
       color: $dark-highlight-color;
       &:hover {
@@ -133,9 +132,15 @@
     }
 
     &.panel-integrations {
+      border: 1px solid $basic-alpha-16;
+      background-color: $bg-dark300;
       .list-integrations {
         background-color: $bg-dark200;
       }
+    }
+    &.segment-overrides {
+      background-color: $bg-dark100;
+      border: 1px solid $white-alpha-16;
     }
   }
 }
@@ -182,6 +187,13 @@ a.text-white {
           border: 1px solid $basic-alpha-16;
           border-radius: $border-radius-lg;
         }
+      }
+    }
+  }
+  &.panel-projects {
+    .panel-content {
+      .search-list {
+        border: none;
       }
     }
   }

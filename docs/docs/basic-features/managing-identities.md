@@ -89,8 +89,6 @@ Flagsmith rather than in your core application.
 
 Traits are stored natively as either numbers, strings or booleans.
 
-![Image](/img/identity-details.png)
-
 ## Traits powering Segments
 
 Traits can be used within your application, but they can also be used to power
@@ -111,23 +109,5 @@ type conversion within the SDK.
 ## Bulk Uploading Identities and Traits
 
 Identities are lazily created within Flagsmith. There might be instances where you want to push Identity and Trait data
-into the platform outside of a user session. You can achieve this with a `POST` to the `identities` endpoint:
-
-```bash
-curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/?identifier=<identity_id>" \
-     -H 'X-Environment-Key: <Your Environment Key>' \
-     -H 'Content-Type: application/json; charset=utf-8' \
-     -d $'{
-  "traits":   "traits": [
-    {
-      "trait_key": "this_key",
-      "trait_value": "this_value"
-    },
-    {
-      "trait_key": "this_key2",
-      "trait_value": "this_value2"
-    }
-  ],
-  "identifier": "<identity_id>"
-}'
-```
+into the platform outside of a user session. We have a
+[code example for this](/clients/rest#bulk-uploading-identities-and-traits).

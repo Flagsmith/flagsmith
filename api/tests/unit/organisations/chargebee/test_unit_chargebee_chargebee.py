@@ -8,6 +8,7 @@ from pytz import UTC
 
 from organisations.chargebee import (
     add_single_seat,
+    extract_subscription_metadata,
     get_customer_id_from_subscription_id,
     get_hosted_page_url_for_subscription_upgrade,
     get_max_api_calls_for_plan,
@@ -15,10 +16,11 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
-    get_subscription_metadata,
+    get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import cancel_subscription
 from organisations.chargebee.constants import ADDITIONAL_SEAT_ADDON_ID
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
     UpgradeSeatsError,
@@ -260,37 +262,88 @@ class ChargeBeeTestCase(TestCase):
         )
 
 
-@pytest.mark.parametrize("addon_quantity", (None, 1))
-def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
+def test_extract_subscription_metadata(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+):
     # Given
+    status = "status"
     plan_id = "plan-id"
     addon_id = "addon-id"
     subscription_id = "subscription-id"
     customer_email = "test@example.com"
 
-    # Let's create a (mocked) subscription object
-    mock_subscription_response = MockChargeBeeSubscriptionResponse(
-        subscription_id=subscription_id,
-        plan_id=plan_id,
-        customer_email=customer_email,
-        addons=[MockChargeBeeAddOn(addon_id=addon_id, quantity=addon_quantity)],
-    )
-    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
-
-    # tie that subscription object to the mocked chargebee object
-    mocked_chargebee.Subscription.retrieve.return_value = mock_subscription_response
-
-    # now, let's mock chargebee cache object
-    mocked_chargebee_cache = mocker.patch(
-        "organisations.chargebee.chargebee.ChargebeeCache", autospec=True
-    )
-    mocked_chargebee_cache.return_value.plans = {plan_id: chargebee_object_metadata}
-    mocked_chargebee_cache.return_value.addons = {addon_id: chargebee_object_metadata}
+    subscription = {
+        "status": status,
+        "id": subscription_id,
+        "plan_id": plan_id,
+        "addons": [
+            {
+                "id": addon_id,
+                "quantity": 2,
+                "unit_price": 0,
+                "amount": 0,
+            }
+        ],
+    }
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = extract_subscription_metadata(
+        subscription,
+        customer_email,
+    )
 
     # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    assert subscription_metadata.chargebee_email == customer_email
+
+
+def test_extract_subscription_metadata_when_addon_list_is_empty(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+):
+    # Given
+    status = "status"
+    plan_id = "plan-id"
+    subscription_id = "subscription-id"
+    customer_email = "test@example.com"
+
+    subscription = {
+        "status": status,
+        "id": subscription_id,
+        "plan_id": plan_id,
+        "addons": [],
+    }
+
+    # When
+    subscription_metadata = extract_subscription_metadata(
+        subscription,
+        customer_email,
+    )
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls
+    assert subscription_metadata.projects == chargebee_object_metadata.projects
+    assert subscription_metadata.chargebee_email == customer_email
+
+
+def test_get_subscription_metadata_from_id(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+):
+    # Given
+    customer_email = "test@example.com"
+    subscription_id = mock_subscription_response_with_addons.subscription.id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    # Values here are multiplied by 2 because the both the plan and the addon included in
+    # the mock_subscription_response_with_addons fixture contain the same values.
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
@@ -341,7 +394,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
     )
 
 
-def test_get_subscription_metadata_returns_null_if_chargebee_error(
+def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(
     mocker, chargebee_object_metadata
 ):
     # Given
@@ -353,7 +406,7 @@ def test_get_subscription_metadata_returns_null_if_chargebee_error(
     subscription_id = "foo"  # arbitrary subscription id
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
     assert subscription_metadata is None
@@ -363,18 +416,35 @@ def test_get_subscription_metadata_returns_null_if_chargebee_error(
     "subscription_id",
     [None, "", " "],
 )
-def test_get_subscription_metadata_returns_none_for_invalid_subscription_id(
+def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(
     mocker, chargebee_object_metadata, subscription_id
 ):
     # Given
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
     # When
-    subscription_metadata = get_subscription_metadata(subscription_id)
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
     mocked_chargebee.Subscription.retrieve.assert_not_called()
     assert subscription_metadata is None
+
+
+def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_none(
+    mock_subscription_response: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    mock_subscription_response.addons = None
+    subscription_id = mock_subscription_response.subscription.id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls
+    assert subscription_metadata.projects == chargebee_object_metadata.projects
 
 
 def test_add_single_seat_with_existing_addon(mocker):

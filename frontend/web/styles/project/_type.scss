@@ -63,12 +63,12 @@ a {
   h4,
   h5,
   h6 {
-    color: $header-color-dark;
+    color: $text-icon-light;
   }
 }
 
 .font-weight-medium {
-  font-weight: 500;
+  font-weight: 500  !important;
 }
 
 .text-primary {

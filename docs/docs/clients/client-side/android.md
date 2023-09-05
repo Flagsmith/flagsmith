@@ -41,8 +41,6 @@ The SDK is initialised against a single environment within a project on [https:/
 for example the Development or Production environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-![Image](/img/api-key.png)
-
 ## Initialization
 
 ### Within your Activity inside `onCreate()`
@@ -62,7 +60,7 @@ private fun initFlagsmith() {
 ## Custom configuration
 
 The Flagsmith SDK has various parameters for initialisation. Most of these are optional, and allow you to configure the
-Flagmsith SDK to your specific needs:
+Flagsmith SDK to your specific needs:
 
 - `environmentKey` Take this API key from the Flagsmith dashboard and pass here
 - `baseUrl` By default we'll connect to the Flagsmith backend, but if you self-host you can configure here
@@ -73,7 +71,7 @@ Flagmsith SDK to your specific needs:
 
 ## Flags
 
-Now you are all set to retrieve feature flags from your project. For example to list and print all flags:
+Now you are all set to retrieve feature flags from your project. To list and print all flags:
 
 ```kotlin
 flagsmith.getFeatureFlags { result ->

@@ -19,6 +19,7 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
 
 const CodeHelp = require('../../components/CodeHelp')
@@ -154,6 +155,38 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       id='segments-page'
       className='app-container container'
     >
+      <PageTitle
+        cta={
+          segments && (segments.length || searchInput) ? (
+            <>
+              {renderWithPermission(
+                manageSegmentsPermission,
+                'Manage segments',
+                <Button
+                  disabled={hasNoOperators || !manageSegmentsPermission}
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={newSegment}
+                >
+                  Create Segment
+                </Button>,
+              )}
+            </>
+          ) : null
+        }
+        title={'Segments'}
+      >
+        Create and manage groups of users with similar traits. Segments can be
+        used to override features within the features page for any environment.{' '}
+        <Button
+          theme='text'
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          className='fw-normal'
+        >
+          Learn more.
+        </Button>
+      </PageTitle>
       <div className='segments-page'>
         {isLoading && !hasHadResults.current && !segments && !searchInput && (
           <div className='centered-container'>
@@ -165,39 +198,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row className='justify-content-between'>
-                  <Flex style={{ maxWidth: '700px' }}>
-                    <h4>Segments</h4>
-                    <p>
-                      Create and manage groups of users with similar traits.
-                      Segments can be used to override features within the
-                      features page for any environment.{' '}
-                      <Button
-                        theme='text'
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                      >
-                        Learn about Segments.
-                      </Button>
-                    </p>
-                  </Flex>
-                  <FormGroup className='float-right'>
-                    <div className='text-right'>
-                      {renderWithPermission(
-                        manageSegmentsPermission,
-                        'Manage segments',
-                        <Button
-                          disabled={hasNoOperators || !manageSegmentsPermission}
-                          id='show-create-segment-btn'
-                          data-test='show-create-segment-btn'
-                          onClick={newSegment}
-                        >
-                          Create Segment
-                        </Button>,
-                      )}
-                    </div>
-                  </FormGroup>
-                </Row>
                 {hasNoOperators && <HowToUseSegmentsMessage />}
 
                 <FormGroup>
@@ -249,19 +249,18 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <div
+                            <Row
                               data-test={`segment-${i}-name`}
                               className='font-weight-medium'
                             >
                               {name}
                               {feature && (
-                                <div className='unread ml-2 px-2'>
-                                  {' '}
+                                <div className='chip chip--xs ml-2'>
                                   Feature-Specific
                                 </div>
                               )}
-                            </div>
-                            <div className='list-item-subtitle'>
+                            </Row>
+                            <div className='list-item-subtitle mt-1'>
                               {description || 'No description'}
                             </div>
                           </Flex>

@@ -20,6 +20,7 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const widths = [170, 150, 80]
 const OrganisationSettingsPage = class extends Component {
@@ -274,6 +275,7 @@ const OrganisationSettingsPage = class extends Component {
 
     return (
       <div className='app-container container'>
+        <PageTitle title='Manage' />
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
@@ -308,6 +310,7 @@ const OrganisationSettingsPage = class extends Component {
                       <Tabs
                         value={this.state.tab || 0}
                         onChange={(tab) => this.setState({ tab })}
+                        className='mt-0'
                       >
                         <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
@@ -905,7 +908,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       {id ===
                                                         AccountStore.getUserId() &&
                                                         '(You)'}
-                                                      <div className='list-item-subtitle'>
+                                                      <div className='list-item-subtitle mt-1'>
                                                         {email}
                                                       </div>
                                                     </Flex>
@@ -1128,7 +1131,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   >
                                                     <div className='flex flex-1 px-3'>
                                                       {email || link}
-                                                      <div className='list-item-subtitle'>
+                                                      <div className='list-item-subtitle mt-1'>
                                                         Created{' '}
                                                         {moment(
                                                           date_created,
