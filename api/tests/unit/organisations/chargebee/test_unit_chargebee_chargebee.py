@@ -294,9 +294,11 @@ def test_extract_subscription_metadata(
     )
 
     # Then
-    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    # Note that we multiply by 3 since the plan and the addons carry the same limits,
+    # so we have 1 plan + 2 addons.
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 3
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 3
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 3
     assert subscription_metadata.chargebee_email == customer_email
 
 
