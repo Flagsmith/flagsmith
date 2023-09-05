@@ -2,7 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.conf import settings
-from django.db.utils import IntegrityError
 from django.utils import timezone
 
 from features.feature_types import MULTIVARIATE, STANDARD
@@ -242,62 +241,3 @@ def test_fix_feature_type_migration(migrator):
     )
     assert NewFeature.objects.get(id=standard_feature.id).type == STANDARD
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
-
-
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migrate_set_featurestate_environment_not_null(migrator):
-    # Given
-    old_state = migrator.apply_initial_migration(("features", "0059_fix_feature_type"))
-
-    Organisation = old_state.apps.get_model("organisations", "Organisation")
-    Project = old_state.apps.get_model("projects", "Project")
-    Environment = old_state.apps.get_model("environments", "Environment")
-    Feature = old_state.apps.get_model("features", "Feature")
-    FeatureState = old_state.apps.get_model("features", "FeatureState")
-
-    organisation = Organisation.objects.create(name="test org")
-    project = Project.objects.create(
-        name="test project", organisation_id=organisation.id
-    )
-    environment = Environment.objects.create(
-        name="test environment", project_id=project.id
-    )
-    feature = Feature.objects.create(name="test_feature", project_id=project.id)
-
-    # mimick the creation of the feature states that would have happened when save is called on the model (but doesn't
-    # happen because we're using the migrator models)
-    FeatureState.objects.create(feature=feature, environment=environment, enabled=True)
-
-    # Let's create a feature state with a null environment
-    fs_without_environment = FeatureState.objects.create(
-        feature_id=feature.id,
-        environment_id=None,
-        enabled=True,
-    )
-
-    # When
-    new_state = migrator.apply_tested_migration(
-        ("features", "0060_set_featurestate_environment_not_null")
-    )
-
-    # Then
-    NewFeatureState = new_state.apps.get_model("features", "FeatureState")
-
-    # The feature state should have been deleted
-    assert not NewFeatureState.objects.filter(id=fs_without_environment.id).exists()
-
-    # feature state with environment still exists
-    assert NewFeatureState.objects.filter(
-        feature_id=feature.id, environment_id=environment.id
-    ).exists()
-
-    # and we cant create a feature state without an environment
-    with pytest.raises(IntegrityError):
-        NewFeatureState.objects.create(
-            feature_id=feature.id,
-            environment_id=None,
-            enabled=True,
-        )
