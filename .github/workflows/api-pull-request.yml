@@ -50,7 +50,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
-          cache-dependency-path: flagsmtih
 
       - name: Install Dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
