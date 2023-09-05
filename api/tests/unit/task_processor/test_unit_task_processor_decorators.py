@@ -8,6 +8,7 @@ from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
+from task_processor.exceptions import InvalidArgumentsError
 from task_processor.models import RecurringTask
 from task_processor.task_registry import get_task
 
@@ -93,3 +94,17 @@ def test_register_recurring_task_does_nothing_if_not_run_by_processor(mocker, db
     assert not RecurringTask.objects.filter(task_identifier=task_identifier).exists()
     with pytest.raises(KeyError):
         assert get_task(task_identifier)
+
+
+def test_register_task_handler_validates_inputs():
+    # Given
+    @register_task_handler()
+    def my_function(*args, **kwargs):
+        pass
+
+    class NonSerializableObj:
+        pass
+
+    # When
+    with pytest.raises(InvalidArgumentsError):
+        my_function(NonSerializableObj())
