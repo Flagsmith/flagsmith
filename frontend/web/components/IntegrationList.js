@@ -76,7 +76,7 @@ class Integration extends Component {
                   onClick={this.add}
                   size='xSmall'
                 >
-                  Add integration
+                  Add Integration
                 </Button>
               )}
             </Row>
