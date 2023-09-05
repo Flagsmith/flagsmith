@@ -8,6 +8,7 @@ from threading import Thread
 from django.conf import settings
 from django.utils import timezone
 
+from task_processor.exceptions import InvalidArgumentsError
 from task_processor.models import RecurringTask, Task
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
@@ -41,6 +42,7 @@ def register_task_handler(task_name: str = None):
                 return
 
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
+                _validate_inputs(*args, **kwargs)
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
                 logger.debug("Running task '%s' in separate thread", task_identifier)
@@ -58,11 +60,19 @@ def register_task_handler(task_name: str = None):
 
         def run_in_thread(*, args: typing.Tuple = (), kwargs: typing.Dict = None):
             logger.info("Running function %s in unmanaged thread.", f.__name__)
+            _validate_inputs(*args, **kwargs)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
 
         f.delay = delay
         f.run_in_thread = run_in_thread
         f.task_identifier = task_identifier
+
+        def _validate_inputs(*args, **kwargs):
+            try:
+                Task.serialize_data(args or tuple())
+                Task.serialize_data(kwargs or dict())
+            except TypeError as e:
+                raise InvalidArgumentsError("Inputs are not serializable.") from e
 
         return f
 
