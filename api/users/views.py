@@ -76,6 +76,7 @@ class AdminInitView(View):
         else:
             return JsonResponse(
                 {
+                    "adminUserCreated": False,
                     "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
