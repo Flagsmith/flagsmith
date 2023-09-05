@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 import pytest
+from pytest_django.fixtures import SettingsWrapper
 
 from task_processor.decorators import (
     register_recurring_task,
@@ -11,6 +12,7 @@ from task_processor.decorators import (
 from task_processor.exceptions import InvalidArgumentsError
 from task_processor.models import RecurringTask
 from task_processor.task_registry import get_task
+from task_processor.task_run_method import TaskRunMethod
 
 
 def test_register_task_handler_run_in_thread(mocker, caplog):
@@ -96,7 +98,7 @@ def test_register_recurring_task_does_nothing_if_not_run_by_processor(mocker, db
         assert get_task(task_identifier)
 
 
-def test_register_task_handler_validates_inputs():
+def test_register_task_handler_validates_inputs() -> None:
     # Given
     @register_task_handler()
     def my_function(*args, **kwargs):
@@ -108,3 +110,24 @@ def test_register_task_handler_validates_inputs():
     # When
     with pytest.raises(InvalidArgumentsError):
         my_function(NonSerializableObj())
+
+
+@pytest.mark.parametrize(
+    "task_run_method", (TaskRunMethod.SEPARATE_THREAD, TaskRunMethod.SYNCHRONOUSLY)
+)
+def test_inputs_are_validated_when_run_without_task_processor(
+    settings: SettingsWrapper, task_run_method: TaskRunMethod
+) -> None:
+    # Given
+    settings.TASK_RUN_METHOD = task_run_method
+
+    @register_task_handler()
+    def my_function(*args, **kwargs):
+        pass
+
+    class NonSerializableObj:
+        pass
+
+    # When
+    with pytest.raises(InvalidArgumentsError):
+        my_function.delay(args=(NonSerializableObj(),))

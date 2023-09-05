@@ -63,10 +63,6 @@ def register_task_handler(task_name: str = None):
             _validate_inputs(*args, **kwargs)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
 
-        f.delay = delay
-        f.run_in_thread = run_in_thread
-        f.task_identifier = task_identifier
-
         def _wrapper(*args, **kwargs):
             """
             Execute the function after validating the arguments. Ensures that, in unit testing,
@@ -75,6 +71,10 @@ def register_task_handler(task_name: str = None):
             """
             _validate_inputs(*args, **kwargs)
             return f(*args, **kwargs)
+
+        _wrapper.delay = delay
+        _wrapper.run_in_thread = run_in_thread
+        _wrapper.task_identifier = task_identifier
 
         return _wrapper
 
