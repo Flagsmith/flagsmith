@@ -26,6 +26,10 @@ class ChargebeePlanMetadata(ChargebeeObjMetadata):
     pass
 
 
+class ChargebeeAddOnMetadata(ChargebeeObjMetadata):
+    pass
+
+
 class ChargebeeSubscriptionMetadata(ChargebeeObjMetadata):
     def __init__(
         self,
