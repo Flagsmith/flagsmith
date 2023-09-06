@@ -299,6 +299,12 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         else:
             return FeatureStateSerializerCreate
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ["update", "create"]:
+            context["environment"] = self.get_environment_from_request()
+        return context
+
     def get_queryset(self):
         """
         Override queryset to filter based on provided URL parameters.

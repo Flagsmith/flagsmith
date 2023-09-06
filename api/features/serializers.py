@@ -323,10 +323,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return environment
 
     def validate(self, attrs):
-        environment = (
-            attrs.get("environment")
-            or self.context["view"].get_environment_from_request()
-        )
+        environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
