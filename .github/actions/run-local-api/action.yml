@@ -53,7 +53,7 @@ runs:
         -e DISABLE_ANALYTICS_FEATURES=$DISABLE_ANALYTICS_FEATURES \
         -e DJANGO_ALLOWED_HOSTS="*" \
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
-        -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
+        -e ENABLE_FE_E2E=True \
         -e ACCESS_LOG_LOCATION=- \
         -d flagsmith/flagsmith-api:e2e-${{ github.sha }} )
         echo "containerId=$CONTAINER_ID" >> "$GITHUB_OUTPUT"

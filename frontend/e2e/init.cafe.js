@@ -14,7 +14,16 @@ import flagTests from './tests/flag-tests'
 require('dotenv').config()
 
 const url = `http://localhost:${process.env.PORT || 8080}/`
+const e2eTestApi = `${Project.api}e2etests/teardown/`
 const logger = getLogger()
+
+console.log(
+  '\n',
+  '\x1b[32m',
+  `E2E using API: ${e2eTestApi}. E2E URL: ${url}`,
+  '\x1b[0m',
+  '\n',
+)
 
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
@@ -22,7 +31,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
 
   if (token) {
-    await fetch(`${Project.api}e2etests/teardown/`, {
+    await fetch(e2eTestApi, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

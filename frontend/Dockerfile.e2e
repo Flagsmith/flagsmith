@@ -6,14 +6,11 @@ COPY package.json package-lock.json .npmrc .nvmrc ./
 COPY bin/ ./bin/
 COPY env/ ./env/
 
-# Run npm ci before copying source code to improve caching of layers. Cache clean no needed?
-# RUN npm cache clean --force
+# Run npm ci before copying source code to improve caching of layers. No need to clean cache.
 ENV ENV=e2e
 RUN npm ci
 
 
 COPY . .
-# Commented because it is already executed on the postinstall hook of npm ci
-# RUN npm run env
 
 CMD ["bash", "-l"]

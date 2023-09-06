@@ -25,7 +25,7 @@ services:
           - frontend_flagsmith-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
-      FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+      ENABLE_FE_E2E: 'True'
       DJANGO_ALLOWED_HOSTS: '*'
       DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
       DISABLE_ANALYTICS_FEATURES: 'true'
