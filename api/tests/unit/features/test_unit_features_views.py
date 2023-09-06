@@ -900,7 +900,7 @@ def test_create_segment_override_using_environment_viewset(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_cannon_create_feature_state_for_feature_from_different_project(
+def test_cannot_create_feature_state_for_feature_from_different_project(
     client, environment, project_two_feature, feature_segment, project_two
 ):
     # Given
