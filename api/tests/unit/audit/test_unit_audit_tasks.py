@@ -178,7 +178,7 @@ def test_create_segment_priorities_changed_audit_log(
     create_segment_priorities_changed_audit_log(
         previous_id_priority_pairs=[
             (feature_segment.id, 0),
-            (another_feature_segment, 1),
+            (another_feature_segment.id, 1),
         ],
         feature_segment_ids=[feature_segment.id, another_feature_segment.id],
         user_id=admin_user.id,
