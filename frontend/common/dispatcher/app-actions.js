@@ -209,6 +209,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       ...params,
     })
   },
+  enableFeatureVersioning(env) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.ENABLE_FEATURE_VERSIONING,
+      env,
+    })
+  },
   enableTwoFactor() {
     Dispatcher.handleViewAction({
       actionType: Actions.ENABLE_TWO_FACTOR,

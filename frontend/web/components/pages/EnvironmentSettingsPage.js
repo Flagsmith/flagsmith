@@ -107,9 +107,15 @@ const EnvironmentSettingsPage = class extends Component {
         use_identity_composite_key_for_hashing:
           !!this.state.use_identity_composite_key_for_hashing,
         use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
-        use_v2_feature_versioning: !!this.state.use_v2_feature_versioning,
       }),
     )
+
+    if (
+      !!this.state.use_v2_feature_versioning &&
+      !env.use_v2_feature_versioning
+    ) {
+      AppActions.enableFeatureVersioning(env)
+    }
   }
 
   saveDisabled = () => {

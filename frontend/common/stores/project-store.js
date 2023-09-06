@@ -83,6 +83,14 @@ const controller = {
       store.saved()
     })
   },
+  enableFeatureVersioning: (env) => {
+    API.trackEvent(Constants.events.ENABLE_FEATURE_VERSIONING)
+    // TODO: we might need a `then` method on this to refresh things?
+    data.post(
+      `${Project.api}environments/${env.api_key}/enable-v2-versioning/`,
+      env,
+    )
+  },
   getProject: (id, cb, force) => {
     if (force) {
       store.loading()
@@ -190,6 +198,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_ENVIRONMENT:
       controller.editEnv(action.env)
+      break
+    case Actions.ENABLE_FEATURE_VERSIONING:
+      controller.enableFeatureVersioning(action.env)
       break
     case Actions.DELETE_ENVIRONMENT:
       controller.deleteEnv(action.env)
