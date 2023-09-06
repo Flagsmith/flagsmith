@@ -67,7 +67,7 @@ def call_environment_webhooks(
     except Environment.DoesNotExist:
         return
     _call_webhooks(
-        (webhook.id for webhook in environment.webhooks.filter(enabled=True)),
+        environment.webhooks.filter(enabled=True),
         data,
         event_type,
         WebhookType.ENVIRONMENT,
@@ -85,7 +85,7 @@ def call_organisation_webhooks(
     except Organisation.DoesNotExist:
         return
     _call_webhooks(
-        (webhook.id for webhook in organisation.webhooks.filter(enabled=True)),
+        organisation.webhooks.filter(enabled=True),
         data,
         event_type,
         WebhookType.ORGANISATION,
@@ -149,7 +149,7 @@ def call_webhook_email_on_error(
 
 
 def _call_webhooks(
-    webhook_ids: typing.Iterable[int],
+    webhooks: typing.Iterable[WebhookModels],
     data: typing.Mapping,
     event_type: str,
     webhook_type: WebhookType,
@@ -157,9 +157,9 @@ def _call_webhooks(
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
-    for webhook_id in webhook_ids:
+    for webhook in webhooks:
         call_webhook_email_on_error.delay(
-            args=(webhook_id, serializer.data, webhook_type.value)
+            args=(webhook.id, serializer.data, webhook_type.value)
         )
 
 
