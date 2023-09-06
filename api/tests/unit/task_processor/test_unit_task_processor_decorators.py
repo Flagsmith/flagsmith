@@ -44,7 +44,7 @@ def test_register_task_handler_run_in_thread(mocker, caplog):
 
     # Then
     mock_thread_class.assert_called_once_with(
-        target=my_function, args=args, kwargs=kwargs, daemon=True
+        target=my_function.unwrapped, args=args, kwargs=kwargs, daemon=True
     )
     mock_thread.start.assert_called_once()
 

@@ -76,6 +76,9 @@ def register_task_handler(task_name: str = None):
         _wrapper.run_in_thread = run_in_thread
         _wrapper.task_identifier = task_identifier
 
+        # patch the original unwrapped function onto the wrapped version for testing
+        _wrapper.unwrapped = f
+
         return _wrapper
 
     return decorator
