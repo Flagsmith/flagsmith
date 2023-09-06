@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueValidator
 
 from organisations.invites.models import Invite
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
-from users.models import FFAdminUser
+from users.models import FFAdminUser, SignUpType
 
 from .constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 
@@ -64,6 +64,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     def save(self, **kwargs):
         if not (
             settings.ALLOW_REGISTRATION_WITHOUT_INVITE
+            or self.validated_data.get("sign_up_type") == SignUpType.INVITE_LINK.value
             or Invite.objects.filter(email=self.validated_data.get("email"))
         ):
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)

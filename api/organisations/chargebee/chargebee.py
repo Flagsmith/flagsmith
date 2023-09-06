@@ -115,7 +115,7 @@ def extract_subscription_metadata(
     subscription_metadata.chargebee_email = customer_email
 
     for addon in chargebee_addons:
-        quantity = getattr(addon, "quantity", None) or 1
+        quantity = addon.get("quantity") or 1
         addon_metadata: ChargebeePlanMetadata = (
             chargebee_cache.addons[addon["id"]] * quantity
         )
