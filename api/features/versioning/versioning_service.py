@@ -75,13 +75,20 @@ def get_environment_flags_list(
 def _build_environment_flags_qs_filter(
     environment: "Environment", feature_name: str = None, additional_filters: Q = None
 ) -> Q:
+    now = timezone.now()
+
     qs_filter = Q(environment=environment, deleted_at__isnull=True)
-    if not environment.use_v2_feature_versioning:
+    if environment.use_v2_feature_versioning:
+        qs_filter &= Q(
+            environment_feature_version__isnull=False,
+            environment_feature_version__published=True,
+            environment_feature_version__live_from__lte=now,
+        )
+    else:
         qs_filter &= Q(
             live_from__isnull=False,
-            live_from__lte=timezone.now(),
+            live_from__lte=now,
             version__isnull=False,
-            environment_feature_version__isnull=True,
         )
 
     if feature_name:

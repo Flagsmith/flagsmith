@@ -22,27 +22,27 @@ now = timezone.now()
 
 
 def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(
-    environment, feature
+    environment_v2_versioning, feature
 ):
     # Given
-    segment = Segment.objects.create(project=environment.project)
+    original_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    segment = Segment.objects.create(project=environment_v2_versioning.project)
     feature_segment = FeatureSegment.objects.create(
-        segment=segment, feature=feature, environment=environment
+        segment=segment, feature=feature, environment=environment_v2_versioning
     )
     FeatureState.objects.create(
-        environment=environment, feature=feature, feature_segment=feature_segment
-    )
-
-    environment.use_v2_feature_versioning = True
-    environment.save()  # note: initial version created via lifecycle hook here
-
-    original_version = EnvironmentFeatureVersion.objects.get(
-        environment=environment, feature=feature
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment=feature_segment,
+        environment_feature_version=original_version,
     )
 
     # When
     new_version = EnvironmentFeatureVersion.objects.create(
-        environment=environment, feature=feature
+        environment=environment_v2_versioning, feature=feature
     )
 
     # Then
@@ -52,10 +52,13 @@ def test_create_new_environment_feature_version_clones_feature_states_from_previ
     # and the correct feature states are cloned and added to the new version
     assert new_version.feature_states.count() == 2
     assert new_version.feature_states.filter(
-        environment=environment, feature=feature, feature_segment=None, identity=None
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment=None,
+        identity=None,
     ).exists()
     assert new_version.feature_states.filter(
-        environment=environment,
+        environment=environment_v2_versioning,
         feature=feature,
         feature_segment__segment=segment,
         identity=None,

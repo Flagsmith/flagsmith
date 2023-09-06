@@ -43,7 +43,6 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.exceptions import FeatureVersioningError
-from features.versioning.tasks import create_initial_feature_versions
 from metadata.models import Metadata
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
@@ -140,10 +139,6 @@ class Environment(
     def clear_environment_cache(self):
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
-
-    @hook(AFTER_UPDATE, when="use_v2_feature_versioning", was=False, is_now=True)
-    def create_initial_versions(self):
-        create_initial_feature_versions.delay(kwargs={"environment_id": self.id})
 
     @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
     def validate_use_v2_feature_versioning(self):
