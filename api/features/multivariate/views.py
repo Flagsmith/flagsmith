@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -37,8 +38,11 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return MultivariateFeatureOption.objects.none()
 
-        feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
-        return feature.multivariate_options.all()
+        if "feature_pk" in self.kwargs:
+            feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
+            return feature.multivariate_options.all()
+        else:
+            raise ValidationError("Feature Id cannot be undefined or is nonexistent.")
 
 
 @swagger_auto_schema(
