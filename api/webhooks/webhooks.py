@@ -126,7 +126,7 @@ def _call_webhook(
 
 
 @register_task_handler()
-def _call_webhook_email_on_error(
+def call_webhook_email_on_error(
     webhook_id: int, data: typing.Mapping, webhook_type: str
 ):
     if webhook_type == WebhookType.ORGANISATION.value:
@@ -158,7 +158,7 @@ def _call_webhooks(
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook_id in webhook_ids:
-        _call_webhook_email_on_error.delay(
+        call_webhook_email_on_error.delay(
             args=(webhook_id, serializer.data, webhook_type.value)
         )
 
