@@ -590,11 +590,13 @@ class ChargeBeeWebhookTestCase(TestCase):
         # Given
         seats = 3
         api_calls = 100
+        plan_id = "test-plan"
         mock_extract_subscription_metadata.return_value = ChargebeeSubscriptionMetadata(
             seats=seats,
             api_calls=api_calls,
             projects=None,
             chargebee_email=self.cb_user.email,
+            plan_id=plan_id,
         )
         data = {
             "content": {
@@ -695,6 +697,7 @@ class ChargeBeeWebhookTestCase(TestCase):
             api_calls=100,
             projects=1,
             chargebee_email=self.cb_user.email,
+            plan_id="test-plan",
         )
         data = {
             "content": {
@@ -857,14 +860,16 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_projects = 5
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+    expected_plan_id = "test-plan"
 
     get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata",
+        "organisations.models.get_subscription_metadata_from_id",
         return_value=ChargebeeSubscriptionMetadata(
             seats=expected_seats,
             projects=expected_projects,
             api_calls=expected_api_calls,
             chargebee_email=expected_chargebee_email,
+            plan_id=expected_plan_id,
         ),
     )
 
@@ -915,11 +920,9 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
     mocker, organisation, admin_client, chargebee_subscription
 ):
     # Given
-    get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata"
+    mock_get_subscription_metadata = mocker.patch(
+        "organisations.models.get_subscription_metadata_from_id", return_value=None
     )
-
-    get_subscription_metadata.return_value = None
 
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
@@ -932,7 +935,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    get_subscription_metadata.assert_called_once_with(
+    mock_get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
     )
     assert response.json() == {
@@ -1048,6 +1051,7 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         api_calls=max_api_calls,
         projects=max_projects,
         chargebee_email=chargebee_email,
+        plan_id=plan_id,
     )
 
     data = {

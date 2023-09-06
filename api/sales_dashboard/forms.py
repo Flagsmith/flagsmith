@@ -14,9 +14,6 @@ from organisations.chargebee import (
 )
 from organisations.models import Organisation
 from organisations.subscriptions.constants import CHARGEBEE
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -70,15 +67,14 @@ class ChargebeeSyncForm(forms.Form):
     subscription_id = forms.CharField()
 
     def clean(self):
-        if self._errors:
-            raise forms.ValidationError("No subscription_id value")
-
         # Check the Chargebee Subscription ID exists and is valid
         metadata = get_subscription_metadata_from_chargebee(
             self.cleaned_data["subscription_id"]
         )
         if metadata is None:
             raise ValidationError("Could not find valid Subscription in Chargebee")
+
+        self.cleaned_data["chargebee_metadata"] = metadata
 
     def save(self, commit=True):
         subscription_id = self.cleaned_data["subscription_id"]
@@ -89,7 +85,6 @@ class ChargebeeSyncForm(forms.Form):
 
         organisation.subscription.subscription_id = subscription_id
         organisation.subscription.payment_method = CHARGEBEE
-        organisation.save()
+        organisation.subscription.save()
 
-        subscription_metadata = get_subscription_metadata(organisation)
-        organisation.update_chargebee_metadata(subscription_metadata)
+        organisation.update_chargebee_metadata(self.cleaned_data["chargebee_metadata"])

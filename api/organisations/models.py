@@ -26,7 +26,7 @@ from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
-from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeeSubscriptionMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
@@ -124,7 +124,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             and self.subscription.can_auto_upgrade_seats
         )
 
-    def update_chargebee_metadata(self, chargebee_metadata):
+    def update_chargebee_metadata(
+        self, chargebee_metadata: ChargebeeSubscriptionMetadata
+    ):
         self.subscription.update_chargebee_metadata(
             chargebee_metadata.plan_id,
             chargebee_metadata.seats,
@@ -195,7 +197,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.max_api_calls = get_max_api_calls_for_plan(plan_metadata)
         self.save()
 
-    def update_chargebee_metadata(self, plan_id, max_seats, max_api_calls):
+    def update_chargebee_metadata(
+        self, plan_id: str, max_seats: int, max_api_calls: int
+    ):
         self.customer_id = get_customer_id_from_subscription_id(self.subscription_id)
         self.plan = plan_id
         self.max_seats = max_seats
@@ -241,11 +245,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             if self.organisation.has_subscription_information_cache():
                 # Getting the data from the subscription information cache because
                 # data is guaranteed to be up to date by using a Chargebee webhook.
-                metadata = ChargebeeObjMetadata(
+                metadata = ChargebeeSubscriptionMetadata(
                     seats=self.organisation.subscription_information_cache.allowed_seats,
                     api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
                     projects=self.organisation.subscription_information_cache.allowed_projects,
                     chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+                    plan_id=self.organisation.subscription_information_cache.plan_id,
                 )
             else:
                 metadata = get_subscription_metadata_from_id(self.subscription_id)
@@ -313,3 +318,4 @@ class OrganisationSubscriptionInformationCache(models.Model):
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
+    plan_id = models.CharField(blank=True, max_length=254, null=True)

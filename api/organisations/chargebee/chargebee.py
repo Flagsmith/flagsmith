@@ -109,19 +109,22 @@ def extract_subscription_metadata(
 ) -> ChargebeeSubscriptionMetadata:
     chargebee_addons = chargebee_subscription.get("addons", [])
     chargebee_cache = ChargebeeCache()
-    subscription_metadata: ChargebeeSubscriptionMetadata = chargebee_cache.plans[
-        chargebee_subscription["plan_id"]
-    ]
-    subscription_metadata.chargebee_email = customer_email
+
+    plan_id = chargebee_subscription["plan_id"]
+    plan_metadata: ChargebeePlanMetadata = chargebee_cache.plans[plan_id]
 
     for addon in chargebee_addons:
         quantity = addon.get("quantity") or 1
         addon_metadata: ChargebeePlanMetadata = (
             chargebee_cache.addons[addon["id"]] * quantity
         )
-        subscription_metadata = subscription_metadata + addon_metadata
+        plan_metadata = plan_metadata + addon_metadata
 
-    return subscription_metadata
+    return ChargebeeSubscriptionMetadata.from_chargebee_plan_metadata(
+        plan_id=plan_id,
+        chargebee_email=customer_email,
+        chargebee_plan_metadata=plan_metadata,
+    )
 
 
 def get_subscription_metadata_from_id(
