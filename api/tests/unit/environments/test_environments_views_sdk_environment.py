@@ -87,7 +87,7 @@ def test_get_environment_document_is_not_throttled_by_user_throttle(
     enviroment, feature, settings, environment_api_key
 ):
     # Given
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"] = "1/minute"
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
 
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)

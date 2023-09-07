@@ -822,7 +822,7 @@ def test_get_flags_is_not_throttled_by_user_throttle(
     api_client, environment, feature, settings
 ):
     # Given
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"] = "1/minute"
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     url = reverse("api-v1:flags")
