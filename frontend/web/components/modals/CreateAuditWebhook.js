@@ -137,11 +137,12 @@ const CreateAuditWebhook = class extends Component {
                     {isEdit ? (
                       <Button
                         className='ml-4'
+                        type='submit'
                         data-test='update-feature-btn'
                         id='update-feature-btn'
                         disabled={isSaving || !url}
                       >
-                        {isSaving ? 'Creating' : 'Update Webhook'}
+                        {isSaving ? 'Updating' : 'Update Webhook'}
                       </Button>
                     ) : (
                       <Button
