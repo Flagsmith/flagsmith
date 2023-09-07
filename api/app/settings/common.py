@@ -445,8 +445,11 @@ LOGOUT_URL = "/admin/logout/"
 
 # Email associated with user that is used by front end for end to end testing purposes
 E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
+# User email address used for E2E Signup test
 E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for Change email E2E test which is part of invite tests
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
 
 # SSL handling in Django
