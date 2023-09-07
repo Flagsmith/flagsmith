@@ -1,5 +1,4 @@
 import os
-from typing import LiteralString
 
 from django.urls import reverse
 from rest_framework import status
@@ -14,8 +13,8 @@ def test_e2e_teardown(settings, db) -> None:
     # TODO: tidy up this hack to fix throttle rates
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1000/min"
     token = "test-token"
-    e2e_user_email: LiteralString = E2E_USER
-    e2e_user2_email: LiteralString = E2E_SIGNUP_USER
+    e2e_user_email = E2E_USER
+    e2e_user2_email = E2E_SIGNUP_USER
     register_url = "/api/v1/auth/users/"
 
     os.environ["E2E_TEST_AUTH_TOKEN"] = token
