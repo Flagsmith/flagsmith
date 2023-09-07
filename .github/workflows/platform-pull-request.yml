@@ -50,8 +50,6 @@ jobs:
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
         with:
-          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
-          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           tests: segment-part-1 environment
           concurrency: 1
@@ -77,8 +75,6 @@ jobs:
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
         with:
-          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
-          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           tests: segment-part-2
           concurrency: 1
@@ -104,8 +100,6 @@ jobs:
       - name: Run E2E tests against local
         uses: ./.github/actions/local-e2e-tests
         with:
-          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
-          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           tests: segment-part-3 signup flag invite project
           concurrency: 2
