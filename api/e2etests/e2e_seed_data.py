@@ -12,11 +12,21 @@ from users.models import FFAdminUser
 PASSWORD = "str0ngp4ssw0rd!"
 
 
+def delete_user_and_its_organisations(user_email: str) -> None:
+    user = FFAdminUser.objects.filter(email=user_email).first()
+    if user:
+        for organisation in Organisation.objects.filter(
+            id__in=user.organisations.all()
+        ):
+            organisation.delete()
+        user.delete()
+
+
 def teardown() -> None:
-    # delete users created for e2e test by front end
-    FFAdminUser.objects.filter(email=E2E_SIGNUP_USER).delete()
-    FFAdminUser.objects.filter(email=E2E_USER).delete()
-    FFAdminUser.objects.filter(email=E2E_CHANGE_EMAIL_USER).delete()
+    # delete users and their orgs created for e2e test by front end
+    delete_user_and_its_organisations(user_email=E2E_SIGNUP_USER)
+    delete_user_and_its_organisations(user_email=E2E_USER)
+    delete_user_and_its_organisations(user_email=E2E_CHANGE_EMAIL_USER)
 
 
 def seed_data() -> None:
