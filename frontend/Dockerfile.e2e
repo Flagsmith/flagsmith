@@ -6,7 +6,7 @@ COPY package.json package-lock.json .npmrc .nvmrc ./
 COPY bin/ ./bin/
 COPY env/ ./env/
 
-# Run npm ci before copying source code to improve caching of layers. No need to clean cache.
+# Run npm ci before copying source code to improve caching of layers.
 ENV ENV=e2e
 RUN npm ci
 

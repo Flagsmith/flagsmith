@@ -106,7 +106,7 @@ jobs:
 
   run-e2e-segments-1-tests-docker-unified:
     runs-on: ubuntu-latest
-    name: Unified E2E - Segments-1, Environment
+    name: E2E Unified - Segments-1, Environment
 
     steps:
       - name: Cloning repo
@@ -129,7 +129,7 @@ jobs:
 
   run-e2e-segments-2-tests-docker-unified:
     runs-on: ubuntu-latest
-    name: Unified E2E - Segments-2
+    name: E2E Unified - Segments-2
 
     steps:
       - name: Cloning repo
@@ -152,7 +152,7 @@ jobs:
 
   run-e2e-other-tests-docker-unified:
     runs-on: ubuntu-latest
-    name: Unified E2E - Segments-3, Signup, Flag, Invite, Project
+    name: E2E Unified - Segments-3, Signup, Flag, Invite, Project
 
     steps:
       - name: Cloning repo
