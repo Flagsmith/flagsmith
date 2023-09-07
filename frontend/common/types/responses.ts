@@ -342,5 +342,6 @@ export type Res = {
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
+  getSubscriptionMetadata: { id: string }
   // END OF TYPES
 }

@@ -19,12 +19,14 @@ import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
+import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 import Button from './base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import UpgradeIcon from './svg/UpgradeIcon'
 import Format from 'common/utils/format'
+import PaymentModal from './modals/Payment'
 
 const App = class extends Component {
   static propTypes = {
@@ -40,6 +42,7 @@ const App = class extends Component {
     asideIsVisible: !isMobile,
     lastEnvironmentId: '',
     lastProjectId: '',
+    maxApiCalls: 50000,
     pin: '',
     showAnnouncement: true,
     totalApiCalls: 0,
@@ -72,6 +75,13 @@ const App = class extends Component {
       AccountStore.getOrganisation()?.id &&
       this.state.activeOrganisation !== AccountStore.getOrganisation().id
     ) {
+      getSubscriptionMetadata(getStore(), {
+        id: AccountStore.getOrganisation()?.id,
+      }).then((res) => {
+        this.setState({
+          maxApiCalls: res?.data?.max_api_calls,
+        })
+      })
       getOrganisationUsage(getStore(), {
         organisationId: AccountStore.getOrganisation()?.id,
       }).then((res) => {
@@ -242,8 +252,6 @@ const App = class extends Component {
     const projectId =
       _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
     const environmentId = _.get(match, 'params.environmentId')
-    const maxApiCalls =
-      AccountStore.getOrganisation()?.subscription?.max_api_calls
 
     const storageHasParams = lastEnvironmentId || lastProjectId
     const pageHasAside = environmentId || projectId || storageHasParams
@@ -360,8 +368,8 @@ const App = class extends Component {
                                         style={
                                           Utils.calculateRemainingLimitsPercentage(
                                             this.state.totalApiCalls,
-                                            maxApiCalls,
-                                            30,
+                                            this.state.maxApiCalls,
+                                            70,
                                           ).percentage &&
                                           Utils.getFlagsmithHasFeature(
                                             'max_api_calls_alert',
@@ -385,7 +393,7 @@ const App = class extends Component {
                                       >
                                         {Utils.calculateRemainingLimitsPercentage(
                                           this.state.totalApiCalls,
-                                          maxApiCalls,
+                                          this.state.maxApiCalls,
                                           70,
                                         ).percentage &&
                                         Utils.getFlagsmithHasFeature(
@@ -396,7 +404,7 @@ const App = class extends Component {
                                               {`You used ${Format.shortenNumber(
                                                 this.state.totalApiCalls,
                                               )}/${Format.shortenNumber(
-                                                maxApiCalls,
+                                                this.state.maxApiCalls,
                                               )} requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade'}

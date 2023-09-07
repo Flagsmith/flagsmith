@@ -105,5 +105,6 @@ export type Req = {
     user: string
   }
   getProjectFlags: { project: string }
+  getGetSubscriptionMetadata: { id: string }
   // END OF TYPES
 }
