@@ -111,6 +111,7 @@ def trigger_sample_webhook(
     requests.exceptions.RequestException,
     max_tries=3,
     jitter=backoff.full_jitter,
+    max_time=2,
 )
 def _call_webhook(
     webhook: typing.Type[AbstractBaseExportableWebhookModel],
@@ -133,6 +134,7 @@ def call_webhook_email_on_error(
         webhook = OrganisationWebhook.objects.get(id=webhook_id)
     else:
         webhook = Webhook.objects.get(id=webhook_id)
+
     try:
         res = _call_webhook(webhook, data)
     except requests.exceptions.RequestException as exc:
