@@ -13,12 +13,9 @@ def test_e2e_teardown(settings, db) -> None:
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1000/min"
     token = "test-token"
     register_url = "/api/v1/auth/users/"
+    settings.ENABLE_FE_E2E = True
 
-    print(
-        f"settings.E2E_SIGNUP_USER: {settings.E2E_USER},settings.E2E_SIGNUP_USER: {settings.E2E_SIGNUP_USER}"
-    )
     os.environ["E2E_TEST_AUTH_TOKEN"] = token
-    os.environ["ENABLE_FE_E2E"] = "True"
 
     client = APIClient(HTTP_X_E2E_TEST_AUTH_TOKEN=token)
 
@@ -37,8 +34,8 @@ def test_e2e_teardown(settings, db) -> None:
     # then test that we can teardown that user
     url = reverse(viewname="api-v1:e2etests:teardown")
     teardown_response = client.post(url)
-    e2e_user: FFAdminUser = FFAdminUser.objects.get(email=settings.E2E_USER)
     assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
+    e2e_user: FFAdminUser = FFAdminUser.objects.get(email=settings.E2E_USER)
     assert e2e_user is not None
     assert not FFAdminUser.objects.filter(email=settings.E2E_SIGNUP_USER).exists()
     for subscription in Subscription.objects.filter(
