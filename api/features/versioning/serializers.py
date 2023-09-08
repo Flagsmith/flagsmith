@@ -47,5 +47,4 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
         self.instance.publish(
             live_from=live_from, published_by=self.context["request"].user
         )
-        self.instance.save()
         return self.instance

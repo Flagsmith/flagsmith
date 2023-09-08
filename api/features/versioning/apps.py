@@ -6,4 +6,5 @@ class FeatureVersioningAppConfig(AppConfig):
     name = "features.versioning"
 
     def ready(self):
+        from . import receivers  # noqa
         from . import signals  # noqa
