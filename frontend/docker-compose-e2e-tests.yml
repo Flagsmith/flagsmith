@@ -30,13 +30,19 @@ services:
       DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
       DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      ACCESS_LOG_LOCATION: /dev/shm/log.txt
     ports:
       - 8000:8000
     depends_on:
-      db:
-        condition: service_started
+      - db
     links:
       - db:db
+    healthcheck:
+      test: "[ -e /dev/shm/log.txt ] && exit 0 || exit 1"
+      start_period: 60s
+      interval: 10s
+      timeout: 3s
+      retries: 30
 
   frontend:
     build:
@@ -59,7 +65,7 @@ services:
       - 8080:8080
     depends_on:
       flagsmith-api:
-        condition: service_started
+        condition: service_healthy
 
     links:
       - flagsmith-api:flagsmith-api

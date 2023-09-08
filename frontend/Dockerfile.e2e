@@ -12,5 +12,6 @@ RUN npm ci
 
 
 COPY . .
+RUN npm run env
 
 CMD ["bash", "-l"]
