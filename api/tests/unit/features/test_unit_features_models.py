@@ -3,12 +3,14 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
+from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
     from projects.models import Project
@@ -372,3 +374,73 @@ def test_create_feature_creates_feature_states_in_all_environments_and_environme
     # Then
     assert EnvironmentFeatureVersion.objects.filter(feature=feature).count() == 2
     assert feature.feature_states.count() == 2
+
+
+def test_webhooks_are_called_when_feature_state_is_updated(
+    mocker: MockerFixture, feature_state: FeatureState
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature_state.enabled = not feature_state.enabled
+    feature_state.save()
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+
+
+def test_webhooks_are_called_when_feature_state_is_created(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature_state = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+
+
+def test_webhooks_are_not_called_for_feature_state_with_environment_feature_version(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_segment = FeatureSegment.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        segment=segment,
+        environment_feature_version=new_version,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment_feature_version=new_version,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+    )
+    new_version.publish(admin_user)
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_not_called()
