@@ -28,6 +28,7 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionSerializer,
 )
 from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser
 
 
 class EnvironmentFeatureVersionViewSet(
@@ -81,7 +82,12 @@ class EnvironmentFeatureVersionViewSet(
         )
 
     def perform_create(self, serializer: Serializer) -> None:
-        serializer.save(environment=self.environment, feature=self.feature)
+        created_by = None
+        if isinstance(self.request.user, FFAdminUser):
+            created_by = self.request.user
+        serializer.save(
+            environment=self.environment, feature=self.feature, created_by=created_by
+        )
 
     def perform_destroy(self, instance: EnvironmentFeatureVersion) -> None:
         if instance.is_live:

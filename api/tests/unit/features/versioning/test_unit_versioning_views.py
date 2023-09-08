@@ -69,6 +69,7 @@ def test_get_versions_for_a_feature_and_environment(
 
 
 def test_create_new_feature_version(
+    admin_user: "FFAdminUser",
     admin_client: "APIClient",
     environment_v2_versioning: Environment,
     feature: "Feature",
@@ -84,6 +85,10 @@ def test_create_new_feature_version(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+    response_json = response.json()
+    assert response_json["created_by"] == admin_user.id
+    assert response_json["uuid"]
 
 
 def test_delete_feature_version(
