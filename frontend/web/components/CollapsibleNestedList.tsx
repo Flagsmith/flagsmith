@@ -87,11 +87,20 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
         )
 
       const permissions = projectPermissions || envPermissions
-      const isAdmin = permissions?.results[0]?.admin || false
+      const roleResult = permissions?.results.filter(
+        (item) => item.role === role?.id,
+      )
+      const roleRermissions =
+        roleResult && roleResult.length > 0 ? roleResult[0].permissions : []
+
+      const isAdmin =
+        roleResult && roleResult.length > 0 ? roleResult[0].admin : false
+
       const permissionsSummary =
-        permissions?.results[0]?.permissions
-          .map((item) => Format.enumeration.get(item))
-          .join(', ') || ''
+        roleRermissions 
+        && roleRermissions.length > 0 &&
+      roleRermissions.map((item) => Format.enumeration.get(item)).join(', ') ||
+        ''
 
       return projectIsLoading || envIsLoading ? (
         <div className='modal-body text-center'>
