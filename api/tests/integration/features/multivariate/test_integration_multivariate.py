@@ -36,6 +36,33 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
 
 @pytest.mark.parametrize(
     "client",
+    [lazy_fixture("admin_client")],
+)
+def test_cannot_create_mv_option_when_feature_id_is_undefined(client, project, feature):
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, "undefined"],
+    )
+
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
