@@ -443,6 +443,8 @@ SWAGGER_SETTINGS = {
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
+# Enable E2E tests
+ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
 E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
 # User email address used for E2E Signup test

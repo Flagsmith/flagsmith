@@ -1,5 +1,4 @@
-import os
-
+from django.conf import settings
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
@@ -15,7 +14,7 @@ class Teardown(APIView):
     authentication_classes = (TokenAuthentication,)
 
     def post(self, request):
-        if "ENABLE_FE_E2E" not in os.environ:
+        if not settings.ENABLE_FE_E2E:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         teardown()
