@@ -7,7 +7,8 @@ USER node
 
 WORKDIR /srv/bt
 
-COPY --chown=node:node . .
+COPY --chown=node:node frontend .
+COPY .release-please-manifest.json .
 
 RUN npm ci --quiet --production
 ENV ENV=prod

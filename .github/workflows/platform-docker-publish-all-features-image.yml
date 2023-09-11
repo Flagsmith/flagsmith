@@ -71,7 +71,6 @@ jobs:
         run: |
           cd api
           echo ${{ github.sha }} > CI_COMMIT_SHA
-          echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
           echo '' > ENTERPRISE_VERSION
 
       - name: Docker metadata

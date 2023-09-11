@@ -1,6 +1,10 @@
+import json
 import pathlib
 
 import shortuuid
+
+UNKNOWN = "unknown"
+VERSIONS_INFO_FILE_LOCATION = ".versions.json"
 
 
 def create_hash():
@@ -10,9 +14,19 @@ def create_hash():
 
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
-    version_json = {
+    version_json = {}
+    image_tag = UNKNOWN
+
+    manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
+
+    if manifest_versions_content != UNKNOWN:
+        manifest_versions = json.loads(manifest_versions_content)
+        version_json["package_versions"] = manifest_versions
+        image_tag = manifest_versions["."]
+
+    version_json = version_json | {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": _get_file_contents("./IMAGE_TAG"),
+        "image_tag": image_tag,
         "is_enterprise": pathlib.Path("./ENTERPRISE_VERSION").exists(),
     }
 
@@ -25,4 +39,4 @@ def _get_file_contents(file_path: str) -> str:
         with open(file_path) as f:
             return f.read().replace("\n", "")
     except FileNotFoundError:
-        return "unknown"
+        return UNKNOWN

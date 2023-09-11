@@ -32,8 +32,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.e2e
+      context: ../
+      dockerfile: frontend/Dockerfile.e2e
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
