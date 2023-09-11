@@ -1,7 +1,6 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
@@ -36,9 +35,7 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         feature_pk = self.kwargs.get("feature_pk")
-        feature = get_object_or_404(Feature, pk=feature_pk)
-        if request.user not in feature.owners.all():
-            raise PermissionDenied("You do not have permission to perform this action.")
+        get_object_or_404(Feature, pk=feature_pk)
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

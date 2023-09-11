@@ -4,10 +4,12 @@ import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(
@@ -68,12 +70,9 @@ def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, pro
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_client")],
-)
-def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(client, project):
+def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
     # Given
+    new_user = FFAdminUser.objects.create(email="testuser@mail.com")
     organisation = Organisation.objects.create(name="Test Org")
     new_project = Project.objects.create(name="Test project", organisation=organisation)
     feature = Feature.objects.create(
@@ -91,6 +90,8 @@ def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(client, p
         "string_value": "bigger",
         "default_percentage_allocation": 50,
     }
+    client = APIClient()
+    client.force_authenticate(user=new_user)
     # When
     response = client.post(
         url,
