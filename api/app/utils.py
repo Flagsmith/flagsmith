@@ -39,4 +39,4 @@ def _get_file_contents(file_path: str) -> str:
         with open(file_path) as f:
             return f.read().replace("\n", "")
     except FileNotFoundError:
-        return "unknown"
+        return UNKNOWN
