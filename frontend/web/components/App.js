@@ -421,7 +421,7 @@ const App = class extends Component {
                                             <UpgradeIcon
                                               width='20'
                                               fill='#9DA4AE'
-                                            />
+                                            />{' '}
                                             <span>Upgrade</span>
                                           </>
                                         )}
