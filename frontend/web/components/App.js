@@ -396,35 +396,27 @@ const App = class extends Component {
                                           this.state.maxApiCalls,
                                           70,
                                         ).percentage &&
-                                        Utils.getFlagsmithHasFeature(
-                                          'max_api_calls_alert',
-                                        ) ? (
-                                          <>
-                                            <span>
-                                              {`You have used ${Format.shortenNumber(
-                                                this.state.totalApiCalls,
-                                              )}/${Format.shortenNumber(
-                                                this.state.maxApiCalls,
-                                              )} of your allowed requests.`}
-                                              <br />
-                                              <span style={{ color: 'red' }}>
-                                                {'Upgrade '}
+                                          Utils.getFlagsmithHasFeature(
+                                            'max_api_calls_alert',
+                                          ) && (
+                                            <>
+                                              <span>
+                                                {`You have used ${Format.shortenNumber(
+                                                  this.state.totalApiCalls,
+                                                )}/${Format.shortenNumber(
+                                                  this.state.maxApiCalls,
+                                                )} of your allowed requests.`}
+                                                <br />
+                                                <span style={{ color: 'red' }}>
+                                                  {'Upgrade '}
+                                                </span>
+                                                <UpgradeIcon
+                                                  width='20'
+                                                  fill='#9DA4AE'
+                                                />
                                               </span>
-                                              <UpgradeIcon
-                                                width='20'
-                                                fill='#9DA4AE'
-                                              />
-                                            </span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <UpgradeIcon
-                                              width='20'
-                                              fill='#9DA4AE'
-                                            />{' '}
-                                            <span>Upgrade</span>
-                                          </>
-                                        )}
+                                            </>
+                                          )}
                                       </a>
                                     )}
                                   {!!AccountStore.getOrganisation() && (
