@@ -149,8 +149,7 @@ runs:
       run: |
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
-        cd api
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
