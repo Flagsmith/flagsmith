@@ -405,7 +405,8 @@ const App = class extends Component {
                                                 this.state.totalApiCalls,
                                               )}/${Format.shortenNumber(
                                                 this.state.maxApiCalls,
-                                              )} of your allowed requests. Click to`}{' '}
+                                              )} of your allowed requests.`}
+                                              <br />
                                               <span style={{ color: 'red' }}>
                                                 {'Upgrade '}
                                               </span>
