@@ -401,13 +401,13 @@ const App = class extends Component {
                                         ) ? (
                                           <>
                                             <span>
-                                              {`You used ${Format.shortenNumber(
+                                              {`You have used ${Format.shortenNumber(
                                                 this.state.totalApiCalls,
                                               )}/${Format.shortenNumber(
                                                 this.state.maxApiCalls,
-                                              )} requests. Click to`}{' '}
+                                              )} of your allowed requests. Click to`}{' '}
                                               <span style={{ color: 'red' }}>
-                                                {'Upgrade'}
+                                                {'Upgrade '}
                                               </span>
                                               <UpgradeIcon
                                                 width='20'
