@@ -23,9 +23,6 @@ def test_get_version_info(mocker: MockerFixture) -> None:
 
     manifest_mocked_file = {
         ".": "2.66.2",
-        "frontend": "2.66.2",
-        "api": "2.66.2",
-        "docs": "2.66.2",
     }
     mock_get_file_contents = mocker.patch("app.utils._get_file_contents")
     mock_get_file_contents.side_effect = (json.dumps(manifest_mocked_file), "some_sha")
@@ -38,12 +35,7 @@ def test_get_version_info(mocker: MockerFixture) -> None:
         "ci_commit_sha": "some_sha",
         "image_tag": "2.66.2",
         "is_enterprise": True,
-        "package_versions": {
-            ".": "2.66.2",
-            "api": "2.66.2",
-            "docs": "2.66.2",
-            "frontend": "2.66.2",
-        },
+        "package_versions": {".": "2.66.2"},
     }
 
 
