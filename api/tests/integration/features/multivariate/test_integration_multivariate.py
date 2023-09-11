@@ -5,6 +5,10 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
+from features.models import Feature
+from organisations.models import Organisation
+from projects.models import Project
+
 
 @pytest.mark.parametrize(
     "client",
@@ -35,19 +39,22 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
 
 
 @pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_client")],
+    "client, feature_id",
+    [
+        (lazy_fixture("admin_client"), "undefined"),
+        (lazy_fixture("admin_client"), "89809"),
+    ],
 )
-def test_cannot_create_mv_option_when_feature_id_is_undefined(client, project, feature):
+def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
-        args=[project, "undefined"],
+        args=[project, feature_id],
     )
 
     data = {
         "type": "unicode",
-        "feature": feature,
+        "feature": feature_id,
         "string_value": "bigger",
         "default_percentage_allocation": 50,
     }
@@ -58,7 +65,40 @@ def test_cannot_create_mv_option_when_feature_id_is_undefined(client, project, f
         content_type="application/json",
     )
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_client")],
+)
+def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(client, project):
+    # Given
+    organisation = Organisation.objects.create(name="Test Org")
+    new_project = Project.objects.create(name="Test project", organisation=organisation)
+    feature = Feature.objects.create(
+        name="New_feature",
+        project=new_project,
+    )
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature.id],
+    )
+
+    data = {
+        "type": "unicode",
+        "feature": feature.id,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize(
