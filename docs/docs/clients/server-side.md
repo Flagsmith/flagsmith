@@ -18,42 +18,77 @@ Once you've got that understood, lets get the SDKs integrated!
 
 :::
 
-## Github Links
-
-All our SDKs are on Github.
+## SDK Overview
 
 <Tabs groupId="language">
 <TabItem value="py" label="Python">
+
+### Version Compatiability
+
+Python 3.8+
+
+### Github Link
 
 https://github.com/Flagsmith/flagsmith-python-client
 
 </TabItem>
 <TabItem value="java" label="Java">
 
+### Version Compatiability
+
+JDK 11+
+
+### Github Link
+
 https://github.com/Flagsmith/flagsmith-java-client
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
+
+### Github Link
 
 https://github.com/Flagsmith/flagsmith-dotnet-client
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-https://github.com/Flagsmith/flagsmith-nodejs-client https://github.com/Flagsmith/flagsmith-nodejs-examples
+### Version Compatiability
+
+Node 14+
+
+### Github Link
+
+- https://github.com/Flagsmith/flagsmith-nodejs-client
+- https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
+
+### Version Compatiability
+
+Ruby 2.4+
+
+### Github Link
 
 https://github.com/Flagsmith/flagsmith-ruby-client
 
 </TabItem>
 <TabItem value="php" label="PHP">
 
+### Version Compatiability
+
+php 7.4+
+
+### Github Link
+
 https://github.com/Flagsmith/flagsmith-php-client
 
 </TabItem>
 <TabItem value="go" label="Go">
+
+### Version Compatiability
+
+### Github Link
 
 https://github.com/Flagsmith/flagsmith-go-client
 
