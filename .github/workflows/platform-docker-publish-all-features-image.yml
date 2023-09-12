@@ -3,7 +3,7 @@ name: Publish Flagsmith Private Cloud Image
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - '*'
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
@@ -71,7 +71,6 @@ jobs:
         run: |
           cd api
           echo ${{ github.sha }} > CI_COMMIT_SHA
-          echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
           echo '' > ENTERPRISE_VERSION
 
       - name: Docker metadata
