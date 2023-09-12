@@ -123,7 +123,7 @@ export const deleteTrait = async (index: number) => {
   await waitForElementNotExist(byId(`user-trait-${index}`))
 }
 
-const lastTestGroup = {}
+const lastTestSection = {}
 let lastTestName = undefined
 
 export const logUsingLastSection = (message?: string) => {
@@ -133,9 +133,9 @@ export const logUsingLastSection = (message?: string) => {
 // eslint-disable-next-line no-console
 export const log = (section: string | undefined, message?: string) => {
   const testName = t.test.name
-  const sectionName = section ?? lastTestGroup[testName]
+  const sectionName = section ?? lastTestSection[testName]
 
-  if (lastTestName !== testName || lastTestGroup[testName] !== sectionName) {
+  if (lastTestName !== testName || lastTestSection[testName] !== sectionName) {
     const ellipsis = section === sectionName ? '' : '...'
     console.log(
       '\n',
@@ -144,7 +144,7 @@ export const log = (section: string | undefined, message?: string) => {
       '\x1b[0m',
       '\n',
     )
-    lastTestGroup[testName] = sectionName
+    lastTestSection[testName] = sectionName
     lastTestName = testName
   }
   if (message) {
