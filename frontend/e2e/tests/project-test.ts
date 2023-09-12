@@ -9,10 +9,10 @@ import {
 import { E2E_USER, PASSWORD } from '../config'
 
 export default async function () {
-  log('Login', 'Project Test')
+  log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-0')
-  log('Edit Project', 'Project Test')
+  log('Edit Project')
   await click('#project-settings-link')
   await setText("[name='proj-name']", 'Test Project')
   await click('#save-proj-btn')
