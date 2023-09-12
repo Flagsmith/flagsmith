@@ -45,6 +45,10 @@ https://github.com/Flagsmith/flagsmith-java-client
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
+### Version Compatiability
+
+.NET core 6.0+
+
 ### Github Link
 
 https://github.com/Flagsmith/flagsmith-dotnet-client
