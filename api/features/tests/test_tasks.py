@@ -41,6 +41,9 @@ def test_trigger_feature_state_change_webhooks(mocker):
     environment_webhook_call_args = mock_call_environment_webhooks.call_args
     organisation_webhook_call_args = mock_call_organisation_webhooks.call_args
 
+    assert environment_webhook_call_args[1]["args"][0] == environment.id
+    assert organisation_webhook_call_args[1]["args"][0] == organisation.id
+
     # verify that the data for both calls is the same
     assert (
         environment_webhook_call_args[1]["args"][1]
