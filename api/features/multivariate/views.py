@@ -35,7 +35,8 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         feature_pk = self.kwargs.get("feature_pk")
-        get_object_or_404(Feature, pk=feature_pk)
+        project_pk = self.kwargs.get("project_pk")
+        get_object_or_404(Feature.objects.filter(project__id=project_pk), pk=feature_pk)
         return super().create(request, *args, **kwargs)
 
     def get_queryset(self):
