@@ -7,13 +7,14 @@ USER node
 
 WORKDIR /srv/bt
 
-COPY --chown=node:node package.json package-lock.json .npmrc .nvmrc ./
-COPY --chown=node:node bin/ ./bin/
-COPY --chown=node:node env/ ./env/
+COPY --chown=node:node frontend/package.json frontend/package-lock.json frontend/.npmrc frontend/.nvmrc ./
+COPY --chown=node:node frontend/bin/ ./bin/
+COPY --chown=node:node frontend/env/ ./env/
 
 RUN npm ci --quiet --production
 
-COPY --chown=node:node . .
+COPY --chown=node:node frontend .
+COPY .release-please-manifest.json .
 ENV ENV=prod
 RUN npm run bundle
 

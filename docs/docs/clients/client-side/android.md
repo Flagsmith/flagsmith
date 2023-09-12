@@ -41,8 +41,6 @@ The SDK is initialised against a single environment within a project on [https:/
 for example the Development or Production environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-![Image](/img/api-key.png)
-
 ## Initialization
 
 ### Within your Activity inside `onCreate()`

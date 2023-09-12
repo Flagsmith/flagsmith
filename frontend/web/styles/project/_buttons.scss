@@ -147,6 +147,9 @@ button.btn {
     &.btn-sm {
       padding: 0 10px;
     }
+    &.btn-lg{
+      line-height: $btn-line-height-lg;
+    }
     &.btn-remove {
       background-color: $danger-alfa-8;
       &:hover,

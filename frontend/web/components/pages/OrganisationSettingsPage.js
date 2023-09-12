@@ -908,7 +908,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       {id ===
                                                         AccountStore.getUserId() &&
                                                         '(You)'}
-                                                      <div className='list-item-subtitle'>
+                                                      <div className='list-item-subtitle mt-1'>
                                                         {email}
                                                       </div>
                                                     </Flex>
@@ -1131,7 +1131,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   >
                                                     <div className='flex flex-1 px-3'>
                                                       {email || link}
-                                                      <div className='list-item-subtitle'>
+                                                      <div className='list-item-subtitle mt-1'>
                                                         Created{' '}
                                                         {moment(
                                                           date_created,

@@ -83,32 +83,6 @@ class EnvironmentTestCase(TestCase):
         assert response.data["results"][0]["identifier"] == identifier_one
         assert response.data["results"][1]["identifier"] == identifier_two
 
-    def test_should_update_value_of_feature_state(self):
-        # Given
-        feature = Feature.objects.create(name="feature", project=self.project)
-        environment = Environment.objects.create(name="test env", project=self.project)
-        feature_state = FeatureState.objects.get(
-            feature=feature, environment=environment
-        )
-        url = reverse(
-            "api-v1:environments:environment-featurestates-detail",
-            args=[environment.api_key, feature_state.id],
-        )
-
-        # When
-        response = self.client.put(
-            url,
-            data=self.fs_put_template % (feature_state.id, True, "This is a value"),
-            content_type="application/json",
-        )
-
-        # Then
-        feature_state.refresh_from_db()
-
-        assert response.status_code == status.HTTP_200_OK
-        assert feature_state.get_feature_state_value() == "This is a value"
-        assert feature_state.enabled
-
     def test_audit_log_entry_created_when_new_environment_created(self):
         # Given
         url = reverse("api-v1:environments:environment-list")
@@ -501,14 +475,14 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
 
 @pytest.mark.parametrize(
-    "client, is_master_api_key_client",
+    "client, is_admin_master_api_key_client",
     [
-        (lazy_fixture("master_api_key_client"), True),
+        (lazy_fixture("admin_master_api_key_client"), True),
         (lazy_fixture("admin_client"), False),
     ],
 )
 def test_should_create_environments(
-    project, client, admin_user, is_master_api_key_client
+    project, client, admin_user, is_admin_master_api_key_client
 ):
     # Given
     url = reverse("api-v1:environments:environment-list")
@@ -529,14 +503,15 @@ def test_should_create_environments(
     assert response.json()["use_identity_composite_key_for_hashing"] is True
 
     # and user is admin
-    if not is_master_api_key_client:
+    if not is_admin_master_api_key_client:
         assert UserEnvironmentPermission.objects.filter(
             user=admin_user, admin=True, environment__id=response.json()["id"]
         ).exists()
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_environment_without_required_metadata_returns_400(
     project,
@@ -562,7 +537,8 @@ def test_create_environment_without_required_metadata_returns_400(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_environment_with_required_metadata_returns_201(
     project,
@@ -599,7 +575,8 @@ def test_create_environment_with_required_metadata_returns_201(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_environment_metadata(
     project,
@@ -643,7 +620,8 @@ def test_update_environment_metadata(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_audit_log_entry_created_when_environment_updated(environment, project, client):
     # Given
@@ -687,7 +665,8 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_document(environment, project, client, feature, segment):
     # Given
@@ -714,7 +693,8 @@ def test_get_document(environment, project, client, feature, segment):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     identity, client, trait, environment
@@ -755,7 +735,8 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     environment, client, identity, trait
@@ -787,7 +768,8 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_user_can_list_environment_permission(client, environment):
     # Given
@@ -804,7 +786,7 @@ def test_user_can_list_environment_permission(client, environment):
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(
-    master_api_key_client, environment
+    admin_master_api_key_client, environment
 ):
     # Given
     url = reverse(
@@ -812,7 +794,7 @@ def test_environment_my_permissions_reruns_400_for_master_api_key(
     )
 
     # When
-    response = master_api_key_client.get(url)
+    response = admin_master_api_key_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -217,7 +217,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           file: api/Dockerfile
-          context: api/
           push: false
           cache-from: type=gha,scope=image-api-fb
           cache-to: type=gha,mode=max,scope=image-api-fb
@@ -243,7 +242,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           file: frontend/Dockerfile
-          context: frontend/
           push: false
           cache-from: type=gha,scope=image-frontend-fb
           cache-to: type=gha,mode=max,scope=image-frontend-fb

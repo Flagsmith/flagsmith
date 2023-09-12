@@ -46,8 +46,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.e2e
+      context: ../
+      dockerfile: frontend/Dockerfile.e2e
       x-bake:
         cache-from:
           - type=gha,scope=image-e2e-unified-fe

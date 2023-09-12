@@ -43,8 +43,7 @@ def create_audit_log_from_historical_record(
 def add_master_api_key(sender, **kwargs):
     try:
         history_instance = kwargs["history_instance"]
-        history_instance.master_api_key = (
-            HistoricalRecords.thread.request.master_api_key
-        )
+        master_api_key = HistoricalRecords.thread.request.user.key
+        history_instance.master_api_key = master_api_key
     except (KeyError, AttributeError):
         pass

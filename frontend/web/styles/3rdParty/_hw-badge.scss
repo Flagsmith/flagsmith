@@ -9,6 +9,9 @@
       right: 8px;
       left: auto;
       background: $danger;
+      line-height: 12px;
+      font-size: 9px;
+      font-weight: 500;
       &.HW_softHidden {
         background: $bg-light500;
       }
