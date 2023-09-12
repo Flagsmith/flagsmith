@@ -21,3 +21,7 @@ help with this.
 
 - Maximum size of a Flag String Value is **20,000 bytes**
 - Maximum size of an Identity Trait Value is **2,000 bytes**
+
+## Segment Data Elements
+
+- Maximum size of a Segment Rule Value is **1,000 bytes**

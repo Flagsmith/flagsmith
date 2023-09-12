@@ -3,7 +3,7 @@ name: API Publish Docker Images
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - '*'
     paths:
       - api/**
       - .github/**
@@ -30,7 +30,6 @@ jobs:
       - name: Write git info to Docker image
         run: |
           echo ${{ github.sha }} > api/CI_COMMIT_SHA
-          echo '${{ github.ref_name }}' > api/IMAGE_TAG
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -50,6 +49,6 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           file: api/Dockerfile
-          context: api/
+          context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}

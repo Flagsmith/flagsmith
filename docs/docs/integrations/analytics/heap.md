@@ -27,13 +27,7 @@ If the flag has no remote config value, Flagsmith will just pass the boolean sta
 
 :::
 
-Identity flag values are passed into Heap.
-
-Here's a demo user in Flagsmith:
-
-![Heap Analytics](/img/integrations/heap/heap-integration-2.png)
-
-If we make the call to the Flagsmith API to get the flags for this user:
+Identity flag values are passed into Heap. If we make the call to the Flagsmith API to get the flags for an Identity.
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \
