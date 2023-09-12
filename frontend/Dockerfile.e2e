@@ -2,11 +2,16 @@ FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
 # Build Flagsmith
 WORKDIR /srv/flagsmith
-COPY . .
-RUN npm cache clean --force
+COPY package.json package-lock.json .npmrc .nvmrc ./
+COPY bin/ ./bin/
+COPY env/ ./env/
+
+# Run npm ci before copying source code to improve caching of layers.
+ENV ENV=e2e
 RUN npm ci
 
-ENV ENV=e2e
+
+COPY . .
 RUN npm run env
 
 CMD ["bash", "-l"]

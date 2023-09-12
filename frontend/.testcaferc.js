@@ -1,7 +1,6 @@
 const isDev = process.env.E2E_DEV;
 module.exports = {
     "browsers": "firefox:headless",
-    "concurrency": 3,
     "port1": 8080,
     "port2": 8081,
     "hostname": "localhost",

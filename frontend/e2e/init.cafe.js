@@ -1,20 +1,29 @@
 import fetch from 'node-fetch'
-import { t, test, fixture } from 'testcafe'
+import { test, fixture } from 'testcafe'
 import { waitForReact } from 'testcafe-react-selectors'
 
 import Project from '../common/project'
-import { getLogger, log, logout, logResults } from './helpers.cafe'
+import { getLogger, logout, logResults } from './helpers.cafe'
 import environmentTest from './tests/environment-test'
 import inviteTest from './tests/invite-test'
 import projectTest from './tests/project-test'
-import {testSegment1, testSegment2} from './tests/segment-test'
+import { testSegment1, testSegment2, testSegment3 } from './tests/segment-test'
 import initialiseTests from './tests/initialise-tests'
 import flagTests from './tests/flag-tests'
 
 require('dotenv').config()
 
 const url = `http://localhost:${process.env.PORT || 8080}/`
+const e2eTestApi = `${Project.api}e2etests/teardown/`
 const logger = getLogger()
+
+console.log(
+  '\n',
+  '\x1b[32m',
+  `E2E using API: ${e2eTestApi}. E2E URL: ${url}`,
+  '\x1b[0m',
+  '\n',
+)
 
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
@@ -22,7 +31,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
 
   if (token) {
-    await fetch(`${Project.api}e2etests/teardown/`, {
+    await fetch(e2eTestApi, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -67,10 +76,8 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
   .beforeEach(async () => {
     await waitForReact()
   })
-  .after(async (t) => {
-    console.log('Start of Initialise Requests')
+  .afterEach(async (t) => {
     await logResults(logger.requests, t)
-    console.log('End of Initialise Requests')
   })
 
 test('Segment-part-1', async () => {
@@ -80,6 +87,11 @@ test('Segment-part-1', async () => {
 
 test('Segment-part-2', async () => {
   await testSegment2()
+  await logout()
+})
+
+test('Segment-part-3', async () => {
+  await testSegment3()
   await logout()
 })
 

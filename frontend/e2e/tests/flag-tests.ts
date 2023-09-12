@@ -14,14 +14,12 @@ import {
   waitForElementVisible,
 } from '../helpers.cafe'
 import { t } from 'testcafe'
-
-const email = 'nightwatch@solidstategroup.com'
-const password = 'str0ngp4ssw0rd!'
+import { E2E_USER, PASSWORD } from '../config'
 
 export default async function () {
-  log('Login');
-  await login(email, password);
-  await click('#project-select-0');
+  log('Login')
+  await login(E2E_USER, PASSWORD)
+  await click('#project-select-0')
 
   log('Create Features')
   await click('#features-link')
@@ -104,5 +102,4 @@ export default async function () {
   log('Clear down features')
   await deleteFeature(1, 'header_size')
   await deleteFeature(0, 'header_enabled')
-
 }

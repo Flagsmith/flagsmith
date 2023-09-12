@@ -5,12 +5,6 @@ inputs:
   database_url:
     description: The database URL to connect the API to
     required: true
-  sendgrid_api_key:
-    description: The sendgrid API key to use for email sending
-    required: true
-  sentry_sdk_dsn:
-    description: The sentry SDK DSN
-    required: true
   e2e_test_token:
     description: The token to use for authenticating the E2E test process
     required: false
@@ -40,20 +34,16 @@ runs:
       env:
         E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
         DATABASE_URL: ${{ inputs.database_url }}
-        SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
-        SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
         DISABLE_ANALYTICS_FEATURES: ${{ inputs.disable_analytics_features }}
       run: |
         CONTAINER_ID=$( docker run \
         -p 8000:8000 \
         -e DATABASE_URL=$DATABASE_URL \
         -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
-        -e SENDGRID_API_KEY=$SENDGRID_API_KEY \
-        -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
         -e DISABLE_ANALYTICS_FEATURES=$DISABLE_ANALYTICS_FEATURES \
         -e DJANGO_ALLOWED_HOSTS="*" \
         -e DJANGO_SETTINGS_MODULE=app.settings.test \
-        -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
+        -e ENABLE_FE_E2E=True \
         -e ACCESS_LOG_LOCATION=- \
         -d flagsmith/flagsmith-api:e2e-${{ github.sha }} )
         echo "containerId=$CONTAINER_ID" >> "$GITHUB_OUTPUT"

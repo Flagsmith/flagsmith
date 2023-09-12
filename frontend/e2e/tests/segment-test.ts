@@ -26,13 +26,11 @@ import {
   waitAndRefresh,
   waitForElementVisible,
 } from '../helpers.cafe'
-
-const email = 'nightwatch@solidstategroup.com'
-const password = 'str0ngp4ssw0rd!'
+import { E2E_USER, PASSWORD } from '../config'
 
 export const testSegment1 = async () => {
   log('Login')
-  await login(email, password)
+  await login(E2E_USER, PASSWORD)
 
   log('Create Organisation')
   await click(byId('create-organisation-btn'))
@@ -147,7 +145,7 @@ export const testSegment1 = async () => {
 
 export const testSegment2 = async () => {
   log('Login')
-  await login(email, password)
+  await login(E2E_USER, PASSWORD)
 
   log('Create Organisation')
   await click(byId('create-organisation-btn'))
@@ -240,6 +238,24 @@ export const testSegment2 = async () => {
   await gotoFeatures()
   await deleteFeature(1, 'flag')
   await deleteFeature(0, 'config')
+}
+
+export const testSegment3 = async () => {
+  log('Login')
+  await login(E2E_USER, PASSWORD)
+
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', 'Bullet Train Ltd 4')
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-select-page'))
+
+  log('Create Project')
+
+  await click('.btn-project-create')
+  await setText(byId('projectName'), 'My Segment Test Project 3')
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
 
   log('Create features')
   await gotoFeatures()
