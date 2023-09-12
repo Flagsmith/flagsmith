@@ -13,7 +13,7 @@ export type Rule = {
   ors?: Rule[]
 }
 export const setText = async (selector: string, text: string) => {
-  logUsingLastGroup(`Set text ${selector} : ${text}`)
+  logUsingLastSection(`Set text ${selector} : ${text}`)
   return t
     .selectText(selector)
     .pressKey('delete')
@@ -22,7 +22,7 @@ export const setText = async (selector: string, text: string) => {
 }
 
 export const waitForElementVisible = async (selector: string) => {
-  logUsingLastGroup(`Waiting element visible ${selector}`)
+  logUsingLastSection(`Waiting element visible ${selector}`)
   return t
     .expect(Selector(selector).visible)
     .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
@@ -57,13 +57,13 @@ export const logResults = async (requests: LoggedRequest[], t) => {
       2,
     ),
   )
-  logUsingLastGroup('Session JavaScript Errors')
-  logUsingLastGroup(JSON.stringify(await t.getBrowserConsoleMessages()))
+  logUsingLastSection('Session JavaScript Errors')
+  logUsingLastSection(JSON.stringify(await t.getBrowserConsoleMessages()))
   log('End of Requests')
 }
 
 export const waitForElementNotExist = async (selector: string) => {
-  logUsingLastGroup(`Waiting element not visible ${selector}`)
+  logUsingLastSection(`Waiting element not visible ${selector}`)
   return t.expect(Selector(selector).exists).notOk('', { timeout: 10000 })
 }
 export const gotoFeatures = async () => {
@@ -126,25 +126,25 @@ export const deleteTrait = async (index: number) => {
 const lastTestGroup = {}
 let lastTestName = undefined
 
-export const logUsingLastGroup = (message?: string) => {
+export const logUsingLastSection = (message?: string) => {
   log(undefined, message)
 }
 
 // eslint-disable-next-line no-console
-export const log = (group: string | undefined, message?: string) => {
+export const log = (section: string | undefined, message?: string) => {
   const testName = t.test.name
-  const groupName = group ?? lastTestGroup[testName]
+  const sectionName = section ?? lastTestGroup[testName]
 
-  if (lastTestName !== testName || lastTestGroup[testName] !== groupName) {
-    const ellipsis = group === groupName ? '' : '...'
+  if (lastTestName !== testName || lastTestGroup[testName] !== sectionName) {
+    const ellipsis = section === sectionName ? '' : '...'
     console.log(
       '\n',
       '\x1b[32m',
-      `${testName ? `${ellipsis}[${testName} tests] ` : ''}${groupName}`,
+      `${testName ? `${ellipsis}[${testName} tests] ` : ''}${sectionName}`,
       '\x1b[0m',
       '\n',
     )
-    lastTestGroup[testName] = groupName
+    lastTestGroup[testName] = sectionName
     lastTestName = testName
   }
   if (message) {
@@ -367,7 +367,7 @@ export const createSegment = async (
 }
 
 export const waitAndRefresh = async (waitFor = 3000) => {
-  logUsingLastGroup(`Waiting for ${waitFor}ms, then refreshing.`)
+  logUsingLastSection(`Waiting for ${waitFor}ms, then refreshing.`)
   await t.wait(waitFor)
   await t.eval(() => location.reload())
 }
