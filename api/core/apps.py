@@ -14,6 +14,7 @@ class BaseAppConfig(AppConfig):
     """
 
     name = "core"
+    label = "core_app"
 
     def ready(self):
         from core.signals import (

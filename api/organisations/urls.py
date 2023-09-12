@@ -3,8 +3,7 @@ from app_analytics.views import (
     get_usage_data_view,
 )
 from django.conf import settings
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from api_keys.views import MasterAPIKeyViewSet
@@ -71,8 +70,8 @@ app_name = "organisations"
 
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(organisations_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(organisations_router.urls)),
     path(
         "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
@@ -132,7 +131,7 @@ if settings.IS_RBAC_INSTALLED:
     )
     urlpatterns.extend(
         [
-            url(r"^", include(organisations_router.urls)),
-            url(r"^", include(nested_roles_router.urls)),
+            re_path(r"^", include(organisations_router.urls)),
+            re_path(r"^", include(nested_roles_router.urls)),
         ]
     )

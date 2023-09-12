@@ -79,7 +79,7 @@ obtain the file afterwards. There is an example docker-compose file provided bel
 version: '3'
 services:
  postgres:
-  image: postgres:11.12-alpine
+  image: postgres:12.16-alpine
   environment:
    POSTGRES_PASSWORD: password
    POSTGRES_DB: flagsmith

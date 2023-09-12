@@ -13,7 +13,7 @@ A basic docker-compose setup might look like:
 
 ```yaml
     postgres:
-        image: postgres:11.12-alpine
+        image: postgres:12.16-alpine
         environment:
             POSTGRES_PASSWORD: password
             POSTGRES_DB: flagsmith
