@@ -24,9 +24,9 @@ import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
-import UpgradeIcon from './svg/UpgradeIcon'
 import Format from 'common/utils/format'
-import PaymentModal from './modals/Payment'
+import ErrorMessage from 'components/ErrorMessage'
+import WarningMessage from 'components/WarningMessage'
 
 const App = class extends Component {
   static propTypes = {
@@ -300,6 +300,17 @@ const App = class extends Component {
     )
     const dismissed = flagsmith.getTrait('dismissed_announcement')
     const showBanner = !dismissed || dismissed !== announcementValue.id
+    const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
+      this.state.totalApiCalls,
+      this.state.maxApiCalls,
+      70,
+    ).percentage
+
+    const alertMaxApiCallsText = `You have used ${Format.shortenNumber(
+      this.state.totalApiCalls,
+    )}/${Format.shortenNumber(
+      this.state.maxApiCalls,
+    )} of your allowed requests.`
 
     return (
       <Provider store={getStore()}>
@@ -358,67 +369,6 @@ const App = class extends Component {
                             <React.Fragment>
                               <nav className='my-3 my-md-0 hidden-xs-down flex-row navbar-right space'>
                                 <Row>
-                                  {!!AccountStore.getOrganisation() &&
-                                    Utils.getFlagsmithHasFeature(
-                                      'payments_enabled',
-                                    ) && (
-                                      <a
-                                        href='#'
-                                        className='cursor-pointer nav-link p-2'
-                                        style={
-                                          Utils.calculateRemainingLimitsPercentage(
-                                            this.state.totalApiCalls,
-                                            this.state.maxApiCalls,
-                                            70,
-                                          ).percentage &&
-                                          Utils.getFlagsmithHasFeature(
-                                            'max_api_calls_alert',
-                                          )
-                                            ? {
-                                                border: '#7B51FB',
-                                                borderRadius: '8px',
-                                                borderStyle: 'solid',
-                                                fontSize: '15px',
-                                                width: '250px',
-                                              }
-                                            : {}
-                                        }
-                                        onClick={() => {
-                                          openModal(
-                                            'Payment plans',
-                                            <PaymentModal viewOnly={false} />,
-                                            'modal-lg',
-                                          )
-                                        }}
-                                      >
-                                        {Utils.calculateRemainingLimitsPercentage(
-                                          this.state.totalApiCalls,
-                                          this.state.maxApiCalls,
-                                          70,
-                                        ).percentage &&
-                                          Utils.getFlagsmithHasFeature(
-                                            'max_api_calls_alert',
-                                          ) && (
-                                            <>
-                                              <span>
-                                                {`You have used ${Format.shortenNumber(
-                                                  this.state.totalApiCalls,
-                                                )}/${Format.shortenNumber(
-                                                  this.state.maxApiCalls,
-                                                )} of your allowed requests.`}
-                                                <br />
-                                                <span style={{ color: 'red' }}>
-                                                  {'Upgrade '}
-                                                </span>
-                                                <UpgradeIcon
-                                                  width='20'
-                                                  fill='#9DA4AE'
-                                                />
-                                              </span>
-                                            </>
-                                          )}
-                                      </a>
-                                    )}
                                   {!!AccountStore.getOrganisation() && (
                                     <NavLink
                                       id='projects-link'
@@ -557,6 +507,31 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
+                          <Row>
+                            {user &&
+                              Utils.getFlagsmithHasFeature(
+                                'payments_enabled',
+                              ) &&
+                              Utils.getFlagsmithHasFeature(
+                                'max_api_calls_alert',
+                              ) &&
+                              (maxApiCallsPercentage &&
+                              maxApiCallsPercentage < 100 ? (
+                                <WarningMessage
+                                  warningMessage={alertMaxApiCallsText}
+                                  warningMessageClass={'announcement'}
+                                  enabledButton
+                                />
+                              ) : (
+                                maxApiCallsPercentage >= 100 && (
+                                  <ErrorMessage
+                                    error={alertMaxApiCallsText}
+                                    errorMessageClass={'announcement'}
+                                    enabledButton
+                                  />
+                                )
+                              ))}
+                          </Row>
                           {user &&
                             showBanner &&
                             Utils.getFlagsmithHasFeature('announcement') &&
