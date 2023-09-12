@@ -88,6 +88,8 @@ https://github.com/Flagsmith/flagsmith-php-client
 
 ### Version Compatiability
 
+Go 1.18+
+
 ### Github Link
 
 https://github.com/Flagsmith/flagsmith-go-client
@@ -95,10 +97,18 @@ https://github.com/Flagsmith/flagsmith-go-client
 </TabItem>
 <TabItem value="rust" label="Rust">
 
+### Github Link
+
 https://github.com/Flagsmith/flagsmith-rust-client
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
+
+### Version Compatiability
+
+Elixir 1.12+
+
+### Github Link
 
 https://github.com/Flagsmith/flagsmith-elixir-client
 
