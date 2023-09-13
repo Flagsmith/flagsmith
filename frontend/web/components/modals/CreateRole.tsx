@@ -216,18 +216,12 @@ const CreateRole: FC<CreateRoleType> = ({
           <Tab1 ref={ref} />
         </TabItem>
         <TabItem
-          tabLabel={
-            <Row className='justify-content-center'>
-              Organisation permissions
-            </Row>
-          }
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
         >
           <EditPermissionsModal level={'organisation'} role={role} ref={ref2} />
         </TabItem>
         <TabItem
-          tabLabel={
-            <Row className='justify-content-center'>Project permissions</Row>
-          }
+          tabLabel={<Row className='justify-content-center'>Project</Row>}
         >
           <h5 className='my-4 title'>Edit Permissions</h5>
           <CollapsibleNestedList
@@ -238,11 +232,7 @@ const CreateRole: FC<CreateRoleType> = ({
           />
         </TabItem>
         <TabItem
-          tabLabel={
-            <Row className='justify-content-center'>
-              Environment permissions
-            </Row>
-          }
+          tabLabel={<Row className='justify-content-center'>Environment</Row>}
         >
           <h5 className='my-4 title'>Edit Permissions</h5>
           <ProjectFilter
