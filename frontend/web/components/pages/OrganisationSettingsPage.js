@@ -295,7 +295,7 @@ const OrganisationSettingsPage = class extends Component {
   }
   editRole = (role) => {
     openModal(
-      'Edit Role',
+      'Edit Role and Permissions',
       <CreateRole
         isEdit
         role={role}
