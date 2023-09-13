@@ -257,7 +257,8 @@ final flagsmithClient = FlagsmithClient(
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 
-This will use the default Flagsmith realtime updates URI: `'https://realtime.flagsmith.com/sse/environments/'`, with a reconnect interval of 29000 milliseconds.
+This will use the default Flagsmith realtime updates URI: `'https://realtime.flagsmith.com/sse/environments/'`, with a
+reconnect interval of 29000 milliseconds.
 
 You can change this configuration with your own SSE connection:
 
