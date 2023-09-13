@@ -896,7 +896,11 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
-                                  {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
+                                    {featureLimitAlert.percentage &&
+                                      Utils.displayLimitAlert(
+                                        'features',
+                                        featureLimitAlert.percentage,
+                                      )}
                                     <Tooltip
                                       title={
                                         <h5 className='mb-4'>
@@ -1491,7 +1495,11 @@ const CreateFlag = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
-                                {featureLimitAlert.percentage && Utils.displayLimitAlert("features", featureLimitAlert.percentage)}
+                                {featureLimitAlert.percentage &&
+                                  Utils.displayLimitAlert(
+                                    'features',
+                                    featureLimitAlert.percentage,
+                                  )}
                                 {Value(
                                   error,
                                   projectAdmin,

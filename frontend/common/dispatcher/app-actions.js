@@ -37,12 +37,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  getEnv(environmentId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_ENVIRONMENT,
-      environmentId,
-    })
-  },
   createFlag(projectId, environmentId, flag, segmentOverrides) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_FLAG,
@@ -65,13 +59,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       name,
     })
   },
-
   createProject(name) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_PROJECT,
       name,
     })
   },
+
   deleteChangeRequest(id, cb) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_CHANGE_REQUEST,
@@ -108,6 +102,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_PROJECT,
       id,
+    })
+  },
+  getEnv(environmentId) {
+    Dispatcher.handleViewAction({
+      actionType: Actions.GET_ENVIRONMENT,
+      environmentId,
     })
   },
   deleteUser(id) {

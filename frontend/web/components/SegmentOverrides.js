@@ -656,7 +656,11 @@ class TheComponent extends Component {
                       </a>
                       .
                     </InfoMessage>
-                    {segmentOverrideLimitAlert.percentage && Utils.displayLimitAlert("segment overrides", segmentOverrideLimitAlert.percentage)}
+                    {segmentOverrideLimitAlert.percentage &&
+                      Utils.displayLimitAlert(
+                        'segment overrides',
+                        segmentOverrideLimitAlert.percentage,
+                      )}
                   </div>
                 )}
 

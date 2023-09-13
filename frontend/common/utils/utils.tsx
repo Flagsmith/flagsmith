@@ -73,6 +73,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 0
   },
 
+  changeRequestsEnabled(value: number | null | undefined) {
+    return typeof value === 'number'
+  },
+
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -85,10 +89,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
       />
     ) : null
-  },
-
-  changeRequestsEnabled(value: number | null | undefined) {
-    return typeof value === 'number'
   },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)

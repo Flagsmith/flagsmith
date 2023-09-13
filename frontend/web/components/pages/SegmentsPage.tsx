@@ -169,7 +169,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 manageSegmentsPermission,
                 'Manage segments',
                 <Button
-                  disabled={hasNoOperators ||
+                  disabled={
+                    hasNoOperators ||
                     !manageSegmentsPermission ||
                     segmentsLimitAlert.percentage >= 100
                   }
@@ -204,7 +205,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
-            {Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
+            {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>

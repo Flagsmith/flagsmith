@@ -25,8 +25,9 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import Format from 'common/utils/format'
-import ErrorMessage from 'components/ErrorMessage'
-import WarningMessage from 'components/WarningMessage'
+import ErrorMessage from './ErrorMessage'
+import WarningMessage from './WarningMessage'
+import OrganisationLimit from './OrganisationLimit';
 
 const App = class extends Component {
   static propTypes = {
@@ -507,31 +508,7 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
-                          <Row>
-                            {user &&
-                              Utils.getFlagsmithHasFeature(
-                                'payments_enabled',
-                              ) &&
-                              Utils.getFlagsmithHasFeature(
-                                'max_api_calls_alert',
-                              ) &&
-                              (maxApiCallsPercentage &&
-                              maxApiCallsPercentage < 100 ? (
-                                <WarningMessage
-                                  warningMessage={alertMaxApiCallsText}
-                                  warningMessageClass={'announcement'}
-                                  enabledButton
-                                />
-                              ) : (
-                                maxApiCallsPercentage >= 100 && (
-                                  <ErrorMessage
-                                    error={alertMaxApiCallsText}
-                                    errorMessageClass={'announcement'}
-                                    enabledButton
-                                  />
-                                )
-                              ))}
-                          </Row>
+                          <OrganisationLimit organisationId={AccountStore.getOrganisation()?.id}/>
                           {user &&
                             showBanner &&
                             Utils.getFlagsmithHasFeature('announcement') &&

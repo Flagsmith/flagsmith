@@ -346,7 +346,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </a>
             .
           </InfoMessage>
-          {segmentsLimitAlert.percentage && Utils.displayLimitAlert("segments", segmentsLimitAlert.percentage)}
+          {segmentsLimitAlert.percentage &&
+            Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
         </div>
       )}
 
