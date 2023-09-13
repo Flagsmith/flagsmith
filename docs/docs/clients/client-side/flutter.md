@@ -246,9 +246,17 @@ final flagsmithClient = FlagsmithClient(
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 
-## Realtime Flag Updates
+## Real-time Flag Updates
 
-Realtime flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
+:::tip
+
+Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
+
+Real-time Flags are currently in beta. Please contact us to join the beta!
+
+:::
+
+Real-time flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
 
 ```dart
 final flagsmithClient = FlagsmithClient(
