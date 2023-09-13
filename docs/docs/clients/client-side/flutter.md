@@ -246,6 +246,31 @@ final flagsmithClient = FlagsmithClient(
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 
+## Realtime Flag Updates
+
+Realtime flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
+
+```dart
+final flagsmithClient = FlagsmithClient(
+      config: FlagsmithConfig(
+          enableRealtimeUpdates: true,
+      ), apiKey: 'YOUR_ENV_API_KEY');
+```
+
+This will use the default Flagsmith realtime updates URI: `'https://realtime.flagsmith.com/sse/environments/'`, with a
+reconnect interval of 29000 milliseconds.
+
+You can change this configuration with your own SSE connection:
+
+```dart
+final flagsmithClient = FlagsmithClient(
+      config: FlagsmithConfig(
+          enableRealtimeUpdates: true,
+          realtimeUpdatesBaseURI: 'https://your_sse_endpoint.com/sse/',
+          reconnctToSSEInterval: 15000,
+      ), apiKey: 'YOUR_ENV_API_KEY');
+```
+
 ## Known issues
 
 - If using the package Dio, you may encounter an error saying `Bad state: Future already completed`. There is a bug in
