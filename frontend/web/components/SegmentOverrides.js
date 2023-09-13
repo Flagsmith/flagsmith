@@ -13,6 +13,7 @@ import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
+import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -539,10 +540,6 @@ class TheComponent extends Component {
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
 
-    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
-      ProjectStore.getTotalSegmentOverrides(),
-      ProjectStore.getMaxSegmentOverridesAllowed(),
-    )
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
@@ -656,11 +653,10 @@ class TheComponent extends Component {
                       </a>
                       .
                     </InfoMessage>
-                    {segmentOverrideLimitAlert.percentage &&
-                      Utils.displayLimitAlert(
-                        'segment overrides',
-                        segmentOverrideLimitAlert.percentage,
-                      )}
+                    <SegmentOverrideLimit
+                      id={this.props.environmentId}
+                      maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+                    />
                   </div>
                 )}
 

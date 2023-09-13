@@ -9,6 +9,7 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
 
 class TheComponent extends Component {
   state = {
@@ -110,10 +111,6 @@ class TheComponent extends Component {
         />
       </div>
     )
-    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
-      ProjectStore.getTotalSegmentOverrides(),
-      ProjectStore.getMaxSegmentOverridesAllowed(),
-    )
 
     return this.state.isLoading ? (
       <div className='text-center'>
@@ -134,11 +131,10 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
-        {segmentOverrideLimitAlert.percentage &&
-          Utils.displayLimitAlert(
-            'segment overrides',
-            segmentOverrideLimitAlert.percentage,
-          )}
+        <SegmentOverrideLimit
+          id={environment.api_key}
+          maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+        />
         <div>
           <InputGroup
             component={

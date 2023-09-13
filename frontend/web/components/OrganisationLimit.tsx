@@ -6,30 +6,32 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import Format from 'common/utils/format'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 
-type EnvironmentLimitType = {
+type OrganisationLimitType = {
   id: string
-  environmentId: string
-  projectId: string
 }
 
-const OrganisationLimit: FC<EnvironmentLimitType> = ({ id }) => {
-  const {} = useGetOrganisationUsageQuery({ organisationId: id })
+const OrganisationLimit: FC<OrganisationLimitType> = ({ id }) => {
+  const { data: totalApiCalls } = useGetOrganisationUsageQuery({
+    organisationId: id,
+  })
   const { data: maxApiCalls } = useGetSubscriptionMetadataQuery({ id })
   const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
-    this.state.totalApiCalls,
-    maxApiCalls,
+    totalApiCalls?.totals.total,
+    maxApiCalls?.max_api_calls,
     70,
   ).percentage
 
   const alertMaxApiCallsText = `You have used ${Format.shortenNumber(
-    this.state.totalApiCalls,
-  )}/${Format.shortenNumber(maxApiCalls)} of your allowed requests.`
+    totalApiCalls?.totals.total,
+  )}/${Format.shortenNumber(
+    maxApiCalls?.max_api_calls,
+  )} of your allowed requests.`
 
   return (
     <Row>
       {Utils.getFlagsmithHasFeature('payments_enabled') &&
         Utils.getFlagsmithHasFeature('max_api_calls_alert') &&
-        (maxApiCallsPercentage && maxApiCallsPercentage < 100 ? (
+        (maxApiCallsPercentage < 100 ? (
           <WarningMessage
             warningMessage={alertMaxApiCallsText}
             warningMessageClass={'announcement'}

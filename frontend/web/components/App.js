@@ -25,9 +25,7 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import Format from 'common/utils/format'
-import ErrorMessage from './ErrorMessage'
-import WarningMessage from './WarningMessage'
-import OrganisationLimit from './OrganisationLimit';
+import OrganisationLimit from './OrganisationLimit'
 
 const App = class extends Component {
   static propTypes = {
@@ -508,7 +506,11 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
-                          <OrganisationLimit organisationId={AccountStore.getOrganisation()?.id}/>
+                          {user && (
+                            <OrganisationLimit
+                              id={AccountStore.getOrganisation()?.id}
+                            />
+                          )}
                           {user &&
                             showBanner &&
                             Utils.getFlagsmithHasFeature('announcement') &&
