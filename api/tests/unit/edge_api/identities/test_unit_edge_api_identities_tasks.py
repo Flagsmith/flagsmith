@@ -52,8 +52,8 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED.value
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
         feature=feature,
@@ -105,8 +105,8 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED.value
 
     mock_generate_webhook_feature_state_data.assert_called_once_with(
         feature=feature,
@@ -176,8 +176,8 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     mock_call_environment_webhooks.assert_called_once()
     call_args = mock_call_environment_webhooks.call_args
 
-    assert call_args[0][0] == environment
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_UPDATED.value
 
     assert mock_generate_webhook_feature_state_data.call_count == 2
     mock_generate_data_calls = mock_generate_webhook_feature_state_data.call_args_list
