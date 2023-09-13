@@ -27,7 +27,9 @@ def call_webhooks(sender, instance, **kwargs):
         if instance.project
         else instance.environment.project.organisation
     )
-    call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
+    call_organisation_webhooks.delay(
+        args=(organisation.id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
+    )
 
 
 def _get_integration_config(instance, integration_name):
