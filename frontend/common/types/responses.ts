@@ -339,7 +339,7 @@ export type Res = {
     }
     value: string
   }
-  roles: Roles
+  roles: Role[]
   rolePermission: { id: string }
 
   projectFlags: PagedResponse<ProjectFlag>

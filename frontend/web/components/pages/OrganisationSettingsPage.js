@@ -214,7 +214,7 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editUserPermissions = (user) => {
+  editUserPermissions = (user, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -224,13 +224,14 @@ const OrganisationSettingsPage = class extends Component {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
         level='organisation'
+        roles={roles}
         user={user}
       />,
       'p-0 side-modal',
     )
   }
 
-  editGroupPermissions = (group) => {
+  editGroupPermissions = (group, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -242,6 +243,7 @@ const OrganisationSettingsPage = class extends Component {
         }}
         level='organisation'
         group={group}
+        roles={roles}
         push={this.context.router.history.push}
       />,
       'p-0 side-modal',
@@ -936,6 +938,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   if (role !== 'ADMIN') {
                                                     this.editUserPermissions(
                                                       user,
+                                                      roles,
                                                     )
                                                   }
                                                 }
@@ -1281,7 +1284,7 @@ const OrganisationSettingsPage = class extends Component {
                                             </p>
                                             <UserGroupList
                                               onEditPermissions={
-                                                this.editGroupPermissions
+                                                (group) => this.editGroupPermissions(group, roles)
                                               }
                                               showRemove
                                               orgId={

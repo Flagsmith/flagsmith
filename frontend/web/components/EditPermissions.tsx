@@ -41,6 +41,7 @@ import {
   useUpdateRoleProjectPermissionsMutation,
 } from 'common/services/useRolePermission'
 
+import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
 
@@ -81,6 +82,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       useState<EntityPermissions>({ admin: false, permissions: [] })
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [rolesSelected, setRolesSelected] = useState<Array>([])
     const {
       group,
       id,
@@ -94,6 +97,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       permissionChanged,
       push,
       role,
+      roles,
       user,
     } = props
     useImperativeHandle(
@@ -120,7 +124,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       },
       [],
     )
-
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
     const processResults = (results: (UserPermission & GroupPermission)[]) => {
       let entityPermissions:
@@ -519,6 +522,20 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       })
     }
 
+    const addRole = (id: string) => {
+      setRolesSelected((rolesSelected || []).concat({ role: id }))
+    }
+
+    const removeOwner = (id: string) => {
+      setRolesSelected((rolesSelected || []).filter((v) => v.role !== id))
+    }
+
+    const getRoles = (roles, selectedRoles) => {
+      return roles.filter((v) => selectedRoles.find((a) => a.role === v.id))
+    }
+
+    const rolesAdded = getRoles(roles, rolesSelected || [])
+
     const isAdmin = admin()
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
 
@@ -545,7 +562,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                       <span>
                         Role-based access is not available on our Free Plan.
                         Please visit{' '}
-                        <a 
+                        <a
                           href='https://flagsmith.com/pricing/'
                           className='text-primary'
                         >
@@ -612,9 +629,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             <div className='mt-4'>
               <InfoMessage>
                 The selected {isGroup ? 'group' : 'user'} does not have explicit
-                user permissions to view this {parentLevel}. If the user does not
-                belong to any groups with this permissions, you may have to adjust
-                their permissions in{' '}
+                user permissions to view this {parentLevel}. If the user does
+                not belong to any groups with this permissions, you may have to
+                adjust their permissions in{' '}
                 <a
                   onClick={() => {
                     if (parentSettingsLink) {
@@ -629,6 +646,61 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               </InfoMessage>
             </div>
           )}
+        </div>
+        {level === 'organisation' && (
+          <FormGroup className='px-4'>
+            <InputGroup
+              component={
+                <div>
+                  <Row>
+                    <strong style={{ width: 70 }}>Roles: </strong>
+                    {rolesAdded?.map((r) => (
+                      <Row
+                        key={r.id}
+                        onClick={() => removeOwner(r.id)}
+                        className='chip'
+                        style={{ marginBottom: 4, marginTop: 4 }}
+                      >
+                        <span className='font-weight-bold'>{r.name}</span>
+                        <span className='chip-icon ion ion-ios-close' />
+                      </Row>
+                    ))}
+                    <Button
+                      theme='text'
+                      onClick={() => setShowRoles(true)}
+                      style={{ width: 70 }}
+                    >
+                      Add Role
+                    </Button>
+                  </Row>
+                </div>
+              }
+              // onChange={(e) =>
+              //   this.setState({
+              //     description: Utils.safeParseEventValue(e),
+              //   })
+              // }
+              type='text'
+              title='Assignees'
+              tooltip='Assigns what role the user will have/ assign what role the group will have'
+              inputProps={{
+                className: 'full-width',
+                style: { minHeight: 80 },
+              }}
+              className='full-width'
+              placeholder='Add an optional description...'
+            />
+          </FormGroup>
+        )}
+        <div className='px-4'>
+          <MyRoleSelect
+            orgId={id}
+            value={rolesSelected.map((v) => v.role)}
+            onAdd={addRole}
+            onRemove={removeOwner}
+            isOpen={showRoles}
+            onToggle={() => setShowRoles(!showRoles)}
+          />
         </div>
         <div className='modal-footer'>
           {!role && (
