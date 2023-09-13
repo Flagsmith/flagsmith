@@ -101,6 +101,10 @@ https://github.com/Flagsmith/flagsmith-go-client
 </TabItem>
 <TabItem value="rust" label="Rust">
 
+### Version Compatiability
+
+2021 edition (1.56.0)+
+
 ### Github Link
 
 https://github.com/Flagsmith/flagsmith-rust-client
