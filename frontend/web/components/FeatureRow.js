@@ -257,6 +257,23 @@ class TheComponent extends Component {
                     }`}
                   </Tooltip>
                 )}
+                {projectFlag.is_server_key_only && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <span>{'Server side Only'}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {
+                      'Prevent this feature from being accessed with client-side SDKs.'
+                    }
+                  </Tooltip>
+                )}
                 <TagValues
                   inline
                   projectId={`${projectId}`}
