@@ -110,9 +110,16 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
+    { name: 'albacross', value: !!process.env.ALBACROSS_CLIENT_ID },
   ]
+  let albacross, dynatrace
+
+  if (process.env.ALBACROSS_CLIENT_ID && !process.env.E2E) {
+    albacross = `window._nQc=${process.env.ALBACROSS_CLIENT_ID};`
+  }
+
   let output = values.map(getVariable).join('')
-  let dynatrace = ''
+
   if (process.env.DYNATRACE_URL) {
     dynatrace=`
 window.enableDynatrace = true;
@@ -189,7 +196,8 @@ window.enableDynatrace = true;
         ${output}
     };
     
-    ${dynatrace}
+    ${dynatrace || ''}
+    ${albacross || ''}
     `)
 
 
