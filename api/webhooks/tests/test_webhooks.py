@@ -45,9 +45,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment_id=self.environment.id,
+            environment=self.environment,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED.value,
+            event_type=WebhookEventType.FLAG_UPDATED,
         )
 
         # Then
@@ -70,9 +70,9 @@ class WebhooksTestCase(TestCase):
 
         # When
         call_environment_webhooks(
-            environment_id=self.environment.id,
+            environment=self.environment,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED.value,
+            event_type=WebhookEventType.FLAG_UPDATED,
         )
 
         # Then
@@ -124,9 +124,9 @@ class WebhooksTestCase(TestCase):
         ).hexdigest()
 
         call_environment_webhooks(
-            environment_id=self.environment.id,
+            environment=self.environment,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED.value,
+            event_type=WebhookEventType.FLAG_UPDATED,
         )
         # When
         _, kwargs = mock_requests.post.call_args_list[0]
@@ -144,9 +144,9 @@ class WebhooksTestCase(TestCase):
         )
         # When
         call_environment_webhooks(
-            environment_id=self.environment.id,
+            environment=self.environment,
             data={},
-            event_type=WebhookEventType.FLAG_UPDATED.value,
+            event_type=WebhookEventType.FLAG_UPDATED,
         )
 
         # Then
@@ -179,16 +179,16 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
     expected_data = {}
-    expected_event_type = WebhookEventType.FLAG_UPDATED.value
+    expected_event_type = WebhookEventType.FLAG_UPDATED
     expected_send_failure_email_data = {
-        "event_type": expected_event_type,
+        "event_type": expected_event_type.value,
         "data": expected_data,
     }
     expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
 
     # When
     call_environment_webhooks(
-        environment_id=environment.id,
+        environment=environment,
         data=expected_data,
         event_type=expected_event_type,
     )
@@ -200,13 +200,13 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
             mocker.call(
                 webhook_2,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT.value,
+                WebhookType.ENVIRONMENT,
                 expected_send_failure_status_code,
             ),
             mocker.call(
                 webhook_1,
                 expected_send_failure_email_data,
-                WebhookType.ENVIRONMENT.value,
+                WebhookType.ENVIRONMENT,
                 expected_send_failure_status_code,
             ),
         ],

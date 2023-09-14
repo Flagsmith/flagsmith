@@ -1,3 +1,5 @@
+from threading import Thread
+
 from environments.models import Webhook
 from features.models import FeatureState
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
@@ -36,18 +38,19 @@ def trigger_feature_state_change_webhooks(
     previous_state = _get_previous_state(history_instance, event_type)
     if previous_state:
         data.update(previous_state=previous_state)
+    Thread(
+        target=call_environment_webhooks,
+        args=(instance.environment, data, event_type),
+    ).start()
 
-    call_environment_webhooks.delay(
-        args=(instance.environment.id, data, event_type.value)
-    )
-
-    call_organisation_webhooks.delay(
+    Thread(
+        target=call_organisation_webhooks,
         args=(
-            instance.environment.project.organisation.id,
+            instance.environment.project.organisation,
             data,
-            event_type.value,
-        )
-    )
+            event_type,
+        ),
+    ).start()
 
 
 def _get_previous_state(
