@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: flagsmith/flagsmith-rbac
-          token: ${{ secrets.github_access_token }}
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
           ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
           path: ./flagsmith-rbac
 
