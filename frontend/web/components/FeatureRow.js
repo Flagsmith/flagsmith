@@ -264,7 +264,7 @@ class TheComponent extends Component {
                         className='chip me-2 chip--xs bg-primary text-white'
                         style={{ border: 'none' }}
                       >
-                        <span>{'Server side Only'}</span>
+                        <span>{'Server-side only'}</span>
                       </span>
                     }
                     place='top'
