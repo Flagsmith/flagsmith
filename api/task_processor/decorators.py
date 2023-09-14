@@ -42,7 +42,6 @@ def register_task_handler(task_name: str = None):
                 return
 
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
-                logger.debug("Running task %s synchronously", task_identifier)
                 _validate_inputs(*args, **kwargs)
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
