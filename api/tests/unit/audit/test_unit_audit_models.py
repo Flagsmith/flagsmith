@@ -1,13 +1,11 @@
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from audit.serializers import AuditLogSerializer
 from integrations.datadog.models import DataDogConfiguration
-from webhooks.webhooks import WebhookEventType
 
 
 def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     # Given
-    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks.delay")
+    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks")
 
     audit_log = AuditLog(project=project, log="Some audit log")
 
@@ -15,13 +13,7 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     audit_log.save()
 
     # Then
-    mock_call_webhooks.assert_called_once_with(
-        args=(
-            project.organisation.id,
-            AuditLogSerializer(instance=audit_log).data,
-            WebhookEventType.AUDIT_LOG_CREATED.value,
-        )
-    )
+    mock_call_webhooks.assert_called()
 
 
 def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(

@@ -68,7 +68,7 @@ def call_environment_webhook_for_feature_state_change(
         else WebhookEventType.FLAG_UPDATED
     )
 
-    call_environment_webhooks(environment.id, data, event_type=event_type.value)
+    call_environment_webhooks(environment, data, event_type=event_type)
 
 
 @register_task_handler()
