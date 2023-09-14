@@ -70,7 +70,8 @@ Flagsmith SDK to your specific needs:
   server
 - `enableRealtimeUpdates` Enable the SDK to receive updates to features in real time while the app is running
 - `defaultFlags` Provide default flags the the SDK to ensure values are availble when no network connection can be made
-- `cacheConfig` Disabled by default, but when enabled will allow Flagsmith to fall back to cached values when no network connection can be made
+- `cacheConfig` Disabled by default, but when enabled will allow Flagsmith to fall back to cached values when no network
+  connection can be made
 - `request / read / writeTimeoutSeconds` Fine-grained control of the HTTP timeouts used inside the Flagsmith SDK
 
 ## Flags
@@ -168,7 +169,7 @@ val defaultFlags = listOf(
 
 // Then pass these during initialisation:
 flagsmith = Flagsmith(
-    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey, 
+    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey,
     defaultFlags = defaultFlags,
     context = context)
 
@@ -177,11 +178,12 @@ flagsmith = Flagsmith(
 ### Cache
 
 By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage),
-and in case of a failed response, fall back on the cached values. The cache can be turned off or on during initialisation:
+and in case of a failed response, fall back on the cached values. The cache can be turned off or on during
+initialisation:
 
 ```kotlin
 flagsmith = Flagsmith(
-    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey, 
+    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey,
     cacheConfig = FlagsmithCacheConfig(enableCache = true)
     context = context)
 ```
@@ -198,7 +200,8 @@ FlagsmithCacheConfig (
 
 ## Override the default base URL
 
-By default, the client uses a default configuration. You can override the configuration as follows. If you're also using realtime flag updates in your hosted environment you'll also need to pass the eventSourceUrl in a similar fashion:
+By default, the client uses a default configuration. You can override the configuration as follows. If you're also using
+realtime flag updates in your hosted environment you'll also need to pass the eventSourceUrl in a similar fashion:
 
 ```kotlin
         flagsmith = Flagsmith(
