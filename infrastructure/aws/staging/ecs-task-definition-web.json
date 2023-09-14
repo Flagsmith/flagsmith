@@ -72,8 +72,8 @@
                     "value": "flagsmith_environments"
                 },
                 {
-                    "name": "FE_E2E_TEST_USER_EMAIL",
-                    "value": "nightwatch@solidstategroup.com"
+                    "name": "ENABLE_FE_E2E",
+                    "value": "True"
                 },
                 {
                     "name": "GITHUB_CLIENT_ID",
