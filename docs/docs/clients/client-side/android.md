@@ -68,6 +68,10 @@ Flagsmith SDK to your specific needs:
 - `enableAnalytics` Enable analytics - default true. Disable this if you'd like to avoid the use of Context
 - `analyticsFlushPeriod` The period in seconds between attempts by the Flagsmith SDK to push analytic events to the
   server
+- `enableRealtimeUpdates` Enable the SDK to receive updates to features in real time while the app is running
+- `defaultFlags` Provide default flags the the SDK to ensure values are availble when no network connection can be made
+- `cacheConfig` Disabled by default, but when enabled will allow Flagsmith to fall back to cached values when no network connection can be made
+- `request / read / writeTimeoutSeconds` Fine-grained control of the HTTP timeouts used inside the Flagsmith SDK
 
 ## Flags
 
@@ -131,13 +135,75 @@ flagsmith.getTraits(identity = "test@test.com") { result ->
 }
 ```
 
+### Providing Default Flags
+
+You can define default flag values when initialising the SDK. This ensures that your application works as intended in
+the event that it cannot receive a response from our API.
+
+```kotlin
+val defaultFlags = listOf(
+    Flag(
+        feature = Feature(
+            id = 345345L,
+            name = "Flag 1",
+            createdDate = "2023‐07‐07T09:07:16Z",
+            description = "Flag 1 description",
+            type = "CONFIG",
+            defaultEnabled = true,
+            initialValue = "true"
+        ), enabled = true, featureStateValue = "value1"
+    ),
+    Flag(
+        feature = Feature(
+            id = 34345L,
+            name = "Flag 2",
+            createdDate = "2023‐07‐07T09:07:16Z",
+            description = "Flag 2 description",
+            type = "CONFIG",
+            defaultEnabled = true,
+            initialValue = "true"
+        ), enabled = true, featureStateValue = "value2"
+    ),
+)
+
+// Then pass these during initialisation:
+flagsmith = Flagsmith(
+    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey, 
+    defaultFlags = defaultFlags,
+    context = context)
+
+```
+
+### Cache
+
+By default, the cache is off. When turned on, Flagsmith will cache all flags returned by the API (to permanent storage),
+and in case of a failed response, fall back on the cached values. The cache can be turned off or on during initialisation:
+
+```kotlin
+flagsmith = Flagsmith(
+    environmentKey = FlagsmithConfigHelper  environmentDevelopmentKey, 
+    cacheConfig = FlagsmithCacheConfig(enableCache = true)
+    context = context)
+```
+
+You can also set a TTL for the cache (in seconds) for finer control:
+
+```kotlin
+FlagsmithCacheConfig (
+    enableCache = true,
+    cacheTTLSeconds = 3600L, // 1 hour
+    val cacheSize = 1024L * 1024L, // 1 MB
+)
+```
+
 ## Override the default base URL
 
-If you'd like to use your own API URL you can override this like so during initialization:
+By default, the client uses a default configuration. You can override the configuration as follows. If you're also using realtime flag updates in your hosted environment you'll also need to pass the eventSourceUrl in a similar fashion:
 
 ```kotlin
         flagsmith = Flagsmith(
             environmentKey = Helper.environmentDevelopmentKey,
             context = context,
-            baseUrl = "https://hostedflagsmith.company.com/")
+            baseUrl = "https://hostedflagsmith.company.com/"),
+            eventSourceUrl = "https://api.hostedflagsmith.company.com/"
 ```
