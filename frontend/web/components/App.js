@@ -19,12 +19,10 @@ import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
-import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
-import Format from 'common/utils/format'
 import OrganisationLimit from './OrganisationLimit'
 
 const App = class extends Component {
@@ -41,10 +39,8 @@ const App = class extends Component {
     asideIsVisible: !isMobile,
     lastEnvironmentId: '',
     lastProjectId: '',
-    maxApiCalls: 50000,
     pin: '',
     showAnnouncement: true,
-    totalApiCalls: 0,
   }
 
   constructor(props, context) {
@@ -74,19 +70,11 @@ const App = class extends Component {
       AccountStore.getOrganisation()?.id &&
       this.state.activeOrganisation !== AccountStore.getOrganisation().id
     ) {
-      getSubscriptionMetadata(getStore(), {
-        id: AccountStore.getOrganisation()?.id,
-      }).then((res) => {
-        this.setState({
-          maxApiCalls: res?.data?.max_api_calls,
-        })
-      })
       getOrganisationUsage(getStore(), {
         organisationId: AccountStore.getOrganisation()?.id,
       }).then((res) => {
         this.setState({
           activeOrganisation: AccountStore.getOrganisation().id,
-          totalApiCalls: res?.data?.totals.total,
         })
       })
     }
@@ -299,17 +287,6 @@ const App = class extends Component {
     )
     const dismissed = flagsmith.getTrait('dismissed_announcement')
     const showBanner = !dismissed || dismissed !== announcementValue.id
-    const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
-      this.state.totalApiCalls,
-      this.state.maxApiCalls,
-      70,
-    ).percentage
-
-    const alertMaxApiCallsText = `You have used ${Format.shortenNumber(
-      this.state.totalApiCalls,
-    )}/${Format.shortenNumber(
-      this.state.maxApiCalls,
-    )} of your allowed requests.`
 
     return (
       <Provider store={getStore()}>

@@ -50,7 +50,6 @@ const Aside = class extends Component {
               ? {}
               : { live_from_after: new Date().toISOString() },
           )
-          AppActions.getEnv(this.props.environmentId)
         }
       })
     }
@@ -78,7 +77,6 @@ const Aside = class extends Component {
               ? {}
               : { live_from_after: new Date().toISOString() },
           )
-          AppActions.getEnv(this.props.environmentId)
         }
       }
     }

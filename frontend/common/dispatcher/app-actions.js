@@ -104,12 +104,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       id,
     })
   },
-  getEnv(environmentId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_ENVIRONMENT,
-      environmentId,
-    })
-  },
   deleteUser(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_USER,

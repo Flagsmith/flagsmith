@@ -84,14 +84,6 @@ const controller = {
       store.saved()
     })
   },
-  getEnv: (envId) => {
-    data.get(`${Project.api}environments/${envId}/`).then((environment) => {
-      environment.total_segment_overrides =
-        environment.total_segment_overrides || 0
-      store.model = Object.assign(store.model, { environment })
-      store.saved()
-    })
-  },
   getProject: (id, cb, force) => {
     if (force) {
       store.loading()
@@ -225,9 +217,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_ENVIRONMENT:
       controller.editEnv(action.env)
-      break
-    case Actions.GET_ENVIRONMENT:
-      controller.getEnv(action.environmentId)
       break
     case Actions.DELETE_ENVIRONMENT:
       controller.deleteEnv(action.env)

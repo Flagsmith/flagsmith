@@ -14,6 +14,8 @@ import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
 import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import { getStore } from 'common/store'
+import { getEnvironment } from 'common/services/useEnvironment'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -425,7 +427,16 @@ class TheComponent extends Component {
 
   constructor(props) {
     super(props)
-    this.state = { segmentEditId: undefined }
+    this.state = { segmentEditId: undefined, totalSegmentOverrides: 0 }
+  }
+  componentDidMount() {
+    getEnvironment(getStore(), {
+      id: this.props.environmentId,
+    }).then((res) => {
+      this.setState({
+        totalSegmentOverrides: res[0].data.total_segment_overrides,
+      })
+    })
   }
 
   addItem = () => {
@@ -539,6 +550,11 @@ class TheComponent extends Component {
         : SegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
+
+    const segmentOverrideLimitAlert = Utils.calculateRemainingLimitsPercentage(
+      this.state.totalSegmentOverrides,
+      ProjectStore.getMaxSegmentOverridesAllowed(),
+    )
 
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&

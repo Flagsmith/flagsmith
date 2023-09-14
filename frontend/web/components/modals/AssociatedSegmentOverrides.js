@@ -10,6 +10,8 @@ import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import { getStore } from 'common/store'
+import { getEnvironment } from 'common/services/useEnvironment'
 
 class TheComponent extends Component {
   state = {
@@ -379,12 +381,35 @@ export default class SegmentOverridesInner extends Component {
 }
 
 class SegmentOverridesInnerAdd extends Component {
-  state = {}
+  state = { totalSegmentOverrides: 0 }
+
+  fetchTotalSegmentOverrides() {
+    const { environmentId } = this.props
+    const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
+
+    if (!env) {
+      return
+    }
+
+    const id = env.api_key
+
+    getEnvironment(getStore(), { id }).then((res) => {
+      this.setState({
+        totalSegmentOverrides: res[1].data.total_segment_overrides,
+      })
+    })
+  }
 
   componentDidMount() {
     ES6Component(this)
+    this.fetchTotalSegmentOverrides()
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.environmentId !== this.props.environmentId) {
+      this.fetchTotalSegmentOverrides()
+    }
+  }
   render() {
     const { environmentId, id, ignoreFlags, projectId } = this.props
     const addValue = (featureId, feature) => {
@@ -415,7 +440,7 @@ class SegmentOverridesInnerAdd extends Component {
       // updateSegments(segmentOverrides.concat([newValue]))
     }
     const segmentOverrideLimitAlert =
-      ProjectStore.getTotalSegmentOverrides >=
+      this.state.totalSegmentOverrides >=
       ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
