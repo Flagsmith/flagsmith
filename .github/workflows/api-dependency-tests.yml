@@ -1,0 +1,84 @@
+name: Run unit tests for Rbac
+
+on:
+  push:
+    branches:
+      - feat/ci/run-rbac-tests #TEMP: change branch to test
+    paths:
+      - api/**
+      - .github/**
+
+defaults:
+  run:
+    working-directory: api
+
+env:
+  FLAGSMITH_RBAC_REVISION: v0.3.1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: API Unit Tests
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.10', '3.11']
+
+    steps:
+      - name: Create analytics database
+        env:
+          PGPASSWORD: postgres
+        run: createdb -h localhost -U postgres -p 5432 analytics
+
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Install Dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-packages
+
+      - name: Checkout rbac package
+        uses: actions/checkout@v3
+        with:
+          repository: flagsmith/flagsmith-rbac
+          token: ${{ secrets.github_access_token }}
+          ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
+          path: ./flagsmith-rbac
+
+      - name: Integrate RBAC module
+        run: mv ./flagsmith-rbac/rbac ./api
+        shell: bash
+
+      - name: integrate rbac tests
+        run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
+        shell: bash
+        working-directory: api
+
+      - name: Check for missing migrations
+        env:
+          DOTENV_OVERRIDE_FILE: .env-ci
+          opts: --no-input --dry-run --check
+        run: make django-make-migrations
+
+      - name: Run Tests
+        env:
+          DOTENV_OVERRIDE_FILE: .env-ci
+        run: make test
