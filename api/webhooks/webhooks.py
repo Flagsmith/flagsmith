@@ -1,6 +1,7 @@
 import enum
 import json
 import typing
+from datetime import datetime, timedelta
 from typing import Type, Union
 
 import backoff
@@ -21,7 +22,6 @@ from webhooks.sample_webhook_data import (
     organisation_webhook_data,
 )
 
-from .models import AbstractBaseExportableWebhookModel
 from .serializers import WebhookSerializer
 
 if typing.TYPE_CHECKING:
@@ -93,17 +93,17 @@ def call_organisation_webhooks(
 
 
 def call_integration_webhook(config, data):
-    return _call_webhook(config, data)
+    return _call_webhook_sync(config, data)
 
 
 def trigger_sample_webhook(
-    webhook: typing.Type[AbstractBaseExportableWebhookModel], webhook_type: WebhookType
+    webhook: WebhookModels, webhook_type: WebhookType
 ) -> requests.models.Response:
     data = WEBHOOK_SAMPLE_DATA.get(webhook_type)
     serializer = WebhookSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    return _call_webhook(webhook, serializer.data)
+    return _call_webhook_sync(webhook, serializer.data)
 
 
 @backoff.on_exception(
@@ -111,10 +111,9 @@ def trigger_sample_webhook(
     requests.exceptions.RequestException,
     max_tries=3,
     jitter=backoff.full_jitter,
-    max_time=2,
 )
-def _call_webhook(
-    webhook: typing.Type[AbstractBaseExportableWebhookModel],
+def _call_webhook_sync(
+    webhook: WebhookModels,
     data: typing.Mapping,
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
@@ -126,28 +125,133 @@ def _call_webhook(
     return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
 
 
+def _call_webhook_async(
+    webhook_id: int,
+    data: typing.Mapping,
+    webhook_type: str,
+    max_tries: int = 3,
+    send_error_email: bool = False,
+    backoff_type: typing.Union[
+        backoff.constant, backoff.expo, backoff.fibo
+    ] = backoff.expo,
+    jitter_type: typing.Union[
+        backoff.random_jitter, backoff.full_jitter
+    ] = backoff.full_jitter,
+) -> None:
+    @register_task_handler()
+    def _setup_call_webhook_task(
+        webhook_id: int,
+        data: typing.Mapping,
+        webhook_type: str,
+        try_count: int = 0,
+        max_tries: int = 3,
+        send_error_email: bool = False,
+        backoff_type: str = backoff.expo.__name__,
+        jitter_type: str = backoff.full_jitter.__name__,
+    ):
+        if try_count >= max_tries:
+            return
+
+        headers = {"content-type": "application/json"}
+        json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
+        if webhook_type == WebhookType.ORGANISATION.value:
+            webhook = OrganisationWebhook.objects.get(id=webhook_id)
+        else:
+            webhook = Webhook.objects.get(id=webhook_id)
+
+        if webhook.secret:
+            signature = sign_payload(json_data, key=webhook.secret)
+            headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
+
+        try:
+            res = requests.post(
+                str(webhook.url), data=json_data, headers=headers, timeout=10
+            )
+        except requests.exceptions.RequestException as exc:
+            # Increase the try count first
+            try_count += 1
+
+            # Don't schedule a task if the try_count will exceed max_tries,
+            # fail the backoff and send a failure email
+            if send_error_email and try_count == max_tries:
+                send_failure_email(
+                    webhook,
+                    data,
+                    webhook_type,
+                    f"N/A ({exc.__class__.__name__})",
+                )
+            else:
+                wait_seconds = _calculate_wait_time(
+                    backoff_type, jitter_type, try_count
+                )
+                _setup_call_webhook_task.delay(
+                    delay_until=datetime.now() + timedelta(seconds=wait_seconds),
+                    args=(
+                        webhook_id,
+                        data,
+                        webhook_type,
+                        try_count,
+                        max_tries,
+                        send_error_email,
+                        backoff_type,
+                        jitter_type,
+                    ),
+                )
+            return
+
+        if res.status_code != 200 and send_error_email:
+            send_failure_email(webhook, data, webhook_type, res.status_code)
+
+    _setup_call_webhook_task.delay(
+        args=(
+            webhook_id,
+            data,
+            webhook_type,
+            0,
+            max_tries,
+            send_error_email,
+            backoff_type.__name__,
+            jitter_type.__name__,
+        )
+    )
+
+
+def _calculate_wait_time(backoff_type, jitter_type, try_count) -> float:
+    """
+    Calculate the wait time for the next retry, based on the current try count
+    and the backoff and jitter types.
+    """
+
+    if backoff.constant.__name__ == backoff_type:
+        backoff_fn = backoff.constant
+    elif backoff.fibo.__name__ == backoff_type:
+        backoff_fn = backoff.fibo
+    else:
+        backoff_fn = backoff.expo
+
+    # Create a backoff generator
+    gen = backoff_fn()
+
+    delay_time = 0
+
+    # Move the generator try_count times forward, as we can't store the generator
+    # state in the task_processor
+    for _ in range(try_count):
+        delay_time = next(gen)
+
+    if backoff.random_jitter.__name__ == jitter_type:
+        delay_time = backoff.random_jitter(delay_time)
+    else:
+        delay_time += backoff.full_jitter(delay_time)
+
+    return delay_time
+
+
 @register_task_handler()
 def call_webhook_email_on_error(
     webhook_id: int, data: typing.Mapping, webhook_type: str
 ):
-    if webhook_type == WebhookType.ORGANISATION.value:
-        webhook = OrganisationWebhook.objects.get(id=webhook_id)
-    else:
-        webhook = Webhook.objects.get(id=webhook_id)
-
-    try:
-        res = _call_webhook(webhook, data)
-    except requests.exceptions.RequestException as exc:
-        send_failure_email(
-            webhook,
-            data,
-            webhook_type,
-            f"N/A ({exc.__class__.__name__})",
-        )
-        return
-
-    if res.status_code != 200:
-        send_failure_email(webhook, data, webhook_type, res.status_code)
+    _call_webhook_async(webhook_id, data, webhook_type, 3, True)
 
 
 def _call_webhooks(
