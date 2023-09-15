@@ -489,6 +489,20 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ]
+    ),
+)
 class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
