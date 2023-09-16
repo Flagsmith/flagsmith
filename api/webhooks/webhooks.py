@@ -126,9 +126,9 @@ def _call_webhook_sync(
 
 
 def _call_webhook_async(
-    webhook_id: int,
+    webhook: WebhookModels,
     data: typing.Mapping,
-    webhook_type: str,
+    webhook_type: WebhookType,
     max_tries: int = 3,
     send_error_email: bool = False,
     backoff_type: typing.Union[
@@ -184,6 +184,7 @@ def _call_webhook_async(
                 wait_seconds = _calculate_wait_time(
                     backoff_type, jitter_type, try_count
                 )
+
                 _setup_call_webhook_task.delay(
                     delay_until=datetime.now() + timedelta(seconds=wait_seconds),
                     args=(
@@ -204,9 +205,9 @@ def _call_webhook_async(
 
     _setup_call_webhook_task.delay(
         args=(
-            webhook_id,
+            webhook.id,
             data,
-            webhook_type,
+            webhook_type.value,
             0,
             max_tries,
             send_error_email,
@@ -251,7 +252,20 @@ def _calculate_wait_time(backoff_type, jitter_type, try_count) -> float:
 def call_webhook_email_on_error(
     webhook_id: int, data: typing.Mapping, webhook_type: str
 ):
-    _call_webhook_async(webhook_id, data, webhook_type, 3, True)
+    if webhook_type == WebhookType.ORGANISATION.value:
+        webhook = OrganisationWebhook.objects.get(id=webhook_id)
+    else:
+        webhook = Webhook.objects.get(id=webhook_id)
+
+    _call_webhook_async(
+        webhook,
+        data,
+        WebhookType.ENVIRONMENT
+        if WebhookType.ENVIRONMENT.value == webhook_type
+        else WebhookType.ORGANISATION,
+        max_tries=3,
+        send_error_email=True,
+    )
 
 
 def _call_webhooks(
