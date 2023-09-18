@@ -9,6 +9,7 @@ export type GroupSelectType = {
   groups: UserGroup[] | UserGroupSummary[] | undefined
   value: number[] | undefined
   isOpen: boolean
+  isSmall: boolean
   onAdd: (id: number, isUser: boolean) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
@@ -17,6 +18,7 @@ const GroupSelect: FC<GroupSelectType> = ({
   disabled,
   groups,
   isOpen,
+  isSmall,
   onAdd,
   onRemove,
   onToggle,
@@ -30,12 +32,15 @@ const GroupSelect: FC<GroupSelectType> = ({
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
+  const modalClassName = isSmall
+    ? 'sm-inline-modal--tags'
+    : 'inline-modal--tags'
   return (
     <InlineModal
       title='Groups'
       isOpen={isOpen}
       onClose={onToggle}
-      className='inline-modal--tags'
+      className={modalClassName}
     >
       <Input
         disabled={disabled}
@@ -51,6 +56,7 @@ const GroupSelect: FC<GroupSelectType> = ({
               <Row
                 onClick={() => {
                   const isRemove = value?.includes(v.id)
+                  console.log('DEBUG: isRemove:', isRemove)
                   if (isRemove && onRemove) {
                     onRemove(v.id, false)
                   } else if (!isRemove && onAdd) {

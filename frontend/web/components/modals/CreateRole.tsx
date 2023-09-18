@@ -19,27 +19,70 @@ import {
 import { EditPermissionsModal } from 'components/EditPermissions'
 import OrganisationStore from 'common/stores/organisation-store'
 import ProjectFilter from 'components/ProjectFilter'
-import { Environment } from 'common/types/responses'
+import { Environment, User } from 'common/types/responses'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import UserSelect from 'components/UserSelect'
+import MyGroupsSelect from 'components/MyGroupsSelect'
 
 type CreateRoleType = {
   organisationId?: string
   role: Role
   onComplete: () => void
   isEdit?: boolean
+  users: User[]
+  groups: Array
 }
 const CreateRole: FC<CreateRoleType> = ({
+  groups,
   isEdit,
   onComplete,
   organisationId,
   role,
+  users,
 }) => {
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
+  const [userGroupTab, setUserGroupTab] = useState<number>(0)
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
+  const [showUserSelect, setShowUserSelect] = useState<boolean>(false)
+  const [showGroupSelect, setShowGroupSelect] = useState<boolean>(false)
+  const [userSelected, setUserSelected] = useState<Array>([])
+  const [groupSelected, setGroupSelected] = useState<Array>([])
 
   const projectData = OrganisationStore.getProjects()
+
+  const addUserOrGroup = (id: string, isUser = true) => {
+    if (isUser) {
+      setUserSelected((userSelected || []).concat({ user: id }))
+      console.log('DEBUG: add userSelected:', userSelected)
+    } else {
+      setGroupSelected((groupSelected || []).concat({ group: id }))
+      console.log('DEBUG: add groupSelected:', groupSelected)
+    }
+  }
+
+  const removeUserOrGroup = (id: string, isUser = true) => {
+    if (isUser) {
+      setUserSelected((userSelected || []).filter((v) => v.user !== id))
+    } else {
+      console.log('DEBUG: remove: id:', id, groupSelected)
+      setUserSelected((groupSelected || []).filter((v) => v.group !== id))
+    }
+  }
+
+  const getUsers = (users = [], selectedRoles) => {
+    return users.filter((v) => selectedRoles.find((a) => a.user === v.id))
+  }
+
+  const getGroup = (groups = [], groupSelected) => {
+    console.log('DEBUG: groups:', groups, groupSelected)
+
+    return groups.filter((v) => groupSelected.find((a) => a.role === v.id))
+  }
+
+  const usersAdded = getUsers(users, userSelected || [])
+  const groupsAdded = getGroup(groups, groupSelected || [])
 
   useEffect(() => {
     if (project) {
@@ -214,6 +257,101 @@ const CreateRole: FC<CreateRoleType> = ({
       <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
         <TabItem tabLabel={<Row className='justify-content-center'>Role</Row>}>
           <Tab1 ref={ref} />
+        </TabItem>
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Members</Row>}
+        >
+          <h5 className='mt-4 title'>Assign Roles</h5>
+          <Tabs
+            value={userGroupTab}
+            onChange={setUserGroupTab}
+            theme='pill m-0'
+          >
+            <TabItem
+              tabLabel={<Row className='justify-content-center'>Users</Row>}
+            >
+              <div>
+                <h5 style={{ width: 110 }} className='mt-4'>
+                  Users List:
+                </h5>
+                <Row>
+                  <Button theme='text' onClick={() => setShowUserSelect(true)}>
+                    Assign role to user
+                  </Button>
+                  {showUserSelect && (
+                    <UserSelect
+                      users={users}
+                      value={usersAdded && usersAdded.map((v) => v.id)}
+                      onAdd={(id) => addUserOrGroup(id)}
+                      onRemove={(id) => removeUserOrGroup(id)}
+                      isOpen={showUserSelect}
+                      onToggle={() => setShowUserSelect(!showUserSelect)}
+                      isSmall
+                    />
+                  )}
+                </Row>
+                {usersAdded.length !== 0 &&
+                  usersAdded.map((u) => (
+                    <Row
+                      key={u.id}
+                      onClick={() => removeUserOrGroup(u.id)}
+                      className='chip'
+                      style={{
+                        justifyContent: 'space-between',
+                        marginBottom: 4,
+                        marginTop: 4,
+                      }}
+                    >
+                      <span className='font-weight-bold'>
+                        {u.first_name} {u.last_name}
+                      </span>
+                      <span className='chip-icon ion ion-ios-close' />
+                    </Row>
+                  ))}
+              </div>
+            </TabItem>
+            <TabItem
+              tabLabel={<Row className='justify-content-center'>Groups</Row>}
+            >
+              <div>
+                <h5 style={{ width: 120 }} className='mt-4'>
+                  Groups List:
+                </h5>
+                <Row>
+                  <Button theme='text' onClick={() => setShowGroupSelect(true)}>
+                    Assign role to group
+                  </Button>
+                  {showGroupSelect && (
+                    <MyGroupsSelect
+                      orgId={organisationId}
+                      value={groupsAdded && groupsAdded.map((v) => v.group)}
+                      onAdd={(id) => addUserOrGroup(id, false)}
+                      onRemove={(id) => removeUserOrGroup(id, false)}
+                      isOpen={showGroupSelect}
+                      onToggle={() => setShowGroupSelect(!showGroupSelect)}
+                      isSmall
+                    />
+                  )}
+                </Row>
+                {groupsAdded.length !== 0 &&
+                  groupsAdded.map((g) => (
+                    <Row
+                      key={g.id}
+                      onClick={() => removeUserOrGroup(g.id, false)}
+                      className='chip'
+                      style={{
+                        justifyContent: 'space-between',
+                        marginBottom: 4,
+                        marginTop: 4,
+                      }}
+                    >
+                      <span className='font-weight-bold'>{g.id}</span>
+                      <span className='chip-icon ion ion-ios-close' />
+                    </Row>
+                  ))}
+              </div>
+            </TabItem>
+          </Tabs>
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Organisation</Row>}

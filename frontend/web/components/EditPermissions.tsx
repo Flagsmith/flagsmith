@@ -530,7 +530,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       setRolesSelected((rolesSelected || []).filter((v) => v.role !== id))
     }
 
-    const getRoles = (roles, selectedRoles) => {
+    const getRoles = (roles = [], selectedRoles) => {
       return roles.filter((v) => selectedRoles.find((a) => a.role === v.id))
     }
 
@@ -647,7 +647,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             </div>
           )}
         </div>
-        {level === 'organisation' && (
+        {roles && level === 'organisation' && (
           <FormGroup className='px-4'>
             <InputGroup
               component={
@@ -681,7 +681,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               //   })
               // }
               type='text'
-              title='Assignees'
+              title='Assign roles'
               tooltip='Assigns what role the user will have/ assign what role the group will have'
               inputProps={{
                 className: 'full-width',
@@ -724,6 +724,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
 
 export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal)
 
+const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
   const {
     id,
@@ -734,6 +735,8 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     parentLevel,
     parentSettingsLink,
     permissions,
+    roleTabDesc,
+    roleTabTitle,
     router,
     tabClassName,
   } = props
@@ -774,6 +777,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       'p-0 side-modal',
     )
   }
+  const hasRbacPermission = Utils.getPlansPermission('RBAC')
+  const roles = [
+    {
+        "id": 24,
+        "description": "desc",
+        "name": "role 1",
+        "organisation": 6
+    },
+    {
+        "id": 25,
+        "description": "",
+        "name": "role 2",
+        "organisation": 6
+    }
+]
 
   return (
     <div className='mt-4'>
@@ -934,6 +952,92 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
             </div>
           </FormGroup>
         </TabItem>
+        {Utils.getFlagsmithHasFeature('show_role_management') && (
+          <TabItem tabLabel='Roles'>
+            {hasRbacPermission ? (
+              <>
+                <Row space className='mt-4'>
+                  <h5 className='m-b-0'>{roleTabTitle}</h5>
+                </Row>
+                <p className='fs-small lh-sm'>{roleTabDesc}</p>
+                <PanelSearch
+                  id='org-members-list'
+                  title={'Roles'}
+                  className='no-pad'
+                  items={roles}
+                  itemHeight={65}
+                  header={
+                    <Row className='table-header px-3'>
+                      <div
+                        style={{
+                          width: rolesWidths[0],
+                        }}
+                      >
+                        Roles
+                      </div>
+                      <div
+                        style={{
+                          width: rolesWidths[1],
+                        }}
+                      >
+                        Description
+                      </div>
+                    </Row>
+                  }
+                  renderRow={(role) => (
+                    <Row
+                      className='list-item clickable cursor-pointer'
+                      key={role.id}
+                    >
+                      <Row
+                        // onClick={() => {
+                        //   this.editRole(role)
+                        // }}
+                        className='table-column px-3'
+                        style={{
+                          width: rolesWidths[0],
+                        }}
+                      >
+                        {role.name}
+                      </Row>
+                      <Row
+                        className='table-column px-3'
+                        // onClick={() => {
+                        //   this.editRole(role)
+                        // }}
+                        style={{
+                          width: rolesWidths[1],
+                        }}
+                      >
+                        {role.description}
+                      </Row>
+                    </Row>
+                  )}
+                  renderNoResults={
+                    <Panel
+                      title={'Roles with project permissions'}
+                      className='no-pad'
+                    >
+                      <div className='search-list'>
+                        <Row className='list-item p-3 text-muted'>
+                          You currently have no roles with project permissions.
+                        </Row>
+                      </div>
+                    </Panel>
+                  }
+                  isLoading={false}
+                />
+              </>
+            ) : (
+              <div className='mt-4'>
+                <InfoMessage>
+                  To use <strong>role</strong> features you have to upgrade your
+                  plan.
+                </InfoMessage>
+              </div>
+            )}
+          </TabItem>
+        )}
       </Tabs>
     </div>
   )

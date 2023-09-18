@@ -461,6 +461,9 @@ const ProjectSettingsPage = class extends Component {
                         tabClassName='flat-panel'
                         id={this.props.match.params.projectId}
                         level='project'
+                        roleTabTitle='Project Roles'
+                        roleTabDesc='Edit roles with project permissions.'
+                        role
                       />
                     </TabItem>
                   </Tabs>

@@ -7,6 +7,7 @@ type MyGroupsSelectType = GroupSelectType & {
 }
 
 const MyGroupsSelect: FC<MyGroupsSelectType> = ({ orgId, ...props }) => {
+  console.log('DEBUG: orgId:', orgId)
   const { data } = useGetMyGroupsQuery({ orgId, page_size: 1 })
   return <GroupSelect {...props} groups={data?.results} />
 }

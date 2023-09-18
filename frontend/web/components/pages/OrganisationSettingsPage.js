@@ -48,6 +48,7 @@ const OrganisationSettingsPage = class extends Component {
 
   componentDidMount = () => {
     AppActions.getRoles(AccountStore.getOrganisation().id)
+    AppActions.getGroups(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
     if (
@@ -295,16 +296,19 @@ const OrganisationSettingsPage = class extends Component {
       'p-0',
     )
   }
-  editRole = (role) => {
+  editRole = (role, users, groups) => {
     openModal(
       'Edit Role and Permissions',
       <CreateRole
+        organisationId={role.organisation}
         isEdit
         role={role}
         onComplete={() => {
           AppActions.getRoles(role.organisation)
           toast('Role updated')
         }}
+        users={users}
+        groups={groups}
       />,
       'side-modal',
     )
@@ -330,6 +334,7 @@ const OrganisationSettingsPage = class extends Component {
               <OrganisationProvider>
                 {({
                   error,
+                  groups,
                   invalidateInviteLink,
                   inviteLinks,
                   invites,
@@ -1309,6 +1314,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     onClick={() =>
                                                       this.createRole(
                                                         organisation.id,
+                                                        users,
                                                       )
                                                     }
                                                     type='button'
@@ -1356,7 +1362,11 @@ const OrganisationSettingsPage = class extends Component {
                                                     >
                                                       <Row
                                                         onClick={() => {
-                                                          this.editRole(role)
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
                                                         }}
                                                         className='table-column px-3'
                                                         style={{
@@ -1368,7 +1378,11 @@ const OrganisationSettingsPage = class extends Component {
                                                       <Row
                                                         className='table-column px-3'
                                                         onClick={() => {
-                                                          this.editRole(role)
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
                                                         }}
                                                         style={{
                                                           width: rolesWidths[1],

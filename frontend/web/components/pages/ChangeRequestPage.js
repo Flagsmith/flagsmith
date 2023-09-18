@@ -27,7 +27,7 @@ const ChangeRequestsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
-
+  // TODO: review this function users?.filter((v) => approvals?.includes(v.group))
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.group))
 

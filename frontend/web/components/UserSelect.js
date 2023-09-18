@@ -16,12 +16,16 @@ class TheComponent extends Component {
         return `${v.first_name} ${v.last_name}`.toLowerCase().includes(search)
       })
     const value = this.props.value || []
+    const modalClassName = this.props.isSmall
+      ? 'sm-inline-modal--tags'
+      : 'inline-modal--tags'
+
     return (
       <InlineModal
         title='Assignees'
         isOpen={this.props.isOpen}
         onClose={this.props.onToggle}
-        className='inline-modal--tags'
+        className={modalClassName}
       >
         <Input
           disabled={this.props.disabled}
