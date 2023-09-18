@@ -277,6 +277,17 @@ const PaymentModal = class extends Component {
                                 <p>Online Ts and Cs</p>
                               </li>
                             </ul>
+                            <a
+                              onClick={() => {
+                                closeModal()
+                                Utils.openChat()
+                              }}
+                              href='#'
+                              className='pricing-cta blue'
+                              style={{ width: '100%' }}
+                            >
+                              Request more API calls
+                            </a>
                           </div>
                         </div>
                       </div>

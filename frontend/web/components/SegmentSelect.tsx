@@ -9,6 +9,7 @@ import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
 type SegmentSelectType = {
+  disabled: boolean
   projectId: string
   'data-test'?: string
   placeholder?: string
@@ -41,6 +42,7 @@ const SegmentSelect: FC<SegmentSelectType> = ({
       data-test={rest['data-test']}
       placeholder={rest.placeholder}
       value={rest.value}
+      isDisabled={rest.disabled}
       onChange={rest.onChange}
       onInputChange={(e: any) => {
         searchItems(Utils.safeParseEventValue(e))

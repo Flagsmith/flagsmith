@@ -4,3 +4,4 @@
 *.handlebars
 *.css
 .bablerc
+**/CHANGELOG.md

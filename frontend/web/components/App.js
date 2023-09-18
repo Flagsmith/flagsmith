@@ -20,9 +20,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
+import OrganisationLimit from './OrganisationLimit'
 
 const App = class extends Component {
   static propTypes = {
@@ -40,7 +41,6 @@ const App = class extends Component {
     lastProjectId: '',
     pin: '',
     showAnnouncement: true,
-    totalApiCalls: 0,
   }
 
   constructor(props, context) {
@@ -75,7 +75,6 @@ const App = class extends Component {
       }).then((res) => {
         this.setState({
           activeOrganisation: AccountStore.getOrganisation().id,
-          totalApiCalls: res?.data?.totals.total,
         })
       })
     }
@@ -484,6 +483,11 @@ const App = class extends Component {
                         </div>
                       ) : (
                         <Fragment>
+                          {user && (
+                            <OrganisationLimit
+                              id={AccountStore.getOrganisation()?.id}
+                            />
+                          )}
                           {user &&
                             showBanner &&
                             Utils.getFlagsmithHasFeature('announcement') &&

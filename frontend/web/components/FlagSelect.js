@@ -64,6 +64,7 @@ class FlagSelect extends Component {
             ? options.find((v) => v.value === this.props.value)
             : null
         }
+        isDisabled={this.props.disabled}
         onInputChange={this.search}
         placeholder={this.props.placeholder}
         onChange={(v) => this.props.onChange(v.value, v.flag)}

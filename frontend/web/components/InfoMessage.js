@@ -33,7 +33,9 @@ export default class InfoMessage extends PureComponent {
         )}
         {this.props.isClosable && (
           <a onClick={this.props.close} className='mt-n2 mr-n2 pl-2'>
-            <span className={`icon ion-md-close ${this.props.infoMessageClass} close-btn`}/>
+            <span
+              className={`icon ion-md-close ${this.props.infoMessageClass} close-btn`}
+            />
           </a>
         )}
       </div>
