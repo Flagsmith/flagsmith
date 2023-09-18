@@ -111,7 +111,8 @@ const FeaturesPage = class extends Component {
     if (!error?.name && !error?.initial_value) {
       // Could not determine field level error, show generic toast.
       toast(
-        'We could not create this feature, please check the name is not in use.',
+        error.project ||
+          'We could not create this feature, please check the name is not in use.',
         'danger',
       )
     }
@@ -161,8 +162,20 @@ const FeaturesPage = class extends Component {
         className='app-container container'
       >
         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-          {({ environmentFlags, projectFlags }, { removeFlag, toggleFlag }) => {
+          {(
+            {
+              environmentFlags,
+              maxFeaturesAllowed,
+              projectFlags,
+              totalFeatures,
+            },
+            { removeFlag, toggleFlag },
+          ) => {
             const isLoading = !FeatureListStore.hasLoaded
+            const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
+              totalFeatures,
+              maxFeaturesAllowed,
+            )
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -178,6 +191,11 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
+                        {featureLimitAlert.percentage &&
+                          Utils.displayLimitAlert(
+                            'features',
+                            featureLimitAlert.percentage,
+                          )}
                         <PageTitle
                           title={'Features'}
                           cta={
@@ -186,7 +204,11 @@ const FeaturesPage = class extends Component {
                                 ? this.createFeaturePermission((perm) => (
                                     <div className='text-right'>
                                       <Button
-                                        disabled={!perm || readOnly}
+                                        disabled={
+                                          !perm ||
+                                          readOnly ||
+                                          featureLimitAlert.percentage >= 100
+                                        }
                                         data-test='show-create-feature-btn'
                                         id='show-create-feature-btn'
                                         onClick={this.newFlag}

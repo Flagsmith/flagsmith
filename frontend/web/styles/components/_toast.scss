@@ -1,16 +1,16 @@
-@import "../variables";
+@import '../variables';
 
 #toast {
-	display: inline-block;
-	position: fixed;
-	right: 15px;
-	top: 15px;
-	z-index: 1000000000;
+  display: inline-block;
+  position: fixed;
+  right: 15px;
+  top: 15px;
+  z-index: 1000000000;
 
-	button{
-		box-shadow: none;
-		color:black
-	}
+  button {
+    box-shadow: none;
+    color: black;
+  }
 }
 
 .toast-message {
