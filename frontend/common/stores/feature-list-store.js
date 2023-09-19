@@ -66,7 +66,7 @@ const controller = {
           (flag.multivariate_options || []).map((v) =>
             data
               .post(
-                `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`,
+                `${Project.api}projects/${projectId}/features/${res.id}/mv-options/`,
                 {
                   ...v,
                   feature: res.id,

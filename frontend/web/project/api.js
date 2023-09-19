@@ -40,7 +40,7 @@ global.API = {
       })
   },
   alias(id, user = {}) {
-    if (id === Project.excludeAnalytics) return
+    if (Project.excludeAnalytics?.includes(id)) return
     if (Project.mixpanel) {
       mixpanel.alias(id)
     }
@@ -114,7 +114,7 @@ global.API = {
     }
   },
   identify(id, user = {}) {
-    if (id === Project.excludeAnalytics) return
+    if (Project.excludeAnalytics?.includes(id)) return
     try {
       const orgs =
         (user &&
@@ -205,7 +205,7 @@ global.API = {
     })
   },
   register(email, firstName, lastName) {
-    if (email === Project.excludeAnalytics) return
+    if (Project.excludeAnalytics?.includes(email)) return
     if (Project.mixpanel) {
       mixpanel.register({
         'Email': email,

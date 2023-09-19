@@ -125,5 +125,8 @@ export type Req = {
   updateRolePermissionGroup: { id: string }
   deleteRolePermissionGroup: { id: string }
   createRolePermissionGroup: { organisation_id: string; role_id: string }
+  getGetSubscriptionMetadata: { id: string }
+  getEnvironment: { id: string }
+  getSubscriptionMetadata: { id: string }
   // END OF TYPES
 }

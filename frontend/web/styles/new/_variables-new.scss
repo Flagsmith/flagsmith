@@ -25,6 +25,7 @@ $info-alfa-8: rgba(10, 173, 223, 0.08);
 $info-alfa-24: rgba(10, 173, 223, 0.24);
 $danger-alfa-8: rgba(255, 66, 75, 0.08);
 $danger-alfa-16: rgba(255, 66, 75, 0.16);
+$warning-alfa-8: rgba(255, 159, 0, 0.08);
 $primary-alfa-8: rgba(149, 108, 255, 0.08);
 $primary-alfa-16: rgba(149, 108, 255, 0.16);
 $primary-alfa-24: rgba(149, 108, 255, 0.24);
@@ -242,11 +243,13 @@ $alert-info-bg: $info-alfa-8;
 $alert-info-border-color: $info;
 $alert-danger-bg: $danger-alfa-8;
 $alert-danger-border-color: $danger;
-$alert-color: $body-text;
+$alert-warning-border-color: $warning;
+$alert-color: $text-icon-grey;
 $alert-font-weight: 500;
 $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
 $alert-color-dark: $white-alpha-48;
+$alert-announcement-close-btn: $text-icon-light-grey;
 
 //Tabs
 $tab-btn-line-height: 42px;

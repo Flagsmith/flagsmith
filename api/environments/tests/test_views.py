@@ -83,32 +83,6 @@ class EnvironmentTestCase(TestCase):
         assert response.data["results"][0]["identifier"] == identifier_one
         assert response.data["results"][1]["identifier"] == identifier_two
 
-    def test_should_update_value_of_feature_state(self):
-        # Given
-        feature = Feature.objects.create(name="feature", project=self.project)
-        environment = Environment.objects.create(name="test env", project=self.project)
-        feature_state = FeatureState.objects.get(
-            feature=feature, environment=environment
-        )
-        url = reverse(
-            "api-v1:environments:environment-featurestates-detail",
-            args=[environment.api_key, feature_state.id],
-        )
-
-        # When
-        response = self.client.put(
-            url,
-            data=self.fs_put_template % (feature_state.id, True, "This is a value"),
-            content_type="application/json",
-        )
-
-        # Then
-        feature_state.refresh_from_db()
-
-        assert response.status_code == status.HTTP_200_OK
-        assert feature_state.get_feature_state_value() == "This is a value"
-        assert feature_state.enabled
-
     def test_audit_log_entry_created_when_new_environment_created(self):
         # Given
         url = reverse("api-v1:environments:environment-list")

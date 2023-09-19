@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { withRouter } from 'react-router-dom'
 import amplitude from 'amplitude-js'
@@ -20,8 +20,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
+import InfoMessage from './InfoMessage'
+import OrganisationLimit from './OrganisationLimit'
 
 const App = class extends Component {
   static propTypes = {
@@ -38,7 +40,7 @@ const App = class extends Component {
     lastEnvironmentId: '',
     lastProjectId: '',
     pin: '',
-    totalApiCalls: 0,
+    showAnnouncement: true,
   }
 
   constructor(props, context) {
@@ -73,7 +75,6 @@ const App = class extends Component {
       }).then((res) => {
         this.setState({
           activeOrganisation: AccountStore.getOrganisation().id,
-          totalApiCalls: res?.data?.totals.total,
         })
       })
     }
@@ -210,6 +211,11 @@ const App = class extends Component {
     this.context.router.history.replace('/')
   }
 
+  closeAnnouncement = (announcementId) => {
+    this.setState({ showAnnouncement: false })
+    flagsmith.setTrait(`dismissed_announcement`, announcementId)
+  }
+
   render() {
     if (
       Utils.getFlagsmithHasFeature('dark_mode') &&
@@ -276,6 +282,11 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
+    const announcementValue = JSON.parse(
+      Utils.getFlagsmithValue('announcement'),
+    )
+    const dismissed = flagsmith.getTrait('dismissed_announcement')
+    const showBanner = !dismissed || dismissed !== announcementValue.id
 
     return (
       <Provider store={getStore()}>
@@ -471,7 +482,35 @@ const App = class extends Component {
                           <Loader />
                         </div>
                       ) : (
-                        this.props.children
+                        <Fragment>
+                          {user && (
+                            <OrganisationLimit
+                              id={AccountStore.getOrganisation()?.id}
+                            />
+                          )}
+                          {user &&
+                            showBanner &&
+                            Utils.getFlagsmithHasFeature('announcement') &&
+                            this.state.showAnnouncement && (
+                              <Row>
+                                <InfoMessage
+                                  title={announcementValue.title}
+                                  infoMessageClass={'announcement'}
+                                  isClosable={announcementValue.isClosable}
+                                  close={() =>
+                                    this.closeAnnouncement(announcementValue.id)
+                                  }
+                                  buttonText={announcementValue.buttonText}
+                                  url={announcementValue.url}
+                                >
+                                  <div>
+                                    <div>{announcementValue.description}</div>
+                                  </div>
+                                </InfoMessage>
+                              </Row>
+                            )}
+                          {this.props.children}
+                        </Fragment>
                       )}
                     </div>
                   )}

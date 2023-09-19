@@ -3,6 +3,7 @@ import InlineModal from './InlineModal'
 import { UserGroup, UserGroupSummary } from 'common/types/responses'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
+import Icon from './Icon'
 
 export type GroupSelectType = {
   disabled: boolean
@@ -53,7 +54,7 @@ const GroupSelect: FC<GroupSelectType> = ({
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {grouplist &&
           grouplist.map((v) => (
-            <div className='list-item clickable' key={v.id}>
+            <div className='assignees-list-item clickable' key={v.id}>
               <Row
                 onClick={() => {
                   const isRemove = value?.includes(v.id)
@@ -71,10 +72,9 @@ const GroupSelect: FC<GroupSelectType> = ({
                   {v.name}
                 </Flex>
                 {value?.includes(v.id) && (
-                  <span
-                    style={{ fontSize: 24 }}
-                    className='ion `text-primary` ion-ios-checkmark'
-                  />
+                  <span className='mr-1'>
+                    <Icon name='checkmark' fill='#6837FC' />
+                  </span>
                 )}
               </Row>
             </div>

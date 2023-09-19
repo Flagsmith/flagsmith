@@ -38,7 +38,7 @@ addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 
 [tool.poetry]
 name = "flagsmith-api"
-version = "2.67.0"
+version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = ["Flagsmith <support@flagsmith.com>"]
 readme = "readme.md"
@@ -79,7 +79,7 @@ environs = "~9.2.0"
 django-lifecycle = "~1.0.0"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^4.0.1"
+flagsmith-flag-engine = "^4.1.0"
 boto3 = "~1.26.75"
 slack-sdk = "~3.9.0"
 asgiref = "~3.5.0"
@@ -101,6 +101,7 @@ django-ses = "~3.5.0"
 django-axes = "~5.32.0"
 pydantic = "~1.10.9"
 pyngo = "~1.6.0"
+flagsmith = "^3.4.0"
 
 [tool.poetry.group.auth-controller.dependencies]
 django-multiselectfield = "~0.1.12"

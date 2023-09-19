@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 from core.constants import STRING
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from audit.models import AuditLog
@@ -220,6 +220,17 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert environment is None
+
+    @override_settings(
+        CACHE_BAD_ENVIRONMENTS_SECONDS=60, CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES=1
+    )
+    def test_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(self):
+        # Given
+        api_key = "bad-key"
+
+        # When
+        with self.assertNumQueries(1):
+            [Environment.get_from_cache(api_key) for _ in range(10)]
 
 
 def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(

@@ -12,7 +12,7 @@ import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 
-export const width = [200, 65, 48, 75]
+export const width = [200, 65, 48, 75, 450]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -192,7 +192,7 @@ class TheComponent extends Component {
           <Row>
             <Flex>
               <Row
-                className='font-weight-medium mb-1'
+                className='font-weight-medium'
                 style={{
                   alignItems: 'start',
                   lineHeight: 1,
@@ -201,8 +201,9 @@ class TheComponent extends Component {
                 }}
               >
                 <span className='me-2'>
-                  {description ? (
+                  {created_date ? (
                     <Tooltip
+                      place='right'
                       title={
                         <span>
                           {name}
@@ -211,7 +212,9 @@ class TheComponent extends Component {
                         </span>
                       }
                     >
-                      {description}
+                      {`Created ${moment(created_date).format(
+                        'Do MMM YYYY HH:mma',
+                      )}`}
                     </Tooltip>
                   ) : (
                     name
@@ -254,15 +257,37 @@ class TheComponent extends Component {
                     }`}
                   </Tooltip>
                 )}
+                {projectFlag.is_server_key_only && (
+                  <Tooltip
+                    title={
+                      <span
+                        className='chip me-2 chip--xs bg-primary text-white'
+                        style={{ border: 'none' }}
+                      >
+                        <span>{'Server-side only'}</span>
+                      </span>
+                    }
+                    place='top'
+                  >
+                    {
+                      'Prevent this feature from being accessed with client-side SDKs.'
+                    }
+                  </Tooltip>
+                )}
                 <TagValues
                   inline
                   projectId={`${projectId}`}
                   value={projectFlag.tags}
                 />
               </Row>
-              <div className='list-item-subtitle'>
-                Created {moment(created_date).format('Do MMM YYYY HH:mma')}
-              </div>
+              {description && (
+                <div
+                  className='list-item-subtitle mt-1'
+                  style={{ lineHeight: '20px', width: width[4] }}
+                >
+                  {description}
+                </div>
+              )}
             </Flex>
           </Row>
         </Flex>
