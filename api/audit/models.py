@@ -14,10 +14,6 @@ from django_lifecycle import (
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
-from sse import (
-    send_environment_update_message_for_environment,
-    send_environment_update_message_for_project,
-)
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
@@ -113,11 +109,6 @@ class AuditLog(LifecycleModel):
         when="environment_document_updated",
         is_now=True,
     )
-    def process_environment_update(self):
-        self.update_environments_updated_at()
-        self.send_environments_to_dynamodb()
-        self.send_environment_update_message()
-
     def update_environments_updated_at(self):
         environments_filter = Q()
         if self.environment_id:
@@ -128,20 +119,6 @@ class AuditLog(LifecycleModel):
         self.project.environments.filter(environments_filter).update(
             updated_at=self.created_date
         )
+        from .tasks import process_environment_update
 
-    def send_environments_to_dynamodb(self):
-        from environments.models import Environment
-
-        Environment.write_environments_to_dynamodb(
-            environment_id=self.environment_id, project_id=self.project_id
-        )
-
-    def send_environment_update_message(self):
-        if self.environment_id:
-            environment = self.environment
-            # Because we updated the environment `updated_at` in the previous hook in bulk
-            # update it manually here to save a `refresh_from_db` call
-            environment.updated_at = self.created_date
-            send_environment_update_message_for_environment(environment)
-        else:
-            send_environment_update_message_for_project(self.project)
+        process_environment_update.delay(args=(self.id))

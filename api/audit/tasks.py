@@ -8,6 +8,11 @@ from audit.constants import (
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
+from environments.models import Environment
+from sse import (
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
+)
 from task_processor.decorators import register_task_handler
 
 logger = logging.getLogger(__name__)
@@ -163,3 +168,19 @@ def create_segment_priorities_changed_audit_log(
         related_object_type=RelatedObjectType.FEATURE.name,
         master_api_key_id=master_api_key_id,
     )
+
+
+@register_task_handler()
+def process_environment_update(audit_log_id: int):
+    audit_log = AuditLog.objects.get(id=audit_log_id)
+
+    # Send environment document to dynamodb
+    Environment.write_environments_to_dynamodb(
+        environment_id=audit_log.environment_id, project_id=audit_log.project_id
+    )
+
+    # send environment update message
+    if audit_log.environment_id:
+        send_environment_update_message_for_environment(audit_log.environment)
+    else:
+        send_environment_update_message_for_project(audit_log.project)
