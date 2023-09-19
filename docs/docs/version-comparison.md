@@ -14,7 +14,7 @@ Open Source, SaaS hosted and Enterprise versions:
 - The Open Source version is limited to a single Project.
 - The SaaS and Enterprise versions have [Change Requests and Flag Scheduling](advanced-use/change-requests.md).
 - The SaaS and Enterprise versions have [Role-Based Access Control](/system-administration/rbac).
-- The SaaS and Enterprise versions have [Audit Logs](/system-administration/security#audit-logs).
+- The SaaS and Enterprise versions have [Audit Logs](/system-administration/audit-logs).
 - The SaaS and Enterprise versions have additional Authentication Providers:
   - [Okta](/deployment/configuration/authentication/okta)
   - [LDAP](/deployment/configuration/authentication/ldap)

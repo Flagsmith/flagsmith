@@ -2,16 +2,6 @@
 title: System Administration
 ---
 
-## Audit Logs
-
-Every action taken within the Flagsmith administration application is tracked and logged. This allows you to easily
-retrace the events and values that flags, identities and segments have taken over time.
-
-You can view the Audit Log within the Flagsmith application, and filter it in order to find the information you are
-after.
-
-You can also stream your Audit Logs into your own infrastructure using [Audit Log Webhooks](#audit-log-webhooks).
-
 ## Audit Log Webhooks
 
 You can use Audit Log Webhooks to stream your Organisation's Audit Log into your own infrastructure. This can be useful
