@@ -48,6 +48,7 @@ const GroupSelect: FC<GroupSelectType> = ({
         onChange={(e: InputEvent) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
         placeholder='Type or choose a Group'
+        search
       />
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {grouplist &&
@@ -56,7 +57,6 @@ const GroupSelect: FC<GroupSelectType> = ({
               <Row
                 onClick={() => {
                   const isRemove = value?.includes(v.id)
-                  console.log('DEBUG: isRemove:', isRemove)
                   if (isRemove && onRemove) {
                     onRemove(v.id, false)
                   } else if (!isRemove && onAdd) {

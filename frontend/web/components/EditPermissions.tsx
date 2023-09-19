@@ -41,6 +41,16 @@ import {
   useUpdateRoleProjectPermissionsMutation,
 } from 'common/services/useRolePermission'
 
+import {
+  useCreateRolesPermissionUsersMutation,
+  useDeleteRolesPermissionUsersMutation,
+} from 'common/services/useRolesUser'
+
+import {
+  useCreateRolePermissionGroupMutation,
+  useDeleteRolePermissionGroupMutation,
+} from 'common/services/useRolePermissionGroup'
+
 import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
 const Project = require('common/project')
@@ -149,6 +159,19 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
       return entityPermissions
     }
+    const [
+      createRolePermissionUser,
+      { data: usersData, isSuccess: userAdded },
+    ] = useCreateRolesPermissionUsersMutation()
+
+    const [deleteRolePermissionUser] = useDeleteRolesPermissionUsersMutation()
+
+    const [
+      createRolePermissionGroup,
+      { data: groupsData, isSuccess: groupAdded },
+    ] = useCreateRolePermissionGroupMutation()
+
+    const [deleteRolePermissionGroup] = useDeleteRolePermissionGroupMutation()
 
     const [
       updateRoleEnvironmentPermissions,
@@ -521,17 +544,94 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         admin: !entityPermissions.admin,
       })
     }
-
-    const addRole = (id: string) => {
-      setRolesSelected((rolesSelected || []).concat({ role: id }))
+    const addRole = (roleId: string) => {
+      if (level === 'organisation') {
+        if (user) {
+          createRolePermissionUser({
+            data: {
+              user: user.id,
+            },
+            organisation_id: id,
+            role_id: roleId,
+          })
+        }
+        if (group) {
+          createRolePermissionGroup({
+            data: {
+              group: group.id,
+            },
+            organisation_id: id,
+            role_id: roleId,
+          })
+        }
+      }
     }
 
-    const removeOwner = (id: string) => {
-      setRolesSelected((rolesSelected || []).filter((v) => v.role !== id))
+    const removeOwner = (roleId: string) => {
+      const roleSelected = rolesAdded.find((item) => item.id === roleId)
+      if (level === 'organisation') {
+        if (user) {
+          deleteRolePermissionUser({
+            organisation_id: id,
+            role_id: roleId,
+            user_id: roleSelected.user_role_id,
+          })
+        }
+        if (group) {
+          deleteRolePermissionGroup({
+            group_id: roleSelected.group_role_id,
+            organisation_id: id,
+            role_id: roleId,
+          })
+        }
+      }
+      setRolesSelected((rolesSelected || []).filter((v) => v.role !== roleId))
+      toast('User role was removed')
     }
+
+    useEffect(() => {
+      if (userAdded || groupAdded) {
+        if (user) {
+          setRolesSelected(
+            (rolesSelected || []).concat({
+              role: usersData?.role,
+              user_role_id: usersData?.id,
+            }),
+          )
+        }
+        if (group) {
+          setRolesSelected(
+            (rolesSelected || []).concat({
+              group_role_id: groupsData?.id,
+              role: groupsData?.role,
+            }),
+          )
+        }
+        toast('Role assigned')
+      }
+    }, [userAdded, usersData, groupsData, groupAdded])
 
     const getRoles = (roles = [], selectedRoles) => {
-      return roles.filter((v) => selectedRoles.find((a) => a.role === v.id))
+      return roles
+        .filter((v) => selectedRoles.find((a) => a.role === v.id))
+        .map((role) => {
+          const matchedRole = selectedRoles.find((r) => r.role === role.id)
+          if (matchedRole) {
+            if (user) {
+              return {
+                ...role,
+                user_role_id: matchedRole.user_role_id,
+              }
+            }
+            if (group) {
+              return {
+                ...role,
+                group_role_id: matchedRole.group_role_id,
+              }
+            }
+          }
+          return role
+        })
     }
 
     const rolesAdded = getRoles(roles, rolesSelected || [])
@@ -675,11 +775,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                   </Row>
                 </div>
               }
-              // onChange={(e) =>
-              //   this.setState({
-              //     description: Utils.safeParseEventValue(e),
-              //   })
-              // }
               type='text'
               title='Assign roles'
               tooltip='Assigns what role the user will have/ assign what role the group will have'
@@ -780,18 +875,18 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
   const roles = [
     {
-        "id": 24,
-        "description": "desc",
-        "name": "role 1",
-        "organisation": 6
+      'description': 'desc',
+      'id': 24,
+      'name': 'role 1',
+      'organisation': 6,
     },
     {
-        "id": 25,
-        "description": "",
-        "name": "role 2",
-        "organisation": 6
-    }
-]
+      'description': '',
+      'id': 25,
+      'name': 'role 2',
+      'organisation': 6,
+    },
+  ]
 
   return (
     <div className='mt-4'>

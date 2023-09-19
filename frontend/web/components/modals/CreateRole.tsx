@@ -20,9 +20,19 @@ import { EditPermissionsModal } from 'components/EditPermissions'
 import OrganisationStore from 'common/stores/organisation-store'
 import ProjectFilter from 'components/ProjectFilter'
 import { Environment, User } from 'common/types/responses'
-import { setInterceptClose } from 'components/modals/base/ModalDefault'
+import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
+import {
+  useCreateRolesPermissionUsersMutation,
+  useDeleteRolesPermissionUsersMutation,
+  useGetRolesPermissionUsersQuery,
+} from 'common/services/useRolesUser'
+import {
+  useCreateRolePermissionGroupMutation,
+  useDeleteRolePermissionGroupMutation,
+  useGetRolePermissionGroupQuery,
+} from 'common/services/useRolePermissionGroup'
 
 type CreateRoleType = {
   organisationId?: string
@@ -52,33 +62,137 @@ const CreateRole: FC<CreateRoleType> = ({
 
   const projectData = OrganisationStore.getProjects()
 
+  const [createRolePermissionUser, { data: usersData, isSuccess: userAdded }] =
+    useCreateRolesPermissionUsersMutation()
+
+  const [deleteRolePermissionUser, { deleted: roleUserDeleted }] =
+    useDeleteRolesPermissionUsersMutation()
+
+  const [
+    createRolePermissionGroup,
+    { data: groupsData, isSuccess: groupAdded },
+  ] = useCreateRolePermissionGroupMutation()
+
+  const [deleteRolePermissionGroup, { deleted: roleGroupDeleted }] =
+    useDeleteRolePermissionGroupMutation()
+
+  const {
+    data: userList,
+    isSuccess,
+    refetch,
+  } = useGetRolesPermissionUsersQuery(
+    {
+      organisation_id: organisationId,
+      role_id: role?.id,
+    },
+    { skip: !role || !organisationId },
+  )
+
+  const {
+    data: groupList,
+    isSuccess: groupListLoaded,
+    refetch: refetchGroups,
+  } = useGetRolePermissionGroupQuery(
+    {
+      organisation_id: organisationId,
+      role_id: role?.id,
+    },
+    { skip: !role || !organisationId },
+  )
+
+  useEffect(() => {
+    if (userAdded || roleUserDeleted) {
+      refetch()
+    }
+  }, [userAdded, roleUserDeleted, refetch])
+
+  useEffect(() => {
+    if (groupAdded || roleGroupDeleted) {
+      refetchGroups()
+    }
+  }, [groupAdded, roleGroupDeleted, refetchGroups])
+
+  useEffect(() => {
+    if (isSuccess) {
+      console.log('DEBUG: userList:', userList.results)
+    }
+  }, [userList, isSuccess])
+
+  useEffect(() => {
+    if (groupListLoaded) {
+      console.log('DEBUG: groupList:', groupList.results)
+    }
+  }, [groupList, groupListLoaded])
+
   const addUserOrGroup = (id: string, isUser = true) => {
     if (isUser) {
-      setUserSelected((userSelected || []).concat({ user: id }))
-      console.log('DEBUG: add userSelected:', userSelected)
+      createRolePermissionUser({
+        data: {
+          user: id,
+        },
+        organisation_id: organisationId,
+        role_id: role.id,
+      })
     } else {
-      setGroupSelected((groupSelected || []).concat({ group: id }))
-      console.log('DEBUG: add groupSelected:', groupSelected)
+      createRolePermissionGroup({
+        data: {
+          group: id,
+        },
+        organisation_id: organisationId,
+        role_id: role.id,
+      })
     }
   }
 
   const removeUserOrGroup = (id: string, isUser = true) => {
+    const userRole = usersAdded.find((item) => item.id === id)
     if (isUser) {
+      deleteRolePermissionUser({
+        organisation_id: organisationId,
+        role_id: role.id,
+        user_id: userRole.user_role_id,
+      })
       setUserSelected((userSelected || []).filter((v) => v.user !== id))
+      toast('User role was removed')
     } else {
-      console.log('DEBUG: remove: id:', id, groupSelected)
-      setUserSelected((groupSelected || []).filter((v) => v.group !== id))
+      const groupRole = groupsAdded.find((item) => item.id === id)
+      deleteRolePermissionGroup({
+        group_id: groupRole.role_group_id,
+        organisation_id: organisationId,
+        role_id: role.id,
+      })
+      setGroupSelected((groupSelected || []).filter((v) => v.group !== id))
+      toast('Group role was removed')
     }
   }
 
   const getUsers = (users = [], selectedRoles) => {
-    return users.filter((v) => selectedRoles.find((a) => a.user === v.id))
+    return users
+      .filter((v) => selectedRoles.find((a) => a.user === v.id))
+      .map((user) => {
+        const matchedRole = selectedRoles.find((role) => role.user === user.id)
+        if (matchedRole) {
+          return {
+            ...user,
+            user_role_id: matchedRole.user_role_id,
+          }
+        }
+        return user
+      })
   }
 
   const getGroup = (groups = [], groupSelected) => {
-    console.log('DEBUG: groups:', groups, groupSelected)
-
-    return groups.filter((v) => groupSelected.find((a) => a.role === v.id))
+    return groups
+      .filter((v) => groupSelected.find((a) => a.group === v.id))
+      .map((group) => {
+        const matchingGroup = groupSelected.find(
+          (selected) => selected.group === group.id,
+        )
+        if (matchingGroup) {
+          return { ...group, role_group_id: matchingGroup.role_group_id }
+        }
+        return group
+      })
   }
 
   const usersAdded = getUsers(users, userSelected || [])
@@ -92,6 +206,30 @@ const CreateRole: FC<CreateRoleType> = ({
       setEnvironments(environments)
     }
   }, [project, projectData])
+
+  useEffect(() => {
+    if (userAdded) {
+      setUserSelected(
+        (userSelected || []).concat({
+          user: usersData?.user,
+          user_role_id: usersData?.id,
+        }),
+      )
+      toast('Role assigned')
+    }
+  }, [userAdded, usersData])
+
+  useEffect(() => {
+    if (groupAdded) {
+      setGroupSelected(
+        (groupSelected || []).concat({
+          group: groupsData?.group,
+          role_group_id: groupsData?.id,
+        }),
+      )
+      toast('Role assigned')
+    }
+  }, [groupAdded, groupsData])
 
   const Tab1 = forwardRef((props, ref) => {
     const { data: roleData, isLoading } = useGetRoleQuery(
@@ -282,8 +420,8 @@ const CreateRole: FC<CreateRoleType> = ({
                     <UserSelect
                       users={users}
                       value={usersAdded && usersAdded.map((v) => v.id)}
-                      onAdd={(id) => addUserOrGroup(id)}
-                      onRemove={(id) => removeUserOrGroup(id)}
+                      onAdd={addUserOrGroup}
+                      onRemove={removeUserOrGroup}
                       isOpen={showUserSelect}
                       onToggle={() => setShowUserSelect(!showUserSelect)}
                       isSmall
@@ -324,9 +462,9 @@ const CreateRole: FC<CreateRoleType> = ({
                   {showGroupSelect && (
                     <MyGroupsSelect
                       orgId={organisationId}
-                      value={groupsAdded && groupsAdded.map((v) => v.group)}
-                      onAdd={(id) => addUserOrGroup(id, false)}
-                      onRemove={(id) => removeUserOrGroup(id, false)}
+                      value={groupsAdded && groupsAdded.map((v) => v.id)}
+                      onAdd={addUserOrGroup}
+                      onRemove={removeUserOrGroup}
                       isOpen={showGroupSelect}
                       onToggle={() => setShowGroupSelect(!showGroupSelect)}
                       isSmall
@@ -345,7 +483,7 @@ const CreateRole: FC<CreateRoleType> = ({
                         marginTop: 4,
                       }}
                     >
-                      <span className='font-weight-bold'>{g.id}</span>
+                      <span className='font-weight-bold'>{g.name}</span>
                       <span className='chip-icon ion ion-ios-close' />
                     </Row>
                   ))}

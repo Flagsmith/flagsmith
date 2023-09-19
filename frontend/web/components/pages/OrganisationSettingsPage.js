@@ -1288,8 +1288,11 @@ const OrganisationSettingsPage = class extends Component {
                                               environments.
                                             </p>
                                             <UserGroupList
-                                              onEditPermissions={
-                                                (group) => this.editGroupPermissions(group, roles)
+                                              onEditPermissions={(group) =>
+                                                this.editGroupPermissions(
+                                                  group,
+                                                  roles,
+                                                )
                                               }
                                               showRemove
                                               orgId={

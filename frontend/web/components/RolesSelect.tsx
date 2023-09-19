@@ -45,6 +45,7 @@ const RoleSelect: FC<RoleSelectType> = ({
         onChange={(e: InputEvent) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
         placeholder='Type or choose a Role'
+        search
       />
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {rolelist &&

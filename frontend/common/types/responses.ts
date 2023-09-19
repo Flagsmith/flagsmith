@@ -280,6 +280,12 @@ export type Role = {
   organisation?: number
 }
 
+export type RolePermissionUser = {
+  user: number
+  role: nomber
+  id: number
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -344,5 +350,7 @@ export type Res = {
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
+  rolesPermissionUsers: RolePermissionUser
+  rolePermissionGroup: { id: string }
   // END OF TYPES
 }
