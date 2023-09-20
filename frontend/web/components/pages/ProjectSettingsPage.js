@@ -12,6 +12,10 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesProjectPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -22,7 +26,7 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { roles: [] }
     AppActions.getProject(this.props.match.params.projectId)
     this.getPermissions()
   }
@@ -39,6 +43,26 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      getRolesProjectPermissions(
+        getStore(),
+        {
+          organisation_id: AccountStore.getOrganisation().id,
+          project_id: this.props.match.params.projectId,
+          role_id: roles.data.results[0].id,
+        },
+        { forceRefetch: true },
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
+      })
+    })
   }
 
   onSave = () => {
@@ -464,6 +488,7 @@ const ProjectSettingsPage = class extends Component {
                         roleTabTitle='Project Roles'
                         roleTabDesc='Edit roles with project permissions.'
                         role
+                        roles={this.state.roles}
                       />
                     </TabItem>
                   </Tabs>

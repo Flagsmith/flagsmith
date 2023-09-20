@@ -95,6 +95,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [showRoles, setShowRoles] = useState<boolean>(false)
     const [rolesSelected, setRolesSelected] = useState<Array>([])
     const {
+      envId,
       group,
       id,
       isGroup,
@@ -234,7 +235,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setSaving(false)
       }
       if (envUpdatedError || envCreatedError) {
-        toast('Failed to Save')
+        toast('Failed to Save', 'danger')
         setSaving(false)
       }
     }, [
@@ -258,7 +259,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setSaving(false)
       }
       if (orgUpdatedError || orgCreatedError) {
-        toast('Failed to Save')
+        toast('Failed to Save', 'danger')
         setSaving(false)
       }
     }, [
@@ -282,7 +283,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setSaving(false)
       }
       if (projectUpdatedError || projectCreatedError) {
-        toast('Failed to Save')
+        toast('Failed to Save', 'danger')
         setSaving(false)
       }
     }, [
@@ -316,7 +317,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         project_id: id,
         role_id: role?.id,
       },
-      { skip: !role || !id },
+      { skip: !id || envId },
     )
 
     const {
@@ -325,7 +326,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       refetch: refetchEnvPerm,
     } = useGetRoleEnvironmentPermissionsQuery(
       {
-        env_id: id,
+        env_id: envId || id,
         organisation_id: role?.organisation,
         role_id: role?.id,
       },
@@ -457,7 +458,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
               updateRoleEnvironmentPermissions({
                 body: {
                   admin: entityPermissions.admin,
-                  environment: id,
+                  environment: envId || id,
                   permissions: entityPermissions.permissions,
                 },
                 id: entityPermissions.id,
@@ -790,6 +791,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         <div className='px-4'>
           <MyRoleSelect
             orgId={id}
+            level={level}
             value={rolesSelected.map((v) => v.role)}
             onAdd={addRole}
             onRemove={removeOwner}
@@ -822,6 +824,7 @@ export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal)
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
   const {
+    envId,
     id,
     level,
     onSaveGroup,
@@ -832,6 +835,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     permissions,
     roleTabDesc,
     roleTabTitle,
+    roles,
     router,
     tabClassName,
   } = props
@@ -872,21 +876,20 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       'p-0 side-modal',
     )
   }
+  const editRolePermissions = (role) => {
+    openModal(
+      `Edit ${Format.camelCase(level)} Role Permissions`,
+      <EditPermissionsModal
+        name={`${role.name}`}
+        id={id}
+        envId={envId}
+        level={level}
+        role={role}
+      />,
+      'p-0 side-modal',
+    )
+  }
   const hasRbacPermission = Utils.getPlansPermission('RBAC')
-  const roles = [
-    {
-      'description': 'desc',
-      'id': 24,
-      'name': 'role 1',
-      'organisation': 6,
-    },
-    {
-      'description': '',
-      'id': 25,
-      'name': 'role 2',
-      'organisation': 6,
-    },
-  ]
 
   return (
     <div className='mt-4'>
@@ -1085,9 +1088,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                       key={role.id}
                     >
                       <Row
-                        // onClick={() => {
-                        //   this.editRole(role)
-                        // }}
+                        onClick={() => editRolePermissions(role)}
                         className='table-column px-3'
                         style={{
                           width: rolesWidths[0],
@@ -1097,9 +1098,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                       </Row>
                       <Row
                         className='table-column px-3'
-                        // onClick={() => {
-                        //   this.editRole(role)
-                        // }}
+                        onClick={() => editRolePermissions(role)}
                         style={{
                           width: rolesWidths[1],
                         }}

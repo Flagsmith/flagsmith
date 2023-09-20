@@ -97,9 +97,11 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
         roleResult && roleResult.length > 0 ? roleResult[0].admin : false
 
       const permissionsSummary =
-        roleRermissions 
-        && roleRermissions.length > 0 &&
-      roleRermissions.map((item) => Format.enumeration.get(item)).join(', ') ||
+        (roleRermissions &&
+          roleRermissions.length > 0 &&
+          roleRermissions
+            .map((item) => Format.enumeration.get(item))
+            .join(', ')) ||
         ''
 
       return projectIsLoading || envIsLoading ? (
