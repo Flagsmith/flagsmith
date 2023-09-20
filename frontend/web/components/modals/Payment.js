@@ -391,7 +391,7 @@ const PaymentModal = class extends Component {
 }
 
 const WrappedPaymentModal = makeAsyncScriptLoader(
-  ConfigProvider(PaymentModal),
+  ConfigProvider(<div/>),
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
