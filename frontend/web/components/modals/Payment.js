@@ -391,12 +391,11 @@ const PaymentModal = class extends Component {
 }
 
 const WrappedPaymentModal = makeAsyncScriptLoader(
-  ConfigProvider(<div/>),
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
   },
-)
+)(ConfigProvider(PaymentModal))
 
 PaymentModal.propTypes = {}
 
@@ -416,5 +415,3 @@ module.exports = (props) => (
     }}
   />
 )
-
-console.log("Unchanged")
