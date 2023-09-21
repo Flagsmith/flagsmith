@@ -114,13 +114,23 @@ const CreateRole: FC<CreateRoleType> = ({
 
   useEffect(() => {
     if (isSuccess) {
-      console.log('DEBUG: userList:', userList.results)
+      setUserSelected(() => {
+        return userList.results.map((u) => ({
+          user: u.user,
+          user_role_id: u.id,
+        }))
+      })
     }
   }, [userList, isSuccess])
 
   useEffect(() => {
-    if (groupListLoaded) {
-      console.log('DEBUG: groupList:', groupList.results)
+    if (groupListLoaded && groupList?.results) {
+      setGroupSelected(() => {
+        return groupList.results.map((g) => ({
+          group: g.group,
+          role_group_id: g.id,
+        }))
+      })
     }
   }, [groupList, groupListLoaded])
 
