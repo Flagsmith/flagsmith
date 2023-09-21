@@ -23,102 +23,58 @@ Once you've got that understood, lets get the SDKs integrated!
 <Tabs groupId="language">
 <TabItem value="py" label="Python">
 
-### Version Compatiability
-
-Python 3.8+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-python-client
+- Version Compatibility: **Python 3.8+**
+- Source Code: https://github.com/Flagsmith/flagsmith-python-client
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-### Version Compatiability
-
-JDK 11+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-java-client
+- Version Compatibility: **JDK 11+**
+- Source Code: https://github.com/Flagsmith/flagsmith-java-client
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-### Version Compatiability
-
-.NET core 6.0+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-dotnet-client
+- Version Compatibility: **.NET core 6.0+**
+- Source Code: https://github.com/Flagsmith/flagsmith-dotnet-client
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-### Version Compatiability
-
-Node 14+
-
-### Github Link
-
-- https://github.com/Flagsmith/flagsmith-nodejs-client
-- https://github.com/Flagsmith/flagsmith-nodejs-examples
+- Version Compatibility: **Node 14+**
+- Source Code:
+  - https://github.com/Flagsmith/flagsmith-nodejs-client
+  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
 
-### Version Compatiability
-
-Ruby 2.4+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-ruby-client
+- Version Compatibility: **Ruby 2.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-ruby-client
 
 </TabItem>
 <TabItem value="php" label="PHP">
 
-### Version Compatiability
-
-php 7.4+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-php-client
+- Version Compatibility: **php 7.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-php-client
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-### Version Compatiability
-
-Go 1.18+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-go-client
+- Version Compatibility: **Go 1.18+**
+- Source Code: https://github.com/Flagsmith/flagsmith-go-client
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
-### Version Compatiability
-
-2021 edition (1.56.0)+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-rust-client
+- Version Compatibility: **2021 edition (1.56.0)+**
+- Source Code: https://github.com/Flagsmith/flagsmith-rust-client
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
 
-### Version Compatiability
-
-Elixir 1.12+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-elixir-client
+- Version Compatibility: **Elixir 1.12+**
+- Source Code: https://github.com/Flagsmith/flagsmith-elixir-client
 
 </TabItem>
 </Tabs>
