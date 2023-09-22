@@ -2,7 +2,6 @@ import { Component } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
 import AccountStore from 'common/stores/account-store'
 import UserGroupStore from 'common/stores/user-group-store'
-import RoleStore from 'common/stores/role-store'
 
 const OrganisationProvider = class extends Component {
   static displayName = 'OrganisationProvider'
@@ -17,7 +16,6 @@ const OrganisationProvider = class extends Component {
         AccountStore.getOrganisation() && AccountStore.getOrganisation().name,
       project: OrganisationStore.getProject(),
       projects: OrganisationStore.getProjects(),
-      roles: RoleStore.getRoles(),
       subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
       users: OrganisationStore.getUsers(),
     }
@@ -31,14 +29,8 @@ const OrganisationProvider = class extends Component {
         isSaving: OrganisationStore.isSaving,
         project: OrganisationStore.getProject(),
         projects: OrganisationStore.getProjects(this.props.id),
-        roles: RoleStore.getRoles(),
         subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
         users: OrganisationStore.getUsers(),
-      })
-    })
-    this.listenTo(RoleStore, 'change', () => {
-      this.setState({
-        roles: RoleStore.getRoles(),
       })
     })
     this.listenTo(OrganisationStore, 'saved', () => {
@@ -64,7 +56,6 @@ const OrganisationProvider = class extends Component {
         isSaving: OrganisationStore.isSaving,
         project: OrganisationStore.getProject(),
         projects: OrganisationStore.getProjects(this.props.id),
-        roles: RoleStore.getRoles(),
         subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
         users: OrganisationStore.getUsers(),
       },

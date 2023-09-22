@@ -23,6 +23,8 @@ import Format from 'common/utils/format'
 import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
 
 const widths = [450, 150, 100]
 const rolesWidths = [250, 600, 100]
@@ -38,6 +40,7 @@ const OrganisationSettingsPage = class extends Component {
     this.state = {
       manageSubscriptionLoaded: true,
       role: 'ADMIN',
+      roles: [],
     }
     if (!AccountStore.getOrganisation()) {
       return
@@ -47,7 +50,13 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   componentDidMount = () => {
-    AppActions.getRoles(AccountStore.getOrganisation().id)
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      this.setState({ roles: roles.data.results })
+    })
     AppActions.getGroups(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
@@ -275,9 +284,15 @@ const OrganisationSettingsPage = class extends Component {
       <CreateRole
         organisationId={organisationId}
         onComplete={() => {
-          AppActions.getRoles(organisationId)
-          toast('Role created')
-          closeModal()
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role created')
+            closeModal()
+          })
         }}
       />,
       'side-modal',
@@ -289,8 +304,14 @@ const OrganisationSettingsPage = class extends Component {
       <ConfirmDeleteRole
         role={role}
         onComplete={() => {
-          AppActions.getRoles(role.organisation)
-          toast('Role Deleted')
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role Deleted')
+          })
         }}
       />,
       'p-0',
@@ -304,8 +325,14 @@ const OrganisationSettingsPage = class extends Component {
         isEdit
         role={role}
         onComplete={() => {
-          AppActions.getRoles(role.organisation)
-          toast('Role updated')
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role updated')
+          })
         }}
         users={users}
         groups={groups}
@@ -340,7 +367,6 @@ const OrganisationSettingsPage = class extends Component {
                   invites,
                   isLoading,
                   name,
-                  roles,
                   subscriptionMeta,
                   users,
                 }) => {
@@ -943,7 +969,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   if (role !== 'ADMIN') {
                                                     this.editUserPermissions(
                                                       user,
-                                                      roles,
+                                                      this.state.roles,
                                                     )
                                                   }
                                                 }
@@ -1291,7 +1317,7 @@ const OrganisationSettingsPage = class extends Component {
                                               onEditPermissions={(group) =>
                                                 this.editGroupPermissions(
                                                   group,
-                                                  roles,
+                                                  this.state.roles,
                                                 )
                                               }
                                               showRemove
@@ -1335,7 +1361,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   id='org-members-list'
                                                   title={'Roles'}
                                                   className='no-pad'
-                                                  items={roles}
+                                                  items={this.state.roles}
                                                   itemHeight={65}
                                                   header={
                                                     <Row className='table-header px-3'>

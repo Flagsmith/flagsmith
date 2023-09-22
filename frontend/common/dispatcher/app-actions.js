@@ -214,12 +214,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       actionType: Actions.ENABLE_TWO_FACTOR,
     })
   },
-  getRoles(organisationId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_ROLES,
-      organisationId,
-    })
-  },
   getChangeRequest(id, projectId, environmentId) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_CHANGE_REQUEST,
