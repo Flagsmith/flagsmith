@@ -93,12 +93,14 @@ class OrganisationList(ListView):
         # when the caches were last updated.
         try:
             subscription_information_caches_influx_updated_at = (
-                OrganisationSubscriptionInformationCache.objects.order_by(
-                    "-influx_updated_at"
+                OrganisationSubscriptionInformationCache.objects.filter(
+                    influx_updated_at__isnull=False
                 )
+                .order_by("-influx_updated_at")
                 .first()
                 .influx_updated_at.strftime("%H:%M:%S %d/%m/%Y")
             )
+
         except AttributeError:
             subscription_information_caches_influx_updated_at = None
 
