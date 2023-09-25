@@ -12,14 +12,60 @@ type MainItem = {
   id: string
 }
 
-type CollapsibleNestedListProps = {
+type CollapsibleNestedRolePermissionsListProps = {
   mainItems: MainItem[]
   role: Role
   level: string
 }
 
-const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
-  ({ level, mainItems, role }, ref) => {
+const PermissionsSummary = ({ level, levelId, role }) => {
+  const { data: projectPermissions, isLoading: projectIsLoading } =
+    useGetRoleProjectPermissionsQuery(
+      {
+        organisation_id: role?.organisation,
+        project_id: levelId,
+        role_id: role?.id,
+      },
+      { skip: !levelId || level !== 'project' },
+    )
+
+  const { data: envPermissions, isLoading: envIsLoading } =
+    useGetRoleEnvironmentPermissionsQuery(
+      {
+        env_id: levelId,
+        organisation_id: role?.organisation,
+        role_id: role?.id,
+      },
+      { skip: !levelId || level !== 'environment' },
+    )
+
+  const permissions = projectPermissions || envPermissions
+  const roleResult = permissions?.results.filter(
+    (item) => item.role === role?.id,
+  )
+  const roleRermissions =
+    roleResult && roleResult.length > 0 ? roleResult[0].permissions : []
+
+  const isAdmin =
+    roleResult && roleResult.length > 0 ? roleResult[0].admin : false
+
+  const permissionsSummary =
+    (roleRermissions &&
+      roleRermissions.length > 0 &&
+      roleRermissions.map((item) => Format.enumeration.get(item)).join(', ')) ||
+    ''
+
+  return projectIsLoading || envIsLoading ? (
+    <div className='modal-body text-center'>
+      <Loader />
+    </div>
+  ) : (
+    <div>{isAdmin ? 'Administrator' : permissionsSummary}</div>
+  )
+}
+
+const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermissionsListProps> =
+  forwardRef(({ level, mainItems, role }, ref) => {
     const [expandedItems, setExpandedItems] = useState<string[]>([])
     const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
 
@@ -65,73 +111,14 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
       [unsavedProjects],
     )
 
-    const PermissionsSummary = ({ levelId }) => {
-      const { data: projectPermissions, isLoading: projectIsLoading } =
-        useGetRoleProjectPermissionsQuery(
-          {
-            organisation_id: role?.organisation,
-            project_id: levelId,
-            role_id: role?.id,
-          },
-          { skip: !levelId || level !== 'project' },
-        )
-
-      const { data: envPermissions, isLoading: envIsLoading } =
-        useGetRoleEnvironmentPermissionsQuery(
-          {
-            env_id: levelId,
-            organisation_id: role?.organisation,
-            role_id: role?.id,
-          },
-          { skip: !levelId || level !== 'environment' },
-        )
-
-      const permissions = projectPermissions || envPermissions
-      const roleResult = permissions?.results.filter(
-        (item) => item.role === role?.id,
-      )
-      const roleRermissions =
-        roleResult && roleResult.length > 0 ? roleResult[0].permissions : []
-
-      const isAdmin =
-        roleResult && roleResult.length > 0 ? roleResult[0].admin : false
-
-      const permissionsSummary =
-        (roleRermissions &&
-          roleRermissions.length > 0 &&
-          roleRermissions
-            .map((item) => Format.enumeration.get(item))
-            .join(', ')) ||
-        ''
-
-      return projectIsLoading || envIsLoading ? (
-        <div className='modal-body text-center'>
-          <Loader />
-        </div>
-      ) : (
-        <div>{isAdmin ? 'Administrator' : permissionsSummary}</div>
-      )
-    }
-
     return (
-      <div
-        style={{
-          borderRadius: '10px',
-          minHeight: '60px',
-        }}
-      >
+      <div className='collapsible-nested-list list-container'>
         {mainItems.map((mainItem, index) => (
           <div key={index}>
             <Row
               key={index}
               onClick={() => toggleExpand(mainItem.id)}
-              style={{
-                backgroundColor: '#fafafb',
-                border: '1px solid rgba(101, 109, 123, 0.16)',
-                borderRadius: '10px',
-                opacity: 1,
-              }}
-              className='clickable cursor-pointer list-item-sm px-3'
+              className='clickable cursor-pointer list-item-sm px-3 list-row'
             >
               <Flex>
                 <div className={'list-item-subtitle'}>
@@ -143,7 +130,11 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
               </Flex>
               <Flex>
                 <div className={'list-item-subtitle'}>
-                  <PermissionsSummary levelId={mainItem.id} />
+                  <PermissionsSummary
+                    level={level}
+                    levelId={mainItem.id}
+                    role={role}
+                  />
                 </div>
               </Flex>
               <Icon
@@ -177,7 +168,6 @@ const CollapsibleNestedList: React.FC<CollapsibleNestedListProps> = forwardRef(
         ))}
       </div>
     )
-  },
-)
+  })
 
-export default CollapsibleNestedList
+export default CollapsibleNestedRolePermissionsList

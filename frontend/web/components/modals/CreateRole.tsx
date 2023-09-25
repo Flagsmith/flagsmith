@@ -9,7 +9,7 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import CollapsibleNestedList from 'components/CollapsibleNestedList'
+import CollapsibleNestedRolePermissionsList from 'components/CollapsibleNestedRolePermissionsList'
 import {
   useGetRoleQuery,
   useCreateRoleMutation,
@@ -434,7 +434,7 @@ const CreateRole: FC<CreateRoleType> = ({
                       onRemove={removeUserOrGroup}
                       isOpen={showUserSelect}
                       onToggle={() => setShowUserSelect(!showUserSelect)}
-                      isSmall
+                      size='-sm'
                     />
                   )}
                 </Row>
@@ -443,12 +443,7 @@ const CreateRole: FC<CreateRoleType> = ({
                     <Row
                       key={u.id}
                       onClick={() => removeUserOrGroup(u.id)}
-                      className='chip'
-                      style={{
-                        justifyContent: 'space-between',
-                        marginBottom: 4,
-                        marginTop: 4,
-                      }}
+                      className='chip my-1 role-list'
                     >
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}
@@ -477,7 +472,7 @@ const CreateRole: FC<CreateRoleType> = ({
                       onRemove={removeUserOrGroup}
                       isOpen={showGroupSelect}
                       onToggle={() => setShowGroupSelect(!showGroupSelect)}
-                      isSmall
+                      size='-sm'
                     />
                   )}
                 </Row>
@@ -486,12 +481,7 @@ const CreateRole: FC<CreateRoleType> = ({
                     <Row
                       key={g.id}
                       onClick={() => removeUserOrGroup(g.id, false)}
-                      className='chip'
-                      style={{
-                        justifyContent: 'space-between',
-                        marginBottom: 4,
-                        marginTop: 4,
-                      }}
+                      className='chip my-1 role-list'
                     >
                       <span className='font-weight-bold'>{g.name}</span>
                       <span className='chip-icon ion ion-ios-close' />
@@ -510,7 +500,7 @@ const CreateRole: FC<CreateRoleType> = ({
           tabLabel={<Row className='justify-content-center'>Project</Row>}
         >
           <h5 className='my-4 title'>Edit Permissions</h5>
-          <CollapsibleNestedList
+          <CollapsibleNestedRolePermissionsList
             mainItems={projectData}
             role={role}
             level={'project'}
@@ -528,7 +518,7 @@ const CreateRole: FC<CreateRoleType> = ({
             className='mb-2'
           />
           {environments.length > 0 && (
-            <CollapsibleNestedList
+            <CollapsibleNestedRolePermissionsList
               mainItems={environments}
               role={role}
               level={'environment'}

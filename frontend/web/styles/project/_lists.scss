@@ -53,3 +53,20 @@
     background-color: transparent;
   }
 }
+
+.collapsible-nested-list {
+  .list-container{
+    border-radius: 10px;
+    min-height: 60px;
+  }
+  .list-row{
+    background-color: #fafafb;
+    border: 1px solid rgba(101, 109, 123, 0.16);
+    border-radius: 10px;
+    opacity: 1;
+  }
+}
+
+.role-list {
+  justify-content: space-between
+}

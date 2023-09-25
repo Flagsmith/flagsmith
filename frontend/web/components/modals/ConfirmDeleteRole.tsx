@@ -19,17 +19,6 @@ const ConfirmDeleteRole: FC<ConfirmDeleteRoleType> = ({ onComplete, role }) => {
     }
   }, [deleted, onComplete])
 
-  const ModalBody: FC<ConfirmDeleteRoleType> = ({ role }) => {
-    return (
-      <>
-        <p>
-          Are you sure you want to delete <strong>{role.name}</strong> from this
-          organization?
-        </p>
-      </>
-    )
-  }
-
   return (
     <div>
       <form
@@ -40,7 +29,10 @@ const ConfirmDeleteRole: FC<ConfirmDeleteRoleType> = ({ onComplete, role }) => {
       >
         <div className='modal-body'>
           <FormGroup>
-            <ModalBody role={role} />
+            <p>
+              Are you sure you want to delete <strong>{role.name}</strong> from
+              this organization?
+            </p>
           </FormGroup>
           {isError && <ErrorMessage error='Error deleting this role' />}
         </div>
@@ -59,5 +51,3 @@ const ConfirmDeleteRole: FC<ConfirmDeleteRoleType> = ({ onComplete, role }) => {
 }
 
 export default ConfirmDeleteRole
-
-module.exports = ConfirmDeleteRole
