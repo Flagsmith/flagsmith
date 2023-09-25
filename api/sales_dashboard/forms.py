@@ -7,7 +7,12 @@ from django.core.mail import send_mail
 
 from environments.models import Environment
 from features.models import Feature
-from organisations.models import Organisation
+from organisations.models import TRIAL_SUBSCRIPTION_ID, Organisation
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+)
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -25,6 +30,29 @@ class MaxAPICallsForm(forms.Form):
 
     def save(self, organisation, commit=True):
         organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
+        organisation.subscription.save()
+
+
+class StartTrialForm(forms.Form):
+    max_seats = forms.IntegerField()
+    max_api_calls = forms.IntegerField()
+
+    def save(self, organisation, commit=True):
+        organisation.subscription.max_seats = self.cleaned_data["max_seats"]
+        organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
+        organisation.subscription.subscription_id = TRIAL_SUBSCRIPTION_ID
+        organisation.subscription.customer_id = TRIAL_SUBSCRIPTION_ID
+        organisation.subscription.plan = "enterprise-saas-monthly-v2"
+        organisation.subscription.save()
+
+
+class EndTrialForm(forms.Form):
+    def save(self, organisation, commit=True):
+        organisation.subscription.max_seats = MAX_SEATS_IN_FREE_PLAN
+        organisation.subscription.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        organisation.subscription.subscription_id = ""
+        organisation.subscription.customer_id = ""
+        organisation.subscription.plan = FREE_PLAN_ID
         organisation.subscription.save()
 
 

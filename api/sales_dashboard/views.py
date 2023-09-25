@@ -36,7 +36,13 @@ from organisations.tasks import (
     update_organisation_subscription_information_influx_cache,
 )
 
-from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
+from .forms import (
+    EmailUsageForm,
+    EndTrialForm,
+    MaxAPICallsForm,
+    MaxSeatsForm,
+    StartTrialForm,
+)
 
 OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
@@ -182,6 +188,36 @@ def update_max_api_calls(request, organisation_id):
         max_api_calls_form.save(organisation)
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required
+def organisation_start_trial(request, organisation_id):
+    start_trial_form = StartTrialForm(request.POST)
+    if start_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        start_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
+
+
+@staff_member_required
+def organisation_end_trial(request, organisation_id):
+    end_trial_form = EndTrialForm(request.POST)
+    if end_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        end_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
 
 
 @staff_member_required

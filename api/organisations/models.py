@@ -217,7 +217,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
-        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+        if self.is_in_trial():
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
@@ -260,6 +260,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
         )
         return overage if overage > 0 else 0
+
+    def is_in_trial(self):
+        return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):
