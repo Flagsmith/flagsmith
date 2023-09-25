@@ -56,13 +56,13 @@
 
 .collapsible-nested-list {
   .list-container{
-    border-radius: 10px;
+    border-radius: $border-radius-default;
     min-height: 60px;
   }
   .list-row{
     background-color: #fafafb;
     border: 1px solid rgba(101, 109, 123, 0.16);
-    border-radius: 10px;
+    border-radius: $border-radius-default;
     opacity: 1;
   }
 }
