@@ -110,6 +110,8 @@ class AuditLog(LifecycleModel):
         is_now=True,
     )
     def update_environments_updated_at(self):
+        from environments.tasks import process_environment_update
+
         environments_filter = Q()
         if self.environment_id:
             environments_filter = Q(id=self.environment_id)
@@ -119,6 +121,5 @@ class AuditLog(LifecycleModel):
         self.project.environments.filter(environments_filter).update(
             updated_at=self.created_date
         )
-        from .tasks import process_environment_update
 
-        process_environment_update.delay(args=(self.id))
+        process_environment_update.delay(args=(self.id,))
