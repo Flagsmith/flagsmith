@@ -317,7 +317,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         project_id: id,
         role_id: role?.id,
       },
-      { skip: !id || envId },
+      {
+        skip:
+          !id || envId || !Utils.getFlagsmithHasFeature('show_role_management'),
+      },
     )
 
     const {
@@ -330,7 +333,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         organisation_id: role?.organisation,
         role_id: role?.id,
       },
-      { skip: !role || !id },
+      {
+        skip:
+          !role || !id || !Utils.getFlagsmithHasFeature('show_role_management'),
+      },
     )
 
     useEffect(() => {
@@ -748,57 +754,61 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             </div>
           )}
         </div>
-        {roles && level === 'organisation' && (
-          <FormGroup className='px-4'>
-            <InputGroup
-              component={
-                <div>
-                  <Row>
-                    <strong style={{ width: 70 }}>Roles: </strong>
-                    {rolesAdded?.map((r) => (
-                      <Row
-                        key={r.id}
-                        onClick={() => removeOwner(r.id)}
-                        className='chip'
-                        style={{ marginBottom: 4, marginTop: 4 }}
+        {Utils.getFlagsmithHasFeature('show_role_management') &&
+          roles &&
+          level === 'organisation' && (
+            <FormGroup className='px-4'>
+              <InputGroup
+                component={
+                  <div>
+                    <Row>
+                      <strong style={{ width: 70 }}>Roles: </strong>
+                      {rolesAdded?.map((r) => (
+                        <Row
+                          key={r.id}
+                          onClick={() => removeOwner(r.id)}
+                          className='chip'
+                          style={{ marginBottom: 4, marginTop: 4 }}
+                        >
+                          <span className='font-weight-bold'>{r.name}</span>
+                          <span className='chip-icon ion ion-ios-close' />
+                        </Row>
+                      ))}
+                      <Button
+                        theme='text'
+                        onClick={() => setShowRoles(true)}
+                        style={{ width: 70 }}
                       >
-                        <span className='font-weight-bold'>{r.name}</span>
-                        <span className='chip-icon ion ion-ios-close' />
-                      </Row>
-                    ))}
-                    <Button
-                      theme='text'
-                      onClick={() => setShowRoles(true)}
-                      style={{ width: 70 }}
-                    >
-                      Add Role
-                    </Button>
-                  </Row>
-                </div>
-              }
-              type='text'
-              title='Assign roles'
-              tooltip='Assigns what role the user will have/ assign what role the group will have'
-              inputProps={{
-                className: 'full-width',
-                style: { minHeight: 80 },
-              }}
-              className='full-width'
-              placeholder='Add an optional description...'
+                        Add Role
+                      </Button>
+                    </Row>
+                  </div>
+                }
+                type='text'
+                title='Assign roles'
+                tooltip='Assigns what role the user/group will have'
+                inputProps={{
+                  className: 'full-width',
+                  style: { minHeight: 80 },
+                }}
+                className='full-width'
+                placeholder='Add an optional description...'
+              />
+            </FormGroup>
+          )}
+        {Utils.getFlagsmithHasFeature('show_role_management') && (
+          <div className='px-4'>
+            <MyRoleSelect
+              orgId={id}
+              level={level}
+              value={rolesSelected.map((v) => v.role)}
+              onAdd={addRole}
+              onRemove={removeOwner}
+              isOpen={showRoles}
+              onToggle={() => setShowRoles(!showRoles)}
             />
-          </FormGroup>
+          </div>
         )}
-        <div className='px-4'>
-          <MyRoleSelect
-            orgId={id}
-            level={level}
-            value={rolesSelected.map((v) => v.role)}
-            onAdd={addRole}
-            onRemove={removeOwner}
-            isOpen={showRoles}
-            onToggle={() => setShowRoles(!showRoles)}
-          />
-        </div>
         <div className='modal-footer'>
           {!role && (
             <Button className='mr-2' onClick={closeModal} theme='secondary'>

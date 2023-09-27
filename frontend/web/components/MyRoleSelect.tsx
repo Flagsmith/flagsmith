@@ -9,7 +9,7 @@ type MyRoleSelectType = RoleSelectType & {
 const MyRoleSelect: FC<MyRoleSelectType> = ({ level, orgId, ...props }) => {
   const { data } = useGetRolesQuery(
     { organisation_id: orgId },
-    { skip: !orgId || level },
+    { skip: !orgId },
   )
   return <RolesSelect {...props} roles={data?.results} />
 }
