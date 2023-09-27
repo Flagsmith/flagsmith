@@ -1,0 +1,25 @@
+{
+    "_links": {
+        "environments": {
+            "href": "/api/v2/projects/test-project-key/environments",
+            "type": "application/json"
+        },
+        "flagDefaults": {
+            "href": "/api/v2/projects/test-project-key/flag-defaults",
+            "type": "application/json"
+        },
+        "self": {
+            "href": "/api/v2/projects/test-project-key",
+            "type": "application/json"
+        }
+    },
+    "_id": "64f6f21653c76f12626d1429",
+    "key": "test-project-key",
+    "includeInSnippetByDefault": false,
+    "defaultClientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+    },
+    "name": "Test Project",
+    "tags": []
+}
