@@ -1,11 +1,8 @@
-import json
-from os.path import abspath, dirname, join
 from typing import Type
 from unittest.mock import MagicMock
 
 import pytest
 from django.core import signing
-from pytest_mock import MockerFixture
 from requests.exceptions import HTTPError, Timeout
 
 from environments.models import Environment
@@ -15,7 +12,6 @@ from features.multivariate.models import (
     MultivariateFeatureStateValue,
 )
 from features.value_types import STRING
-from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
 from integrations.launch_darkly.services import (
     create_import_request,
@@ -25,81 +21,26 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
-@pytest.fixture
-def ld_project_key() -> str:
-    return "test-project-key"
-
-
-@pytest.fixture
-def ld_token() -> str:
-    return "test-token"
-
-
-@pytest.fixture
-def ld_client_mock(mocker: MockerFixture) -> MagicMock:
-    ld_client_mock = mocker.MagicMock(spec=LaunchDarklyClient)
-
-    for method_name, response_data_path in {
-        "get_project": "client_responses/get_project.json",
-        "get_environments": "client_responses/get_environments.json",
-        "get_flags": "client_responses/get_flags.json",
-    }.items():
-        getattr(ld_client_mock, method_name).return_value = json.load(
-            open(join(dirname(abspath(__file__)), response_data_path))
-        )
-
-    ld_client_mock.get_flag_count.return_value = 5
-    ld_client_mock.get_flag_tags.return_value = ["testtag", "testtag2"]
-
-    return ld_client_mock
-
-
-@pytest.fixture
-def import_request(
-    ld_client_mock: MagicMock,
-    mocker: MockerFixture,
-    project: Project,
-    organisation_one_admin_user: FFAdminUser,
-    ld_project_key: str,
-    ld_token: str,
-) -> LaunchDarklyImportRequest:
-    mocker.patch(
-        "integrations.launch_darkly.services.LaunchDarklyClient",
-        return_value=ld_client_mock,
-    )
-    return create_import_request(
-        project=project,
-        user=organisation_one_admin_user,
-        ld_project_key=ld_project_key,
-        ld_token=ld_token,
-    )
-
-
 def test_create_import_request__return_expected(
-    mocker: MockerFixture,
     ld_client_mock: MagicMock,
+    ld_client_class_mock: MagicMock,
     project: Project,
-    organisation_one_admin_user: FFAdminUser,
+    test_user: FFAdminUser,
 ) -> None:
     # Given
     ld_project_key = "test-project-key"
     ld_token = "test-token"
 
-    ld_client_class = mocker.patch(
-        "integrations.launch_darkly.services.LaunchDarklyClient",
-        return_value=ld_client_mock,
-    )
-
     # When
     result = create_import_request(
         project=project,
-        user=organisation_one_admin_user,
+        user=test_user,
         ld_project_key=ld_project_key,
         ld_token=ld_token,
     )
 
     # Then
-    ld_client_class.assert_called_once_with(ld_token)
+    ld_client_class_mock.assert_called_once_with(ld_token)
     ld_client_mock.get_project.assert_called_once_with(project_key=ld_project_key)
     ld_client_mock.get_flag_count.assert_called_once_with(project_key=ld_project_key)
 
@@ -109,7 +50,7 @@ def test_create_import_request__return_expected(
     }
     assert signing.loads(result.ld_project_key, salt="ldimport") == ld_project_key
     assert signing.loads(result.ld_token, salt="ldimport") == ld_token
-    assert result.created_by == organisation_one_admin_user
+    assert result.created_by == test_user
     assert result.project == project
 
 
@@ -127,8 +68,8 @@ def test_create_import_request__return_expected(
     ],
 )
 def test_process_import_request__api_error__expected_status(
-    mocker: MockerFixture,
     ld_client_mock: MagicMock,
+    ld_client_class_mock: MagicMock,
     failing_ld_client_method_name: str,
     exception: Type[Exception],
     expected_error_message: str,
@@ -136,10 +77,6 @@ def test_process_import_request__api_error__expected_status(
 ) -> None:
     # Given
     getattr(ld_client_mock, failing_ld_client_method_name).side_effect = exception
-    mocker.patch(
-        "integrations.launch_darkly.services.LaunchDarklyClient",
-        return_value=ld_client_mock,
-    )
 
     # When
     with pytest.raises(type(exception)):
@@ -255,6 +192,6 @@ def test_process_import_request__success__expected_status(
         == 100
     )
 
-    # Tagged are imported correctly.
+    # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
