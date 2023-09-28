@@ -7,11 +7,6 @@ from requests.exceptions import HTTPError, Timeout
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
-from features.value_types import STRING
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
 from integrations.launch_darkly.services import (
     create_import_request,
@@ -141,56 +136,30 @@ def test_process_import_request__success__expected_status(
     percentage_mv_feature = Feature.objects.get(
         project=project, name="flag4_multivalue"
     )
-    percentage_mv_options = list(
-        MultivariateFeatureOption.objects.filter(feature=percentage_mv_feature)
-    )
-    assert set(option.type for option in percentage_mv_options) == {STRING}
-    assert [option.string_value for option in percentage_mv_options] == [
-        "variation3",
-        "variation2",
-        "variation1",
-    ]
-
-    # Multivariate feature states are set correctly.
     percentage_mv_feature_states_by_env_name = {
         fs.environment.name: fs
         for fs in FeatureState.objects.filter(feature=percentage_mv_feature)
     }
-    assert percentage_mv_feature_states_by_env_name["Test"].enabled is False
-    assert (
-        percentage_mv_feature_states_by_env_name["Test"]
-        .get_multivariate_feature_state_value("test")
-        .string_value
-        == "variation1"
-    )
-    assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
-    assert (
-        percentage_mv_feature_states_by_env_name["Production"]
-        .get_multivariate_feature_state_value("test")
-        .string_value
-        == "variation2"
-    )
 
-    # Multivariate feature states with percentage rollout have correct percentage
-    # allocations.
-    assert (
-        sum(
-            mvfs.percentage_allocation
-            for mvfs in MultivariateFeatureStateValue.objects.filter(
-                feature_state=percentage_mv_feature_states_by_env_name["Test"]
-            )
+    assert percentage_mv_feature_states_by_env_name["Test"].enabled is False
+    assert list(
+        percentage_mv_feature_states_by_env_name[
+            "Test"
+        ].multivariate_feature_state_values.values_list(
+            "multivariate_feature_option__string_value",
+            "percentage_allocation",
         )
-        == 100
-    )
-    assert (
-        sum(
-            mvfs.percentage_allocation
-            for mvfs in MultivariateFeatureStateValue.objects.filter(
-                feature_state=percentage_mv_feature_states_by_env_name["Production"]
-            )
+    ) == [("variation1", 100), ("variation2", 0)]
+
+    assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
+    assert list(
+        percentage_mv_feature_states_by_env_name[
+            "Production"
+        ].multivariate_feature_state_values.values_list(
+            "multivariate_feature_option__string_value",
+            "percentage_allocation",
         )
-        == 100
-    )
+    ) == [("variation1", 24), ("variation2", 25), ("variation3", 51)]
 
     # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
