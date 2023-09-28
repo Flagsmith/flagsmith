@@ -109,7 +109,7 @@ class AuditLog(LifecycleModel):
         when="environment_document_updated",
         is_now=True,
     )
-    def update_environments_updated_at(self):
+    def process_environment_update(self):
         from environments.tasks import process_environment_update
 
         environments_filter = Q()
