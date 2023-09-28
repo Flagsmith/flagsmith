@@ -93,7 +93,7 @@ generate-ld-client-types:
 	datamodel-codegen \
 		--output integrations/launch_darkly/types.py \
 		--output-model-type typing.TypedDict \
-		--target-python-version 3.11 \
+		--target-python-version 3.10 \
 		--use-double-quotes \
 		--use-standard-collections \
 		--wrap-string-literal \

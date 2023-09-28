@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict
+from typing import TYPE_CHECKING, Literal, Optional, TypedDict
 
 from core.models import abstract_base_auditable_model_factory
 from django.db import models
+from typing_extensions import NotRequired
 
 from audit.related_object_type import RelatedObjectType
 from projects.models import Project
