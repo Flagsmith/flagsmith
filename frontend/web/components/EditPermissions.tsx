@@ -233,6 +233,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
+        close()
       }
       if (envUpdatedError || envCreatedError) {
         toast('Failed to Save', 'danger')
@@ -257,6 +258,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
+        close()
       }
       if (orgUpdatedError || orgCreatedError) {
         toast('Failed to Save', 'danger')
@@ -281,6 +283,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
+        close()
       }
       if (projectUpdatedError || projectCreatedError) {
         toast('Failed to Save', 'danger')
@@ -843,7 +846,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     parentLevel,
     parentSettingsLink,
     permissions,
-    roleTabDesc,
     roleTabTitle,
     roles,
     router,
@@ -1067,7 +1069,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 <Row space className='mt-4'>
                   <h5 className='m-b-0'>{roleTabTitle}</h5>
                 </Row>
-                <p className='fs-small lh-sm'>{roleTabDesc}</p>
+                <p className='fs-small lh-sm'>{`Can edit roles ${level} permission.`}</p>
                 <PanelSearch
                   id='org-members-list'
                   title={'Roles'}
@@ -1119,12 +1121,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                   )}
                   renderNoResults={
                     <Panel
-                      title={'Roles with project permissions'}
+                      title={`Roles with ${level} permissions`}
                       className='no-pad'
                     >
                       <div className='search-list'>
                         <Row className='list-item p-3 text-muted'>
-                          You currently have no roles with project permissions.
+                          {`You currently have no roles with ${level} permissions.`}
                         </Row>
                       </div>
                     </Panel>

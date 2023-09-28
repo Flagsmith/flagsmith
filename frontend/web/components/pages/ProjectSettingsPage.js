@@ -488,7 +488,6 @@ const ProjectSettingsPage = class extends Component {
                         id={this.props.match.params.projectId}
                         level='project'
                         roleTabTitle='Project Roles'
-                        roleTabDesc='Edit roles with project permissions.'
                         role
                         roles={this.state.roles}
                       />
