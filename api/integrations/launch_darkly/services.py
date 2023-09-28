@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.core import signing
 from django.utils import timezone
-from requests.exceptions import RequestException
+from requests.exceptions import HTTPError, RequestException
 
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
@@ -53,9 +53,9 @@ def _complete_import_request(
     """
     try:
         yield
-    except Exception:
+    except Exception as exc:
         import_request.status["result"] = "failure"
-        raise
+        raise exc
     else:
         import_request.status["result"] = "success"
     finally:
@@ -188,13 +188,15 @@ def _create_feature_from_ld(
 
     tags = [tags_by_ld_tag[ld_tag] for ld_tag in ld_flag["tags"]]
 
-    feature = Feature.objects.create(
-        name=ld_flag["key"],
+    feature, _ = Feature.objects.update_or_create(
         project_id=project_id,
-        description=ld_flag.get("description"),
-        default_enabled=False,
-        type=feature_type,
-        is_archived=ld_flag["archived"],
+        name=ld_flag["key"],
+        defaults={
+            "description": ld_flag.get("description"),
+            "default_enabled": False,
+            "type": feature_type,
+            "is_archived": ld_flag["archived"],
+        },
     )
     feature.tags.set(tags)
 
@@ -263,8 +265,15 @@ def process_import_request(
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
             ld_flags = ld_client.get_flags(project_key=ld_project_key)
             ld_tags = ld_client.get_flag_tags()
+        except HTTPError as exc:
+            import_request.status[
+                "error_message"
+            ] = f"HTTP {exc.response.status_code} when requesting LaunchDarkly"
+            raise
         except RequestException as exc:
-            import_request.status["error_message"] = exc.__class__.__name__
+            import_request.status[
+                "error_message"
+            ] = f"{exc.__class__.__name__} when requesting LaunchDarkly"
             raise
 
         environments_by_ld_environment_key = _create_environments_from_ld(

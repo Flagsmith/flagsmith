@@ -117,36 +117,32 @@ def test_create_import_request__return_expected(
     "failing_ld_client_method_name", ["get_environments", "get_flags", "get_flag_tags"]
 )
 @pytest.mark.parametrize(
-    "exception_class, expected_error_message",
+    "exception, expected_error_message",
     [
-        (HTTPError, "HTTPError"),
-        (Timeout, "Timeout"),
+        (
+            HTTPError(response=MagicMock(status_code=503)),
+            "HTTP 503 when requesting LaunchDarkly",
+        ),
+        (Timeout(), "Timeout when requesting LaunchDarkly"),
     ],
 )
 def test_process_import_request__api_error__expected_status(
     mocker: MockerFixture,
     ld_client_mock: MagicMock,
     failing_ld_client_method_name: str,
-    exception_class: Type[Exception],
+    exception: Type[Exception],
     expected_error_message: str,
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     # Given
-    getattr(
-        ld_client_mock, failing_ld_client_method_name
-    ).side_effect = exception_class()
+    getattr(ld_client_mock, failing_ld_client_method_name).side_effect = exception
     mocker.patch(
         "integrations.launch_darkly.services.LaunchDarklyClient",
         return_value=ld_client_mock,
     )
 
-    mocker.patch(
-        "integrations.launch_darkly.client.Session.get",
-        side_effect=exception_class(),
-    )
-
     # When
-    with pytest.raises(exception_class):
+    with pytest.raises(type(exception)):
         process_import_request(import_request)
 
     # Then
