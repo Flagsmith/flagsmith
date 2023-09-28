@@ -1,54 +1,54 @@
-from core.models import AbstractBaseExportableModel
+from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict
+
+from core.models import abstract_base_auditable_model_factory
 from django.db import models
 
-from integrations.launch_darkly.enums import LogLevel
-from organisations.models import Organisation
+from audit.related_object_type import RelatedObjectType
 from projects.models import Project
 
-
-class LaunchDarklyImportLog(AbstractBaseExportableModel):
-    launch_darkly_import = models.ForeignKey(
-        "LaunchDarklyImport", on_delete=models.CASCADE
-    )
-    log_level = models.CharField(max_length=8, choices=LogLevel.choices)
-    log_message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+if TYPE_CHECKING:  # pragma: no cover
+    from users.models import FFAdminUser
 
 
-class LaunchDarklyImport(AbstractBaseExportableModel):
+class LaunchDarklyImportStatus(TypedDict):
+    requested_environment_count: int
+    requested_flag_count: int
+    result: NotRequired[Literal["success", "failure"]]
+    error_message: NotRequired[str]
+
+
+class LaunchDarklyImportRequest(
+    abstract_base_auditable_model_factory(),
+):
+    history_record_class_path = "features.models.HistoricalLaunchDarklyImportRequest"
+    related_object_type = RelatedObjectType.IMPORT_REQUEST
+
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE
-    )
-    started_at = models.DateTimeField(auto_now_add=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
-    @property
-    def completed(self) -> bool:
-        return self.completed_at is not None
+    ld_project_key = models.CharField(max_length=2000)
+    ld_token = models.CharField(max_length=2000)
 
-    @property
-    def errors(self) -> int:
-        return self.launchdarklyimportlog_set.filter(log_level=LogLevel.ERROR).count()
+    status: LaunchDarklyImportStatus = models.JSONField()
 
-    def log(self, log_level, log_message):
-        return LaunchDarklyImportLog.objects.create(
-            launch_darkly_import=self, log_level=log_level, log_message=log_message
-        )
+    def get_create_log_message(self, _) -> str:
+        return "New LaunchDarkly import requested"
 
-    def debug(self, log_message):
-        self.log(LogLevel.DEBUG, log_message)
+    def get_update_log_message(self, _) -> Optional[str]:
+        if not self.completed_at:
+            return None
+        if self.status.get("result") == "success":
+            return "LaunchDarkly import completed successfully"
+        if error_message := self.status.get("error_message"):
+            return f"LaunchDarkly import failed with error: {error_message}"
+        return "LaunchDarkly import failed"
 
-    def info(self, log_message):
-        self.log(LogLevel.INFO, log_message)
+    def get_audit_log_author(self) -> "FFAdminUser":
+        return self.created_by
 
-    def warning(self, log_message):
-        self.log(LogLevel.WARNING, log_message)
-
-    def error(self, log_message):
-        self.log(LogLevel.ERROR, log_message)
-
-    def critical(self, log_message):
-        self.log(LogLevel.CRITICAL, log_message)
+    def _get_project(self) -> Project:
+        return self.project

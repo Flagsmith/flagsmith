@@ -21,7 +21,7 @@
                     "type": "application/json"
                 },
                 "self": {
-                    "href": "/api/v2/flags/test-project-key/flag4",
+                    "href": "/api/v2/flags/test-project-key/flag5",
                     "type": "application/json"
                 }
             },
@@ -55,7 +55,7 @@
                 "production": {
                     "_environmentName": "Production",
                     "_site": {
-                        "href": "/default/production/features/flag4",
+                        "href": "/default/production/features/flag5",
                         "type": "text/html"
                     },
                     "_summary": {
@@ -87,7 +87,7 @@
                 "test": {
                     "_environmentName": "Test",
                     "_site": {
-                        "href": "/default/test/features/flag4",
+                        "href": "/default/test/features/flag5",
                         "type": "text/html"
                     },
                     "_summary": {
@@ -123,11 +123,14 @@
             },
             "goalIds": [],
             "includeInSnippet": false,
-            "key": "flag4",
+            "key": "flag5",
             "kind": "boolean",
             "maintainerId": "64f6f21653c76f12626d142a",
-            "name": "flag4",
-            "tags": [],
+            "name": "flag5",
+            "tags": [
+                "testtag",
+                "testtag2"
+            ],
             "temporary": true,
             "variationJsonSchema": null,
             "variations": [
@@ -142,5 +145,5 @@
             ]
         }
     ],
-    "totalCount": 4
+    "totalCount": 5
 }

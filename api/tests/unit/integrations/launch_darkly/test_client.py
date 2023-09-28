@@ -154,3 +154,72 @@ def test_launch_darkly_client__get_flags__return_expected(
 
     # Then
     assert result == expected_result
+
+
+def test_launch_darkly_client__get_flag_count__return_expected(
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+    api_version = "20230101"
+
+    mocker.patch(
+        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_VERSION",
+        new=api_version,
+    )
+
+    example_response_file_path = join(
+        dirname(abspath(__file__)),
+        "example_api_responses/getFeatureFlags_1.json",
+    )
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/flags/test-project-key?limit=1",
+        text=open(example_response_file_path).read(),
+        request_headers={"Authorization": token, "LD-API-Version": api_version},
+    )
+
+    expected_result = 5
+
+    client = LaunchDarklyClient(token=token)
+
+    # When
+    result = client.get_flag_count(project_key=project_key)
+
+    # Then
+    assert result == expected_result
+
+
+def test_launch_darkly_client__get_flag_tags__return_expected(
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    token = "test-token"
+    api_version = "20230101"
+
+    mocker.patch(
+        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_VERSION",
+        new=api_version,
+    )
+
+    example_response_file_path = join(
+        dirname(abspath(__file__)),
+        "example_api_responses/getTags.json",
+    )
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/tags?kind=flag",
+        text=open(example_response_file_path).read(),
+        request_headers={"Authorization": token, "LD-API-Version": api_version},
+    )
+
+    expected_result = ["testtag", "testtag2"]
+
+    client = LaunchDarklyClient(token=token)
+
+    # When
+    result = client.get_flag_tags()
+
+    # Then
+    assert result == expected_result
