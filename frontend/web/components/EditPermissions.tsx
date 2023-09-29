@@ -70,6 +70,7 @@ type EditPermissionModalType = {
   user?: User
   role?: Role
   permissionChanged: () => void
+  editPermissionsFromSettings?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -95,6 +96,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [showRoles, setShowRoles] = useState<boolean>(false)
     const [rolesSelected, setRolesSelected] = useState<Array>([])
     const {
+      editPermissionsFromSettings,
       envId,
       group,
       id,
@@ -233,7 +235,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
-        close()
+        if (editPermissionsFromSettings) {
+          close()
+        }
       }
       if (envUpdatedError || envCreatedError) {
         toast('Failed to Save', 'danger')
@@ -258,7 +262,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
-        close()
+        if (editPermissionsFromSettings) {
+          close()
+        }
       }
       if (orgUpdatedError || orgCreatedError) {
         toast('Failed to Save', 'danger')
@@ -283,7 +289,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         permissionChanged?.()
         onSave?.()
         setSaving(false)
-        close()
+        if (editPermissionsFromSettings) {
+          close()
+        }
       }
       if (projectUpdatedError || projectCreatedError) {
         toast('Failed to Save', 'danger')
@@ -299,8 +307,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     ])
 
     const {
-      data,
-      isLoading,
+      data: organisationPermissions,
+      isLoading: organisationIsLoading,
       refetch: refetchOrgPerm,
     } = useGetRoleOrganisationPermissionsQuery(
       {
@@ -343,11 +351,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     )
 
     useEffect(() => {
-      if (!isLoading && data && level === 'organisation') {
-        const entityPermissions = processResults(data.results)
+      if (!organisationIsLoading && organisationPermissions && level === 'organisation') {
+        const entityPermissions = processResults(organisationPermissions.results)
         setEntityPermissions(entityPermissions)
       }
-    }, [data, isLoading])
+    }, [organisationPermissions, organisationIsLoading])
 
     useEffect(() => {
       if (!projectIsLoading && projectPermissions && level === 'project') {
@@ -894,6 +902,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <EditPermissionsModal
         name={`${role.name}`}
         id={id}
+        editPermissionsFromSettings
         envId={envId}
         level={level}
         role={role}
@@ -1069,7 +1078,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 <Row space className='mt-4'>
                   <h5 className='m-b-0'>{roleTabTitle}</h5>
                 </Row>
-                <p className='fs-small lh-sm'>{`Can edit roles ${level} permission.`}</p>
                 <PanelSearch
                   id='org-members-list'
                   title={'Roles'}
@@ -1120,10 +1128,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                     </Row>
                   )}
                   renderNoResults={
-                    <Panel
-                      title={`Roles with ${level} permissions`}
-                      className='no-pad'
-                    >
+                    <Panel title={'Roles'} className='no-pad'>
                       <div className='search-list'>
                         <Row className='list-item p-3 text-muted'>
                           {`You currently have no roles with ${level} permissions.`}

@@ -724,7 +724,7 @@ const EnvironmentSettingsPage = class extends Component {
                           envId={env.id}
                           router={this.context.router}
                           level='environment'
-                          roleTabTitle='Environment Roles'
+                          roleTabTitle='Environment Permissions'
                           roles={this.state.roles}
                         />
                       </FormGroup>
