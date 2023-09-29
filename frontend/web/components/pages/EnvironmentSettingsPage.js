@@ -713,7 +713,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'

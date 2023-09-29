@@ -478,7 +478,7 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
                           this.getPermissions()
