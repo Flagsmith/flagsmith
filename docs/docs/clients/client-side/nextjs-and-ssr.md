@@ -50,7 +50,7 @@ state.
 import { FlagsmithProvider } from 'flagsmith/react';
 import { createFlagsmithInstance } from 'flagsmith/isomorphic';
 function MyApp({ Component, pageProps, flagsmithState }) {
- const flagsmithRef = useRef(createFlagsmithInstance())
+ const flagsmithRef = useRef(createFlagsmithInstance());
  return (
   <FlagsmithProvider flagsmith={flagsmithRef.current} serverState={flagsmithState}>
    <Component {...pageProps} />
