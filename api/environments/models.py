@@ -191,6 +191,7 @@ class Environment(
 
             if cls.is_bad_key(api_key):
                 return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
