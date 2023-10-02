@@ -191,7 +191,6 @@ class Environment(
 
             if cls.is_bad_key(api_key):
                 return None
-
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
@@ -206,10 +205,10 @@ class Environment(
                 base_qs = cls.objects.select_related(*select_related_args).defer(
                     "description"
                 )
-                qs_one = base_qs.filter(api_key=api_key)
-                qs_two = base_qs.filter(api_keys__key=api_key)
+                qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
+                qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
 
-                environment = qs_one.union(qs_two).get()
+                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
                 environment_cache.set(
                     api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
                 )
