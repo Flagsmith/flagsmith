@@ -3,12 +3,11 @@ from typing import Any, Iterator, Optional
 from requests import Session
 
 from integrations.launch_darkly import types as ld_types
-
-LAUNCH_DARKLY_API_BASE_URL = "https://app.launchdarkly.com"
-LAUNCH_DARKLY_API_VERSION = "20220603"
-# Maximum limit for /api/v2/projects/
-# /api/v2/flags/ seemingly not limited, but let's not get too greedy
-LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE = 1000
+from integrations.launch_darkly.constants import (
+    LAUNCH_DARKLY_API_BASE_URL,
+    LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
+    LAUNCH_DARKLY_API_VERSION,
+)
 
 
 class LaunchDarklyClient:

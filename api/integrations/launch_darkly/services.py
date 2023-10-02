@@ -16,6 +16,9 @@ from features.multivariate.models import (
 from features.value_types import STRING
 from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.client import LaunchDarklyClient
+from integrations.launch_darkly.constants import (
+    LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
+)
 from integrations.launch_darkly.models import (
     LaunchDarklyImportRequest,
     LaunchDarklyImportStatus,
@@ -88,7 +91,7 @@ def _create_tags_from_ld(
     tags_by_ld_tag = {
         tag: Tag(
             label=tag,
-            color="#3d4db6",
+            color=LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
             project_id=project_id,
         )
         for tag in ld_tags
