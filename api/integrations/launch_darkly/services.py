@@ -31,7 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _sign_ld_value(value: str, user_id: object) -> str:
-    return signing.dumps(value, f"ld_import_{user_id}")
+    return signing.dumps(value, salt=f"ld_import_{user_id}")
 
 
 def _unsign_ld_value(value: str, user_id: object) -> str:
