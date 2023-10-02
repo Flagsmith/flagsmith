@@ -27,14 +27,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from users.models import FFAdminUser
 
 
-def _sign_ld_value(value: str) -> str:
-    return signing.dumps(value, salt="ldimport")
+def _sign_ld_value(value: str, user_id: object) -> str:
+    return signing.dumps(value, f"ld_import_{user_id}")
 
 
-def _unsign_ld_value(value: str) -> str:
+def _unsign_ld_value(value: str, user_id: object) -> str:
     return signing.loads(
         value,
-        salt="ldimport",
+        salt=f"ld_import_{user_id}",
         max_age=settings.LAUNCH_DARKLY_IMPORT_SENSITIVE_DATA_MAX_AGE_SECONDS,
     )
 
@@ -243,11 +243,12 @@ def create_import_request(
         "requested_flag_count": requested_flag_count,
     }
 
+    user_id = user.id
     return LaunchDarklyImportRequest.objects.create(
         project=project,
         created_by=user,
-        ld_token=_sign_ld_value(ld_token),
-        ld_project_key=_sign_ld_value(ld_project_key),
+        ld_token=_sign_ld_value(ld_token, user_id),
+        ld_project_key=_sign_ld_value(ld_project_key, user_id),
         status=status,
     )
 
@@ -256,8 +257,9 @@ def process_import_request(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     with _complete_import_request(import_request):
-        ld_token = _unsign_ld_value(import_request.ld_token)
-        ld_project_key = _unsign_ld_value(import_request.ld_project_key)
+        user_id = import_request.created_by.id
+        ld_token = _unsign_ld_value(import_request.ld_token, user_id)
+        ld_project_key = _unsign_ld_value(import_request.ld_project_key, user_id)
 
         ld_client = LaunchDarklyClient(ld_token)
 

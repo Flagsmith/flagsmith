@@ -43,8 +43,10 @@ def test_create_import_request__return_expected(
         "requested_environment_count": 2,
         "requested_flag_count": 5,
     }
-    assert signing.loads(result.ld_project_key, salt="ldimport") == ld_project_key
-    assert signing.loads(result.ld_token, salt="ldimport") == ld_token
+    assert (
+        signing.loads(result.ld_project_key, salt=str(test_user.id)) == ld_project_key
+    )
+    assert signing.loads(result.ld_token, salt=str(test_user.id)) == ld_token
     assert result.created_by == test_user
     assert result.project == project
 
