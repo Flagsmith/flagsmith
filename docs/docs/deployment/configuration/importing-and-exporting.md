@@ -141,6 +141,13 @@ make sure whichever role you are using to run you container has access to read f
 Alternatively, you can provide the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables to refer to an
 IAM user that has access to the S3 bucket.
 
+> Using localstack to achieve local/test exports with s3 can be done using
+> [localstack](https://github.com/localstack/localstack) and the
+> [service-specific endpoint](https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html) strategy.
+>
+> Once running you are able to set a specific url for the s3 service `AWS_ENDPOINT_URL_S3` or for all services
+> `AWS_ENDPOINT_URL`.
+
 ## Importing
 
 ### Option 1 - Local File System
@@ -158,3 +165,10 @@ e.g.
 ```bash
 python manage.py import-organisation-from-s3 my-export-bucket exports/organisation-1.json
 ```
+
+> Using localstack to achieve local/test imports with s3 can be done using
+> [localstack](https://github.com/localstack/localstack) and the
+> [service-specific endpoint](https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html) strategy.
+>
+> Once running you are able to set a specific url for the s3 service `AWS_ENDPOINT_URL_S3` or for all services
+> `AWS_ENDPOINT_URL`.
