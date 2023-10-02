@@ -87,7 +87,7 @@ serve:
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
-	curl -sSL https://static.launchdarkly.com/app/s/openapi.2161bd87d.json | \
+	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
 	npx openapi-format /dev/fd/0 \
 		--filterFile ld-openapi-filter.yaml | \
 	datamodel-codegen \
