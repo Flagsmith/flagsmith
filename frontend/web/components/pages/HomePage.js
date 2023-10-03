@@ -677,14 +677,15 @@ const HomePage = class extends React.Component {
                             </Card>
                             <Row className='justify-content-center'>
                               Have an account?{' '}
-                              <Link
-                                id='existing-member-btn'
-                                to={`/login${redirect}`}
+                              <Button
+                                theme='text'
+                                className='ml-1 fw-bold'
+                                onClick={() => {
+                                  window.location.href = `/login${redirect}`
+                                }}
                               >
-                                <Button theme='text' className='ml-1 fw-bold'>
-                                  Log in
-                                </Button>
-                              </Link>
+                                Log in
+                              </Button>
                             </Row>
                           </React.Fragment>
                         )}
