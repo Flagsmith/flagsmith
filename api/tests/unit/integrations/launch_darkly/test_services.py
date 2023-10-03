@@ -45,8 +45,8 @@ def test_create_import_request__return_expected(
         "requested_environment_count": 2,
         "requested_flag_count": 5,
     }
-    assert signing.loads(result.ld_project_key, salt=expected_salt) == ld_project_key
     assert signing.loads(result.ld_token, salt=expected_salt) == ld_token
+    assert result.ld_project_key == ld_project_key
     assert result.created_by == test_user
     assert result.project == project
 
@@ -82,7 +82,6 @@ def test_process_import_request__api_error__expected_status(
     # Then
     assert import_request.completed_at
     assert import_request.ld_token == ""
-    assert import_request.ld_project_key == ""
     assert import_request.status["result"] == "failure"
     assert import_request.status["error_message"] == expected_error_message
 
@@ -98,7 +97,6 @@ def test_process_import_request__success__expected_status(
     # Import request is marked as completed successfully.
     assert import_request.completed_at
     assert import_request.ld_token == ""
-    assert import_request.ld_project_key == ""
     assert import_request.status["result"] == "success"
 
     # Environment names are correct.

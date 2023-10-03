@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from django.core import signing
 from django.utils import timezone
@@ -60,7 +60,7 @@ def _complete_import_request(
     else:
         import_request.status["result"] = "success"
     finally:
-        import_request.ld_token = import_request.ld_project_key = ""
+        import_request.ld_token = ""
         import_request.completed_at = timezone.now()
         import_request.save()
 
@@ -227,6 +227,15 @@ def _create_features_from_ld(
     ]
 
 
+def get_import_request(
+    project: "Project", ld_project_key: str
+) -> Optional[LaunchDarklyImportRequest]:
+    return LaunchDarklyImportRequest.objects.get(
+        project=project,
+        ld_project_key=ld_project_key,
+    )
+
+
 def create_import_request(
     project: "Project",
     user: "FFAdminUser",
@@ -244,12 +253,11 @@ def create_import_request(
         "requested_flag_count": requested_flag_count,
     }
 
-    user_id = user.id
     return LaunchDarklyImportRequest.objects.create(
         project=project,
         created_by=user,
-        ld_token=_sign_ld_value(ld_token, user_id),
-        ld_project_key=_sign_ld_value(ld_project_key, user_id),
+        ld_project_key=ld_project_key,
+        ld_token=_sign_ld_value(ld_token, user.id),
         status=status,
     )
 
@@ -258,9 +266,11 @@ def process_import_request(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     with _complete_import_request(import_request):
-        user_id = import_request.created_by.id
-        ld_token = _unsign_ld_value(import_request.ld_token, user_id)
-        ld_project_key = _unsign_ld_value(import_request.ld_project_key, user_id)
+        ld_token = _unsign_ld_value(
+            import_request.ld_token,
+            import_request.created_by.id,
+        )
+        ld_project_key = import_request.ld_project_key
 
         ld_client = LaunchDarklyClient(ld_token)
 

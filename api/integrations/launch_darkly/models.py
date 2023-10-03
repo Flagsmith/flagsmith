@@ -53,3 +53,12 @@ class LaunchDarklyImportRequest(
 
     def _get_project(self) -> Project:
         return self.project
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_project_ld_project_key_status_result_null",
+                fields=["project", "ld_project_key"],
+                condition=models.Q(status__result__isnull=True),
+            )
+        ]

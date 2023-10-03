@@ -1,7 +1,9 @@
 from django.db.models import QuerySet
+from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -51,12 +53,19 @@ class LaunchDarklyImportRequestViewSet(
             self.request.user.get_permitted_projects(CREATE_ENVIRONMENT),
             pk=self.kwargs["project_pk"],
         )
-        instance = create_import_request(
-            project=project,
-            user=self.request.user,
-            ld_token=request_serializer.validated_data["token"],
-            ld_project_key=request_serializer.validated_data["project_key"],
-        )
+
+        try:
+            instance = create_import_request(
+                project=project,
+                user=self.request.user,
+                ld_token=request_serializer.validated_data["token"],
+                ld_project_key=request_serializer.validated_data["project_key"],
+            )
+        except IntegrityError:
+            raise ValidationError(
+                "Existing import already in progress for this project"
+            )
+
         process_launch_darkly_import_request.delay(
             kwargs={"import_request_id": instance.id}
         )

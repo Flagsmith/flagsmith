@@ -67,3 +67,63 @@ def test_launch_darkly_import_request_view__create__return_expected(
         },
         "updated_at": mocker.ANY,
     }
+
+
+def test_launch_darkly_import_request_view__create__existing_unfinished__return_expected(
+    ld_client_class_mock: MagicMock,
+    project: Project,
+    admin_client: APIClient,
+    mocker: MockerFixture,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    process_launch_darkly_import_request_mock = mocker.patch(
+        "integrations.launch_darkly.views.process_launch_darkly_import_request"
+    )
+
+    url = reverse("api-v1:projects:imports-launch-darkly-list", args=[project.id])
+
+    # When
+    response = admin_client.post(url, data={"token": token, "project_key": project_key})
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == ["Existing import already in progress for this project"]
+    process_launch_darkly_import_request_mock.assert_not_called()
+
+
+def test_launch_darkly_import_request_view__create__existing_finished__return_expected(
+    ld_client_class_mock: MagicMock,
+    project: Project,
+    admin_client: APIClient,
+    mocker: MockerFixture,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    import_request.status["result"] = "success"
+    import_request.save()
+
+    process_launch_darkly_import_request_mock = mocker.patch(
+        "integrations.launch_darkly.views.process_launch_darkly_import_request"
+    )
+
+    url = reverse("api-v1:projects:imports-launch-darkly-list", args=[project.id])
+
+    # When
+    response = admin_client.post(url, data={"token": token, "project_key": project_key})
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    created_import_request = LaunchDarklyImportRequest.objects.get(
+        project=project,
+        status__result__isnull=True,
+    )
+    process_launch_darkly_import_request_mock.delay.assert_called_once_with(
+        kwargs={"import_request_id": created_import_request.id},
+    )
