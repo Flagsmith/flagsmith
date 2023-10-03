@@ -13,7 +13,6 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-python manage.py createcachetable
 make serve
 ```
 
