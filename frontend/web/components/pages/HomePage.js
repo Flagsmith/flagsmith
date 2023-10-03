@@ -11,6 +11,9 @@ import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import { isConstructorDeclaration } from 'typescript'
+
+let controller = new AbortController()
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -28,6 +31,10 @@ const HomePage = class extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
+    console.log(
+      'HomePage componentDidUpdate. prevProps.location.pathname',
+      prevProps.location.pathname,
+    )
     if (this.props.location.pathname !== prevProps.location.pathname) {
       const emailField =
         document.querySelector('input[name="firstName"]') ||
@@ -35,10 +42,70 @@ const HomePage = class extends React.Component {
       if (emailField) {
         emailField.focus()
       }
+      if (
+        Project.albacross &&
+        this.props.location.pathname.indexOf('signup') !== -1
+      ) {
+        console.log('Controller:', controller)
+        EventTarget.prototype.oldAddEventListener =
+          EventTarget.prototype.addEventListener
+        window._nQc = Project.albacross
+        const script = document.createElement('script')
+        script.type = 'text/javascript'
+        script.async = true
+        script.src = 'https://serve.albacross.com/track.js'
+        script.id = 'albacross'
+
+        EventTarget.prototype.addEventListener = function (
+          type,
+          listener,
+          options = false,
+        ) {
+          const parsedOptions =
+            typeof options == 'boolean' ? { capture: options } : options
+
+          console.log(
+            `Attaching event listener - parsedOptions: ${parsedOptions}, type: ${type}, options: ${options}`,
+          )
+          console.log('this: ', this)
+          console.log('listener: ', listener)
+          EventTarget.prototype.oldAddEventListener.call(this, type, listener, {
+            signal: controller.signal,
+            ...parsedOptions,
+          })
+        }
+
+        document.body.appendChild(script)
+      } else if (document.getElementById('albacross')) {
+        console.log('Leaving signup page. Removing overridden addEventListener')
+        controller.abort()
+        controller = new AbortController()
+        EventTarget.prototype.addEventListener =
+          EventTarget.prototype.oldAddEventListener
+        document.body.removeChild(document.getElementById('albacross'))
+        delete window._nQc
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    if (document.getElementById('albacross')) {
+      console.log('Unmounting and removing overridden addEventListener')
+      controller.abort()
+      controller = new AbortController()
+      EventTarget.prototype.addEventListener =
+        EventTarget.prototype.oldAddEventListener
+      document.body.removeChild(document.getElementById('albacross'))
+      delete window._nQc
     }
   }
 
   componentDidMount() {
+    console.log(
+      'HomePage componentDidMount. Pathname:',
+      this.props.location.pathname,
+    )
+
     document.body.classList.remove('dark')
     if (document.location.href.includes('oauth')) {
       const parts = location.href.split('oauth/')
