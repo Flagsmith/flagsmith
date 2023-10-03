@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
-from django.conf import settings
 from django.core import signing
 from django.utils import timezone
 from requests.exceptions import HTTPError, RequestException
@@ -38,7 +37,6 @@ def _unsign_ld_value(value: str, user_id: object) -> str:
     return signing.loads(
         value,
         salt=f"ld_import_{user_id}",
-        max_age=settings.LAUNCH_DARKLY_IMPORT_SENSITIVE_DATA_MAX_AGE_SECONDS,
     )
 
 
