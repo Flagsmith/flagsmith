@@ -29,11 +29,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from users.models import FFAdminUser
 
 
-def _sign_ld_value(value: str, user_id: object) -> str:
+def _sign_ld_value(value: str, user_id: int) -> str:
     return signing.dumps(value, salt=f"ld_import_{user_id}")
 
 
-def _unsign_ld_value(value: str, user_id: object) -> str:
+def _unsign_ld_value(value: str, user_id: int) -> str:
     return signing.loads(
         value,
         salt=f"ld_import_{user_id}",
