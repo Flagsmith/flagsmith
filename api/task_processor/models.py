@@ -105,7 +105,7 @@ class Task(AbstractBaseTask):
         cls,
         schedule_for: datetime,
         task_identifier: str,
-        queue_size: int,
+        queue_size: typing.Optional[int],
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
