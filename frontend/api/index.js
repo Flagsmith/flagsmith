@@ -110,6 +110,7 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
+    { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
   ]
   let output = values.map(getVariable).join('')
   let dynatrace = ''
