@@ -490,7 +490,7 @@ const OrganisationSettingsPage = class extends Component {
                                 <div className='col-md-10'>
                                   <p className='fs-small lh-sm'>
                                     Only allow organisation admins to create
-                                    projects
+                                    projects.
                                   </p>
                                 </div>
                                 <div className='col-md-2 text-right'>
