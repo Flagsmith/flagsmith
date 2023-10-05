@@ -81,6 +81,13 @@ job is complete, all the Identities that were present in your Core API will be p
 
 The Core API will continue to work normally during and following the migration.
 
+:::caution
+
+As of Dec 1st, 2023, we will no longer be replicating Identities from the Core API to our Edge API. Please ensure your
+applications are fully migrated before this point in time.
+
+:::
+
 If you have a product like a mobile app, where you cannot immediately force your users to upgrade (as opposed to a web
 app, for example), you will likely generate Identity writes to the old Core API.
 
