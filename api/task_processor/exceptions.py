@@ -4,3 +4,7 @@ class TaskProcessingError(Exception):
 
 class InvalidArgumentsError(TaskProcessingError):
     pass
+
+
+class TaskQueueFullError(Exception):
+    pass
