@@ -7,6 +7,16 @@ Managing larger numbers of flags is made easier using some of the tools built in
 You can create tags within Flagsmith and tag Flags in order to organise them. Tags can also be used to filter the list
 of Flags in the event that you have a large number.
 
+:::info Protected Tags
+
+Tags with the following names will prevent users from being able to delete tagged Flags via the dashboard:
+
+- `protected`
+- `donotdelete`
+- `permanent`
+
+:::
+
 ## Server-side only Flags
 
 When creating a flag, you can optionally define it as "Server-Side Only". Enabling this option for the flag will prevent
@@ -34,6 +44,13 @@ on that flag. Archiving the flag helps to keep your main list of flags under con
 
 By default, Flagsmith stores flags with lower case characters in order to minimise human error. If you want to store
 flags in a case-sensitive manner you can do this as a Project-wide setting from the Project Settings page.
+
+:::tip
+
+We don't recommend making your Flags case sensitive. This can lead to bugs related to case sensitivity and flags not
+being found at runtime.
+
+:::
 
 ## Feature Name Regular Expressions
 
