@@ -59,7 +59,7 @@
     "copy-webpack-plugin": "^9.1.0",
     "cors": "^2.8.3",
     "cross-env": "5.2.0",
-    "css-loader": "4.3.0",
+    "css-loader": "6.8.1",
     "dompurify": "^3.0.5",
     "dotenv": "6.2.0",
     "express": "4.17.3",
