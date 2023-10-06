@@ -344,44 +344,40 @@ const EnvironmentSettingsPage = class extends Component {
                             </Row>
                           )}
                         </div>
-                        {Utils.getFlagsmithHasFeature(
-                          'configure_hide_sensitive_data',
-                        ) && (
-                          <div className='col-md-6 mt-4'>
-                            <Row className='mb-2'>
-                              <Switch
-                                checked={hide_sensitive_data}
-                                onChange={(v) => {
-                                  this.confirmToggle(
-                                    'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
-                                    'hide_sensitive_data',
-                                    hide_sensitive_data,
-                                  )
-                                }}
-                              />
-                              <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
-                            </Row>
-                            <p className='fs-small lh-sm'>
-                              Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or via
-                              our REST API. For full information on the excluded
-                              fields see documentation{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
-                                target='_blank'
-                                className='fw-normal'
-                              >
-                                here.
-                              </Button>
-                              <div className='text-danger'>
-                                Warning! Enabling this feature will change the
-                                response from the API and could break your
-                                existing code.
-                              </div>
-                            </p>
-                          </div>
-                        )}
+                        <div className='col-md-6 mt-4'>
+                          <Row className='mb-2'>
+                            <Switch
+                              checked={hide_sensitive_data}
+                              onChange={(v) => {
+                                this.confirmToggle(
+                                  'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'hide_sensitive_data',
+                                  hide_sensitive_data,
+                                )
+                              }}
+                            />
+                            <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
+                          </Row>
+                          <p className='fs-small lh-sm'>
+                            Exclude sensitive data from endpoints returning
+                            flags and identity information to the SDKs or via
+                            our REST API. For full information on the excluded
+                            fields see documentation{' '}
+                            <Button
+                              theme='text'
+                              href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
+                              target='_blank'
+                              className='fw-normal'
+                            >
+                              here.
+                            </Button>
+                            <div className='text-danger'>
+                              Warning! Enabling this feature will change the
+                              response from the API and could break your
+                              existing code.
+                            </div>
+                          </p>
+                        </div>
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <Switch
