@@ -6,7 +6,7 @@ const getQueryString = (params) => {
 }
 
 module.exports = {
-  _request(method, _url, data, headers = {}) {
+  _request(method, _url, data, headers = {}, isExternal) {
     const options = {
       headers: {
         'Accept': 'application/json',
@@ -19,7 +19,7 @@ module.exports = {
     if (method !== 'get')
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
 
-    if (this.token) {
+    if (this.token && !isExternal) {
       // add auth tokens to headers of all requests
       options.headers.AUTHORIZATION = `Token ${this.token}`
     }
@@ -71,8 +71,8 @@ module.exports = {
     return this._request('delete', url, data, headers)
   },
 
-  get(url, data, headers) {
-    return this._request('get', url, data || null, headers)
+  get(url, data, headers, isExternal = false) {
+    return this._request('get', url, data || null, headers, isExternal)
   },
 
   post(url, data, headers) {
