@@ -72,12 +72,13 @@ def _create_environments_from_ld(
     environments_by_ld_environment_key: dict[str, Environment] = {}
 
     for ld_environment in ld_environments:
-        environments_by_ld_environment_key[ld_environment["key"]] = Environment(
+        (
+            environments_by_ld_environment_key[ld_environment["key"]],
+            _,
+        ) = Environment.objects.get_or_create(
             name=ld_environment["name"],
             project_id=project_id,
         )
-
-    Environment.objects.bulk_create(environments_by_ld_environment_key.values())
 
     return environments_by_ld_environment_key
 
