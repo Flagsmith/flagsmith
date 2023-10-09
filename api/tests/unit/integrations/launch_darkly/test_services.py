@@ -116,9 +116,9 @@ def test_process_import_request__success__expected_status(
         ("testtag2", "#3d4db6"),
         ("Imported", "#3d4db6"),
     ]
-    assert list(
+    assert set(
         Feature.objects.filter(project=project).values_list("name", "tags__label")
-    ) == [
+    ) == {
         ("flag1", "Imported"),
         ("flag2_value", "Imported"),
         ("flag3_multivalue", "Imported"),
@@ -126,7 +126,7 @@ def test_process_import_request__success__expected_status(
         ("flag5", "testtag"),
         ("flag5", "Imported"),
         ("flag5", "testtag2"),
-    ]
+    }
 
     # Standard feature states have expected values.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
