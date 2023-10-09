@@ -16,6 +16,7 @@ from features.value_types import STRING
 from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.constants import (
+    LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
     LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
 )
 from integrations.launch_darkly.models import (
@@ -87,16 +88,16 @@ def _create_tags_from_ld(
     ld_tags: list[str],
     project_id: int,
 ) -> dict[str, Tag]:
-    tags_by_ld_tag = {
-        tag: Tag(
-            label=tag,
-            color=LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
-            project_id=project_id,
-        )
-        for tag in ld_tags
-    }
+    tags_by_ld_tag = {}
 
-    Tag.objects.bulk_create(tags_by_ld_tag.values())
+    for ld_tag in (*ld_tags, LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL):
+        tags_by_ld_tag[ld_tag], _ = Tag.objects.update_or_create(
+            label=ld_tag,
+            project_id=project_id,
+            defaults={
+                "color": LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
+            },
+        )
 
     return tags_by_ld_tag
 
@@ -188,7 +189,10 @@ def _create_feature_from_ld(
         "multivariate": (MULTIVARIATE, _create_mv_feature_states),
     }[ld_flag["kind"]]
 
-    tags = [tags_by_ld_tag[ld_tag] for ld_tag in ld_flag["tags"]]
+    tags = [
+        tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL],
+        *(tags_by_ld_tag[ld_tag] for ld_tag in ld_flag["tags"]),
+    ]
 
     feature, _ = Feature.objects.update_or_create(
         project_id=project_id,

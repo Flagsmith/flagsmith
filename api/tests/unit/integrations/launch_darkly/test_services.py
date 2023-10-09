@@ -13,6 +13,7 @@ from integrations.launch_darkly.services import (
     process_import_request,
 )
 from projects.models import Project
+from projects.tags.models import Tag
 from users.models import FFAdminUser
 
 
@@ -108,6 +109,24 @@ def test_process_import_request__success__expected_status(
     assert list(
         Feature.objects.filter(project=project).values_list("name", flat=True)
     ) == ["flag1", "flag2_value", "flag3_multivalue", "flag4_multivalue", "flag5"]
+
+    # Tags are created and set as expected.
+    assert list(Tag.objects.filter(project=project).values_list("label", "color")) == [
+        ("testtag", "#3d4db6"),
+        ("testtag2", "#3d4db6"),
+        ("Imported", "#3d4db6"),
+    ]
+    assert list(
+        Feature.objects.filter(project=project).values_list("name", "tags__label")
+    ) == [
+        ("flag1", "Imported"),
+        ("flag2_value", "Imported"),
+        ("flag3_multivalue", "Imported"),
+        ("flag4_multivalue", "Imported"),
+        ("flag5", "testtag"),
+        ("flag5", "Imported"),
+        ("flag5", "testtag2"),
+    ]
 
     # Standard feature states have expected values.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
