@@ -1,5 +1,4 @@
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from edge_api.identities.views import (
@@ -128,10 +127,10 @@ environments_router.register(r"api-keys", EnvironmentAPIKeyViewSet, basename="ap
 app_name = "environments"
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(environments_router.urls)),
-    url(r"^", include(identity_router.urls)),
-    url(r"^", include(edge_identity_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(environments_router.urls)),
+    re_path(r"^", include(identity_router.urls)),
+    re_path(r"^", include(edge_identity_router.urls)),
     path(
         "environments/<str:environment_api_key>/edge-identities-featurestates",
         EdgeIdentityWithIdentifierFeatureStateView.as_view(),

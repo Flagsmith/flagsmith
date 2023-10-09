@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.conf.urls import include
-from django.urls import path
+from django.urls import include, path
 from rest_framework_nested import routers
 
 from features.feature_segments.views import FeatureSegmentViewSet
