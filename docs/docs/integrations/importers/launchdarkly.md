@@ -11,7 +11,7 @@ You can import your Flags and Segments from LaunchDarkly into Flagsmith.
 
 1. Create a LaunchDarkly Access Token. In LaunchDarkly: Account settings > Authorization > Access tokens.
 2. Create a new Project within Flagsmith, then go to Project Settings > Import. Add your Token generated in step 1.
-3. The import will begin immediately. Please dont navigate away from the page until the import is complete.
+3. The import will begin immediately. Please don't navigate away from the page until the import is complete.
 
 ## What we will import
 
