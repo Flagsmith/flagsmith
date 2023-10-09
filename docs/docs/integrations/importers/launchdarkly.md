@@ -10,8 +10,23 @@ You can import your Flags and Segments from LaunchDarkly into Flagsmith.
 ## Integration Setup
 
 1. Create a LaunchDarkly Access Token. In LaunchDarkly: Account settings > Authorization > Access tokens.
-2. From the Flagsmith Integrations menu, select LaunchDarkly. Paste the Access Token from step #1 above.
-3. Start the import.
+2. Using your Access Token and a LaunchDarkly project key (usually `"default"`) , create an Import Request for a
+   Flagsmith project of your choice:
+
+```bash
+curl -X 'POST' \
+  'https://api.flagsmith.com/api/v1/projects/<project_id>/imports/launch-darkly/' \
+  -H 'content-type: application/json' \
+  -H 'authorization: Token <api token>' \
+  -d '{"token":"<launchdarkly token>","project_key":"default"}'
+```
+
+4. The import will begin immediately. Check the import request status:
+
+```bash
+curl https://api.flagsmith.com/api/v1/projects/<project id>/imports/launch-darkly/<import_request_id>/ \
+    -H 'authorization: Token <api token>'
+```
 
 ## What we will import
 
@@ -36,4 +51,4 @@ Boolean values will be taken from the `_summary -> on` field of within LaunchDar
 
 Multivariate LaunchDarkly flags will be imported into Flagsmith as MultiVariate Flagsmith flag values.
 
-Multivariate values will be taken from the `Multivariate` (#todo: check this) field of within LaunchDarkly.
+Multivariate values will be taken from the `variations` field of within LaunchDarkly.
