@@ -110,17 +110,19 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 <TabItem value="dotnet" label=".NET">
 
 ```bash
+# Check https://www.nuget.org/packages/Flagsmith for the latest version!
+
 # Package Manager
-Install-Package Flagsmith -Version 4.0.0
+Install-Package Flagsmith -Version 5.1.0
 
 #.NET CLI
-dotnet add package Flagsmith --version 4.0.0
+dotnet add package Flagsmith --version 5.1.0
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="4.0.0" />
+<PackageReference Include="Flagsmith" Version="5.1.0" />
 
 # Paket CLI
-paket add Flagsmith --version 4.0.0
+paket add Flagsmith --version 5.1.0
 ```
 
 </TabItem>
@@ -158,17 +160,20 @@ composer require flagsmith/flagsmith-php-client symfony/http-client nyholm/psr7 
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/Flagsmith/flagsmith-go-client/v2
+# Check https://github.com/Flagsmith/flagsmith-go-client/releases for the latest version!
+
+go get github.com/Flagsmith/flagsmith-go-client/v3
 ```
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
 ```bash
+# Check https://crates.io/crates/flagsmith/versions for the latest version!
+
 # Cargo.toml
 [dependencies]
 flagsmith = "~1"
-
 ```
 
 </TabItem>
