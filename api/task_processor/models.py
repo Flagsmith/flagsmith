@@ -74,6 +74,7 @@ class Task(AbstractBaseTask):
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
     objects = TaskManager()
+    priority = models.PositiveSmallIntegerField(default=None)
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
