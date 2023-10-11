@@ -827,19 +827,19 @@ files = [
 
 [[package]]
 name = "django"
-version = "3.2.20"
-description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
+version = "4.0.10"
+description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "Django-3.2.20-py3-none-any.whl", hash = "sha256:a477ab326ae7d8807dc25c186b951ab8c7648a3a23f9497763c37307a2b5ef87"},
-    {file = "Django-3.2.20.tar.gz", hash = "sha256:dec2a116787b8e14962014bf78e120bba454135108e1af9e9b91ade7b2964c40"},
+    {file = "Django-4.0.10-py3-none-any.whl", hash = "sha256:4496eb4f65071578b703fdc6e6f29302553c7440e3f77baf4cefa4a4e091fc3d"},
+    {file = "Django-4.0.10.tar.gz", hash = "sha256:2c2f73c16b11cb272c6d5e3b063f0d1be06f378d8dc6005fbe8542565db659cc"},
 ]
 
 [package.dependencies]
-asgiref = ">=3.3.2,<4"
-pytz = "*"
+asgiref = ">=3.4.1,<4"
 sqlparse = ">=0.2.2"
+tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
 [package.extras]
 argon2 = ["argon2-cffi (>=19.1.0)"]
@@ -1098,19 +1098,23 @@ typing_extensions = ">=3.6,<5"
 
 [[package]]
 name = "django-trench"
-version = "0.2.3"
+version = "0.3.1"
 description = "REST Multi-factor authentication package for Django"
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-trench-0.2.3.tar.gz", hash = "sha256:63e189a057c45198d178ea79337e690250b484fcd8ff2057c9fd4b3699639853"},
+    {file = "django-trench-0.3.1.tar.gz", hash = "sha256:ee667681b62c3ab057754419e15c68df93556e586781e4382277ec094e2bc2aa"},
+    {file = "django_trench-0.3.1-py3-none-any.whl", hash = "sha256:1bca8eec1900187f8e5b7b6c63adfa5714258a41d8bdb83d1bee12645cc0cadf"},
 ]
 
 [package.dependencies]
-pyotp = ">=2.2.6"
-smsapi-client = ">=2.2.5"
-twilio = ">=6.18.1"
-yubico-client = ">=1.10.0"
+pyotp = ">=2.6.0"
+smsapi-client = ">=2.4.5"
+twilio = ">=6.56.0"
+yubico-client = ">=1.13.0"
+
+[package.extras]
+docs = ["sphinx (>=1.4)", "sphinx-rtd-theme"]
 
 [[package]]
 name = "djangorestframework"
@@ -3554,6 +3558,17 @@ files = [
 ]
 
 [[package]]
+name = "tzdata"
+version = "2023.3"
+description = "Provider of IANA time zone data"
+optional = false
+python-versions = ">=2"
+files = [
+    {file = "tzdata-2023.3-py2.py3-none-any.whl", hash = "sha256:7e65763eef3120314099b6939b5546db7adce1e7d6f2e179e3df563c70511eda"},
+    {file = "tzdata-2023.3.tar.gz", hash = "sha256:11ef1e08e54acb0d4f95bdb1be05da659673de4acbd21bf9c69e94cc5e907a3a"},
+]
+
+[[package]]
 name = "uritemplate"
 version = "3.0.1"
 description = "URI templates"
@@ -3874,4 +3889,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "43d92401d88145f7c7f482d5a3c6a81fc011c0dadc17768bcbfdd625076f0e0b"
+content-hash = "de4ecb8cbdc564671a15abaea7fd0ee2b99ddf189a02e3b2af205f8eed6bbdc8"

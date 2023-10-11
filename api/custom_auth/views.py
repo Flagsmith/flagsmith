@@ -9,8 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from trench.views.authtoken import (
-    AuthTokenLoginOrRequestMFACode,
-    AuthTokenLoginWithMFACode,
+    MFAFirstStepAuthTokenView,
+    MFASecondStepAuthTokenView,
 )
 
 from custom_auth.serializers import CustomUserDelete
@@ -19,7 +19,7 @@ from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from .models import UserPasswordResetRequest
 
 
-class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
+class CustomMFAFirstStepAuthTokenView(MFAFirstStepAuthTokenView):
     """
     Class to handle throttling for login requests
     """
@@ -28,7 +28,7 @@ class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     throttle_scope = "login"
 
 
-class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
+class CustomMFASecondStepAuthTokenView(MFASecondStepAuthTokenView):
     """
     Override class to add throttling
     """
