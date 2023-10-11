@@ -1,8 +1,10 @@
-from trench.backends.application import ApplicationBackend
+from trench.backends.application import ApplicationMessageDispatcher
 
 
-class CustomApplicationBackend(ApplicationBackend):
+class CustomApplicationMessageDispatcher(ApplicationMessageDispatcher):
     def dispatch_message(self):
-        original_message = super(CustomApplicationBackend, self).dispatch_message()
+        original_message = super(
+            CustomApplicationMessageDispatcher, self
+        ).dispatch_message()
         data = {**original_message, "secret": self.obj.secret}
         return data

@@ -656,7 +656,7 @@ TRENCH_AUTH = {
             "VERBOSE_NAME": "TOTP App",
             "VALIDITY_PERIOD": 60 * 10,
             "USES_THIRD_PARTY_CLIENT": True,
-            "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
+            "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationMessageDispatcher",
         },
     },
     "SECRET_KEY_LENGTH": 32,
