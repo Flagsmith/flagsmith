@@ -1,12 +1,12 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Tuple
 
 from django.core import signing
 from django.utils import timezone
 from requests.exceptions import HTTPError, RequestException
 
 from environments.models import Environment
-from features.feature_types import MULTIVARIATE, STANDARD
+from features.feature_types import MULTIVARIATE, STANDARD, FeatureType
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -102,7 +102,7 @@ def _create_tags_from_ld(
     return tags_by_ld_tag
 
 
-def _create_standard_feature_states(
+def _create_boolean_feature_states(
     ld_flag: ld_types.FeatureFlag,
     feature: Feature,
     environments_by_ld_environment_key: dict[str, Environment],
@@ -114,9 +114,47 @@ def _create_standard_feature_states(
             environment=environment,
             defaults={"enabled": ld_flag_config["on"]},
         )
+
         FeatureStateValue.objects.update_or_create(
             feature_state=feature_state,
-            defaults={"feature_state": feature_state},
+        )
+
+
+def _create_string_feature_states(
+    ld_flag: ld_types.FeatureFlag,
+    feature: Feature,
+    environments_by_ld_environment_key: dict[str, Environment],
+) -> None:
+    variations_by_idx = {
+        str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
+    }
+
+    for ld_environment_key, environment in environments_by_ld_environment_key.items():
+        ld_flag_config = ld_flag["environments"][ld_environment_key]
+
+        is_flag_on = ld_flag_config["on"]
+        if is_flag_on:
+            variation_config_key = "isFallthrough"
+        else:
+            variation_config_key = "isOff"
+
+        string_value = ""
+
+        if ld_flag_config_summary := ld_flag_config.get("_summary"):
+            enabled_variations = ld_flag_config_summary.get("variations") or {}
+            for idx, variation_config in enabled_variations.items():
+                if variation_config.get(variation_config_key):
+                    string_value = variations_by_idx[idx]["value"]
+                    break
+
+        feature_state, _ = FeatureState.objects.update_or_create(
+            feature=feature,
+            environment=environment,
+            defaults={"enabled": is_flag_on},
+        )
+        FeatureStateValue.objects.update_or_create(
+            feature_state=feature_state,
+            defaults={"type": STRING, "string_value": string_value},
         )
 
 
@@ -129,15 +167,14 @@ def _create_mv_feature_states(
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption] = {}
 
     for idx, variation in enumerate(variations):
-        mv_feature_options_by_variation[str(idx)] = MultivariateFeatureOption(
+        (
+            mv_feature_options_by_variation[str(idx)],
+            _,
+        ) = MultivariateFeatureOption.objects.update_or_create(
             feature=feature,
-            type=STRING,
             string_value=variation["value"],
+            defaults={"default_percentage_allocation": 0, "type": STRING},
         )
-
-    MultivariateFeatureOption.objects.bulk_create(
-        mv_feature_options_by_variation.values(),
-    )
 
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
@@ -178,16 +215,38 @@ def _create_mv_feature_states(
                 )
 
 
+def _get_feature_type_and_feature_state_factory(
+    ld_flag: ld_types.FeatureFlag,
+) -> Tuple[
+    FeatureType,
+    Callable[[ld_types.FeatureFlag, Feature, dict[str, Environment]], None],
+]:
+    match ld_flag["kind"]:
+        case "multivariate" if len(ld_flag["variations"]) > 2:
+            feature_type = MULTIVARIATE
+            feature_state_factory = _create_mv_feature_states
+        case "multivariate":
+            feature_type = STANDARD
+            feature_state_factory = _create_string_feature_states
+        case _:  # assume boolean
+            feature_type = STANDARD
+            feature_state_factory = _create_boolean_feature_states
+
+    return feature_type, feature_state_factory
+
+
 def _create_feature_from_ld(
     ld_flag: ld_types.FeatureFlag,
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
     project_id: int,
 ) -> Feature:
-    feature_type, feature_state_factory = {
-        "boolean": (STANDARD, _create_standard_feature_states),
-        "multivariate": (MULTIVARIATE, _create_mv_feature_states),
-    }[ld_flag["kind"]]
+    (
+        feature_type,
+        feature_state_factory,
+    ) = _get_feature_type_and_feature_state_factory(
+        ld_flag,
+    )
 
     tags = [
         tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL],
@@ -230,15 +289,6 @@ def _create_features_from_ld(
         )
         for ld_flag in ld_flags
     ]
-
-
-def get_import_request(
-    project: "Project", ld_project_key: str
-) -> Optional[LaunchDarklyImportRequest]:
-    return LaunchDarklyImportRequest.objects.get(
-        project=project,
-        ld_project_key=ld_project_key,
-    )
 
 
 def create_import_request(
