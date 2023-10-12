@@ -137,19 +137,45 @@ def test_process_import_request__success__expected_status(
     boolean_standard_feature_states_by_env_name["Test"].enabled is True
     boolean_standard_feature_states_by_env_name["Production"].enabled is False
 
-    value_standard_feature = Feature.objects.get(project=project, name="flag2_value")
-    value_standard_feature_states_by_env_name = {
+    string_standard_feature = Feature.objects.get(project=project, name="flag2_value")
+    string_standard_feature_states_by_env_name = {
         fs.environment.name: fs
-        for fs in FeatureState.objects.filter(feature=value_standard_feature)
+        for fs in FeatureState.objects.filter(feature=string_standard_feature)
     }
-    value_standard_feature_states_by_env_name["Test"].enabled is True
-    value_standard_feature_states_by_env_name[
-        "Test"
-    ].get_feature_state_value() == "123123"
-    value_standard_feature_states_by_env_name["Production"].enabled is False
-    value_standard_feature_states_by_env_name[
-        "Production"
-    ].get_feature_state_value() == ""
+    assert string_standard_feature_states_by_env_name["Test"].enabled is True
+    assert (
+        string_standard_feature_states_by_env_name["Test"].get_feature_state_value()
+        == "123123"
+    )
+    assert (
+        string_standard_feature_states_by_env_name["Test"].feature_state_value.type
+        == "unicode"
+    )
+    assert (
+        string_standard_feature_states_by_env_name[
+            "Test"
+        ].feature_state_value.string_value
+        == "123123"
+    )
+    assert string_standard_feature_states_by_env_name["Production"].enabled is False
+    assert (
+        string_standard_feature_states_by_env_name[
+            "Production"
+        ].get_feature_state_value()
+        == ""
+    )
+    assert (
+        string_standard_feature_states_by_env_name[
+            "Production"
+        ].feature_state_value.type
+        == "unicode"
+    )
+    assert (
+        string_standard_feature_states_by_env_name[
+            "Production"
+        ].feature_state_value.string_value
+        == ""
+    )
 
     # Multivariate feature states with percentage rollout have expected values.
     percentage_mv_feature = Feature.objects.get(
@@ -168,7 +194,7 @@ def test_process_import_request__success__expected_status(
             "multivariate_feature_option__string_value",
             "percentage_allocation",
         )
-    ) == [("variation1", 100), ("variation2", 0)]
+    ) == [("variation1", 100), ("variation2", 0), ("variation3", 0)]
 
     assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
     assert list(
