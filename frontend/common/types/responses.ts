@@ -344,5 +344,7 @@ export type Res = {
   identityFeatureStates: IdentityFeatureState[]
   getSubscriptionMetadata: { id: string }
   environment: Environment
+  metadataModelField: { id: string }
+  metaData: { id: string }
   // END OF TYPES
 }

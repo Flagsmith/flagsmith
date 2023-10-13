@@ -108,5 +108,13 @@ export type Req = {
   getGetSubscriptionMetadata: { id: string }
   getEnvironment: { id: string }
   getSubscriptionMetadata: { id: string }
+  getMetadataModelField: { organisation_id: string; id: string }
+  updateMetadataModelField: { organisation_id: string; id: string }
+  deleteMetadataModelField: { organisation_id: string; id: string }
+  createMetadataModelField: { organisation_id: string }
+  getMetaData: { id: string }
+  updateMetaData: { id: string }
+  deleteMetaData: { id: string }
+  createMetaData: {}
   // END OF TYPES
 }

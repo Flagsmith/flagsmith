@@ -53,3 +53,27 @@
     background-color: transparent;
   }
 }
+
+
+.identities-table {
+  display: table;
+  width: 100%;
+  border: 1px solid rgba(101, 109, 123, 0.16);
+  border-radius: 10px;
+}
+
+.identities-row {
+  display: table-row;
+}
+
+.identities-cell {
+  display: table-cell;
+  padding: 10px;
+  border: none;
+  text-align: center;
+}
+
+.identities-header {
+  font-weight: bold;
+}
+
