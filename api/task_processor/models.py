@@ -11,6 +11,14 @@ from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
 
 
+class TaskPriority(models.IntegerChoices):
+    LOWER = 100
+    LOW = 75
+    NORMAL = 50
+    HIGH = 25
+    HIGHEST = 0
+
+
 class AbstractBaseTask(models.Model):
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,7 +82,9 @@ class Task(AbstractBaseTask):
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
     objects = TaskManager()
-    priority = models.PositiveSmallIntegerField(default=None)
+    priority = models.PositiveSmallIntegerField(
+        default=None, null=True, choices=TaskPriority.choices
+    )
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
