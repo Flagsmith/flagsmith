@@ -101,12 +101,14 @@ class Task(AbstractBaseTask):
     def create(
         cls,
         task_identifier: str,
+        priority: TaskPriority = TaskPriority.NORMAL,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
         return Task(
             task_identifier=task_identifier,
+            priority=priority,
             serialized_args=cls.serialize_data(args or tuple()),
             serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )

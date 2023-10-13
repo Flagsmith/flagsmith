@@ -15,6 +15,7 @@ from task_processor.models import (
     RecurringTask,
     RecurringTaskRun,
     Task,
+    TaskPriority,
     TaskResult,
     TaskRun,
 )
@@ -248,26 +249,39 @@ def test_run_task_does_nothing_if_no_tasks(db):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_run_task_runs_tasks_in_correct_order():
+def test_run_task_runs_tasks_in_correct_priority():
     # Given
     # 2 tasks
     task_1 = Task.create(
-        _create_organisation.task_identifier, args=("task 1 organisation",)
+        _create_organisation.task_identifier,
+        args=("task 1 organisation",),
+        priority=TaskPriority.HIGH,
     )
     task_1.save()
 
     task_2 = Task.create(
-        _create_organisation.task_identifier, args=("task 2 organisation",)
+        _create_organisation.task_identifier,
+        args=("task 2 organisation",),
+        priority=TaskPriority.HIGH,
     )
     task_2.save()
+
+    task_3 = Task.create(
+        _create_organisation.task_identifier,
+        args=("task 3 organisation",),
+        priority=TaskPriority.HIGHEST,
+    )
+    task_3.save()
 
     # When
     task_runs_1 = run_tasks()
     task_runs_2 = run_tasks()
+    task_runs_3 = run_tasks()
 
     # Then
-    assert task_runs_1[0].task == task_1
-    assert task_runs_2[0].task == task_2
+    assert task_runs_1[0].task == task_3
+    assert task_runs_2[0].task == task_1
+    assert task_runs_3[0].task == task_2
 
 
 @pytest.mark.django_db(transaction=True)
