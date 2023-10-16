@@ -6,7 +6,7 @@ const getQueryString = (params) => {
 }
 
 module.exports = {
-  _request(method, _url, data, headers = {}) {
+  _request(method, _url, data, headers = {}, isExternal) {
     const options = {
       headers: {
         'Accept': 'application/json',
@@ -19,7 +19,10 @@ module.exports = {
     if (method !== 'get')
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
 
-    if (this.token) {
+    if (
+      (this.token && !isExternal) ||
+      (this.token && isExternal && method !== 'get')
+    ) {
       // add auth tokens to headers of all requests
       options.headers.AUTHORIZATION = `Token ${this.token}`
     }
@@ -51,7 +54,7 @@ module.exports = {
     }
 
     return fetch(url, options)
-      .then(this.status)
+      .then((response) => this.status(response, isExternal))
       .then((response) => {
         // always return json
         let contentType = response.headers.get('content-type')
@@ -75,8 +78,8 @@ module.exports = {
     return this._request('get', url, data || null, headers)
   },
 
-  post(url, data, headers) {
-    return this._request('post', url, data, headers)
+  post(url, data, headers, isExternal = false) {
+    return this._request('post', url, data, headers, isExternal)
   },
 
   put(url, data, headers) {
@@ -88,12 +91,12 @@ module.exports = {
     this.token = _token
   },
 
-  status(response) {
+  status(response, isExternal) {
     // handle ajax requests
     if (response.status >= 200 && response.status < 300) {
       return Promise.resolve(response)
     }
-    if (response.status === 401) {
+    if (!isExternal && response.status === 401) {
       AppActions.setUser(null)
     }
     response
