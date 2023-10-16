@@ -6,6 +6,7 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 
@@ -71,7 +72,7 @@ def call_environment_webhook_for_feature_state_change(
     call_environment_webhooks(environment, data, event_type=event_type)
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def sync_identity_document_features(identity_uuid: str):
     from .models import EdgeIdentity
 
