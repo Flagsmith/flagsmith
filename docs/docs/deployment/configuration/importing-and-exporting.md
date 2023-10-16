@@ -5,7 +5,7 @@ sidebar_position: 110
 
 :::tip
 
-You need to be running Flagsmith version `2.28.2` or greater to be able to export and import your Flagsmith data.
+You need to be running Flagsmith version `2.28.4` or greater to be able to export and import your Flagsmith data.
 
 :::
 
