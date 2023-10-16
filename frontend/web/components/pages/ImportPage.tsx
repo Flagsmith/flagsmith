@@ -40,7 +40,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
           setAppIsLoading(false)
           window.location.reload()
         }
-      }, 5000)
+      }, 1000)
     }
 
     if (statusLoaded) {
