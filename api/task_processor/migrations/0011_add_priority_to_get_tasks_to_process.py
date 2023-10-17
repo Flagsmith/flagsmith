@@ -18,6 +18,11 @@ class Migration(migrations.Migration):
                 "sql",
                 "0011_get_tasks_to_process.sql",
             ),
-            reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process",
+            # reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process;",
+            reverse_sql_file_path=os.path.join(
+                os.path.dirname(__file__),
+                "sql",
+                "0008_get_tasks_to_process.sql",
+            ),
         ),
     ]
