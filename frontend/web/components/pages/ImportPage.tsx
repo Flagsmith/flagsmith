@@ -58,14 +58,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
     _data
-      .get(
-        `https://app.launchdarkly.com/api/v2/projects`,
-        '',
-        {
-          'Authorization': LDKey,
-        },
-        true,
-      )
+      .get(`https://app.launchdarkly.com/api/v2/projects`, '', {
+        'Authorization': LDKey,
+      })
       .then((res) => {
         setIsLoading(false)
         setProjects(res.items)

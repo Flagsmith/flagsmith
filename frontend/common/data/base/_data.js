@@ -1,3 +1,4 @@
+import Project from 'common/project'
 const getQueryString = (params) => {
   const esc = encodeURIComponent
   return Object.keys(params)
@@ -6,7 +7,7 @@ const getQueryString = (params) => {
 }
 
 module.exports = {
-  _request(method, _url, data, headers = {}, isExternal) {
+  _request(method, _url, data, headers = {}) {
     const options = {
       headers: {
         'Accept': 'application/json',
@@ -15,6 +16,7 @@ module.exports = {
       method,
       timeout: 60000,
     }
+    const isExternal = !_url.startsWith(Project.api)
 
     if (method !== 'get')
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
@@ -74,12 +76,12 @@ module.exports = {
     return this._request('delete', url, data, headers)
   },
 
-  get(url, data, headers, isExternal = false) {
-    return this._request('get', url, data || null, headers, isExternal)
+  get(url, data, headers) {
+    return this._request('get', url, data || null, headers)
   },
 
-  post(url, data, headers, isExternal = false) {
-    return this._request('post', url, data, headers, isExternal)
+  post(url, data, headers) {
+    return this._request('post', url, data, headers)
   },
 
   put(url, data, headers) {
