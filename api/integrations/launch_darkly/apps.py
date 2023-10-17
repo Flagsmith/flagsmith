@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class LaunchDarklyConfigurationConfig(AppConfig):
+class LaunchDarklyConfigurationConfig(BaseAppConfig):
     name = "integrations.launch_darkly"
