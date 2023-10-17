@@ -160,7 +160,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   renderNoResults={
                     <div>
                       <Row>
-                        <div className='font-weight-medium'>No Prokects</div>
+                        <div className='font-weight-medium'>No Projects</div>
                       </Row>
                     </div>
                   }
