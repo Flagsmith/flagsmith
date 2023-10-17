@@ -19,7 +19,7 @@ const TestWebhook: FC<TestWebhookType> = ({ json, webhook }) => {
     setLoading(true)
     setSuccess(false)
     data
-      .post(webhook, JSON.parse(json), null, true)
+      .post(webhook, JSON.parse(json), null)
       .then(() => {
         setLoading(false)
         setSuccess(true)
