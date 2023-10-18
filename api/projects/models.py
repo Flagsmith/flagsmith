@@ -46,7 +46,7 @@ class IdentityOverridesV2MigrationStatus(models.TextChoices):
     COMPLETE = "COMPLETE", "Complete"
 
 
-UNAUDITED_FIELDS = [
+UNAUDITED_PROJECT_FIELDS = (
     "hide_disabled_flags",
     "enable_dynamo_db",
     "prevent_flag_defaults",
@@ -57,13 +57,13 @@ UNAUDITED_FIELDS = [
     "max_features_allowed",
     "max_segment_overrides_allowed",
     "identity_overrides_v2_migration_status",
-]
+)
 
 
 class Project(
     LifecycleModelMixin,
-    abstract_base_auditable_model_factory(UNAUDITED_FIELDS),
     SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(UNAUDITED_PROJECT_FIELDS),
 ):
     history_record_class_path = "projects.models.HistoricalProject"
     related_object_type = RelatedObjectType.PROJECT

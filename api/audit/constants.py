@@ -15,7 +15,7 @@ USER_CREATED_MESSAGE = "New User created: %s"
 USER_UPDATED_MESSAGE = "User %s updated: %s"
 USER_DELETED_MESSAGE = "User deleted: %s"
 GROUP_CREATED_MESSAGE = "New Permission Group created: %s"
-GROUP_UPDATED_MESSAGE = "Permission Group updated: %s"
+GROUP_UPDATED_MESSAGE = "Permission Group %s updated: %s"
 GROUP_DELETED_MESSAGE = "Permission Group deleted: %s"
 FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Flag state / Remote Config value update scheduled for %s for feature: %s"
