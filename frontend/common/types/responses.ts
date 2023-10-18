@@ -110,16 +110,19 @@ export type AuditLogItem = {
   created_date: string
   log: string
   author?: User
+  organisation: Organisation
   environment?: Environment
-  project: ProjectSummary
+  project?: ProjectSummary
   related_object_id: number
   related_object_type:
-    | 'FEATURE'
-    | 'FEATURE_STATE'
-    | 'ENVIRONMENT'
     | 'CHANGE_REQUEST'
-    | 'SEGMENT'
     | 'EDGE_IDENTITY'
+    | 'ENVIRONMENT'
+    | 'FEATURE_STATE'
+    | 'FEATURE'
+    | 'IMPORT_REQUEST'
+    | 'PROJECT'
+    | 'SEGMENT'
   is_system_event: boolean
 }
 
