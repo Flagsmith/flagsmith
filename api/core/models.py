@@ -7,7 +7,11 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
-from simple_history.models import HistoricalRecords
+from simple_history.models import (
+    HistoricalRecords as BaseHistoricalRecords,
+    pre_create_historical_m2m_records,
+    post_create_historical_m2m_records,
+)
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.related_object_type import RelatedObjectType
@@ -153,13 +157,70 @@ def get_history_user(
     return None if getattr(user, "is_master_api_key_user", False) else user
 
 
+# remove this once django-simple-history > 3.4.0 is released
+class HistoricalRecords(BaseHistoricalRecords):
+    # patch https://github.com/jazzband/django-simple-history/pull/1218
+    def create_historical_record_m2ms(self, history_instance, instance):
+        for field in history_instance._history_m2m_fields:
+            m2m_history_model = self.m2m_models[field]
+            original_instance = history_instance.instance
+            through_model = getattr(original_instance, field.name).through
+
+            insert_rows = []
+
+            # `m2m_field_name()` is part of Django's internal API
+            through_field_name = field.m2m_field_name()
+
+            rows = through_model.objects.filter(**{through_field_name: instance})
+
+            for row in rows:
+                insert_row = {"history": history_instance}
+
+                for through_model_field in through_model._meta.fields:
+                    insert_row[through_model_field.name] = getattr(
+                        row, through_model_field.name
+                    )
+
+                insert_rows.append(m2m_history_model(**insert_row))
+
+            pre_create_historical_m2m_records.send(
+                sender=m2m_history_model,
+                rows=insert_rows,
+                history_instance=history_instance,
+                instance=instance,
+                field=field,
+            )
+            created_rows = m2m_history_model.objects.bulk_create(insert_rows)
+            post_create_historical_m2m_records.send(
+                sender=m2m_history_model,
+                created_rows=created_rows,
+                history_instance=history_instance,
+                instance=instance,
+                field=field,
+            )
+
+    # patch https://github.com/jazzband/django-simple-history/pull/1243
+    def get_m2m_fields_from_model(self, model):
+        m2m_fields = set(self.m2m_fields)
+        try:
+            m2m_fields.update(getattr(model, self.m2m_fields_model_field_name))
+        except AttributeError:
+            pass
+        field_names = [
+            field if isinstance(field, str) else field.name for field in m2m_fields
+        ]
+        return [getattr(model, field_name).field for field_name in field_names]
+
+
 def abstract_base_auditable_model_factory(
-    historical_records_excluded_fields: list[str] | None = None,
+    unaudited_fields: typing.Sequence[str] | None = None,
+    audited_m2m_fields: typing.Sequence[str] | None = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     class Base(_AbstractBaseAuditableModel):
         history = HistoricalRecords(
             bases=[BaseHistoricalModel],
-            excluded_fields=historical_records_excluded_fields or [],
+            excluded_fields=unaudited_fields or (),
+            m2m_fields=audited_m2m_fields or (),
             get_user=get_history_user,
             inherit=True,
         )
