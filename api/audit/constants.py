@@ -8,6 +8,9 @@ FEATURE_SEGMENT_UPDATED_MESSAGE = (
 )
 ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
 ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
+PROJECT_CREATED_MESSAGE = "New Project created: %s"
+PROJECT_UPDATED_MESSAGE = "Project updated: %s"
+PROJECT_DELETED_MESSAGE = "Project deleted: %s"
 FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Flag state / Remote Config value update scheduled for %s for feature: %s"
 )
