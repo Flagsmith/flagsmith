@@ -18,54 +18,63 @@ Once you've got that understood, lets get the SDKs integrated!
 
 :::
 
-## Github Links
-
-All our SDKs are on Github.
+## SDK Overview
 
 <Tabs groupId="language">
 <TabItem value="py" label="Python">
 
-https://github.com/Flagsmith/flagsmith-python-client
+- Version Compatibility: **Python 3.8+**
+- Source Code: https://github.com/Flagsmith/flagsmith-python-client
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-https://github.com/Flagsmith/flagsmith-java-client
+- Version Compatibility: **JDK 11+**
+- Source Code: https://github.com/Flagsmith/flagsmith-java-client
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-https://github.com/Flagsmith/flagsmith-dotnet-client
+- Version Compatibility: **.NET core 6.0+**
+- Source Code: https://github.com/Flagsmith/flagsmith-dotnet-client
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-https://github.com/Flagsmith/flagsmith-nodejs-client https://github.com/Flagsmith/flagsmith-nodejs-examples
+- Version Compatibility: **Node 14+**
+- Source Code:
+  - https://github.com/Flagsmith/flagsmith-nodejs-client
+  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
 
-https://github.com/Flagsmith/flagsmith-ruby-client
+- Version Compatibility: **Ruby 2.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-ruby-client
 
 </TabItem>
 <TabItem value="php" label="PHP">
 
-https://github.com/Flagsmith/flagsmith-php-client
+- Version Compatibility: **php 7.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-php-client
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-https://github.com/Flagsmith/flagsmith-go-client
+- Version Compatibility: **Go 1.18+**
+- Source Code: https://github.com/Flagsmith/flagsmith-go-client
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
-https://github.com/Flagsmith/flagsmith-rust-client
+- Version Compatibility: **2021 edition (1.56.0)+**
+- Source Code: https://github.com/Flagsmith/flagsmith-rust-client
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
 
-https://github.com/Flagsmith/flagsmith-elixir-client
+- Version Compatibility: **Elixir 1.12+**
+- Source Code: https://github.com/Flagsmith/flagsmith-elixir-client
 
 </TabItem>
 </Tabs>
@@ -101,17 +110,19 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 <TabItem value="dotnet" label=".NET">
 
 ```bash
+# Check https://www.nuget.org/packages/Flagsmith for the latest version!
+
 # Package Manager
-Install-Package Flagsmith -Version 4.0.0
+Install-Package Flagsmith -Version 5.1.0
 
 #.NET CLI
-dotnet add package Flagsmith --version 4.0.0
+dotnet add package Flagsmith --version 5.1.0
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="4.0.0" />
+<PackageReference Include="Flagsmith" Version="5.1.0" />
 
 # Paket CLI
-paket add Flagsmith --version 4.0.0
+paket add Flagsmith --version 5.1.0
 ```
 
 </TabItem>
@@ -149,17 +160,20 @@ composer require flagsmith/flagsmith-php-client symfony/http-client nyholm/psr7 
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/Flagsmith/flagsmith-go-client/v2
+# Check https://github.com/Flagsmith/flagsmith-go-client/releases for the latest version!
+
+go get github.com/Flagsmith/flagsmith-go-client/v3
 ```
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
 ```bash
+# Check https://crates.io/crates/flagsmith/versions for the latest version!
+
 # Cargo.toml
 [dependencies]
 flagsmith = "~1"
-
 ```
 
 </TabItem>

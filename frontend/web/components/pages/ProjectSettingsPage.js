@@ -12,6 +12,7 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import ImportPage from './ImportPage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -463,6 +464,14 @@ const ProjectSettingsPage = class extends Component {
                         level='project'
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature('import_project') && (
+                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                        <ImportPage
+                          projectId={this.props.match.params.projectId}
+                          projectName={project.name}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

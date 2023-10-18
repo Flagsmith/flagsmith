@@ -72,8 +72,8 @@
                     "value": "flagsmith_environments"
                 },
                 {
-                    "name": "FE_E2E_TEST_USER_EMAIL",
-                    "value": "nightwatch@solidstategroup.com"
+                    "name": "ENABLE_FE_E2E",
+                    "value": "True"
                 },
                 {
                     "name": "GITHUB_CLIENT_ID",
@@ -161,7 +161,7 @@
                 },
                 {
                     "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up,scale-up-v2,scale-up-annual-v2"
+                    "value": "scale-up,scale-up-v2,scale-up-annual-v2,scale-up-24-months-v2"
                 },
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",

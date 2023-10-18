@@ -13,6 +13,7 @@ import Permission from 'common/providers/Permission'
 import Icon from './Icon'
 import ProjectSelect from './ProjectSelect'
 import AsideProjectButton from './AsideProjectButton'
+import Constants from 'common/constants'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -484,21 +485,32 @@ const Aside = class extends Component {
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
-                                                {manageIdentityPermission && (
+                                                {Utils.renderWithPermission(
+                                                  manageIdentityPermission,
+                                                  Constants.environmentPermissions(
+                                                    'View Identities',
+                                                  ),
                                                   <NavLink
                                                     id='users-link'
-                                                    className='aside__environment-list-item mt-1'
+                                                    className={`aside__environment-list-item ${
+                                                      !manageIdentityPermission &&
+                                                      'disabled'
+                                                    } mt-1`}
                                                     exact
                                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                   >
                                                     <span className='mr-2'>
                                                       <Icon
                                                         name='people'
-                                                        fill='#9DA4AE'
+                                                        fill={
+                                                          manageIdentityPermission
+                                                            ? '#9DA4AE'
+                                                            : '#696969'
+                                                        }
                                                       />
                                                     </span>
                                                     Identities
-                                                  </NavLink>
+                                                  </NavLink>,
                                                 )}
 
                                                 {environmentAdmin && (
