@@ -120,9 +120,11 @@ export type AuditLogItem = {
     | 'ENVIRONMENT'
     | 'FEATURE_STATE'
     | 'FEATURE'
+    | 'GROUP'
     | 'IMPORT_REQUEST'
     | 'PROJECT'
     | 'SEGMENT'
+    | 'USER'
   is_system_event: boolean
 }
 

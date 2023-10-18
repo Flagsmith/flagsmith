@@ -1,8 +1,10 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class UsersConfig(AppConfig):
+class UsersConfig(BaseAppConfig):
+    default = True
     name = "users"
 
     def ready(self):
+        super().ready()
         from . import signals  # noqa

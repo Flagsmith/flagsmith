@@ -1,6 +1,7 @@
 import logging
 import typing
 
+from core.models import abstract_base_auditable_model_factory
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -11,6 +12,14 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
+from audit.constants import (
+    USER_CREATED_MESSAGE,
+    USER_DELETED_MESSAGE,
+    USER_UPDATED_MESSAGE,
+    GROUP_CREATED_MESSAGE,
+    GROUP_DELETED_MESSAGE,
+)
+from audit.models import RelatedObjectType
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
@@ -91,12 +100,26 @@ class UserManager(BaseUserManager):
         return self.get(email__iexact=email)
 
 
-class FFAdminUser(LifecycleModel, AbstractUser):
+UNAUDITED_USER_FIELDS = [
+    "date_joined",
+    "marketing_consent_given",
+    "sign_up_type",
+    "last_login",
+]
+
+
+class FFAdminUser(
+    LifecycleModel,
+    abstract_base_auditable_model_factory(UNAUDITED_USER_FIELDS),
+    AbstractUser,
+):
+    history_record_class_path = "users.models.HistoricalFFAdminUser"
+    related_object_type = RelatedObjectType.USER
+
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation
     )
     email = models.EmailField(unique=True, null=False)
-    objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
     first_name = models.CharField(_("first name"), max_length=30)
     last_name = models.CharField(_("last name"), max_length=150)
@@ -109,6 +132,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
+
+    objects = UserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
@@ -324,6 +349,25 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
 
+    def get_create_log_message(self, history_instance) -> str | None:
+        return USER_CREATED_MESSAGE % self
+
+    def get_update_log_message(self, history_instance) -> str | None:
+        changed_fields = history_instance.diff_against(
+            history_instance.prev_record
+        ).changed_fields
+        return (
+            "; ".join(USER_UPDATED_MESSAGE % (field, self) for field in changed_fields)
+            or None
+        )
+
+    def get_delete_log_message(self, history_instance) -> str | None:
+        return USER_DELETED_MESSAGE % self
+
+    def _get_organisations(self) -> typing.Iterable[Organisation]:
+        # TODO IS THIS CAUSING A DEADLOCK?
+        return self.organisations.all()
+
 
 # Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
 # we use __subclasshook__[1] method on UserABC to check if FFAdminUser implements the required interface
@@ -343,10 +387,13 @@ class UserPermissionGroupMembership(models.Model):
         db_table = "users_userpermissiongroup_users"
 
 
-class UserPermissionGroup(models.Model):
+class UserPermissionGroup(abstract_base_auditable_model_factory(), models.Model):
     """
     Model to group users within an organisation for the purposes of permissioning.
     """
+
+    history_record_class_path = "users.models.HistoricalUserPermissionGroup"
+    related_object_type = RelatedObjectType.GROUP
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
@@ -388,3 +435,12 @@ class UserPermissionGroup(models.Model):
 
     def remove_users_by_id(self, user_ids: list):
         self.users.remove(*user_ids)
+
+    def get_create_log_message(self, history_instance) -> str | None:
+        return GROUP_CREATED_MESSAGE % self.name
+
+    def get_delete_log_message(self, history_instance) -> str | None:
+        return GROUP_DELETED_MESSAGE % self.name
+
+    def _get_organisations(self) -> typing.Iterable[Organisation]:
+        return [self.organisation]
