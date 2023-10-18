@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import re
+import typing
 
 from core.models import SoftDeleteExportableModel, abstract_base_auditable_model_factory
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Count
 from django.utils import timezone
 from django_lifecycle import (
     AFTER_SAVE,
@@ -26,6 +26,12 @@ from permissions.models import (
 )
 from projects.managers import ProjectManager
 from projects.tasks import write_environments_to_dynamodb
+
+
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from features.models import Feature
+    from segments.models import Segment
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
@@ -96,6 +102,10 @@ class Project(
 
     objects = ProjectManager()
 
+    environments: models.QuerySet[Environment]
+    features: models.QuerySet[Feature]
+    segments: models.QuerySet[Segment]
+
     class Meta:
         ordering = ["id"]
 
@@ -108,7 +118,7 @@ class Project(
             self.features.count() > self.max_features_allowed
             or self.segments.count() > self.max_segments_allowed
             or self.environments.annotate(
-                segment_override_count=Count("feature_segments")
+                segment_override_count=models.Count("feature_segments")
             )
             .filter(segment_override_count__gt=self.max_segment_overrides_allowed)
             .exists()
