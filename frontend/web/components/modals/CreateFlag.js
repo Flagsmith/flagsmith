@@ -507,6 +507,20 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
+        {!isEdit && (
+          <FormGroup className='mb-5 setting'>
+            <InputGroup
+              title={'Metadata*'}
+              tooltip={Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION}
+              tooltipPlace='left'
+              component={
+                <Button size='xSmall' type='button' theme='outline'>
+                  Add Metadata
+                </Button>
+              }
+            />
+          </FormGroup>
+        )}
         {!identity && projectFlag && (
           <Permission
             level='project'

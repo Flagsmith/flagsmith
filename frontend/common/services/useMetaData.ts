@@ -9,7 +9,7 @@ export const metaDataService = service
       createMetaData: builder.mutation<Res['metaData'], Req['createMetaData']>({
         invalidatesTags: [{ id: 'LIST', type: 'MetaData' }],
         query: (query: Req['createMetaData']) => ({
-          body: query,
+          body: query.body,
           method: 'POST',
           url: `metadata/fields/`,
         }),
@@ -17,9 +17,14 @@ export const metaDataService = service
       deleteMetaData: builder.mutation<Res['metaData'], Req['deleteMetaData']>({
         invalidatesTags: [{ id: 'LIST', type: 'MetaData' }],
         query: (query: Req['deleteMetaData']) => ({
-          body: query,
           method: 'DELETE',
           url: `metadata/fields/${query.id}/`,
+        }),
+      }),
+      getListMetaData: builder.query<Res['metaData'], Req['getMetaData']>({
+        providesTags: (res) => [{ id: res?.id, type: 'MetaData' }],
+        query: (query: Req['getMetaData']) => ({
+          url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
       }),
       getMetaData: builder.query<Res['metaData'], Req['getMetaData']>({
@@ -34,7 +39,7 @@ export const metaDataService = service
           { id: res?.id, type: 'MetaData' },
         ],
         query: (query: Req['updateMetaData']) => ({
-          body: query,
+          body: query.body,
           method: 'PUT',
           url: `metadata/fields/${query.id}/`,
         }),
@@ -72,7 +77,20 @@ export async function getMetaData(
     typeof metaDataService.endpoints.getMetaData.initiate
   >[1],
 ) {
-  return store.dispatch(metaDataService.endpoints.getMetaData.initiate(data, options))
+  return store.dispatch(
+    metaDataService.endpoints.getMetaData.initiate(data, options),
+  )
+}
+export async function getListMetaData(
+  store: any,
+  data: Req['getListMetaData'],
+  options?: Parameters<
+    typeof metaDataService.endpoints.getListMetaData.initiate
+  >[1],
+) {
+  return store.dispatch(
+    metaDataService.endpoints.getListMetaData.initiate(data, options),
+  )
 }
 export async function updateMetaData(
   store: any,
@@ -90,6 +108,7 @@ export async function updateMetaData(
 export const {
   useCreateMetaDataMutation,
   useDeleteMetaDataMutation,
+  useGetListMetaDataQuery,
   useGetMetaDataQuery,
   useUpdateMetaDataMutation,
   // END OF EXPORTS

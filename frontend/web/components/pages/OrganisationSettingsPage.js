@@ -22,32 +22,12 @@ import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import CreateMetadata from 'components/modals/CreateMetadata'
+import { getListMetaData, deleteMetaData } from 'common/services/useMetaData'
+import { getStore } from 'common/store'
+import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
 const widths = [170, 150, 80]
 const metadataWidth = [200, 150, 150, 70, 450]
-const metadata = [
-  {
-    'description': 'string',
-    'id': 1,
-    'name': 'metadata 1',
-    'organisation': 6,
-    'type': 'int',
-  },
-  {
-    'description': 'string',
-    'id': 2,
-    'name': 'metadata 2',
-    'organisation': 6,
-    'type': 'url',
-  },
-  {
-    'description': 'string',
-    'id': 3,
-    'name': 'metadata 3',
-    'organisation': 6,
-    'type': 'str',
-  },
-]
 
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
@@ -60,6 +40,8 @@ const OrganisationSettingsPage = class extends Component {
     super(props, context)
     this.state = {
       manageSubscriptionLoaded: true,
+      metadata: [],
+      metadataModelField: [],
       role: 'ADMIN',
     }
     if (!AccountStore.getOrganisation()) {
@@ -78,6 +60,8 @@ const OrganisationSettingsPage = class extends Component {
     ) {
       this.context.router.history.replace('/projects')
     }
+    this.getMetadata()
+    this.getMetadataModelField()
   }
 
   onSave = () => {
@@ -99,6 +83,68 @@ const OrganisationSettingsPage = class extends Component {
     } else {
       this.context.router.history.replace('/create')
     }
+  }
+
+  getMetadata = () => {
+    getListMetaData(
+      getStore(),
+      {
+        organisation: AccountStore.getOrganisation().id,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
+      this.setState({
+        metadata: res.data.results,
+      })
+    })
+  }
+
+  getMetadataModelField = () => {
+    getMetadataModelFieldList(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      console.log('DEBUG: res2:', res.data.results)
+      this.setState({
+        metadataModelField: res.data.results,
+      })
+    })
+  }
+
+  // const mergeMetadata = res.data.results.map((item1) => {
+  //   const matchingItem2 = resMetadataModelField.data.results.find(
+  //     (item2) => item2.field === item1.id,
+  //   )
+  //   if (matchingItem2) {
+  //     return {
+  //       ...item1,
+  //       content_type: matchingItem2.content_type,
+  //     }
+  //   }
+  //   return item1
+  // })
+  // metadataModelField
+
+  metadataCreated = () => {
+    // getListMetaData(getStore(), {
+    //     organisation: AccountStore.getOrganisation().id,
+    //   },
+    // ).then((res) => {
+    //   this.setState({
+    //     metadata: res.data.results,
+    //   })
+      this.getMetadata()
+      // closeModal()
+    // })
+  }
+
+  deleteMetadata = (id) => {
+    toast('Metadata has been deleted')
+    deleteMetaData(getStore(), {
+      id,
+    }).then(() => {
+      console.log('DEBUG: deleted')
+      this.getMetadata()
+    })
   }
 
   deleteInvite = (id) => {
@@ -278,10 +324,14 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editMetadata = () => {
+  editMetadata = (id) => {
     openModal(
       `Edit Metadata`,
-      <CreateMetadata isEdit={true} />,
+      <CreateMetadata
+        isEdit={true}
+        id={id}
+        onComplete={this.metadataCreated}
+      />,
       'side-modal create-feature-modal',
     )
   }
@@ -1435,7 +1485,7 @@ const OrganisationSettingsPage = class extends Component {
                               <PanelSearch
                                 id='webhook-list'
                                 title={'Metadata'}
-                                items={metadata}
+                                items={this.state.metadata}
                                 header={
                                   <Row className='table-header'>
                                     <Flex className='table-column px-3'>
@@ -1469,14 +1519,16 @@ const OrganisationSettingsPage = class extends Component {
                                 }
                                 renderRow={(metadata) => (
                                   <Row
-                                    onClick={() => {
-                                      this.editMetadata()
-                                    }}
                                     space
                                     className='list-item clickable cursor-pointer'
                                     key={metadata.id}
                                   >
-                                    <Flex className='table-column px-3'>
+                                    <Flex
+                                      onClick={() => {
+                                        this.editMetadata(metadata.id)
+                                      }}
+                                      className='table-column px-3'
+                                    >
                                       <div className='font-weight-medium mb-1'>
                                         {metadata.name}
                                       </div>
@@ -1488,60 +1540,98 @@ const OrganisationSettingsPage = class extends Component {
                                         display: 'flex',
                                         width: '185px',
                                       }}
+                                      onClick={() => {
+                                        this.editMetadata(metadata.id)
+                                      }}
                                     >
-                                      {/* <Switch
-                                        checked={true}
-                                        style={{ marginRight: '10px' }}
-                                        onChange={() =>
-                                          console.log('DEBUG: change:')
-                                        }
-                                      />
-                                      <span
-                                        className='checkbox mr-2'
-                                        style={{
-                                          alignItems: 'center',
-                                          display: 'flex',
-                                          flexDirection: 'column',
+                                      <div
+                                        className='table-column'
+                                        style={{ width: '1600px' }}
+                                        onClick={() => {
+                                          this.editMetadata(metadata.id)
                                         }}
                                       >
-                                        {<Icon name='checkmark-square' />}
-                                        {'Required'}
-                                      </span> */}
-                                      {'Enabled'}
+                                        <Switch
+                                          checked={true}
+                                          onChange={() =>
+                                            console.log('DEBUG: change:')
+                                          }
+                                        />
+                                        {'Enabled'}
+                                        <span className='checkbox mr-2'>
+                                          <Switch
+                                            checked={false}
+                                            onChange={() =>
+                                              console.log('DEBUG: change:')
+                                            }
+                                          />
+                                          {'Required'}
+                                        </span>
+                                      </div>
                                     </div>
                                     <div
                                       className='table-column'
-                                      style={{ width: '150px' }}
+                                      style={{ width: '180px' }}
+                                      onClick={() => {
+                                        this.editMetadata(metadata.id)
+                                      }}
                                     >
-                                      {/* <Select
-                                        value={'disable'}
-                                        options={[
-                                          { id: 1, label: 'disable' },
-                                          { id: 2, label: 'enable' },
-                                          { id: 3, label: 'required' },
-                                        ]}
-                                        onChange={() =>
-                                          console.log('DEBUG: id')
-                                        }
-                                        className='mb-4 react-select'
-                                      /> */}
-                                      {'Disabled'}
+                                      <div
+                                        className='table-column'
+                                        style={{ width: '170px' }}
+                                        onClick={() => {
+                                          this.editMetadata(metadata.id)
+                                        }}
+                                      >
+                                        <Switch
+                                          checked={true}
+                                          onChange={() =>
+                                            console.log('DEBUG: change:')
+                                          }
+                                        />
+                                        {'Enabled'}
+                                        <span className='checkbox mr-2'>
+                                          <Switch
+                                            checked={false}
+                                            onChange={() =>
+                                              console.log('DEBUG: change:')
+                                            }
+                                          />
+                                          {'Required'}
+                                        </span>
+                                      </div>
                                     </div>
                                     <div
                                       className='table-column'
-                                      style={{ width: '150px' }}
+                                      style={{ width: '170px' }}
+                                      onClick={() => {
+                                        this.editMetadata(metadata.id)
+                                      }}
                                     >
-                                      {/* <Switch
-                                        checked={true}
-                                        onChange={() =>
-                                          console.log('DEBUG: change:')
-                                        }
-                                      />
-                                      <span className='checkbox mr-2'>
-                                        {<Icon name='checkmark-square' />}
-                                        {'Required'}
-                                      </span> */}
-                                      {'Required'}
+                                      <div
+                                        className='table-column'
+                                        style={{ width: '150px' }}
+                                        onClick={() => {
+                                          this.editMetadata(metadata.id)
+                                        }}
+                                      >
+                                        <Switch
+                                          checked={true}
+                                          onChange={() =>
+                                            console.log('DEBUG: change:')
+                                          }
+                                        />
+                                        {'Enabled'}
+                                        <span className='checkbox mr-2'>
+                                          <Switch
+                                            checked={true}
+                                            onChange={() =>
+                                              console.log('DEBUG: change:')
+                                            }
+                                          />
+                                          {'Required'}
+                                        </span>
+                                      </div>
                                     </div>
 
                                     <div className='table-column'>
@@ -1549,7 +1639,7 @@ const OrganisationSettingsPage = class extends Component {
                                         id='delete-invite'
                                         type='button'
                                         onClick={() => {
-                                          console.log('DEBUG: delte metadata')
+                                          this.deleteMetadata(metadata.id)
                                         }}
                                         className='btn btn-with-icon'
                                       >

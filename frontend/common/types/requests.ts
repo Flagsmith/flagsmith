@@ -113,8 +113,21 @@ export type Req = {
   deleteMetadataModelField: { organisation_id: string; id: string }
   createMetadataModelField: { organisation_id: string }
   getMetaData: { id: string }
-  updateMetaData: { id: string }
+  updateMetaData: {
+    id: string
+    body: {
+      name: string
+      type: string
+      description: string
+      organisation: number
+    }
+  }
   deleteMetaData: { id: string }
-  createMetaData: {}
+  createMetaData: {
+    name: string
+    type: string
+    description: string
+    organisation: number
+  }
   // END OF TYPES
 }
