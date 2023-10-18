@@ -13,11 +13,12 @@ from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from audit.constants import (
+    GROUP_CREATED_MESSAGE,
+    GROUP_DELETED_MESSAGE,
+    GROUP_UPDATED_MESSAGE,
     USER_CREATED_MESSAGE,
     USER_DELETED_MESSAGE,
     USER_UPDATED_MESSAGE,
-    GROUP_CREATED_MESSAGE,
-    GROUP_DELETED_MESSAGE,
 )
 from audit.models import RelatedObjectType
 from environments.models import Environment
@@ -100,17 +101,23 @@ class UserManager(BaseUserManager):
         return self.get(email__iexact=email)
 
 
-UNAUDITED_USER_FIELDS = [
-    "date_joined",
+# NOTE date_joined cannot be excluded because there is also a date_joined field on
+# the organisations through model, and currently simple history would create a
+# historical through model without the field but try to store the value anyway
+UNAUDITED_USER_FIELDS = (
+    # "date_joined",
     "marketing_consent_given",
     "sign_up_type",
     "last_login",
-]
+)
+AUDITED_USER_M2M_FIELDS = ("organisations",)
 
 
 class FFAdminUser(
     LifecycleModel,
-    abstract_base_auditable_model_factory(UNAUDITED_USER_FIELDS),
+    abstract_base_auditable_model_factory(
+        UNAUDITED_USER_FIELDS, AUDITED_USER_M2M_FIELDS
+    ),
     AbstractUser,
 ):
     history_record_class_path = "users.models.HistoricalFFAdminUser"
@@ -365,7 +372,7 @@ class FFAdminUser(
         return USER_DELETED_MESSAGE % self
 
     def _get_organisations(self) -> typing.Iterable[Organisation]:
-        # TODO IS THIS CAUSING A DEADLOCK?
+        # TODO #2797 IS THIS CAUSING A DEADLOCK?
         return self.organisations.all()
 
 
@@ -387,7 +394,12 @@ class UserPermissionGroupMembership(models.Model):
         db_table = "users_userpermissiongroup_users"
 
 
-class UserPermissionGroup(abstract_base_auditable_model_factory(), models.Model):
+AUDITED_GROUP_M2M_FIELDS = ("users",)
+
+
+class UserPermissionGroup(
+    abstract_base_auditable_model_factory(audited_m2m_fields=AUDITED_GROUP_M2M_FIELDS)
+):
     """
     Model to group users within an organisation for the purposes of permissioning.
     """
@@ -401,7 +413,7 @@ class UserPermissionGroup(abstract_base_auditable_model_factory(), models.Model)
         blank=True,
         related_name="permission_groups",
         through=UserPermissionGroupMembership,
-        through_fields=["userpermissiongroup", "ffadminuser"],
+        through_fields=("userpermissiongroup", "ffadminuser"),
     )
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
@@ -410,7 +422,6 @@ class UserPermissionGroup(abstract_base_auditable_model_factory(), models.Model)
         default=False,
         help_text="If set to true, all new users will be added to this group",
     )
-
     external_id = models.CharField(
         blank=True,
         null=True,
@@ -438,6 +449,17 @@ class UserPermissionGroup(abstract_base_auditable_model_factory(), models.Model)
 
     def get_create_log_message(self, history_instance) -> str | None:
         return GROUP_CREATED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> str | None:
+        changed_fields = history_instance.diff_against(
+            history_instance.prev_record
+        ).changed_fields
+        return (
+            "; ".join(
+                GROUP_UPDATED_MESSAGE % (field, self.name) for field in changed_fields
+            )
+            or None
+        )
 
     def get_delete_log_message(self, history_instance) -> str | None:
         return GROUP_DELETED_MESSAGE % self.name
