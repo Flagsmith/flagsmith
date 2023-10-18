@@ -30,11 +30,15 @@ def create_audit_log_from_historical_record(
         else None
     )
 
+    history_record_class_path = instance.history_record_class_path or (
+        f"{history_instance.__class__.__module__}.{history_instance.__class__.__name__}"
+    )
+
     tasks.create_audit_log_from_historical_record.delay(
         kwargs={
             "history_instance_id": history_instance.history_id,
             "history_user_id": getattr(history_user, "id", None),
-            "history_record_class_path": instance.history_record_class_path,
+            "history_record_class_path": history_record_class_path,
         },
         delay_until=delay_until,
     )
