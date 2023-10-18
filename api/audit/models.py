@@ -13,6 +13,7 @@ from django_lifecycle import (
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
+from organisations.models import Organisation
 from projects.models import Project
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
@@ -21,15 +22,26 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 class AuditLog(LifecycleModel):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
+    # TODO #2797: data migrate missing organisation values and rename this
+    _organisation = models.ForeignKey(
+        Organisation,
+        db_column="organisation",
+        related_name="audit_logs",
+        null=True,
+        on_delete=models.DO_NOTHING,
+    )
+    _organisation_id: int | None
     project = models.ForeignKey(
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
+    project_id: int | None
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="audit_logs",
         null=True,
         on_delete=models.DO_NOTHING,
     )
+    environment_id: int | None
 
     log = models.TextField()
     author = models.ForeignKey(
@@ -66,6 +78,28 @@ class AuditLog(LifecycleModel):
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
 
+    # TODO #2797: data migrate missing organisation values and remove these
+
+    @property
+    def organisation(self) -> Organisation | None:
+        return self._organisation or (
+            self.project.organisation if self.project else None
+        )
+
+    @organisation.setter
+    def organisation(self, value):
+        self._organisation = value
+
+    @property
+    def organisation_id(self) -> int | None:
+        return self._organisation_id or (
+            self.project.organisation_id if self.project else None
+        )
+
+    @organisation_id.setter
+    def organisation_id(self, value):
+        self._organisation_id = value
+
     @property
     def environment_document_updated(self) -> bool:
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
@@ -99,9 +133,12 @@ class AuditLog(LifecycleModel):
         return getattr(module, class_name)
 
     @hook(BEFORE_CREATE)
-    def add_project(self):
-        if self.environment and self.project is None:
-            self.project = self.environment.project
+    def add_project_organisation(self):
+        """Ensure dependent fields are present"""
+        if self.project_id is None and self.environment:
+            self.project_id = self.environment.project_id
+        if self.organisation_id is None and self.project:
+            self.organisation_id = self.project.organisation_id
 
     @hook(
         AFTER_CREATE,
@@ -111,6 +148,10 @@ class AuditLog(LifecycleModel):
     )
     def process_environment_update(self):
         from environments.tasks import process_environment_update
+
+        # Some logs do not relate to projects/environments
+        if not self.project:
+            return
 
         environments_filter = Q()
         if self.environment_id:

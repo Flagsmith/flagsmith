@@ -114,13 +114,13 @@ class Segment(
             rule.does_identity_match(identity, traits) for rule in rules
         )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return SEGMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
-    def _get_project(self):
+    def _get_project(self) -> Project | None:
         return self.project
 
 
@@ -397,14 +397,14 @@ class Condition(
 
         return False
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         return f"Condition updated on segment '{self._get_segment().name}'."
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         if not self._get_segment().deleted_at:
             return f"Condition removed from segment '{self._get_segment().name}'."
 
@@ -419,5 +419,5 @@ class Condition(
             setattr(self, "segment", self.rule.get_segment())
         return self.segment
 
-    def _get_project(self) -> typing.Optional[Project]:
+    def _get_project(self) -> Project | None:
         return self.rule.get_segment().project

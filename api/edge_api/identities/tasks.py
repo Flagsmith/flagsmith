@@ -98,8 +98,6 @@ def generate_audit_log_records(
     user_id: int = None,
     master_api_key_id: int = None,
 ):
-    audit_records = []
-
     feature_override_changes = changes.get("feature_overrides")
     if not feature_override_changes:
         return
@@ -108,21 +106,20 @@ def generate_audit_log_records(
         "project", "project__organisation"
     ).get(api_key=environment_api_key)
 
+    audit_logs = []
     for feature_name, change_details in feature_override_changes.items():
         action = {"+": "created", "-": "deleted", "~": "updated"}.get(
             change_details.get("change_type")
         )
         log = f"Feature override {action} for feature '{feature_name}' and identity '{identifier}'"
-        audit_records.append(
+        audit_logs.append(
             AuditLog(
-                project=environment.project,
                 environment=environment,
                 log=log,
                 author_id=user_id,
+                master_api_key_id=master_api_key_id,
                 related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
                 related_object_uuid=identity_uuid,
-                master_api_key_id=master_api_key_id,
             )
         )
-
-    AuditLog.objects.bulk_create(audit_records)
+    AuditLog.objects.bulk_create(audit_logs)

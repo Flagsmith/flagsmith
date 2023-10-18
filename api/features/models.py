@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import datetime
 import logging
@@ -193,16 +193,16 @@ class Feature(
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return FEATURE_CREATED_MESSAGE % self.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return FEATURE_DELETED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         return FEATURE_UPDATED_MESSAGE % self.name
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def _get_project(self) -> Project | None:
         return self.project
 
 
@@ -375,13 +375,13 @@ class FeatureSegment(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
             self.segment.name,
         )
 
-    def _get_environment(self) -> "Environment":
+    def _get_environment(self) -> Environment | None:
         return self.environment
 
 
@@ -839,7 +839,7 @@ class FeatureState(
     def belongs_to_uncommited_change_request(self) -> bool:
         return self.change_request_id and not self.change_request.committed_at
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
@@ -852,7 +852,7 @@ class FeatureState(
 
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -865,7 +865,7 @@ class FeatureState(
             )
         return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         try:
             if self.identity_id:
                 return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
@@ -882,7 +882,7 @@ class FeatureState(
             # Account for cascade deletes
             return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> int | None:
         # Change requests can create, update, or delete feature states that may never go live,
         # since we already include the change requests in the audit log
         # we don't want to create separate audit logs for the associated
@@ -903,10 +903,10 @@ class FeatureState(
 
         return kwargs
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def _get_environment(self) -> Environment | None:
         return self.environment
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def _get_project(self) -> Project | None:
         return self.feature.project
 
     def _is_more_recent_version(self, other: "FeatureState") -> bool:
@@ -939,7 +939,7 @@ class FeatureStateValue(
         clone.save()
         return clone
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         fs = self.feature_state
 
         changes = history_instance.diff_against(history_instance.prev_record).changes
@@ -974,5 +974,5 @@ class FeatureStateValue(
 
         return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def _get_environment(self) -> Environment | None:
         return self.feature_state.environment

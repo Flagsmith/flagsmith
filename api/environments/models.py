@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import logging
 import typing
@@ -318,10 +317,10 @@ class Environment(
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return ENVIRONMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         return ENVIRONMENT_UPDATED_MESSAGE % self.name
 
     def get_hide_disabled_flags(self) -> bool:
@@ -349,11 +348,8 @@ class Environment(
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
         return map_environment_to_environment_document(environment)
 
-    def _get_environment(self):
+    def _get_environment(self) -> Environment | None:
         return self
-
-    def _get_project(self):
-        return self.project
 
 
 class Webhook(AbstractBaseExportableWebhookModel):

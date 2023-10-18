@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import typing
 import uuid
@@ -12,6 +14,7 @@ from audit.related_object_type import RelatedObjectType
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
+    from organisations.models import Organisation
     from projects.models import Project
     from users.models import FFAdminUser
 
@@ -82,54 +85,64 @@ class _AbstractBaseAuditableModel(models.Model):
     class Meta:
         abstract = True
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         """Override if audit log records should be written when model is created"""
         return None
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         """Override if audit log records should be written when model is updated"""
         return None
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         """Override if audit log records should be written when model is deleted"""
         return None
 
-    def get_environment_and_project(
+    def get_organisations_project_environment(
         self,
-    ) -> typing.Tuple[typing.Optional["Environment"], typing.Optional["Project"]]:
-        environment, project = self._get_environment(), self._get_project()
-        if not (environment or project):
+    ) -> tuple[typing.Iterable[Organisation], Project | None, Environment | None]:
+        environment = self._get_environment()
+        project = self._get_project() or (environment.project if environment else None)
+        organisations = self._get_organisations() or (
+            [project.organisation] if project else []
+        )
+        if not organisations:
             raise RuntimeError(
-                "One of _get_environment() or _get_project() must "
-                "be implemented and return a non-null value"
+                f"{self.__class__.__name__}: One of _get_organisations(), _get_project() or _get_environment() must "
+                "be implemented and return a truthy value"
             )
-        return environment, project
+        return organisations, project, environment
 
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         """Add extra kwargs to the creation of the AuditLog record"""
         return {}
 
-    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+    def get_audit_log_author(self, history_instance) -> FFAdminUser | None:
         """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> int | None:
         """Override the related object ID in cases where it shouldn't be self.id"""
-        return self.id
+        return self.pk
 
-    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+    def get_audit_log_related_object_type(
+        self, history_instance
+    ) -> RelatedObjectType | None:
         """
         Override the related object type to account for writing audit logs for related objects
         when certain events happen on this model.
         """
         return self.related_object_type
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
-        """Return the related environment for this model."""
+    def _get_organisations(self) -> typing.Iterable[Organisation]:
+        """Return the related organisation for this model."""
+        return []
+
+    def _get_project(self) -> Project | None:
+        """Return the related project for this model."""
         return None
 
-    def _get_project(self) -> typing.Optional["Project"]:
-        """Return the related project for this model."""
+    def _get_environment(self) -> Environment | None:
+        """Return the related environment for this model."""
         return None
 
 
@@ -141,7 +154,7 @@ def get_history_user(
 
 
 def abstract_base_auditable_model_factory(
-    historical_records_excluded_fields: typing.List[str] = None,
+    historical_records_excluded_fields: list[str] | None = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     class Base(_AbstractBaseAuditableModel):
         history = HistoricalRecords(

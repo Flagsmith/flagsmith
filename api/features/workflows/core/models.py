@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import logging
 import typing
@@ -42,7 +44,6 @@ from .exceptions import (
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from projects.models import Project
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -120,13 +121,13 @@ class ChangeRequest(
         self.committed_by = committed_by
         self.save()
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         if (
             history_instance.prev_record
             and history_instance.prev_record.committed_at is None
@@ -144,11 +145,8 @@ class ChangeRequest(
         ):
             return self.committed_by
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def _get_environment(self) -> Environment | None:
         return self.environment
-
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.environment.project
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -251,11 +249,11 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
             fail_silently=True,
         )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if self.approved_at is not None:
             return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         if (
             history_instance.prev_record.approved_at is None
             and self.approved_at is not None
@@ -268,7 +266,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
     def get_audit_log_author(self, history_instance) -> "FFAdminUser":
         return self.user
 
-    def _get_environment(self):
+    def _get_environment(self) -> Environment | None:
         return self.change_request.environment
 
 

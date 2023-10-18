@@ -49,7 +49,11 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
+        # TODO #2797: data migrate missing organisation values and query on organisation only
         return Q(
+            _organisation__userorganisation__user=self.request.user,
+            _organisation__userorganisation__role=OrganisationRole.ADMIN,
+        ) | Q(
             project__organisation__userorganisation__user=self.request.user,
             project__organisation__userorganisation__role=OrganisationRole.ADMIN,
         )
@@ -59,7 +63,10 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, OrganisationAuditLogPermissions]
 
     def _get_base_filters(self) -> Q:
-        return Q(project__organisation__id=self.kwargs["organisation_pk"])
+        # TODO #2797: data migrate missing organisation values and query on organisation only
+        return Q(_organisation__id=self.kwargs["organisation_pk"]) | Q(
+            project__organisation__id=self.kwargs["organisation_pk"]
+        )
 
 
 class ProjectAuditLogViewSet(_BaseAuditLogViewSet):
