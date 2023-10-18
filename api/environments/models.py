@@ -163,7 +163,7 @@ class Environment(
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
 
-        # Since identities are closely tied to the enviroment
+        # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
         for feature_state in self.feature_states.filter(identity=None):

@@ -775,3 +775,28 @@ class TraitViewSetTestCase(TestCase):
 
         # and
         assert Trait.objects.filter(pk=trait_2.id).exists()
+
+
+def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(
+    settings, identity, environment, api_client
+):
+    # Given
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    url = reverse("api-v1:sdk-traits-list")
+    data = {
+        "identity": {"identifier": identity.identifier},
+        "trait_key": "key",
+        "trait_value": "value",
+    }
+
+    # When
+    for _ in range(10):
+        res = api_client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK

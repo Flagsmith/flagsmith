@@ -28,6 +28,10 @@ class APIKeyUser(UserABC):
         return True
 
     @property
+    def pk(self) -> str:
+        return self.key.id
+
+    @property
     def is_master_api_key_user(self) -> bool:
         return True
 
