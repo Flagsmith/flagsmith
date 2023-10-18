@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
 import re
 
-from core.models import SoftDeleteExportableModel
+from core.models import SoftDeleteExportableModel, abstract_base_auditable_model_factory
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -17,6 +16,8 @@ from django_lifecycle import (
     hook,
 )
 
+from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+from audit.related_object_type import RelatedObjectType
 from organisations.models import Organisation
 from permissions.models import (
     PROJECT_PERMISSION_TYPE,
@@ -30,12 +31,33 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class Project(LifecycleModelMixin, SoftDeleteExportableModel):
+UNAUDITED_FIELDS = [
+    "hide_disabled_flags",
+    "enable_dynamo_db",
+    "prevent_flag_defaults",
+    "enable_realtime_updates",
+    "only_allow_lower_case_feature_names",
+    "feature_name_regex",
+    "max_segments_allowed",
+    "max_features_allowed",
+    "max_segment_overrides_allowed",
+]
+
+
+class Project(
+    LifecycleModelMixin,
+    abstract_base_auditable_model_factory(UNAUDITED_FIELDS),
+    SoftDeleteExportableModel,
+):
+    history_record_class_path = "projects.models.HistoricalProject"
+    related_object_type = RelatedObjectType.PROJECT
+
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
         Organisation, related_name="projects", on_delete=models.CASCADE
     )
+    organisation_id: int
     hide_disabled_flags = models.BooleanField(
         default=False,
         help_text="If true will exclude flags from SDK which are " "disabled",
@@ -148,6 +170,15 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             not self.feature_name_regex
             or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
+
+    def get_create_log_message(self, history_instance) -> str | None:
+        return PROJECT_CREATED_MESSAGE % self.name
+
+    def get_delete_log_message(self, history_instance) -> str | None:
+        return PROJECT_DELETED_MESSAGE % self.name
+
+    def _get_project(self) -> Project | None:
+        return self
 
 
 class ProjectPermissionManager(models.Manager):
