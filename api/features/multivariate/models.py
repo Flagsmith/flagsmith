@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 import uuid
 
@@ -83,17 +85,17 @@ class MultivariateFeatureOption(
             self.feature.type = STANDARD
             self.feature.save()
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         return f"Multivariate option added to feature '{self.feature.name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         if not self.feature.deleted_at:
             return f"Multivariate option removed from feature '{self.feature.name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
-    def _get_project(self) -> typing.Optional["Project"]:
+    def _get_project(self) -> Project | None:
         return self.feature.project
 
 
@@ -143,7 +145,7 @@ class MultivariateFeatureStateValue(
 
         return clone
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         feature_state = self.feature_state
         feature = feature_state.feature
 
@@ -162,5 +164,5 @@ class MultivariateFeatureStateValue(
 
         return self.feature_state.feature_id
 
-    def _get_environment(self) -> typing.Optional["Environment"]:
+    def _get_environment(self) -> Environment | None:
         return self.feature_state.environment

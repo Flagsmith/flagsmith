@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Literal, Optional, TypedDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from core.models import abstract_base_auditable_model_factory
 from django.db import models
@@ -36,10 +38,10 @@ class LaunchDarklyImportRequest(
 
     status: LaunchDarklyImportStatus = models.JSONField()
 
-    def get_create_log_message(self, _) -> str:
+    def get_create_log_message(self, history_instance) -> str | None:
         return "New LaunchDarkly import requested"
 
-    def get_update_log_message(self, _) -> Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         if not self.completed_at:
             return None
         if self.status.get("result") == "success":
@@ -48,10 +50,10 @@ class LaunchDarklyImportRequest(
             return f"LaunchDarkly import failed with error: {error_message}"
         return "LaunchDarkly import failed"
 
-    def get_audit_log_author(self) -> "FFAdminUser":
+    def get_audit_log_author(self) -> FFAdminUser:
         return self.created_by
 
-    def _get_project(self) -> Project:
+    def _get_project(self) -> Project | None:
         return self.project
 
     class Meta:

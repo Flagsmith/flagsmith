@@ -72,13 +72,21 @@ class Segment(
 
         return False
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def does_identity_match(
+        self, identity: "Identity", traits: typing.List["Trait"] = None
+    ) -> bool:
+        rules = self.rules.all()
+        return rules.count() > 0 and all(
+            rule.does_identity_match(identity, traits) for rule in rules
+        )
+
+    def get_create_log_message(self, history_instance) -> str | None:
         return SEGMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> str | None:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
-    def _get_project(self):
+    def _get_project(self) -> Project | None:
         return self.project
 
 
@@ -171,14 +179,170 @@ class Condition(
             self.value,
         )
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def does_identity_match(  # noqa: C901
+        self, identity: "Identity", traits: typing.List["Trait"] = None
+    ) -> bool:
+        if self.operator == PERCENTAGE_SPLIT:
+            return self._check_percentage_split_operator(identity)
+
+        # we allow passing in traits to handle when they aren't
+        # persisted for certain organisations
+        traits = identity.identity_traits.all() if traits is None else traits
+        matching_trait = next(
+            filter(lambda t: t.trait_key == self.property, traits), None
+        )
+        if matching_trait is None:
+            return self.operator == IS_NOT_SET
+
+        if self.operator in (IS_SET, IS_NOT_SET):
+            return self.operator == IS_SET
+        elif self.operator == MODULO:
+            if matching_trait.value_type in [INTEGER, FLOAT]:
+                return self._check_modulo_operator(matching_trait.trait_value)
+        elif self.operator == IN:
+            return str(matching_trait.trait_value) in self.value.split(",")
+        elif matching_trait.value_type == INTEGER:
+            return self.check_integer_value(matching_trait.integer_value)
+        elif matching_trait.value_type == FLOAT:
+            return self.check_float_value(matching_trait.float_value)
+        elif matching_trait.value_type == BOOLEAN:
+            return self.check_boolean_value(matching_trait.boolean_value)
+        elif is_semver(self.value):
+            return self.check_semver_value(matching_trait.string_value)
+
+        return self.check_string_value(matching_trait.string_value)
+
+    def _check_percentage_split_operator(self, identity):
+        try:
+            float_value = float(self.value) / 100.0
+        except ValueError:
+            return False
+
+        segment = self.rule.get_segment()
+        return (
+            get_hashed_percentage_for_object_ids(
+                object_ids=[segment.id, identity.get_hash_key()]
+            )
+            <= float_value
+        )
+
+    def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
+        try:
+            divisor, remainder = self.value.split("|")
+            divisor = float(divisor)
+            remainder = float(remainder)
+        except ValueError:
+            return False
+
+        return value % divisor == remainder
+
+    def check_integer_value(self, value: int) -> bool:
+        try:
+            int_value = int(str(self.value))
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == int_value
+        elif self.operator == GREATER_THAN:
+            return value > int_value
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= int_value
+        elif self.operator == LESS_THAN:
+            return value < int_value
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= int_value
+        elif self.operator == NOT_EQUAL:
+            return value != int_value
+
+        return False
+
+    def check_float_value(self, value: float) -> bool:
+        try:
+            float_value = float(str(self.value))
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == float_value
+        elif self.operator == GREATER_THAN:
+            return value > float_value
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= float_value
+        elif self.operator == LESS_THAN:
+            return value < float_value
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= float_value
+        elif self.operator == NOT_EQUAL:
+            return value != float_value
+
+        return False
+
+    def check_boolean_value(self, value: bool) -> bool:
+        if self.value in ("False", "false", "0"):
+            bool_value = False
+        elif self.value in ("True", "true", "1"):
+            bool_value = True
+        else:
+            return False
+
+        if self.operator == EQUAL:
+            return value == bool_value
+        elif self.operator == NOT_EQUAL:
+            return value != bool_value
+
+        return False
+
+    def check_semver_value(self, value: str) -> bool:
+        try:
+            condition_version_info = semver.VersionInfo.parse(
+                remove_semver_suffix(self.value)
+            )
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == condition_version_info
+        elif self.operator == GREATER_THAN:
+            return value > condition_version_info
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= condition_version_info
+        elif self.operator == LESS_THAN:
+            return value < condition_version_info
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= condition_version_info
+        elif self.operator == NOT_EQUAL:
+            return value != condition_version_info
+
+        return False
+
+    def check_string_value(self, value: str) -> bool:
+        try:
+            str_value = str(self.value)
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == str_value
+        elif self.operator == NOT_EQUAL:
+            return value != str_value
+        elif self.operator == CONTAINS:
+            return str_value in value
+        elif self.operator == NOT_CONTAINS:
+            return str_value not in value
+        elif self.operator == REGEX:
+            return re.compile(str(self.value)).match(value) is not None
+
+        return False
+
+    def get_update_log_message(self, history_instance) -> str | None:
         return f"Condition updated on segment '{self._get_segment().name}'."
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> str | None:
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> str | None:
         if not self._get_segment().deleted_at:
             return f"Condition removed from segment '{self._get_segment().name}'."
 
@@ -193,5 +357,5 @@ class Condition(
             setattr(self, "segment", self.rule.get_segment())
         return self.segment
 
-    def _get_project(self) -> typing.Optional[Project]:
+    def _get_project(self) -> Project | None:
         return self.rule.get_segment().project
