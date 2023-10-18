@@ -117,6 +117,8 @@ wanted a Segment to evaluate as true for 5 different customer tenancies. Create 
 matches all of those 5 customer tenancy ID's and no others. You can then create a Trait value for the Identity that
 contains the tenancy ID of that user.
 
+The `In` operator _is_ case sensitive when evaluating alphabetical characters.
+
 ### SemVer-aware operators
 
 The following [SemVer](https://semver.org/) operators are also available:

@@ -149,6 +149,7 @@ INSTALLED_APPS = [
     "integrations.webhook",
     "integrations.dynatrace",
     "integrations.flagsmith",
+    "integrations.launch_darkly",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -218,6 +219,7 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -227,11 +229,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
+        "user": USER_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -443,8 +447,16 @@ SWAGGER_SETTINGS = {
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
+# Enable E2E tests
+ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
-FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
+# User email address used for E2E Signup test
+E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for Change email E2E test which is part of invite tests
+E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for the rest of the E2E tests
+E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(

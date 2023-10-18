@@ -496,6 +496,20 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ]
+    ),
+)
 class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -542,6 +556,7 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    throttle_classes = []
     pagination_class = None
 
     @swagger_auto_schema(

@@ -2,7 +2,9 @@ import cn from 'classnames'
 
 const themeClassNames = {
   danger: 'alert-danger',
+  info: 'alert-info',
   success: 'alert',
+  warning: 'alert-warning',
 }
 
 const Message = class extends React.Component {

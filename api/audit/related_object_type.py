@@ -8,3 +8,4 @@ class RelatedObjectType(enum.Enum):
     ENVIRONMENT = "Environment"
     CHANGE_REQUEST = "Change request"
     EDGE_IDENTITY = "Edge Identity"
+    IMPORT_REQUEST = "Import request"
