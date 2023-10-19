@@ -7,7 +7,7 @@ sidebar_position: 10
 
 You can import your Flags and Segments from LaunchDarkly into Flagsmith.
 
-:::warn
+:::caution
 
 Flagsmith and Launch Darkly do have differences in their product design and underlying data model. Our importer makes
 sane decisions around how to migrate data but we strongly recommend you check the results of the import by hand once the
