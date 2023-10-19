@@ -1,3 +1,11 @@
+# generic/default audit messages
+
+CREATED_MESSAGE = "New {model_name} created: {identity}"
+DELETED_MESSAGE = "{model_name} deleted: {identity}"
+UPDATED_MESSAGE = "{model_name} {field} updated: {identity}"
+
+# specific audit messages
+
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
 FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
@@ -8,15 +16,6 @@ FEATURE_SEGMENT_UPDATED_MESSAGE = (
 )
 ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
 ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
-PROJECT_CREATED_MESSAGE = "New Project created: %s"
-PROJECT_UPDATED_MESSAGE = "Project updated: %s"
-PROJECT_DELETED_MESSAGE = "Project deleted: %s"
-USER_CREATED_MESSAGE = "New User created: %s"
-USER_UPDATED_MESSAGE = "User %s updated: %s"
-USER_DELETED_MESSAGE = "User deleted: %s"
-GROUP_CREATED_MESSAGE = "New Permission Group created: %s"
-GROUP_UPDATED_MESSAGE = "Permission Group %s updated: %s"
-GROUP_DELETED_MESSAGE = "Permission Group deleted: %s"
 FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Flag state / Remote Config value update scheduled for %s for feature: %s"
 )

@@ -12,14 +12,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-from audit.constants import (
-    GROUP_CREATED_MESSAGE,
-    GROUP_DELETED_MESSAGE,
-    GROUP_UPDATED_MESSAGE,
-    USER_CREATED_MESSAGE,
-    USER_DELETED_MESSAGE,
-    USER_UPDATED_MESSAGE,
-)
 from audit.models import RelatedObjectType
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
@@ -116,11 +108,14 @@ AUDITED_USER_M2M_FIELDS = ("organisations",)
 class FFAdminUser(
     LifecycleModel,
     abstract_base_auditable_model_factory(
-        UNAUDITED_USER_FIELDS, AUDITED_USER_M2M_FIELDS
+        UNAUDITED_USER_FIELDS,
+        AUDITED_USER_M2M_FIELDS,
+        audit_create=True,
+        audit_update=True,
+        audit_delete=True,
     ),
     AbstractUser,
 ):
-    history_record_class_path = "users.models.HistoricalFFAdminUser"
     related_object_type = RelatedObjectType.USER
 
     organisations = models.ManyToManyField(
@@ -356,21 +351,6 @@ class FFAdminUser(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
 
-    def get_create_log_message(self, history_instance) -> str | None:
-        return USER_CREATED_MESSAGE % self
-
-    def get_update_log_message(self, history_instance) -> str | None:
-        changed_fields = history_instance.diff_against(
-            history_instance.prev_record
-        ).changed_fields
-        return (
-            "; ".join(USER_UPDATED_MESSAGE % (field, self) for field in changed_fields)
-            or None
-        )
-
-    def get_delete_log_message(self, history_instance) -> str | None:
-        return USER_DELETED_MESSAGE % self
-
     def _get_organisations(self) -> typing.Iterable[Organisation]:
         # TODO #2797 IS THIS CAUSING A DEADLOCK?
         return self.organisations.all()
@@ -387,7 +367,7 @@ class UserPermissionGroupMembership(models.Model):
         "users.UserPermissionGroup",
         on_delete=models.CASCADE,
     )
-    ffadminuser = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    ffadminuser = models.ForeignKey(FFAdminUser, on_delete=models.CASCADE)
     group_admin = models.BooleanField(default=False)
 
     class Meta:
@@ -398,18 +378,22 @@ AUDITED_GROUP_M2M_FIELDS = ("users",)
 
 
 class UserPermissionGroup(
-    abstract_base_auditable_model_factory(audited_m2m_fields=AUDITED_GROUP_M2M_FIELDS)
+    abstract_base_auditable_model_factory(
+        audited_m2m_fields=AUDITED_GROUP_M2M_FIELDS,
+        audit_create=True,
+        audit_update=True,
+        audit_delete=True,
+    )
 ):
     """
     Model to group users within an organisation for the purposes of permissioning.
     """
 
-    history_record_class_path = "users.models.HistoricalUserPermissionGroup"
     related_object_type = RelatedObjectType.GROUP
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
-        "users.FFAdminUser",
+        FFAdminUser,
         blank=True,
         related_name="permission_groups",
         through=UserPermissionGroupMembership,
@@ -447,22 +431,8 @@ class UserPermissionGroup(
     def remove_users_by_id(self, user_ids: list):
         self.users.remove(*user_ids)
 
-    def get_create_log_message(self, history_instance) -> str | None:
-        return GROUP_CREATED_MESSAGE % self.name
-
-    def get_update_log_message(self, history_instance) -> str | None:
-        changed_fields = history_instance.diff_against(
-            history_instance.prev_record
-        ).changed_fields
-        return (
-            "; ".join(
-                GROUP_UPDATED_MESSAGE % (field, self.name) for field in changed_fields
-            )
-            or None
-        )
-
-    def get_delete_log_message(self, history_instance) -> str | None:
-        return GROUP_DELETED_MESSAGE % self.name
+    def get_audit_log_identity(self) -> str:
+        return self.name
 
     def _get_organisations(self) -> typing.Iterable[Organisation]:
         return [self.organisation]

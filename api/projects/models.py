@@ -16,7 +16,6 @@ from django_lifecycle import (
     hook,
 )
 
-from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
 from audit.related_object_type import RelatedObjectType
 from organisations.models import Organisation
 from permissions.models import (
@@ -53,9 +52,10 @@ UNAUDITED_PROJECT_FIELDS = (
 class Project(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(UNAUDITED_PROJECT_FIELDS),
+    abstract_base_auditable_model_factory(
+        UNAUDITED_PROJECT_FIELDS, audit_create=True, audit_delete=True
+    ),
 ):
-    history_record_class_path = "projects.models.HistoricalProject"
     related_object_type = RelatedObjectType.PROJECT
 
     name = models.CharField(max_length=2000)
@@ -181,11 +181,8 @@ class Project(
             or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
 
-    def get_create_log_message(self, history_instance) -> str | None:
-        return PROJECT_CREATED_MESSAGE % self.name
-
-    def get_delete_log_message(self, history_instance) -> str | None:
-        return PROJECT_DELETED_MESSAGE % self.name
+    def get_audit_log_identity(self) -> str:
+        return self.name
 
     def _get_project(self) -> Project | None:
         return self

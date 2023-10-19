@@ -14,6 +14,7 @@ from simple_history.models import (
 )
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
+from audit.constants import CREATED_MESSAGE, DELETED_MESSAGE, UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
 
 if typing.TYPE_CHECKING:
@@ -137,6 +138,19 @@ class _AbstractBaseAuditableModel(models.Model):
         """
         return self.related_object_type
 
+    def get_audit_log_identity(self) -> str:
+        """Override the human-readable identity for the related object"""
+        return str(self)
+
+    def get_audit_log_model_name(self, history_instance) -> str:
+        """Override the human-readable model name for the related object"""
+        if related_object_type := self.get_audit_log_related_object_type(
+            history_instance
+        ):
+            return related_object_type.value
+        else:
+            return self._meta.verbose_name or self.__class__.__name__
+
     def _get_organisations(self) -> typing.Iterable[Organisation]:
         """Return the related organisation for this model."""
         return []
@@ -212,9 +226,51 @@ class HistoricalRecords(BaseHistoricalRecords):
         return [getattr(model, field_name).field for field_name in field_names]
 
 
+def default_get_create_log_message(
+    self: _AbstractBaseAuditableModel, history_instance
+) -> str | None:
+    return CREATED_MESSAGE.format(
+        model_name=self.get_audit_log_model_name(history_instance),
+        identity=self.get_audit_log_identity(),
+    )
+
+
+def default_get_update_log_message(
+    self: _AbstractBaseAuditableModel, history_instance
+) -> str | None:
+    if not (prev_record := history_instance.prev_record):
+        logger.warning(f"No previous record for {self}")
+        return None
+
+    model_name = self.get_audit_log_model_name(history_instance)
+    identity = self.get_audit_log_identity()
+    changed_fields = history_instance.diff_against(prev_record).changed_fields
+    return (
+        "; ".join(
+            UPDATED_MESSAGE.format(
+                model_name=model_name, identity=identity, field=field
+            )
+            for field in changed_fields
+        )
+        or None
+    )
+
+
+def default_get_delete_log_message(
+    self: _AbstractBaseAuditableModel, history_instance
+) -> str | None:
+    return DELETED_MESSAGE.format(
+        model_name=self.get_audit_log_model_name(history_instance),
+        identity=self.get_audit_log_identity(),
+    )
+
+
 def abstract_base_auditable_model_factory(
     unaudited_fields: typing.Sequence[str] | None = None,
     audited_m2m_fields: typing.Sequence[str] | None = None,
+    audit_create=False,
+    audit_update=False,
+    audit_delete=False,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     class Base(_AbstractBaseAuditableModel):
         history = HistoricalRecords(
@@ -227,5 +283,12 @@ def abstract_base_auditable_model_factory(
 
         class Meta:
             abstract = True
+
+    if audit_create:
+        Base.get_create_log_message = default_get_create_log_message
+    if audit_update:
+        Base.get_update_log_message = default_get_update_log_message
+    if audit_delete:
+        Base.get_delete_log_message = default_get_delete_log_message
 
     return Base
