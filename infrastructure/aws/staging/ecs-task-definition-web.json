@@ -166,6 +166,10 @@
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
+                },
+                {
+                    "name": "ADMIN_THROTTLE_CACHE_BACKEND",
+                    "value": "django_redis.cache.RedisCache"
                 }
             ],
             "secrets": [
@@ -220,6 +224,10 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "ADMIN_THROTTLE_CACHE_LOCATION",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:REDIS_CACHE_URL::"
                 }
             ],
             "logConfiguration": {
