@@ -162,14 +162,16 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         organisation = Organisation.objects.get(id=organisation_pk)
 
         qs = UserPermissionGroup.objects.filter(organisation=organisation)
-        if not self.request.user.has_organisation_permission(
-            organisation, MANAGE_USER_GROUPS
+        if (
+            self.action != "summaries"
+            and not self.request.user.has_organisation_permission(
+                organisation, MANAGE_USER_GROUPS
+            )
         ):
+            # my-groups and summaries return a very cut down set of data, we can safely allow all users
+            # of the groups / organisation to retrieve them in this case, otherwise they must be a group admin.
             q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
             if self.action != "my_groups":
-                # my-groups returns a very cut down set of data, we can safely allow all users
-                # of the groups to retrieve them in this case, otherwise they must be a group
-                # admin.
                 q = q & Q(userpermissiongroupmembership__group_admin=True)
             qs = qs.filter(q)
 
@@ -178,7 +180,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
-        elif self.action == "my_groups":
+        elif self.action in ("my_groups", "summaries"):
             return MyUserPermissionGroupsSerializer
         return ListUserPermissionGroupSerializer
 
@@ -241,6 +243,13 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     def my_groups(self, request: Request, organisation_pk: int) -> Response:
         """
         Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
+
+    @action(detail=False, methods=["GET"], url_path="summaries")
+    def summaries(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects for all groups in the organisation.
         """
         return self.list(request, organisation_pk)
 
