@@ -216,7 +216,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={flagEnabled}
                 onChange={() => {
                   setFlagsEnabled(!flagEnabled)
-                  handleMetadataModelField(57, !flagEnabled)
+                  handleMetadataModelField(55, !flagEnabled)
                 }}
                 className='ml-0'
               />

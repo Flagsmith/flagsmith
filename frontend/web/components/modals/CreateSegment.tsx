@@ -422,7 +422,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tooltip={Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION}
             tooltipPlace='left'
             component={
-              <Button size='xSmall' type='button' theme='outline' onClick={() => setShowMetadataList(!showDescriptions)}>
+              <Button
+                size='xSmall'
+                type='button'
+                theme='outline'
+                onClick={() => setShowMetadataList(!showDescriptions)}
+              >
                 Add Metadata
               </Button>
             }

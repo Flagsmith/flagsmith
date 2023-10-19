@@ -523,7 +523,7 @@ const CreateFlag = class extends Component {
                   theme='outline'
                   onClick={() =>
                     this.setState({
-                      metadataSeletecIsOpen: !this.state.metadataSeletecIsOpen,
+                      showMetadataList: !this.state.showMetadataList,
                     })
                   }
                 >
