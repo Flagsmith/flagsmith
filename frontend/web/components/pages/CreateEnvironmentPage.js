@@ -160,6 +160,11 @@ const CreateEnvironmentPage = class extends Component {
                                   <MyMetadataSelect
                                     contentType={30}
                                     isOpen={showMetadataList}
+                                    onToggle={() =>
+                                      this.setState({
+                                        showMetadataList: !showMetadataList,
+                                      })
+                                    }
                                     orgId={AccountStore.getOrganisation().id}
                                   />
                                 </>

@@ -34,7 +34,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { metadataSeletecIsOpen: false }
+    this.state = { showMetadataList: false }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -826,8 +826,8 @@ const EnvironmentSettingsPage = class extends Component {
                                 className='mt-3'
                                 onClick={() =>
                                   this.setState({
-                                    metadataSeletecIsOpen:
-                                      !this.state.metadataSeletecIsOpen,
+                                    showMetadataList:
+                                      !this.state.showMetadataList,
                                   })
                                 }
                               >
@@ -838,7 +838,12 @@ const EnvironmentSettingsPage = class extends Component {
                         </FormGroup>
                         <MyMetadataSelect
                           contentType={30}
-                          isOpen={this.state.metadataSeletecIsOpen}
+                          isOpen={this.state.showMetadataList}
+                          onToggle={() =>
+                            this.setState({
+                              showMetadataList: !this.state.showMetadataList,
+                            })
+                          }
                           orgId={AccountStore.getOrganisation().id}
                         />
                       </TabItem>

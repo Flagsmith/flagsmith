@@ -437,6 +437,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <MyMetadataSelect
               contentType={55}
               isOpen={showMetadataList}
+              onToggle={() => setShowMetadataList(!showMetadataList)}
               orgId={AccountStore.getOrganisation().id}
             />
           </FormGroup>

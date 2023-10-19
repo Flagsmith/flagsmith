@@ -29,7 +29,7 @@ const MetadataSelect: FC<MetadataSelectType> = ({
     <InlineModal
       title='Metadata'
       isOpen={isOpen}
-      // onClose={onToggle}
+      onClose={onToggle}
       className='inline-modal--tags'
     >
       <Input

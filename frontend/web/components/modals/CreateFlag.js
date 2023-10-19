@@ -534,6 +534,11 @@ const CreateFlag = class extends Component {
             <MyMetadataSelect
               contentType={39}
               isOpen={this.state.showMetadataList}
+              onToggle={() =>
+                this.setState({
+                  showMetadataList: !this.state.showMetadataList,
+                })
+              }
               orgId={AccountStore.getOrganisation().id}
             />
           </FormGroup>
