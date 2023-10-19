@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.core import signing
-from requests.exceptions import HTTPError, Timeout
+from requests.exceptions import HTTPError, RequestException, Timeout
 
 from environments.models import Environment
 from features.models import Feature, FeatureState
@@ -60,20 +60,21 @@ def test_create_import_request__return_expected(
     [
         (
             HTTPError(response=MagicMock(status_code=503)),
-            "HTTP 503 when requesting LaunchDarkly",
+            "HTTPError 503 when requesting /expected_path",
         ),
-        (Timeout(), "Timeout when requesting LaunchDarkly"),
+        (Timeout(), "Timeout when requesting /expected_path"),
     ],
 )
 def test_process_import_request__api_error__expected_status(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
     failing_ld_client_method_name: str,
-    exception: Type[Exception],
+    exception: Type[RequestException],
     expected_error_message: str,
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     # Given
+    exception.request = MagicMock(path_url="/expected_path")
     getattr(ld_client_mock, failing_ld_client_method_name).side_effect = exception
 
     # When
@@ -187,6 +188,10 @@ def test_process_import_request__success__expected_status(
     }
 
     assert percentage_mv_feature_states_by_env_name["Test"].enabled is False
+    assert (
+        percentage_mv_feature_states_by_env_name["Test"].get_feature_state_value()
+        == "variation2"
+    )
     assert list(
         percentage_mv_feature_states_by_env_name[
             "Test"
@@ -197,6 +202,10 @@ def test_process_import_request__success__expected_status(
     ) == [("variation1", 100), ("variation2", 0), ("variation3", 0)]
 
     assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
+    assert (
+        percentage_mv_feature_states_by_env_name["Production"].get_feature_state_value()
+        == "variation3"
+    )
     assert list(
         percentage_mv_feature_states_by_env_name[
             "Production"
