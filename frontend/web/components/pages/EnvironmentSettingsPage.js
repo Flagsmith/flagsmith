@@ -17,6 +17,7 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import MyMetadataSelect from 'components/MyMetadataSelect'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -33,7 +34,7 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { metadataSeletecIsOpen: false }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
@@ -805,6 +806,38 @@ const EnvironmentSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
+                    </TabItem>
+                    <TabItem tabLabel='Metadata'>
+                      <FormGroup className='mt-5 setting'>
+                        <InputGroup
+                          title={'Metadata*'}
+                          tooltip={
+                            Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION
+                          }
+                          tooltipPlace='left'
+                          component={
+                            <Button
+                              size='xSmall'
+                              type='button'
+                              theme='outline'
+                              className='mt-3'
+                              onClick={() =>
+                                this.setState({
+                                  metadataSeletecIsOpen:
+                                    !this.state.metadataSeletecIsOpen,
+                                })
+                              }
+                            >
+                              Add Metadata
+                            </Button>
+                          }
+                        />
+                      </FormGroup>
+                      <MyMetadataSelect
+                        contentType={30}
+                        isOpen={this.state.metadataSeletecIsOpen}
+                        orgId={AccountStore.getOrganisation().id}
+                      />
                     </TabItem>
                   </Tabs>
                 )}

@@ -37,6 +37,7 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
+import MyMetadataSelect from 'components/MyMetadataSelect'
 
 type PageType = {
   number: number
@@ -133,6 +134,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
+  const [showMetadataList, setShowMetadataList] = useState<boolean>(false)
 
   const isError = createError || updateError
   const isLimitReached =
@@ -414,6 +416,23 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Show condition descriptions'}
           </span>
         </Row>
+        <FormGroup className='mb-5 setting'>
+          <InputGroup
+            title={'Metadata*'}
+            tooltip={Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION}
+            tooltipPlace='left'
+            component={
+              <Button size='xSmall' type='button' theme='outline' onClick={() => setShowMetadataList(!showDescriptions)}>
+                Add Metadata
+              </Button>
+            }
+          />
+          <MyMetadataSelect
+            contentType={55}
+            isOpen={showMetadataList}
+            orgId={AccountStore.getOrganisation().id}
+          />
+        </FormGroup>
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
             Include users when the following rules apply:

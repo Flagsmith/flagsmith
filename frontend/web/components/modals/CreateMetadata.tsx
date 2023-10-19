@@ -67,13 +67,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   ] = useDeleteMetadataModelFieldMutation()
 
   useEffect(() => {
-    if (!creatingMetadataField && metadataFieldcreated) {
-      console.log('DEBUG: refetch:')
-      // refetch()
-    }
-  }, [creatingMetadataField, metadataFieldcreated])
-
-  useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
       setDescription(data.description)
@@ -102,15 +95,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [environmentRequired, setEnvironmentRequired] = useState<boolea>(false)
   const [segmentRequired, setSegmentRequired] = useState<boolea>(false)
   const [flagRequired, setFlagRequired] = useState<boolea>(false)
-  const content_types = [
-    { entity: 'environment', id: 30 },
-    { entity: 'feature', id: 39 },
-    { entity: 'segment', id: 55 },
-  ]
   const [metadataFieldsArray, setMetadataFieldsArray] = useState<array>([])
 
   const handleMetadataModelField = (contentTypeId, enabled) => {
-    console.log('DEBUG: contentTypeId:', contentTypeId, 'enabled:', enabled)
     if (enabled) {
       addMetadataField(contentTypeId)
     } else {
@@ -128,10 +115,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     )
     setMetadataFieldsArray(updatedMetadataFields)
   }
-
-  // DEBUG: environment_content_type.id: 31 || 30
-  // DEBUG: feature_content_type.id: 40 || 39
-  // DEBUG: segment_content_type.id: 57 || 55
 
   useEffect(() => {
     if (created && !creating) {
@@ -261,7 +244,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               id,
             })
             if (!metadataFields && id) {
-              console.log('DEBUG: metadataFields:', metadataFields, 'id:', id)
               metadataFieldsArray.map((m) => {
                 createMetadataField({
                   body: { 'content_type': m, 'field': id },
@@ -272,7 +254,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             } else if (metadataFields && id && metadataModelFieldId) {
             }
             if (metadataFields && id && environmentEnabled) {
-              console.log('DEBUG: metadataFields:', metadataFields, 'id:', id)
               // metadataFields.map((m) => {
               //   updateMetaDataField({
               //     body: { 'content_type': m, 'field': id },

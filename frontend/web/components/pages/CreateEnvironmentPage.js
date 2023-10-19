@@ -127,6 +127,26 @@ const CreateEnvironmentPage = class extends Component {
                                   placeholder='Environment Description'
                                 />
                               </CondensedRow>
+                              <FormGroup className='mt-5 setting'>
+                                <InputGroup
+                                  title={'Metadata*'}
+                                  tooltip={
+                                    Constants.strings
+                                      .FEATURE_FLAG_METADATA_DESCRIPTION
+                                  }
+                                  tooltipPlace='left'
+                                  component={
+                                    <Button
+                                      size='xSmall'
+                                      type='button'
+                                      theme='outline'
+                                      className='mt-3'
+                                    >
+                                      Add Metadata
+                                    </Button>
+                                  }
+                                />
+                              </FormGroup>
                               <CondensedRow>
                                 {project &&
                                   project.environments &&

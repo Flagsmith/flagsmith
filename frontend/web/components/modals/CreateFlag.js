@@ -31,6 +31,7 @@ import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
+import MyMetadataSelect from 'components/MyMetadataSelect'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -84,6 +85,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
+      showMetadataList: false,
       tab: Utils.fromParam().tab || 0,
       tags: tags || [],
     }
@@ -480,6 +482,7 @@ const CreateFlag = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -507,17 +510,31 @@ const CreateFlag = class extends Component {
             />
           </FormGroup>
         )}
-        {!isEdit && (
+        {metadataEnable && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata*'}
               tooltip={Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION}
               tooltipPlace='left'
               component={
-                <Button size='xSmall' type='button' theme='outline'>
+                <Button
+                  size='xSmall'
+                  type='button'
+                  theme='outline'
+                  onClick={() =>
+                    this.setState({
+                      metadataSeletecIsOpen: !this.state.metadataSeletecIsOpen,
+                    })
+                  }
+                >
                   Add Metadata
                 </Button>
               }
+            />
+            <MyMetadataSelect
+              contentType={39}
+              isOpen={this.state.showMetadataList}
+              orgId={AccountStore.getOrganisation().id}
             />
           </FormGroup>
         )}

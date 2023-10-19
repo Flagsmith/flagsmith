@@ -12,7 +12,7 @@ from .fields import GenericObjectID
 
 FIELD_VALUE_MAX_LENGTH = 2000
 
-METADATA_SUPPORTED_MODELS = ["environment"]
+METADATA_SUPPORTED_MODELS = ["environment", "feature", "segment"]
 
 # A map of model name to a function that takes the object id and returns the organisation_id
 SUPPORTED_REQUIREMENTS_MAPPING = {
