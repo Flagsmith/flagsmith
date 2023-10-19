@@ -173,3 +173,82 @@ def create_segment_priorities_changed_audit_log(
         related_object_id=feature.pk,
         related_object_type=RelatedObjectType.FEATURE.name,
     )
+
+
+@register_task_handler()
+def create_audit_log_user_logged_in(user_id: int):
+    if not (user := get_user_model().objects.filter(id=user_id).first()):
+        logger.warning(
+            f"User with id {user_id} not found. Audit log for user logged in not created."
+        )
+        return
+
+    user = typing.cast(_AbstractBaseAuditableModel, user)
+    log_message = (
+        f"{RelatedObjectType.USER.value} logged in: {user.get_audit_log_identity()}"
+    )
+
+    audit_logs = [
+        AuditLog(
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            is_system_event=True,
+        )
+        for organisation in user._get_organisations()
+    ]
+    AuditLog.objects.bulk_create(audit_logs)
+
+
+@register_task_handler()
+def create_audit_log_user_logged_out(user_id: int):
+    if not (user := get_user_model().objects.filter(id=user_id).first()):
+        logger.warning(
+            f"User with id {user_id} not found. Audit log for user logged out not created."
+        )
+        return
+
+    user = typing.cast(_AbstractBaseAuditableModel, user)
+    log_message = (
+        f"{RelatedObjectType.USER.value} logged out: {user.get_audit_log_identity()}"
+    )
+
+    audit_logs = [
+        AuditLog(
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            is_system_event=True,
+        )
+        for organisation in user._get_organisations()
+    ]
+    AuditLog.objects.bulk_create(audit_logs)
+
+
+@register_task_handler()
+def create_audit_log_user_login_failed(
+    credentials: dict, codes: list[str] | None = None
+):
+    if not (username := credentials.get("username")):
+        return
+    if not (user := get_user_model().objects.get_by_natural_key(username)):
+        return
+    if not isinstance(user, _AbstractBaseAuditableModel):
+        return
+
+    reason = ",".join(codes) if codes else "password"
+    log_message = f"{RelatedObjectType.USER.value} login failed ({reason}): {user.get_audit_log_identity()}"
+
+    audit_logs = [
+        AuditLog(
+            organisation=organisation,
+            related_object_id=user.pk,
+            related_object_type=RelatedObjectType.USER.name,
+            log=log_message,
+            is_system_event=True,
+        )
+        for organisation in user._get_organisations()
+    ]
+    AuditLog.objects.bulk_create(audit_logs)

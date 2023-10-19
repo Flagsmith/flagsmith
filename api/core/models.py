@@ -164,6 +164,7 @@ class _AbstractBaseAuditableModel(models.Model):
         return None
 
 
+# TODO #2797 later: get IP address from request
 def get_history_user(
     instance: typing.Any, request: HttpRequest
 ) -> typing.Optional["FFAdminUser"]:
