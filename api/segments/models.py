@@ -11,6 +11,7 @@ from core.models import (
 )
 from django.core.exceptions import ValidationError
 from django.db import models
+from flag_engine.segments.evaluator import evaluate_identity_in_segment
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
 
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
@@ -20,6 +21,11 @@ from environments.identities.helpers import (
 )
 from features.models import Feature
 from projects.models import Project
+from util.mappers.engine import (
+    map_identity_to_engine,
+    map_segment_to_engine,
+    map_traits_to_trait_models,
+)
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -109,9 +115,14 @@ class Segment(
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
-        rules = self.rules.all()
-        return rules.count() > 0 and all(
-            rule.does_identity_match(identity, traits) for rule in rules
+        segment_model = map_segment_to_engine(self)
+        identity_model = map_identity_to_engine(identity)
+        trait_models = map_traits_to_trait_models(traits) if traits else None
+
+        return evaluate_identity_in_segment(
+            identity=identity_model,
+            segment=segment_model,
+            override_traits=trait_models,
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
