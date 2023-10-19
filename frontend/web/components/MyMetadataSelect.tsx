@@ -24,7 +24,7 @@ const MyMetadataSelect: FC<MyMetadataSelectType> = ({
     if (metadata?.results?.length && metadataModelField?.results?.length) {
       const metadataForContentType = metadata.results.filter((meta) => {
         return metadataModelField.results.some(
-          (item) => item.field === meta.id && item.content_type === 30,
+          (item) => item.field === meta.id && item.content_type === contentType,
         )
       })
       setMetadataList(metadataForContentType)

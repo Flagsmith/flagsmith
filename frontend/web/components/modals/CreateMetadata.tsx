@@ -196,7 +196,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={segmentEnabled}
                 onChange={() => {
                   setSegmentsEnabled(!segmentEnabled)
-                  handleMetadataModelField(39, !segmentEnabled)
+                  handleMetadataModelField(55, !segmentEnabled)
                 }}
                 className='ml-0'
               />
@@ -216,7 +216,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={flagEnabled}
                 onChange={() => {
                   setFlagsEnabled(!flagEnabled)
-                  handleMetadataModelField(55, !flagEnabled)
+                  handleMetadataModelField(39, !flagEnabled)
                 }}
                 className='ml-0'
               />
