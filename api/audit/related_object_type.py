@@ -7,6 +7,7 @@ class RelatedObjectType(enum.Enum):
     ENVIRONMENT = "Environment"
     FEATURE = "Feature"
     FEATURE_STATE = "Feature state"
+    GRANT = "Grant"
     GROUP = "Group"
     IMPORT_REQUEST = "Import request"
     PROJECT = "Project"
