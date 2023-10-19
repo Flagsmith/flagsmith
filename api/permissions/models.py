@@ -1,4 +1,11 @@
+from core.models import (
+    SoftDeleteObject,
+    abstract_base_auditable_model_factory,
+)
 from django.db import models
+
+from audit.related_object_type import RelatedObjectType
+
 
 PROJECT_PERMISSION_TYPE = "PROJECT"
 ENVIRONMENT_PERMISSION_TYPE = "ENVIRONMENT"
@@ -11,13 +18,24 @@ PERMISSION_TYPES = (
 )
 
 
+# effectively read-only - not audited
 class PermissionModel(models.Model):
     key = models.CharField(max_length=100, primary_key=True)
     description = models.TextField()
     type = models.CharField(max_length=100, choices=PERMISSION_TYPES, null=True)
 
 
-class AbstractBasePermissionModel(models.Model):
+class AbstractBasePermissionModel(
+    SoftDeleteObject,
+    abstract_base_auditable_model_factory(
+        audited_m2m_fields=("permissions",),
+        audit_create=True,
+        audit_update=True,
+        audit_delete=True,
+    ),
+):
+    related_object_type = RelatedObjectType.GRANT
+
     class Meta:
         abstract = True
 

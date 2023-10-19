@@ -249,6 +249,12 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
             )
         ]
 
+    def get_audit_log_identity(self) -> str:
+        return f"{self.group.name} / {self.project.name}"
+
+    def _get_project(self) -> Project | None:
+        return self.project
+
 
 class UserProjectPermission(AbstractBasePermissionModel):
     user = models.ForeignKey(
@@ -267,3 +273,9 @@ class UserProjectPermission(AbstractBasePermissionModel):
                 fields=["user", "project"], name="unique_user_project_permission"
             )
         ]
+
+    def get_audit_log_identity(self) -> str:
+        return f"{self.user.email} / {self.project.name}"
+
+    def _get_project(self) -> Project | None:
+        return self.project
