@@ -5,13 +5,14 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
+import MyMetadataSelect from 'components/MyMetadataSelect'
 
 const CreateEnvironmentPage = class extends Component {
   static displayName = 'CreateEnvironmentPage'
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { showMetadataList: false }
   }
 
   static contextTypes = {
@@ -40,7 +41,8 @@ const CreateEnvironmentPage = class extends Component {
   }
 
   render() {
-    const { name } = this.state
+    const { name, showMetadataList } = this.state
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
     return (
       <div className='app-container container'>
         <PageTitle title={'Create Environment'}>
@@ -127,26 +129,41 @@ const CreateEnvironmentPage = class extends Component {
                                   placeholder='Environment Description'
                                 />
                               </CondensedRow>
-                              <FormGroup className='mt-5 setting'>
-                                <InputGroup
-                                  title={'Metadata*'}
-                                  tooltip={
-                                    Constants.strings
-                                      .FEATURE_FLAG_METADATA_DESCRIPTION
-                                  }
-                                  tooltipPlace='left'
-                                  component={
-                                    <Button
-                                      size='xSmall'
-                                      type='button'
-                                      theme='outline'
-                                      className='mt-3'
-                                    >
-                                      Add Metadata
-                                    </Button>
-                                  }
-                                />
-                              </FormGroup>
+                              {metadataEnable && (
+                                <>
+                                  <FormGroup className='mt-5 setting'>
+                                    <InputGroup
+                                      title={'Metadata*'}
+                                      tooltip={
+                                        Constants.strings
+                                          .FEATURE_FLAG_METADATA_DESCRIPTION
+                                      }
+                                      tooltipPlace='left'
+                                      component={
+                                        <Button
+                                          size='xSmall'
+                                          type='button'
+                                          theme='outline'
+                                          className='mt-3'
+                                          onClick={() =>
+                                            this.setState({
+                                              showMetadataList:
+                                                !showMetadataList,
+                                            })
+                                          }
+                                        >
+                                          Add Metadata
+                                        </Button>
+                                      }
+                                    />
+                                  </FormGroup>
+                                  <MyMetadataSelect
+                                    contentType={30}
+                                    isOpen={showMetadataList}
+                                    orgId={AccountStore.getOrganisation().id}
+                                  />
+                                </>
+                              )}
                               <CondensedRow>
                                 {project &&
                                   project.environments &&

@@ -189,6 +189,7 @@ const EnvironmentSettingsPage = class extends Component {
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -807,38 +808,41 @@ const EnvironmentSettingsPage = class extends Component {
                         )}
                       </FormGroup>
                     </TabItem>
-                    <TabItem tabLabel='Metadata'>
-                      <FormGroup className='mt-5 setting'>
-                        <InputGroup
-                          title={'Metadata*'}
-                          tooltip={
-                            Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION
-                          }
-                          tooltipPlace='left'
-                          component={
-                            <Button
-                              size='xSmall'
-                              type='button'
-                              theme='outline'
-                              className='mt-3'
-                              onClick={() =>
-                                this.setState({
-                                  metadataSeletecIsOpen:
-                                    !this.state.metadataSeletecIsOpen,
-                                })
-                              }
-                            >
-                              Add Metadata
-                            </Button>
-                          }
+                    {metadataEnable && (
+                      <TabItem tabLabel='Metadata'>
+                        <FormGroup className='mt-5 setting'>
+                          <InputGroup
+                            title={'Metadata*'}
+                            tooltip={
+                              Constants.strings
+                                .FEATURE_FLAG_METADATA_DESCRIPTION
+                            }
+                            tooltipPlace='left'
+                            component={
+                              <Button
+                                size='xSmall'
+                                type='button'
+                                theme='outline'
+                                className='mt-3'
+                                onClick={() =>
+                                  this.setState({
+                                    metadataSeletecIsOpen:
+                                      !this.state.metadataSeletecIsOpen,
+                                  })
+                                }
+                              >
+                                Add Metadata
+                              </Button>
+                            }
+                          />
+                        </FormGroup>
+                        <MyMetadataSelect
+                          contentType={30}
+                          isOpen={this.state.metadataSeletecIsOpen}
+                          orgId={AccountStore.getOrganisation().id}
                         />
-                      </FormGroup>
-                      <MyMetadataSelect
-                        contentType={30}
-                        isOpen={this.state.metadataSeletecIsOpen}
-                        orgId={AccountStore.getOrganisation().id}
-                      />
-                    </TabItem>
+                      </TabItem>
+                    )}
                   </Tabs>
                 )}
               </>
