@@ -1,4 +1,4 @@
-from django.contrib.auth import user_logged_out
+from django.contrib.auth import user_logged_out, user_login_failed
 from django.utils.decorators import method_decorator
 from djoser.views import UserViewSet
 from drf_yasg.utils import swagger_auto_schema
@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.throttling import ScopedRateThrottle
 from trench.views.authtoken import (
     AuthTokenLoginOrRequestMFACode,
@@ -17,6 +18,22 @@ from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 
 from .models import UserPasswordResetRequest
+
+
+class CustomCodeLoginSerializer(AuthTokenLoginWithMFACode.serializer_class):
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except ValidationError as e:
+            # signal non-password login failure
+            if user := getattr(self, "user", None):
+                user_login_failed.send(
+                    self.__module__,
+                    credentials={"username": user.natural_key()},
+                    request=self.context["request"],
+                    codes=e.get_codes(),
+                )
+            raise
 
 
 class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
@@ -33,6 +50,7 @@ class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
     Override class to add throttling
     """
 
+    serializer_class = CustomCodeLoginSerializer
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
 
