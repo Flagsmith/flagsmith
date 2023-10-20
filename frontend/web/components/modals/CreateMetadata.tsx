@@ -43,11 +43,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   ]
   const orgId = AccountStore.getOrganisation().id
   const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
-  // const { data: metadataFields, isLoading: metadataIsLoading } =
-  //   useGetMetadataModelFieldQuery(
-  //     { id: metadataModelFieldId, organisation_id: orgId },
-  //     { skip: !metadataModelFieldId },
-  //   )
 
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
     useCreateMetadataMutation()

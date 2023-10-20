@@ -549,10 +549,8 @@ const CreateFlag = class extends Component {
               }
             />
             <MyMetadataSelect
-              contentType={39}
+              contentType={Constants.contentTypes.flag}
               isOpen={this.state.showMetadataList}
-              onAdd={this.addMetadata}
-              onRemove={this.removeMetadata}
               onToggle={() =>
                 this.setState({
                   showMetadataList: !this.state.showMetadataList,
@@ -560,17 +558,6 @@ const CreateFlag = class extends Component {
               }
               orgId={AccountStore.getOrganisation().id}
             />
-            {/* {ownerGroups.map((u) => (
-              <Row
-                key={u.id}
-                onClick={() => this.removeOwner(u.id, false)}
-                className='chip'
-                style={{ marginBottom: 4, marginTop: 4 }}
-              >
-                <span className='font-weight-bold'>{u.name}</span>
-                <span className='chip-icon ion ion-ios-close' />
-              </Row>
-            ))} */}
           </FormGroup>
         )}
         {!identity && projectFlag && (
