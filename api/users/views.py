@@ -168,7 +168,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
                 organisation, MANAGE_USER_GROUPS
             )
         ):
-            # my-groups and summaries return a very cut down set of data, we can safely allow all users
+            # my_groups and summaries return a very cut down set of data, we can safely allow all users
             # of the groups / organisation to retrieve them in this case, otherwise they must be a group admin.
             q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
             if self.action != "my_groups":
@@ -246,7 +246,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         """
         return self.list(request, organisation_pk)
 
-    @action(detail=False, methods=["GET"], url_path="summaries")
+    @action(detail=False, methods=["GET"])
     def summaries(self, request: Request, organisation_pk: int) -> Response:
         """
         Returns a list of summary group objects for all groups in the organisation.

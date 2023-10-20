@@ -1284,3 +1284,58 @@ def test_list_my_groups(organisation, api_client):
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
+
+
+def test_list_group_summaries(
+    organisation: Organisation, admin_client: APIClient
+) -> None:
+    # Given
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-summaries", args=[organisation.id]
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 2
+    assert response_json["results"][0] == {
+        "id": user_permission_group_1.id,
+        "name": user_permission_group_1.name,
+    }
+    assert response_json["results"][1] == {
+        "id": user_permission_group_2.id,
+        "name": user_permission_group_2.name,
+    }
+
+
+def test_user_from_another_organisation_cannot_list_group_summaries(
+    organisation: Organisation, api_client: APIClient
+) -> None:
+    # Given
+    UserPermissionGroup.objects.create(organisation=organisation, name="group1")
+
+    organisation_2 = Organisation.objects.create(name="org2")
+    org2_user = FFAdminUser.objects.create(email="org2user@example.com")
+    org2_user.add_organisation(organisation_2)
+    api_client.force_authenticate(org2_user)
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-summaries", args=[organisation.id]
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
