@@ -6,7 +6,7 @@ import simplejson as json
 from django.db import models
 from django.utils import timezone
 
-from task_processor.exceptions import TaskProcessingError, TaskQueueFullError
+from task_processor.exceptions import TaskProcessingError
 from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
 
@@ -101,6 +101,7 @@ class Task(AbstractBaseTask):
     def create(
         cls,
         task_identifier: str,
+        scheduled_for: datetime,
         priority: TaskPriority = TaskPriority.NORMAL,
         *,
         args: typing.Tuple[typing.Any] = None,
@@ -108,39 +109,21 @@ class Task(AbstractBaseTask):
     ) -> "Task":
         return Task(
             task_identifier=task_identifier,
+            scheduled_for=scheduled_for,
             priority=priority,
             serialized_args=cls.serialize_data(args or tuple()),
             serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )
 
-    @classmethod
-    def schedule_task(
-        cls,
-        schedule_for: datetime,
-        task_identifier: str,
-        queue_size: typing.Optional[int],
-        *,
-        args: typing.Tuple[typing.Any] = None,
-        kwargs: typing.Dict[str, typing.Any] = None,
-    ) -> "Task":
-        if queue_size:
-            if (
-                cls.objects.filter(
-                    task_identifier=task_identifier, completed=False, num_failures__lt=3
-                ).count()
-                > queue_size
-            ):
-                raise TaskQueueFullError(
-                    f"Queue for task {task_identifier} is full. "
-                    f"Max queue size is {queue_size}"
-                )
-        task = cls.create(
-            task_identifier=task_identifier,
-            args=args,
-            kwargs=kwargs,
+    def is_queue_full(self, queue_size: int) -> bool:
+        return (
+            Task.objects.filter(
+                task_identifier=self.task_identifier,
+                completed=False,
+                num_failures__lt=3,
+            ).count()
+            > queue_size
         )
-        task.scheduled_for = schedule_for
-        return task
 
     def mark_failure(self):
         super().mark_failure()

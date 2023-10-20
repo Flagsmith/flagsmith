@@ -5,7 +5,6 @@ import pytest
 from django.utils import timezone
 
 from task_processor.decorators import register_task_handler
-from task_processor.exceptions import TaskQueueFullError
 from task_processor.models import RecurringTask, Task
 
 now = timezone.now()
@@ -24,7 +23,12 @@ def test_task_run():
     args = ["foo"]
     kwargs = {"arg_two": "bar"}
 
-    task = Task.create(my_callable.task_identifier, args=args, kwargs=kwargs)
+    task = Task.create(
+        my_callable.task_identifier,
+        scheduled_for=timezone.now(),
+        args=args,
+        kwargs=kwargs,
+    )
 
     # When
     result = task.run()
@@ -57,7 +61,7 @@ def test_recurring_task_run_should_execute_first_run_at(first_run_time, expected
     )
 
 
-def test_schedule_task_raises_error_if_queue_is_full(db):
+def test_is_queue_full_returns_true_if_queue_is_full(db):
     # Given
     task_identifier = "my_callable"
 
@@ -65,14 +69,12 @@ def test_schedule_task_raises_error_if_queue_is_full(db):
     for _ in range(10):
         Task.objects.create(task_identifier=task_identifier)
 
+    task = Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
     # When
-    with pytest.raises(TaskQueueFullError):
-        Task.schedule_task(
-            schedule_for=timezone.now(), task_identifier=task_identifier, queue_size=9
-        )
+    assert task.is_queue_full(9) is True
 
 
-def test_can_schedule_task_raises_error_if_queue_is_not_full(db):
+def test_is_queue_full_returns_false_if_queue_is_not_full(db):
     # Given
     task_identifier = "my_callable"
 
@@ -89,8 +91,7 @@ def test_can_schedule_task_raises_error_if_queue_is_not_full(db):
         )
 
     # When
-    task = Task.schedule_task(
-        schedule_for=timezone.now(), task_identifier=task_identifier, queue_size=10
-    )
+    task = Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
+
     # Then
-    assert task is not None
+    assert task.is_queue_full(10) is False

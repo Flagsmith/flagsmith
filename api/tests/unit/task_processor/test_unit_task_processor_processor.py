@@ -26,7 +26,11 @@ from task_processor.task_registry import registered_tasks
 def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     # Given
     organisation_name = f"test-org-{uuid.uuid4()}"
-    task = Task.create(_create_organisation.task_identifier, args=(organisation_name,))
+    task = Task.create(
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=(organisation_name,),
+    )
     task.save()
 
     # When
@@ -169,7 +173,7 @@ def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     # Given
-    task = Task.create(_raise_exception.task_identifier)
+    task = Task.create(_raise_exception.task_identifier, scheduled_for=timezone.now())
     task.save()
 
     # When
@@ -189,7 +193,7 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
 
 def test_run_task_runs_failed_task_again(db):
     # Given
-    task = Task.create(_raise_exception.task_identifier)
+    task = Task.create(_raise_exception.task_identifier, scheduled_for=timezone.now())
     task.save()
 
     # When
@@ -254,6 +258,7 @@ def test_run_task_runs_tasks_in_correct_priority():
     # 2 tasks
     task_1 = Task.create(
         _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
         args=("task 1 organisation",),
         priority=TaskPriority.HIGH,
     )
@@ -261,6 +266,7 @@ def test_run_task_runs_tasks_in_correct_priority():
 
     task_2 = Task.create(
         _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
         args=("task 2 organisation",),
         priority=TaskPriority.HIGH,
     )
@@ -268,6 +274,7 @@ def test_run_task_runs_tasks_in_correct_priority():
 
     task_3 = Task.create(
         _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
         args=("task 3 organisation",),
         priority=TaskPriority.HIGHEST,
     )
@@ -294,12 +301,16 @@ def test_run_tasks_skips_locked_tasks():
     # 2 tasks
     # One which is configured to just sleep for 3 seconds, to simulate a task
     # being held for a short period of time
-    task_1 = Task.create(_sleep.task_identifier, args=(3,))
+    task_1 = Task.create(
+        _sleep.task_identifier, scheduled_for=timezone.now(), args=(3,)
+    )
     task_1.save()
 
     # and another which should create an organisation
     task_2 = Task.create(
-        _create_organisation.task_identifier, args=("task 2 organisation",)
+        _create_organisation.task_identifier,
+        scheduled_for=timezone.now(),
+        args=("task 2 organisation",),
     )
     task_2.save()
 
@@ -327,7 +338,11 @@ def test_run_more_than_one_task(db):
     for _ in range(num_tasks):
         organisation_name = f"test-org-{uuid.uuid4()}"
         tasks.append(
-            Task.create(_create_organisation.task_identifier, args=(organisation_name,))
+            Task.create(
+                _create_organisation.task_identifier,
+                scheduled_for=timezone.now(),
+                args=(organisation_name,),
+            )
         )
     Task.objects.bulk_create(tasks)
 
