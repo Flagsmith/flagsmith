@@ -212,6 +212,11 @@ export default {
     primary: '#6837fc',
     white: '#ffffff',
   },
+  contentTypes: {
+    environemnt: 30,
+    flag: 39,
+    segment: 55,
+  },
   defaultRule: {
     operator: 'EQUAL',
     property: '',

@@ -14,6 +14,8 @@ import {
   useDeleteMetadataModelFieldMutation,
 } from 'common/services/useMetadataModelField'
 
+import Constants from 'common/constants'
+
 type CreateMetadataType = {
   id?: string
   isEdit?: boolean
@@ -176,7 +178,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={environmentEnabled}
                 onChange={() => {
                   setEnvironmentEnable(!environmentEnabled)
-                  handleMetadataModelField(30, !environmentEnabled)
+                  handleMetadataModelField(
+                    Constants.contentTypes.environemnt,
+                    !environmentEnabled,
+                  )
                 }}
                 className='ml-0'
               />
@@ -196,7 +201,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={segmentEnabled}
                 onChange={() => {
                   setSegmentsEnabled(!segmentEnabled)
-                  handleMetadataModelField(55, !segmentEnabled)
+                  handleMetadataModelField(
+                    Constants.contentTypes.segment,
+                    !segmentEnabled,
+                  )
                 }}
                 className='ml-0'
               />
@@ -216,7 +224,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 checked={flagEnabled}
                 onChange={() => {
                   setFlagsEnabled(!flagEnabled)
-                  handleMetadataModelField(39, !flagEnabled)
+                  handleMetadataModelField(
+                    Constants.contentTypes.flag,
+                    !flagEnabled,
+                  )
                 }}
                 className='ml-0'
               />

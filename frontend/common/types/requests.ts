@@ -129,5 +129,8 @@ export type Req = {
     description: string
     organisation: number
   }
+  createLaunchDarklyProjectImport: { project_id: string }
+  getLaunchDarklyProjectImport: { project_id: string }
+  getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
   // END OF TYPES
 }
