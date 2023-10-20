@@ -1,4 +1,3 @@
-from typing import Type
 from unittest.mock import MagicMock
 
 import pytest
@@ -69,7 +68,7 @@ def test_process_import_request__api_error__expected_status(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
     failing_ld_client_method_name: str,
-    exception: Type[RequestException],
+    exception: RequestException,
     expected_error_message: str,
     import_request: LaunchDarklyImportRequest,
 ) -> None:
@@ -188,6 +187,8 @@ def test_process_import_request__success__expected_status(
     }
 
     assert percentage_mv_feature_states_by_env_name["Test"].enabled is False
+
+    # The `off` variation from LD's environment is imported as the control value.
     assert (
         percentage_mv_feature_states_by_env_name["Test"].get_feature_state_value()
         == "variation2"
@@ -202,6 +203,8 @@ def test_process_import_request__success__expected_status(
     ) == [("variation1", 100), ("variation2", 0), ("variation3", 0)]
 
     assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
+
+    # The `off` variation from LD's environment is imported as the control value.
     assert (
         percentage_mv_feature_states_by_env_name["Production"].get_feature_state_value()
         == "variation3"
