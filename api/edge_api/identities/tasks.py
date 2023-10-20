@@ -72,7 +72,7 @@ def call_environment_webhook_for_feature_state_change(
     call_environment_webhooks(environment, data, event_type=event_type)
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)
+@register_task_handler(priority=TaskPriority.HIGH)
 def sync_identity_document_features(identity_uuid: str):
     from .models import EdgeIdentity
 
