@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import { useGetListMetaDataQuery } from 'common/services/useMetaData'
+import { useGetListMetaDataQuery } from 'common/services/useMetadata'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 
 import MetadataSelect, { MetadataSelectType } from './MetadataSelect' // we need this to make JSX compile

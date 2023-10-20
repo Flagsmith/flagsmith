@@ -22,7 +22,7 @@ import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import CreateMetadata from 'components/modals/CreateMetadata'
-import { getListMetadata, deleteMetadata } from 'common/services/useMetaData'
+import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
 import { getStore } from 'common/store'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
