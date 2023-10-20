@@ -12,7 +12,7 @@ const CreateEnvironmentPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { showMetadataList: false }
+    this.state = { metadata: [], showMetadataList: false }
   }
 
   static contextTypes = {
@@ -41,7 +41,7 @@ const CreateEnvironmentPage = class extends Component {
   }
 
   render() {
-    const { name, showMetadataList } = this.state
+    const { metadata, name, showMetadataList } = this.state
     const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
     return (
       <div className='app-container container'>

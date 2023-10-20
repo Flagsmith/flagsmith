@@ -81,6 +81,7 @@ const CreateFlag = class extends Component {
           : Utils.getTypedValue(feature_state_value),
       is_archived,
       is_server_key_only,
+      metadata: [],
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
@@ -448,6 +449,20 @@ const CreateFlag = class extends Component {
     this.state.valueChanged = true
     this.forceUpdate()
   }
+  addMetadata = (id) => {
+    this.setState({
+      metadata: (this.state.metadata || []).concat({ metadata: id }),
+    })
+  }
+
+  removeMetadata = (id) => {
+    this.setState({
+      metadata: (this.state.metadata || []).filter((v) => v.metadata !== id),
+    })
+  }
+
+  getMetadataList = (metadataList, metadata) =>
+    metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
 
   render() {
     const {
@@ -461,6 +476,8 @@ const CreateFlag = class extends Component {
       name,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
+
+    // const metadataList = this.getApprovals(metadata, this.state.metadata || [])
 
     const { identity, identityName, isEdit, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
@@ -534,6 +551,8 @@ const CreateFlag = class extends Component {
             <MyMetadataSelect
               contentType={39}
               isOpen={this.state.showMetadataList}
+              onAdd={this.addMetadata}
+              onRemove={this.removeMetadata}
               onToggle={() =>
                 this.setState({
                   showMetadataList: !this.state.showMetadataList,
@@ -541,6 +560,17 @@ const CreateFlag = class extends Component {
               }
               orgId={AccountStore.getOrganisation().id}
             />
+            {/* {ownerGroups.map((u) => (
+              <Row
+                key={u.id}
+                onClick={() => this.removeOwner(u.id, false)}
+                className='chip'
+                style={{ marginBottom: 4, marginTop: 4 }}
+              >
+                <span className='font-weight-bold'>{u.name}</span>
+                <span className='chip-icon ion ion-ios-close' />
+              </Row>
+            ))} */}
           </FormGroup>
         )}
         {!identity && projectFlag && (
