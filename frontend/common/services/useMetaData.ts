@@ -2,43 +2,43 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const metaDataService = service
-  .enhanceEndpoints({ addTagTypes: ['MetaData'] })
+export const metadataService = service
+  .enhanceEndpoints({ addTagTypes: ['Metadata'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createMetaData: builder.mutation<Res['metaData'], Req['createMetaData']>({
-        invalidatesTags: [{ id: 'LIST', type: 'MetaData' }],
-        query: (query: Req['createMetaData']) => ({
+      createMetadata: builder.mutation<Res['metadata'], Req['createMetadata']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        query: (query: Req['createMetadata']) => ({
           body: query.body,
           method: 'POST',
           url: `metadata/fields/`,
         }),
       }),
-      deleteMetaData: builder.mutation<Res['metaData'], Req['deleteMetaData']>({
-        invalidatesTags: [{ id: 'LIST', type: 'MetaData' }],
-        query: (query: Req['deleteMetaData']) => ({
+      deleteMetadata: builder.mutation<Res['metadata'], Req['deleteMetadata']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        query: (query: Req['deleteMetadata']) => ({
           method: 'DELETE',
           url: `metadata/fields/${query.id}/`,
         }),
       }),
-      getListMetaData: builder.query<Res['metaData'], Req['getMetaData']>({
-        providesTags: (res) => [{ id: res?.id, type: 'MetaData' }],
+      getListMetadata: builder.query<Res['metadata'], Req['getMetadata']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Metadata' }],
         query: (query: Req['getMetaData']) => ({
           url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
       }),
-      getMetaData: builder.query<Res['metaData'], Req['getMetaData']>({
-        providesTags: (res) => [{ id: res?.id, type: 'MetaData' }],
-        query: (query: Req['getMetaData']) => ({
+      getMetadata: builder.query<Res['metadata'], Req['getMetadata']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Metadata' }],
+        query: (query: Req['getMetadata']) => ({
           url: `metadata/fields/${query.id}/`,
         }),
       }),
-      updateMetaData: builder.mutation<Res['metaData'], Req['updateMetaData']>({
+      updateMetadata: builder.mutation<Res['metadata'], Req['updateMetadata']>({
         invalidatesTags: (res) => [
-          { id: 'LIST', type: 'MetaData' },
-          { id: res?.id, type: 'MetaData' },
+          { id: 'LIST', type: 'Metadata' },
+          { id: res?.id, type: 'Metadata' },
         ],
-        query: (query: Req['updateMetaData']) => ({
+        query: (query: Req['updateMetadata']) => ({
           body: query.body,
           method: 'PUT',
           url: `metadata/fields/${query.id}/`,
@@ -48,74 +48,74 @@ export const metaDataService = service
     }),
   })
 
-export async function createMetaData(
+export async function createMetadata(
   store: any,
-  data: Req['createMetaData'],
+  data: Req['createMetadata'],
   options?: Parameters<
-    typeof metaDataService.endpoints.createMetaData.initiate
+    typeof metadataService.endpoints.createMetadata.initiate
   >[1],
 ) {
   return store.dispatch(
-    metaDataService.endpoints.createMetaData.initiate(data, options),
+    metadataService.endpoints.createMetadata.initiate(data, options),
   )
 }
-export async function deleteMetaData(
+export async function deleteMetadata(
   store: any,
-  data: Req['deleteMetaData'],
+  data: Req['deleteMetadata'],
   options?: Parameters<
-    typeof metaDataService.endpoints.deleteMetaData.initiate
+    typeof metadataService.endpoints.deleteMetadata.initiate
   >[1],
 ) {
   return store.dispatch(
-    metaDataService.endpoints.deleteMetaData.initiate(data, options),
+    metadataService.endpoints.deleteMetadata.initiate(data, options),
   )
 }
-export async function getMetaData(
+export async function getMetadata(
   store: any,
-  data: Req['getMetaData'],
+  data: Req['getMetadata'],
   options?: Parameters<
-    typeof metaDataService.endpoints.getMetaData.initiate
+    typeof metadataService.endpoints.getMetadata.initiate
   >[1],
 ) {
   return store.dispatch(
-    metaDataService.endpoints.getMetaData.initiate(data, options),
+    metadataService.endpoints.getMetadata.initiate(data, options),
   )
 }
-export async function getListMetaData(
+export async function getListMetadata(
   store: any,
-  data: Req['getListMetaData'],
+  data: Req['getListMetadata'],
   options?: Parameters<
-    typeof metaDataService.endpoints.getListMetaData.initiate
+    typeof metadataService.endpoints.getListMetadata.initiate
   >[1],
 ) {
   return store.dispatch(
-    metaDataService.endpoints.getListMetaData.initiate(data, options),
+    metadataService.endpoints.getListMetadata.initiate(data, options),
   )
 }
-export async function updateMetaData(
+export async function updateMetadata(
   store: any,
-  data: Req['updateMetaData'],
+  data: Req['updateMetadata'],
   options?: Parameters<
-    typeof metaDataService.endpoints.updateMetaData.initiate
+    typeof metadataService.endpoints.updateMetadata.initiate
   >[1],
 ) {
   return store.dispatch(
-    metaDataService.endpoints.updateMetaData.initiate(data, options),
+    metadataService.endpoints.updateMetadata.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreateMetaDataMutation,
-  useDeleteMetaDataMutation,
-  useGetListMetaDataQuery,
-  useGetMetaDataQuery,
-  useUpdateMetaDataMutation,
+  useCreateMetadataMutation,
+  useDeleteMetadataMutation,
+  useGetListMetadataQuery,
+  useGetMetadataQuery,
+  useUpdateMetadataMutation,
   // END OF EXPORTS
-} = metaDataService
+} = metadataService
 
 /* Usage examples:
-const { data, isLoading } = useGetMetaDataQuery({ id: 2 }, {}) //get hook
-const [createMetaData, { isLoading, data, isSuccess }] = useCreateMetaDataMutation() //create hook
-metaDataService.endpoints.getMetaData.select({id: 2})(store.getState()) //access data from any function
+const { data, isLoading } = useGetMetadataQuery({ id: 2 }, {}) //get hook
+const [createMetadata, { isLoading, data, isSuccess }] = useCreateMetadataMutation() //create hook
+metadataService.endpoints.getMetadata.select({id: 2})(store.getState()) //access data from any function
 */

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react'
 import AccountStore from 'common/stores/account-store'
 
 import {
-  useCreateMetaDataMutation,
-  useGetMetaDataQuery,
-  useUpdateMetaDataMutation,
-} from 'common/services/useMetaData'
+  useCreateMetadataMutation,
+  useGetMetadataQuery,
+  useUpdateMetadataMutation,
+} from 'common/services/useMetadata'
 
 import {
   useGetMetadataModelFieldQuery,
@@ -19,7 +19,7 @@ import Constants from 'common/constants'
 type CreateMetadataType = {
   id?: string
   isEdit?: boolean
-  metadataModelFieldId?: string
+  metadataModelFieldList?: Array
 }
 
 type MetadataType = {
@@ -32,7 +32,7 @@ type MetadataType = {
 const CreateMetadata: FC<CreateMetadataType> = ({
   id,
   isEdit,
-  metadataModelFieldId,
+  metadataModelFieldList,
 }) => {
   const metadataTypes: MetadataType = [
     { id: 1, label: 'int', value: 'int' },
@@ -42,29 +42,29 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     { id: 5, label: 'multiline string', value: 'multiline_str' },
   ]
   const orgId = AccountStore.getOrganisation().id
-  const { data, isLoading } = useGetMetaDataQuery({ id }, { skip: !id })
-  const { data: metadataFields, isLoading: metadataIsLoading } =
-    useGetMetadataModelFieldQuery(
-      { id: metadataModelFieldId, organisation_id: orgId },
-      { skip: !metadataModelFieldId },
-    )
+  const { data, isLoading } = useGetMetadataQuery({ id }, { skip: !id })
+  // const { data: metadataFields, isLoading: metadataIsLoading } =
+  //   useGetMetadataModelFieldQuery(
+  //     { id: metadataModelFieldId, organisation_id: orgId },
+  //     { skip: !metadataModelFieldId },
+  //   )
 
   const [createMetadata, { isLoading: creating, isSuccess: created }] =
-    useCreateMetaDataMutation()
-  const [updateMetaData, { isLoading: updating, isSuccess: updated }] =
-    useUpdateMetaDataMutation()
+    useCreateMetadataMutation()
+  const [updateMetadata, { isLoading: updating, isSuccess: updated }] =
+    useUpdateMetadataMutation()
 
   const [
     createMetadataField,
     { isLoading: creatingMetadataField, isSuccess: metadataFieldcreated },
   ] = useCreateMetadataModelFieldMutation()
   const [
-    updateMetaDataField,
+    updateMetadataField,
     { isLoading: updatingMetadataField, isSuccess: MetadataFieldUpdated },
   ] = useUpdateMetadataModelFieldMutation()
 
   const [
-    deleteMetaDataField,
+    deleteMetadataField,
     { isLoading: deletingMetadataField, isSuccess: MetadataFieldDeleted },
   ] = useDeleteMetadataModelFieldMutation()
 
@@ -82,11 +82,11 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     }
   }, [updating, updated])
 
-  useEffect(() => {
-    if (metadataFields && !metadataIsLoading) {
-      onComplete?.()
-    }
-  }, [metadataFields, metadataIsLoading])
+  // useEffect(() => {
+  //   if (metadataFields && !metadataIsLoading) {
+  //     onComplete?.()
+  //   }
+  // }, [metadataFields, metadataIsLoading])
 
   const [typeValue, setTypeValue] = useState<string>('')
   const [name, setName] = useState<string>('')
@@ -179,7 +179,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 onChange={() => {
                   setEnvironmentEnable(!environmentEnabled)
                   handleMetadataModelField(
-                    Constants.contentTypes.environemnt,
+                    Constants.contentTypes.environment,
                     !environmentEnabled,
                   )
                 }}
@@ -245,7 +245,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       <Button
         onClick={() => {
           if (isEdit) {
-            updateMetaData({
+            updateMetadata({
               body: {
                 description,
                 name,
@@ -262,11 +262,11 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   organisation_id: orgId,
                 })
               })
-            } else if (metadataFields && id && metadataModelFieldId) {
+            } else if (metadataFields && id) {
             }
             if (metadataFields && id && environmentEnabled) {
               // metadataFields.map((m) => {
-              //   updateMetaDataField({
+              //   updateMetadataField({
               //     body: { 'content_type': m, 'field': id },
               //     id,
               //     organisation_id: orgId,

@@ -213,7 +213,7 @@ export default {
     white: '#ffffff',
   },
   contentTypes: {
-    environemnt: 30,
+    environment: 30,
     flag: 39,
     segment: 55,
   },

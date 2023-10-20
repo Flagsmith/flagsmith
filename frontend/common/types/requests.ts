@@ -112,8 +112,8 @@ export type Req = {
   updateMetadataModelField: { organisation_id: string; id: string }
   deleteMetadataModelField: { organisation_id: string; id: string }
   createMetadataModelField: { organisation_id: string }
-  getMetaData: { id: string }
-  updateMetaData: {
+  getMetadata: { id: string }
+  updateMetadata: {
     id: string
     body: {
       name: string
@@ -122,8 +122,8 @@ export type Req = {
       organisation: number
     }
   }
-  deleteMetaData: { id: string }
-  createMetaData: {
+  deleteMetadata: { id: string }
+  createMetadata: {
     name: string
     type: string
     description: string

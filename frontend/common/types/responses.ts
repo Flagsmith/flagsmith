@@ -360,7 +360,7 @@ export type Res = {
   getSubscriptionMetadata: { id: string }
   environment: Environment
   metadataModelField: { id: string }
-  metaData: { id: string }
+  metadata: { id: string }
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   // END OF TYPES

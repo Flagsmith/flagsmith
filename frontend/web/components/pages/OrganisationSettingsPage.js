@@ -22,7 +22,7 @@ import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import CreateMetadata from 'components/modals/CreateMetadata'
-import { getListMetaData, deleteMetaData } from 'common/services/useMetaData'
+import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
 import { getStore } from 'common/store'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
@@ -86,7 +86,7 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   getMetadata = () => {
-    getListMetaData(
+    getListMetadata(
       getStore(),
       {
         organisation: AccountStore.getOrganisation().id,
@@ -110,21 +110,13 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   metadataCreated = () => {
-    // getListMetaData(getStore(), {
-    //     organisation: AccountStore.getOrganisation().id,
-    //   },
-    // ).then((res) => {
-    //   this.setState({
-    //     metadata: res.data.results,
-    //   })
     this.getMetadata()
-    // closeModal()
-    // })
+    closeModal()
   }
 
   deleteMetadata = (id) => {
     toast('Metadata has been deleted')
-    deleteMetaData(getStore(), {
+    deleteMetadata(getStore(), {
       id,
     }).then(() => {
       this.getMetadata()
@@ -308,11 +300,12 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editMetadata = (id) => {
+  editMetadata = (id, contentTypeList) => {
     openModal(
       `Edit Metadata`,
       <CreateMetadata
         isEdit={true}
+        metadataModelFieldList={contentTypeList}
         id={id}
         onComplete={this.metadataCreated}
       />,
@@ -1522,7 +1515,10 @@ const OrganisationSettingsPage = class extends Component {
                                     >
                                       <Flex
                                         onClick={() => {
-                                          this.editMetadata(metadata.id)
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_field,
+                                          )
                                         }}
                                         className='table-column px-3'
                                       >
@@ -1538,7 +1534,10 @@ const OrganisationSettingsPage = class extends Component {
                                           width: '185px',
                                         }}
                                         onClick={() => {
-                                          this.editMetadata(metadata.id)
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_field,
+                                          )
                                         }}
                                       >
                                         <div
@@ -1550,7 +1549,10 @@ const OrganisationSettingsPage = class extends Component {
                                         >
                                           <Switch
                                             checked={metadata.content_type_fields.find(
-                                              (m) => m.content_type === 30,
+                                              (m) =>
+                                                m.content_type ===
+                                                Constants.contentTypes
+                                                  .environment,
                                             )}
                                           />
                                           {'Enabled'}
@@ -1564,19 +1566,27 @@ const OrganisationSettingsPage = class extends Component {
                                         className='table-column'
                                         style={{ width: '180px' }}
                                         onClick={() => {
-                                          this.editMetadata(metadata.id)
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_field,
+                                          )
                                         }}
                                       >
                                         <div
                                           className='table-column'
                                           style={{ width: '170px' }}
                                           onClick={() => {
-                                            this.editMetadata(metadata.id)
+                                            this.editMetadata(
+                                              metadata.id,
+                                              metadata.content_type_field,
+                                            )
                                           }}
                                         >
                                           <Switch
                                             checked={metadata.content_type_fields.find(
-                                              (m) => m.content_type === 55,
+                                              (m) =>
+                                                m.content_type ===
+                                                Constants.contentTypes.segment,
                                             )}
                                           />
                                           {'Enabled'}
@@ -1590,19 +1600,27 @@ const OrganisationSettingsPage = class extends Component {
                                         className='table-column'
                                         style={{ width: '170px' }}
                                         onClick={() => {
-                                          this.editMetadata(metadata.id)
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_field,
+                                          )
                                         }}
                                       >
                                         <div
                                           className='table-column'
                                           style={{ width: '150px' }}
                                           onClick={() => {
-                                            this.editMetadata(metadata.id)
+                                            this.editMetadata(
+                                              metadata.id,
+                                              metadata.content_type_field,
+                                            )
                                           }}
                                         >
                                           <Switch
                                             checked={metadata.content_type_fields.find(
-                                              (m) => m.content_type === 39,
+                                              (m) =>
+                                                m.content_type ===
+                                                Constants.contentTypes.flag,
                                             )}
                                           />
                                           {'Enabled'}
@@ -1644,7 +1662,6 @@ const OrganisationSettingsPage = class extends Component {
                                       </div>
                                     </Panel>
                                   }
-                                  // isLoading={this.props.webhookLoading}
                                 />
                               </FormGroup>
                             </div>
