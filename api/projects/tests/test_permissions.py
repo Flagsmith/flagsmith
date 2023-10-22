@@ -3,6 +3,7 @@ from unittest import TestCase, mock
 import pytest
 
 from organisations.models import Organisation, OrganisationRole
+from organisations.subscriptions.constants import MAX_PROJECTS_IN_FREE_PLAN
 from projects.models import (
     Project,
     ProjectPermissionModel,
@@ -371,3 +372,29 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
         # Then - exception thrown
         assert not result
+
+
+@pytest.mark.django_db
+def test_free_plan_has_only_fixed_projects_permission():
+    organisation = Organisation.objects.create(name="Test organisation")
+
+    user = FFAdminUser.objects.create(email="admin@test.com")
+    user_permission_group = UserPermissionGroup.objects.create(
+        name="Users", organisation=organisation
+    )
+    user_permission_group.users.add(user)
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+    project_permissions = ProjectPermissions()
+
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.data = {"name": "Test", "organisation": organisation.id}
+    mock_request.user = user
+
+    for i in range(MAX_PROJECTS_IN_FREE_PLAN):
+        result = project_permissions.has_permission(mock_request, mock_view)
+        Project.objects.create(name=f"Test project{i}", organisation=organisation)
+        assert result
+
+    assert not project_permissions.has_permission(mock_request, mock_view)

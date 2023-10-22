@@ -41,6 +41,16 @@ class ProjectPermissions(IsAuthenticated):
             organisation = Organisation.objects.get(
                 id=int(request.data.get("organisation"))
             )
+
+            # Allow project creation based on the active subscription
+            subscription_metadata = (
+                organisation.subscription.get_subscription_metadata()
+            )
+            total_projects_created = Project.objects.filter(
+                organisation=organisation
+            ).count()
+            if total_projects_created >= subscription_metadata.projects:
+                return False
             if organisation.restrict_project_create_to_admin:
                 return request.user.is_organisation_admin(organisation.pk)
             return request.user.has_organisation_permission(
