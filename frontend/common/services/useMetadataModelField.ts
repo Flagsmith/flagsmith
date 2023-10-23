@@ -23,7 +23,6 @@ export const metadataModelFieldService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'MetadataModelField' }],
         query: (query: Req['deleteMetadataModelField']) => ({
-          body: query,
           method: 'DELETE',
           url: `organisations/${query.organisation_id}/metadata-model-fields/${query.id}/`,
         }),

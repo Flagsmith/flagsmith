@@ -8,7 +8,6 @@ import {
 } from 'common/services/useMetadata'
 
 import {
-  useGetMetadataModelFieldQuery,
   useCreateMetadataModelFieldMutation,
   useUpdateMetadataModelFieldMutation,
   useDeleteMetadataModelFieldMutation,
@@ -26,13 +25,14 @@ type MetadataType = {
   id: int
   value: string
   label: string
-  onComplete: () => void
+  onComplete?: () => void
 }
 
 const CreateMetadata: FC<CreateMetadataType> = ({
   id,
   isEdit,
   metadataModelFieldList,
+  onComplete,
 }) => {
   const metadataTypes: MetadataType = [
     { id: 1, label: 'int', value: 'int' },
@@ -59,7 +59,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   ] = useUpdateMetadataModelFieldMutation()
 
   const [
-    deleteMetadataField,
+    deleteMetadataModelField,
     { isLoading: deletingMetadataField, isSuccess: MetadataFieldDeleted },
   ] = useDeleteMetadataModelFieldMutation()
 
@@ -68,30 +68,41 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       setName(data.name)
       setDescription(data.description)
       setTypeValue(metadataTypes.find((m) => m.value === data.type))
+      setMetadataFieldsArray(metadataModelFieldList.map((m) => m.content_type))
+      setFlagsEnabled(
+        !!metadataModelFieldList.find(
+          (i) => i.content_type == Constants.contentTypes.flag,
+        ),
+      )
+      setSegmentsEnabled(
+        !!metadataModelFieldList.find(
+          (i) => i.content_type == Constants.contentTypes.segment,
+        ),
+      )
+      setEnvironmentEnabled(
+        !!metadataModelFieldList.find(
+          (i) => i.content_type == Constants.contentTypes.environment,
+        ),
+      )
     }
   }, [data, isLoading])
 
   useEffect(() => {
     if (!updating && updated) {
       toast('Metadata updated')
+      closeModal()
     }
   }, [updating, updated])
-
-  // useEffect(() => {
-  //   if (metadataFields && !metadataIsLoading) {
-  //     onComplete?.()
-  //   }
-  // }, [metadataFields, metadataIsLoading])
 
   const [typeValue, setTypeValue] = useState<string>('')
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
-  const [environmentEnabled, setEnvironmentEnable] = useState<boolean>(false)
+  const [environmentEnabled, setEnvironmentEnabled] = useState<boolean>(false)
   const [segmentEnabled, setSegmentsEnabled] = useState<boolean>(false)
   const [flagEnabled, setFlagsEnabled] = useState<boolean>(false)
   const [environmentRequired, setEnvironmentRequired] = useState<boolea>(false)
-  const [segmentRequired, setSegmentRequired] = useState<boolea>(false)
-  const [flagRequired, setFlagRequired] = useState<boolea>(false)
+  const [segmentRequired, setSegmentRequired] = useState<boolean>(false)
+  const [flagRequired, setFlagRequired] = useState<booleaan>(false)
   const [metadataFieldsArray, setMetadataFieldsArray] = useState<array>([])
 
   const handleMetadataModelField = (contentTypeId, enabled) => {
@@ -172,7 +183,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               <Switch
                 checked={environmentEnabled}
                 onChange={() => {
-                  setEnvironmentEnable(!environmentEnabled)
+                  setEnvironmentEnabled(!environmentEnabled)
                   handleMetadataModelField(
                     Constants.contentTypes.environment,
                     !environmentEnabled,
@@ -249,7 +260,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
               },
               id,
             })
-            if (!metadataFields && id) {
+            if (!metadataModelFieldList.length && id) {
               metadataFieldsArray.map((m) => {
                 createMetadataField({
                   body: { 'content_type': m, 'field': id },
@@ -257,16 +268,31 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                   organisation_id: orgId,
                 })
               })
-            } else if (metadataFields && id) {
-            }
-            if (metadataFields && id && environmentEnabled) {
-              // metadataFields.map((m) => {
-              //   updateMetadataField({
-              //     body: { 'content_type': m, 'field': id },
-              //     id,
-              //     organisation_id: orgId,
-              //   })
-              // })
+            } else if (metadataModelFieldList.length && id) {
+              const metadataToDelete = metadataModelFieldList.filter(
+                (m) => !metadataFieldsArray.includes(m.content_type),
+              )
+              const metadataToCreate = metadataFieldsArray.filter(
+                (id) =>
+                  !metadataModelFieldList.some((m) => m.content_type === id),
+              )
+              if (metadataToDelete.length) {
+                metadataToDelete.map((m) => {
+                  deleteMetadataModelField({
+                    id: m.id,
+                    organisation_id: orgId,
+                  })
+                })
+              }
+              if (metadataToCreate.length) {
+                metadataToCreate.map((m) => {
+                  createMetadataField({
+                    body: { 'content_type': m, 'field': id },
+                    id,
+                    organisation_id: orgId,
+                  })
+                })
+              }
             }
           } else {
             createMetadata({

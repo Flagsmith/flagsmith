@@ -1517,7 +1517,7 @@ const OrganisationSettingsPage = class extends Component {
                                         onClick={() => {
                                           this.editMetadata(
                                             metadata.id,
-                                            metadata.content_type_field,
+                                            metadata.content_type_fields,
                                           )
                                         }}
                                         className='table-column px-3'
@@ -1536,7 +1536,7 @@ const OrganisationSettingsPage = class extends Component {
                                         onClick={() => {
                                           this.editMetadata(
                                             metadata.id,
-                                            metadata.content_type_field,
+                                            metadata.content_type_fields,
                                           )
                                         }}
                                       >
@@ -1548,6 +1548,7 @@ const OrganisationSettingsPage = class extends Component {
                                           }}
                                         >
                                           <Switch
+                                            className='mr-1'
                                             checked={metadata.content_type_fields.find(
                                               (m) =>
                                                 m.content_type ===
@@ -1557,7 +1558,10 @@ const OrganisationSettingsPage = class extends Component {
                                           />
                                           {'Enabled'}
                                           <span className='checkbox mr-2'>
-                                            <Switch checked={false} />
+                                            <Switch
+                                              className='mr-1'
+                                              checked={false}
+                                            />
                                             {'Required'}
                                           </span>
                                         </div>
@@ -1568,41 +1572,7 @@ const OrganisationSettingsPage = class extends Component {
                                         onClick={() => {
                                           this.editMetadata(
                                             metadata.id,
-                                            metadata.content_type_field,
-                                          )
-                                        }}
-                                      >
-                                        <div
-                                          className='table-column'
-                                          style={{ width: '170px' }}
-                                          onClick={() => {
-                                            this.editMetadata(
-                                              metadata.id,
-                                              metadata.content_type_field,
-                                            )
-                                          }}
-                                        >
-                                          <Switch
-                                            checked={metadata.content_type_fields.find(
-                                              (m) =>
-                                                m.content_type ===
-                                                Constants.contentTypes.segment,
-                                            )}
-                                          />
-                                          {'Enabled'}
-                                          <span className='checkbox mr-2'>
-                                            <Switch checked={false} />
-                                            {'Required'}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: '170px' }}
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_field,
+                                            metadata.content_type_fields,
                                           )
                                         }}
                                       >
@@ -1612,11 +1582,50 @@ const OrganisationSettingsPage = class extends Component {
                                           onClick={() => {
                                             this.editMetadata(
                                               metadata.id,
-                                              metadata.content_type_field,
+                                              metadata.content_type_fields,
                                             )
                                           }}
                                         >
                                           <Switch
+                                            className='mr-1'
+                                            checked={metadata.content_type_fields.find(
+                                              (m) =>
+                                                m.content_type ===
+                                                Constants.contentTypes.segment,
+                                            )}
+                                          />
+                                          {'Enabled'}
+                                          <span className='checkbox mr-2'>
+                                            <Switch
+                                              className='mr-1'
+                                              checked={false}
+                                            />
+                                            {'Required'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div
+                                        className='table-column'
+                                        style={{ width: '150px' }}
+                                        onClick={() => {
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_fields,
+                                          )
+                                        }}
+                                      >
+                                        <div
+                                          className='table-column'
+                                          style={{ width: '150px' }}
+                                          onClick={() => {
+                                            this.editMetadata(
+                                              metadata.id,
+                                              metadata.content_type_fields,
+                                            )
+                                          }}
+                                        >
+                                          <Switch
+                                            className='mr-1'
                                             checked={metadata.content_type_fields.find(
                                               (m) =>
                                                 m.content_type ===
@@ -1625,7 +1634,10 @@ const OrganisationSettingsPage = class extends Component {
                                           />
                                           {'Enabled'}
                                           <span className='checkbox mr-2'>
-                                            <Switch checked={false} />
+                                            <Switch
+                                              className='mr-1'
+                                              checked={false}
+                                            />
                                             {'Required'}
                                           </span>
                                         </div>
