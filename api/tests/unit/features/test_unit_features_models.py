@@ -404,3 +404,42 @@ def test_feature_state_gt_operator_for_segment_overrides_and_environment_default
 
     # Then
     assert segment_override > environment_default
+
+
+def test_feature_state_clone_for_segment_override_clones_feature_segment(
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # When
+    cloned_fs = segment_featurestate.clone(env=environment_two, as_draft=True)
+
+    # Then
+    assert cloned_fs.feature_segment != segment_featurestate.feature_segment
+
+    assert (
+        cloned_fs.feature_segment.segment
+        == segment_featurestate.feature_segment.segment
+    )
+    assert (
+        cloned_fs.feature_segment.priority
+        == segment_featurestate.feature_segment.priority
+    )
+
+
+def test_feature_segment_clone(
+    feature_segment: FeatureSegment,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # When
+    cloned_feature_segment = feature_segment.clone(environment=environment_two)
+
+    # Then
+    assert cloned_feature_segment.id != feature_segment.id
+
+    assert cloned_feature_segment.priority == feature_segment.priority
+    assert cloned_feature_segment.segment == feature_segment.segment
+    assert cloned_feature_segment.feature == feature_segment.feature
+    assert cloned_feature_segment.environment == environment_two

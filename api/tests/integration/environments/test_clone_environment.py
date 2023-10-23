@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 from tests.integration.helpers import (
     get_env_feature_states_list_with_api,
     get_feature_segement_list_with_api,
@@ -17,7 +18,7 @@ from tests.integration.helpers import (
 def test_clone_environment_clones_feature_states_with_value(
     client, project, environment, environment_api_key, feature
 ):
-    # Firstly, let's update feature state value of the source enviroment
+    # Firstly, let's update feature state value of the source environment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
         client, {"environment": environment, "feature": feature}
@@ -51,7 +52,7 @@ def test_clone_environment_clones_feature_states_with_value(
         client, {"environment": environment}
     )
 
-    # Now, fetch the feature states of the clone enviroment
+    # Now, fetch the feature states of the clone environment
     clone_env_feature_states = get_env_feature_states_list_with_api(
         client, {"environment": res.json()["id"]}
     )
@@ -80,13 +81,13 @@ def test_clone_environment_clones_feature_states_with_value(
 def test_clone_environment_creates_admin_permission_with_the_current_user(
     admin_user, admin_client, environment, environment_api_key
 ):
-    # Firstly, let's create the clone of the enviroment
+    # Firstly, let's create the clone of the environment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
     res = admin_client.post(url, {"name": env_name})
     clone_env_api_key = res.json()["api_key"]
 
-    # Now, fetch the permission of the newly creatd enviroment
+    # Now, fetch the permission of the newly creatd environment
     perm_url = reverse(
         "api-v1:environments:environment-user-permissions-list",
         args=[clone_env_api_key],
@@ -98,7 +99,12 @@ def test_clone_environment_creates_admin_permission_with_the_current_user(
 
 
 def test_env_clone_creates_feature_segment(
-    admin_client, environment, environment_api_key, db, feature, feature_segment
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    feature_segment: int,
+    segment_featurestate: int,
 ):
     # Firstly, let's clone the environment
     env_name = "Cloned env"
@@ -161,6 +167,9 @@ def test_env_clone_clones_segments_overrides(
             "feature_segment": feature_segment,
         },
     )
+    source_feature_segment_id = source_env_feature_states["results"][0][
+        "feature_segment"
+    ]
 
     # (fetch the feature segment id to filter feature states)
     clone_feature_segment_id = get_feature_segement_list_with_api(
@@ -199,3 +208,4 @@ def test_env_clone_clones_segments_overrides(
         clone_env_feature_states["results"][0]["feature_segment"]
         == clone_feature_segment_id
     )
+    assert clone_feature_segment_id != source_feature_segment_id

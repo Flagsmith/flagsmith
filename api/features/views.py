@@ -299,6 +299,12 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         else:
             return FeatureStateSerializerCreate
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ["update", "create"]:
+            context["environment"] = self.get_environment_from_request()
+        return context
+
     def get_queryset(self):
         """
         Override queryset to filter based on provided URL parameters.
@@ -341,46 +347,26 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         return environment
 
-    def get_identity_from_request(self, environment):
-        """
-        Get identity object from URL parameters in request.
-        """
-        identity = Identity.objects.get(pk=self.kwargs["identity_pk"])
-        return identity
-
     def create(self, request, *args, **kwargs):
         """
         DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
-        environment = self.get_environment_from_request()
-        if (
-            environment.project.organisation
-            not in self.request.user.organisations.all()
-        ):
-            return Response(status.HTTP_403_FORBIDDEN)
-
-        data["environment"] = environment.id
-
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        feature_id = int(data["feature"])
-
-        if feature_id not in [
-            feature.id for feature in environment.project.features.all()
-        ]:
-            error = {"detail": "Feature does not exist in project"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        environment = self.get_environment_from_request()
+        data["environment"] = environment.id
 
         identity_pk = self.kwargs.get("identity_pk")
         if identity_pk:
             data["identity"] = identity_pk
 
         serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
+
+        if serializer.is_valid(raise_exception=True):
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -394,10 +380,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
-        else:
-            logger.error(serializer.errors)
-            error = {"detail": "Couldn't create feature state."}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         """
@@ -507,6 +489,20 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ]
+    ),
+)
 class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -555,6 +551,7 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    throttle_classes = []
     pagination_class = None
 
     @swagger_auto_schema(

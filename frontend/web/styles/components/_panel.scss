@@ -70,6 +70,7 @@
   &.segment-overrides {
     border: 1px solid $basic-alpha-16;
     border-radius: $border-radius-lg;
+    background-color: $text-icon-light;
   }
 
   &.no-pad {
@@ -137,6 +138,10 @@
         background-color: $bg-dark200;
       }
     }
+    &.segment-overrides {
+      background-color: $bg-dark100;
+      border: 1px solid $white-alpha-16;
+    }
   }
 }
 
@@ -189,6 +194,27 @@ a.text-white {
     .panel-content {
       .search-list {
         border: none;
+      }
+    }
+  }
+  &.panel-change-request {
+    .search-list {
+      border-color: rgba(149, 108, 255, 0.48);
+
+      .table-header {
+        color: #6837fc;
+        background-color: rgba(102, 51, 255, 0.08);
+      }
+
+      .change-request-item {
+        border-color: rgba(149, 108, 255, 0.48);
+      }
+    }
+
+    .change-request-updated-value {
+      input,
+      code.txt {
+        color: #6837fc;
       }
     }
   }

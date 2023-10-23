@@ -560,15 +560,17 @@ class FeatureState(
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
-        clone.feature_segment = (
-            FeatureSegment.objects.get(
-                environment=env,
-                feature=clone.feature,
-                segment=self.feature_segment.segment,
+
+        if self.feature_segment:
+            # For now, we can only create a new feature segment if we are cloning to another environment
+            # TODO: with feature versioning, ensure that we clone regardless.
+            #  see this PR: https://github.com/Flagsmith/flagsmith/pull/2382
+            clone.feature_segment = (
+                self.feature_segment.clone(environment=env)
+                if env != self.environment
+                else self.feature_segment
             )
-            if self.feature_segment
-            else None
-        )
+
         clone.environment = env
         clone.version = None if as_draft else version or self.version
         clone.live_from = live_from

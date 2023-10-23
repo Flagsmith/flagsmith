@@ -8,6 +8,7 @@ from threading import Thread
 from django.conf import settings
 from django.utils import timezone
 
+from task_processor.exceptions import InvalidArgumentsError, TaskQueueFullError
 from task_processor.models import RecurringTask, Task
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
@@ -15,7 +16,7 @@ from task_processor.task_run_method import TaskRunMethod
 logger = logging.getLogger(__name__)
 
 
-def register_task_handler(task_name: str = None):
+def register_task_handler(task_name: str = None, queue_size: int = None):
     def decorator(f: typing.Callable):
         nonlocal task_name
 
@@ -41,30 +42,50 @@ def register_task_handler(task_name: str = None):
                 return
 
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
+                _validate_inputs(*args, **kwargs)
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
                 logger.debug("Running task '%s' in separate thread", task_identifier)
                 run_in_thread(args=args, kwargs=kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                task = Task.schedule_task(
-                    schedule_for=delay_until or timezone.now(),
-                    task_identifier=task_identifier,
-                    args=args,
-                    kwargs=kwargs,
-                )
+                try:
+                    task = Task.schedule_task(
+                        schedule_for=delay_until or timezone.now(),
+                        task_identifier=task_identifier,
+                        queue_size=queue_size,
+                        args=args,
+                        kwargs=kwargs,
+                    )
+                except TaskQueueFullError as e:
+                    logger.warning(e)
+                    return
+
                 task.save()
                 return task
 
         def run_in_thread(*, args: typing.Tuple = (), kwargs: typing.Dict = None):
             logger.info("Running function %s in unmanaged thread.", f.__name__)
+            _validate_inputs(*args, **kwargs)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
 
-        f.delay = delay
-        f.run_in_thread = run_in_thread
-        f.task_identifier = task_identifier
+        def _wrapper(*args, **kwargs):
+            """
+            Execute the function after validating the arguments. Ensures that, in unit testing,
+            the arguments are validated to prevent issues with serialization in an environment
+            that utilises the task processor.
+            """
+            _validate_inputs(*args, **kwargs)
+            return f(*args, **kwargs)
 
-        return f
+        _wrapper.delay = delay
+        _wrapper.run_in_thread = run_in_thread
+        _wrapper.task_identifier = task_identifier
+
+        # patch the original unwrapped function onto the wrapped version for testing
+        _wrapper.unwrapped = f
+
+        return _wrapper
 
     return decorator
 
@@ -101,3 +122,11 @@ def register_recurring_task(
         return task
 
     return decorator
+
+
+def _validate_inputs(*args, **kwargs):
+    try:
+        Task.serialize_data(args or tuple())
+        Task.serialize_data(kwargs or dict())
+    except TypeError as e:
+        raise InvalidArgumentsError("Inputs are not serializable.") from e

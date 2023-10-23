@@ -1,23 +1,23 @@
-@import "../variables";
+@import '../variables';
 
 #toast {
-	display: inline-block;
-	position: fixed;
-	right: 15px;
-	top: 15px;
-	z-index: 1000000000;
+  display: inline-block;
+  position: fixed;
+  right: 15px;
+  top: 15px;
+  z-index: 1000000000;
 
-	button{
-		box-shadow: none;
-		color:black
-	}
+  button {
+    box-shadow: none;
+    color: black;
+  }
 }
 
 .toast-message {
 	top: 0;
 	right: 15px;
 	width: 250px;
-	background: $success-alfa-8;
+	background: $success-solid-alert;
 	font-weight: 500;
 	border: 1px solid $success;
 }

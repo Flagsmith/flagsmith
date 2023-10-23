@@ -32,7 +32,7 @@
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;
   border-radius: $border-radius;
-  margin-right: .5rem;
+  margin-right: 0.5rem;
   font-size: $font-sm;
   line-height: $line-height-sm;
   font-weight: normal;
@@ -143,7 +143,7 @@
 
 .MuiFormControl-root {
   border: 1px solid $input-border-color !important;
-  padding: $input-padding !important;
+  padding: 0.5rem !important;
   border-radius: $border-radius;
 }
 
