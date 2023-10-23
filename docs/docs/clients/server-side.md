@@ -794,6 +794,12 @@ flagsmith.close();
 ```
 
 </TabItem>
+<TabItem value="php" label="PHP">
+
+Since PHP does not share state between requests, you **have** to implement caching to get the benefits of Local
+Evaluation mode. Please see [caching](#caching) below.
+
+</TabItem>
 </Tabs>
 
 ## Configuring the SDK
@@ -1571,6 +1577,51 @@ router.get('/', function (req, res, next) {
  });
 });
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+```php
+$flagsmith = (new Flagsmith(TOKEN));
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+It is recommended to use a psr simple-cache implementation to cache the environment document between multiple requests.
+
+```sh
+composer require symfony/cache
+```
+
+```php
+$flagsmith = (new Flagsmith(TOKEN))
+  ->withCache(new Psr16Cache(new FilesystemAdapter()));
+// Cache the environment call to reduce network calls for each and every evaluation.
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+An optional cron job can be added to refresh this cache at a set time depending on your choice. Please set
+EnvironmentTTL value for this purpose.
+
+```php
+// the environment will be cached for 100 seconds.
+$flagsmith = $flagsmith->withEnvironmentTtl(100);
+$flagsmith->updateEnvironment();
+```
+
+```sh
+* * * 1 40 php index.php # using cli
+* * * 1 40 curl http://localhost:8000/ # using http
+```
+
+Note:
+
+- For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
+  `ser.`.
+- The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with its
+  own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file system
+  one.
 
 </TabItem>
 </Tabs>
