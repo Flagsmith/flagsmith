@@ -15,6 +15,12 @@ import has finished.
 
 :::
 
+:::caution
+
+Import operations will overwrite existing environments and flags in your project.
+
+:::
+
 ## Integration Setup
 
 1. Create a LaunchDarkly Access Token. In LaunchDarkly: Account settings > Authorization > Access tokens.
@@ -45,3 +51,5 @@ Boolean values will be taken from the `_summary -> on` field of within LaunchDar
 Multivariate LaunchDarkly flags will be imported into Flagsmith as MultiVariate Flagsmith flag values.
 
 Multivariate values will be taken from the `variations` field of within LaunchDarkly.
+
+Values set to serve when targeting is off will be imported as control values.

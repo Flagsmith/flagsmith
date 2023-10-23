@@ -85,7 +85,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       )}
       <div className='mt-4'>
         <InfoMessage>
-          Import operations will overwrite existing environments and flags.
+          Import operations will overwrite existing environments and flags in your project.
         </InfoMessage>
         <h5>Import LaunchDarkly Projects</h5>
         <label>Set LaunchDarkly key</label>
