@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Callable, Tuple
 
 from django.core import signing
 from django.utils import timezone
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import RequestException
 
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD, FeatureType
@@ -39,6 +39,13 @@ def _unsign_ld_value(value: str, user_id: int) -> str:
         value,
         salt=f"ld_import_{user_id}",
     )
+
+
+def _log_error(
+    import_request: LaunchDarklyImportRequest,
+    error_message: str,
+) -> None:
+    import_request.status["error_message"] = error_message
 
 
 @contextmanager
@@ -164,24 +171,31 @@ def _create_mv_feature_states(
     environments_by_ld_environment_key: dict[str, Environment],
 ) -> None:
     variations = ld_flag["variations"]
+    variation_values_by_idx: dict[str, str] = {}
     mv_feature_options_by_variation: dict[str, MultivariateFeatureOption] = {}
 
     for idx, variation in enumerate(variations):
+        variation_idx = str(idx)
+        variation_value = variation["value"]
+        variation_values_by_idx[variation_idx] = variation_value
         (
             mv_feature_options_by_variation[str(idx)],
             _,
         ) = MultivariateFeatureOption.objects.update_or_create(
             feature=feature,
-            string_value=variation["value"],
+            string_value=variation_value,
             defaults={"default_percentage_allocation": 0, "type": STRING},
         )
 
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
+
+        is_flag_on = ld_flag_config["on"]
+
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
             environment=environment,
-            defaults={"enabled": ld_flag_config["on"]},
+            defaults={"enabled": is_flag_on},
         )
 
         cumulative_rollout = rollout_baseline = 0
@@ -189,6 +203,17 @@ def _create_mv_feature_states(
         if ld_flag_config_summary := ld_flag_config.get("_summary"):
             enabled_variations = ld_flag_config_summary.get("variations") or {}
             for variation_idx, variation_config in enabled_variations.items():
+                if variation_config.get("isOff"):
+                    # Set LD's off value as the control value.
+                    # We expect only one off variation.
+                    FeatureStateValue.objects.update_or_create(
+                        feature_state=feature_state,
+                        defaults={
+                            "type": STRING,
+                            "string_value": variation_values_by_idx[variation_idx],
+                        },
+                    )
+
                 mv_feature_option = mv_feature_options_by_variation[variation_idx]
                 percentage_allocation = 0
 
@@ -298,13 +323,12 @@ def create_import_request(
     ld_token: str,
 ) -> LaunchDarklyImportRequest:
     ld_client = LaunchDarklyClient(ld_token)
-    ld_project = ld_client.get_project(project_key=ld_project_key)
 
-    requested_environment_count = ld_project["environments"]["totalCount"]
+    ld_project = ld_client.get_project(project_key=ld_project_key)
     requested_flag_count = ld_client.get_flag_count(project_key=ld_project_key)
 
     status: LaunchDarklyImportStatus = {
-        "requested_environment_count": requested_environment_count,
+        "requested_environment_count": ld_project["environments"]["totalCount"],
         "requested_flag_count": requested_flag_count,
     }
 
@@ -333,15 +357,15 @@ def process_import_request(
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
             ld_flags = ld_client.get_flags(project_key=ld_project_key)
             ld_tags = ld_client.get_flag_tags()
-        except HTTPError as exc:
-            import_request.status[
-                "error_message"
-            ] = f"HTTP {exc.response.status_code} when requesting LaunchDarkly"
-            raise
         except RequestException as exc:
-            import_request.status[
-                "error_message"
-            ] = f"{exc.__class__.__name__} when requesting LaunchDarkly"
+            _log_error(
+                import_request=import_request,
+                error_message=(
+                    f"{exc.__class__.__name__} "
+                    f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
+                    f"when requesting {exc.request.path_url}"
+                ),
+            )
             raise
 
         environments_by_ld_environment_key = _create_environments_from_ld(
