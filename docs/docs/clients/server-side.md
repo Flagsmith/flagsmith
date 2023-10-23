@@ -769,7 +769,7 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asnchronous network request to retrieve details about the Environment.
+- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
 - Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
   has is up to date.
 
