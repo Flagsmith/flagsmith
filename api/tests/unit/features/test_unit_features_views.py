@@ -959,6 +959,65 @@ def test_create_feature_state_environment_is_read_only(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
+def test_cannot_create_feature_state_of_feature_from_different_project(
+    client, environment, project_two_feature, feature_segment
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    new_value = "new-value"
+    data = {
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": project_two_feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": feature_segment.id,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["feature"][0] == "Feature does not exist in project"
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_create_feature_state_environment_field_is_read_only(
+    client, environment, feature, feature_segment, environment_two
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    new_value = "new-value"
+    data = {
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment_two.id,
+        "feature_segment": feature_segment.id,
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["environment"] == environment.id
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
 def test_cannot_update_environment_of_a_feature_state(
     client, environment, feature, feature_state, environment_two
 ):
@@ -1019,4 +1078,3 @@ def test_cannot_update_feature_of_a_feature_state(
     assert (
         response.json()["feature"][0] == "Cannot change the feature of a feature state"
     )
-
