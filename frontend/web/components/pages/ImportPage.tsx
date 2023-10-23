@@ -5,6 +5,7 @@ import {
   useGetLaunchDarklyProjectImportQuery,
 } from 'common/services/useLaunchDarklyProjectImport'
 import AppLoader from 'components/AppLoader'
+import InfoMessage from 'components/InfoMessage'
 
 type ImportPageType = {
   projectId: string
@@ -83,6 +84,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
         </div>
       )}
       <div className='mt-4'>
+        <InfoMessage>
+          Import operations will overwrite existing environments and flags in your project.
+        </InfoMessage>
         <h5>Import LaunchDarkly Projects</h5>
         <label>Set LaunchDarkly key</label>
         <FormGroup>
