@@ -57,6 +57,8 @@ def register_task_handler(
                     task = Task.create(
                         task_identifier=task_identifier,
                         scheduled_for=delay_until or timezone.now(),
+                        priority=priority,
+                        queue_size=queue_size,
                         args=args,
                         kwargs=kwargs,
                     )
@@ -64,7 +66,7 @@ def register_task_handler(
                     logger.warning(e)
                     return
 
-                task.save(priority=priority)
+                task.save()
                 return task
 
         def run_in_thread(*, args: typing.Tuple = (), kwargs: typing.Dict = None):
