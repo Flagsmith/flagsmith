@@ -56,7 +56,7 @@ const CreateFlag = class extends Component {
       : {
           multivariate_options: [],
         }
-    const { allowEditDescription } = this.props
+    const { allowEditDescription, tab } = this.props
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -84,7 +84,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tab: Utils.fromParam().tab || 0,
+      tab: tab || 0,
       tags: tags || [],
     }
     AppActions.getGroups(AccountStore.getOrganisation().id)
