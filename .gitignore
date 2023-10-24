@@ -23,3 +23,6 @@ src/CI_COMMIT_SHA
 .DS_Store
 .idea
 *.iml
+api/.testmondata
+api/.testmondata-shm
+api/.testmondata-wal
