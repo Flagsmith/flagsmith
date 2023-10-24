@@ -71,6 +71,21 @@ export type Project = {
   environments: Environment[]
 }
 
+export type LaunchDarklyProjectImport = {
+  id: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  completed_at: string
+  status: {
+      requested_environment_count: number
+      requested_flag_count: number
+      result: string || null
+      error_message: string || null
+  },
+  project: number
+}
+
 export type User = {
   id: number
   email: string
@@ -360,5 +375,7 @@ export type Res = {
   rolePermissionGroup: { id: string }
   getSubscriptionMetadata: { id: string }
   environment: Environment
+  launchDarklyProjectImport: LaunchDarklyProjectImport
+  launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   // END OF TYPES
 }

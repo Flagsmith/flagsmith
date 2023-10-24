@@ -551,6 +551,7 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    throttle_classes = []
     pagination_class = None
 
     @swagger_auto_schema(

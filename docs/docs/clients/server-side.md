@@ -23,102 +23,58 @@ Once you've got that understood, lets get the SDKs integrated!
 <Tabs groupId="language">
 <TabItem value="py" label="Python">
 
-### Version Compatiability
-
-Python 3.8+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-python-client
+- Version Compatibility: **Python 3.8+**
+- Source Code: https://github.com/Flagsmith/flagsmith-python-client
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-### Version Compatiability
-
-JDK 11+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-java-client
+- Version Compatibility: **JDK 11+**
+- Source Code: https://github.com/Flagsmith/flagsmith-java-client
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-### Version Compatiability
-
-.NET core 6.0+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-dotnet-client
+- Version Compatibility: **.NET core 6.0+**
+- Source Code: https://github.com/Flagsmith/flagsmith-dotnet-client
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-### Version Compatiability
-
-Node 14+
-
-### Github Link
-
-- https://github.com/Flagsmith/flagsmith-nodejs-client
-- https://github.com/Flagsmith/flagsmith-nodejs-examples
+- Version Compatibility: **Node 14+**
+- Source Code:
+  - https://github.com/Flagsmith/flagsmith-nodejs-client
+  - https://github.com/Flagsmith/flagsmith-nodejs-examples
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
 
-### Version Compatiability
-
-Ruby 2.4+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-ruby-client
+- Version Compatibility: **Ruby 2.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-ruby-client
 
 </TabItem>
 <TabItem value="php" label="PHP">
 
-### Version Compatiability
-
-php 7.4+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-php-client
+- Version Compatibility: **php 7.4+**
+- Source Code: https://github.com/Flagsmith/flagsmith-php-client
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-### Version Compatiability
-
-Go 1.18+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-go-client
+- Version Compatibility: **Go 1.18+**
+- Source Code: https://github.com/Flagsmith/flagsmith-go-client
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
-### Version Compatiability
-
-2021 edition (1.56.0)+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-rust-client
+- Version Compatibility: **2021 edition (1.56.0)+**
+- Source Code: https://github.com/Flagsmith/flagsmith-rust-client
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
 
-### Version Compatiability
-
-Elixir 1.12+
-
-### Github Link
-
-https://github.com/Flagsmith/flagsmith-elixir-client
+- Version Compatibility: **Elixir 1.12+**
+- Source Code: https://github.com/Flagsmith/flagsmith-elixir-client
 
 </TabItem>
 </Tabs>
@@ -154,17 +110,19 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 <TabItem value="dotnet" label=".NET">
 
 ```bash
+# Check https://www.nuget.org/packages/Flagsmith for the latest version!
+
 # Package Manager
-Install-Package Flagsmith -Version 4.0.0
+Install-Package Flagsmith -Version 5.1.0
 
 #.NET CLI
-dotnet add package Flagsmith --version 4.0.0
+dotnet add package Flagsmith --version 5.1.0
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="4.0.0" />
+<PackageReference Include="Flagsmith" Version="5.1.0" />
 
 # Paket CLI
-paket add Flagsmith --version 4.0.0
+paket add Flagsmith --version 5.1.0
 ```
 
 </TabItem>
@@ -202,17 +160,20 @@ composer require flagsmith/flagsmith-php-client symfony/http-client nyholm/psr7 
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/Flagsmith/flagsmith-go-client/v2
+# Check https://github.com/Flagsmith/flagsmith-go-client/releases for the latest version!
+
+go get github.com/Flagsmith/flagsmith-go-client/v3
 ```
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
 ```bash
+# Check https://crates.io/crates/flagsmith/versions for the latest version!
+
 # Cargo.toml
 [dependencies]
 flagsmith = "~1"
-
 ```
 
 </TabItem>
@@ -808,7 +769,7 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asnchronous network request to retrieve details about the Environment.
+- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
 - Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
   has is up to date.
 
@@ -831,6 +792,12 @@ flagsmith.close();
 // available from v2.2.1
 flagsmith.close();
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+Since PHP does not share state between requests, you **have** to implement caching to get the benefits of Local
+Evaluation mode. Please see [caching](#caching) below.
 
 </TabItem>
 </Tabs>
@@ -1610,6 +1577,51 @@ router.get('/', function (req, res, next) {
  });
 });
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+```php
+$flagsmith = (new Flagsmith(TOKEN));
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+It is recommended to use a psr simple-cache implementation to cache the environment document between multiple requests.
+
+```sh
+composer require symfony/cache
+```
+
+```php
+$flagsmith = (new Flagsmith(TOKEN))
+  ->withCache(new Psr16Cache(new FilesystemAdapter()));
+// Cache the environment call to reduce network calls for each and every evaluation.
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+An optional cron job can be added to refresh this cache at a set time depending on your choice. Please set
+EnvironmentTTL value for this purpose.
+
+```php
+// the environment will be cached for 100 seconds.
+$flagsmith = $flagsmith->withEnvironmentTtl(100);
+$flagsmith->updateEnvironment();
+```
+
+```sh
+* * * 1 40 php index.php # using cli
+* * * 1 40 curl http://localhost:8000/ # using http
+```
+
+Note:
+
+- For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
+  `ser.`.
+- The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with its
+  own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file system
+  one.
 
 </TabItem>
 </Tabs>

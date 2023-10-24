@@ -8,7 +8,7 @@ from threading import Thread
 from django.conf import settings
 from django.utils import timezone
 
-from task_processor.exceptions import InvalidArgumentsError
+from task_processor.exceptions import InvalidArgumentsError, TaskQueueFullError
 from task_processor.models import RecurringTask, Task
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
@@ -16,7 +16,7 @@ from task_processor.task_run_method import TaskRunMethod
 logger = logging.getLogger(__name__)
 
 
-def register_task_handler(task_name: str = None):
+def register_task_handler(task_name: str = None, queue_size: int = None):
     def decorator(f: typing.Callable):
         nonlocal task_name
 
@@ -49,12 +49,18 @@ def register_task_handler(task_name: str = None):
                 run_in_thread(args=args, kwargs=kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                task = Task.schedule_task(
-                    schedule_for=delay_until or timezone.now(),
-                    task_identifier=task_identifier,
-                    args=args,
-                    kwargs=kwargs,
-                )
+                try:
+                    task = Task.schedule_task(
+                        schedule_for=delay_until or timezone.now(),
+                        task_identifier=task_identifier,
+                        queue_size=queue_size,
+                        args=args,
+                        kwargs=kwargs,
+                    )
+                except TaskQueueFullError as e:
+                    logger.warning(e)
+                    return
+
                 task.save()
                 return task
 

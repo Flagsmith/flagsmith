@@ -161,7 +161,7 @@
                 },
                 {
                     "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up,scale-up-v2,scale-up-annual-v2"
+                    "value": "scale-up,scale-up-v2,scale-up-annual-v2,scale-up-24-months-v2"
                 },
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
