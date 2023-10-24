@@ -219,6 +219,7 @@ elif "DJANGO_DB_NAME" in os.environ:
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -228,7 +229,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
