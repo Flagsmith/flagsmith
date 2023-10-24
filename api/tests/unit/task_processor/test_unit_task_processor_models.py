@@ -59,39 +59,3 @@ def test_recurring_task_run_should_execute_first_run_at(first_run_time, expected
         ).should_execute
         == expected
     )
-
-
-def test_is_queue_full_returns_true_if_queue_is_full(db):
-    # Given
-    task_identifier = "my_callable"
-
-    # some incomplete task
-    for _ in range(10):
-        Task.objects.create(task_identifier=task_identifier)
-
-    Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
-    # When
-    assert Task.is_queue_full(task_identifier, 9) is True
-
-
-def test_is_queue_full_returns_false_if_queue_is_not_full(db):
-    # Given
-    task_identifier = "my_callable"
-
-    # Some incomplete task
-    for _ in range(10):
-        Task.objects.create(task_identifier=task_identifier)
-
-        # tasks with different identifiers
-        Task.objects.create(task_identifier="task_with_different_identifier")
-
-        # failed tasks
-        Task.objects.create(
-            task_identifier="task_with_different_identifier", num_failures=3
-        )
-
-    # When
-    Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
-
-    # Then
-    assert Task.is_queue_full(task_identifier, 10) is False

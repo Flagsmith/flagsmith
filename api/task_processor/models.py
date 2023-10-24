@@ -108,12 +108,11 @@ class Task(AbstractBaseTask):
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
-        if queue_size:
-            if cls.is_queue_full(task_identifier, queue_size):
-                raise TaskQueueFullError(
-                    f"Queue for task {task_identifier} is full. "
-                    f"Max queue size is {queue_size}"
-                )
+        if queue_size and cls._is_queue_full(task_identifier, queue_size):
+            raise TaskQueueFullError(
+                f"Queue for task {task_identifier} is full. "
+                f"Max queue size is {queue_size}"
+            )
         return Task(
             task_identifier=task_identifier,
             scheduled_for=scheduled_for,
@@ -123,7 +122,7 @@ class Task(AbstractBaseTask):
         )
 
     @classmethod
-    def is_queue_full(cls, task_identifier: str, queue_size: int) -> bool:
+    def _is_queue_full(cls, task_identifier: str, queue_size: int) -> bool:
         return (
             cls.objects.filter(
                 task_identifier=task_identifier,
