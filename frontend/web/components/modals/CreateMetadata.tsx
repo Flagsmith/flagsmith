@@ -89,10 +89,15 @@ const CreateMetadata: FC<CreateMetadataType> = ({
 
   useEffect(() => {
     if (!updating && updated) {
-      toast('Metadata updated')
-      closeModal()
+      onComplete?.()
     }
   }, [updating, updated])
+
+  useEffect(() => {
+    if (created && !creating) {
+      onComplete?.()
+    }
+  }, [creating, created])
 
   const [typeValue, setTypeValue] = useState<string>('')
   const [name, setName] = useState<string>('')
@@ -123,12 +128,6 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     )
     setMetadataFieldsArray(updatedMetadataFields)
   }
-
-  useEffect(() => {
-    if (created && !creating) {
-      onComplete?.()
-    }
-  }, [creating, created])
 
   return (
     <div className='create-feature-tab px-3'>
@@ -249,6 +248,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         </div>
       )}
       <Button
+        disabled={!name || !typeValue}
         onClick={() => {
           if (isEdit) {
             updateMetadata({

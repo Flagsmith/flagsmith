@@ -100,9 +100,13 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   getMetadataModelField = () => {
-    getMetadataModelFieldList(getStore(), {
-      organisation_id: AccountStore.getOrganisation().id,
-    }).then((res) => {
+    getMetadataModelFieldList(
+      getStore(),
+      {
+        organisation_id: AccountStore.getOrganisation().id,
+      },
+      { forceRefetch: true },
+    ).then((res) => {
       this.setState({
         metadataModelField: res.data.results,
       })
@@ -110,7 +114,15 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   metadataCreated = () => {
+    toast('Metadata created')
     this.getMetadata()
+    closeModal()
+  }
+
+  metadataUpdated = () => {
+    toast('Metadata Updated')
+    this.getMetadata()
+    this.getMetadataModelField()
     closeModal()
   }
 
@@ -295,7 +307,7 @@ const OrganisationSettingsPage = class extends Component {
   createMetadata = () => {
     openModal(
       `Create Metadata`,
-      <CreateMetadata />,
+      <CreateMetadata onComplete={this.metadataCreated} />,
       'side-modal create-feature-modal',
     )
   }
@@ -307,7 +319,7 @@ const OrganisationSettingsPage = class extends Component {
         isEdit={true}
         metadataModelFieldList={contentTypeList}
         id={id}
-        onComplete={this.metadataCreated}
+        onComplete={this.metadataUpdated}
       />,
       'side-modal create-feature-modal',
     )
