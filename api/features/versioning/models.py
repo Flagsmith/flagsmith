@@ -12,6 +12,7 @@ from django.db.models import Index
 from django.utils import timezone
 
 from features.versioning.exceptions import FeatureVersioningError
+from features.versioning.signals import environment_feature_version_published
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -107,8 +108,14 @@ class EnvironmentFeatureVersion(
         )
 
     def publish(
-        self, published_by: "FFAdminUser", live_from: datetime.datetime = None
+        self,
+        published_by: "FFAdminUser",
+        live_from: datetime.datetime = None,
+        persist: bool = True,
     ) -> None:
         self.live_from = live_from or timezone.now()
         self.published = True
         self.published_by = published_by
+        if persist:
+            self.save()
+            environment_feature_version_published.send(self.__class__, instance=self)

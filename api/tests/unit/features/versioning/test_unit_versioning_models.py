@@ -174,14 +174,13 @@ def test_publish(
     )
 
     mocked_rebuild_environment_document = mocker.patch(
-        "features.versioning.signals.rebuild_environment_document",
+        "features.versioning.receivers.rebuild_environment_document",
         autospec=rebuild_environment_document,
     )
 
     # When
     with freeze_time(now):
         version_2.publish(published_by=admin_user)
-        version_2.save()
 
     # Then
     assert version_2.is_live
@@ -192,4 +191,30 @@ def test_publish(
     mocked_rebuild_environment_document.delay.assert_called_once_with(
         kwargs={"environment_id": environment.id},
         delay_until=version_2.live_from,
+    )
+
+
+def test_update_version_webhooks_triggered_when_version_published(
+    environment_v2_versioning: Environment,
+    feature: "Feature",
+    admin_user: "FFAdminUser",
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+    )
+
+    mock_trigger_update_version_webhooks = mocker.patch(
+        "features.versioning.receivers.trigger_update_version_webhooks"
+    )
+
+    # When
+    new_version.publish(admin_user)
+
+    # Then
+    mock_trigger_update_version_webhooks.delay.assert_called_once_with(
+        kwargs={"environment_feature_version_uuid": str(new_version.uuid)},
+        delay_until=new_version.live_from,
     )

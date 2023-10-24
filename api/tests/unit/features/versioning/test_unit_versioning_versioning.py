@@ -133,7 +133,6 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     environment_feature_1_version_2_feature_state.enabled = True
     environment_feature_1_version_2_feature_state.save()
     environment_feature_1_version_2.publish(admin_user)
-    environment_feature_1_version_2.save()
 
     # When
     environment_feature_states = get_environment_flags_list(

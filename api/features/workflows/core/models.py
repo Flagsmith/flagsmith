@@ -34,6 +34,7 @@ from audit.tasks import (
     create_feature_state_went_live_audit_log,
 )
 from features.models import FeatureState
+from features.versioning.tasks import trigger_update_version_webhooks
 
 from ...versioning.models import EnvironmentFeatureVersion
 from .exceptions import (
@@ -141,12 +142,22 @@ class ChangeRequest(
                 ):
                     environment_feature_version.live_from = now
 
-                environment_feature_version.publish(published_by)
+                environment_feature_version.publish(published_by, persist=False)
 
             EnvironmentFeatureVersion.objects.bulk_update(
                 environment_feature_versions,
                 fields=["published", "published_by", "live_from"],
             )
+
+            for environment_feature_version in environment_feature_versions:
+                trigger_update_version_webhooks.delay(
+                    kwargs={
+                        "environment_feature_version_uuid": str(
+                            environment_feature_version.uuid
+                        )
+                    },
+                    delay_until=environment_feature_version.live_from,
+                )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title

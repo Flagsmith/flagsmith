@@ -45,7 +45,6 @@ def test_get_versions_for_a_feature_and_environment(
         feature=feature, environment=environment_v2_versioning
     )
     version_2.publish(published_by=admin_user)
-    version_2.save()
 
     # and a draft version
     draft_version = EnvironmentFeatureVersion.objects.create(
@@ -455,7 +454,6 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
 
     # and we publish the version
     environment_feature_version.publish(admin_user)
-    environment_feature_version.save()
 
     url = reverse(
         "api-v1:versioning:environment-feature-version-featurestates-detail",
