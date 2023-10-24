@@ -35,7 +35,7 @@ class EnvironmentFeatureVersion(
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    published = models.BooleanField(default=False)
+    published_at = models.DateTimeField(blank=True, null=True)
     live_from = models.DateTimeField(null=True)
 
     created_by = models.ForeignKey(
@@ -72,6 +72,10 @@ class EnvironmentFeatureVersion(
     def is_live(self) -> bool:
         return self.published and self.live_from <= timezone.now()
 
+    @property
+    def published(self) -> bool:
+        return self.published_at is not None
+
     @classmethod
     def create_initial_version(
         cls, environment: "Environment", feature: "Feature"
@@ -91,7 +95,7 @@ class EnvironmentFeatureVersion(
             )
 
         return cls.objects.create(
-            environment=environment, feature=feature, published=True
+            environment=environment, feature=feature, published_at=timezone.now()
         )
 
     def get_previous_version(self) -> typing.Optional["EnvironmentFeatureVersion"]:
@@ -100,7 +104,7 @@ class EnvironmentFeatureVersion(
                 environment=self.environment,
                 feature=self.feature,
                 live_from__lt=timezone.now(),
-                published=True,
+                published_at__isnull=False,
             )
             .order_by("-live_from")
             .exclude(uuid=self.uuid)
@@ -113,8 +117,9 @@ class EnvironmentFeatureVersion(
         live_from: datetime.datetime = None,
         persist: bool = True,
     ) -> None:
-        self.live_from = live_from or timezone.now()
-        self.published = True
+        now = timezone.now()
+        self.live_from = live_from or now
+        self.published_at = now
         self.published_by = published_by
         if persist:
             self.save()

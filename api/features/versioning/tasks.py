@@ -38,12 +38,14 @@ def enable_v2_versioning(environment_id: int):
 def _create_initial_feature_versions(environment: "Environment"):
     from features.models import Feature
 
+    now = timezone.now()
+
     for feature in Feature.objects.filter(project=environment.project_id):
         ef_version = EnvironmentFeatureVersion.objects.create(
             feature=feature,
             environment=environment,
-            published=True,
-            live_from=timezone.now(),
+            published_at=now,
+            live_from=now,
         )
         get_environment_flags_queryset(environment=environment).filter(
             identity__isnull=True, feature=feature
