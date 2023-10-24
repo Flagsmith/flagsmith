@@ -6,7 +6,7 @@ import simplejson as json
 from django.db import models
 from django.utils import timezone
 
-from task_processor.exceptions import TaskProcessingError
+from task_processor.exceptions import TaskProcessingError, TaskQueueFullError
 from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
 
@@ -103,10 +103,17 @@ class Task(AbstractBaseTask):
         task_identifier: str,
         scheduled_for: datetime,
         priority: TaskPriority = TaskPriority.NORMAL,
+        queue_size: int = None,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
+        if queue_size:
+            if cls.is_queue_full(task_identifier, queue_size):
+                raise TaskQueueFullError(
+                    f"Queue for task {task_identifier} is full. "
+                    f"Max queue size is {queue_size}"
+                )
         return Task(
             task_identifier=task_identifier,
             scheduled_for=scheduled_for,
@@ -115,10 +122,11 @@ class Task(AbstractBaseTask):
             serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )
 
-    def is_queue_full(self, queue_size: int) -> bool:
+    @classmethod
+    def is_queue_full(cls, task_identifier: str, queue_size: int) -> bool:
         return (
-            Task.objects.filter(
-                task_identifier=self.task_identifier,
+            cls.objects.filter(
+                task_identifier=task_identifier,
                 completed=False,
                 num_failures__lt=3,
             ).count()

@@ -16,7 +16,7 @@ class PostgresOnlyRunSQL(migrations.RunSQL):
         reverse_sql: typing.Union[str, os.PathLike] = None,
     ) -> "PostgresOnlyRunSQL":
         with open(file_path) as forward_sql:
-            with suppress(FileNotFoundError):
+            with suppress(FileNotFoundError, TypeError):
                 with open(reverse_sql) as reverse_sql_file:
                     reverse_sql = reverse_sql_file.read()
             return cls(forward_sql.read(), reverse_sql=reverse_sql)

@@ -69,9 +69,9 @@ def test_is_queue_full_returns_true_if_queue_is_full(db):
     for _ in range(10):
         Task.objects.create(task_identifier=task_identifier)
 
-    task = Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
+    Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
     # When
-    assert task.is_queue_full(9) is True
+    assert Task.is_queue_full(task_identifier, 9) is True
 
 
 def test_is_queue_full_returns_false_if_queue_is_not_full(db):
@@ -91,7 +91,7 @@ def test_is_queue_full_returns_false_if_queue_is_not_full(db):
         )
 
     # When
-    task = Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
+    Task.create(task_identifier=task_identifier, scheduled_for=timezone.now())
 
     # Then
-    assert task.is_queue_full(10) is False
+    assert Task.is_queue_full(task_identifier, 10) is False

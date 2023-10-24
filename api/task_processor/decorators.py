@@ -8,7 +8,7 @@ from threading import Thread
 from django.conf import settings
 from django.utils import timezone
 
-from task_processor.exceptions import InvalidArgumentsError
+from task_processor.exceptions import InvalidArgumentsError, TaskQueueFullError
 from task_processor.models import RecurringTask, Task, TaskPriority
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
@@ -53,18 +53,15 @@ def register_task_handler(
                 run_in_thread(args=args, kwargs=kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                task = Task.create(
-                    task_identifier=task_identifier,
-                    scheduled_for=delay_until or timezone.now(),
-                    args=args,
-                    kwargs=kwargs,
-                )
-                if queue_size and task.is_queue_full(queue_size):
-                    logger.warning(
-                        "Task queue is full for %s. Task not created.",
-                        task_identifier,
+                try:
+                    task = Task.create(
+                        task_identifier=task_identifier,
+                        scheduled_for=delay_until or timezone.now(),
+                        args=args,
+                        kwargs=kwargs,
                     )
-
+                except TaskQueueFullError as e:
+                    logger.warning(e)
                     return
 
                 task.save(priority=priority)
