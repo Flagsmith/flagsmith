@@ -11,6 +11,11 @@ class PostgresOnlyRunSQL(migrations.RunSQL):
     def from_sql_file(
         cls, file_path: str, reverse_sql: str = None, reverse_sql_file_path: str = None
     ) -> "PostgresOnlyRunSQL":
+        if reverse_sql and reverse_sql_file_path:
+            raise ValueError(
+                "can only be called with one of reverse_sql or reverse_sql_file_path"
+            )
+
         with open(file_path) as forward_sql:
             if reverse_sql_file_path is not None:
                 with open(reverse_sql_file_path) as reverse_sql_file:
