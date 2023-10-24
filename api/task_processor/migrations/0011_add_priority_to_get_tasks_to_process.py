@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 "sql",
                 "0011_get_tasks_to_process.sql",
             ),
-            reverse_sql_file_path=os.path.join(
+            reverse_sql=os.path.join(
                 os.path.dirname(__file__),
                 "sql",
                 "0008_get_tasks_to_process.sql",

@@ -1,5 +1,7 @@
+import os
 import typing
 import uuid
+from contextlib import suppress
 
 from django.db import migrations
 
@@ -9,16 +11,13 @@ from permissions.models import PermissionModel
 class PostgresOnlyRunSQL(migrations.RunSQL):
     @classmethod
     def from_sql_file(
-        cls, file_path: str, reverse_sql: str = None, reverse_sql_file_path: str = None
+        cls,
+        file_path: typing.Union[str, os.PathLike],
+        reverse_sql: typing.Union[str, os.PathLike] = None,
     ) -> "PostgresOnlyRunSQL":
-        if reverse_sql and reverse_sql_file_path:
-            raise ValueError(
-                "can only be called with one of reverse_sql or reverse_sql_file_path"
-            )
-
         with open(file_path) as forward_sql:
-            if reverse_sql_file_path is not None:
-                with open(reverse_sql_file_path) as reverse_sql_file:
+            with suppress(FileNotFoundError):
+                with open(reverse_sql) as reverse_sql_file:
                     reverse_sql = reverse_sql_file.read()
             return cls(forward_sql.read(), reverse_sql=reverse_sql)
 
