@@ -16,6 +16,7 @@ type CollapsibleNestedRolePermissionsListProps = {
   mainItems: MainItem[]
   role: Role
   level: string
+  filter: string
 }
 
 const PermissionsSummary = ({ level, levelId, role }) => {
@@ -65,9 +66,17 @@ const PermissionsSummary = ({ level, levelId, role }) => {
 }
 
 const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermissionsListProps> =
-  forwardRef(({ level, mainItems, role }, ref) => {
+  forwardRef(({ filter, level, mainItems, role }, ref) => {
     const [expandedItems, setExpandedItems] = useState<string[]>([])
     const [unsavedProjects, setUnsavedProjects] = useState<string[]>([])
+
+    const mainItemsFiltered =
+      mainItems &&
+      mainItems?.filter((v) => {
+        const search = filter.toLowerCase()
+        if (!search) return true
+        return `${v.name}`.toLowerCase().includes(search)
+      })
 
     const toggleExpand = (id: string) => {
       setExpandedItems((prevExpanded) =>
@@ -113,7 +122,7 @@ const CollapsibleNestedRolePermissionsList: React.FC<CollapsibleNestedRolePermis
 
     return (
       <div className='collapsible-nested-list list-container'>
-        {mainItems.map((mainItem, index) => (
+        {mainItemsFiltered?.map((mainItem, index) => (
           <div key={index}>
             <Row
               key={index}

@@ -373,6 +373,8 @@ const CreateRole: FC<CreateRoleType> = ({
   })
 
   const TabValue = () => {
+    const [searchProject, setSearchProject] = useState<string>('')
+    const [searchEnv, setSearchEnv] = useState<string>('')
     const ref = useRef(null)
     const ref2 = useRef(null)
     useEffect(() => {
@@ -499,8 +501,22 @@ const CreateRole: FC<CreateRoleType> = ({
         <TabItem
           tabLabel={<Row className='justify-content-center'>Project</Row>}
         >
-          <h5 className='my-4 title'>Edit Permissions</h5>
+          <Row className='role-list'>
+            <h5 className='my-4 title'>Edit Permissions</h5>
+            <Input
+              type='text'
+              className='ml-3'
+              value={searchProject}
+              onChange={(e: InputEvent) =>
+                setSearchProject(Utils.safeParseEventValue(e))
+              }
+              size='small'
+              placeholder='Search'
+              search
+            />
+          </Row>
           <CollapsibleNestedRolePermissionsList
+            filter={searchProject}
             mainItems={projectData}
             role={role}
             level={'project'}
@@ -510,7 +526,20 @@ const CreateRole: FC<CreateRoleType> = ({
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}
         >
-          <h5 className='my-4 title'>Edit Permissions</h5>
+          <Row className='role-list'>
+            <h5 className='my-4 title'>Edit Permissions</h5>
+            <Input
+              type='text'
+              className='ml-3'
+              value={searchEnv}
+              onChange={(e: InputEvent) =>
+                setSearchEnv(Utils.safeParseEventValue(e))
+              }
+              size='small'
+              placeholder='Search'
+              search
+            />
+          </Row>
           <ProjectFilter
             organisationId={role.organisation}
             onChange={setProject}
@@ -519,6 +548,7 @@ const CreateRole: FC<CreateRoleType> = ({
           />
           {environments.length > 0 && (
             <CollapsibleNestedRolePermissionsList
+              filter={searchEnv}
               mainItems={environments}
               role={role}
               level={'environment'}
