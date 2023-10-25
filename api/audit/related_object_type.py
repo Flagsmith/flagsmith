@@ -11,5 +11,6 @@ class RelatedObjectType(enum.Enum):
     GROUP = "Group"
     IMPORT_REQUEST = "Import request"
     PROJECT = "Project"
+    ROLE = "Role"
     SEGMENT = "Segment"
     USER = "User"
