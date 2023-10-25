@@ -1,14 +1,16 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.signals import user_logged_in
+from django.contrib.auth.signals import user_logged_in, user_login_failed
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 
 from organisations.invites.models import Invite
 from users.models import SignUpType
 
 from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+from ..serializers import AuthControllerMixin
 from .github import GithubUser
 from .google import get_user_info
 
@@ -16,7 +18,7 @@ GOOGLE_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 UserModel = get_user_model()
 
 
-class OAuthLoginSerializer(serializers.Serializer):
+class OAuthLoginSerializer(AuthControllerMixin, serializers.Serializer):
     access_token = serializers.CharField(
         required=True,
         help_text="Code or access token returned from the FE interaction with the third party login provider.",
@@ -34,23 +36,35 @@ class OAuthLoginSerializer(serializers.Serializer):
         abstract = True
 
     def create(self, validated_data):
-        user_info = self.get_user_info()
-        if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller.controller import (
-                is_authentication_method_valid,
-            )
+        user_data = self.get_user_info()
 
-            is_authentication_method_valid(
-                self.context.get("request"),
-                email=user_info.get("email"),
-                raise_exception=True,
-            )
+        # make pre-authentication checks and signal on failure
+        email = user_data.get("email")
+        self.check_auth_method(email)
 
-        user = self._get_user(user_info)
+        try:
+            user = self._get_user(user_data)
+        except APIException as e:
+            # catch and signal non-django-authenticate login failure
+            user_login_failed.send(
+                sender=self.__module__,
+                credentials={"username": email},
+                request=self.context.get("request"),
+                codes=e.get_codes(),
+            )
+            raise
+
+        # create token
+        token, _ = Token.objects.get_or_create(user=user)
+
+        # signal successful login
+        user.last_login = timezone.now()
+        user.save()
         user_logged_in.send(
             sender=UserModel, request=self.context.get("request"), user=user
         )
-        return Token.objects.get_or_create(user=user)[0]
+
+        return token
 
     def _get_user(self, user_data: dict):
         email = user_data.get("email")
