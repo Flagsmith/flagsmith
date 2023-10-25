@@ -69,7 +69,7 @@ jobs:
         run: make django-make-migrations
 
       - name: Restore cached testmon data
-        if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
+        if: ${{ github.event_name == 'pull_request' }}
         id: cache-testmon-restore
         uses: actions/cache/restore@v3
         with:
