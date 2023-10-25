@@ -233,7 +233,8 @@ def create_audit_log_user_login_failed(
 ):
     if not (username := credentials.get("username")):
         return
-    if not (user := get_user_model().objects.get_by_natural_key(username)):
+    # ModelBackend looks up user this way, so we will do the same
+    if not (user := get_user_model()._default_manager.get_by_natural_key(username)):
         return
     if not isinstance(user, _AbstractBaseAuditableModel):
         return
