@@ -136,9 +136,11 @@ export type AuditLogItem = {
     | 'ENVIRONMENT'
     | 'FEATURE_STATE'
     | 'FEATURE'
+    | 'GRANT'
     | 'GROUP'
     | 'IMPORT_REQUEST'
     | 'PROJECT'
+    | 'ROLE'
     | 'SEGMENT'
     | 'USER'
   is_system_event: boolean
