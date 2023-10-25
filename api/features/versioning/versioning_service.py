@@ -81,7 +81,7 @@ def _build_environment_flags_qs_filter(
     if environment.use_v2_feature_versioning:
         qs_filter &= Q(
             environment_feature_version__isnull=False,
-            environment_feature_version__published=True,
+            environment_feature_version__published_at__isnull=False,
             environment_feature_version__live_from__lte=now,
         )
     else:

@@ -146,7 +146,7 @@ class ChangeRequest(
 
             EnvironmentFeatureVersion.objects.bulk_update(
                 environment_feature_versions,
-                fields=["published", "published_by", "live_from"],
+                fields=["published_at", "published_by", "live_from"],
             )
 
             for environment_feature_version in environment_feature_versions:
