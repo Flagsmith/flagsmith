@@ -229,7 +229,7 @@ def create_audit_log_user_logged_out(user_id: int):
 
 @register_task_handler()
 def create_audit_log_user_login_failed(
-    credentials: dict, codes: list[str] | None = None
+    credentials: dict, codes: list[str] | str | None = None
 ):
     if not (username := credentials.get("username")):
         return
@@ -238,6 +238,7 @@ def create_audit_log_user_login_failed(
     if not isinstance(user, _AbstractBaseAuditableModel):
         return
 
+    codes = [codes] if type(codes) is str else codes
     reason = ",".join(codes) if codes else "password"
     log_message = f"{RelatedObjectType.USER.value} login failed ({reason}): {user.get_audit_log_identity()}"
 
