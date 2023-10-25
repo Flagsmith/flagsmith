@@ -818,7 +818,6 @@ if WORKFLOWS_LOGIC_INSTALLED:
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
 if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
-    AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
 
 IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
