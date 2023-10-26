@@ -1,4 +1,4 @@
-name: Run unit tests for Rbac
+name: Run API Unit tests with private package
 
 on:
   push:
