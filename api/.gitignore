@@ -7,3 +7,6 @@ features/workflows/logic/
 
 # Unit test coverage
 .coverage
+
+# pytest-testmon files
+.testmondata*
