@@ -45,12 +45,15 @@ class APIKeyUser(UserABC):
         return is_master_api_key_environment_admin(self.key, environment)
 
     def has_project_permission(
-        self, permission: str, project: "Project", tag_ids=None
+        self, permission: str, project: "Project", tag_ids: typing.List[int] = None
     ) -> bool:
         return project in self.get_permitted_projects(permission, tag_ids)
 
     def has_environment_permission(
-        self, permission: str, environment: "Environment", tag_ids=None
+        self,
+        permission: str,
+        environment: "Environment",
+        tag_ids: typing.List[int] = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids
@@ -64,14 +67,14 @@ class APIKeyUser(UserABC):
         )
 
     def get_permitted_projects(
-        self, permission_key: str, tag_ids=None
+        self, permission_key: str, tag_ids: typing.List[int] = None
     ) -> QuerySet["Project"]:
         return get_permitted_projects_for_master_api_key(
             self.key, permission_key, tag_ids
         )
 
     def get_permitted_environments(
-        self, permission_key: str, project: "Project", tag_ids=None
+        self, permission_key: str, project: "Project", tag_ids: typing.List[int] = None
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(
             self.key, project, permission_key, tag_ids

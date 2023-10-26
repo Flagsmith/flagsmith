@@ -30,8 +30,6 @@ ACTION_PERMISSIONS_MAP = {
     "partial_update": CREATE_FEATURE,
 }
 
-# TAG_SUPPORTED_PERMISSIONS = [DELETE_FEATURE, UPDATE_FEATURE_STATE]
-
 
 class FeaturePermissions(IsAuthenticated):
     def has_permission(self, request, view):

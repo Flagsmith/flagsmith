@@ -59,7 +59,7 @@ def is_master_api_key_environment_admin(
 
 
 def get_permitted_projects_for_user(
-    user: "FFAdminUser", permission_key: str, tag_ids: list = None
+    user: "FFAdminUser", permission_key: str, tag_ids: List[int] = None
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -70,6 +70,11 @@ def get_permitted_projects_for_user(
         - User is an admin for the organisation the project belongs to
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only project with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only project with one of those tags will
+        be returned
     """
     base_filter = get_base_permission_filter(
         user, Project, permission_key, tag_ids=tag_ids
@@ -84,7 +89,7 @@ def get_permitted_projects_for_user(
 
 
 def get_permitted_projects_for_master_api_key(
-    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: list = None
+    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: List[int] = None
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
@@ -110,6 +115,11 @@ def get_permitted_environments_for_user(
         - User is an admin for the organisation the environment belongs to
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions(if rbac is enabled)
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only environments with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only environments with one of those tags will
+        be returned
     """
 
     if is_user_project_admin(user, project):
