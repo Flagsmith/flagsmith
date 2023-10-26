@@ -17,8 +17,8 @@ from projects.permissions import (
 )
 from users.models import FFAdminUser, UserPermissionGroup
 
-mock_request = mock.MagicMock
-mock_view = mock.MagicMock
+mock_request = mock.MagicMock()
+mock_view = mock.MagicMock()
 
 
 @pytest.mark.django_db
