@@ -3,7 +3,10 @@ from __future__ import annotations
 import re
 import typing
 
-from core.models import SoftDeleteExportableModel, abstract_base_auditable_model_factory
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -25,7 +28,6 @@ from permissions.models import (
 )
 from projects.managers import ProjectManager
 from projects.tasks import write_environments_to_dynamodb
-
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
