@@ -1,11 +1,7 @@
-from core.models import (
-    SoftDeleteObject,
-    abstract_base_auditable_model_factory,
-)
+from core.models import SoftDeleteObject, abstract_base_auditable_model_factory
 from django.db import models
 
 from audit.related_object_type import RelatedObjectType
-
 
 PROJECT_PERMISSION_TYPE = "PROJECT"
 ENVIRONMENT_PERMISSION_TYPE = "ENVIRONMENT"

@@ -1,13 +1,11 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_login_failed
 from djoser.serializers import UserCreateSerializer, UserDeleteSerializer
-from requests import get
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.validators import UniqueValidator
-from trench.serializers import LoginSerializer, CodeLoginSerializer
+from trench.serializers import CodeLoginSerializer, LoginSerializer
 
 from organisations.invites.models import Invite
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -21,7 +19,9 @@ class AuthControllerMixin(serializers.Serializer):
         """Helper to make pre-authentication checks and signal on failure"""
 
         if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller.controller import is_authentication_method_valid
+            from auth_controller.controller import (
+                is_authentication_method_valid,
+            )
 
             try:
                 is_authentication_method_valid(

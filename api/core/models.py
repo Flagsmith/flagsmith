@@ -7,10 +7,10 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
+from simple_history.models import HistoricalRecords as BaseHistoricalRecords
 from simple_history.models import (
-    HistoricalRecords as BaseHistoricalRecords,
-    pre_create_historical_m2m_records,
     post_create_historical_m2m_records,
+    pre_create_historical_m2m_records,
 )
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
