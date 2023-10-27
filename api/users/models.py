@@ -374,12 +374,9 @@ class UserPermissionGroupMembership(models.Model):
         db_table = "users_userpermissiongroup_users"
 
 
-AUDITED_GROUP_M2M_FIELDS = ("users",)
-
-
 class UserPermissionGroup(
     abstract_base_auditable_model_factory(
-        audited_m2m_fields=AUDITED_GROUP_M2M_FIELDS,
+        audited_m2m_fields=["users"],
         audit_create=True,
         audit_update=True,
         audit_delete=True,
@@ -436,3 +433,23 @@ class UserPermissionGroup(
 
     def _get_organisations(self) -> typing.Iterable[Organisation]:
         return [self.organisation]
+
+    def get_update_log_message(self, history_instance) -> str | None:
+        if not (message := super().get_update_log_message(history_instance)):
+            return message
+
+        # unfortunately we need to call diff_against again :/
+        for change in history_instance.diff_against(
+            history_instance.prev_record
+        ).changes:
+            if change.field == "users":
+                old_pks = set(through["ffadminuser"] for through in change.old)
+                new_pks = set(through["ffadminuser"] for through in change.new)
+                for pk in new_pks - old_pks:
+                    user = FFAdminUser.objects.filter(pk=pk).first()
+                    message += f"; added {user.email if user else f'{pk=}'}"
+                for pk in old_pks - new_pks:
+                    user = FFAdminUser.objects.filter(pk=pk).first()
+                    message += f"; removed {user.email if user else f'{pk=}'}"
+
+        return message
