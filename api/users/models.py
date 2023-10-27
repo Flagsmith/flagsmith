@@ -351,7 +351,7 @@ class FFAdminUser(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
 
-    def _get_organisations(self) -> typing.Iterable[Organisation]:
+    def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         # TODO #2797 IS THIS CAUSING A DEADLOCK?
         return self.organisations.all()
 
@@ -431,7 +431,7 @@ class UserPermissionGroup(
     def get_audit_log_identity(self) -> str:
         return self.name
 
-    def _get_organisations(self) -> typing.Iterable[Organisation]:
+    def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
 
     def get_update_log_message(self, history_instance) -> str | None:

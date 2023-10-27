@@ -107,13 +107,11 @@ class _AbstractBaseAuditableModel(models.Model):
     ) -> tuple[typing.Iterable[Organisation], Project | None, Environment | None]:
         environment = self._get_environment()
         project = self._get_project() or (environment.project if environment else None)
-        organisations = self._get_organisations() or (
-            [project.organisation] if project else []
-        )
-        if not organisations:
+        organisations = [project.organisation] if project else self._get_organisations()
+        if organisations is None:
             raise RuntimeError(
                 f"{self.__class__.__name__}: One of _get_organisations(), _get_project() or _get_environment() must "
-                "be implemented and return a truthy value"
+                "be implemented and return a non-null value"
             )
         return organisations, project, environment
 
@@ -151,9 +149,9 @@ class _AbstractBaseAuditableModel(models.Model):
         else:
             return self._meta.verbose_name or self.__class__.__name__
 
-    def _get_organisations(self) -> typing.Iterable[Organisation]:
+    def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         """Return the related organisation for this model."""
-        return []
+        return None
 
     def _get_project(self) -> Project | None:
         """Return the related project for this model."""
