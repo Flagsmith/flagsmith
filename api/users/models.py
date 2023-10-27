@@ -353,7 +353,29 @@ class FFAdminUser(
 
     def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         # TODO #2797 IS THIS CAUSING A DEADLOCK?
+        # TODO #2797 if user is removed from organisation no log will be recorded?
         return self.organisations.all()
+
+    def get_update_log_message(self, history_instance) -> str | None:
+        if not (message := super().get_update_log_message(history_instance)):
+            return message
+
+        # unfortunately we need to call diff_against again :/
+        # TODO #2797 this appears to be logging one change behind?
+        for change in history_instance.diff_against(
+            history_instance.prev_record
+        ).changes:
+            if change.field == "organisations":
+                old_pks = set(through["organisation"] for through in change.old)
+                new_pks = set(through["organisation"] for through in change.new)
+                for pk in new_pks - old_pks:
+                    org = Organisation.objects.filter(pk=pk).first()
+                    message += f"; added {org.name if org else f'{pk=}'}"
+                for pk in old_pks - new_pks:
+                    org = Organisation.objects.filter(pk=pk).first()
+                    message += f"; removed {org.name if org else f'{pk=}'}"
+
+        return message
 
 
 # Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
