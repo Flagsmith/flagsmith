@@ -127,6 +127,9 @@ pytest-django = "~4.5.2"
 black = "~23.7.0"
 pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
+datamodel-code-generator = "~0.22"
+requests-mock = "^1.11.0"
+pytest-testmon = "^2.0.13"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]

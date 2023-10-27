@@ -110,17 +110,19 @@ implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
 <TabItem value="dotnet" label=".NET">
 
 ```bash
+# Check https://www.nuget.org/packages/Flagsmith for the latest version!
+
 # Package Manager
-Install-Package Flagsmith -Version 4.0.0
+Install-Package Flagsmith -Version 5.1.0
 
 #.NET CLI
-dotnet add package Flagsmith --version 4.0.0
+dotnet add package Flagsmith --version 5.1.0
 
 # PackageReference
-<PackageReference Include="Flagsmith" Version="4.0.0" />
+<PackageReference Include="Flagsmith" Version="5.1.0" />
 
 # Paket CLI
-paket add Flagsmith --version 4.0.0
+paket add Flagsmith --version 5.1.0
 ```
 
 </TabItem>
@@ -158,17 +160,20 @@ composer require flagsmith/flagsmith-php-client symfony/http-client nyholm/psr7 
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/Flagsmith/flagsmith-go-client/v2
+# Check https://github.com/Flagsmith/flagsmith-go-client/releases for the latest version!
+
+go get github.com/Flagsmith/flagsmith-go-client/v3
 ```
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
 ```bash
+# Check https://crates.io/crates/flagsmith/versions for the latest version!
+
 # Cargo.toml
 [dependencies]
 flagsmith = "~1"
-
 ```
 
 </TabItem>
@@ -764,7 +769,7 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asnchronous network request to retrieve details about the Environment.
+- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
 - Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
   has is up to date.
 
@@ -787,6 +792,12 @@ flagsmith.close();
 // available from v2.2.1
 flagsmith.close();
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+Since PHP does not share state between requests, you **have** to implement caching to get the benefits of Local
+Evaluation mode. Please see [caching](#caching) below.
 
 </TabItem>
 </Tabs>
@@ -1566,6 +1577,51 @@ router.get('/', function (req, res, next) {
  });
 });
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+```php
+$flagsmith = (new Flagsmith(TOKEN));
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+It is recommended to use a psr simple-cache implementation to cache the environment document between multiple requests.
+
+```sh
+composer require symfony/cache
+```
+
+```php
+$flagsmith = (new Flagsmith(TOKEN))
+  ->withCache(new Psr16Cache(new FilesystemAdapter()));
+// Cache the environment call to reduce network calls for each and every evaluation.
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+An optional cron job can be added to refresh this cache at a set time depending on your choice. Please set
+EnvironmentTTL value for this purpose.
+
+```php
+// the environment will be cached for 100 seconds.
+$flagsmith = $flagsmith->withEnvironmentTtl(100);
+$flagsmith->updateEnvironment();
+```
+
+```sh
+* * * 1 40 php index.php # using cli
+* * * 1 40 curl http://localhost:8000/ # using http
+```
+
+Note:
+
+- For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
+  `ser.`.
+- The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with its
+  own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file system
+  one.
 
 </TabItem>
 </Tabs>
