@@ -153,6 +153,9 @@ When running in Local Evaluation mode, our SDKs expect to be run as long-lived p
 Lambda either break this contract or make it much more complicated. As a result, we do not recommend running our SDKs in
 Local Evaluation mode on top of platforms like Lambda where you do not have complete control over process lifetimes.
 
+Our [Edge Proxy](/system-administration/edge-proxy/) is a good candidate if you need to run local evaluation mode
+alongside serverless platforms.
+
 ## SDK Compatibility
 
 ### `In` Segment operator
