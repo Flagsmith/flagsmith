@@ -541,7 +541,7 @@ const CreateFlag = class extends Component {
             }
             ds
             type='text'
-            title={identity ? 'Description' : 'Description (optional)'}
+            title={'Description*'}
             placeholder="e.g. 'This determines what size the header is' "
           />
         </FormGroup>
@@ -1534,6 +1534,7 @@ const CreateFlag = class extends Component {
                                       id='create-feature-btn'
                                       disabled={
                                         isSaving ||
+                                        !description||
                                         !name ||
                                         invalid ||
                                         !regexValid ||
