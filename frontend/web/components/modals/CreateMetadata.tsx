@@ -144,7 +144,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         }}
         type='text'
         id='metadata-name'
-        placeholder='FL-124'
+        placeholder='e.g. JIRA Ticket Number'
       />
       <InputGroup
         value={description}
@@ -159,7 +159,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
         }}
         type='text'
         title={'Description (optional)'}
-        placeholder='This is a metadata description'
+        placeholder={"e.g. 'The JIRA Ticket Number associated with this flag'"}
       />
       <Select
         value={typeValue}

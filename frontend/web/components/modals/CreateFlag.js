@@ -531,7 +531,7 @@ const CreateFlag = class extends Component {
           <FormGroup className='mb-5 setting'>
             <InputGroup
               title={'Metadata*'}
-              tooltip={Constants.strings.FEATURE_FLAG_METADATA_DESCRIPTION}
+              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} flags`}
               tooltipPlace='left'
               component={
                 <Button

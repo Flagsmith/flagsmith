@@ -457,7 +457,6 @@ export default {
       `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
     FEATURE_FLAG_DESCRIPTION:
       'A feature that you can turn on or off per environment or user, e.g. instant messaging for a mobile app or an endpoint for an API.',
-    FEATURE_FLAG_METADATA_DESCRIPTION: 'Add metadata in your flags',
     HIDE_FROM_SDKS_DESCRIPTION:
       "Enable this if you want to prevent the Flagsmith API from returning this feature regardless of if it is enabled. Use this if you don't want users to see that a feature name whilst it is in development.",
     IDENTITY_OVERRIDES_DESCRIPTION:
@@ -472,6 +471,7 @@ export default {
       'Set different values for your feature based on what segments users are in.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
+    TOOLTIP_METADATA_DESCRIPTION: 'Add metadata in your',
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:

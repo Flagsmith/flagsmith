@@ -1478,7 +1478,7 @@ const OrganisationSettingsPage = class extends Component {
                           <TabItem tabLabel='Metadata'>
                             <div>
                               <p className='fs-small lh-sm my-4'>
-                                Metadata Tab description
+                                Add metadata to your entities
                               </p>
                               <Button onClick={() => this.createMetadata()}>
                                 {'Create Metadata'}
@@ -1503,13 +1503,19 @@ const OrganisationSettingsPage = class extends Component {
                                         className='table-column'
                                         style={{ width: metadataWidth[1] }}
                                       >
+                                        Segment
+                                      </div>
+                                      <div
+                                        className='table-column'
+                                        style={{ width: metadataWidth[2] }}
+                                      >
                                         Feature
                                       </div>
                                       <div
                                         className='table-column'
                                         style={{ width: metadataWidth[2] }}
                                       >
-                                        Segment
+                                        Action
                                       </div>
                                       <div
                                         className='table-column'
@@ -1554,66 +1560,37 @@ const OrganisationSettingsPage = class extends Component {
                                       >
                                         <div
                                           className='table-column'
-                                          style={{ width: '1600px' }}
                                           onClick={() => {
                                             this.editMetadata(metadata.id)
                                           }}
                                         >
-                                          <Switch
-                                            className='mr-1'
-                                            checked={metadata.content_type_fields.find(
-                                              (m) =>
-                                                m.content_type ===
-                                                Constants.contentTypes
-                                                  .environment,
-                                            )}
-                                          />
-                                          {'Enabled'}
-                                          <span className='checkbox mr-2'>
-                                            <Switch
-                                              className='mr-1'
-                                              checked={false}
-                                            />
+                                          {metadata.content_type_fields.find(
+                                            (m) =>
+                                              m.content_type ===
+                                              Constants.contentTypes
+                                                .environment,
+                                          ) ? (
+                                            <>
+                                              <Icon
+                                                name='checkmark-circle'
+                                                width={20}
+                                                fill='#20c997'
+                                              />
+                                              {'Enabled'}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
+                                          {/* <span className='checkbox mr-2'>
+                                            <Icon name='required' width={20} />
                                             {'Required'}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: '180px' }}
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_fields,
-                                          )
-                                        }}
-                                      >
-                                        <div
-                                          className='table-column'
-                                          style={{ width: '150px' }}
-                                          onClick={() => {
-                                            this.editMetadata(
-                                              metadata.id,
-                                              metadata.content_type_fields,
-                                            )
-                                          }}
-                                        >
-                                          <Switch
-                                            className='mr-1'
-                                            checked={metadata.content_type_fields.find(
-                                              (m) =>
-                                                m.content_type ===
-                                                Constants.contentTypes.segment,
-                                            )}
-                                          />
-                                          {'Enabled'}
-                                          <span className='checkbox mr-2'>
-                                            <Switch
-                                              className='mr-1'
-                                              checked={false}
-                                            />
-                                            {'Required'}
-                                          </span>
+                                          </span> */}
                                         </div>
                                       </div>
                                       <div
@@ -1636,25 +1613,101 @@ const OrganisationSettingsPage = class extends Component {
                                             )
                                           }}
                                         >
-                                          <Switch
-                                            className='mr-1'
-                                            checked={metadata.content_type_fields.find(
-                                              (m) =>
-                                                m.content_type ===
-                                                Constants.contentTypes.flag,
-                                            )}
-                                          />
-                                          {'Enabled'}
-                                          <span className='checkbox mr-2'>
-                                            <Switch
-                                              className='mr-1'
-                                              checked={false}
-                                            />
+                                          {metadata.content_type_fields.find(
+                                            (m) =>
+                                              m.content_type ===
+                                              Constants.contentTypes.segment,
+                                          ) ? (
+                                            <>
+                                              <Icon
+                                                name='checkmark-circle'
+                                                width={20}
+                                                fill='#20c997'
+                                              />
+                                              {'Enabled'}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
+                                          {/* <span className='checkbox mr-2'>
+                                            <Icon name='required' width={20} />
                                             {'Required'}
-                                          </span>
+                                          </span> */}
                                         </div>
                                       </div>
-
+                                      <div
+                                        className='table-column'
+                                        style={{ width: '185px' }}
+                                        onClick={() => {
+                                          this.editMetadata(
+                                            metadata.id,
+                                            metadata.content_type_fields,
+                                          )
+                                        }}
+                                      >
+                                        <div
+                                          className='table-column'
+                                          style={{ width: '150px' }}
+                                          onClick={() => {
+                                            this.editMetadata(
+                                              metadata.id,
+                                              metadata.content_type_fields,
+                                            )
+                                          }}
+                                        >
+                                          {metadata.content_type_fields.find(
+                                            (m) =>
+                                              m.content_type ===
+                                              Constants.contentTypes.flag,
+                                          ) ? (
+                                            <>
+                                              <Icon
+                                                name='checkmark-circle'
+                                                width={20}
+                                                fill='#20c997'
+                                              />
+                                              {'Enabled'}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
+                                          {/* <span className='checkbox mr-2'>
+                                            <Icon name='required' width={20} />
+                                            {'Required'}
+                                          </span> */}
+                                        </div>
+                                      </div>
+                                      <div className='table-column'>
+                                        <Button
+                                          theme='text'
+                                          size='small'
+                                          onClick={() => {
+                                            this.editMetadata(
+                                              metadata.id,
+                                              metadata.content_type_fields,
+                                            )
+                                          }}
+                                        >
+                                          <Icon
+                                            name='edit'
+                                            width={18}
+                                            fill='#6837FC'
+                                          />{' '}
+                                          Edit Metadata
+                                        </Button>
+                                      </div>
                                       <div className='table-column'>
                                         <Button
                                           id='delete-invite'

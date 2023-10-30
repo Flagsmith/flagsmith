@@ -50,6 +50,7 @@ export type IconName =
   | 'timer'
   | 'request'
   | 'people'
+  | 'required'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
@@ -1091,6 +1092,27 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
               clipRule='evenodd'
               d='M9 11C11.206 11 13 9.206 13 7C13 4.794 11.206 3 9 3C6.794 3 5 4.794 5 7C5 9.206 6.794 11 9 11ZM17 13C18.654 13 20 11.654 20 10C20 8.346 18.654 7 17 7C15.346 7 14 8.346 14 10C14 11.654 15.346 13 17 13ZM22 19C22 19.552 21.553 20 21 20H16C16 20.552 15.553 21 15 21H3C2.447 21 2 20.552 2 20C2 16.14 5.141 13 9 13C10.927 13 12.673 13.783 13.94 15.046C14.809 14.374 15.879 14 17 14C19.757 14 22 16.243 22 19Z'
               fill={fill || '#1A2634'}
+            />
+          </g>
+        </svg>
+      )
+    }
+    case 'required': {
+      return (
+        <svg
+          width={width || '24'}
+          height={width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Filled/alert-circle'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M13 13C13 13.552 12.552 14 12 14C11.448 14 11 13.552 11 13V8C11 7.448 11.448 7 12 7C12.552 7 13 7.448 13 8V13ZM12 17C11.448 17 11 16.552 11 16C11 15.448 11.448 15 12 15C12.552 15 13 15.448 13 16C13 16.552 12.552 17 12 17ZM12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2Z'
+              fill={fill || '#4285F4'}
             />
           </g>
         </svg>
