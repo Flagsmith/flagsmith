@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, List, Union
 
 from django.db.models import Q, QuerySet
 
@@ -59,7 +59,7 @@ def is_master_api_key_environment_admin(
 
 
 def get_permitted_projects_for_user(
-    user: "FFAdminUser", permission_key: str
+    user: "FFAdminUser", permission_key: str, tag_ids: List[int] = None
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -70,8 +70,15 @@ def get_permitted_projects_for_user(
         - User is an admin for the organisation the project belongs to
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only project with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only project with one of those tags will
+        be returned
     """
-    base_filter = get_base_permission_filter(user, Project, permission_key)
+    base_filter = get_base_permission_filter(
+        user, Project, permission_key, tag_ids=tag_ids
+    )
 
     organisation_filter = Q(
         organisation__userorganisation__user=user,
@@ -82,13 +89,13 @@ def get_permitted_projects_for_user(
 
 
 def get_permitted_projects_for_master_api_key(
-    master_api_key: "MasterAPIKey", permission_key: str
+    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: List[int] = None
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
 
     return get_permitted_projects_for_master_api_key_using_roles(
-        master_api_key, permission_key
+        master_api_key, permission_key, tag_ids
     )
 
 
@@ -96,6 +103,7 @@ def get_permitted_environments_for_user(
     user: "FFAdminUser",
     project: Project,
     permission_key: str,
+    tag_ids: List[int] = None,
 ) -> QuerySet[Environment]:
     """
     Get all environments that the user has the given permissions for.
@@ -107,12 +115,19 @@ def get_permitted_environments_for_user(
         - User is an admin for the organisation the environment belongs to
         - User has a role attached with the required permissions(if rbac is enabled)
         - User is in a UserPermissionGroup that has a role attached with the required permissions(if rbac is enabled)
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only environments with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only environments with one of those tags will
+        be returned
     """
 
     if is_user_project_admin(user, project):
         return project.environments.all()
 
-    base_filter = get_base_permission_filter(user, Environment, permission_key)
+    base_filter = get_base_permission_filter(
+        user, Environment, permission_key, tag_ids=tag_ids
+    )
     filter_ = base_filter & Q(project=project)
 
     return Environment.objects.filter(filter_).distinct().defer("description")
@@ -122,12 +137,13 @@ def get_permitted_environments_for_master_api_key(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
+    tag_ids: List[int] = None,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
         return project.environments.all()
 
     return get_permitted_environments_for_master_api_key_using_roles(
-        master_api_key, project, permission_key
+        master_api_key, project, permission_key, tag_ids
     )
 
 
@@ -173,12 +189,13 @@ def get_base_permission_filter(
     for_model: Union[Organisation, Project, Environment] = None,
     permission_key: str = None,
     allow_admin: bool = True,
+    tag_ids=None,
 ) -> Q:
     user_filter = get_user_permission_filter(user, permission_key, allow_admin)
     group_filter = get_group_permission_filter(user, permission_key, allow_admin)
 
     role_filter = get_role_permission_filter(
-        user, for_model, permission_key, allow_admin
+        user, for_model, permission_key, allow_admin, tag_ids
     )
 
     return user_filter | group_filter | role_filter

@@ -19,3 +19,5 @@ ENVIRONMENT_PERMISSIONS = [
         "Permission to approve change requests in the given environment.",
     ),
 ]
+
+TAG_SUPPORTED_PERMISSIONS = [UPDATE_FEATURE_STATE]

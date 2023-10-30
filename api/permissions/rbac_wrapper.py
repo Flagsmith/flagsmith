@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List, Union
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
@@ -46,12 +46,14 @@ def is_master_api_key_object_admin(
 
 
 def get_permitted_projects_for_master_api_key_using_roles(
-    master_api_key: "MasterAPIKey", permission_key: str
+    master_api_key: "MasterAPIKey", permission_key: str, tag_ids=None
 ) -> QuerySet[Project]:
     if not settings.IS_RBAC_INSTALLED:
         return Project.objects.none()
 
-    filter_ = get_role_permission_filter(master_api_key, Project, permission_key)
+    filter_ = get_role_permission_filter(
+        master_api_key, Project, permission_key, tag_ids=tag_ids
+    )
     return Project.objects.filter(filter_).distinct()
 
 
@@ -59,12 +61,13 @@ def get_permitted_environments_for_master_api_key_using_roles(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
+    tag_ids: List[int] = None,
 ) -> QuerySet[Environment]:
     if not settings.IS_RBAC_INSTALLED:
         return Environment.objects.none()
 
     base_filter = get_role_permission_filter(
-        master_api_key, Environment, permission_key
+        master_api_key, Environment, permission_key, tag_ids=tag_ids
     )
 
     filter_ = base_filter & Q(project=project)
