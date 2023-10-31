@@ -12,8 +12,6 @@ on:
       - .github/**
     branches:
       - main
-  merge_group:
-    types: [checks_requested]
 
 defaults:
   run:
@@ -21,7 +19,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: General-Purpose-8c-Runner
+    runs-on: ubuntu-latest
     name: API Unit Tests
 
     services:
@@ -35,7 +33,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     strategy:
-      max-parallel: 2
+      max-parallel: 4
       matrix:
         python-version: ['3.10', '3.11']
 
@@ -68,30 +66,10 @@ jobs:
           opts: --no-input --dry-run --check
         run: make django-make-migrations
 
-      - name: Restore cached testmon data
-        if: ${{ github.event_name == 'pull_request' }}
-        id: cache-testmon-restore
-        uses: actions/cache/restore@v3
-        with:
-          enableCrossOsArchive: true
-          path: |
-            /home/runner/work/flagsmith/flagsmith/api/.testmondata*
-          key: testmon-data-python${{ matrix.python-version }}-${{ github.event.pull_request.base.sha }}
-          restore-keys: testmon-data-python${{ matrix.python-version }}-
-
       - name: Run Tests
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
-
-      - name: Save testmon data cache
-        id: cache-testmon-save
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            /home/runner/work/flagsmith/flagsmith/api/.testmondata*
-          key: testmon-data-python${{ matrix.python-version }}-${{github.sha}}
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
