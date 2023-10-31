@@ -41,7 +41,7 @@ class LaunchDarklyImportRequest(
     def get_create_log_message(self, history_instance) -> str | None:
         return "New LaunchDarkly import requested"
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if not self.completed_at:
             return None
         if self.status.get("result") == "success":

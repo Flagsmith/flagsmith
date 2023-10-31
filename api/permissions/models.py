@@ -47,14 +47,11 @@ class AbstractBasePermissionModel(
             permissions.append(PermissionModel.objects.get(key=permission_key))
         self.permissions.set(permissions)
 
-    def get_update_log_message(self, history_instance) -> str | None:
-        if not (message := super().get_update_log_message(history_instance)):
+    def get_update_log_message(self, history_instance, delta) -> str | None:
+        if not (message := super().get_update_log_message(history_instance, delta)):
             return message
 
-        # unfortunately we need to call diff_against again :/
-        for change in history_instance.diff_against(
-            history_instance.prev_record
-        ).changes:
+        for change in delta.changes:
             if change.field == "permissions":
                 old_keys = set(through["permissionmodel"] for through in change.old)
                 new_keys = set(through["permissionmodel"] for through in change.new)
