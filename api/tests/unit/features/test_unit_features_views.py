@@ -14,10 +14,10 @@ from environments.models import Environment
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_list_feature_states_from_simple_view_set(
@@ -560,6 +560,91 @@ def test_add_owners_adds_owner(client, project):
         "first_name": user_2.first_name,
         "last_name": user_2.last_name,
         "last_login": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_group_owners_adds_group_owner(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = Organisation.objects.create(name="Test org")
+    group_1 = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Second Group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_1)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    data = {"group_ids": [group_1.id, group_2.id]}
+
+    # When
+    json_response = client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+
+    # Then
+    assert len(json_response["group_owners"]) == 2
+    assert json_response["group_owners"][0] == {
+        "id": group_1.id,
+        "name": group_1.name,
+    }
+    assert json_response["group_owners"][1] == {
+        "id": group_2.id,
+        "name": group_2.name,
+    }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_remove_group_owners_removes_group_owner(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = Organisation.objects.create(name="Test org")
+    group_1 = UserPermissionGroup.objects.create(
+        name="To be removed group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="To be kept group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_1)
+
+    feature.group_owners.add(group_1.id, group_2.id)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    # Note that only group_1 is set to be removed.
+    data = {"group_ids": [group_1.id]}
+
+    # When
+    json_response = client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+
+    # Then
+    assert len(json_response["group_owners"]) == 1
+    assert json_response["group_owners"][0] == {
+        "id": group_2.id,
+        "name": group_2.name,
     }
 
 
