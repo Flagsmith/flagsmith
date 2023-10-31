@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from core.models import abstract_base_auditable_model_factory
+from core.models import abstract_base_auditable_model_factory, register_auditable_model
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -11,6 +11,7 @@ from django.db.models import Count, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from trench.models import MFAMethod
 
 from audit.models import RelatedObjectType
 from environments.models import Environment
@@ -475,3 +476,12 @@ class UserPermissionGroup(
                     message += f"; removed {user.email if user else f'{pk=}'}"
 
         return message
+
+
+# audit user MFA method create/update/delete
+register_auditable_model(
+    MFAMethod, __package__, audit_create=True, audit_update=True, audit_delete=True
+)
+MFAMethod.related_object_type = RelatedObjectType.USER_MFA_METHOD
+MFAMethod.get_audit_log_identity = lambda self: f"{self.user.email} / {self.name}"
+MFAMethod._get_organisations = lambda self: self.user._get_organisations()

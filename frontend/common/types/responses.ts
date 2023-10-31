@@ -127,6 +127,7 @@ export type AuditLogItem = {
     | 'ROLE'
     | 'SEGMENT'
     | 'USER'
+    | 'USER_MFA_METHOD'
   is_system_event: boolean
 }
 

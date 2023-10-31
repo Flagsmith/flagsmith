@@ -7,6 +7,7 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
+from simple_history import register
 from simple_history.models import HistoricalRecords as BaseHistoricalRecords
 from simple_history.models import (
     post_create_historical_m2m_records,
@@ -291,3 +292,36 @@ def abstract_base_auditable_model_factory(
         Base.get_delete_log_message = default_get_delete_log_message
 
     return Base
+
+
+def register_auditable_model(
+    model: type[models.Model],
+    app: str,
+    unaudited_fields: typing.Sequence[str] | None = None,
+    audited_m2m_fields: typing.Sequence[str] | None = None,
+    audit_create=False,
+    audit_update=False,
+    audit_delete=False,
+):
+    register(
+        model,
+        app,
+        bases=[BaseHistoricalModel],
+        excluded_fields=unaudited_fields or (),
+        m2m_fields=audited_m2m_fields or (),
+        get_user=get_history_user,
+        inherit=True,
+    )
+
+    for attr in _AbstractBaseAuditableModel.__dict__:
+        try:
+            getattr(model, attr)
+        except AttributeError:
+            setattr(model, attr, getattr(_AbstractBaseAuditableModel, attr))
+
+    if audit_create:
+        model.get_create_log_message = default_get_create_log_message
+    if audit_update:
+        model.get_update_log_message = default_get_update_log_message
+    if audit_delete:
+        model.get_delete_log_message = default_get_delete_log_message
