@@ -48,6 +48,7 @@ from .permissions import (
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -156,6 +157,32 @@ class FeatureViewSet(viewsets.ModelViewSet):
             context["overrides_data"] = Feature.get_overrides_data(environment_id)
 
         return context
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        feature = self.get_object()
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        feature = self.get_object()
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
 
     @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
