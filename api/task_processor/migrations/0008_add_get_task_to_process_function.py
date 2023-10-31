@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             os.path.join(
                 os.path.dirname(__file__),
                 "sql",
-                "get_tasks_to_process.sql",
+                "0008_get_tasks_to_process.sql",
             ),
             reverse_sql="DROP FUNCTION IF EXISTS get_tasks_to_process",
         ),
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             os.path.join(
                 os.path.dirname(__file__),
                 "sql",
-                "get_recurring_tasks_to_process.sql",
+                "0008_get_recurring_tasks_to_process.sql",
             ),
             reverse_sql="DROP FUNCTION IF EXISTS get_recurringtasks_to_process",
         ),

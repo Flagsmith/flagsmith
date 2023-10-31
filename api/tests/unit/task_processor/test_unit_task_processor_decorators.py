@@ -10,7 +10,7 @@ from task_processor.decorators import (
     register_task_handler,
 )
 from task_processor.exceptions import InvalidArgumentsError
-from task_processor.models import RecurringTask
+from task_processor.models import RecurringTask, Task, TaskPriority
 from task_processor.task_registry import get_task
 from task_processor.task_run_method import TaskRunMethod
 
@@ -131,3 +131,43 @@ def test_inputs_are_validated_when_run_without_task_processor(
     # When
     with pytest.raises(InvalidArgumentsError):
         my_function.delay(args=(NonSerializableObj(),))
+
+
+def test_delay_returns_none_if_task_queue_is_full(settings, db):
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+
+    @register_task_handler(queue_size=1)
+    def my_function(*args, **kwargs):
+        pass
+
+    for _ in range(10):
+        Task.objects.create(
+            task_identifier="test_unit_task_processor_decorators.my_function"
+        )
+
+    # When
+    task = my_function.delay()
+
+    # Then
+    assert task is None
+
+
+def test_can_create_task_with_priority(settings, db):
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+
+    @register_task_handler(priority=TaskPriority.HIGH)
+    def my_function(*args, **kwargs):
+        pass
+
+    for _ in range(10):
+        Task.objects.create(
+            task_identifier="test_unit_task_processor_decorators.my_function"
+        )
+
+    # When
+    task = my_function.delay()
+
+    # Then
+    assert task.priority == TaskPriority.HIGH

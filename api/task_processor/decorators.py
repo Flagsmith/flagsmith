@@ -9,14 +9,18 @@ from django.conf import settings
 from django.utils import timezone
 
 from task_processor.exceptions import InvalidArgumentsError, TaskQueueFullError
-from task_processor.models import RecurringTask, Task
+from task_processor.models import RecurringTask, Task, TaskPriority
 from task_processor.task_registry import register_task
 from task_processor.task_run_method import TaskRunMethod
 
 logger = logging.getLogger(__name__)
 
 
-def register_task_handler(task_name: str = None, queue_size: int = None):
+def register_task_handler(
+    task_name: str = None,
+    queue_size: int = None,
+    priority: TaskPriority = TaskPriority.NORMAL,
+):
     def decorator(f: typing.Callable):
         nonlocal task_name
 
@@ -50,9 +54,10 @@ def register_task_handler(task_name: str = None, queue_size: int = None):
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 try:
-                    task = Task.schedule_task(
-                        schedule_for=delay_until or timezone.now(),
+                    task = Task.create(
                         task_identifier=task_identifier,
+                        scheduled_for=delay_until or timezone.now(),
+                        priority=priority,
                         queue_size=queue_size,
                         args=args,
                         kwargs=kwargs,
