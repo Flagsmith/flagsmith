@@ -3,7 +3,7 @@ import logging
 import typing
 from datetime import datetime
 
-from core.models import _AbstractBaseAuditableModel, ModelDelta
+from core.models import ModelDelta, _AbstractBaseAuditableModel
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 

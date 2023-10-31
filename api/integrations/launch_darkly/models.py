@@ -21,11 +21,8 @@ class LaunchDarklyImportStatus(TypedDict):
 
 
 class LaunchDarklyImportRequest(
-    abstract_base_auditable_model_factory(),
+    abstract_base_auditable_model_factory(RelatedObjectType.IMPORT_REQUEST),
 ):
-    history_record_class_path = "features.models.HistoricalLaunchDarklyImportRequest"
-    related_object_type = RelatedObjectType.IMPORT_REQUEST
-
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 

@@ -24,14 +24,13 @@ class PermissionModel(models.Model):
 class AbstractBasePermissionModel(
     SoftDeleteObject,
     abstract_base_auditable_model_factory(
+        RelatedObjectType.GRANT,
         audited_m2m_fields=["permissions"],
         audit_create=True,
         audit_update=True,
         audit_delete=True,
     ),
 ):
-    related_object_type = RelatedObjectType.GRANT
-
     class Meta:
         abstract = True
 

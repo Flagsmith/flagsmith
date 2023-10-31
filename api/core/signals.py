@@ -30,7 +30,7 @@ def create_audit_log_from_historical_record(
         else None
     )
 
-    history_record_class_path = instance.history_record_class_path or (
+    history_record_class_path = (
         f"{history_instance.__class__.__module__}.{history_instance.__class__.__name__}"
     )
 

@@ -21,11 +21,8 @@ logger = logging.getLogger(__name__)
 
 class Segment(
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.SEGMENT, ["uuid"]),
 ):
-    history_record_class_path = "segments.models.HistoricalSegment"
-    related_object_type = RelatedObjectType.SEGMENT
-
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
@@ -135,11 +132,9 @@ class SegmentRule(AbstractBaseExportableModel):
 
 
 class Condition(
-    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(RelatedObjectType.SEGMENT, ["uuid"]),
 ):
-    history_record_class_path = "segments.models.HistoricalCondition"
-    related_object_type = RelatedObjectType.SEGMENT
-
     CONDITION_TYPES = (
         (constants.EQUAL, "Exactly Matches"),
         (constants.GREATER_THAN, "Greater than"),
