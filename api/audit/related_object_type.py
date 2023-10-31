@@ -14,3 +14,4 @@ class RelatedObjectType(enum.Enum):
     ROLE = "Role"
     SEGMENT = "Segment"
     USER = "User"
+    USER_MFA_METHOD = "User MFA Method"
