@@ -14,11 +14,13 @@ import {
 } from 'common/services/useMetadataModelField'
 
 import Constants from 'common/constants'
+import constants from 'common/constants'
 
 type CreateMetadataType = {
   id?: string
   isEdit?: boolean
   metadataModelFieldList?: Array
+  projectId?: string
 }
 
 type MetadataType = {
@@ -33,6 +35,7 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   isEdit,
   metadataModelFieldList,
   onComplete,
+  projectId,
 }) => {
   const metadataTypes: MetadataType = [
     { id: 1, label: 'int', value: 'int' },
@@ -49,19 +52,10 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [updateMetadata, { isLoading: updating, isSuccess: updated }] =
     useUpdateMetadataMutation()
 
-  const [
-    createMetadataField,
-    { isLoading: creatingMetadataField, isSuccess: metadataFieldcreated },
-  ] = useCreateMetadataModelFieldMutation()
-  const [
-    updateMetadataField,
-    { isLoading: updatingMetadataField, isSuccess: MetadataFieldUpdated },
-  ] = useUpdateMetadataModelFieldMutation()
+  const [createMetadataField] = useCreateMetadataModelFieldMutation()
+  const [updateMetadataField] = useUpdateMetadataModelFieldMutation()
 
-  const [
-    deleteMetadataModelField,
-    { isLoading: deletingMetadataField, isSuccess: MetadataFieldDeleted },
-  ] = useDeleteMetadataModelFieldMutation()
+  const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -109,6 +103,8 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [segmentRequired, setSegmentRequired] = useState<boolean>(false)
   const [flagRequired, setFlagRequired] = useState<booleaan>(false)
   const [metadataFieldsArray, setMetadataFieldsArray] = useState<array>([])
+  const [requiredMetadataModelFields, setRequiredMetadataModelFields] =
+    useState<array>([])
 
   const handleMetadataModelField = (contentTypeId, enabled) => {
     if (enabled) {
@@ -118,8 +114,23 @@ const CreateMetadata: FC<CreateMetadataType> = ({
     }
   }
 
+  const handleRequiredMetadataModelField = (contentTypeId, enabled) => {
+    if (enabled) {
+      addRequiredMetadataModelFields(contentTypeId)
+    } else {
+      removeRequiredMetadataModelField(contentTypeId)
+    }
+  }
+
   const addMetadataField = (newMetadataField) => {
     setMetadataFieldsArray([...metadataFieldsArray, newMetadataField])
+  }
+
+  const addRequiredMetadataModelFields = (newRequiredMetadataField) => {
+    setRequiredMetadataModelFields([
+      ...requiredMetadataModelFields,
+      newRequiredMetadataField,
+    ])
   }
 
   const removeMetadataField = (metadataFieldToRemove) => {
@@ -127,6 +138,15 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       (m) => m !== metadataFieldToRemove,
     )
     setMetadataFieldsArray(updatedMetadataFields)
+  }
+
+  const removeRequiredMetadataModelField = (requiredMetadataFieldToRemove) => {
+    const requiredMetadataModelFieldsToRemove =
+      requiredMetadataModelFields.filter(
+        (m) => m !== requiredMetadataFieldToRemove,
+      )
+
+    setRequiredMetadataModelFields(requiredMetadataModelFieldsToRemove)
   }
 
   return (
@@ -194,7 +214,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             <div className='entities-cell'>
               <Switch
                 checked={environmentRequired}
-                onChange={() => setEnvironmentRequired(!environmentRequired)}
+                onChange={() => {
+                  setEnvironmentRequired(!environmentRequired)
+                  handleRequiredMetadataModelField(
+                    Constants.contentTypes.environment,
+                    !environmentRequired,
+                  )
+                }}
                 className='ml-0'
               />
             </div>
@@ -217,7 +243,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             <div className='entities-cell'>
               <Switch
                 checked={segmentRequired}
-                onChange={() => setSegmentRequired(!segmentRequired)}
+                onChange={() => {
+                  setSegmentRequired(!segmentRequired)
+                  handleRequiredMetadataModelField(
+                    Constants.contentTypes.segment,
+                    !segmentRequired,
+                  )
+                }}
                 className='ml-0'
               />
             </div>
@@ -240,7 +272,13 @@ const CreateMetadata: FC<CreateMetadataType> = ({
             <div className='entities-cell'>
               <Switch
                 checked={flagRequired}
-                onChange={() => setFlagRequired(!flagRequired)}
+                onChange={() => {
+                  setFlagRequired(!flagRequired)
+                  handleRequiredMetadataModelField(
+                    Constants.contentTypes.flag,
+                    !flagRequired,
+                  )
+                }}
                 className='ml-0'
               />
             </div>
@@ -276,6 +314,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                 (id) =>
                   !metadataModelFieldList.some((m) => m.content_type === id),
               )
+              const metadataToUpdate = metadataModelFieldList.filter((m) =>
+                requiredMetadataModelFields.includes(m.content_type),
+              )
               if (metadataToDelete.length) {
                 metadataToDelete.map((m) => {
                   deleteMetadataModelField({
@@ -291,6 +332,31 @@ const CreateMetadata: FC<CreateMetadataType> = ({
                     id,
                     organisation_id: orgId,
                   })
+                })
+              }
+              if (metadataToUpdate.length) {
+                metadataToUpdate.map((m) => {
+                  const query = {
+                    body: { 'content_type': m.content_type, 'field': m.field },
+                    id: m.id,
+                    organisation_id: orgId,
+                  }
+                  const isRequiredFor = [
+                    {
+                      content_type: constants.contentTypes.project,
+                      object_id: Number(projectId),
+                    },
+                  ]
+                  if (m.content_type === 30 && environmentRequired) {
+                    query.body.is_required_for = isRequiredFor
+                  }
+                  if (m.content_type === 39 && flagRequired) {
+                    query.body.is_required_for = isRequiredFor
+                  }
+                  if (m.content_type === 55 && segmentRequired) {
+                    query.body.is_required_for = isRequiredFor
+                  }
+                  updateMetadataField(query)
                 })
               }
             }

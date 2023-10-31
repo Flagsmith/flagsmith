@@ -215,6 +215,7 @@ export default {
   contentTypes: {
     environment: 30,
     flag: 39,
+    project: 27,
     segment: 55,
   },
   defaultRule: {

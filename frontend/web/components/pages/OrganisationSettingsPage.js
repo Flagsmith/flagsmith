@@ -21,13 +21,8 @@ import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import CreateMetadata from 'components/modals/CreateMetadata'
-import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
-import { getStore } from 'common/store'
-import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
 const widths = [170, 150, 80]
-const metadataWidth = [200, 150, 150, 70, 450]
 
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
@@ -40,8 +35,6 @@ const OrganisationSettingsPage = class extends Component {
     super(props, context)
     this.state = {
       manageSubscriptionLoaded: true,
-      metadata: [],
-      metadataModelField: [],
       role: 'ADMIN',
     }
     if (!AccountStore.getOrganisation()) {
@@ -60,8 +53,6 @@ const OrganisationSettingsPage = class extends Component {
     ) {
       this.context.router.history.replace('/projects')
     }
-    this.getMetadata()
-    this.getMetadataModelField()
   }
 
   onSave = () => {
@@ -85,55 +76,6 @@ const OrganisationSettingsPage = class extends Component {
     }
   }
 
-  getMetadata = () => {
-    getListMetadata(
-      getStore(),
-      {
-        organisation: AccountStore.getOrganisation().id,
-      },
-      { forceRefetch: true },
-    ).then((res) => {
-      this.setState({
-        metadata: res.data.results,
-      })
-    })
-  }
-
-  getMetadataModelField = () => {
-    getMetadataModelFieldList(
-      getStore(),
-      {
-        organisation_id: AccountStore.getOrganisation().id,
-      },
-      { forceRefetch: true },
-    ).then((res) => {
-      this.setState({
-        metadataModelField: res.data.results,
-      })
-    })
-  }
-
-  metadataCreated = () => {
-    toast('Metadata created')
-    this.getMetadata()
-    closeModal()
-  }
-
-  metadataUpdated = () => {
-    toast('Metadata Updated')
-    this.getMetadata()
-    this.getMetadataModelField()
-    closeModal()
-  }
-
-  deleteMetadata = (id) => {
-    toast('Metadata has been deleted')
-    deleteMetadata(getStore(), {
-      id,
-    }).then(() => {
-      this.getMetadata()
-    })
-  }
 
   deleteInvite = (id) => {
     openConfirm(
@@ -304,26 +246,7 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  createMetadata = () => {
-    openModal(
-      `Create Metadata`,
-      <CreateMetadata onComplete={this.metadataCreated} />,
-      'side-modal create-feature-modal',
-    )
-  }
 
-  editMetadata = (id, contentTypeList) => {
-    openModal(
-      `Edit Metadata`,
-      <CreateMetadata
-        isEdit={true}
-        metadataModelFieldList={contentTypeList}
-        id={id}
-        onComplete={this.metadataUpdated}
-      />,
-      'side-modal create-feature-modal',
-    )
-  }
 
   formatLastLoggedIn = (last_login) => {
     if (!last_login) return 'Never'
@@ -347,24 +270,12 @@ const OrganisationSettingsPage = class extends Component {
     const {
       props: { webhooks, webhooksLoading },
     } = this
-    const { metadata, metadataModelField } = this.state
     const hasRbacPermission = Utils.getPlansPermission('RBAC')
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
     const force2faPermission = Utils.getPlansPermission('FORCE_2FA')
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
-
-    const mergeMetadata = metadata.map((item1) => {
-      const matchingItems2 = metadataModelField.filter(
-        (item2) => item2.field === item1.id,
-      )
-      return {
-        ...item1,
-        content_type_fields: matchingItems2,
-      }
-    })
 
     return (
       <div className='app-container container'>
@@ -1472,276 +1383,6 @@ const OrganisationSettingsPage = class extends Component {
                                 }
                               />
                             )}
-                          </TabItem>
-                        )}
-                        {metadataEnable && (
-                          <TabItem tabLabel='Metadata'>
-                            <div>
-                              <p className='fs-small lh-sm my-4'>
-                                Add metadata to your entities
-                              </p>
-                              <Button onClick={() => this.createMetadata()}>
-                                {'Create Metadata'}
-                              </Button>
-                              <FormGroup className='mt-4'>
-                                <PanelSearch
-                                  id='webhook-list'
-                                  title={'Metadata'}
-                                  items={mergeMetadata}
-                                  header={
-                                    <Row className='table-header'>
-                                      <Flex className='table-column px-3'>
-                                        Name
-                                      </Flex>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: metadataWidth[0] }}
-                                      >
-                                        Environment
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: metadataWidth[1] }}
-                                      >
-                                        Segment
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: metadataWidth[2] }}
-                                      >
-                                        Feature
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: metadataWidth[2] }}
-                                      >
-                                        Action
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: metadataWidth[3] }}
-                                      >
-                                        Remove
-                                      </div>
-                                    </Row>
-                                  }
-                                  renderRow={(metadata) => (
-                                    <Row
-                                      space
-                                      className='list-item clickable cursor-pointer'
-                                      key={metadata.id}
-                                    >
-                                      <Flex
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_fields,
-                                          )
-                                        }}
-                                        className='table-column px-3'
-                                      >
-                                        <div className='font-weight-medium mb-1'>
-                                          {metadata.name}
-                                        </div>
-                                      </Flex>
-                                      <div
-                                        className='table-column'
-                                        style={{
-                                          alignItems: 'center',
-                                          display: 'flex',
-                                          width: '185px',
-                                        }}
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_fields,
-                                          )
-                                        }}
-                                      >
-                                        <div
-                                          className='table-column'
-                                          onClick={() => {
-                                            this.editMetadata(metadata.id)
-                                          }}
-                                        >
-                                          {metadata.content_type_fields.find(
-                                            (m) =>
-                                              m.content_type ===
-                                              Constants.contentTypes
-                                                .environment,
-                                          ) ? (
-                                            <>
-                                              <Icon
-                                                name='checkmark-circle'
-                                                width={20}
-                                                fill='#20c997'
-                                              />
-                                              {'Enabled'}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                              {'Disabled'}
-                                            </>
-                                          )}
-                                          {/* <span className='checkbox mr-2'>
-                                            <Icon name='required' width={20} />
-                                            {'Required'}
-                                          </span> */}
-                                        </div>
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: '150px' }}
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_fields,
-                                          )
-                                        }}
-                                      >
-                                        <div
-                                          className='table-column'
-                                          style={{ width: '150px' }}
-                                          onClick={() => {
-                                            this.editMetadata(
-                                              metadata.id,
-                                              metadata.content_type_fields,
-                                            )
-                                          }}
-                                        >
-                                          {metadata.content_type_fields.find(
-                                            (m) =>
-                                              m.content_type ===
-                                              Constants.contentTypes.segment,
-                                          ) ? (
-                                            <>
-                                              <Icon
-                                                name='checkmark-circle'
-                                                width={20}
-                                                fill='#20c997'
-                                              />
-                                              {'Enabled'}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                              {'Disabled'}
-                                            </>
-                                          )}
-                                          {/* <span className='checkbox mr-2'>
-                                            <Icon name='required' width={20} />
-                                            {'Required'}
-                                          </span> */}
-                                        </div>
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: '185px' }}
-                                        onClick={() => {
-                                          this.editMetadata(
-                                            metadata.id,
-                                            metadata.content_type_fields,
-                                          )
-                                        }}
-                                      >
-                                        <div
-                                          className='table-column'
-                                          style={{ width: '150px' }}
-                                          onClick={() => {
-                                            this.editMetadata(
-                                              metadata.id,
-                                              metadata.content_type_fields,
-                                            )
-                                          }}
-                                        >
-                                          {metadata.content_type_fields.find(
-                                            (m) =>
-                                              m.content_type ===
-                                              Constants.contentTypes.flag,
-                                          ) ? (
-                                            <>
-                                              <Icon
-                                                name='checkmark-circle'
-                                                width={20}
-                                                fill='#20c997'
-                                              />
-                                              {'Enabled'}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Icon
-                                                name='close-circle'
-                                                width={20}
-                                              />
-                                              {'Disabled'}
-                                            </>
-                                          )}
-                                          {/* <span className='checkbox mr-2'>
-                                            <Icon name='required' width={20} />
-                                            {'Required'}
-                                          </span> */}
-                                        </div>
-                                      </div>
-                                      <div className='table-column'>
-                                        <Button
-                                          theme='text'
-                                          size='small'
-                                          onClick={() => {
-                                            this.editMetadata(
-                                              metadata.id,
-                                              metadata.content_type_fields,
-                                            )
-                                          }}
-                                        >
-                                          <Icon
-                                            name='edit'
-                                            width={18}
-                                            fill='#6837FC'
-                                          />{' '}
-                                          Edit Metadata
-                                        </Button>
-                                      </div>
-                                      <div className='table-column'>
-                                        <Button
-                                          id='delete-invite'
-                                          type='button'
-                                          onClick={() => {
-                                            this.deleteMetadata(metadata.id)
-                                          }}
-                                          className='btn btn-with-icon'
-                                        >
-                                          <Icon
-                                            name='trash-2'
-                                            width={20}
-                                            fill='#656D7B'
-                                          />
-                                        </Button>
-                                      </div>
-                                    </Row>
-                                  )}
-                                  renderNoResults={
-                                    <Panel
-                                      className='no-pad'
-                                      title={'Metadata'}
-                                    >
-                                      <div className='search-list'>
-                                        <Row className='list-item p-3 text-muted'>
-                                          You currently have no metadata
-                                          configured.
-                                        </Row>
-                                      </div>
-                                    </Panel>
-                                  }
-                                />
-                              </FormGroup>
-                            </div>
                           </TabItem>
                         )}
                       </Tabs>

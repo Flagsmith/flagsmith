@@ -21,7 +21,19 @@ SUPPORTED_REQUIREMENTS_MAPPING = {
         "project": lambda project_id: Project.objects.get(
             id=project_id
         ).organisation_id,
-    }
+    },
+    "feature": {
+        "organisation": lambda org_id: org_id,
+        "project": lambda project_id: Project.objects.get(
+            id=project_id
+        ).organisation_id,
+    },
+    "segment": {
+        "organisation": lambda org_id: org_id,
+        "project": lambda project_id: Project.objects.get(
+            id=project_id
+        ).organisation_id,
+    },
 }
 
 
