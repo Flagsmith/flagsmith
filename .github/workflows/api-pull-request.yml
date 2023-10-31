@@ -93,6 +93,9 @@ jobs:
             /home/runner/work/flagsmith/flagsmith/api/.testmondata*
           key: testmon-data-python${{ matrix.python-version }}-${{github.sha}}
 
+      - name: Echo a test output
+        run: echo cache key - testmon-data-python${{ matrix.python-version }}-${{github.sha}}
+
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         env:
