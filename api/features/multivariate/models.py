@@ -31,13 +31,8 @@ class MultivariateFeatureOption(
     LifecycleModelMixin,
     AbstractBaseFeatureValueModel,
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
-    history_record_class_path = (
-        "features.multivariate.models.HistoricalMultivariateFeatureOption"
-    )
-    related_object_type = RelatedObjectType.FEATURE
-
     feature = models.ForeignKey(
         "features.Feature",
         on_delete=models.CASCADE,
@@ -95,13 +90,8 @@ class MultivariateFeatureOption(
 class MultivariateFeatureStateValue(
     LifecycleModelMixin,
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    history_record_class_path = (
-        "features.multivariate.models.HistoricalMultivariateFeatureStateValue"
-    )
-    related_object_type = RelatedObjectType.FEATURE_STATE
-
     feature_state = models.ForeignKey(
         "features.FeatureState",
         on_delete=models.CASCADE,

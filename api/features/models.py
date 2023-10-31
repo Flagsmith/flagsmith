@@ -86,7 +86,7 @@ if typing.TYPE_CHECKING:
 class Feature(
     SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -113,9 +113,6 @@ class Feature(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
     is_server_key_only = models.BooleanField(default=False)
-
-    history_record_class_path = "features.models.HistoricalFeature"
-    related_object_type = RelatedObjectType.FEATURE
 
     objects = FeatureManager()
 
@@ -219,11 +216,8 @@ def get_next_segment_priority(feature):
 class FeatureSegment(
     AbstractBaseExportableModel,
     OrderedModelBase,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
-    history_record_class_path = "features.models.HistoricalFeatureSegment"
-    related_object_type = RelatedObjectType.FEATURE
-
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -388,11 +382,8 @@ class FeatureSegment(
 class FeatureState(
     SoftDeleteExportableModel,
     LifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    history_record_class_path = "features.models.HistoricalFeatureState"
-    related_object_type = RelatedObjectType.FEATURE_STATE
-
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -920,11 +911,8 @@ class FeatureState(
 class FeatureStateValue(
     AbstractBaseFeatureValueModel,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE_STATE, ["uuid"]),
 ):
-    related_object_type = RelatedObjectType.FEATURE_STATE
-    history_record_class_path = "features.models.HistoricalFeatureStateValue"
-
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )

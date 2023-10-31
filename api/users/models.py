@@ -112,6 +112,7 @@ AUDITED_USER_M2M_FIELDS = ("organisations",)
 class FFAdminUser(
     LifecycleModel,
     abstract_base_auditable_model_factory(
+        RelatedObjectType.USER,
         UNAUDITED_USER_FIELDS,
         AUDITED_USER_M2M_FIELDS,
         audit_create=True,
@@ -120,8 +121,6 @@ class FFAdminUser(
     ),
     AbstractUser,
 ):
-    related_object_type = RelatedObjectType.USER
-
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation
     )
@@ -399,6 +398,7 @@ class UserPermissionGroupMembership(models.Model):
 
 class UserPermissionGroup(
     abstract_base_auditable_model_factory(
+        RelatedObjectType.GROUP,
         audited_m2m_fields=["users"],
         audit_create=True,
         audit_update=True,
@@ -408,8 +408,6 @@ class UserPermissionGroup(
     """
     Model to group users within an organisation for the purposes of permissioning.
     """
-
-    related_object_type = RelatedObjectType.GROUP
 
     name = models.CharField(max_length=200)
     users = models.ManyToManyField(
@@ -479,11 +477,11 @@ class UserPermissionGroup(
 register_auditable_model(
     MFAMethod,
     __package__,
+    RelatedObjectType.USER_MFA_METHOD,
     ["_backup_codes"],
     audit_create=True,
     audit_update=True,
     audit_delete=True,
 )
-MFAMethod.related_object_type = RelatedObjectType.USER_MFA_METHOD
 MFAMethod.get_audit_log_identity = lambda self: f"{self.user.email} / {self.name}"
 MFAMethod._get_organisations = lambda self: self.user._get_organisations()

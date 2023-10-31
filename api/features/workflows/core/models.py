@@ -52,11 +52,8 @@ logger = logging.getLogger(__name__)
 class ChangeRequest(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(RelatedObjectType.CHANGE_REQUEST, ["uuid"]),
 ):
-    related_object_type = RelatedObjectType.CHANGE_REQUEST
-    history_record_class_path = "features.workflows.core.models.HistoricalChangeRequest"
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -188,12 +185,10 @@ class ChangeRequest(
                 )
 
 
-class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
-    related_object_type = RelatedObjectType.CHANGE_REQUEST
-    history_record_class_path = (
-        "features.workflows.core.models.HistoricalChangeRequestApproval"
-    )
-
+class ChangeRequestApproval(
+    LifecycleModel,
+    abstract_base_auditable_model_factory(RelatedObjectType.CHANGE_REQUEST),
+):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     change_request = models.ForeignKey(
         ChangeRequest, on_delete=models.CASCADE, related_name="approvals"

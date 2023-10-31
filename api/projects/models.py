@@ -55,11 +55,12 @@ class Project(
     LifecycleModelMixin,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(
-        UNAUDITED_PROJECT_FIELDS, audit_create=True, audit_delete=True
+        RelatedObjectType.PROJECT,
+        UNAUDITED_PROJECT_FIELDS,
+        audit_create=True,
+        audit_delete=True,
     ),
 ):
-    related_object_type = RelatedObjectType.PROJECT
-
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(

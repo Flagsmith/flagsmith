@@ -79,15 +79,12 @@ class _AbstractBaseAuditableModel(models.Model):
 
     Some field descriptions:
 
-     :history_record_class_path: the python class path to the HistoricalRecord model class.
-        e.g. features.models.HistoricalFeature
      :related_object_type: a RelatedObjectType enum representing the related object type of the model.
         Note that this can be overridden by the `get_related_object_type` method in cases where it's
         different for certain scenarios.
     """
 
-    history_record_class_path = None
-    related_object_type = None
+    related_object_type: RelatedObjectType
 
     class Meta:
         abstract = True
@@ -282,6 +279,7 @@ def default_get_delete_log_message(
 
 
 def abstract_base_auditable_model_factory(
+    related_object_type: RelatedObjectType,
     unaudited_fields: typing.Sequence[str] | None = None,
     audited_m2m_fields: typing.Sequence[str] | None = None,
     audit_create=False,
@@ -300,6 +298,7 @@ def abstract_base_auditable_model_factory(
         class Meta:
             abstract = True
 
+    Base.related_object_type = related_object_type
     if audit_create:
         Base.get_create_log_message = default_get_create_log_message
     if audit_update:
@@ -313,8 +312,10 @@ def abstract_base_auditable_model_factory(
 def register_auditable_model(
     model: type[models.Model],
     app: str,
+    related_object_type: RelatedObjectType,
     unaudited_fields: typing.Sequence[str] | None = None,
     audited_m2m_fields: typing.Sequence[str] | None = None,
+    *,
     audit_create=False,
     audit_update=False,
     audit_delete=False,
@@ -326,7 +327,6 @@ def register_auditable_model(
         excluded_fields=unaudited_fields or (),
         m2m_fields=audited_m2m_fields or (),
         get_user=get_history_user,
-        inherit=True,
     )
 
     for attr in _AbstractBaseAuditableModel.__dict__:
@@ -335,6 +335,7 @@ def register_auditable_model(
         except AttributeError:
             setattr(model, attr, getattr(_AbstractBaseAuditableModel, attr))
 
+    model.related_object_type = related_object_type
     if audit_create:
         model.get_create_log_message = default_get_create_log_message
     if audit_update:

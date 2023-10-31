@@ -58,11 +58,10 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
 class Environment(
-    LifecycleModel, abstract_base_auditable_model_factory(), SoftDeleteObject
+    LifecycleModel,
+    abstract_base_auditable_model_factory(RelatedObjectType.ENVIRONMENT),
+    SoftDeleteObject,
 ):
-    history_record_class_path = "environments.models.HistoricalEnvironment"
-    related_object_type = RelatedObjectType.ENVIRONMENT
-
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)

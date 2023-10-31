@@ -2,7 +2,7 @@ import functools
 import logging
 import typing
 
-from core.models import _AbstractBaseAuditableModel, ModelDelta
+from core.models import ModelDelta, _AbstractBaseAuditableModel
 from django.contrib.auth import get_user_model
 
 from audit.constants import (
