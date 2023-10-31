@@ -2,7 +2,7 @@
 
 CREATED_MESSAGE = "New {model_name} created: {identity}"
 DELETED_MESSAGE = "{model_name} deleted: {identity}"
-UPDATED_MESSAGE = "{model_name} {field} updated: {identity}"
+UPDATED_MESSAGE = "{model_name} {field} {action}: {identity}"
 
 # specific audit messages
 

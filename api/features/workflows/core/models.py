@@ -127,7 +127,7 @@ class ChangeRequest(
     def get_delete_log_message(self, history_instance) -> str | None:
         return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if (
             history_instance.prev_record
             and history_instance.prev_record.committed_at is None
@@ -253,7 +253,7 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
         if self.approved_at is not None:
             return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if (
             history_instance.prev_record.approved_at is None
             and self.approved_at is not None

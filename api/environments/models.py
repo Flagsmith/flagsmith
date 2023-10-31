@@ -320,7 +320,7 @@ class Environment(
     def get_create_log_message(self, history_instance) -> str | None:
         return ENVIRONMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return ENVIRONMENT_UPDATED_MESSAGE % self.name
 
     def get_hide_disabled_flags(self) -> bool:

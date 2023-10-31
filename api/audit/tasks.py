@@ -1,7 +1,8 @@
+import functools
 import logging
 import typing
 
-from core.models import _AbstractBaseAuditableModel
+from core.models import _AbstractBaseAuditableModel, ModelDelta
 from django.contrib.auth import get_user_model
 
 from audit.constants import (
@@ -67,13 +68,12 @@ def create_audit_log_from_historical_record(
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
 
-    if (
-        history_instance.history_type == "~"
-        and history_instance.prev_record
-        and not history_instance.diff_against(history_instance.prev_record).changes
-    ):
-        # no auditable data changed in this change/event
-        return
+    delta: ModelDelta | None = None
+    if history_instance.history_type == "~" and history_instance.prev_record:
+        delta = history_instance.diff_against(history_instance.prev_record)
+        if delta is not None and not delta.changes:
+            # no auditable data changed in this change/event
+            return
 
     instance: _AbstractBaseAuditableModel = history_instance.instance
 
@@ -98,7 +98,7 @@ def create_audit_log_from_historical_record(
     log_message = {
         "+": instance.get_create_log_message,
         "-": instance.get_delete_log_message,
-        "~": instance.get_update_log_message,
+        "~": functools.partial(instance.get_update_log_message, delta=delta),
     }[history_instance.history_type](history_instance)
     if not log_message:
         # no log to record for this change/event

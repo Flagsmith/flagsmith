@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from simple_history import register
 from simple_history.models import HistoricalRecords as BaseHistoricalRecords
 from simple_history.models import (
+    ModelDelta,
     post_create_historical_m2m_records,
     pre_create_historical_m2m_records,
 )
@@ -95,7 +96,7 @@ class _AbstractBaseAuditableModel(models.Model):
         """Override if audit log records should be written when model is created"""
         return None
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta: ModelDelta) -> str | None:
         """Override if audit log records should be written when model is updated"""
         return None
 
@@ -235,20 +236,35 @@ def default_get_create_log_message(
     )
 
 
+def _get_action(model: _AbstractBaseAuditableModel, field: str) -> str:
+    new_value = getattr(model, field)
+    if new_value is True:
+        return "set true"
+    if new_value is False:
+        return "set false"
+    if new_value is None:
+        return "set null"
+
+    return "updated"
+
+
 def default_get_update_log_message(
-    self: _AbstractBaseAuditableModel, history_instance
+    self: _AbstractBaseAuditableModel, history_instance, delta: ModelDelta
 ) -> str | None:
-    if not (prev_record := history_instance.prev_record):
+    if not history_instance.prev_record:
         logger.warning(f"No previous record for {self}")
         return None
 
     model_name = self.get_audit_log_model_name(history_instance)
     identity = self.get_audit_log_identity()
-    changed_fields = history_instance.diff_against(prev_record).changed_fields
+    changed_fields = delta.changed_fields
     return (
         "; ".join(
             UPDATED_MESSAGE.format(
-                model_name=model_name, identity=identity, field=field
+                model_name=model_name,
+                identity=identity,
+                field=field,
+                action=_get_action(self, field),
             )
             for field in changed_fields
         )

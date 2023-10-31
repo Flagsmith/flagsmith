@@ -199,7 +199,7 @@ class Feature(
     def get_delete_log_message(self, history_instance) -> str | None:
         return FEATURE_DELETED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         return FEATURE_UPDATED_MESSAGE % self.name
 
     def _get_project(self) -> Project | None:
@@ -852,7 +852,7 @@ class FeatureState(
 
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -939,10 +939,10 @@ class FeatureStateValue(
         clone.save()
         return clone
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        changes = delta.changes
         if (
             len(changes) == 1
             and changes[0].field == "string_value"

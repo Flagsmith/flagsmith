@@ -138,7 +138,7 @@ class MultivariateFeatureStateValue(
 
         return clone
 
-    def get_update_log_message(self, history_instance) -> str | None:
+    def get_update_log_message(self, history_instance, delta) -> str | None:
         feature_state = self.feature_state
         feature = feature_state.feature
 

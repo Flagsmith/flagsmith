@@ -1,7 +1,10 @@
 import logging
 import typing
 
-from core.models import abstract_base_auditable_model_factory, register_auditable_model
+from core.models import (
+    abstract_base_auditable_model_factory,
+    register_auditable_model,
+)
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -357,15 +360,12 @@ class FFAdminUser(
         # TODO #2797 if user is removed from organisation no log will be recorded?
         return self.organisations.all()
 
-    def get_update_log_message(self, history_instance) -> str | None:
-        if not (message := super().get_update_log_message(history_instance)):
+    def get_update_log_message(self, history_instance, delta) -> str | None:
+        if not (message := super().get_update_log_message(history_instance, delta)):
             return message
 
-        # unfortunately we need to call diff_against again :/
         # TODO #2797 this appears to be logging one change behind?
-        for change in history_instance.diff_against(
-            history_instance.prev_record
-        ).changes:
+        for change in delta.changes:
             if change.field == "organisations":
                 old_pks = set(through["organisation"] for through in change.old)
                 new_pks = set(through["organisation"] for through in change.new)
@@ -457,14 +457,11 @@ class UserPermissionGroup(
     def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
 
-    def get_update_log_message(self, history_instance) -> str | None:
-        if not (message := super().get_update_log_message(history_instance)):
+    def get_update_log_message(self, history_instance, delta) -> str | None:
+        if not (message := super().get_update_log_message(history_instance, delta)):
             return message
 
-        # unfortunately we need to call diff_against again :/
-        for change in history_instance.diff_against(
-            history_instance.prev_record
-        ).changes:
+        for change in delta.changes:
             if change.field == "users":
                 old_pks = set(through["ffadminuser"] for through in change.old)
                 new_pks = set(through["ffadminuser"] for through in change.new)
@@ -480,7 +477,12 @@ class UserPermissionGroup(
 
 # audit user MFA method create/update/delete
 register_auditable_model(
-    MFAMethod, __package__, audit_create=True, audit_update=True, audit_delete=True
+    MFAMethod,
+    __package__,
+    ["_backup_codes"],
+    audit_create=True,
+    audit_update=True,
+    audit_delete=True,
 )
 MFAMethod.related_object_type = RelatedObjectType.USER_MFA_METHOD
 MFAMethod.get_audit_log_identity = lambda self: f"{self.user.email} / {self.name}"
