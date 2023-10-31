@@ -26,6 +26,8 @@ ACTION_PERMISSIONS_MAP = {
     "create": CREATE_FEATURE,
     "add_owners": CREATE_FEATURE,
     "remove_owners": CREATE_FEATURE,
+    "add_group_owners": CREATE_FEATURE,
+    "remove_group_owners": CREATE_FEATURE,
     "update": CREATE_FEATURE,
     "partial_update": CREATE_FEATURE,
 }
