@@ -1,4 +1,4 @@
-from core.models import SoftDeleteObject, abstract_base_auditable_model_factory
+from core.models import abstract_base_auditable_model_factory
 from django.db import models
 
 from audit.related_object_type import RelatedObjectType
@@ -22,7 +22,6 @@ class PermissionModel(models.Model):
 
 
 class AbstractBasePermissionModel(
-    SoftDeleteObject,
     abstract_base_auditable_model_factory(
         RelatedObjectType.GRANT,
         audited_m2m_fields=["permissions"],
