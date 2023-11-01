@@ -7,12 +7,15 @@ import uuid
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
+from django.utils import timezone
 from simple_history import register
 from simple_history.models import HistoricalRecords as BaseHistoricalRecords
 from simple_history.models import (
     ModelDelta,
     post_create_historical_m2m_records,
+    post_create_historical_record,
     pre_create_historical_m2m_records,
+    pre_create_historical_record,
 )
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
@@ -180,6 +183,7 @@ class HistoricalRecords(BaseHistoricalRecords):
 
             insert_rows = []
 
+            # FIX IS HERE
             # `m2m_field_name()` is part of Django's internal API
             through_field_name = field.m2m_field_name()
 
@@ -218,11 +222,61 @@ class HistoricalRecords(BaseHistoricalRecords):
             m2m_fields.update(getattr(model, self.m2m_fields_model_field_name))
         except AttributeError:
             pass
+        # FIX IS HERE
         field_names = [
             field if isinstance(field, str) else field.name for field in m2m_fields
         ]
         return [getattr(model, field_name).field for field_name in field_names]
 
+    # fix https://github.com/jazzband/django-simple-history/issues/1268
+    def create_historical_record(self, instance, history_type, using=None):
+        using = using if self.use_base_model_db else None
+        history_date = getattr(instance, "_history_date", timezone.now())
+        history_user = self.get_history_user(instance)
+        history_change_reason = self.get_change_reason_for_object(
+            instance, history_type, using
+        )
+        manager = getattr(instance, self.manager_name)
+
+        attrs = {}
+        # FIX IS HERE
+        for field in manager.model.tracked_fields:
+            attrs[field.attname] = getattr(instance, field.attname)
+
+        relation_field = getattr(manager.model, "history_relation", None)
+        if relation_field is not None:
+            attrs["history_relation"] = instance
+
+        history_instance = manager.model(
+            history_date=history_date,
+            history_type=history_type,
+            history_user=history_user,
+            history_change_reason=history_change_reason,
+            **attrs,
+        )
+
+        pre_create_historical_record.send(
+            sender=manager.model,
+            instance=instance,
+            history_date=history_date,
+            history_user=history_user,
+            history_change_reason=history_change_reason,
+            history_instance=history_instance,
+            using=using,
+        )
+
+        history_instance.save(using=using)
+        self.create_historical_record_m2ms(history_instance, instance)
+
+        post_create_historical_record.send(
+            sender=manager.model,
+            instance=instance,
+            history_instance=history_instance,
+            history_date=history_date,
+            history_user=history_user,
+            history_change_reason=history_change_reason,
+            using=using,
+        )
 
 def default_get_create_log_message(
     self: _AbstractBaseAuditableModel, history_instance
