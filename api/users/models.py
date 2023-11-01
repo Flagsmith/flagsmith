@@ -124,6 +124,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
 
+    @hook(AFTER_CREATE)
+    def add_to_default_ldap_org(self):
+        if settings.LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID:
+            org = Organisation.objects.get(
+                id=settings.LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID
+            )
+            self.add_organisation(org)
+
     def delete_orphan_organisations(self):
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
@@ -368,6 +376,7 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    ldap_dn = models.CharField(blank=True, null=True, unique=True, max_length=255)
     is_default = models.BooleanField(
         default=False,
         help_text="If set to true, all new users will be added to this group",
