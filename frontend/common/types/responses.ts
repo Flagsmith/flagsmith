@@ -296,14 +296,15 @@ export type Account = {
 }
 
 export type Role = {
-  id?: number
-  name?: string
-  organisation?: number
+  id: number
+  name: string
+  description?: string
+  organisation: number
 }
 
 export type RolePermissionUser = {
   user: number
-  role: nomber
+  role: number
   id: number
 }
 
