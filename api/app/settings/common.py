@@ -942,3 +942,81 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
 FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
 )
+
+# LDAP setting
+LDAP_INSTALLED = importlib.util.find_spec("ldap")
+if LDAP_INSTALLED:
+    # The URL of the LDAP server.
+    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+    if LDAP_AUTH_URL:
+        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+
+    # Initiate TLS on connection.
+    LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)
+
+    # The LDAP search base for looking up users.
+    LDAP_AUTH_SEARCH_BASE = env.str(
+        "LDAP_AUTH_SEARCH_BASE", "ou=people,dc=example,dc=com"
+    )
+
+    # The LDAP class that represents a user.
+    LDAP_AUTH_OBJECT_CLASS = env.str("LDAP_AUTH_OBJECT_CLASS", "inetOrgPerson")
+
+    # User model fields mapped to the LDAP
+    # attributes that represent them.
+    LDAP_AUTH_USER_FIELDS = env.dict(
+        "LDAP_AUTH_USER_FIELDS",
+        {
+            "username": "uid",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "email": "mail",
+        },
+    )
+    # Sets the login domain for Active Directory users.
+    LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = env.str(
+        "LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN", None
+    )
+
+    # Path to a callable that takes a dict of {model_field_name: value}, and returns
+    # a string of the username to bind to the LDAP server.
+    # Use this to support different types of LDAP server.
+    LDAP_AUTH_FORMAT_USERNAME = env.str(
+        "LDAP_AUTH_FORMAT_USERNAME",
+        "django_python3_ldap.utils.format_username_openldap",
+    )
+
+    # Set connection/receive timeouts (in seconds) on the underlying `ldap3` library.
+    LDAP_AUTH_CONNECT_TIMEOUT = env.int("LDAP_AUTH_CONNECT_TIMEOUT", None)
+    LDAP_AUTH_RECEIVE_TIMEOUT = env.int("LDAP_AUTH_RECEIVE_TIMEOUT", None)
+
+    # Set this to add newly created users to an organisation
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = env.int(
+        "LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID", None
+    )
+
+    # Path to a callable that takes a user model, a dict of {ldap_field_name: [value]}
+    # a LDAP connection object (to allow further lookups), and saves any additional
+    # user relationships based on the LDAP data.
+    LDAP_AUTH_SYNC_USER_RELATIONS = env.str(
+        "LDAP_AUTH_SYNC_USER_RELATIONS", "django_python3_ldap.utils.sync_user_relations"
+    )
+
+    # Path to a callable that takes a dict of {ldap_field_name: value},
+    # returning a list of [ldap_search_filter]. The search filters will then be AND'd
+    # together when creating the final search filter.
+    LDAP_AUTH_FORMAT_SEARCH_FILTERS = env.str(
+        "LDAP_AUTH_FORMAT_SEARCH_FILTERS",
+        default="django_python3_ldap.utils.format_search_filters",
+    )
+
+    # List of LDAP group DN's that needs to be synced.
+    LDAP_SYNCED_GROUPS = env.list("LDAP_SYNCED_GROUPS", default=[], delimiter=":")
+
+    # DN of the LDAP group that is allowed to login
+    # If None no group check will be performed.
+    LDAP_LOGIN_GROUP = env.str("LDAP_LOGIN_GROUP", None)
+
+    # The LDAP user username and password used by `sync_ldap_users_and_groups` command
+    LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
+    LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
