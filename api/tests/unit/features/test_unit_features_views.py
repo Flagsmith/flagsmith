@@ -571,7 +571,7 @@ def test_add_group_owners_adds_group_owner(client, project):
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
-    organisation = Organisation.objects.create(name="Test org")
+    organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
         name="Test Group", organisation=organisation
     )
@@ -614,7 +614,7 @@ def test_remove_group_owners_removes_group_owner(client, project):
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
-    organisation = Organisation.objects.create(name="Test org")
+    organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
         name="To be removed group", organisation=organisation
     )
@@ -646,6 +646,80 @@ def test_remove_group_owners_removes_group_owner(client, project):
         "id": group_2.id,
         "name": group_2.name,
     }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_remove_group_owners_when_nonexistent(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="To be removed group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+
+    assert feature.group_owners.count() == 0
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    # Note that group_1 is not present, but it should work
+    # anyway since there may have been a double request or two
+    # users working at the same time.
+    data = {"group_ids": [group_1.id]}
+
+    # When
+    json_response = client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+
+    # Then
+    assert len(json_response["group_owners"]) == 0
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_group_owners_with_wrong_org_group(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+    organisation = project.organisation
+    other_organisation = Organisation.objects.create(name="Orgy")
+
+    group_1 = UserPermissionGroup.objects.create(
+        name="Valid Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Invalid Group", organisation=other_organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    user_2.add_organisation(other_organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_2)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    data = {"group_ids": [group_1.id, group_2.id]}
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == 400
+    response.json() == {"non_field_errors": ["Some groups not found"]}
 
 
 @pytest.mark.parametrize(
