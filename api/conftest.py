@@ -420,6 +420,46 @@ def required_a_environment_metadata_field(
 
 
 @pytest.fixture()
+def required_a_feature_metadata_field(
+    organisation,
+    a_metadata_field,
+    feature_content_type,
+    project,
+    project_content_type,
+):
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type, object_id=project.id, model_field=model_field
+    )
+
+    return model_field
+
+
+@pytest.fixture()
+def required_a_segment_metadata_field(
+    organisation,
+    a_metadata_field,
+    segment_content_type,
+    project,
+    project_content_type,
+):
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type, object_id=project.id, model_field=model_field
+    )
+
+    return model_field
+
+
+@pytest.fixture()
 def optional_b_environment_metadata_field(organisation, b_metadata_field, environment):
     environment_type = ContentType.objects.get_for_model(environment)
 
@@ -454,6 +494,16 @@ def environment_metadata_b(environment, optional_b_environment_metadata_field):
 @pytest.fixture()
 def environment_content_type():
     return ContentType.objects.get_for_model(Environment)
+
+
+@pytest.fixture()
+def feature_content_type():
+    return ContentType.objects.get_for_model(Feature)
+
+
+@pytest.fixture()
+def segment_content_type():
+    return ContentType.objects.get_for_model(Segment)
 
 
 @pytest.fixture()
