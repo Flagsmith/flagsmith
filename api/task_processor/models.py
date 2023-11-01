@@ -82,7 +82,7 @@ class Task(AbstractBaseTask):
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
     objects = TaskManager()
-    priority = models.PositiveSmallIntegerField(
+    priority = models.SmallIntegerField(
         default=None, null=True, choices=TaskPriority.choices
     )
 
