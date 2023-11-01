@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('task_processor', '0009_add_recurring_task_run_first_run_at'),
+        ("task_processor", "0009_add_recurring_task_run_first_run_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='task',
-            name='priority',
-            field=models.PositiveSmallIntegerField(choices=[(100, 'Lower'), (75, 'Low'), (50, 'Normal'), (25, 'High'), (0, 'Highest')], default=None, null=True),
+            model_name="task",
+            name="priority",
+            field=models.SmallIntegerField(
+                choices=[
+                    (100, "Lower"),
+                    (75, "Low"),
+                    (50, "Normal"),
+                    (25, "High"),
+                    (0, "Highest"),
+                ],
+                default=None,
+                null=True,
+            ),
         ),
     ]
