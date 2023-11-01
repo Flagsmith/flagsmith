@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import logging
 import typing
 import uuid
@@ -285,6 +286,44 @@ class HistoricalRecords(BaseHistoricalRecords):
         if not getattr(settings, "SIMPLE_HISTORY_ENABLED", True):
             return
         super().m2m_changed(instance, action, attr, pk_set, reverse)
+
+    # fix: m2m fields not tracked when through model used directly
+    def finalize(self, sender, **kwargs):
+        super().finalize(sender, **kwargs)
+
+        # repeat sender check from superclass
+        inherited = False
+        if self.cls is not sender:  # set in concrete
+            inherited = self.inherit and issubclass(sender, self.cls)
+            if not inherited:
+                return  # set in abstract
+
+        # connect additional m2m signal handlers
+        for field in self.get_m2m_fields_from_model(sender):
+            models.signals.post_save.connect(
+                functools.partial(
+                    self.post_m2m_save_or_delete,
+                    cls=sender,
+                    attr=field.name,
+                ),
+                sender=field.remote_field.through,
+                weak=False,
+            )
+            models.signals.post_delete.connect(
+                functools.partial(
+                    self.post_m2m_save_or_delete,
+                    cls=sender,
+                    attr=field.name,
+                    created=False,  # unused but required to match post_save signature
+                ),
+                sender=field.remote_field.through,
+                weak=False,
+            )
+
+    def post_m2m_save_or_delete(self, instance, created, cls, attr, **kwargs):
+        # call post_save on parent model
+        instance_attr = cls._meta.get_field(attr).m2m_field_name()
+        self.post_save(getattr(instance, instance_attr), False, **kwargs)
 
 
 def default_get_create_log_message(
