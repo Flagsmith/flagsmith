@@ -13,6 +13,7 @@ from django.utils import timezone
 from simple_history import register
 from simple_history.models import HistoricalRecords as BaseHistoricalRecords
 from simple_history.models import (
+    ModelChange,
     ModelDelta,
     post_create_historical_m2m_records,
     post_create_historical_record,
@@ -354,21 +355,45 @@ def default_get_update_log_message(
         logger.warning(f"No previous record for {self}")
         return None
 
+    m2m_fields = {field.name: field for field in self.history.model._history_m2m_fields}
     model_name = self.get_audit_log_model_name(history_instance)
     identity = self.get_audit_log_identity()
-    changed_fields = delta.changed_fields
-    return (
-        "; ".join(
-            UPDATED_MESSAGE.format(
-                model_name=model_name,
-                identity=identity,
-                field=field,
-                action=_get_action(self, field),
-            )
-            for field in changed_fields
+
+    def describe(change: ModelChange) -> str:
+        message = UPDATED_MESSAGE.format(
+            model_name=model_name,
+            identity=identity,
+            field=change.field,
+            action=_get_action(self, change.field),
         )
-        or None
-    )
+
+        if m2m_field := m2m_fields.get(change.field):
+
+            def get_identity(pk):
+                obj = m2m_field.related_model.objects.filter(pk=pk).first()
+                # related model MUST implement get_audit_log_identity
+                return obj.get_audit_log_identity() if obj else "None"
+
+            reverse_field_name = m2m_field.m2m_reverse_field_name()
+            old_values = {
+                through[reverse_field_name]: through for through in change.old
+            }
+            new_values = {
+                through[reverse_field_name]: through for through in change.new
+            }
+            for pk in new_values.keys() - old_values.keys():
+                message += f"; added: {get_identity(pk)}"
+            for pk in old_values.keys() - new_values.keys():
+                message += f"; removed: {get_identity(pk)}"
+            for pk in new_values.keys() & old_values.keys():
+                related_identity = get_identity(pk)
+                for field in old_values[pk].keys() | new_values[pk].keys():
+                    if old_values[pk].get(field) != new_values[pk].get(field):
+                        message += f"; {field} changed: {related_identity}"
+
+        return message
+
+    return "; ".join(describe(change) for change in delta.changes) or None
 
 
 def default_get_delete_log_message(

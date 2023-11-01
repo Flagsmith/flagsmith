@@ -359,24 +359,6 @@ class FFAdminUser(
         # TODO #2797 if user is removed from organisation no log will be recorded?
         return self.organisations.all()
 
-    def get_update_log_message(self, history_instance, delta) -> str | None:
-        if not (message := super().get_update_log_message(history_instance, delta)):
-            return message
-
-        # TODO #2797 this appears to be logging one change behind?
-        for change in delta.changes:
-            if change.field == "organisations":
-                old_pks = set(through["organisation"] for through in change.old)
-                new_pks = set(through["organisation"] for through in change.new)
-                for pk in new_pks - old_pks:
-                    org = Organisation.objects.filter(pk=pk).first()
-                    message += f"; added {org.name if org else f'{pk=}'}"
-                for pk in old_pks - new_pks:
-                    org = Organisation.objects.filter(pk=pk).first()
-                    message += f"; removed {org.name if org else f'{pk=}'}"
-
-        return message
-
 
 # Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
 # we use __subclasshook__[1] method on UserABC to check if FFAdminUser implements the required interface
@@ -454,23 +436,6 @@ class UserPermissionGroup(
 
     def _get_organisations(self) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
-
-    def get_update_log_message(self, history_instance, delta) -> str | None:
-        if not (message := super().get_update_log_message(history_instance, delta)):
-            return message
-
-        for change in delta.changes:
-            if change.field == "users":
-                old_pks = set(through["ffadminuser"] for through in change.old)
-                new_pks = set(through["ffadminuser"] for through in change.new)
-                for pk in new_pks - old_pks:
-                    user = FFAdminUser.objects.filter(pk=pk).first()
-                    message += f"; added {user.email if user else f'{pk=}'}"
-                for pk in old_pks - new_pks:
-                    user = FFAdminUser.objects.filter(pk=pk).first()
-                    message += f"; removed {user.email if user else f'{pk=}'}"
-
-        return message
 
 
 # audit user MFA method create/update/delete

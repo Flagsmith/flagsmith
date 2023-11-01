@@ -85,6 +85,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def __str__(self):
         return "Org %s (#%s)" % (self.name, self.id)
 
+    def get_audit_log_identity(self) -> str:
+        return self.name
+
     # noinspection PyTypeChecker
     def get_unique_slug(self):
         return str(self.id) + "-" + self.name

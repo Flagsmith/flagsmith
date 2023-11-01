@@ -20,6 +20,9 @@ class PermissionModel(models.Model):
     description = models.TextField()
     type = models.CharField(max_length=100, choices=PERMISSION_TYPES, null=True)
 
+    def get_audit_log_identity(self) -> str:
+        return self.key
+
 
 class AbstractBasePermissionModel(
     abstract_base_auditable_model_factory(
@@ -44,18 +47,3 @@ class AbstractBasePermissionModel(
         for permission_key in permission_keys:
             permissions.append(PermissionModel.objects.get(key=permission_key))
         self.permissions.set(permissions)
-
-    def get_update_log_message(self, history_instance, delta) -> str | None:
-        if not (message := super().get_update_log_message(history_instance, delta)):
-            return message
-
-        for change in delta.changes:
-            if change.field == "permissions":
-                old_keys = set(through["permissionmodel"] for through in change.old)
-                new_keys = set(through["permissionmodel"] for through in change.new)
-                for key in new_keys - old_keys:
-                    message += f"; added {key}"
-                for key in old_keys - new_keys:
-                    message += f"; removed {key}"
-
-        return message
