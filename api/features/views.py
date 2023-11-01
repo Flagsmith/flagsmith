@@ -164,9 +164,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["POST"], url_path="add-group-owners")
     def add_group_owners(self, request, *args, **kwargs):
-        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         feature = self.get_object()
+        data = request.data
+        data["organisation_id"] = feature.project.organisation.pk
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
         serializer.add_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
         return response
@@ -177,7 +180,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["POST"], url_path="remove-group-owners")
     def remove_group_owners(self, request, *args, **kwargs):
-        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        feature = self.get_object()
+        data = request.data
+        data["organisation_id"] = feature.project.organisation.pk
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         feature = self.get_object()
         serializer.remove_group_owners(feature)
