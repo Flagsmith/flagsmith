@@ -4,6 +4,7 @@ import logging
 import typing
 import uuid
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Manager
 from django.http import HttpRequest
@@ -277,6 +278,14 @@ class HistoricalRecords(BaseHistoricalRecords):
             history_change_reason=history_change_reason,
             using=using,
         )
+
+    # fix: should check settings
+    def m2m_changed(self, instance, action, attr, pk_set, reverse, **_):
+        # FIX IS HERE
+        if not getattr(settings, "SIMPLE_HISTORY_ENABLED", True):
+            return
+        super().m2m_changed(instance, action, attr, pk_set, reverse)
+
 
 def default_get_create_log_message(
     self: _AbstractBaseAuditableModel, history_instance
