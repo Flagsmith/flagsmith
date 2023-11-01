@@ -13,9 +13,9 @@ from environments.sdk.serializers_mixins import (
 from projects.models import Project
 from users.models import UserPermissionGroup
 from users.serializers import (
-    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
+    UserPermissionGroupNameSerializer,
 )
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -43,10 +43,12 @@ class FeatureOwnerInputSerializer(UserIdsSerializer):
 
 class FeatureGroupOwnerInputSerializer(serializers.Serializer):
     group_ids = serializers.ListField(child=serializers.IntegerField())
+    organisation_id = serializers.IntegerField()
 
     def validate(self, data):
         if not UserPermissionGroup.objects.filter(
-            id__in=data["group_ids"]
+            id__in=data["group_ids"],
+            organisation_id=data["organisation_id"],
         ).count() == len(data["group_ids"]):
             raise serializers.ValidationError("Some groups not found")
 
@@ -63,7 +65,7 @@ class FeatureGroupOwnerInputSerializer(serializers.Serializer):
 
 class ProjectFeatureSerializer(serializers.ModelSerializer):
     owners = UserListSerializer(many=True, read_only=True)
-    group_owners = MyUserPermissionGroupsSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupNameSerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
