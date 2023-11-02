@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.http import HttpRequest
 
 
-def get_current_site_url():
+def get_current_site_url() -> str:
     if settings.DOMAIN_OVERRIDE:
         domain = settings.DOMAIN_OVERRIDE
     elif current_site := Site.objects.filter(id=settings.SITE_ID).first():
@@ -14,7 +15,7 @@ def get_current_site_url():
     return url
 
 
-def get_ip_address_from_request(request):
+def get_ip_address_from_request(request: HttpRequest) -> str | None:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     return (
         x_forwarded_for.split(",")[0]

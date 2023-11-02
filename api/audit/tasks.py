@@ -109,13 +109,14 @@ def create_audit_log_from_historical_record(
             organisation=organisation,
             environment=environment,
             project=project,
-            author=override_author or history_user,
             related_object_id=related_object_id,
             related_object_type=related_object_type.name,
             log=log_message,
+            author=override_author or history_user,
+            ip_address=history_instance.ip_address,
+            master_api_key=history_instance.master_api_key,
             history_record_id=history_instance.history_id,
             history_record_class_path=history_record_class_path,
-            master_api_key=history_instance.master_api_key,
             **instance.get_extra_audit_log_kwargs(history_instance),
         )
         for organisation in organisations
@@ -176,7 +177,10 @@ def create_segment_priorities_changed_audit_log(
 
 
 @register_task_handler()
-def create_audit_log_user_logged_in(user_id: int):
+def create_audit_log_user_logged_in(
+    user_id: int,
+    ip_address: str | None = None,
+):
     if not (user := get_user_model().objects.filter(id=user_id).first()):
         logger.warning(
             f"User with id {user_id} not found. Audit log for user logged in not created."
@@ -194,6 +198,8 @@ def create_audit_log_user_logged_in(user_id: int):
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
             log=log_message,
+            author=user,
+            ip_address=ip_address,
             is_system_event=True,
         )
         for organisation in user._get_organisations() or []
@@ -202,7 +208,10 @@ def create_audit_log_user_logged_in(user_id: int):
 
 
 @register_task_handler()
-def create_audit_log_user_logged_out(user_id: int):
+def create_audit_log_user_logged_out(
+    user_id: int,
+    ip_address: str | None = None,
+):
     if not (user := get_user_model().objects.filter(id=user_id).first()):
         logger.warning(
             f"User with id {user_id} not found. Audit log for user logged out not created."
@@ -220,6 +229,8 @@ def create_audit_log_user_logged_out(user_id: int):
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
             log=log_message,
+            author=user,
+            ip_address=ip_address,
             is_system_event=True,
         )
         for organisation in user._get_organisations() or []
@@ -229,12 +240,17 @@ def create_audit_log_user_logged_out(user_id: int):
 
 @register_task_handler()
 def create_audit_log_user_login_failed(
-    credentials: dict, codes: list[str] | str | None = None
+    credentials: dict,
+    ip_address: str | None = None,
+    codes: list[str] | str | None = None,
 ):
     if not (username := credentials.get("username")):
         return
-    # ModelBackend looks up user this way, so we will do the same
-    if not (user := get_user_model()._default_manager.get_by_natural_key(username)):
+    UserModel = get_user_model()
+    try:
+        # ModelBackend looks up user this way, so we will do the same
+        user = get_user_model()._default_manager.get_by_natural_key(username)
+    except UserModel.DoesNotExist:
         return
     if not isinstance(user, _AbstractBaseAuditableModel):
         return
@@ -249,6 +265,8 @@ def create_audit_log_user_login_failed(
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
             log=log_message,
+            author=user,
+            ip_address=ip_address,
             is_system_event=True,
         )
         for organisation in user._get_organisations() or []

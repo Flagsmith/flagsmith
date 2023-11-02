@@ -1,3 +1,4 @@
+from core.helpers import get_ip_address_from_request
 from core.models import _AbstractBaseAuditableModel
 from django.conf import settings
 from django.utils import timezone
@@ -44,10 +45,12 @@ def create_audit_log_from_historical_record(
     )
 
 
-def add_master_api_key(sender, **kwargs):
+def add_ip_address_and_master_api_key(sender, **kwargs):
     try:
         history_instance = kwargs["history_instance"]
-        master_api_key = HistoricalRecords.thread.request.user.key
-        history_instance.master_api_key = master_api_key
+        history_instance.ip_address = get_ip_address_from_request(
+            HistoricalRecords.thread.request
+        )
+        history_instance.master_api_key = HistoricalRecords.thread.request.user.key
     except (KeyError, AttributeError):
         pass
