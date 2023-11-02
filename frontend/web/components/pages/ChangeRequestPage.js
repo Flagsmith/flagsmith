@@ -18,6 +18,9 @@ import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+
 
 const labelWidth = 100
 
@@ -435,7 +438,9 @@ const ChangeRequestsPage = class extends Component {
                                       <span className='font-weight-bold'>
                                         {u.first_name} {u.last_name}
                                       </span>
-                                      <span className='chip-icon ion ion-ios-close' />
+                                      <span className='chip-icon ion'>
+                                        <IonIcon icon={close} />
+                                      </span>
                                     </Row>
                                   ))}
                               </Row>
@@ -489,7 +494,9 @@ const ChangeRequestsPage = class extends Component {
                                       <span className='font-weight-bold'>
                                         {g.name}
                                       </span>
-                                      <span className='chip-icon ion ion-ios-close' />
+                                      <span className='chip-icon ion'>
+                                        <IonIcon icon={close} />
+                                      </span>
                                     </Row>
                                   ))}
                               </Row>

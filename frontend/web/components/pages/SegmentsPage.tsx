@@ -22,6 +22,8 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
+import { globeOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -357,8 +359,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       data-test='show-create-segment-btn'
                       onClick={newSegment}
                     >
-                      <span className='icon ion-ios-globe' /> Create your first
-                      Segment
+                      <span className='icon'>
+                        <IonIcon icon={globeOutline} />
+                      </span>
+                      Create your first Segment
                     </Button>,
                   )}
                 </FormGroup>
