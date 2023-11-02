@@ -16,7 +16,6 @@ from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
-
 # TODO #2797 add audit log checks after user/group/organisation changes
 
 

@@ -10,7 +10,6 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
-
 # TODO #2797 update tests for organisation-only audit logs
 
 
