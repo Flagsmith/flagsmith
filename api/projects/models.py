@@ -187,7 +187,7 @@ class Project(
     def get_audit_log_identity(self) -> str:
         return self.name
 
-    def _get_project(self) -> Project | None:
+    def _get_project(self, delta=None) -> Project | None:
         return self
 
 
@@ -224,7 +224,7 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.project.name}"
 
-    def _get_project(self) -> Project | None:
+    def _get_project(self, delta=None) -> Project | None:
         return self.project
 
 
@@ -245,5 +245,5 @@ class UserProjectPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.project.name}"
 
-    def _get_project(self) -> Project | None:
+    def _get_project(self, delta=None) -> Project | None:
         return self.project

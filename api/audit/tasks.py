@@ -87,7 +87,7 @@ def create_audit_log_from_historical_record(
         organisations,
         project,
         environment,
-    ) = instance.get_organisations_project_environment()
+    ) = instance.get_organisations_project_environment(delta)
 
     related_object_id = instance.get_audit_log_related_object_id(history_instance)
     related_object_type = instance.get_audit_log_related_object_type(history_instance)
@@ -196,7 +196,7 @@ def create_audit_log_user_logged_in(user_id: int):
             log=log_message,
             is_system_event=True,
         )
-        for organisation in user._get_organisations()
+        for organisation in user._get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)
 
@@ -222,7 +222,7 @@ def create_audit_log_user_logged_out(user_id: int):
             log=log_message,
             is_system_event=True,
         )
-        for organisation in user._get_organisations()
+        for organisation in user._get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)
 
@@ -251,6 +251,6 @@ def create_audit_log_user_login_failed(
             log=log_message,
             is_system_event=True,
         )
-        for organisation in user._get_organisations()
+        for organisation in user._get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)

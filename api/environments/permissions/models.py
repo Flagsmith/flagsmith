@@ -34,7 +34,7 @@ class UserEnvironmentPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.environment.name}"
 
-    def _get_environment(self) -> Environment | None:
+    def _get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
 
@@ -60,5 +60,5 @@ class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.environment.name}"
 
-    def _get_environment(self) -> Environment | None:
+    def _get_environment(self, delta=None) -> Environment | None:
         return self.environment

@@ -2,6 +2,7 @@ import logging
 import typing
 
 from core.models import (
+    ModelDelta,
     abstract_base_auditable_model_factory,
     register_auditable_model,
 )
@@ -354,9 +355,22 @@ class FFAdminUser(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
 
-    def _get_organisations(self) -> typing.Iterable[Organisation] | None:
-        # TODO #2797 IS THIS CAUSING A DEADLOCK?
-        # TODO #2797 if user is removed from organisation no log will be recorded?
+    def _get_organisations(
+        self, delta: ModelDelta | None = None
+    ) -> typing.Iterable[Organisation] | None:
+        for change in delta.changes if delta else []:
+            if change.field == "organisations":
+                # look for organisation membership changes
+                changes = set(tuple(uo.items()) for uo in change.new) ^ set(
+                    tuple(uo.items()) for uo in change.old
+                )
+                # if organisation membership has changed, log only against those affected
+                if changes:
+                    return Organisation.objects.filter(
+                        pk__in=set(dict(uo)["organisation"] for uo in changes)
+                    )
+
+        # otherwise return user's current organisations
         return self.organisations.all()
 
 
@@ -434,8 +448,18 @@ class UserPermissionGroup(
     def get_audit_log_identity(self) -> str:
         return self.name
 
-    def _get_organisations(self) -> typing.Iterable[Organisation] | None:
+    def _get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
+
+
+def _mfa_method_get_audit_log_identity(self) -> str:
+    return f"{self.user.email} / {self.name}"
+
+
+def _mfa_method_get_organisations(
+    self, delta=None
+) -> typing.Iterable[Organisation] | None:
+    return self.user._get_organisations(delta)
 
 
 # audit user MFA method create/update/delete
@@ -448,5 +472,5 @@ register_auditable_model(
     audit_update=True,
     audit_delete=True,
 )
-MFAMethod.get_audit_log_identity = lambda self: f"{self.user.email} / {self.name}"
-MFAMethod._get_organisations = lambda self: self.user._get_organisations()
+MFAMethod.get_audit_log_identity = _mfa_method_get_audit_log_identity
+MFAMethod._get_organisations = _mfa_method_get_organisations

@@ -50,7 +50,7 @@ class LaunchDarklyImportRequest(
     def get_audit_log_author(self) -> FFAdminUser:
         return self.created_by
 
-    def _get_project(self) -> Project | None:
+    def _get_project(self, delta=None) -> Project | None:
         return self.project
 
     class Meta:
