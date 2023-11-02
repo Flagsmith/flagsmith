@@ -15,6 +15,9 @@ from projects.models import (
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
+# TODO #2797 add audit log tests for user/group/orgaanisation operations not covered in views
+# including logging for correct organisation(s) according to operation
+
 
 @pytest.mark.django_db
 class FFAdminUserTestCase(TestCase):

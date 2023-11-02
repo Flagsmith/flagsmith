@@ -107,7 +107,6 @@ UNAUDITED_USER_FIELDS = (
     "sign_up_type",
     "last_login",
 )
-AUDITED_USER_M2M_FIELDS = ("organisations",)
 
 
 class FFAdminUser(
@@ -115,7 +114,7 @@ class FFAdminUser(
     abstract_base_auditable_model_factory(
         RelatedObjectType.USER,
         UNAUDITED_USER_FIELDS,
-        AUDITED_USER_M2M_FIELDS,
+        ["organisations"],
         audit_create=True,
         audit_update=True,
         audit_delete=True,

@@ -34,6 +34,8 @@ from users.models import FFAdminUser, UserPermissionGroup
 now = timezone.now()
 yesterday = now - timedelta(days=1)
 
+# TODO #2797 add audit log tests after project changes
+
 
 def test_should_create_a_project(settings, admin_user, admin_client, organisation):
     # Given

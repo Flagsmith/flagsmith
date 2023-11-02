@@ -6,6 +6,8 @@ from organisations.managers import OrganisationPermissionManager
 from organisations.models import Organisation
 from permissions.models import AbstractBasePermissionModel, PermissionModel
 
+# TODO #2797 add audit log tests for permission changes
+
 
 class UserOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(

@@ -17,6 +17,9 @@ from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
 
+# TODO #2797 add audit log checks after user/group/organisation changes
+
+
 @pytest.mark.django_db
 class UserTestCase(TestCase):
     auth_base_url = "/api/v1/auth/"

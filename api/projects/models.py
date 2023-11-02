@@ -34,6 +34,8 @@ if typing.TYPE_CHECKING:
     from features.models import Feature
     from segments.models import Segment
 
+# TODO #2797 add audit log tests for permission changes
+
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
