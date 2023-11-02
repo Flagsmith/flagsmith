@@ -459,7 +459,7 @@ def _mfa_method_get_audit_log_identity(self) -> str:
 def _mfa_method_get_organisations(
     self, delta=None
 ) -> typing.Iterable[Organisation] | None:
-    return self.user._get_organisations(delta)
+    return self.user._get_organisations()
 
 
 # audit user MFA method create/update/delete
