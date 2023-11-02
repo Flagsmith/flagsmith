@@ -52,6 +52,7 @@ class AuditLog(LifecycleModel):
         blank=True,
         on_delete=models.SET_NULL,
     )
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
     master_api_key = models.ForeignKey(
         MasterAPIKey,
         related_name="audit_logs",

@@ -71,6 +71,7 @@ class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
 class BaseHistoricalModel(models.Model):
     include_in_audit = True
 
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
     master_api_key = models.ForeignKey(
         "api_keys.MasterAPIKey", blank=True, null=True, on_delete=models.DO_NOTHING
     )

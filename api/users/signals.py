@@ -1,5 +1,6 @@
 import warnings
 
+from core.helpers import get_ip_address_from_request
 from django.conf import settings
 from django.contrib.auth.signals import (
     user_logged_in,
@@ -62,20 +63,20 @@ def send_warning_email(sender, instance, created, **kwargs):
 
 
 @receiver(user_logged_in, sender=FFAdminUser)
-def signal_audit_log_user_logged_in(signal, sender, user, request):
-    # TODO #2797 later: get IP address from request
-    create_audit_log_user_logged_in.delay(args=(user.pk,))
+def signal_audit_log_user_logged_in(sender, request, user, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
+    create_audit_log_user_logged_in.delay(args=(user.pk, ip_address))
 
 
 @receiver(user_logged_out, sender=FFAdminUser)
-def signal_audit_log_user_logged_out(signal, sender, user, request):
-    # TODO #2797 later: get IP address from request
-    create_audit_log_user_logged_out.delay(args=(user.pk,))
+def signal_audit_log_user_logged_out(sender, request, user, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
+    create_audit_log_user_logged_out.delay(args=(user.pk, ip_address))
 
 
 @receiver(user_login_failed)
-def signal_audit_log_user_login_failed(signal, sender, credentials, request, **kwargs):
-    # TODO #2797 later: get IP address from request
+def signal_audit_log_user_login_failed(sender, credentials, request, **kwargs):
+    ip_address = None if request is None else get_ip_address_from_request(request)
     create_audit_log_user_login_failed.delay(
-        args=(credentials, kwargs.get("codes", None))
+        args=(credentials, ip_address, kwargs.get("codes", None))
     )
