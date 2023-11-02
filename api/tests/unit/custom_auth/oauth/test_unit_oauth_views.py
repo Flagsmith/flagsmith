@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 
-# TODO #2797 add audit log checks for login success and login failure
+# TODO #2797 add audit log checks for login success and login failure if not covered in serializer tests
 
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")

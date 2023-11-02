@@ -4,6 +4,8 @@ from pytest_django.fixtures import SettingsWrapper
 from custom_auth.serializers import CustomUserCreateSerializer
 from users.models import FFAdminUser, SignUpType
 
+# TODO #2797 add audit log checks for login success and login failure including MFA
+
 user_dict = {
     "email": "TestUser@mail.com",
     "password": "pass@word123",
