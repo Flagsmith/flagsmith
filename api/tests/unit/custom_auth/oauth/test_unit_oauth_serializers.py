@@ -17,6 +17,8 @@ from users.models import SignUpType
 
 UserModel = get_user_model()
 
+# TODO #2797 add audit log checks for login success and login failure
+
 
 @pytest.mark.django_db
 class OAuthLoginSerializerTestCase(TestCase):

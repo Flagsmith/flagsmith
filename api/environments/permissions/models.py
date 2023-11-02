@@ -4,6 +4,8 @@ from environments.models import Environment
 from environments.permissions.managers import EnvironmentPermissionManager
 from permissions.models import AbstractBasePermissionModel, PermissionModel
 
+# TODO #2797 add audit log tests for permission changes
+
 
 class EnvironmentPermissionModel(PermissionModel):
     class Meta:
