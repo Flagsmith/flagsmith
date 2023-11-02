@@ -179,9 +179,10 @@ def get_history_user(
     return None if getattr(user, "is_master_api_key_user", False) else user
 
 
-# remove this once django-simple-history > 3.4.0 is released
+# TODO remove (some of) this once django-simple-history > 3.4.0 is released
+# the rest should be contributed back to the project when possible
 class HistoricalRecords(BaseHistoricalRecords):
-    # patch https://github.com/jazzband/django-simple-history/pull/1218
+    # apply merged patch https://github.com/jazzband/django-simple-history/pull/1218
     def create_historical_record_m2ms(self, history_instance, instance):
         for field in history_instance._history_m2m_fields:
             m2m_history_model = self.m2m_models[field]
@@ -222,7 +223,7 @@ class HistoricalRecords(BaseHistoricalRecords):
                 field=field,
             )
 
-    # patch https://github.com/jazzband/django-simple-history/pull/1243
+    # apply merged patch https://github.com/jazzband/django-simple-history/pull/1243
     def get_m2m_fields_from_model(self, model):
         m2m_fields = set(self.m2m_fields)
         try:
@@ -236,6 +237,7 @@ class HistoricalRecords(BaseHistoricalRecords):
         return [getattr(model, field_name).field for field_name in field_names]
 
     # fix https://github.com/jazzband/django-simple-history/issues/1268
+    # TODO create issue and PR applying this change to the superclass
     def create_historical_record(self, instance, history_type, using=None):
         using = using if self.use_base_model_db else None
         history_date = getattr(instance, "_history_date", timezone.now())
@@ -286,6 +288,7 @@ class HistoricalRecords(BaseHistoricalRecords):
         )
 
     # fix: should check settings
+    # TODO create issue and PR adding these changes to the superclass
     def m2m_changed(self, instance, action, attr, pk_set, reverse, **_):
         # FIX IS HERE
         if not getattr(settings, "SIMPLE_HISTORY_ENABLED", True):
@@ -293,6 +296,7 @@ class HistoricalRecords(BaseHistoricalRecords):
         super().m2m_changed(instance, action, attr, pk_set, reverse)
 
     # fix: m2m fields not tracked when through model used directly
+    # TODO create issue and PR adding these changes to the superclass
     def finalize(self, sender, **kwargs):
         super().finalize(sender, **kwargs)
 
