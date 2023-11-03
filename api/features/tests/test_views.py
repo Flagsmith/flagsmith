@@ -787,6 +787,35 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
     )
 
 
+def test_create_segment_override_forbidden(feature, segment, environment, api_client):
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+    user = FFAdminUser.objects.create(email="jim@example.com")
+    api_client.force_authenticate(user)
+
+    # When
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 403
+    assert response.data == {
+        "detail": "You do not have permission to perform this action."
+    }
+
+
 def test_create_segment_override(admin_client, feature, segment, environment):
     # Given
     url = reverse(
