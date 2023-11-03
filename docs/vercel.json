@@ -263,6 +263,10 @@
         {
             "source": "/integrations/newrelic",
             "destination": "/integrations/apm/newrelic"
+        },
+        {
+            "source": "/system-administration/edge-proxy",
+            "destination": "/advanced-use/edge-proxy"
         }
     ]
 }
