@@ -45,7 +45,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-django = "~3.2.19"
+django = "~3.2.23"
 rudder-sdk-python = "~1.0.5"
 analytics-python = "~1.4.0"
 backoff = "~1.10.0"
@@ -127,6 +127,8 @@ pytest-django = "~4.5.2"
 black = "~23.7.0"
 pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
+datamodel-code-generator = "~0.22"
+requests-mock = "^1.11.0"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]

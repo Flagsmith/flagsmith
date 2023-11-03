@@ -18,6 +18,8 @@ CREATE_FEATURE = "CREATE_FEATURE"
 EDIT_FEATURE = "EDIT_FEATURE"
 MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
 
+TAG_SUPPORTED_PERMISSIONS = [DELETE_FEATURE]
+
 PROJECT_PERMISSIONS = [
     (VIEW_PROJECT, "View permission for the given project."),
     (CREATE_ENVIRONMENT, "Ability to create an environment in the given project."),

@@ -17,6 +17,7 @@ type TooltipProps = {
   plainText: boolean
   place?: string | undefined
   title: JSX.Element // This is actually the Tooltip parent component
+  noIcon?: boolean
 }
 
 const StyledTooltip = ({ children }: StyledTooltipProps) => (
@@ -28,10 +29,17 @@ const StyledTooltip = ({ children }: StyledTooltipProps) => (
   </div>
 )
 
-const tooltipStyler = (plainText: boolean, children: string): string => {
-  const html = renderToStaticMarkup(
-    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>,
+const tooltipStyler = (
+  plainText: boolean,
+  children: string,
+  noIcon?: boolean,
+): string => {
+  const tooltip = noIcon ? (
+    <span>{plainText ? children : '{{html}}'}</span>
+  ) : (
+    <StyledTooltip>{plainText ? children : '{{html}}'}</StyledTooltip>
   )
+  const html = renderToStaticMarkup(tooltip)
   if (plainText) {
     return html
   }
@@ -40,6 +48,7 @@ const tooltipStyler = (plainText: boolean, children: string): string => {
 
 const Tooltip = ({
   children,
+  noIcon,
   place,
   plainText,
   title,
@@ -55,15 +64,18 @@ const Tooltip = ({
       ) : (
         <span className='ion ion-ios-help' data-for={id} data-tip />
       )}
-      <ReactTooltip
-        html
-        id={id}
-        place={place || 'top'}
-        type='dark'
-        effect='solid'
-      >
-        {tooltipStyler(plainText, children)}
-      </ReactTooltip>
+      {!!children && (
+          <ReactTooltip
+              html
+              id={id}
+              place={place || 'top'}
+              type='dark'
+              effect='solid'
+          >
+            {tooltipStyler(plainText, children, noIcon)}
+          </ReactTooltip>
+      )}
+
     </span>
   )
 }
