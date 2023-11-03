@@ -6,7 +6,14 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
 from environments.models import Environment
+from environments.permissions.constants import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+)
+from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
+from projects.models import UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 
 
@@ -138,6 +145,55 @@ def test_create_feature_segment_without_permission_returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_create_feature_segment_staff_with_permission(
+    segment, feature, environment, staff_client, staff_user
+):
+    # Given
+    data = {
+        "feature": feature.id,
+        "segment": segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_feature_segment_staff_wrong_permission(
+    segment, feature, environment, staff_client, staff_user
+):
+    # Given
+    data = {
+        "feature": feature.id,
+        "segment": segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    # Former permission; no longer authorizes.
+    user_environment_permission.permissions.add(UPDATE_FEATURE_STATE)
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -195,6 +251,35 @@ def test_update_priority_of_multiple_feature_segments(
     json_response = response.json()
     assert json_response[0]["id"] == feature_segment.id
     assert json_response[1]["id"] == another_feature_segment.id
+
+
+def test_update_priority_for_staff(
+    feature_segment,
+    project,
+    environment,
+    feature,
+    staff_client,
+    staff_user,
+):
+    # Given
+    url = reverse("api-v1:features:feature-segment-update-priorities")
+
+    data = [
+        {"id": feature_segment.id, "priority": 1},
+    ]
+
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_update_priority_returns_403_if_user_does_not_have_permission(
@@ -258,6 +343,32 @@ def test_get_feature_segment_by_uuid(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
+def test_get_feature_segment_by_uuid_for_staff(
+    feature_segment, project, staff_client, staff_user, environment, feature
+):
+    # Given
+    url = reverse(
+        "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
+    )
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(UPDATE_FEATURE_STATE)
+    user_project_permission = UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    )
+    user_project_permission.add_permission(VIEW_PROJECT)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    json_response = response.json()
+    assert json_response["id"] == feature_segment.id
+    assert json_response["uuid"] == str(feature_segment.uuid)
+
+
 def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
     feature_segment, project, test_user_client, environment, feature
 ):
@@ -285,6 +396,30 @@ def test_get_feature_segment_by_id(
 
     # When
     response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    json_response = response.json()
+    assert json_response["id"] == feature_segment.id
+    assert json_response["uuid"] == str(feature_segment.uuid)
+
+
+def test_get_feature_segment_by_id_for_staff(
+    feature_segment, project, staff_client, staff_user, environment, feature
+):
+    # Given
+    url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+    user_project_permission = UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    )
+    user_project_permission.add_permission(VIEW_PROJECT)
+
+    # When
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
