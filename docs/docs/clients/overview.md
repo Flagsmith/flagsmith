@@ -107,8 +107,6 @@ the Flagsmith every `60` seconds; this rate is configurable within each SDK.
 
 It's important to understand the [pros and cons](#pros-cons-and-caveats) for running `Local Evaluation`.
 
-### Client Side SDKs
-
 All our Client Side SDKs run in `Remote Evaluation` mode only; they cannot run in `Local Evaluation mode`. The reason
 for this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
 only allow Client Side SDKs to run in `Remote Evaluation` mode.
@@ -119,6 +117,53 @@ Because Clients are almost always operating remotely from your server infrastruc
 running in `Local Evaluation` mode.
 
 :::
+
+## Networking Model
+
+When are network requests made, and when do you need to consider network latency? It depends on your evaluation mode!
+
+### Remote Evaluation mode
+
+- Flagsmith SDKs will store all the Flags for an Environment in local memory. Flag evaluations within the SDK are then a
+  simple lookup in memory with no associated network call.
+- If the context of an Identity changes, for example if a new Trait is added to the Identity, the SDK will make a new
+  call to the Flagsmith API to update the Traits of the Identity and receive new Flags, as the value of those flags may
+  have changed. This happens in one network call.
+- If an entirely new Identity is provided, the SDK will make a new call to the Flagsmith API to receive new Flags.
+- Other than the above two points, the SDK will not make further network requests to the Flagsmith API. If you wish you
+  can manually trigger a network call in code and refresh Flags locally.
+
+### Local Evaluation mode
+
+- When the SDK is initialised, it will make a network request to the Flagsmith API to receive all the Environment data
+  it needs to run Local Evaluations. The SDK receives a single JSON document with all this data.
+- Future evaluations are all computed locally within the SDK runtime. This means they are extremely fast as there is no
+  network latency to account for.
+- No further network calls take place for 60 seconds.
+- After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
+  API.
+
+### Client Side SDK approaches
+
+Since Client Side SDKs will generally be associated with a single Identity (the person who owns the client device!), a
+common pattern for networking implementation is:
+
+1. The user launches your application for the first time. Since your application does not know how they are, a call to
+   get the default Environment Flags is made by the Flagsmith SDK.
+2. After the user logs in, make a second request to get the Flags with the new user Identity.
+3. Cache these flags locally on the device.
+4. Upon subsequent application launches, immediately read the flags from the cached store from step 3 and use those as
+   your application Flag values.
+5. In the background make a request to Flagsmith to refresh their Flags.
+6. Update both your application and the local cache with these fresh flags.
+
+### Things to note
+
+- Flagsmith always returns **all** Environment Flags during API calls. In fact, there is no way to request the state of
+  a single flag via our API.
+- The 60 second polling time in Local Evaluation mode is configurable.
+- You can provide your own caching layer (with a short TTL) in front of Local Evaluation mode requests if you wish -
+  this is not uncommon.
 
 ## Pros, Cons and Caveats
 
