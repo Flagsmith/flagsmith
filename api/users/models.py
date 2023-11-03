@@ -124,14 +124,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
 
-    @hook(AFTER_CREATE)
-    def add_to_default_ldap_org(self):
-        if settings.LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID:
-            org = Organisation.objects.get(
-                id=settings.LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID
-            )
-            self.add_organisation(org)
-
     def delete_orphan_organisations(self):
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
