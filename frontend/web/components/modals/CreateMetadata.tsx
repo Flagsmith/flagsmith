@@ -56,13 +56,17 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [updateMetadataField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
       setDescription(data.description)
       setTypeValue(metadataTypes.find((m) => m.value === data.type))
       setMetadataFieldsArray(metadataModelFieldList.map((m) => m.content_type))
+      setRequiredMetadataModelFields(
+        metadataModelFieldList
+          .filter((m) => m.is_required_for.length > 0)
+          .map((m) => m.content_type),
+      )
       setFlagsEnabled(
         !!metadataModelFieldList.find(
           (i) => i.content_type == Constants.contentTypes.flag,
@@ -76,6 +80,27 @@ const CreateMetadata: FC<CreateMetadataType> = ({
       setEnvironmentEnabled(
         !!metadataModelFieldList.find(
           (i) => i.content_type == Constants.contentTypes.environment,
+        ),
+      )
+      setFlagRequired(
+        !!metadataModelFieldList.find(
+          (i) =>
+            i.content_type == Constants.contentTypes.flag &&
+            i?.is_required_for.length > 0,
+        ),
+      )
+      setSegmentRequired(
+        !!metadataModelFieldList.find(
+          (i) =>
+            i.content_type == Constants.contentTypes.segment &&
+            i?.is_required_for.length > 0,
+        ),
+      )
+      setEnvironmentRequired(
+        !!metadataModelFieldList.find(
+          (i) =>
+            i.content_type == Constants.contentTypes.environment &&
+            i?.is_required_for.length > 0,
         ),
       )
     }
@@ -99,9 +124,9 @@ const CreateMetadata: FC<CreateMetadataType> = ({
   const [environmentEnabled, setEnvironmentEnabled] = useState<boolean>(false)
   const [segmentEnabled, setSegmentsEnabled] = useState<boolean>(false)
   const [flagEnabled, setFlagsEnabled] = useState<boolean>(false)
-  const [environmentRequired, setEnvironmentRequired] = useState<boolea>(false)
+  const [environmentRequired, setEnvironmentRequired] = useState<boolean>(false)
   const [segmentRequired, setSegmentRequired] = useState<boolean>(false)
-  const [flagRequired, setFlagRequired] = useState<booleaan>(false)
+  const [flagRequired, setFlagRequired] = useState<boolean>(false)
   const [metadataFieldsArray, setMetadataFieldsArray] = useState<array>([])
   const [requiredMetadataModelFields, setRequiredMetadataModelFields] =
     useState<array>([])

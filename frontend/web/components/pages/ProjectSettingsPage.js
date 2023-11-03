@@ -662,12 +662,49 @@ const ProjectSettingsPage = class extends Component {
                                           Constants.contentTypes.environment,
                                       ) ? (
                                         <>
-                                          <Icon
-                                            name='checkmark-circle'
-                                            width={20}
-                                            fill='#20c997'
-                                          />
-                                          {'Enabled'}
+                                          {metadata.content_type_fields.some(
+                                            (field) =>
+                                              field.content_type ===
+                                              Constants.contentTypes
+                                                .environment,
+                                          ) ? (
+                                            <>
+                                              {metadata.content_type_fields.some(
+                                                (field) =>
+                                                  field.content_type ===
+                                                    Constants.contentTypes
+                                                      .environment &&
+                                                  field.is_required_for &&
+                                                  field.is_required_for.length >
+                                                    0,
+                                              ) ? (
+                                                <>
+                                                  <Icon
+                                                    name='required'
+                                                    width={20}
+                                                  />
+                                                  {'Required'}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Icon
+                                                    name='checkmark-circle'
+                                                    width={20}
+                                                    fill='#20c997'
+                                                  />
+                                                  {'Enabled'}
+                                                </>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
                                         </>
                                       ) : (
                                         <>
@@ -678,10 +715,6 @@ const ProjectSettingsPage = class extends Component {
                                           {'Disabled'}
                                         </>
                                       )}
-                                      <span className='checkbox mr-2'>
-                                        <Icon name='required' width={20} />
-                                        {'Required'}
-                                      </span>
                                     </div>
                                   </div>
                                   <div
@@ -710,12 +743,48 @@ const ProjectSettingsPage = class extends Component {
                                           Constants.contentTypes.segment,
                                       ) ? (
                                         <>
-                                          <Icon
-                                            name='checkmark-circle'
-                                            width={20}
-                                            fill='#20c997'
-                                          />
-                                          {'Enabled'}
+                                          {metadata.content_type_fields.some(
+                                            (field) =>
+                                              field.content_type ===
+                                              Constants.contentTypes.segment,
+                                          ) ? (
+                                            <>
+                                              {metadata.content_type_fields.some(
+                                                (field) =>
+                                                  field.content_type ===
+                                                    Constants.contentTypes
+                                                      .segment &&
+                                                  field.is_required_for &&
+                                                  field.is_required_for.length >
+                                                    0,
+                                              ) ? (
+                                                <>
+                                                  <Icon
+                                                    name='required'
+                                                    width={20}
+                                                  />
+                                                  {'Required'}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Icon
+                                                    name='checkmark-circle'
+                                                    width={20}
+                                                    fill='#20c997'
+                                                  />
+                                                  {'Enabled'}
+                                                </>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
                                         </>
                                       ) : (
                                         <>
@@ -726,10 +795,6 @@ const ProjectSettingsPage = class extends Component {
                                           {'Disabled'}
                                         </>
                                       )}
-                                      <span className='checkbox mr-2'>
-                                        <Icon name='required' width={20} />
-                                        {'Required'}
-                                      </span>
                                     </div>
                                   </div>
                                   <div
@@ -758,12 +823,48 @@ const ProjectSettingsPage = class extends Component {
                                           Constants.contentTypes.flag,
                                       ) ? (
                                         <>
-                                          <Icon
-                                            name='checkmark-circle'
-                                            width={20}
-                                            fill='#20c997'
-                                          />
-                                          {'Enabled'}
+                                          {metadata.content_type_fields.some(
+                                            (field) =>
+                                              field.content_type ===
+                                              Constants.contentTypes.flag,
+                                          ) ? (
+                                            <>
+                                              {metadata.content_type_fields.some(
+                                                (field) =>
+                                                  field.content_type ===
+                                                    Constants.contentTypes
+                                                      .flag &&
+                                                  field.is_required_for &&
+                                                  field.is_required_for.length >
+                                                    0,
+                                              ) ? (
+                                                <>
+                                                  <Icon
+                                                    name='required'
+                                                    width={20}
+                                                  />
+                                                  {'Required'}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Icon
+                                                    name='checkmark-circle'
+                                                    width={20}
+                                                    fill='#20c997'
+                                                  />
+                                                  {'Enabled'}
+                                                </>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Icon
+                                                name='close-circle'
+                                                width={20}
+                                              />
+                                              {'Disabled'}
+                                            </>
+                                          )}
                                         </>
                                       ) : (
                                         <>
@@ -774,10 +875,6 @@ const ProjectSettingsPage = class extends Component {
                                           {'Disabled'}
                                         </>
                                       )}
-                                      <span className='checkbox mr-2'>
-                                        <Icon name='required' width={20} />
-                                        {'Required'}
-                                      </span>
                                     </div>
                                   </div>
                                   <div className='table-column'>
