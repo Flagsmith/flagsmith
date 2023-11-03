@@ -23,6 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
+    BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
 )
@@ -675,24 +676,27 @@ class FeatureState(
         return getattr(self, "feature_state_value", None)
 
     @hook(BEFORE_CREATE)
-    def check_for_existing_feature_state(self):
-        # prevent duplicate feature states being created for an environment
+    @hook(BEFORE_SAVE, when="deleted", is_not=True)
+    def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
-
-        q = Q(
+        filter_ = Q(
             environment=self.environment,
             feature=self.feature,
             feature_segment=self.feature_segment,
             identity=self.identity,
         )
+        if self.id:
+            filter_ &= ~Q(id=self.id)
 
         if self.environment.use_v2_feature_versioning:
-            q = q & Q(environment_feature_version=self.environment_feature_version)
+            filter_ = filter_ & Q(
+                environment_feature_version=self.environment_feature_version
+            )
         else:
-            q = q & Q(version=self.version)
+            filter_ = filter_ & Q(version=self.version)
 
-        if FeatureState.objects.filter(q).exists():
+        if FeatureState.objects.filter(filter_).exists():
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"

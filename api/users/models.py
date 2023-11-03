@@ -243,28 +243,37 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 % (self.id, getattr(organisation, "id", organisation))
             )
 
-    def get_permitted_projects(self, permission_key: str) -> QuerySet[Project]:
-        return get_permitted_projects_for_user(self, permission_key)
+    def get_permitted_projects(
+        self, permission_key: str, tag_ids: typing.List[int] = None
+    ) -> QuerySet[Project]:
+        return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
-    def has_project_permission(self, permission: str, project: Project) -> bool:
+    def has_project_permission(
+        self, permission: str, project: Project, tag_ids: typing.List[int] = None
+    ) -> bool:
         if self.is_project_admin(project):
             return True
-        return project in self.get_permitted_projects(permission)
+        return project in self.get_permitted_projects(permission, tag_ids=tag_ids)
 
     def has_environment_permission(
-        self, permission: str, environment: "Environment"
+        self,
+        permission: str,
+        environment: "Environment",
+        tag_ids: typing.List[int] = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
-            permission, environment.project
+            permission, environment.project, tag_ids=tag_ids
         )
 
     def is_project_admin(self, project: Project) -> bool:
         return is_user_project_admin(self, project)
 
     def get_permitted_environments(
-        self, permission_key: str, project: Project
+        self, permission_key: str, project: Project, tag_ids: typing.List[int] = None
     ) -> QuerySet["Environment"]:
-        return get_permitted_environments_for_user(self, project, permission_key)
+        return get_permitted_environments_for_user(
+            self, project, permission_key, tag_ids
+        )
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
