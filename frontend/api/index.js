@@ -394,7 +394,7 @@ app.post('/api/webflow/webhook', (req, res) => {
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
                   //todo: Tidy up above with async calls and call destinations in parallel
-                  if (process.env.RELAY_TOKEN && postToSlack) {
+                  if (process.env.DATA_RELAY_API_KEY && postToSlack) {
                     try {
                       await dataRelay
                           .sendEvent(
