@@ -7,6 +7,7 @@ const pipedrive = require('pipedrive')
 const spm = require('./middleware/single-page-middleware')
 const path = require('path')
 const app = express()
+const dataRelay = require('data-relay/node')
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
@@ -388,11 +389,22 @@ app.post('/api/webflow/webhook', (req, res) => {
 
               console.log('Adding Note.')
               pipedriveNotesApi.addNote(newNote).then(
-                (noteData) => {
+                async (noteData) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
-
+                  //todo: Tidy up above with async calls and call destinations in parallel
+                  if (process.env.RELAY_TOKEN && postToSlack) {
+                    try {
+                      await dataRelay
+                          .sendEvent(
+                              req.body.data,
+                              { apiKey: process.env.DATA_RELAY_API_KEY },
+                          )
+                    } catch (e) {
+                        console.log('Error sending Contact us form sent to Relay:\r\n', e, formMessage)
+                    }
+                  }
                   return res.status(200).json({})
                 },
                 (error) => {
