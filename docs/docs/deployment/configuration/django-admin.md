@@ -22,7 +22,7 @@ credentials of any of your super users.
 
 :::info If the login page is only showing the option to 'Log in using SSO' then you may need to set the
 `ENABLE_ADMIN_ACCESS_USER_PASS` environment variable. See
-[this list](http://localhost:3000/deployment/hosting/locally-api#application-environment-variables) for more
+[this list](/deployment/hosting/locally-api#application-environment-variables) for more
 information. :::
 
 ## Admin Pages
