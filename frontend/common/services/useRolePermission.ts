@@ -179,6 +179,35 @@ export async function createRolePermissions(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
+export async function getRolesProjectPermissions(
+  store: any,
+  data: Req['getRolesPermission'],
+  options?: Parameters<
+    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
+  >[1],
+) {
+  return store.dispatch(
+    rolePermissionService.endpoints.getRolesProjectPermissions.initiate(
+      data,
+      options,
+    ),
+  )
+}
+
+export async function getRolesEnvironmentPermissions(
+  store: any,
+  data: Req['getRolesEnvironment'],
+  options?: Parameters<
+    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
+  >[1],
+) {
+  return store.dispatch(
+    rolePermissionService.endpoints.getRolesEnvironmentPermissions.initiate(
+      data,
+      options,
+    ),
+  )
+}
 
 // END OF FUNCTION_EXPORTS
 
