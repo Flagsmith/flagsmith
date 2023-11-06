@@ -35,8 +35,8 @@ from users.serializers import (
     ListUsersQuerySerializer,
     UserIdsSerializer,
     UserListSerializer,
-    UserPermissionGroupNameSerializer,
     UserPermissionGroupSerializerDetail,
+    UserPermissionGroupSummarySerializer,
 )
 
 from .forms import InitConfigForm
@@ -179,7 +179,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
         elif self.action == "my_groups":
-            return UserPermissionGroupNameSerializer
+            return UserPermissionGroupSummarySerializer
         return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
