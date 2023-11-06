@@ -174,7 +174,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if not UserPermissionGroup.objects.filter(
             id__in=serializer.validated_data["group_ids"],
             organisation_id=feature.project.organisation_id,
-        ).count() == len(data["group_ids"]):
+        ).count() == len(serializer.validated_data["group_ids"]):
             raise serializers.ValidationError("Some groups not found")
 
         serializer.add_group_owners(feature)
