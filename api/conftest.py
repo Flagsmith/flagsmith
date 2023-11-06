@@ -174,7 +174,7 @@ def segment_rule(segment):
 
 
 @pytest.fixture()
-def environment(project, staff_user):
+def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
 
 
