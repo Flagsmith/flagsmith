@@ -245,8 +245,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         return self.list(request, organisation_pk)
 
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def make_user_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
 ):
@@ -260,8 +260,8 @@ def make_user_group_admin(
     return Response()
 
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def remove_user_as_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
 ):

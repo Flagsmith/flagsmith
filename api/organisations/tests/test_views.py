@@ -1157,6 +1157,25 @@ def test_make_user_group_admin_success(
     )
 
 
+def test_make_user_group_admin_forbidden(
+    test_user_client, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = test_user_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_remove_user_as_group_admin_user_does_not_belong_to_group(
     admin_client, admin_user, organisation, user_permission_group
 ):
@@ -1200,6 +1219,25 @@ def test_remove_user_as_group_admin_success(
         ).group_admin
         is False
     )
+
+
+def test_remove_user_as_group_admin_forbidden(
+    test_user_client, organisation, user_permission_group
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    another_user.make_group_admin(user_permission_group.id)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = test_user_client.post(url)
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_list_user_groups_as_group_admin(organisation, api_client):
