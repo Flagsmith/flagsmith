@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -35,6 +35,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from users.models import UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -166,7 +167,13 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def add_group_owners(self, request, *args, **kwargs):
         feature = self.get_object()
         data = request.data
-        data["organisation_id"] = feature.project.organisation.pk
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
         serializer = FeatureGroupOwnerInputSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
@@ -181,11 +188,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="remove-group-owners")
     def remove_group_owners(self, request, *args, **kwargs):
         feature = self.get_object()
-        data = request.data
-        data["organisation_id"] = feature.project.organisation.pk
-        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        feature = self.get_object()
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
         return response
