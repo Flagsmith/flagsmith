@@ -60,6 +60,7 @@
     "cors": "^2.8.3",
     "cross-env": "5.2.0",
     "css-loader": "4.3.0",
+    "data-relay": "^0.0.10",
     "dompurify": "^3.0.5",
     "dotenv": "6.2.0",
     "express": "4.17.3",
