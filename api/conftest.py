@@ -77,9 +77,29 @@ def test_user_client(api_client, test_user):
 
 
 @pytest.fixture()
-def organisation(db, admin_user):
+def staff_user(django_user_model):
+    """
+    A non-admin user fixture.
+    To add to an environment with permissions use:
+    uep = UserEnvironmentPermission.objects.create ...
+    uep.permissions.add ...
+    This fixture is attached to the organisation fixture.
+    """
+    return django_user_model.objects.create(email="staff@example.com")
+
+
+@pytest.fixture()
+def staff_client(staff_user):
+    client = APIClient()
+    client.force_authenticate(user=staff_user)
+    return client
+
+
+@pytest.fixture()
+def organisation(db, admin_user, staff_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+    staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org
 
 
