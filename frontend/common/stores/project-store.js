@@ -1,6 +1,7 @@
 import { getIsWidget } from 'components/pages/WidgetPage'
 
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -92,6 +93,12 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
+          project.max_segments_allowed = project.max_segments_allowed
+          project.max_features_allowed = project.max_features_allowed
+          project.max_segment_overrides_allowed =
+            project.max_segment_overrides_allowed
+          project.total_features = project.total_features || 0
+          project.total_segments = project.total_segments || 0
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
@@ -118,6 +125,12 @@ const controller = {
         data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
       ])
         .then(([project, environments]) => {
+          project.max_segments_allowed = project.max_segments_allowed
+          project.max_features_allowed = project.max_features_allowed
+          project.max_segment_overrides_allowed =
+            project.max_segment_overrides_allowed
+          project.total_features = project.total_features || 0
+          project.total_segments = project.total_segments || 0
           store.model = Object.assign(project, {
             environments: _.sortBy(environments.results, 'name'),
           })
@@ -162,6 +175,24 @@ const store = Object.assign({}, BaseStore, {
     })
   },
   getEnvs: () => store.model && store.model.environments,
+  getMaxFeaturesAllowed: () => {
+    return store.model && store.model.max_features_allowed
+  },
+  getMaxSegmentOverridesAllowed: () => {
+    return store.model && store.model.max_segment_overrides_allowed
+  },
+  getMaxSegmentsAllowed: () => {
+    return store.model && store.model.max_segments_allowed
+  },
+  getTotalFeatures: () => {
+    return store.model && store.model.total_features
+  },
+  getTotalSegmentOverrides: () => {
+    return store.model && store.model.environment.total_segment_overrides
+  },
+  getTotalSegments: () => {
+    return store.model && store.model.total_segments
+  },
   id: 'project',
   model: null,
 })

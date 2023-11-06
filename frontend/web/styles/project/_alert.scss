@@ -39,6 +39,11 @@
   border-color: $alert-danger-border-color;
 }
 
+.alert-warning {
+  background-color: $alert-warning-bg;
+  border-color: $alert-warning-border-color;
+}
+
 .alert-info {
   background-color: $alert-info-bg;
   border-color: $alert-info-border-color;
@@ -79,8 +84,10 @@
 .dark {
   .alert {
     color: $alert-color-dark;
+    background-color: $success-solid-dark-alert;
   }
   .alert-info {
+    background-color: $info-solid-dark-alert;
     .title {
       color: $text-icon-light;
     }
@@ -90,6 +97,12 @@
     strong {
       color: $text-icon-light;
     }
+  }
+  .alert-warning {
+    background-color: $warning-solid-dark-alert;
+  }
+  .alert-danger{
+    background-color: $danger-solid-dark-alert
   }
   .announcement {
     .close-btn {
