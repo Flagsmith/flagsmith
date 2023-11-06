@@ -3,7 +3,6 @@ import json
 import typing
 from typing import Type, Union
 
-import backoff
 import requests
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
@@ -11,11 +10,13 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
+from django.utils import timezone
 
 from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
 from projects.models import Organisation
 from task_processor.decorators import register_task_handler
+from task_processor.task_run_method import TaskRunMethod
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,
@@ -58,8 +59,17 @@ def get_webhook_model(
 
 @register_task_handler()
 def call_environment_webhooks(
-    environment_id: int, data: typing.Mapping, event_type: str
+    environment_id: int, data: typing.Mapping, event_type: str, retries: int = 3
 ):
+    """
+    Call environment webhooks.
+
+    :param environment_id: The ID of the environment for which webhooks will be triggered.
+    :param data: A mapping containing the data to be sent in the webhook request.
+    :param event_type: The type of event to trigger the webhook.
+    :param retries: The number of times to retry the webhook in case of failure (int, default is 3).
+    """
+
     if settings.DISABLE_WEBHOOKS:
         return
     try:
@@ -71,13 +81,23 @@ def call_environment_webhooks(
         data,
         event_type,
         WebhookType.ENVIRONMENT,
+        retries,
     )
 
 
 @register_task_handler()
 def call_organisation_webhooks(
-    organisation_id: int, data: typing.Mapping, event_type: str
+    organisation_id: int, data: typing.Mapping, event_type: str, retries: int = 3
 ):
+    """
+    Call organisation webhooks.
+
+    :param organisationt_id: The ID of the organisationt for which webhooks will be triggered.
+    :param data: A mapping containing the data to be sent in the webhook request.
+    :param event_type: The type of event to trigger the webhook.
+    :param retries: The number of times to retry the webhook in case of failure (int, default is 3).
+    """
+
     if settings.DISABLE_WEBHOOKS:
         return
     try:
@@ -89,32 +109,28 @@ def call_organisation_webhooks(
         data,
         event_type,
         WebhookType.ORGANISATION,
+        retries,
     )
 
 
 def call_integration_webhook(config, data):
-    return _call_webhook(config, data)
+    return _call_webhook(config.id, data)
 
 
 def trigger_sample_webhook(
-    webhook: typing.Type[AbstractBaseExportableWebhookModel], webhook_type: WebhookType
+    webhook: AbstractBaseExportableWebhookModel, webhook_type: WebhookType
 ) -> requests.models.Response:
     data = WEBHOOK_SAMPLE_DATA.get(webhook_type)
     serializer = WebhookSerializer(data=data)
     serializer.is_valid(raise_exception=True)
-
+    """
+    :raises requests.exceptions.RequestException: If an error occurs while making the request to the webhook.
+    """
     return _call_webhook(webhook, serializer.data)
 
 
-@backoff.on_exception(
-    backoff.expo,
-    requests.exceptions.RequestException,
-    max_tries=3,
-    jitter=backoff.full_jitter,
-    max_time=2,
-)
 def _call_webhook(
-    webhook: typing.Type[AbstractBaseExportableWebhookModel],
+    webhook: AbstractBaseExportableWebhookModel,
     data: typing.Mapping,
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
@@ -122,32 +138,79 @@ def _call_webhook(
     if webhook.secret:
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
-
     return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
 
 
 @register_task_handler()
-def call_webhook_email_on_error(
-    webhook_id: int, data: typing.Mapping, webhook_type: str
+def call_webhook_with_failure_mail_after_retires(
+    webhook_id: int,
+    data: typing.Mapping,
+    webhook_type: str,
+    send_failure_mail: bool = False,
+    max_retries: int = 3,
+    try_count: int = 1,
 ):
+    """
+    Call a webhook with support for sending failure emails after retries.
+
+    :param webhook_id: The ID of the webhook to be called.
+    :param data: A mapping containing the data to be sent in the webhook request.
+    :param webhook_type: The type of the webhook to be triggered.
+    :param send_failure_mail: Whether to send a failure notification email (bool, default is False).
+    :param max_retries: The maximum number of retries to attempt (int, default is 3).
+    :param try_count: Stores the current retry attempt count in scheduled tasks,
+                        not needed to be specified (int, default is 1).
+    """
+
+    if try_count > max_retries:
+        return
+
     if webhook_type == WebhookType.ORGANISATION.value:
         webhook = OrganisationWebhook.objects.get(id=webhook_id)
     else:
         webhook = Webhook.objects.get(id=webhook_id)
 
+    headers = {"content-type": "application/json"}
+    json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
+    if webhook.secret:
+        signature = sign_payload(json_data, key=webhook.secret)
+        headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
+
     try:
-        res = _call_webhook(webhook, data)
-    except requests.exceptions.RequestException as exc:
-        send_failure_email(
-            webhook,
-            data,
-            webhook_type,
-            f"N/A ({exc.__class__.__name__})",
+        res = requests.post(
+            str(webhook.url), data=json_data, headers=headers, timeout=10
         )
+    except requests.exceptions.RequestException as exc:
+        if try_count == max_retries:
+            if send_failure_mail:
+                send_failure_email(
+                    webhook,
+                    data,
+                    webhook_type,
+                    f"N/A ({exc.__class__.__name__})",
+                )
+        else:
+            call_webhook_with_failure_mail_after_retires.delay(
+                delay_until=(
+                    timezone.now() + timezone.timedelta(seconds=2**try_count)
+                    if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
+                    else None
+                ),
+                args=(
+                    webhook_id,
+                    data,
+                    webhook_type,
+                    send_failure_mail,
+                    max_retries,
+                    try_count + 1,
+                ),
+            )
         return
 
-    if res.status_code != 200:
+    if send_failure_mail and res.status_code != 200:
         send_failure_email(webhook, data, webhook_type, res.status_code)
+
+    return res
 
 
 def _call_webhooks(
@@ -155,13 +218,14 @@ def _call_webhooks(
     data: typing.Mapping,
     event_type: str,
     webhook_type: WebhookType,
+    retries: int = 3,
 ):
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
-        call_webhook_email_on_error.delay(
-            args=(webhook.id, serializer.data, webhook_type.value)
+        call_webhook_with_failure_mail_after_retires.delay(
+            args=(webhook.id, serializer.data, webhook_type.value, True, retries)
         )
 
 

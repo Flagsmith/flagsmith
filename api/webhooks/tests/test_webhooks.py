@@ -155,6 +155,7 @@ class WebhooksTestCase(TestCase):
 
 
 @pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
+@pytest.mark.django_db
 def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     mocker: MockerFixture,
     expected_error: Type[Exception],
@@ -194,6 +195,8 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
     # Then
+    # Default is to retry 3 times for each webhook
+    assert requests_post_mock.call_count == 2 * 3
     assert send_failure_email_mock.call_count == 2
     send_failure_email_mock.assert_has_calls(
         [
