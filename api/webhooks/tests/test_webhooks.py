@@ -20,6 +20,7 @@ from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
     call_environment_webhooks,
+    call_organisation_webhooks,
     trigger_sample_webhook,
 )
 
@@ -210,6 +211,63 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
                 webhook_1,
                 expected_send_failure_email_data,
                 WebhookType.ENVIRONMENT.value,
+                expected_send_failure_status_code,
+            ),
+        ],
+        any_order=True,
+    )
+
+
+@pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
+@pytest.mark.django_db
+def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
+    mocker: MockerFixture, expected_error: Type[Exception], organisation: Organisation
+) -> None:
+    # Given
+    requests_post_mock = mocker.patch("webhooks.webhooks.requests.post")
+    requests_post_mock.side_effect = expected_error()
+    send_failure_email_mock: mock.Mock = mocker.patch(
+        "webhooks.webhooks.send_failure_email"
+    )
+
+    webhook_1 = OrganisationWebhook.objects.create(
+        url="http://url.1.com", enabled=True, organisation=organisation
+    )
+    webhook_2 = OrganisationWebhook.objects.create(
+        url="http://url.2.com", enabled=True, organisation=organisation
+    )
+
+    expected_data = {}
+    expected_event_type = WebhookEventType.FLAG_UPDATED.value
+    expected_send_failure_email_data = {
+        "event_type": expected_event_type,
+        "data": expected_data,
+    }
+    expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
+
+    # When
+    call_organisation_webhooks(
+        organisation_id=organisation.id,
+        data=expected_data,
+        event_type=expected_event_type,
+    )
+
+    # Then
+    # Default is to retry 3 times for each webhook
+    assert requests_post_mock.call_count == 2 * 3
+    assert send_failure_email_mock.call_count == 2
+    send_failure_email_mock.assert_has_calls(
+        [
+            mocker.call(
+                webhook_2,
+                expected_send_failure_email_data,
+                WebhookType.ORGANISATION.value,
+                expected_send_failure_status_code,
+            ),
+            mocker.call(
+                webhook_1,
+                expected_send_failure_email_data,
+                WebhookType.ORGANISATION.value,
                 expected_send_failure_status_code,
             ),
         ],
