@@ -168,14 +168,14 @@ class FeatureViewSet(viewsets.ModelViewSet):
         feature = self.get_object()
         data = request.data
 
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
         if not UserPermissionGroup.objects.filter(
-            id__in=data["group_ids"],
+            id__in=serializer.validated_data["group_ids"],
             organisation_id=feature.project.organisation_id,
         ).count() == len(data["group_ids"]):
             raise serializers.ValidationError("Some groups not found")
-
-        serializer = FeatureGroupOwnerInputSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
 
         serializer.add_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
