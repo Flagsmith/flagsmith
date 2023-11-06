@@ -80,9 +80,9 @@ def test_user_client(api_client, test_user):
 def staff_user(django_user_model):
     """
     A non-admin user fixture.
-    To add to an environment with permissions use:
-    uep = UserEnvironmentPermission.objects.create ...
-    uep.permissions.add ...
+    To add to an environment with permissions use the fixture
+    with_environment_permissions.
+
     This fixture is attached to the organisation fixture.
     """
     return django_user_model.objects.create(email="staff@example.com")
@@ -180,6 +180,11 @@ def environment(project):
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
 ) -> typing.Callable:
+    """
+    Add environment permissions to the staff_user fixture.
+    Defaults to associating to the environment fixture.
+    """
+
     def _with_environment_permissions(
         permission_keys: list[str], environment_id: typing.Optional[int] = None
     ) -> UserEnvironmentPermission:
