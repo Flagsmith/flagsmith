@@ -1158,7 +1158,9 @@ def test_make_user_group_admin_success(
 
 
 def test_make_user_group_admin_forbidden(
-    staff_client, organisation, user_permission_group
+    staff_client: FFAdminUser,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
 ):
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
@@ -1222,7 +1224,9 @@ def test_remove_user_as_group_admin_success(
 
 
 def test_remove_user_as_group_admin_forbidden(
-    staff_client, organisation, user_permission_group
+    staff_client: FFAdminUser,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
 ):
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")

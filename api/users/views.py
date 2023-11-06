@@ -249,7 +249,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def make_user_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,
@@ -264,7 +264,7 @@ def make_user_group_admin(
 @permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def remove_user_as_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,
