@@ -141,7 +141,7 @@ and whether you are using Client-side or Server-side SDKs!
 
 #### Server-side
 
-- Flagsmith SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a network request.
+- Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a network request.
 
 If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
 consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
