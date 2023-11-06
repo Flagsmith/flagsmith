@@ -177,6 +177,24 @@ def environment(project):
 
 
 @pytest.fixture()
+def with_environment_permissions(
+    environment: Environment, staff_user: FFAdminUser
+) -> typing.Callable:
+    def _with_environment_permissions(
+        permission_keys: list[str], environment_id: typing.Optional[int] = None
+    ) -> UserEnvironmentPermission:
+        environment_id = environment_id or environment.id
+        uep, __ = UserEnvironmentPermission.objects.get_or_create(
+            environment_id=environment_id, user=staff_user
+        )
+        uep.permissions.add(*permission_keys)
+
+        return uep
+
+    return _with_environment_permissions
+
+
+@pytest.fixture()
 def identity(environment):
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
