@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -35,6 +35,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -165,8 +166,14 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def add_owners(self, request, *args, **kwargs):
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         feature = self.get_object()
+
+        for user in FFAdminUser.objects.filter(
+            id__in=serializer.validated_data["user_ids"]
+        ):
+            if not user.has_project_permission(VIEW_PROJECT, feature.project):
+                raise serializers.ValidationError("Some users not found")
+
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
 
