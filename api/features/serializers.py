@@ -11,11 +11,10 @@ from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
 from projects.models import Project
-from users.models import UserPermissionGroup
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
-    UserPermissionGroupNameSerializer,
+    UserPermissionGroupSummarySerializer,
 )
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -43,16 +42,6 @@ class FeatureOwnerInputSerializer(UserIdsSerializer):
 
 class FeatureGroupOwnerInputSerializer(serializers.Serializer):
     group_ids = serializers.ListField(child=serializers.IntegerField())
-    organisation_id = serializers.IntegerField()
-
-    def validate(self, data):
-        if not UserPermissionGroup.objects.filter(
-            id__in=data["group_ids"],
-            organisation_id=data["organisation_id"],
-        ).count() == len(data["group_ids"]):
-            raise serializers.ValidationError("Some groups not found")
-
-        return data
 
     def add_group_owners(self, feature: Feature):
         group_ids = self.validated_data["group_ids"]
@@ -65,7 +54,7 @@ class FeatureGroupOwnerInputSerializer(serializers.Serializer):
 
 class ProjectFeatureSerializer(serializers.ModelSerializer):
     owners = UserListSerializer(many=True, read_only=True)
-    group_owners = UserPermissionGroupNameSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
