@@ -163,7 +163,7 @@ def call_webhook_with_failure_mail_after_retires(
     """
 
     if try_count > max_retries:
-        return
+        raise ValueError("try_count can't be greater than max_retries")
 
     if webhook_type == WebhookType.ORGANISATION.value:
         webhook = OrganisationWebhook.objects.get(id=webhook_id)

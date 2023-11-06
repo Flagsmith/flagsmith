@@ -21,6 +21,7 @@ from webhooks.webhooks import (
     WebhookType,
     call_environment_webhooks,
     call_organisation_webhooks,
+    call_webhook_with_failure_mail_after_retires,
     trigger_sample_webhook,
 )
 
@@ -273,3 +274,9 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
         ],
         any_order=True,
     )
+
+
+def test_call_webhook_with_failure_mail_after_retires_raises_error_on_invalid_args():
+    try_count = 10
+    with pytest.raises(ValueError):
+        call_webhook_with_failure_mail_after_retires(0, {}, "", try_count=try_count)
