@@ -1158,7 +1158,7 @@ def test_make_user_group_admin_success(
 
 
 def test_make_user_group_admin_forbidden(
-    test_user_client, organisation, user_permission_group
+    staff_client, organisation, user_permission_group
 ):
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
@@ -1170,7 +1170,7 @@ def test_make_user_group_admin_forbidden(
     )
 
     # When
-    response = test_user_client.post(url)
+    response = staff_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -1222,7 +1222,7 @@ def test_remove_user_as_group_admin_success(
 
 
 def test_remove_user_as_group_admin_forbidden(
-    test_user_client, organisation, user_permission_group
+    staff_client, organisation, user_permission_group
 ):
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
@@ -1235,7 +1235,7 @@ def test_remove_user_as_group_admin_forbidden(
     )
 
     # When
-    response = test_user_client.post(url)
+    response = staff_client.post(url)
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
