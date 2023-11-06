@@ -119,6 +119,7 @@ export type Req = {
     organisation_id: string
     role_id: string
     user_id: string
+    level?: string
   }
   createRolesPermissionUsers: { organisation_id: string; role_id: string }
   getRolePermissionGroup: { id: string }

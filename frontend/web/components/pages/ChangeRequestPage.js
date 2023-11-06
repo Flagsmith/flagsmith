@@ -224,12 +224,6 @@ const ChangeRequestsPage = class extends Component {
         orgUsers,
         changeRequest.approvals.map((v) => v.user),
       )
-    console.log(
-      'DEBUG: ownerUsers',
-      ownerUsers,
-      'changeRequest:',
-      changeRequest,
-    )
     const ownerGroups =
       changeRequest &&
       this.getGroupApprovals(orgGroups, changeRequest.group_assignments)

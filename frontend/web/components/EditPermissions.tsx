@@ -30,15 +30,11 @@ import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePer
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import {
-  useCreateRoleEnvironmentPermissionsMutation,
-  useCreateRoleOrganisationPermissionsMutation,
-  useCreateRoleProjectPermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useUpdateRoleEnvironmentPermissionsMutation,
-  useUpdateRoleOrganisationPermissionsMutation,
-  useUpdateRoleProjectPermissionsMutation,
+  useCreateRolePermissionsMutation,
+  useUpdateRolePermissionsMutation,
 } from 'common/services/useRolePermission'
 
 import {
@@ -177,61 +173,32 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [deleteRolePermissionGroup] = useDeleteRolePermissionGroupMutation()
 
     const [
-      updateRoleEnvironmentPermissions,
+      updateRolePermissions,
       {
-        isError: envUpdatedError,
-        isLoading: isEnvPermUpdating,
-        isSuccess: isEnvPermUpdated,
+        isError: errorUpdating,
+        isLoading: isRolePermUpdating,
+        isSuccess: isRolePermUpdated,
       },
-    ] = useUpdateRoleEnvironmentPermissionsMutation()
+    ] = useUpdateRolePermissionsMutation()
+
     const [
-      updateRoleOrganisationPermissions,
+      createRolePermissions,
       {
-        isError: orgUpdatedError,
-        isLoading: isOrgPermUpdating,
-        isSuccess: isOrgPermUpdated,
+        isError: errorCreating,
+        isLoading: isRolePermCreating,
+        isSuccess: isRolePermCreated,
       },
-    ] = useUpdateRoleOrganisationPermissionsMutation()
-    const [
-      updateRoleProjectPermissions,
-      {
-        isError: projectUpdatedError,
-        isLoading: isProjectPermUpdating,
-        isSuccess: isProjectPermUpdated,
-      },
-    ] = useUpdateRoleProjectPermissionsMutation()
-    const [
-      createRoleEnvironmentPermissions,
-      {
-        isError: envCreatedError,
-        isLoading: isEnvPermCreating,
-        isSuccess: isEnvPermCreated,
-      },
-    ] = useCreateRoleEnvironmentPermissionsMutation()
-    const [
-      createRoleProjectPermissions,
-      {
-        isError: orgCreatedError,
-        isLoading: isProjectPermCreating,
-        isSuccess: isProjectPermCreated,
-      },
-    ] = useCreateRoleProjectPermissionsMutation()
-    const [
-      createRoleOrganisationPermissions,
-      {
-        isError: projectCreatedError,
-        isLoading: isOrgPermCreating,
-        isSuccess: isOrgPermCreated,
-      },
-    ] = useCreateRoleOrganisationPermissionsMutation()
+    ] = useCreateRolePermissionsMutation()
 
     useEffect(() => {
-      if (isEnvPermUpdating || isEnvPermCreating) {
+      const isSaving = isRolePermCreating || isRolePermUpdating
+      if (isSaving) {
         setSaving(true)
       }
-      if (isEnvPermUpdated || isEnvPermCreated) {
-        refetchEnvPerm()
-        toast('Environment permissions Saved')
+      if (isRolePermCreated || isRolePermUpdated) {
+        toast(
+          `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
+        )
         permissionChanged?.()
         onSave?.()
         setSaving(false)
@@ -239,120 +206,65 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           close()
         }
       }
-      if (envUpdatedError || envCreatedError) {
-        toast('Failed to Save', 'danger')
+      if (errorUpdating || errorCreating) {
         setSaving(false)
       }
     }, [
-      isEnvPermUpdating,
-      isEnvPermCreating,
-      isEnvPermUpdated,
-      isEnvPermCreated,
-      envUpdatedError,
-      envCreatedError,
+      errorUpdating,
+      errorCreating,
+      isRolePermCreated,
+      isRolePermUpdated,
+      isRolePermCreating,
+      isRolePermUpdating,
     ])
 
+    const { data: organisationPermissions, isLoading: organisationIsLoading } =
+      useGetRoleOrganisationPermissionsQuery(
+        {
+          organisation_id: role?.organisation,
+          role_id: role?.id,
+        },
+        { skip: !role },
+      )
+
+    const { data: projectPermissions, isLoading: projectIsLoading } =
+      useGetRoleProjectPermissionsQuery(
+        {
+          organisation_id: role?.organisation,
+          project_id: id,
+          role_id: role?.id,
+        },
+        {
+          skip:
+            !id ||
+            envId ||
+            !Utils.getFlagsmithHasFeature('show_role_management'),
+        },
+      )
+
+    const { data: envPermissions, isLoading: envIsLoading } =
+      useGetRoleEnvironmentPermissionsQuery(
+        {
+          env_id: envId || id,
+          organisation_id: role?.organisation,
+          role_id: role?.id,
+        },
+        {
+          skip:
+            !role ||
+            !id ||
+            !Utils.getFlagsmithHasFeature('show_role_management'),
+        },
+      )
     useEffect(() => {
-      if (isOrgPermUpdating || isOrgPermCreating) {
-        setSaving(true)
-      }
-      if (isOrgPermUpdated || isOrgPermCreated) {
-        refetchOrgPerm()
-        toast('Organisation permissions Saved')
-        permissionChanged?.()
-        onSave?.()
-        setSaving(false)
-        if (editPermissionsFromSettings) {
-          close()
-        }
-      }
-      if (orgUpdatedError || orgCreatedError) {
-        toast('Failed to Save', 'danger')
-        setSaving(false)
-      }
-    }, [
-      isOrgPermUpdating,
-      isOrgPermCreating,
-      isOrgPermUpdated,
-      isOrgPermCreated,
-      orgUpdatedError,
-      orgCreatedError,
-    ])
-
-    useEffect(() => {
-      if (isProjectPermUpdating || isProjectPermCreating) {
-        setSaving(true)
-      }
-      if (isProjectPermUpdated || isProjectPermCreated) {
-        refetchProjectPerm()
-        toast('Project permissions Saved')
-        permissionChanged?.()
-        onSave?.()
-        setSaving(false)
-        if (editPermissionsFromSettings) {
-          close()
-        }
-      }
-      if (projectUpdatedError || projectCreatedError) {
-        toast('Failed to Save', 'danger')
-        setSaving(false)
-      }
-    }, [
-      isProjectPermUpdating,
-      isProjectPermCreating,
-      isProjectPermUpdated,
-      isProjectPermCreated,
-      projectUpdatedError,
-      projectCreatedError,
-    ])
-
-    const {
-      data: organisationPermissions,
-      isLoading: organisationIsLoading,
-      refetch: refetchOrgPerm,
-    } = useGetRoleOrganisationPermissionsQuery(
-      {
-        organisation_id: role?.organisation,
-        role_id: role?.id,
-      },
-      { skip: !role },
-    )
-
-    const {
-      data: projectPermissions,
-      isLoading: projectIsLoading,
-      refetch: refetchProjectPerm,
-    } = useGetRoleProjectPermissionsQuery(
-      {
-        organisation_id: role?.organisation,
-        project_id: id,
-        role_id: role?.id,
-      },
-      {
-        skip:
-          !id || envId || !Utils.getFlagsmithHasFeature('show_role_management'),
-      },
-    )
-
-    const {
-      data: envPermissions,
-      isLoading: envIsLoading,
-      refetch: refetchEnvPerm,
-    } = useGetRoleEnvironmentPermissionsQuery(
-      {
-        env_id: envId || id,
-        organisation_id: role?.organisation,
-        role_id: role?.id,
-      },
-      {
-        skip:
-          !role || !id || !Utils.getFlagsmithHasFeature('show_role_management'),
-      },
-    )
-
-    useEffect(() => {
-      if (!organisationIsLoading && organisationPermissions && level === 'organisation') {
-        const entityPermissions = processResults(organisationPermissions.results)
+      if (
+        !organisationIsLoading &&
+        organisationPermissions &&
+        level === 'organisation'
+      ) {
+        const entityPermissions = processResults(
+          organisationPermissions.results,
+        )
         setEntityPermissions(entityPermissions)
       }
     }, [organisationPermissions, organisationIsLoading])
@@ -447,81 +359,33 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             setSaving(false)
           })
       } else {
+        const body = {
+          permissions: entityPermissions.permissions,
+        }
+        if (level === 'project') {
+          body.admin = entityPermissions.admin
+          body.project = id
+        }
+        if (level === 'environment') {
+          body.admin = entityPermissions.admin
+          body.environment = envId || id
+        }
         if (entityId) {
-          switch (level) {
-            case 'organisation':
-              updateRoleOrganisationPermissions({
-                body: {
-                  permissions: entityPermissions.permissions,
-                },
-                id: entityId,
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            case 'project':
-              updateRoleProjectPermissions({
-                body: {
-                  admin: entityPermissions.admin,
-                  permissions: entityPermissions.permissions,
-                  project: id,
-                },
-                id: entityPermissions.id,
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            case 'environment':
-              updateRoleEnvironmentPermissions({
-                body: {
-                  admin: entityPermissions.admin,
-                  environment: envId || id,
-                  permissions: entityPermissions.permissions,
-                },
-                id: entityPermissions.id,
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            default:
-              break
-          }
+          updateRolePermissions({
+            body,
+            id: entityId,
+            level: level === 'organisation' ? level : `${level}s`,
+            organisation_id: role.organisation,
+            role_id: role.id,
+          })
         } else {
-          switch (level) {
-            case 'organisation':
-              createRoleOrganisationPermissions({
-                body: {
-                  permissions: entityPermissions.permissions,
-                },
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            case 'project':
-              createRoleProjectPermissions({
-                body: {
-                  admin: entityPermissions.admin,
-                  permissions: entityPermissions.permissions,
-                  project: id,
-                },
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            case 'environment':
-              createRoleEnvironmentPermissions({
-                body: {
-                  admin: entityPermissions.admin,
-                  environment: id,
-                  permissions: entityPermissions.permissions,
-                },
-                organisation_id: role.organisation,
-                role_id: role.id,
-              })
-              break
-            default:
-              break
-          }
+          createRolePermissions({
+            body,
+            id: entityId,
+            level: level === 'organisation' ? level : `${level}s`,
+            organisation_id: role.organisation,
+            role_id: role.id,
+          })
         }
       }
     }

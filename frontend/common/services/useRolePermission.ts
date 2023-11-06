@@ -3,57 +3,32 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const rolePermissionService = service
-  .enhanceEndpoints({ addTagTypes: ['RolePermission'] })
+  .enhanceEndpoints({ addTagTypes: ['rolePermission'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createRoleEnvironmentPermissions: builder.mutation<
+      createRolePermissions: builder.mutation<
         Res['rolePermission'],
         Req['createRolePermission']
       >({
         invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
+          { id: 'LIST', type: 'rolePermission' },
+          { id: res?.id, type: 'rolePermission' },
         ],
         query: (query: Req['updateRolePermission']) => ({
           body: query.body,
           method: 'POST',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/`,
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}/${query.level}-permissions/`,
         }),
-      }),
-      createRoleOrganisationPermissions: builder.mutation<
-        Res['rolePermission'],
-        Req['createRolePermission']
-      >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
-        ],
-        query: (query: Req['updateRolePermission']) => ({
-          body: query,
-          method: 'POST',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
-        }),
+        transformErrorResponse: () => {
+          toast('Failed to Save', 'danger')
+        },
       }),
 
-      createRoleProjectPermissions: builder.mutation<
-        Res['rolePermission'],
-        Req['createRolePermission']
-      >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
-        ],
-        query: (query: Req['updateRolePermission']) => ({
-          body: query.body,
-          method: 'POST',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/`,
-        }),
-      }),
       getRoleEnvironmentPermissions: builder.query<
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
@@ -62,7 +37,7 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/`,
         }),
@@ -97,49 +72,19 @@ export const rolePermissionService = service
         }),
       }),
 
-      updateRoleEnvironmentPermissions: builder.mutation<
+      updateRolePermissions: builder.mutation<
         Res['rolePermission'],
         Req['updateRolePermission']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'rolePermission' }],
         query: (query: Req['updateRolePermission']) => ({
           body: query.body,
           method: 'PUT',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/${query.id}/`,
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}/${query.level}-permissions/${query.id}/`,
         }),
-      }),
-
-      updateRoleOrganisationPermissions: builder.mutation<
-        Res['rolePermission'],
-        Req['updateRolePermission']
-      >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
-        ],
-        query: (query: Req['updateRolePermission']) => ({
-          body: query.body,
-          method: 'PUT',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/organisation-permissions/${query.id}/`,
-        }),
-      }),
-
-      updateRoleProjectPermissions: builder.mutation<
-        Res['rolePermission'],
-        Req['updateRolePermission']
-      >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'RolePermission' },
-          { id: res?.id, type: 'RolePermission' },
-        ],
-        query: (query: Req['updateRolePermission']) => ({
-          body: query.body,
-          method: 'PUT',
-          url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/${query.id}/`,
-        }),
+        transformErrorResponse: () => {
+          toast('Failed to Save', 'danger')
+        },
       }),
 
       // END OF ENDPOINTS
@@ -163,15 +108,15 @@ export async function getRoleOrganisationPermissions(
     store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
-export async function updateRoleOrganisationPermissions(
+export async function updateRolePermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleOrganisationPermissions.initiate
+    typeof rolePermissionService.endpoints.updateRolePermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.updateRoleOrganisationPermissions.initiate(
+    rolePermissionService.endpoints.updateRolePermissions.initiate(
       data,
       options,
     ),
@@ -190,38 +135,6 @@ export async function getRoleProjectPermissions(
 ) {
   store.dispatch(
     rolePermissionService.endpoints.getRoleProjectPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
-  )
-}
-export async function getRolesProjectPermissions(
-  store: any,
-  data: Req['getRolesPermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
-  >[1],
-) {
-  return store.dispatch(
-    rolePermissionService.endpoints.getRolesProjectPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-}
-
-export async function updateRoleProjectPermissions(
-  store: any,
-  data: Req['updateRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleProjectPermissions.initiate
-  >[1],
-) {
-  store.dispatch(
-    rolePermissionService.endpoints.updateRoleProjectPermissions.initiate(
       data,
       options,
     ),
@@ -249,29 +162,15 @@ export async function getRoleEnvironmentPermissions(
   )
 }
 
-export async function getRolesEnvironmentPermissions(
-  store: any,
-  data: Req['getRolesEnvironment'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.getRolesProjectPermissions.initiate
-  >[1],
-) {
-  return store.dispatch(
-    rolePermissionService.endpoints.getRolesEnvironmentPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-}
-export async function updateRoleEnvironmentPermissions(
+export async function createRolePermissions(
   store: any,
   data: Req['updateRolePermission'],
   options?: Parameters<
-    typeof rolePermissionService.endpoints.updateRoleEnvironmentPermissions.initiate
+    typeof rolePermissionService.endpoints.createRolePermissions.initiate
   >[1],
 ) {
   store.dispatch(
-    rolePermissionService.endpoints.updateRoleEnvironmentPermissions.initiate(
+    rolePermissionService.endpoints.createRolePermissions.initiate(
       data,
       options,
     ),
@@ -281,71 +180,14 @@ export async function updateRoleEnvironmentPermissions(
   )
 }
 
-export async function createRoleOrganisationPermissions(
-  store: any,
-  data: Req['updateRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleOrganisationPermissions.initiate
-  >[1],
-) {
-  store.dispatch(
-    rolePermissionService.endpoints.createRoleOrganisationPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
-  )
-}
-
-export async function createRoleProjectPermissions(
-  store: any,
-  data: Req['updateRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleProjectPermissions.initiate
-  >[1],
-) {
-  store.dispatch(
-    rolePermissionService.endpoints.createRoleProjectPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
-  )
-}
-
-export async function createRoleEnvironmentPermissions(
-  store: any,
-  data: Req['updateRolePermission'],
-  options?: Parameters<
-    typeof rolePermissionService.endpoints.createRoleEnvironmentPermissions.initiate
-  >[1],
-) {
-  store.dispatch(
-    rolePermissionService.endpoints.createRoleEnvironmentPermissions.initiate(
-      data,
-      options,
-    ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
-  )
-}
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreateRoleEnvironmentPermissionsMutation,
-  useCreateRoleOrganisationPermissionsMutation,
-  useCreateRoleProjectPermissionsMutation,
+  useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,
   useGetRoleProjectPermissionsQuery,
-  useUpdateRoleEnvironmentPermissionsMutation,
-  useUpdateRoleOrganisationPermissionsMutation,
-  useUpdateRoleProjectPermissionsMutation,
+  useUpdateRolePermissionsMutation,
   // END OF EXPORTS
 } = rolePermissionService
 
