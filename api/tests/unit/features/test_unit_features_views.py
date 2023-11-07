@@ -530,7 +530,7 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_add_owners_adds_owner_when_users_not_connected(client, project):
+def test_add_owners_fails_if_user_not_found(client, project):
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
 
@@ -546,8 +546,9 @@ def test_add_owners_adds_owner_when_users_not_connected(client, project):
     # When
     response = client.post(url, data=json.dumps(data), content_type="application/json")
     # Then
-    response.status_code == status.HTTP_400_BAD_REQUEST
-    response.data == ["Some users not found"]
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data == ["Some users not found"]
+    assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
 
 
 @pytest.mark.parametrize(
