@@ -20,10 +20,14 @@ against any of the users in your database.
 Once you have a user, you can access the django admin pages at `/admin/`. You will be prompted to log in with the
 credentials of any of your super users.
 
-:::info If the login page is only showing the option to 'Log in using SSO' then you may need to set the
+:::info
+
+If the login page is only showing the option to 'Log in using SSO' then you may need to set the
 `ENABLE_ADMIN_ACCESS_USER_PASS` environment variable. See
 [this list](http://localhost:3000/deployment/hosting/locally-api#application-environment-variables) for more
-information. :::
+information.
+
+:::
 
 ## Admin Pages
 
