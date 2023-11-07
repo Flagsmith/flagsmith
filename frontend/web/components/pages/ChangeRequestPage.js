@@ -30,7 +30,6 @@ const ChangeRequestsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
-
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.id))
 
