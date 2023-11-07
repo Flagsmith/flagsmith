@@ -35,7 +35,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -49,6 +49,7 @@ from .permissions import (
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -157,6 +158,41 @@ class FeatureViewSet(viewsets.ModelViewSet):
             context["overrides_data"] = Feature.get_overrides_data(environment_id)
 
         return context
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        data = request.data
+
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=serializer.validated_data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(serializer.validated_data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
 
     @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
