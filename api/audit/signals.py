@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)
-def call_webhooks(sender, instance, **kwargs):
+def call_webhooks(sender, instance: AuditLog, **kwargs):
     data = AuditLogSerializer(instance=instance).data
 
     if not (organisation := instance.organisation):

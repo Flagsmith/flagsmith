@@ -77,6 +77,9 @@ def signal_audit_log_user_logged_out(sender, request, user, **kwargs):
 @receiver(user_login_failed)
 def signal_audit_log_user_login_failed(sender, credentials, request, **kwargs):
     ip_address = None if request is None else get_ip_address_from_request(request)
-    create_audit_log_user_login_failed.delay(
-        args=(credentials, ip_address, kwargs.get("codes", None))
-    )
+    # get codes passed by auth serializers that catch APIException and send user_login_failed
+    codes = kwargs.get("codes", None)
+    # unfortunately DRF's get_codes() is inconsistent betweeen APIException and ValidationError,
+    # and sometimes returns str, so coerce that to list[str]
+    codes = [codes] if type(codes) is str else codes
+    create_audit_log_user_login_failed.delay(args=(credentials, ip_address, codes))
