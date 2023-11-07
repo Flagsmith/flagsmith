@@ -6,6 +6,8 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './Icon'
+import { logoGithub, document } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const getGithubLink = (key) => {
   switch (key) {
@@ -206,7 +208,13 @@ const CodeHelp = class extends Component {
                           className='btn btn-primary'
                           size='xSmall'
                         >
-                          <span className='icon ion ion-ios-document' /> {key}{' '}
+                          <span
+                            className='icon ion'
+                            style={{ marginRight: '2px' }}
+                          >
+                            <IonIcon icon={document} />
+                          </span>
+                          {key}
                           Docs
                         </Button>
                       )}
@@ -217,8 +225,13 @@ const CodeHelp = class extends Component {
                           className='btn btn-primary'
                           size='xSmall'
                         >
-                          <span className='icon ion ion-logo-github' /> {key}{' '}
-                          GitHub
+                          <span
+                            className='icon ion'
+                            style={{ marginRight: '2px' }}
+                          >
+                            <IonIcon icon={logoGithub} />
+                          </span>
+                          {key} GitHub
                         </Button>
                       )}
                     </Column>

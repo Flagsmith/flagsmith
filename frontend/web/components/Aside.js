@@ -14,6 +14,8 @@ import Icon from './Icon'
 import ProjectSelect from './ProjectSelect'
 import AsideProjectButton from './AsideProjectButton'
 import Constants from 'common/constants'
+import { star, warning, pricetag } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -569,14 +571,20 @@ const Aside = class extends Component {
                                 className='aside__nav-item'
                                 href='https://docs.flagsmith.com'
                               >
-                                <i className='icon mr-2 ion-ios-star aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon
+                                    icon={star}
+                                  />
+                                </i>
                                 Super cool demo feature!
                               </a>
                             )}
 
                             {Utils.getFlagsmithHasFeature('broken_feature') && (
                               <Link to='/broken' className='aside__nav-item'>
-                                <i className='icon mr-2 ion-ios-warning aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon icon={warning} />
+                                </i>
                                 Demo Broken Feature
                               </Link>
                             )}
@@ -587,7 +595,9 @@ const Aside = class extends Component {
                                     html
                                     title={
                                       <span>
-                                        <span className='ml-2 icon ion-ios-pricetag' />{' '}
+                                        <span className='ml-2 icon'>
+                                          <IonIcon icon={pricetag} />
+                                        </span>{' '}
                                         {this.state.version.tag}
                                       </span>
                                     }

@@ -1,6 +1,8 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
 import Icon from './Icon'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 export default class InfoMessage extends PureComponent {
   static displayName = 'InfoMessage'
@@ -33,9 +35,9 @@ export default class InfoMessage extends PureComponent {
         )}
         {this.props.isClosable && (
           <a onClick={this.props.close} className='mt-n2 mr-n2 pl-2'>
-            <span
-              className={`icon ion-md-close ${this.props.infoMessageClass} close-btn`}
-            />
+            <span className={`icon ${this.props.infoMessageClass} close-btn`}>
+              <IonIcon icon={close} />
+            </span>
           </a>
         )}
       </div>

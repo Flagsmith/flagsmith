@@ -11,6 +11,8 @@ import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import { informationCircleOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 let controller = new AbortController()
 
@@ -348,7 +350,11 @@ const HomePage = class extends React.Component {
                                       >
                                         {isInvite && (
                                           <div className='notification flex-row'>
-                                            <span className='notification__icon ion-md-information-circle-outline mb-2' />
+                                            <span className='notification__icon mb-2'>
+                                              <IonIcon
+                                                icon={informationCircleOutline}
+                                              />
+                                            </span>
                                             <p className='notification__text pl-3'>
                                               Login to accept your invite
                                             </p>
@@ -541,7 +547,11 @@ const HomePage = class extends React.Component {
                                   )}
                                   {isInvite && (
                                     <div className='notification flex-row'>
-                                      <span className='notification__icon ion-md-information-circle-outline mb-2' />
+                                      <span className='notification__icon mb-2'>
+                                        <IonIcon
+                                          icon={informationCircleOutline}
+                                        />
+                                      </span>
                                       <p className='notification__text pl-3'>
                                         Create an account to accept your invite
                                       </p>

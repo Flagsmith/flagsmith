@@ -10,6 +10,8 @@ import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { timeOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -204,7 +206,9 @@ const ChangeRequestsPage = class extends Component {
                             <div className='font-weight-medium'>
                               {title}
                               {isScheduled && (
-                                <span className='ml-1 mr-4 ion ion-md-time' />
+                                <span className='ml-1 mr-4 ion'>
+                                  <IonIcon icon={timeOutline} />
+                                </span>
                               )}
                             </div>
                             <div className='list-item-subtitle mt-1'>
