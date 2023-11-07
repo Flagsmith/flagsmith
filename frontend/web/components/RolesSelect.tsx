@@ -1,57 +1,55 @@
 import React, { FC, useState } from 'react'
 import InlineModal from './InlineModal'
-import { UserGroup, UserGroupSummary } from 'common/types/responses'
+import { Role } from 'common/types/responses'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import Icon from './Icon'
 
-export type GroupSelectType = {
+export type RoleSelectType = {
   disabled: boolean
-  groups: UserGroup[] | UserGroupSummary[] | undefined
+  roles: Role[] | undefined
   value: number[] | undefined
   isOpen: boolean
-  size: string
   onAdd: (id: number, isUser: boolean) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
 }
-const GroupSelect: FC<GroupSelectType> = ({
+const RoleSelect: FC<RoleSelectType> = ({
   disabled,
-  groups,
   isOpen,
   onAdd,
   onRemove,
   onToggle,
-  size,
+  roles,
   value,
 }) => {
   const [filter, setFilter] = useState<string>('')
-  const grouplist =
-    groups &&
-    groups.filter((v) => {
+  const rolelist =
+    roles &&
+    roles.filter((v) => {
       const search = filter.toLowerCase()
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
-  const modalClassName = `inline-modal--tags${size}`
+
   return (
     <InlineModal
-      title='Groups'
+      title='Roles'
       isOpen={isOpen}
       onClose={onToggle}
-      className={modalClassName}
+      className='inline-modal--tags'
     >
       <Input
         disabled={disabled}
         value={filter}
         onChange={(e: InputEvent) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
-        placeholder='Type or choose a Group'
+        placeholder='Type or choose a Role'
         search
       />
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-        {grouplist &&
-          grouplist.map((v) => (
+        {rolelist &&
+          rolelist.map((v) => (
             <div className='assignees-list-item clickable' key={v.id}>
               <Row
                 onClick={() => {
@@ -82,4 +80,4 @@ const GroupSelect: FC<GroupSelectType> = ({
   )
 }
 
-export default GroupSelect
+export default RoleSelect
