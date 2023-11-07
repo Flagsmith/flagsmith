@@ -81,9 +81,8 @@ def staff_user(django_user_model):
     """
     A non-admin user fixture.
 
-    To add to an environment with permissions use:
-    uep = UserEnvironmentPermission.objects.create ...
-    uep.permissions.add ...
+    To add to an environment with permissions use the fixture
+    with_environment_permissions.
 
     This fixture is attached to the organisation fixture.
     """
@@ -176,6 +175,29 @@ def segment_rule(segment):
 @pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
+
+
+@pytest.fixture()
+def with_environment_permissions(
+    environment: Environment, staff_user: FFAdminUser
+) -> typing.Callable:
+    """
+    Add environment permissions to the staff_user fixture.
+    Defaults to associating to the environment fixture.
+    """
+
+    def _with_environment_permissions(
+        permission_keys: list[str], environment_id: typing.Optional[int] = None
+    ) -> UserEnvironmentPermission:
+        environment_id = environment_id or environment.id
+        uep, __ = UserEnvironmentPermission.objects.get_or_create(
+            environment_id=environment_id, user=staff_user
+        )
+        uep.permissions.add(*permission_keys)
+
+        return uep
+
+    return _with_environment_permissions
 
 
 @pytest.fixture()
