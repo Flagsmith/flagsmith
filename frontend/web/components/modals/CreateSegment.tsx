@@ -509,13 +509,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 id={environmentId}
               >
                 {({ permission: manageSegmentOverrides }) => {
+                  const manageSegmentsEnabled = Utils.getFlagsmithHasFeature(
+                    'manage_segment_overrides_env_role',
+                  )
                   const isReadOnly = !manageSegmentOverrides
                   return (
                     <AssociatedSegmentOverrides
                       feature={segment.feature}
                       projectId={projectId}
                       id={segment.id}
-                      readOnly={isReadOnly}
+                      readOnly={manageSegmentsEnabled ? isReadOnly : false}
                     />
                   )
                 }}

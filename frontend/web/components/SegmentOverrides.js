@@ -601,7 +601,11 @@ class TheComponent extends Component {
                           this.props.setShowCreateSegment(true)
                         }}
                         theme='outline'
-                        disabled={!manageSegments || !!isLimitReached}
+                        disabled={
+                          manageSegmentsEnabled
+                            ? !manageSegments || !!isLimitReached
+                            : false
+                        }
                       >
                         Create Feature-Specific Segment
                       </Button>

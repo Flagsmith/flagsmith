@@ -1140,9 +1140,17 @@ const CreateFlag = class extends Component {
                                                 const isReadOnly =
                                                   !manageSegmentOverrides ||
                                                   noPermissions
+                                                const manageSegmentsEnabled =
+                                                  Utils.getFlagsmithHasFeature(
+                                                    'manage_segment_overrides_env_role',
+                                                  )
                                                 return (
                                                   <SegmentOverrides
-                                                    readOnly={isReadOnly}
+                                                    readOnly={
+                                                      manageSegmentsEnabled
+                                                        ? isReadOnly
+                                                        : noPermissions
+                                                    }
                                                     showEditSegment
                                                     showCreateSegment={
                                                       this.state
