@@ -5,6 +5,7 @@ from typing import Iterable
 
 import boto3
 from boto3.dynamodb.conditions import Key
+from botocore.config import Config
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.environments.builders import build_environment_model
@@ -32,7 +33,9 @@ class DynamoWrapper:
     def __init__(self):
         self._table = None
         if self.table_name:
-            self._table = boto3.resource("dynamodb").Table(self.table_name)
+            self._table = boto3.resource(
+                "dynamodb", config=Config(tcp_keepalive=True)
+            ).Table(self.table_name)
 
     @property
     def is_enabled(self) -> bool:
