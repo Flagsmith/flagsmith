@@ -7,6 +7,7 @@ import CreateGroupModal from 'components/modals/CreateGroup'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
+import ConfirmDeleteRole from 'components/modals/ConfirmDeleteRole'
 import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import AdminAPIKeys from 'components/AdminAPIKeys'
@@ -19,10 +20,14 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
+import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
 
-const widths = [170, 150, 80]
+const widths = [450, 150, 100]
+const rolesWidths = [250, 600, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -35,6 +40,7 @@ const OrganisationSettingsPage = class extends Component {
     this.state = {
       manageSubscriptionLoaded: true,
       role: 'ADMIN',
+      roles: [],
     }
     if (!AccountStore.getOrganisation()) {
       return
@@ -44,6 +50,14 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   componentDidMount = () => {
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      this.setState({ roles: roles.data.results })
+    })
+    AppActions.getGroups(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
     if (
@@ -210,7 +224,7 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editUserPermissions = (user) => {
+  editUserPermissions = (user, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -220,13 +234,14 @@ const OrganisationSettingsPage = class extends Component {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
         level='organisation'
+        roles={roles}
         user={user}
       />,
       'p-0 side-modal',
     )
   }
 
-  editGroupPermissions = (group) => {
+  editGroupPermissions = (group, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -238,6 +253,7 @@ const OrganisationSettingsPage = class extends Component {
         }}
         level='organisation'
         group={group}
+        roles={roles}
         push={this.context.router.history.push}
       />,
       'p-0 side-modal',
@@ -262,6 +278,69 @@ const OrganisationSettingsPage = class extends Component {
     return 'Within 30 days'
   }
 
+  createRole = (organisationId) => {
+    openModal(
+      'Create Role',
+      <CreateRole
+        organisationId={organisationId}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role created')
+            closeModal()
+          })
+        }}
+      />,
+      'side-modal',
+    )
+  }
+  deleteRole = (role) => {
+    openModal(
+      'Remove Role',
+      <ConfirmDeleteRole
+        role={role}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role Deleted')
+          })
+        }}
+      />,
+      'p-0',
+    )
+  }
+  editRole = (role, users, groups) => {
+    openModal(
+      'Edit Role and Permissions',
+      <CreateRole
+        organisationId={role.organisation}
+        isEdit
+        role={role}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role updated')
+          })
+        }}
+        users={users}
+        groups={groups}
+      />,
+      'side-modal',
+    )
+  }
+
   render() {
     const {
       props: { webhooks, webhooksLoading },
@@ -282,6 +361,7 @@ const OrganisationSettingsPage = class extends Component {
               <OrganisationProvider>
                 {({
                   error,
+                  groups,
                   invalidateInviteLink,
                   inviteLinks,
                   invites,
@@ -304,7 +384,6 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
-
                   return (
                     <div>
                       <Tabs
@@ -890,6 +969,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   if (role !== 'ADMIN') {
                                                     this.editUserPermissions(
                                                       user,
+                                                      this.state.roles,
                                                     )
                                                   }
                                                 }
@@ -1234,8 +1314,11 @@ const OrganisationSettingsPage = class extends Component {
                                               environments.
                                             </p>
                                             <UserGroupList
-                                              onEditPermissions={
-                                                this.editGroupPermissions
+                                              onEditPermissions={(group) =>
+                                                this.editGroupPermissions(
+                                                  group,
+                                                  this.state.roles,
+                                                )
                                               }
                                               showRemove
                                               orgId={
@@ -1244,6 +1327,152 @@ const OrganisationSettingsPage = class extends Component {
                                             />
                                           </div>
                                         </TabItem>
+                                        {Utils.getFlagsmithHasFeature(
+                                          'show_role_management',
+                                        ) && (
+                                          <TabItem tabLabel='Roles'>
+                                            {hasRbacPermission ? (
+                                              <>
+                                                <Row space className='mt-4'>
+                                                  <h5 className='m-b-0'>
+                                                    Roles
+                                                  </h5>
+                                                  <Button
+                                                    className='mr-2'
+                                                    id='btn-invite'
+                                                    onClick={() =>
+                                                      this.createRole(
+                                                        organisation.id,
+                                                        users,
+                                                      )
+                                                    }
+                                                    type='button'
+                                                  >
+                                                    Create Role
+                                                  </Button>
+                                                </Row>
+                                                <p className='fs-small lh-sm'>
+                                                  Create custom roles, assign
+                                                  permissions, and keys to the
+                                                  role, and then you can assign
+                                                  roles to users and/or groups.
+                                                </p>
+                                                <PanelSearch
+                                                  id='org-members-list'
+                                                  title={'Roles'}
+                                                  className='no-pad'
+                                                  items={this.state.roles}
+                                                  itemHeight={65}
+                                                  header={
+                                                    <Row className='table-header px-3'>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[0],
+                                                        }}
+                                                      >
+                                                        Roles
+                                                      </div>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[1],
+                                                        }}
+                                                      >
+                                                        Description
+                                                      </div>
+                                                      <div className='table-column text-center'>
+                                                        Remove
+                                                      </div>
+                                                    </Row>
+                                                  }
+                                                  renderRow={(role) => (
+                                                    <Row
+                                                      className='list-item clickable cursor-pointer'
+                                                      key={role.id}
+                                                    >
+                                                      <Row
+                                                        onClick={() => {
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
+                                                        }}
+                                                        className='table-column px-3'
+                                                        style={{
+                                                          width: rolesWidths[0],
+                                                        }}
+                                                      >
+                                                        {role.name}
+                                                      </Row>
+                                                      <Row
+                                                        className='table-column px-3'
+                                                        onClick={() => {
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
+                                                        }}
+                                                        style={{
+                                                          width: rolesWidths[1],
+                                                        }}
+                                                      >
+                                                        {role.description}
+                                                      </Row>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[2],
+                                                        }}
+                                                        className='table-column text-center px-3'
+                                                      >
+                                                        <Button
+                                                          id='remove-role'
+                                                          type='button'
+                                                          onClick={() => {
+                                                            this.deleteRole(
+                                                              role,
+                                                            )
+                                                          }}
+                                                          className='btn btn-with-icon'
+                                                        >
+                                                          <Icon
+                                                            name='trash-2'
+                                                            width={20}
+                                                            fill='#656D7B'
+                                                          />
+                                                        </Button>
+                                                      </div>
+                                                    </Row>
+                                                  )}
+                                                  renderNoResults={
+                                                    <Panel
+                                                      title={
+                                                        'Organisation roles'
+                                                      }
+                                                      className='no-pad'
+                                                    >
+                                                      <div className='search-list'>
+                                                        <Row className='list-item p-3 text-muted'>
+                                                          You currently have no
+                                                          organisation roles
+                                                        </Row>
+                                                      </div>
+                                                    </Panel>
+                                                  }
+                                                  isLoading={false}
+                                                />
+                                              </>
+                                            ) : (
+                                              <div className='mt-4'>
+                                                <InfoMessage>
+                                                  To use <strong>role</strong>{' '}
+                                                  features you have to upgrade
+                                                  your plan.
+                                                </InfoMessage>
+                                              </div>
+                                            )}
+                                          </TabItem>
+                                        )}
                                       </Tabs>
                                     </div>
                                   )}
