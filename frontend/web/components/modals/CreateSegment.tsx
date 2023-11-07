@@ -37,6 +37,7 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
+import Permission from 'common/providers/Permission'
 
 type PageType = {
   number: number
@@ -502,11 +503,23 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <AssociatedSegmentOverrides
-                feature={segment.feature}
-                projectId={projectId}
-                id={segment.id}
-              />
+              <Permission
+                level='environment'
+                permission={'MANAGE_SEGMENT_OVERRIDES'}
+                id={environmentId}
+              >
+                {({ permission: manageSegmentOverrides }) => {
+                  const isReadOnly = !manageSegmentOverrides
+                  return (
+                    <AssociatedSegmentOverrides
+                      feature={segment.feature}
+                      projectId={projectId}
+                      id={segment.id}
+                      readOnly={isReadOnly}
+                    />
+                  )
+                }}
+              </Permission>
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>

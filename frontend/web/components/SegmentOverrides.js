@@ -559,159 +559,174 @@ class TheComponent extends Component {
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
+    const manageSegmentsEnabled = Utils.getFlagsmithHasFeature(
+      'manage_segment_overrides_env_role',
+    )
     return (
       <div>
-        <div className='mt-2 mb-2'>
-          {!this.props.id &&
-            !this.props.disableCreate &&
-            !this.props.showCreateSegment &&
-            !this.props.readOnly && (
-              <Flex className='text-left'>
-                <SegmentSelect
-                  disabled={!!isLimitReached}
-                  projectId={this.props.projectId}
-                  data-test='select-segment'
-                  placeholder='Create a Segment Override...'
-                  filter={filter}
-                  value={this.state.selectedSegment}
-                  onChange={(selectedSegment) =>
-                    this.setState({ selectedSegment }, this.addItem)
-                  }
-                />
-              </Flex>
-            )}
-          {!this.props.showCreateSegment &&
-            !this.props.readOnly &&
-            !this.props.disableCreate && (
-              <div className='text-right'>
-                <Button
-                  className='mt-2'
-                  onClick={() => {
-                    this.setState({ selectedSegment: null })
-                    this.props.setShowCreateSegment(true)
-                  }}
-                  theme='outline'
-                  disabled={!!isLimitReached}
-                >
-                  Create Feature-Specific Segment
-                </Button>
-              </div>
-            )}
-          {this.props.showCreateSegment && !this.state.segmentEditId && (
-            <div className='create-segment-overrides'>
-              <CreateSegmentModal
-                onComplete={(segment) => {
-                  if (this.state.selectedSegment) {
-                    this.props.setShowCreateSegment(false)
-                  } else {
-                    this.props.setShowCreateSegment(false)
-                    this.setState(
-                      {
-                        selectedSegment: {
-                          label: segment.name,
-                          value: segment.id,
-                        },
-                      },
-                      this.addItem,
-                    )
-                  }
-                }}
-                onCancel={() => {
-                  this.props.setShowCreateSegment(false)
-                }}
-                condensed
-                feature={this.props.feature}
-                environmentId={this.props.environmentId}
-                projectId={this.props.projectId}
-              />
-            </div>
-          )}
-          {this.props.showCreateSegment && this.state.segmentEditId && (
-            <CreateSegmentModal
-              segment={this.state.segmentEditId}
-              isEdit
-              condensed
-              onComplete={() => {
-                this.setState({
-                  segmentEditId: undefined,
-                })
-                this.props.setShowCreateSegment(false)
-              }}
-              onCancel={() => {
-                this.setState({ segmentEditId: undefined })
-                this.props.setShowCreateSegment(false)
-              }}
-              environmentId={this.props.environmentId}
-              projectId={this.props.projectId}
-            />
-          )}
-          {visibleValues &&
-            !!visibleValues.length &&
-            !this.props.showCreateSegment && (
-              <div
-                style={isLoading ? { opacity: 0.5 } : null}
-                className='overflow-visible'
-              >
-                {!this.props.id && (
-                  <div className='my-4'>
-                    <InfoMessage className='mb-4 text-left faint'>
-                      Prioritise a segment override by dragging it to the top of
-                      the list.
-                      <br />
-                      Segment overrides will only apply when you identify via
-                      the SDK.{' '}
-                      <a
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                        rel='noreferrer'
+        <Permission
+          level='project'
+          permission={'MANAGE_SEGMENTS'}
+          id={this.props.projectId}
+        >
+          {({ permission: manageSegments }) => {
+            return (
+              <div className='mt-2 mb-2'>
+                {!this.props.id &&
+                  !this.props.disableCreate &&
+                  !this.props.showCreateSegment &&
+                  !this.props.readOnly && (
+                    <Flex className='text-left'>
+                      <SegmentSelect
+                        disabled={!!isLimitReached}
+                        projectId={this.props.projectId}
+                        data-test='select-segment'
+                        placeholder='Create a Segment Override...'
+                        filter={filter}
+                        value={this.state.selectedSegment}
+                        onChange={(selectedSegment) =>
+                          this.setState({ selectedSegment }, this.addItem)
+                        }
+                      />
+                    </Flex>
+                  )}
+                {!this.props.showCreateSegment &&
+                  !this.props.readOnly &&
+                  !this.props.disableCreate && (
+                    <div className='text-right'>
+                      <Button
+                        className='mt-2'
+                        onClick={() => {
+                          this.setState({ selectedSegment: null })
+                          this.props.setShowCreateSegment(true)
+                        }}
+                        theme='outline'
+                        disabled={!manageSegments || !!isLimitReached}
                       >
-                        Check the Docs for more details
-                      </a>
-                      .
-                    </InfoMessage>
-                    <SegmentOverrideLimit
-                      id={this.props.environmentId}
-                      maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+                        Create Feature-Specific Segment
+                      </Button>
+                    </div>
+                  )}
+                {this.props.showCreateSegment && !this.state.segmentEditId && (
+                  <div className='create-segment-overrides'>
+                    <CreateSegmentModal
+                      onComplete={(segment) => {
+                        if (this.state.selectedSegment) {
+                          this.props.setShowCreateSegment(false)
+                        } else {
+                          this.props.setShowCreateSegment(false)
+                          this.setState(
+                            {
+                              selectedSegment: {
+                                label: segment.name,
+                                value: segment.id,
+                              },
+                            },
+                            this.addItem,
+                          )
+                        }
+                      }}
+                      onCancel={() => {
+                        this.props.setShowCreateSegment(false)
+                      }}
+                      condensed
+                      feature={this.props.feature}
+                      environmentId={this.props.environmentId}
+                      projectId={this.props.projectId}
                     />
                   </div>
                 )}
-
-                {value && (
-                  <>
-                    <InnerComponent
-                      disabled={isLoading || this.props.readOnly}
-                      id={this.props.id}
-                      name={this.props.name}
-                      controlValue={this.props.controlValue}
-                      multivariateOptions={multivariateOptions}
-                      confirmRemove={this.confirmRemove}
-                      setVariations={this.setVariations}
-                      toggle={this.toggle}
-                      setValue={this.setValue}
-                      readOnly={this.props.readOnly}
-                      showEditSegment={this.props.showEditSegment}
-                      environmentId={this.props.environmentId}
-                      projectId={this.props.projectId}
-                      setShowCreateSegment={this.props.setShowCreateSegment}
-                      items={value.map((v) => ({
-                        ...v,
-                      }))}
-                      setSegmentEditId={this.setSegmentEditId}
-                      onSortEnd={this.onSortEnd}
-                      projectFlag={this.props.projectFlag}
-                    />
-                    <div className='text-left mt-4'>
-                      <JSONReference
-                        showNamesButton
-                        title={'Segment Overrides'}
-                        json={value}
-                      />
-                    </div>
-                  </>
+                {this.props.showCreateSegment && this.state.segmentEditId && (
+                  <CreateSegmentModal
+                    segment={this.state.segmentEditId}
+                    isEdit
+                    condensed
+                    onComplete={() => {
+                      this.setState({
+                        segmentEditId: undefined,
+                      })
+                      this.props.setShowCreateSegment(false)
+                    }}
+                    onCancel={() => {
+                      this.setState({ segmentEditId: undefined })
+                      this.props.setShowCreateSegment(false)
+                    }}
+                    environmentId={this.props.environmentId}
+                    projectId={this.props.projectId}
+                  />
                 )}
+                {visibleValues &&
+                  !!visibleValues.length &&
+                  !this.props.showCreateSegment && (
+                    <div
+                      style={isLoading ? { opacity: 0.5 } : null}
+                      className='overflow-visible'
+                    >
+                      {!this.props.id && (
+                        <div className='my-4'>
+                          <InfoMessage className='mb-4 text-left faint'>
+                            Prioritise a segment override by dragging it to the
+                            top of the list.
+                            <br />
+                            Segment overrides will only apply when you identify
+                            via the SDK.{' '}
+                            <a
+                              target='_blank'
+                              href='https://docs.flagsmith.com/basic-features/managing-segments'
+                              rel='noreferrer'
+                            >
+                              Check the Docs for more details
+                            </a>
+                            .
+                          </InfoMessage>
+                          <SegmentOverrideLimit
+                            id={this.props.environmentId}
+                            maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+                          />
+                        </div>
+                      )}
+
+                      {value && (
+                        <>
+                          <InnerComponent
+                            disabled={isLoading || this.props.readOnly}
+                            id={this.props.id}
+                            name={this.props.name}
+                            controlValue={this.props.controlValue}
+                            multivariateOptions={multivariateOptions}
+                            confirmRemove={this.confirmRemove}
+                            setVariations={this.setVariations}
+                            toggle={this.toggle}
+                            setValue={this.setValue}
+                            readOnly={this.props.readOnly}
+                            showEditSegment={this.props.showEditSegment}
+                            environmentId={this.props.environmentId}
+                            projectId={this.props.projectId}
+                            setShowCreateSegment={
+                              this.props.setShowCreateSegment
+                            }
+                            items={value.map((v) => ({
+                              ...v,
+                            }))}
+                            setSegmentEditId={this.setSegmentEditId}
+                            onSortEnd={this.onSortEnd}
+                            projectFlag={this.props.projectFlag}
+                          />
+                          <div className='text-left mt-4'>
+                            <JSONReference
+                              showNamesButton
+                              title={'Segment Overrides'}
+                              json={value}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
               </div>
-            )}
-        </div>
+            )
+          }}
+        </Permission>
       </div>
     )
   }
