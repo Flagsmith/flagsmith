@@ -130,8 +130,8 @@ and whether you are using Client-side or Server-side SDKs!
 
 #### Client-side
 
-- Flagsmith SDKs will store all the Flags for an Environment in local memory. Flag evaluations within the SDK are then a
-  simple lookup in memory with no associated network call.
+- By default, client-side SDKs will initialise and retrieve all the Flags for an Environment and store them in local
+  memory. Flag evaluations within the SDK are then a simple lookup in memory with no associated network call.
 - If the context of an Identity changes, for example if a new Trait is added to the Identity, the SDK will make a new
   call to the Flagsmith API to update the Traits of the Identity and receive new Flags, as the value of those flags may
   have changed. This happens in one network call.
@@ -139,9 +139,17 @@ and whether you are using Client-side or Server-side SDKs!
 - Other than the above two points, the SDK will not make further network requests to the Flagsmith API. If you wish you
   can manually trigger a network call in code and refresh Flags locally.
 
+:::tip
+
+Exact Client-side specifics of initialisation and Flag retrieval depends on the language and platform. Check the docs
+for the relevant language platform for details.
+
+:::
+
 #### Server-side
 
-- Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a network request.
+- Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a
+  network request.
 
 If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
 consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
