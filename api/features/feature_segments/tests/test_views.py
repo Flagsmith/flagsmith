@@ -10,7 +10,6 @@ from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
 )
-from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
 from projects.models import UserProjectPermission
 from projects.permissions import VIEW_PROJECT
@@ -146,7 +145,12 @@ def test_create_feature_segment_without_permission_returns_403(
 
 
 def test_create_feature_segment_staff_with_permission(
-    segment, feature, environment, staff_client, staff_user
+    segment,
+    feature,
+    environment,
+    staff_client,
+    staff_user,
+    with_environment_permissions,
 ):
     # Given
     data = {
@@ -155,10 +159,7 @@ def test_create_feature_segment_staff_with_permission(
         "environment": environment.id,
     }
     url = reverse("api-v1:features:feature-segment-list")
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
-    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
 
     # When
     response = staff_client.post(
@@ -170,7 +171,12 @@ def test_create_feature_segment_staff_with_permission(
 
 
 def test_create_feature_segment_staff_wrong_permission(
-    segment, feature, environment, staff_client, staff_user
+    segment,
+    feature,
+    environment,
+    staff_client,
+    staff_user,
+    with_environment_permissions,
 ):
     # Given
     data = {
@@ -179,11 +185,8 @@ def test_create_feature_segment_staff_wrong_permission(
         "environment": environment.id,
     }
     url = reverse("api-v1:features:feature-segment-list")
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
     # Former permission; no longer authorizes.
-    user_environment_permission.permissions.add(UPDATE_FEATURE_STATE)
+    with_environment_permissions([UPDATE_FEATURE_STATE])
 
     # When
     response = staff_client.post(
@@ -260,6 +263,7 @@ def test_update_priority_for_staff(
     feature,
     staff_client,
     staff_user,
+    with_environment_permissions,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
@@ -268,10 +272,7 @@ def test_update_priority_for_staff(
         {"id": feature_segment.id, "priority": 1},
     ]
 
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
-    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
 
     # When
     response = staff_client.post(
@@ -344,16 +345,19 @@ def test_get_feature_segment_by_uuid(
 
 
 def test_get_feature_segment_by_uuid_for_staff(
-    feature_segment, project, staff_client, staff_user, environment, feature
+    feature_segment,
+    project,
+    staff_client,
+    staff_user,
+    environment,
+    feature,
+    with_environment_permissions,
 ):
     # Given
     url = reverse(
         "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
     )
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
-    user_environment_permission.permissions.add(UPDATE_FEATURE_STATE)
+    with_environment_permissions([UPDATE_FEATURE_STATE])
     user_project_permission = UserProjectPermission.objects.create(
         user=staff_user, project=project
     )
@@ -405,14 +409,18 @@ def test_get_feature_segment_by_id(
 
 
 def test_get_feature_segment_by_id_for_staff(
-    feature_segment, project, staff_client, staff_user, environment, feature
+    feature_segment,
+    project,
+    staff_client,
+    staff_user,
+    environment,
+    feature,
+    with_environment_permissions,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
-    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
     user_project_permission = UserProjectPermission.objects.create(
         user=staff_user, project=project
     )
