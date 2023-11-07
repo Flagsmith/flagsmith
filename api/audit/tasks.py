@@ -242,20 +242,19 @@ def create_audit_log_user_logged_out(
 def create_audit_log_user_login_failed(
     credentials: dict,
     ip_address: str | None = None,
-    codes: list[str] | str | None = None,
+    codes: list[str] | None = None,
 ):
     if not (username := credentials.get("username")):
         return
     UserModel = get_user_model()
     try:
         # ModelBackend looks up user this way, so we will do the same
-        user = get_user_model()._default_manager.get_by_natural_key(username)
+        user = UserModel._default_manager.get_by_natural_key(username)
     except UserModel.DoesNotExist:
         return
     if not isinstance(user, _AbstractBaseAuditableModel):
         return
 
-    codes = [codes] if type(codes) is str else codes
     reason = ",".join(codes) if codes else "password"
     log_message = f"{RelatedObjectType.USER.value} login failed ({reason}): {user.get_audit_log_identity()}"
 
