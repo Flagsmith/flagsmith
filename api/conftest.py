@@ -82,7 +82,8 @@ def staff_user(django_user_model):
     A non-admin user fixture.
 
     To add to an environment with permissions use the fixture
-    with_environment_permissions.
+    with_environment_permissions, or similar with the fixture
+
 
     This fixture is attached to the organisation fixture.
     """
@@ -198,6 +199,29 @@ def with_environment_permissions(
         return uep
 
     return _with_environment_permissions
+
+
+@pytest.fixture()
+def with_project_permissions(
+    project: Project, staff_user: FFAdminUser
+) -> typing.Callable:
+    """
+    Add project permissions to the staff_user fixture.
+    Defaults to associating to the environment fixture.
+    """
+
+    def _with_project_permissions(
+        permission_keys: list[str], project_id: typing.Optional[int] = None
+    ) -> UserProjectPermission:
+        project_id = project_id or project.id
+        upp, __ = UserProjectPermission.objects.get_or_create(
+            project_id=project_id, user=staff_user
+        )
+        upp.permissions.add(*permission_keys)
+
+        return upp
+
+    return _with_project_permissions
 
 
 @pytest.fixture()
