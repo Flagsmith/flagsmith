@@ -352,16 +352,14 @@ def test_get_feature_segment_by_uuid_for_staff(
     environment,
     feature,
     with_environment_permissions,
+    with_project_permissions,
 ):
     # Given
     url = reverse(
         "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
     )
     with_environment_permissions([UPDATE_FEATURE_STATE])
-    user_project_permission = UserProjectPermission.objects.create(
-        user=staff_user, project=project
-    )
-    user_project_permission.add_permission(VIEW_PROJECT)
+    with_project_permissions([VIEW_PROJECT])
 
     # When
     response = staff_client.get(url)
