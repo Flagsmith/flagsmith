@@ -1,5 +1,5 @@
 ---
-title: Permissions and Role Based Access Control
+title: Role Based Access Control
 ---
 
 Flagsmith provides fine-grained permissions to help larger teams manage access and roles across organisations, projects
@@ -12,9 +12,9 @@ these features as part of a self hosted/on premise solution, please [get in touc
 
 :::
 
-## Users, Groups and Roles
+## Users, Groups, and Roles
 
-Permissions are assigned to individual Flagsmith users, groups or roles.
+Permissions can be assigned to Flagsmith individual users, groups, or roles.
 
 ### Users
 
@@ -34,9 +34,9 @@ that group, but not the permissions the group has on other entities.
 
 ### Roles
 
-Roles are an entity to which you can attach a set of permissions at the organization, project, and environment levels.
-You can assign a role, along with its associated permissions, to a user or group. You can also assign API keys to a
-role.
+A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at organization,
+project, and environment levels. You can assign a role, along with its associated permissions, to a user or group. You
+will also be able to assign API keys to a role in future versions.
 
 ### Creating a role
 
@@ -74,20 +74,16 @@ After creating the role, you can assign it to users or groups by following these
 
 ## Permissions
 
-Permissions have 3 levels: Organisation, Project, and Environment.
+Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 
-### Organisations
-
-The permissions available at the Organisation level are defined below.
+### Organisation
 
 | **Permission**     | **Ability**                                                                 |
 | ------------------ | --------------------------------------------------------------------------- |
 | Create Project     | Allows the user to create Projects in the given Organisation                |
 | Manage User Groups | Allows the user to manage the Groups in the Organisation and their members. |
 
-### Projects
-
-The permissions available at the Project level are defined below.
+### Project
 
 | **Permission**     | **Ability**                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------ |
@@ -99,9 +95,7 @@ The permissions available at the Project level are defined below.
 | Manage Segments    | Can create, delete and edit Segments within the Project                                    |
 | View audit log     | Allows the user to view the audit logs for this Project.                                   |
 
-### Environments
-
-The permissions available at the Environment level are defined below.
+### Environment
 
 | **Permission**         | **Ability**                                               |
 | ---------------------- | --------------------------------------------------------- |
