@@ -3,7 +3,7 @@ name: Run API Unit tests with private package
 on:
   push:
     branches:
-      - feat/ci/run-rbac-tests #TEMP: change branch to test
+      - main
     paths:
       - api/**
       - .github/**
