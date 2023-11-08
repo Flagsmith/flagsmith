@@ -16,6 +16,7 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -529,9 +530,11 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_add_owners_adds_owner(client, project):
+def test_add_owners_fails_if_user_not_found(client, project):
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
+
+    # Users have no association to the project or organisation.
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
     user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
     url = reverse(
@@ -541,24 +544,48 @@ def test_add_owners_adds_owner(client, project):
     data = {"user_ids": [user_1.id, user_2.id]}
 
     # When
-    json_response = client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    ).json()
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data == ["Some users not found"]
+    assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
 
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_owners_adds_owner(staff_user, admin_user, client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    ).add_permission(VIEW_PROJECT)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"user_ids": [staff_user.id, admin_user.id]}
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    json_response = response.json()
     # Then
     assert len(json_response["owners"]) == 2
     assert json_response["owners"][0] == {
-        "id": user_1.id,
-        "email": user_1.email,
-        "first_name": user_1.first_name,
-        "last_name": user_1.last_name,
+        "id": staff_user.id,
+        "email": staff_user.email,
+        "first_name": staff_user.first_name,
+        "last_name": staff_user.last_name,
         "last_login": None,
     }
     assert json_response["owners"][1] == {
-        "id": user_2.id,
-        "email": user_2.email,
-        "first_name": user_2.first_name,
-        "last_name": user_2.last_name,
+        "id": admin_user.id,
+        "email": admin_user.email,
+        "first_name": admin_user.first_name,
+        "last_name": admin_user.last_name,
         "last_login": None,
     }
 
