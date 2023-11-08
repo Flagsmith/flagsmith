@@ -790,8 +790,12 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
 
 
 def test_create_segment_override_forbidden(
-    feature, segment, environment, api_client, staff_user, staff_client
-):
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:create-segment-override",
@@ -820,8 +824,12 @@ def test_create_segment_override_forbidden(
 
 
 def test_create_segment_override_staff(
-    feature, segment, environment, staff_user, staff_client
-):
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
     # Given
     url = reverse(
         "api-v1:environments:create-segment-override",

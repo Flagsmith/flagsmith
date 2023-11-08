@@ -1,4 +1,5 @@
 import json
+from typing import Callable
 
 import pytest
 from django.urls import reverse
@@ -11,9 +12,10 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
 )
 from features.models import Feature, FeatureSegment
-from projects.models import UserProjectPermission
+from projects.models import Project, UserProjectPermission
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
+from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(
@@ -145,13 +147,13 @@ def test_create_feature_segment_without_permission_returns_403(
 
 
 def test_create_feature_segment_staff_with_permission(
-    segment,
-    feature,
-    environment,
-    staff_client,
-    staff_user,
-    with_environment_permissions,
-):
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    staff_client: FFAdminUser,
+    staff_user: FFAdminUser,
+    with_environment_permissions: Callable,
+) -> None:
     # Given
     data = {
         "feature": feature.id,
@@ -171,12 +173,12 @@ def test_create_feature_segment_staff_with_permission(
 
 
 def test_create_feature_segment_staff_wrong_permission(
-    segment,
-    feature,
-    environment,
-    staff_client,
-    staff_user,
-    with_environment_permissions,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    staff_client: FFAdminUser,
+    staff_user: FFAdminUser,
+    with_environment_permissions: Callable,
 ):
     # Given
     data = {
@@ -257,14 +259,14 @@ def test_update_priority_of_multiple_feature_segments(
 
 
 def test_update_priority_for_staff(
-    feature_segment,
-    project,
-    environment,
-    feature,
-    staff_client,
-    staff_user,
-    with_environment_permissions,
-):
+    feature_segment: FeatureSegment,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    staff_client: FFAdminUser,
+    staff_user: FFAdminUser,
+    with_environment_permissions: Callable,
+) -> None:
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
@@ -345,15 +347,15 @@ def test_get_feature_segment_by_uuid(
 
 
 def test_get_feature_segment_by_uuid_for_staff(
-    feature_segment,
-    project,
-    staff_client,
-    staff_user,
-    environment,
-    feature,
-    with_environment_permissions,
-    with_project_permissions,
-):
+    feature_segment: FeatureSegment,
+    project: Project,
+    staff_client: FFAdminUser,
+    staff_user: FFAdminUser,
+    environment: Environment,
+    feature: Feature,
+    with_environment_permissions: Callable,
+    with_project_permissions: Callable,
+) -> None:
     # Given
     url = reverse(
         "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
@@ -407,13 +409,13 @@ def test_get_feature_segment_by_id(
 
 
 def test_get_feature_segment_by_id_for_staff(
-    feature_segment,
-    project,
-    staff_client,
-    staff_user,
-    environment,
-    feature,
-    with_environment_permissions,
+    feature_segment: FeatureSegment,
+    project: Project,
+    staff_client: FFAdminUser,
+    staff_user: FFAdminUser,
+    environment: Environment,
+    feature: Feature,
+    with_environment_permissions: Callable,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
