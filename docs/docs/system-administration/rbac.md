@@ -1,11 +1,9 @@
 ---
-title: Role Based Access Control
+title: Permissions and Role Based Access Control
 ---
 
-Flagsmith provides fine-grained permissions to help larger teams manage access and roles across projects and
-environments.
-
-Permissions are assigned to individual team members or to groups.
+Flagsmith provides fine-grained permissions to help larger teams manage access and roles across organisations, projects
+and environments.
 
 :::info
 
@@ -14,33 +12,84 @@ these features as part of a self hosted/on premise solution, please [get in touc
 
 :::
 
-## Groups
+## Users, Groups and Roles
 
-Groups are a convenient way to manage permissions for multiple team members. Groups can contain any number of team
-members. You can create groups with the Organisation Settings page.
+Permissions are assigned to individual Flagsmith users, groups or roles.
 
-Members of a group can be designated as an admin for that group. As a group admin, users can manage the membership for
-that group, but not the permissions the group has on other entities.
+### Users
 
-## Organisations
-
-Team members can be defined as Organisation Administrators or Users. Organisation Administrator is effectively a
+Flagsmith Users can be defined as Organisation Administrators or Users. Organisation Administrator is effectively a
 super-user role, and gives full read/write access to every Project, Environment, Flag, Remote Config and Segment within
 that Organisation.
 
 Users that are not Organisation Administrators must have permissions assigned to them manually at the relevant levels.
+
+### Groups
+
+Groups are a convenient way to manage permissions for multiple Flagsmith users. Groups can contain any number of
+Flagsmith users. You can create groups with the Organisation Settings page.
+
+Members of a group can be designated as an admin for that group. As a group admin, users can manage the membership for
+that group, but not the permissions the group has on other entities.
+
+### Roles
+
+Roles are an entity to which you can attach a set of permissions at the organization, project, and environment levels.
+You can assign a role, along with its associated permissions, to a user or group. You can also assign API keys to a
+role.
+
+### Creating a role
+
+You can create a role in the Organisation Settings page.
+
+![RoleList](/img/roles/role-list.png)
+
+![RoleCreate](/img/roles/role-create.png)
+
+### Add Permissions to a role
+
+Once the role is created you can assign the corresponding permissions.
+
+In this case Project Permissions and Environment Permissions:
+
+![RoleProjectPermission](/img/roles/role-project-permissions.png)
+
+![RoleEnvPermission](/img/roles/role-env-permissions.png)
+
+### Assign role to users or groups
+
+After creating the role, you can assign it to users or groups by following these steps.
+
+#### Assign users and groups
+
+![RoleAssignUsers](/img/roles/role-assign-users.png)
+
+![RoleAssignGroups](/img/roles/role-assign-groups.png)
+
+#### List of assigned users/groups
+
+![RoleListUsers](/img/roles/role-user-assigned-list.png)
+
+![RoleListGroups](/img/roles/role-groups-assigned-list.png)
+
+## Permissions
+
+Permissions have 3 levels: Organisation, Project, and Environment.
+
+### Organisations
+
 The permissions available at the Organisation level are defined below.
 
-| **Role**           | **Ability**                                                                 |
+| **Permission**     | **Ability**                                                                 |
 | ------------------ | --------------------------------------------------------------------------- |
 | Create Project     | Allows the user to create Projects in the given Organisation                |
 | Manage User Groups | Allows the user to manage the Groups in the Organisation and their members. |
 
-## Projects
+### Projects
 
-Team Members and Groups can be given individual roles at a Project level.
+The permissions available at the Project level are defined below.
 
-| **Role**           | **Ability**                                                                                |
+| **Permission**     | **Ability**                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------ |
 | Administrator      | Full Read/Write over all Environments, Feature Flag, Remote Config, Segment and Tag values |
 | View Project       | Can view the Project within their account                                                  |
@@ -50,11 +99,11 @@ Team Members and Groups can be given individual roles at a Project level.
 | Manage Segments    | Can create, delete and edit Segments within the Project                                    |
 | View audit log     | Allows the user to view the audit logs for this Project.                                   |
 
-## Environments
+### Environments
 
-Team Members and Groups can be given individual roles at an Environment level.
+The permissions available at the Environment level are defined below.
 
-| **Role**               | **Ability**                                               |
+| **Permission**         | **Ability**                                               |
 | ---------------------- | --------------------------------------------------------- |
 | Administrator          | Can modify Feature Flag, Remote Config and Segment values |
 | View Environment       | Can see the Environment within their account              |
