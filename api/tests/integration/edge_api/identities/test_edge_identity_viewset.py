@@ -212,10 +212,11 @@ def test_get_identities_list(
     edge_identity_dynamo_wrapper_mock,
 ):
     # Given
-    url = reverse(
+    base_url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
+    url = f"{base_url}?page_size=9999"
 
     edge_identity_dynamo_wrapper_mock.get_all_items.return_value = {
         "Items": [identity_document],
@@ -232,7 +233,7 @@ def test_get_identities_list(
     # Then
     assert response.status_code == status.HTTP_200_OK
     edge_identity_dynamo_wrapper_mock.get_all_items.assert_called_with(
-        environment_api_key, 999, None
+        environment_api_key, 100, None
     )
 
 
@@ -268,7 +269,7 @@ def test_search_identities_without_exact_match(
         environment_api_key,
         identifier,
         EdgeIdentityViewSet.dynamo_identifier_search_functions["BEGINS_WITH"],
-        999,
+        100,
         None,
     )
 
@@ -307,7 +308,7 @@ def test_search_for_identities_with_exact_match(
         environment_api_key,
         identifier,
         EdgeIdentityViewSet.dynamo_identifier_search_functions["EQUAL"],
-        999,
+        100,
         None,
     )
 
