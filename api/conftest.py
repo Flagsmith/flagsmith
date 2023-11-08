@@ -207,7 +207,7 @@ def with_project_permissions(
 ) -> typing.Callable:
     """
     Add project permissions to the staff_user fixture.
-    Defaults to associating to the environment fixture.
+    Defaults to associating to the project fixture.
     """
 
     def _with_project_permissions(
