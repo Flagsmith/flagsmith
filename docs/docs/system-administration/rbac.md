@@ -44,33 +44,36 @@ You can create a role in the Organisation Settings page.
 
 ![RoleList](/img/roles/role-list.png)
 
+Once the Create role button is pressed, the role creation modal will open and you will be able to create the role.
+
 ![RoleCreate](/img/roles/role-create.png)
 
 ### Add Permissions to a role
 
 Once the role is created you can assign the corresponding permissions.
 
-In this case Project Permissions and Environment Permissions:
+**E.g. Add Project permission:**
 
-![RoleProjectPermission](/img/roles/role-project-permissions.png)
+- Choose a role.
+- Go to the projects tab.
+- Select a project and enable theirs permissions.
 
-![RoleEnvPermission](/img/roles/role-env-permissions.png)
+![RoleListProject](/img/roles/role-project-permissions.png)
 
 ### Assign role to users or groups
 
-After creating the role, you can assign it to users or groups by following these steps.
+After creating the role, you can assign it to users or groups.
 
-#### Assign users and groups
+**E.g. Assign role to a user:**
 
-![RoleAssignUsers](/img/roles/role-assign-users.png)
+- Choose a role.
+- Go to the Members tab.
+- Select the Users tab.
+- Click assign role to user button and select a user.
 
-![RoleAssignGroups](/img/roles/role-assign-groups.png)
-
-#### List of assigned users/groups
+**List of assigned users:**
 
 ![RoleListUsers](/img/roles/role-user-assigned-list.png)
-
-![RoleListGroups](/img/roles/role-groups-assigned-list.png)
 
 ## Permissions
 
