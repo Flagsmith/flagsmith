@@ -6,6 +6,9 @@ import React, {
   useImperativeHandle,
 } from 'react'
 import { find } from 'lodash'
+import { close as closeIcon } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
@@ -646,7 +649,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                           style={{ marginBottom: 4, marginTop: 4 }}
                         >
                           <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion ion-ios-close' />
+                          <span className='chip-icon ion'>
+                            <IonIcon
+                              icon={closeIcon}
+                              style={{ fontSize: '13px' }}
+                            />
+                          </span>
                         </Row>
                       ))}
                       <Button
