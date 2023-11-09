@@ -34,35 +34,29 @@ that group, but not the permissions the group has on other entities.
 
 ### Roles
 
-A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at organization,
-project, and environment levels. You can assign a role, along with its associated permissions, to a user or group. You
-will also be able to assign API keys to a role in future versions.
+A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at Organization,
+Project, and Environment levels. You can assign a role, along with its associated permissions, to a User or Group. You
+will also be able to assign API keys to a Role in future versions.
 
-### Creating a role
+#### Creating a Role
 
-You can create a role in the Organisation Settings page.
+You can create a Role in the Organisation Settings page.
 
-![RoleList](/img/roles/role-list.png)
-
-Once the Create role button is pressed, the role creation modal will open and you will be able to create the role.
-
-![RoleCreate](/img/roles/role-create.png)
-
-### Add Permissions to a role
+#### Add Permissions to a Role
 
 Once the role is created you can assign the corresponding permissions.
 
 **E.g. Add Project permission:**
 
-- Choose a role.
-- Go to the projects tab.
-- Select a project and enable theirs permissions.
+- Choose a Role.
+- Go to the Projects tab.
+- Select a Project and enable the relevant permissions.
 
 ![RoleListProject](/img/roles/role-project-permissions.png)
 
-### Assign role to users or groups
+### Assign Role to Users or Groups
 
-After creating the role, you can assign it to users or groups.
+After creating the Role, you can assign it to Users or Groups.
 
 **E.g. Assign role to a user:**
 
