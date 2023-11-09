@@ -1,8 +1,10 @@
 import json
+from typing import Callable
 from unittest import TestCase, mock
 
 import pytest
 from core.constants import STRING
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -12,9 +14,10 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
-from metadata.models import Metadata
+from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from projects.models import (
     Project,
@@ -534,6 +537,53 @@ def test_create_environment_without_required_metadata_returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Missing required metadata field" in response.json()["metadata"][0]
+
+
+def test_view_environment_with_staff_track_query_count(
+    staff_client: FFAdminUser,
+    environment: Environment,
+    with_environment_permissions: Callable,
+    project: Project,
+    django_assert_num_queries: Callable,
+    environment_metadata_a: Metadata,
+    environment_metadata_b: Metadata,
+    required_a_environment_metadata_field: MetadataModelField,
+    environment_content_type: ContentType,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    url = reverse("api-v1:environments:environment-list")
+    data = {"project": project.id}
+
+    # When
+    expected_query_count = 7
+    with django_assert_num_queries(expected_query_count):
+        response = staff_client.get(url, data=data, content_type="application/json")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    # Add an environment to make sure the query count is the same.
+    environment_2 = Environment.objects.create(
+        name="Second Environment", project=project
+    )
+    Metadata.objects.create(
+        object_id=environment_2.id,
+        content_type=environment_content_type,
+        model_field=required_a_environment_metadata_field,
+        field_value="10",
+    )
+
+    with_environment_permissions([VIEW_ENVIRONMENT], environment_id=environment_2.id)
+
+    # One additional query for unrelated, unfixable N+1 issue.
+    expected_query_count += 1
+
+    # Then
+    with django_assert_num_queries(expected_query_count):
+        response = staff_client.get(url, data=data, content_type="application/json")
+
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize(
