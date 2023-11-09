@@ -33,6 +33,8 @@ import {
   useDeleteRolePermissionGroupMutation,
   useGetRolePermissionGroupQuery,
 } from 'common/services/useRolePermissionGroup'
+import { close as closeIcon } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 type CreateRoleType = {
   organisationId?: string
@@ -450,7 +452,12 @@ const CreateRole: FC<CreateRoleType> = ({
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}
                       </span>
-                      <span className='chip-icon ion ion-ios-close' />
+                      <span className='chip-icon ion'>
+                        <IonIcon
+                          icon={closeIcon}
+                          style={{ fontSize: '13px' }}
+                        />
+                      </span>
                     </Row>
                   ))}
               </div>
@@ -486,7 +493,12 @@ const CreateRole: FC<CreateRoleType> = ({
                       className='chip my-1 role-list'
                     >
                       <span className='font-weight-bold'>{g.name}</span>
-                      <span className='chip-icon ion ion-ios-close' />
+                      <span className='chip-icon ion'>
+                        <IonIcon
+                          icon={closeIcon}
+                          style={{ fontSize: '13px' }}
+                        />
+                      </span>
                     </Row>
                   ))}
               </div>
