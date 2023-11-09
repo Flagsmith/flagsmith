@@ -576,7 +576,7 @@ def test_view_environment_with_staff_track_query_count(
 
     with_environment_permissions([VIEW_ENVIRONMENT], environment_id=environment_2.id)
 
-    # One additional query for unrelated, unfixable N+1 issue.
+    # One additional query for an unrelated, unfixable N+1 issue.
     expected_query_count += 1
 
     # Then
