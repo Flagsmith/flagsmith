@@ -1,12 +1,15 @@
 import json
 from datetime import datetime, timedelta
+from typing import Type
 from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.db.models import Model
 from django.urls import reverse
 from freezegun import freeze_time
 from pytz import UTC
@@ -718,24 +721,35 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert not mail.outbox
 
-    def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(
-        self,
-    ):
-        # Given
-        data = {
-            "content": {
-                "subscription": {"status": "active", "id": "some-random-id"},
-                "customer": {"email": self.cb_user.email},
-            }
+
+def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
+    api_client: APIClient, caplog: LogCaptureFixture, django_user_model: Type[Model]
+):
+    # Given
+    subscription_id = "some-random-id"
+    cb_user = django_user_model.objects.create(email="test@example.com", is_staff=True)
+    api_client.force_authenticate(cb_user)
+
+    data = {
+        "content": {
+            "subscription": {"status": "active", "id": subscription_id},
+            "customer": {"email": cb_user.email},
         }
+    }
+    url = reverse("api-v1:chargebee-webhook")
 
-        # When
-        res = self.client.post(
-            self.url, data=json.dumps(data), content_type="application/json"
-        )
+    # When
+    res = api_client.post(url, data=json.dumps(data), content_type="application/json")
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+    assert len(caplog.records) == 1
+    assert caplog.record_tuples[0] == (
+        "organisations.views",
+        30,
+        f"Couldn't get unique subscription for ChargeBee id {subscription_id}",
+    )
 
 
 @pytest.mark.django_db
