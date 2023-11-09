@@ -144,7 +144,7 @@
     "@types/react-select": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
-    "chromedriver": "96.0.0",
+    "chromedriver": "119.0.1",
     "eslint": "^7.6.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "2.27.5",
