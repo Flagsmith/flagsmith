@@ -944,7 +944,7 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
 )
 
 # LDAP setting
-LDAP_INSTALLED = importlib.util.find_spec("ldap")
+LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 if LDAP_INSTALLED:
     # The URL of the LDAP server.
     LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
