@@ -14,8 +14,8 @@ const ComingSoon = class extends Component {
         <h3 className='pt-5'>Oops!</h3>
         <p>
           It looks like you do not have permission to view this{' '}
-          {Utils.fromParam().entity || 'page'}. Please contact a member with
-          administrator privileges.
+          {Utils.fromParam().entity || 'page'} or you are not a member of the
+          organisation . Please contact a member with administrator privileges.
         </p>
       </div>
     )

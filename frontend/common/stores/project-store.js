@@ -146,6 +146,7 @@ const controller = {
         })
         .catch(() => {
           if (!getIsWidget()) {
+            AsyncStorage.removeItem('lastEnv')
             document.location.href = '/404?entity=project'
           }
         })
