@@ -72,10 +72,10 @@ You can integrate Flagsmith with AppDynamics. Send flag change events from Flags
 
 ## Chat / Messaging Platforms
 
-<a href="/integrations/slack" alt="Slack"><img width="30%" src="/img/integrations/slack/slack-logo.svg"/></a>
+<a href="/integrations/project-management/slack" alt="Slack"><img width="30%" src="/img/integrations/slack/slack-logo.svg"/></a>
 
 You can integrate Flagsmith with Slack. Send flag change events from Flagsmith into your Slack channels.
-[Learn more](/integrations/slack)
+[Learn more](/integrations/project-management/slack)
 
 ## Authentication Providers / IDPs
 
