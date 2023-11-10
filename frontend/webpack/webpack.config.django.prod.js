@@ -58,8 +58,8 @@ module.exports = {
             ),
 
         ]).concat(require('./pages').map(page => new HtmlWebpackPlugin({
-            filename: `${page}.html`, // output template
-            template: `../api/app/templates/${page}.html`, // template to use
+            filename: `../app/templates/webpack/${page}.html`, // output template (relative from static dir)
+            template: `web/${page}.html`, // template to use (use the same template used for running FE outside of vercel)
             'assets': { // add these script/link tags
                 'client': '/[fullhash].js',
                 'style': 'style.[fullhash].css',
