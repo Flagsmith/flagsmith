@@ -338,7 +338,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     }
 
     mocked_chargebee.Subscription.update.side_effect = ChargebeeAPIError(
-        http_code=200, json_obj=chargebee_response_data
+        http_code=400, json_obj=chargebee_response_data
     )
 
     # When
