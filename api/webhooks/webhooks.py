@@ -145,7 +145,9 @@ def _call_webhook(
     if webhook.secret:
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
-    return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
+    res = requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
+    res.raise_for_status()
+    return res
 
 
 @register_task_handler()
