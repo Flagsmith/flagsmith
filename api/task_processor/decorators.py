@@ -47,9 +47,6 @@ class TaskHandler(typing.Generic[W]):
     ) -> None:
         ...
 
-    def foo(*args: P.args, **kwargs: P.kwargs) -> None:
-        ...
-
 
 def register_task_handler(  # noqa: C901
     *,
