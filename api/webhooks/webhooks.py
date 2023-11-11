@@ -17,6 +17,7 @@ from organisations.models import OrganisationWebhook
 from projects.models import Organisation
 from task_processor.decorators import register_task_handler
 from task_processor.task_run_method import TaskRunMethod
+from webhooks.constants import WEBHOOK_BACKOFF_BASE, WEBHOOK_BACKOFF_RETRIES
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,
@@ -59,7 +60,10 @@ def get_webhook_model(
 
 @register_task_handler()
 def call_environment_webhooks(
-    environment_id: int, data: typing.Mapping, event_type: str, retries: int = 3
+    environment_id: int,
+    data: typing.Mapping,
+    event_type: str,
+    retries: int = WEBHOOK_BACKOFF_RETRIES,
 ):
     """
     Call environment webhooks.
@@ -87,7 +91,10 @@ def call_environment_webhooks(
 
 @register_task_handler()
 def call_organisation_webhooks(
-    organisation_id: int, data: typing.Mapping, event_type: str, retries: int = 3
+    organisation_id: int,
+    data: typing.Mapping,
+    event_type: str,
+    retries: int = WEBHOOK_BACKOFF_RETRIES,
 ):
     """
     Call organisation webhooks.
@@ -142,12 +149,12 @@ def _call_webhook(
 
 
 @register_task_handler()
-def call_webhook_with_failure_mail_after_retires(
+def call_webhook_with_failure_mail_after_retries(
     webhook_id: int,
     data: typing.Mapping,
     webhook_type: str,
     send_failure_mail: bool = False,
-    max_retries: int = 3,
+    max_retries: int = WEBHOOK_BACKOFF_RETRIES,
     try_count: int = 1,
 ):
     """
@@ -180,6 +187,7 @@ def call_webhook_with_failure_mail_after_retires(
         res = requests.post(
             str(webhook.url), data=json_data, headers=headers, timeout=10
         )
+        res.raise_for_status()
     except requests.exceptions.RequestException as exc:
         if try_count == max_retries:
             if send_failure_mail:
@@ -190,9 +198,10 @@ def call_webhook_with_failure_mail_after_retires(
                     f"N/A ({exc.__class__.__name__})",
                 )
         else:
-            call_webhook_with_failure_mail_after_retires.delay(
+            call_webhook_with_failure_mail_after_retries.delay(
                 delay_until=(
-                    timezone.now() + timezone.timedelta(seconds=2**try_count)
+                    timezone.now()
+                    + timezone.timedelta(seconds=WEBHOOK_BACKOFF_BASE**try_count)
                     if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
                     else None
                 ),
@@ -206,10 +215,6 @@ def call_webhook_with_failure_mail_after_retires(
                 ),
             )
         return
-
-    if send_failure_mail and res.status_code != 200:
-        send_failure_email(webhook, data, webhook_type, res.status_code)
-
     return res
 
 
@@ -218,13 +223,13 @@ def _call_webhooks(
     data: typing.Mapping,
     event_type: str,
     webhook_type: WebhookType,
-    retries: int = 3,
+    retries: int = WEBHOOK_BACKOFF_RETRIES,
 ):
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
-        call_webhook_with_failure_mail_after_retires.delay(
+        call_webhook_with_failure_mail_after_retries.delay(
             args=(webhook.id, serializer.data, webhook_type.value, True, retries)
         )
 

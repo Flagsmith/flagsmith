@@ -21,7 +21,7 @@ from webhooks.webhooks import (
     WebhookType,
     call_environment_webhooks,
     call_organisation_webhooks,
-    call_webhook_with_failure_mail_after_retires,
+    call_webhook_with_failure_mail_after_retries,
     trigger_sample_webhook,
 )
 
@@ -189,16 +189,17 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
     }
     expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
 
+    retries = 4
     # When
     call_environment_webhooks(
         environment_id=environment.id,
         data=expected_data,
         event_type=expected_event_type,
+        retries=retries,
     )
 
     # Then
-    # Default is to retry 3 times for each webhook
-    assert requests_post_mock.call_count == 2 * 3
+    assert requests_post_mock.call_count == 2 * retries
     assert send_failure_email_mock.call_count == 2
     send_failure_email_mock.assert_has_calls(
         [
@@ -246,16 +247,17 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     }
     expected_send_failure_status_code = f"N/A ({expected_error.__name__})"
 
+    retries = 5
     # When
     call_organisation_webhooks(
         organisation_id=organisation.id,
         data=expected_data,
         event_type=expected_event_type,
+        retries=retries,
     )
 
     # Then
-    # Default is to retry 3 times for each webhook
-    assert requests_post_mock.call_count == 2 * 3
+    assert requests_post_mock.call_count == 2 * retries
     assert send_failure_email_mock.call_count == 2
     send_failure_email_mock.assert_has_calls(
         [
@@ -276,7 +278,7 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
 
-def test_call_webhook_with_failure_mail_after_retires_raises_error_on_invalid_args():
+def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():
     try_count = 10
     with pytest.raises(ValueError):
-        call_webhook_with_failure_mail_after_retires(0, {}, "", try_count=try_count)
+        call_webhook_with_failure_mail_after_retries(0, {}, "", try_count=try_count)
