@@ -261,7 +261,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         )
         return overage if overage > 0 else 0
 
-    def is_in_trial(self):
+    def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
 

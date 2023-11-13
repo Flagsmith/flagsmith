@@ -37,23 +37,36 @@ class StartTrialForm(forms.Form):
     max_seats = forms.IntegerField()
     max_api_calls = forms.IntegerField()
 
-    def save(self, organisation: Organisation, commit: bool = True):
-        organisation.subscription.max_seats = self.cleaned_data["max_seats"]
-        organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
-        organisation.subscription.subscription_id = TRIAL_SUBSCRIPTION_ID
-        organisation.subscription.customer_id = TRIAL_SUBSCRIPTION_ID
-        organisation.subscription.plan = "enterprise-saas-monthly-v2"
-        organisation.subscription.save()
+    def save(self, organisation: Organisation, commit: bool = True) -> Organisation:
+        subscription = organisation.subscription
+
+        subscription.max_seats = self.cleaned_data["max_seats"]
+        subscription.max_api_calls = self.cleaned_data["max_api_calls"]
+        subscription.subscription_id = TRIAL_SUBSCRIPTION_ID
+        subscription.customer_id = TRIAL_SUBSCRIPTION_ID
+        subscription.plan = "enterprise-saas-monthly-v2"
+
+        if commit:
+            subscription.save()
+
+        return organisation
 
 
 class EndTrialForm(forms.Form):
-    def save(self, organisation: Organisation, commit: bool = True):
-        organisation.subscription.max_seats = MAX_SEATS_IN_FREE_PLAN
-        organisation.subscription.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
-        organisation.subscription.subscription_id = ""
-        organisation.subscription.customer_id = ""
-        organisation.subscription.plan = FREE_PLAN_ID
-        organisation.subscription.save()
+    def save(self, organisation: Organisation, commit: bool = True) -> Organisation:
+        subscription = organisation.subscription
+
+        subscription.max_seats = MAX_SEATS_IN_FREE_PLAN
+        subscription.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        subscription.subscription_id = ""
+        subscription.customer_id = ""
+        subscription.plan = FREE_PLAN_ID
+        subscription.save()
+
+        if commit:
+            subscription.save()
+
+        return organisation
 
 
 class EmailUsageForm(forms.Form):

@@ -9,6 +9,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, F, Q
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseRedirect,
@@ -191,7 +192,9 @@ def update_max_api_calls(request, organisation_id):
 
 
 @staff_member_required
-def organisation_start_trial(request, organisation_id):
+def organisation_start_trial(
+    request: HttpRequest, organisation_id: int
+) -> HttpResponse:
     start_trial_form = StartTrialForm(request.POST)
     if start_trial_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
@@ -206,7 +209,7 @@ def organisation_start_trial(request, organisation_id):
 
 
 @staff_member_required
-def organisation_end_trial(request, organisation_id):
+def organisation_end_trial(request: HttpRequest, organisation_id: int) -> HttpResponse:
     end_trial_form = EndTrialForm(request.POST)
     if end_trial_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
