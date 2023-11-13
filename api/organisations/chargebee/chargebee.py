@@ -189,8 +189,9 @@ def add_single_seat(subscription_id: str):
         api_error_code = e.json_obj["api_error_code"]
         if api_error_code in CHARGEBEE_PAYMENT_ERROR_CODES:
             logger.warning(
-                "Payment declined during additional seat upgrade to a "
-                f"CB subscription for subscription_id {subscription_id}"
+                f"Payment declined ({api_error_code}) during additional "
+                f"seat upgrade to a CB subscription for subscription_id "
+                f"{subscription_id}"
             )
             raise UpgradeSeatsPaymentFailure() from e
 
