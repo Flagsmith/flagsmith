@@ -6,6 +6,12 @@ sidebar_position: 10
 
 View your Flagsmith flags inside Jira.
 
+:::tip
+
+The Jira integration is currently in beta. Please contact us to join the beta!
+
+:::
+
 ## Integration Setup
 
 todo: Correct the link
