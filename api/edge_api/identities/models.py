@@ -4,12 +4,8 @@ from contextlib import suppress
 
 from django.db.models import Prefetch, Q
 from flag_engine.features.models import FeatureStateModel
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
-from flag_engine.identities.models import IdentityModel
-from flag_engine.utils.collections import IdentityFeaturesList
+from flag_engine.identities.builders import build_identity_model
+from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 
 from api_keys.models import MasterAPIKey
 from environments.dynamodb import DynamoIdentityWrapper
@@ -17,6 +13,7 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from users.models import FFAdminUser
+from util.mappers import map_engine_identity_to_identity_document
 
 from .audit import generate_change_dict
 from .tasks import generate_audit_log_records, sync_identity_document_features
@@ -47,9 +44,8 @@ class EdgeIdentity:
 
     @property
     def id(self) -> typing.Union[int, str]:
-        return (
-            self._engine_identity_model.django_id
-            or self._engine_identity_model.identity_uuid
+        return self._engine_identity_model.django_id or str(
+            self._engine_identity_model.identity_uuid
         )
 
     @property
@@ -58,7 +54,7 @@ class EdgeIdentity:
 
     @property
     def identity_uuid(self) -> str:
-        return self._engine_identity_model.identity_uuid
+        return str(self._engine_identity_model.identity_uuid)
 
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
         self._engine_identity_model.identity_features.append(feature_state)
@@ -148,14 +144,16 @@ class EdgeIdentity:
     ) -> typing.Optional[FeatureStateModel]:
         return next(
             filter(
-                lambda fs: fs.featurestate_uuid == featurestate_uuid,
+                lambda fs: str(fs.featurestate_uuid) == featurestate_uuid,
                 self._engine_identity_model.identity_features,
             ),
             None,
         )
 
-    def get_hash_key(self, use_mv_v2_evaluation: bool) -> str:
-        return self._engine_identity_model.get_hash_key(use_mv_v2_evaluation)
+    def get_hash_key(self, use_identity_composite_key_for_hashing: bool) -> str:
+        return self._engine_identity_model.get_hash_key(
+            use_identity_composite_key_for_hashing
+        )
 
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
         with suppress(ValueError):  # ignore if feature state didn't exist
@@ -187,7 +185,7 @@ class EdgeIdentity:
             sync_identity_document_features.delay(args=(str(self.identity_uuid),))
 
     def to_document(self) -> dict:
-        return build_identity_dict(self._engine_identity_model)
+        return map_engine_identity_to_identity_document(self._engine_identity_model)
 
     def _get_changes(self, previous_instance: "EdgeIdentity") -> dict:
         changes = {}

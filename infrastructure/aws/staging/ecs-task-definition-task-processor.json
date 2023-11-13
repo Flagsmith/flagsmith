@@ -102,6 +102,18 @@
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "True"
+                },
+                {
+                    "name": "TASK_DELETE_RETENTION_DAYS",
+                    "value": "280"
+                },
+                {
+                    "name": "TASK_DELETE_RUN_TIME",
+                    "value": "11:00"
+                },
+                {
+                    "name": "TASK_DELETE_BATCH_SIZE",
+                    "value": "100000"
                 }
             ],
             "secrets": [
@@ -124,10 +136,6 @@
                 {
                     "name": "GITHUB_CLIENT_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_CLIENT_SECRET::"
-                },
-                {
-                    "name": "MAILERLITE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:MAILERLITE_API_KEY::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",

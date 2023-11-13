@@ -6,6 +6,8 @@ const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const OrganisationStore = require('./organisation-store')
 const data = require('../data/base/_data')
+const { createSegmentOverride } = require('../services/useSegmentOverride')
+const { getStore } = require('../store')
 
 let createdFirstFeature = false
 const PAGE_SIZE = 200
@@ -64,7 +66,7 @@ const controller = {
           (flag.multivariate_options || []).map((v) =>
             data
               .post(
-                `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`,
+                `${Project.api}projects/${projectId}/features/${res.id}/mv-options/`,
                 {
                   ...v,
                   feature: res.id,
@@ -208,35 +210,55 @@ const controller = {
           })
         }
         if (!v.id) {
-          return data
-            .post(`${Project.api}features/feature-segments/`, {
-              environment: v.environment,
-              feature: v.feature,
-              priority: v.priority,
-              segment: v.segment,
-            })
-            .then((featureSegment) =>
-              data
-                .post(`${Project.api}features/featurestates/`, {
-                  enabled: v.enabled,
-                  environment: v.feature_segment_value.environment,
-                  feature: v.feature_segment_value.feature,
-                  feature_segment: featureSegment.id,
-                  feature_state_value: Utils.valueToFeatureState(v.value),
-                })
-                .then((featureSegmentValue) => {
-                  const newValue = {
-                    ...featureSegment,
-                    enabled: segmentOverrides[i].enabled,
-                    feature_segment_value: featureSegmentValue,
-                    multivariate_options:
-                      segmentOverrides[i].multivariate_options,
-                    segment_name: v.segment_name,
-                    value: segmentOverrides[i].value,
-                  }
-                  segmentOverrides[i] = newValue
-                }),
-            )
+          const featureFlagId = v.feature
+          return createSegmentOverride(
+            getStore(),
+            {
+              enabled: !!v.enabled,
+              environmentId,
+              featureId: featureFlagId,
+              feature_segment: {
+                segment: v.segment,
+              },
+              feature_state_value: {
+                boolean_value:
+                  v.feature_segment_value.feature_state_value.boolean_value,
+                integer_value:
+                  v.feature_segment_value.feature_state_value.integer_value,
+                string_value:
+                  v.feature_segment_value.feature_state_value.string_value,
+                type: v.feature_segment_value.feature_state_value.type,
+              },
+            },
+            { forceRefetch: true },
+          ).then((segmentOverride) => {
+            const newValue = {
+              environment: segmentOverride.data.environment,
+              feature: featureFlagId,
+              feature_segment_value: {
+                change_request: segmentOverride.data.change_request,
+                created_at: segmentOverride.data.created_at,
+                deleted_at: segmentOverride.data.deleted_at,
+                enabled: segmentOverride.data.enabled,
+                environment: segmentOverride.data.environment,
+                feature: featureFlagId,
+                feature_state_value: segmentOverride.data.feature_state_value,
+                id: segmentOverride.data.id,
+                identity: segmentOverride.data.identity,
+                live_from: segmentOverride.data.live_from,
+                updated_at: segmentOverride.data.updated_at,
+                uuid: segmentOverride.data.uuid,
+              },
+              id: segmentOverride.data.feature_segment.id,
+              multivariate_options: segmentOverrides[i].multivariate_options,
+              priority: segmentOverride.data.feature_segment.priority,
+              segment: segmentOverride.data.feature_segment.segment,
+              segment_name: v.segment_name,
+              uuid: segmentOverride.data.feature_segment.uuid,
+              value: segmentOverrides[i].value,
+            }
+            segmentOverrides[i] = newValue
+          })
         }
         return Promise.resolve()
       })
@@ -380,9 +402,25 @@ const controller = {
         `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
       )
       .then(() => {
-        const { featureStateId, multivariate_options, ...changeRequestData } =
-          changeRequest
+        const {
+          approvals,
+          featureStateId,
+          multivariate_options,
+          ...changeRequestData
+        } = changeRequest
+
+        const userApprovals = approvals.filter((u) => {
+          const keys = Object.keys(u)
+          return keys.includes('user')
+        })
+
+        const group_assignments = approvals.filter((g) => {
+          const keys = Object.keys(g)
+          return keys.includes('group')
+        })
+
         const req = {
+          approvals: userApprovals,
           feature_states: [
             {
               enabled: flag.default_enabled,
@@ -394,6 +432,7 @@ const controller = {
               live_from: changeRequest.live_from || new Date().toISOString(),
             },
           ],
+          group_assignments,
           ...changeRequestData,
         }
         const reqType = req.id ? 'put' : 'post'
@@ -497,7 +536,6 @@ const controller = {
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
-      store.loading()
       store.envId = environmentId
       store.projectId = projectId
       store.environmentId = environmentId

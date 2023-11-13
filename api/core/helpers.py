@@ -2,11 +2,15 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 
 
-def get_current_site_url(default_domain: str = "app.flagsmith.com"):
-    current_site = Site.objects.filter(id=settings.SITE_ID).first()
+def get_current_site_url():
+    if settings.DOMAIN_OVERRIDE:
+        domain = settings.DOMAIN_OVERRIDE
+    elif current_site := Site.objects.filter(id=settings.SITE_ID).first():
+        domain = current_site.domain
+    else:
+        domain = settings.DEFAULT_DOMAIN
 
-    url = "https://"
-    url += current_site.domain if current_site else default_domain
+    url = "https://" + domain
     return url
 
 

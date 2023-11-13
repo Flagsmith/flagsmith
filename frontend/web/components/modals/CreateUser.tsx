@@ -27,27 +27,27 @@ const CreateUser: FC<CreateUserType> = ({ environmentId }) => {
   }, [isSuccess])
   return (
     <div>
-      <FormGroup>
-        <label>User IDs</label>
-        <p className='text-muted text-small'>
+      <div className='modal-body px-4'>
+        <div className='fw-bold text-dark mt-4 mb-3'>
           Enter a comma or space separate list of user IDs.
-        </p>
-      </FormGroup>
-      <FormGroup className='text-right'>
-        <ChipInput
-          placeholder='User1, User2, User3'
-          onChange={(value) => setValue(value)}
-          value={value}
-        />
-      </FormGroup>
-      {isError && (
-        <ErrorMessage error='Some Identities already exist and were not created' />
-      )}
-      <FormGroup className='text-right'>
-        <Button onClick={submit} disabled={!value?.length}>
-          Create users
-        </Button>
-      </FormGroup>
+        </div>
+        <label>User IDs</label>
+        <FormGroup className='text-right'>
+          <ChipInput
+            placeholder='User1, User2, User3'
+            onChange={(value) => setValue(value)}
+            value={value}
+          />
+        </FormGroup>
+        {isError && (
+          <ErrorMessage error='Some Identities already exist and were not created' />
+        )}
+        <div className='text-right mt-5'>
+          <Button onClick={submit} disabled={!value?.length}>
+            Create users
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

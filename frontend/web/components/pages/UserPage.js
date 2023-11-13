@@ -17,7 +17,11 @@ import Constants from 'common/constants'
 import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import Icon from 'components/Icon'
+import FeatureValue from 'components/FeatureValue'
+import PageTitle from 'components/PageTitle'
 
+const width = [200, 48, 78]
 const valuesEqual = (actualValue, flagValue) => {
   const nullFalseyA =
     actualValue == null ||
@@ -37,6 +41,7 @@ const UserPage = class extends Component {
     super(props, context)
     this.state = {
       preselect: Utils.fromParam().flag,
+      showArchived: false,
       tags: [],
     }
   }
@@ -93,38 +98,21 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      null,
-      { className: 'fade side-modal create-segment-modal' },
+      'side-modal create-segment-modal',
     )
   }
 
   getActualFlags = () => {
     const { environmentId, id } = this.props.match.params
-    if (Utils.getFlagsmithHasFeature('use_admin_identity_featurestates')) {
-      const url = `${
-        Project.api
-      }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
-      _data
-        .get(url)
-        .then((res) => {
-          this.setState({ actualFlags: _.keyBy(res, (v) => v.feature.name) })
-        })
-        .catch(() => {})
-    } else {
-      const url = `${Utils.getSDKEndpoint()}identities/?identifier=${
-        this.props.match.params.identity
-      }`
-      fetch(url, {
-        headers: { 'X-Environment-Key': this.props.match.params.environmentId },
+    const url = `${
+      Project.api
+    }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
+    _data
+      .get(url)
+      .then((res) => {
+        this.setState({ actualFlags: _.keyBy(res, (v) => v.feature.name) })
       })
-        .then((res) => res.json())
-        .then((res) => {
-          this.setState({
-            actualFlags: _.keyBy(res.flags, (v) => v.feature.name),
-          })
-        })
-        .catch(() => {})
-    }
+      .catch(() => {})
   }
 
   onTraitSaved = () => {
@@ -145,6 +133,7 @@ const UserPage = class extends Component {
         environmentFlag={environmentFlag}
         cb={cb}
       />,
+      'p-0',
     )
   }
 
@@ -178,12 +167,9 @@ const UserPage = class extends Component {
         }}
         environmentFlag={environmentFlag}
       />,
-      null,
-      {
-        className: 'side-modal fade create-feature-modal',
-        onClose: () => {
-          history.replaceState({}, null, `${document.location.pathname}`)
-        },
+      'side-modal create-feature-modal overflow-y-auto',
+      () => {
+        history.replaceState({}, null, `${document.location.pathname}`)
       },
     )
   }
@@ -200,6 +186,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -216,6 +203,7 @@ const UserPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
+      'p-0',
     )
   }
 
@@ -233,12 +221,12 @@ const UserPage = class extends Component {
 
   removeTrait = (id, trait_key) => {
     openConfirm(
-      <h3>Delete Trait</h3>,
-      <p>
+      'Delete Trait',
+      <div>
         {'Are you sure you want to delete trait '}
         <strong>{trait_key}</strong>
         {' from this user?'}
-      </p>,
+      </div>,
       () =>
         AppActions.deleteIdentityTrait(
           this.props.match.params.environmentId,
@@ -278,7 +266,7 @@ const UserPage = class extends Component {
             id={environmentId}
           >
             {({ permission }) => (
-              <div className='app-container'>
+              <div className='app-container container mt-1'>
                 <IdentityProvider onSave={this.onSave}>
                   {(
                     {
@@ -301,27 +289,47 @@ const UserPage = class extends Component {
                         <Loader />
                       </div>
                     ) : (
-                      <div className='container'>
-                        <div className='row'>
-                          <div className='col-md-12'>
-                            <h3>
+                      <>
+                        <nav aria-label='breadcrumb'>
+                          <ol className='breadcrumb mb-2 py-1"'>
+                            <li className='breadcrumb-item fs-small lh-sm'>
+                              <Link
+                                className='fw-normal'
+                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users`}
+                              >
+                                Identities
+                              </Link>
+                            </li>
+                            <li
+                              className='breadcrumb-item active fs-small lh-sm text-muted'
+                              aria-current='page'
+                              style={{ opacity: 0.6 }}
+                            >
                               {(identity && identity.identity.identifier) ||
                                 this.props.match.params.id}
-                            </h3>
-                            <p>
-                              View and manage feature states and traits for this
-                              user. This will override any feature states you
-                              have for your current environment for this user
-                              only. Any features that are not overriden for this
-                              user will fallback to the environment defaults.
-                            </p>
+                            </li>
+                          </ol>
+                        </nav>
+                        <PageTitle
+                          title={
+                            (identity && identity.identity.identifier) ||
+                            this.props.match.params.id
+                          }
+                        >
+                          View and manage feature states and traits for this
+                          user. This will override any feature states you have
+                          for your current environment for this user only. Any
+                          features that are not overriden for this user will
+                          fallback to the environment defaults.
+                        </PageTitle>
+                        <div className='row'>
+                          <div className='col-md-12'>
                             <FormGroup>
                               <FormGroup>
                                 <PanelSearch
                                   id='user-features-list'
                                   className='no-pad'
                                   itemHeight={70}
-                                  icon='ion-ios-rocket'
                                   title='Features'
                                   renderFooter={() => (
                                     <>
@@ -352,7 +360,7 @@ const UserPage = class extends Component {
                                       />
                                     </>
                                   )}
-                                  header={
+                                  searchPanel={
                                     <div className='pb-2'>
                                       <TagFilter
                                         showUntagged
@@ -412,10 +420,36 @@ const UserPage = class extends Component {
                                             )
                                           }}
                                           className='px-2 py-2 ml-2 mr-2'
-                                          tag={{ label: 'Archived' }}
+                                          tag={{
+                                            color: '#0AADDF',
+                                            label: 'Archived',
+                                          }}
                                         />
                                       </TagFilter>
                                     </div>
+                                  }
+                                  header={
+                                    <Row className='table-header'>
+                                      <Flex className='table-column flex-fill px-3'>
+                                        Name
+                                      </Flex>
+                                      <div
+                                        className='table-column'
+                                        style={{ width: width[0] }}
+                                      >
+                                        Value
+                                      </div>
+                                      <div
+                                        className='table-column'
+                                        style={{ width: width[1] }}
+                                      >
+                                        <Switch disabled />
+                                      </div>
+                                      <div
+                                        className='table-column'
+                                        style={{ width: width[2] }}
+                                      ></div>
+                                    </Row>
                                   }
                                   isLoading={FeatureListStore.isLoading}
                                   onSortChange={(sort) => {
@@ -445,7 +479,7 @@ const UserPage = class extends Component {
                                       value: 'created_date',
                                     },
                                   ]}
-                                  renderRow={({ id, name }, i) => {
+                                  renderRow={({ description, id, name }, i) => {
                                     const identityFlag = identityFlags[id] || {}
                                     const environmentFlag =
                                       (environmentFlags &&
@@ -515,176 +549,208 @@ const UserPage = class extends Component {
                                       }
                                     }
 
-                                    if (name === this.state.preselect) {
+                                    if (
+                                      name === this.state.preselect &&
+                                      actualFlags
+                                    ) {
                                       this.state.preselect = null
                                       onClick()
                                     }
                                     return (
-                                      <Row
-                                        className={`list-item clickable py-1 ${
+                                      <div
+                                        className={`flex-row space list-item clickable py-2 ${
                                           flagDifferent && 'flag-different'
                                         }`}
                                         key={id}
-                                        space
                                         data-test={`user-feature-${i}`}
+                                        onClick={onClick}
                                       >
-                                        <div
-                                          onClick={onClick}
-                                          className='flex flex-1'
-                                        >
+                                        <Flex className='table-column'>
                                           <Row>
-                                            <ButtonLink className='mr-2'>
-                                              {name}
-                                            </ButtonLink>
-                                            <TagValues
-                                              projectId={`${projectId}`}
-                                              value={projectFlag.tags}
-                                            />
-                                          </Row>
-                                          {hasUserOverride ? (
-                                            <Row className='chip'>
-                                              <span>Overriding defaults</span>
-                                              <span className='chip-icon icon ion-md-information' />
-                                            </Row>
-                                          ) : flagEnabledDifferent ? (
-                                            <span
-                                              data-test={`feature-override-${i}`}
-                                              className='flex-row chip'
-                                            >
-                                              <Row>
-                                                <Flex>
-                                                  {isMultiVariateOverride ? (
-                                                    <span>
-                                                      This flag is being
-                                                      overridden by a variation
-                                                      defined on your feature,
-                                                      the control value is{' '}
-                                                      <strong>
-                                                        {flagEnabled
-                                                          ? 'on'
-                                                          : 'off'}
-                                                      </strong>{' '}
-                                                      for this user
-                                                    </span>
+                                            <Flex>
+                                              <Row
+                                                className='font-weight-medium'
+                                                style={{
+                                                  alignItems: 'start',
+                                                  lineHeight: 1,
+                                                  rowGap: 4,
+                                                  wordBreak: 'break-all',
+                                                }}
+                                              >
+                                                <span className='me-2'>
+                                                  {description ? (
+                                                    <Tooltip
+                                                      title={
+                                                        <span>
+                                                          {name}
+                                                          <span
+                                                            className={'ms-1'}
+                                                          ></span>
+                                                          <Icon name='info-outlined' />
+                                                        </span>
+                                                      }
+                                                    >
+                                                      {description}
+                                                    </Tooltip>
                                                   ) : (
-                                                    <span>
-                                                      This flag is being
-                                                      overridden by segments and
+                                                    name
+                                                  )}
+                                                </span>
+                                                <TagValues
+                                                  projectId={`${projectId}`}
+                                                  value={projectFlag.tags}
+                                                />
+                                              </Row>
+                                              {hasUserOverride ? (
+                                                <div className='list-item-subtitle mt-1'>
+                                                  Overriding defaults
+                                                </div>
+                                              ) : flagEnabledDifferent ? (
+                                                <div
+                                                  data-test={`feature-override-${i}`}
+                                                  className='list-item-subtitle mt-1'
+                                                >
+                                                  <Row>
+                                                    <Flex>
+                                                      {isMultiVariateOverride ? (
+                                                        <span>
+                                                          This flag is being
+                                                          overridden by a
+                                                          variation defined on
+                                                          your feature, the
+                                                          control value is{' '}
+                                                          <strong>
+                                                            {flagEnabled
+                                                              ? 'on'
+                                                              : 'off'}
+                                                          </strong>{' '}
+                                                          for this user
+                                                        </span>
+                                                      ) : (
+                                                        <span>
+                                                          This flag is being
+                                                          overridden by segments
+                                                          and would normally be{' '}
+                                                          <strong>
+                                                            {flagEnabled
+                                                              ? 'on'
+                                                              : 'off'}
+                                                          </strong>{' '}
+                                                          for this user
+                                                        </span>
+                                                      )}
+                                                    </Flex>
+                                                  </Row>
+                                                </div>
+                                              ) : flagValueDifferent ? (
+                                                isMultiVariateOverride ? (
+                                                  <div
+                                                    data-test={`feature-override-${i}`}
+                                                    className='list-item-subtitle mt-1'
+                                                  >
+                                                    <span className='flex-row'>
+                                                      This feature is being
+                                                      overriden by a % variation
+                                                      in the environment, the
+                                                      control value of this
+                                                      feature is{' '}
+                                                      <FeatureValue
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />
+                                                    </span>
+                                                  </div>
+                                                ) : (
+                                                  <div
+                                                    data-test={`feature-override-${i}`}
+                                                    className='list-item-subtitle mt-1'
+                                                  >
+                                                    <span className='flex-row'>
+                                                      This feature is being
+                                                      overriden by segments and
                                                       would normally be{' '}
-                                                      <strong>
-                                                        {flagEnabled
-                                                          ? 'on'
-                                                          : 'off'}
-                                                      </strong>{' '}
+                                                      <FeatureValue
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />{' '}
                                                       for this user
                                                     </span>
-                                                  )}
-                                                </Flex>
-                                                <span className='ml-1 chip-icon icon ion-md-information' />
-                                              </Row>
-                                            </span>
-                                          ) : flagValueDifferent ? (
-                                            isMultiVariateOverride ? (
-                                              <span
-                                                data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
-                                              >
-                                                <span>
-                                                  This feature is being
-                                                  overriden by a % variation in
-                                                  the environment, the control
-                                                  value of this feature is{' '}
-                                                  <FeatureValue
-                                                    includeEmpty
-                                                    data-test={`user-feature-original-value-${i}`}
-                                                    value={`${flagValue}`}
-                                                  />
-                                                </span>
-                                                <span className='chip-icon icon ion-md-information' />
-                                              </span>
-                                            ) : (
-                                              <span
-                                                data-test={`feature-override-${i}`}
-                                                className='flex-row chip'
-                                              >
-                                                <span>
-                                                  This feature is being
-                                                  overriden by segments and
-                                                  would normally be{' '}
-                                                  <FeatureValue
-                                                    includeEmpty
-                                                    data-test={`user-feature-original-value-${i}`}
-                                                    value={`${flagValue}`}
-                                                  />{' '}
-                                                  for this user
-                                                </span>
-                                                <span className='chip-icon icon ion-md-information' />
-                                              </span>
-                                            )
-                                          ) : (
-                                            <div className='list-item-footer'>
-                                              <span className='faint'>
-                                                Using environment defaults
-                                              </span>
-                                            </div>
+                                                  </div>
+                                                )
+                                              ) : (
+                                                <div className='list-item-subtitle mt-1'>
+                                                  Using environment defaults
+                                                </div>
+                                              )}
+                                            </Flex>
+                                          </Row>
+                                        </Flex>
+                                        <div
+                                          className='table-column'
+                                          style={{ width: width[0] }}
+                                        >
+                                          <FeatureValue
+                                            data-test={`user-feature-value-${i}`}
+                                            value={actualValue}
+                                          />
+                                        </div>
+                                        <div
+                                          className='table-column'
+                                          style={{ width: width[1] }}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                          }}
+                                        >
+                                          {Utils.renderWithPermission(
+                                            permission,
+                                            Constants.environmentPermissions(
+                                              Utils.getManageFeaturePermissionDescription(
+                                                false,
+                                                true,
+                                              ),
+                                            ),
+                                            <Switch
+                                              disabled={!permission}
+                                              data-test={`user-feature-switch-${i}${
+                                                actualEnabled ? '-on' : '-off'
+                                              }`}
+                                              checked={actualEnabled}
+                                              onChange={() =>
+                                                this.confirmToggle(
+                                                  _.find(projectFlags, {
+                                                    id,
+                                                  }),
+                                                  actualFlags[name],
+                                                  () => {
+                                                    toggleFlag({
+                                                      environmentFlag:
+                                                        actualFlags[name],
+                                                      environmentId:
+                                                        this.props.match.params
+                                                          .environmentId,
+                                                      identity:
+                                                        this.props.match.params
+                                                          .id,
+                                                      identityFlag,
+                                                      projectFlag: { id },
+                                                    })
+                                                  },
+                                                )
+                                              }
+                                            />,
                                           )}
                                         </div>
-                                        <Row>
-                                          <Column>
-                                            <div className='feature-value'>
-                                              <FeatureValue
-                                                data-test={`user-feature-value-${i}`}
-                                                value={actualValue}
-                                              />
-                                            </div>
-                                          </Column>
-                                          <Column>
-                                            <div>
-                                              {Utils.renderWithPermission(
-                                                permission,
-                                                Constants.environmentPermissions(
-                                                  Utils.getManageFeaturePermissionDescription(
-                                                    false,
-                                                    true,
-                                                  ),
-                                                ),
-                                                <Switch
-                                                  disabled={!permission}
-                                                  data-test={`user-feature-switch-${i}${
-                                                    actualEnabled
-                                                      ? '-on'
-                                                      : '-off'
-                                                  }`}
-                                                  checked={actualEnabled}
-                                                  onChange={() =>
-                                                    this.confirmToggle(
-                                                      _.find(projectFlags, {
-                                                        id,
-                                                      }),
-                                                      actualFlags[name],
-                                                      () => {
-                                                        toggleFlag({
-                                                          environmentFlag:
-                                                            actualFlags[name],
-                                                          environmentId:
-                                                            this.props.match
-                                                              .params
-                                                              .environmentId,
-                                                          identity:
-                                                            this.props.match
-                                                              .params.id,
-                                                          identityFlag,
-                                                          projectFlag: { id },
-                                                        })
-                                                      },
-                                                    )
-                                                  }
-                                                />,
-                                              )}
-                                            </div>
-                                          </Column>
+                                        <div
+                                          className='table-column p-0'
+                                          style={{ width: width[2] }}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                          }}
+                                        >
                                           {hasUserOverride && (
-                                            <Column>
+                                            <>
                                               {Utils.renderWithPermission(
                                                 permission,
                                                 Constants.environmentPermissions(
@@ -694,6 +760,8 @@ const UserPage = class extends Component {
                                                   ),
                                                 ),
                                                 <Button
+                                                  theme='text'
+                                                  size='xSmall'
                                                   disabled={!permission}
                                                   onClick={() =>
                                                     this.confirmRemove(
@@ -717,13 +785,18 @@ const UserPage = class extends Component {
                                                     )
                                                   }
                                                 >
+                                                  <Icon
+                                                    name='refresh'
+                                                    fill='#6837FC'
+                                                    width={16}
+                                                  />{' '}
                                                   Reset
                                                 </Button>,
                                               )}
-                                            </Column>
+                                            </>
                                           )}
-                                        </Row>
-                                      </Row>
+                                        </div>
+                                      </div>
                                     )
                                   }}
                                   renderSearchWithNoResults
@@ -805,12 +878,11 @@ const UserPage = class extends Component {
                                   <PanelSearch
                                     id='user-traits-list'
                                     className='no-pad'
-                                    icon='ion-ios-person'
                                     itemHeight={65}
                                     title='Traits'
                                     items={traits}
-                                    renderFooter={() => (
-                                      <FormGroup className='text-center mb-2'>
+                                    actionButton={
+                                      <div className='ml-2'>
                                         {Utils.renderWithPermission(
                                           manageUserPermission,
                                           Constants.environmentPermissions(
@@ -818,86 +890,98 @@ const UserPage = class extends Component {
                                           ),
                                           <Button
                                             disabled={!manageUserPermission}
-                                            className='mb-2'
                                             id='add-trait'
                                             onClick={this.createTrait}
+                                            size='small'
                                           >
                                             Add new trait
                                           </Button>,
                                         )}
-                                      </FormGroup>
-                                    )}
+                                      </div>
+                                    }
+                                    header={
+                                      <Row className='table-header'>
+                                        <Flex className='table-column px-3'>
+                                          Trait
+                                        </Flex>
+                                        <Flex className='table-column'>
+                                          Value
+                                        </Flex>
+                                        <div
+                                          className='table-column'
+                                          style={{ width: '80px' }}
+                                        >
+                                          Remove
+                                        </div>
+                                      </Row>
+                                    }
                                     renderRow={(
                                       { id, trait_key, trait_value },
                                       i,
                                     ) => (
                                       <Row
-                                        className='list-item clickable py-2'
+                                        className='list-item clickable '
                                         key={trait_key}
                                         space
                                         data-test={`user-trait-${i}`}
+                                        onClick={() =>
+                                          this.editTrait({
+                                            id,
+                                            trait_key,
+                                            trait_value,
+                                          })
+                                        }
                                       >
+                                        <Flex className='table-column px-3'>
+                                          <div
+                                            className={`js-trait-key-${i} font-weight-medium`}
+                                          >
+                                            {trait_key}
+                                          </div>
+                                        </Flex>
+                                        <Flex className='table-column'>
+                                          <FeatureValue
+                                            includeEmpty
+                                            data-test={`user-trait-value-${i}`}
+                                            value={trait_value}
+                                          />
+                                        </Flex>
                                         <div
-                                          onClick={() =>
-                                            this.editTrait({
-                                              id,
-                                              trait_key,
-                                              trait_value,
-                                            })
-                                          }
-                                          className='flex flex-1'
+                                          className='table-column text-center'
+                                          style={{ width: '80px' }}
+                                          onClick={(e) => e.stopPropagation()}
                                         >
-                                          <Row>
-                                            <ButtonLink
-                                              className={`js-trait-key-${i}`}
-                                              href='#'
+                                          {Utils.renderWithPermission(
+                                            manageUserPermission,
+                                            Constants.environmentPermissions(
+                                              Utils.getManageUserPermissionDescription(),
+                                            ),
+                                            <Button
+                                              id='remove-feature'
+                                              className='btn btn-with-icon'
+                                              type='button'
+                                              disabled={!manageUserPermission}
+                                              onClick={() =>
+                                                this.removeTrait(id, trait_key)
+                                              }
+                                              data-test={`delete-user-trait-${i}`}
                                             >
-                                              {trait_key}
-                                            </ButtonLink>
-                                          </Row>
+                                              <Icon
+                                                name='trash-2'
+                                                width={20}
+                                                fill='#656D7B'
+                                              />
+                                            </Button>,
+                                          )}
                                         </div>
-                                        <Row>
-                                          <Column>
-                                            <FeatureValue
-                                              includeEmpty
-                                              data-test={`user-trait-value-${i}`}
-                                              value={trait_value}
-                                            />
-                                          </Column>
-                                          <Column>
-                                            {Utils.renderWithPermission(
-                                              manageUserPermission,
-                                              Constants.environmentPermissions(
-                                                Utils.getManageUserPermissionDescription(),
-                                              ),
-                                              <button
-                                                id='remove-feature'
-                                                className='btn btn--with-icon'
-                                                type='button'
-                                                disabled={!manageUserPermission}
-                                                onClick={() =>
-                                                  this.removeTrait(
-                                                    id,
-                                                    trait_key,
-                                                  )
-                                                }
-                                                data-test={`delete-user-trait-${i}`}
-                                              >
-                                                <RemoveIcon />
-                                              </button>,
-                                            )}
-                                          </Column>
-                                        </Row>
                                       </Row>
                                     )}
                                     renderNoResults={
                                       <Panel
-                                        icon='ion-ios-person'
                                         title='Traits'
-                                      >
-                                        <div className='text-center'>
-                                          This user has no traits.
-                                          <FormGroup className='text-center mb-0 mt-2'>
+                                        className='no-pad'
+                                        action={
+                                          <div>
                                             {Utils.renderWithPermission(
                                               manageUserPermission,
                                               Constants.environmentPermissions(
@@ -908,11 +992,18 @@ const UserPage = class extends Component {
                                                 className='mb-2'
                                                 id='add-trait'
                                                 onClick={this.createTrait}
+                                                size='small'
                                               >
                                                 Add new trait
                                               </Button>,
                                             )}
-                                          </FormGroup>
+                                          </div>
+                                        }
+                                      >
+                                        <div className='search-list'>
+                                          <Row className='list-item text-muted px-3'>
+                                            This user has no traits.
+                                          </Row>
                                         </div>
                                       </Panel>
                                     }
@@ -936,9 +1027,21 @@ const UserPage = class extends Component {
                                       <PanelSearch
                                         id='user-segments-list'
                                         className='no-pad'
-                                        icon='ion-ios-globe'
                                         title='Segments'
                                         itemHeight={70}
+                                        header={
+                                          <Row className='table-header'>
+                                            <Flex
+                                              className='table-column px-3'
+                                              style={{ maxWidth: '230px' }}
+                                            >
+                                              Name
+                                            </Flex>
+                                            <Flex className='table-column'>
+                                              Description
+                                            </Flex>
+                                          </Row>
+                                        }
                                         items={segments || []}
                                         renderRow={(
                                           { created_date, description, name },
@@ -952,48 +1055,51 @@ const UserPage = class extends Component {
                                             space
                                             key={i}
                                           >
-                                            <div className='flex flex-1'>
-                                              <Row>
-                                                <ButtonLink
-                                                  onClick={() =>
-                                                    this.editSegment(
-                                                      segments[i],
-                                                    )
-                                                  }
+                                            <Flex
+                                              className=' table-column px-3'
+                                              style={{ maxWidth: '230px' }}
+                                            >
+                                              <div
+                                                onClick={() =>
+                                                  this.editSegment(segments[i])
+                                                }
+                                              >
+                                                <span
+                                                  data-test={`segment-${i}-name`}
+                                                  className='font-weight-medium'
                                                 >
-                                                  <span
-                                                    data-test={`segment-${i}-name`}
-                                                    className='bold-link'
-                                                  >
-                                                    {name}
-                                                  </span>
-                                                </ButtonLink>
-                                              </Row>
-                                              <div className='list-item-footer faint mt-2'>
-                                                {description ? (
-                                                  <div>
-                                                    {description}
-                                                    <br />
-                                                  </div>
-                                                ) : (
-                                                  ''
-                                                )}
+                                                  {name}
+                                                </span>
+                                              </div>
+                                              <div className='list-item-subtitle mt-1'>
                                                 Created{' '}
                                                 {moment(created_date).format(
                                                   'DD/MMM/YYYY',
                                                 )}
                                               </div>
-                                            </div>
+                                            </Flex>
+                                            <Flex className='table-column list-item-subtitle'>
+                                              {description ? (
+                                                <div>
+                                                  {description}
+                                                  <br />
+                                                </div>
+                                              ) : (
+                                                ''
+                                              )}
+                                            </Flex>
                                           </Row>
                                         )}
                                         renderNoResults={
                                           <Panel
-                                            icon='ion-ios-globe'
                                             title='Segments'
+                                            className='no-pad'
                                           >
-                                            <div>
-                                              This user is not a member of any
-                                              segments.
+                                            <div className='search-list'>
+                                              <Row className='list-item text-muted px-3'>
+                                                This user is not a member of any
+                                                segments.
+                                              </Row>
                                             </div>
                                           </Panel>
                                         }
@@ -1032,7 +1138,7 @@ const UserPage = class extends Component {
                             </FormGroup>
                           </div>
                         </div>
-                      </div>
+                      </>
                     )
                   }
                 </IdentityProvider>

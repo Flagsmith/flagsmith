@@ -1,8 +1,12 @@
 import React, { Component } from 'react'
 import CreateProjectModal from 'components/modals/CreateProject'
+import CreateOrganisationModal from 'components/modals/CreateOrganisation'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 const ProjectSelectPage = class extends Component {
   static displayName = 'ProjectSelectPage'
@@ -27,7 +31,7 @@ const ProjectSelectPage = class extends Component {
 
   newProject = () => {
     openModal(
-      'Create  Project',
+      'Create Project',
       <CreateProjectModal
         onSave={({ environmentId, projectId }) => {
           this.context.router.history.push(
@@ -35,7 +39,12 @@ const ProjectSelectPage = class extends Component {
           )
         }}
       />,
+      'p-0 side-modal',
     )
+  }
+
+  newOrganisation = () => {
+    openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }
 
   render() {
@@ -44,59 +53,68 @@ const ProjectSelectPage = class extends Component {
       <div
         data-test='project-select-page'
         id='project-select-page'
-        className='app-container container pt-5'
+        className='app-container container'
       >
+        <PageTitle title={'Your projects'}>
+          Projects let you create and manage a set of features and configure
+          them between multiple app environments.
+        </PageTitle>
+        <Panel title='Organisation' className='no-pad'>
+          <Row space>
+            <AccountProvider>
+              {({ organisation }) =>
+                organisation && (
+                  <OrganisationSelect
+                    onChange={(organisationId) => {
+                      AppActions.selectOrganisation(organisationId)
+                      AppActions.getOrganisation(organisationId)
+                    }}
+                  />
+                )
+              }
+            </AccountProvider>
+            {!Utils.getFlagsmithHasFeature('disable_create_org') &&
+              (!Project.superUserCreateOnly ||
+                (Project.superUserCreateOnly &&
+                  AccountStore.model.is_superuser)) && (
+                <div>
+                  <Flex className='text-center'>
+                    <Button
+                      data-test='create-organisation-btn'
+                      onClick={this.newOrganisation}
+                      size='large'
+                    >
+                      Create Organisation
+                    </Button>
+                  </Flex>
+                </div>
+              )}
+          </Row>
+        </Panel>
+        <hr className='py-0 my-5' />
         <OrganisationProvider>
           {({ isLoading, projects }) => (
             <div>
-              {projects && projects.length ? (
-                <div className='flex-row pl-0 pr-0'>
-                  <div className='col-md-9 pl-0 pr-0'>
-                    <h3>Your projects</h3>
-                    <p>
-                      Projects let you create and manage a set of features and
-                      configure them between multiple app environments.
-                    </p>
-                  </div>
-                  <div className='col-md-3 pl-0 pr-0'>
-                    <Permission
-                      level='organisation'
-                      permission='CREATE_PROJECT'
-                      id={AccountStore.getOrganisation().id}
-                    >
-                      {({ permission }) => {
-                        return Utils.renderWithPermission(
-                          permission,
-                          Constants.environmentPermissions('Create Project'),
-                          <Button
-                            disabled={!permission}
-                            className='float-right btn__md-full mb-md-0 mb-3'
-                            onClick={this.newProject}
-                          >
-                            Create Project
-                          </Button>,
-                        )
-                      }}
-                    </Permission>
-                  </div>
-                </div>
+              {(projects && projects.length) || isLoading ? (
+                <div className='flex-row pl-0 pr-0'></div>
               ) : isAdmin ? (
-                <div className='text-center'>
-                  <h3>Great! Now you can create your first project.</h3>
-                  <p>
+                <div className='container-mw-700 mb-4'>
+                  <h5 className='mb-2'>
+                    Great! Now you can create your first project.
+                  </h5>
+                  <p className='fs-small lh-sm mb-0'>
                     When you create a project we'll also generate a{' '}
                     <strong>development</strong> and <strong>production</strong>{' '}
                     environment for you.
                   </p>
-                  <p>
+                  <p className='fs-small lh-sm mb-0'>
                     You can create features for your project, then enable and
                     configure them per environment.
                   </p>
                 </div>
               ) : (
-                <div>
-                  <h3>Your projects</h3>
-                  <p>
+                <div className='container-mw-700 mb-4'>
+                  <p className='fs-small lh-sm mb-0'>
                     You do not have access to any projects within this
                     Organisation. If this is unexpected please contact a member
                     of the Project who has Administrator privileges. Users can
@@ -104,74 +122,141 @@ const ProjectSelectPage = class extends Component {
                   </p>
                 </div>
               )}
-
               {(isLoading || !projects) && (
                 <div className='centered-container'>
                   <Loader />
                 </div>
               )}
               {!isLoading && (
-                <div className='conatiner'>
+                <div>
                   <FormGroup>
                     <PanelSearch
                       id='projects-list'
-                      className='no-pad'
+                      className='no-pad panel-projects'
+                      listClassName='row mt-n2 gy-4'
                       title='Projects'
                       items={projects}
-                      renderRow={({ environments, id, name }, i) => (
-                        <Link
-                          key={id}
-                          className='list-item clickable'
-                          id={`project-select-${i}`}
-                          to={`/project/${id}/environment/${
-                            environments && environments[0]
-                              ? `${environments[0].api_key}/features`
-                              : 'create'
-                          }`}
-                        >
-                          <Row>
-                            <Flex className='align-start'>
-                              <ButtonLink>{name}</ButtonLink>
-                            </Flex>
-                            <span className='text__link icon ion-ios-arrow-forward list-item' />
-                          </Row>
-                        </Link>
-                      )}
+                      renderRow={({ environments, id, name }, i) => {
+                        return (
+                          <>
+                            {i === 0 && (
+                              <div className='col-md-6 col-xl-3'>
+                                <Permission
+                                  level='organisation'
+                                  permission='CREATE_PROJECT'
+                                  id={AccountStore.getOrganisation().id}
+                                >
+                                  {({ permission }) => {
+                                    return Utils.renderWithPermission(
+                                      permission,
+                                      Constants.environmentPermissions(
+                                        'Create Project',
+                                      ),
+                                      <Button
+                                        disabled={!permission}
+                                        onClick={this.newProject}
+                                        className='btn-project btn-project-create'
+                                      >
+                                        <Row className='flex-nowrap'>
+                                          <div className='btn-project-icon'>
+                                            <Icon
+                                              name='plus'
+                                              width={32}
+                                              fill='#9DA4AE'
+                                            />
+                                          </div>
+                                          <div className='font-weight-medium btn-project-title'>
+                                            Create Project
+                                          </div>
+                                        </Row>
+                                      </Button>,
+                                    )
+                                  }}
+                                </Permission>
+                              </div>
+                            )}
+                            <Link
+                              key={id}
+                              id={`project-select-${i}`}
+                              to={`/project/${id}/environment/${
+                                environments && environments[0]
+                                  ? `${environments[0].api_key}/features`
+                                  : 'create'
+                              }`}
+                              className='clickable col-md-6 col-xl-3'
+                              style={{ minWidth: '190px' }}
+                            >
+                              <Button className='btn-project'>
+                                <Row className='flex-nowrap'>
+                                  <h2
+                                    style={{
+                                      backgroundColor:
+                                        Utils.getProjectColour(i),
+                                    }}
+                                    className='btn-project-letter mb-0'
+                                  >
+                                    {name[0]}
+                                  </h2>
+                                  <div className='font-weight-medium btn-project-title'>
+                                    {name}
+                                  </div>
+                                </Row>
+                              </Button>
+                            </Link>
+                          </>
+                        )
+                      }}
                       renderNoResults={
-                        <div className='text-center'>
-                          <div className='text-center'>
-                            <div>
-                              <Permission
-                                level='organisation'
-                                permission='CREATE_PROJECT'
-                                id={AccountStore.getOrganisation().id}
-                              >
-                                {({ permission }) => {
-                                  return Utils.renderWithPermission(
-                                    permission,
-                                    Constants.environmentPermissions(
-                                      'Create Project',
-                                    ),
-                                    <button
-                                      disabled={!permission}
-                                      onClick={this.newProject}
-                                      className='btn btn-primary btn-lg'
-                                      data-test='create-first-project-btn'
-                                      id='create-first-project-btn'
-                                    >
-                                      <span className='icon ion-ios-rocket' />{' '}
-                                      Create a project
-                                    </button>,
-                                  )
-                                }}
-                              </Permission>
-                            </div>
-                          </div>
+                        <div>
+                          <Permission
+                            level='organisation'
+                            permission='CREATE_PROJECT'
+                            id={AccountStore.getOrganisation().id}
+                          >
+                            {({ permission }) => {
+                              return Utils.renderWithPermission(
+                                permission,
+                                Constants.environmentPermissions(
+                                  'Create Project',
+                                ),
+                                <div className='col-md-6 col-xl-3'>
+                                  <Button
+                                    disabled={!permission}
+                                    onClick={this.newProject}
+                                    data-test='create-first-project-btn'
+                                    id='create-first-project-btn'
+                                    className='btn-project btn-project-create'
+                                  >
+                                    <Row>
+                                      <div className='btn-project-icon'>
+                                        <Icon
+                                          name='plus'
+                                          width={32}
+                                          fill='#9DA4AE'
+                                        />
+                                      </div>
+                                      <div className='font-weight-medium'>
+                                        Create Project
+                                      </div>
+                                    </Row>
+                                  </Button>
+                                </div>,
+                              )
+                            }}
+                          </Permission>
                         </div>
                       }
                       filterRow={(item, search) =>
                         item.name.toLowerCase().indexOf(search) > -1
                       }
+                      sorting={[
+                        {
+                          default: true,
+                          label: 'Name',
+                          order: 'asc',
+                          value: 'name',
+                        },
+                      ]}
                     />
                   </FormGroup>
                 </div>

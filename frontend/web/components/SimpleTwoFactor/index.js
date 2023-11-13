@@ -43,7 +43,7 @@ export default class TheComponent extends Component {
         {!hasEnabled && (
           <div>
             <div className='text-right'>
-              <Button disabled={isLoading} onClick={onEnable}>
+              <Button disabled={isLoading} onClick={onEnable} theme='secondary'>
                 Enable Two-Factor Authentication
               </Button>
             </div>
@@ -51,15 +51,18 @@ export default class TheComponent extends Component {
         )}
         {hasEnabled && !hasConfirmed && (
           <div>
-            <Row style={{ alignItems: 'flex-start', flexWrap: 'noWrap' }}>
-              <div className='mr-2'>
+            <Row
+              style={{ flexWrap: 'noWrap', width: 'fit-content' }}
+              className='panel--grey p-2'
+            >
+              <div className='mr-3'>
                 <QRCode renderAs='svg' size={171} value={activationQR} />
               </div>
-              <div className='ml-2 panel--grey'>
+              <div className='ml-2 '>
                 <div className='mb-1'>
                   <strong>Can't scan the code?</strong>
                 </div>
-                <div>
+                <div className='fs-small lh-sm'>
                   To add the entry manually, provide the following details to
                   the application on your phone. Key:{' '}
                   <strong>{activationCode}</strong>
@@ -68,15 +71,23 @@ export default class TheComponent extends Component {
             </Row>
             <div>
               <InputGroup
-                inputProps={{ className: 'full-width' }}
+                className='mb-2 mt-3'
+                inputProps={{
+                  className: 'full-width',
+                  error: error && 'Invalid code',
+                }}
                 onChange={onChange}
                 value={pin}
                 type='text'
                 title='Pin code'
+                isValid={!error}
               />
-              {error && <ErrorMessage error='Invalid pin code' />}
-              <div className='text-right'>
-                <Button disabled={isLoading} onClick={onRegister}>
+              <div className='text-right mt-4'>
+                <Button
+                  disabled={isLoading}
+                  onClick={onRegister}
+                  theme='secondary'
+                >
                   Register with two-factor app
                 </Button>
               </div>
@@ -88,7 +99,11 @@ export default class TheComponent extends Component {
           <div>
             <strong>Two Factor has been enabled</strong>
             <div className='text-right'>
-              <Button disabled={isLoading} onClick={onDisable}>
+              <Button
+                disabled={isLoading}
+                onClick={onDisable}
+                theme='secondary'
+              >
                 Disable two-factor
               </Button>
             </div>

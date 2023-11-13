@@ -7,7 +7,6 @@ set -e
 
 function migrate () {
     python manage.py waitfordb && python manage.py migrate && python manage.py createcachetable
-    migrate_analytics_db
 }
 function serve() {
     # configuration parameters for statsd. Docs can be found here:
@@ -17,16 +16,24 @@ function serve() {
 
     python manage.py waitfordb
 
-    gunicorn --bind 0.0.0.0:8000 \
+    exec gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
              --workers ${GUNICORN_WORKERS:-3} \
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
+             --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s' \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
              app.wsgi
+}
+function run_task_processor() {
+    python manage.py waitfordb --waitfor 30 --migrations
+    if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
+        python manage.py waitfordb --waitfor 30 --migrations --database analytics
+    fi
+    python manage.py runprocessor --sleepintervalms 500
 }
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
@@ -48,6 +55,7 @@ function dump_organisation_to_s3(){
 function dump_organisation_to_local_fs(){
     python manage.py dumporganisationtolocalfs "$1" "$2"
 }
+# Note: `go_to_sleep` is deprecated and will be removed in a future release.
 function go_to_sleep(){
     echo "Sleeping for ${1} seconds before startup"
     sleep ${1}
@@ -56,12 +64,16 @@ function go_to_sleep(){
 if [ "$1" == "migrate" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
 elif [ "$1" == "serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     serve
+elif [ "$1" == "run-task-processor" ]; then
+    run_task_processor
 elif [ "$1" == "migrate-and-serve" ]; then
     if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
+    migrate_analytics_db
     serve
 elif [ "$1" == "migrate-identities" ]; then
     migrate_identities "$2"

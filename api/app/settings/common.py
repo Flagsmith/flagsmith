@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
 import json
-import logging
 import os
 import sys
 import warnings
@@ -124,7 +123,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg2",
+    "drf_yasg",
     "audit",
     "permissions",
     "projects.tags",
@@ -134,7 +133,6 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
-    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -149,6 +147,8 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     "integrations.dynatrace",
+    "integrations.flagsmith",
+    "integrations.launch_darkly",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -218,21 +218,30 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+        "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
+        "user": USER_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_RENDERER_CLASSES": [
+        "util.renderers.PydanticJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -245,8 +254,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    # Add master api key object to request
-    "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -399,14 +406,19 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
-if EMAIL_BACKEND == "sgbackend.SendGridBackend":
-    SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
-    if not SENDGRID_API_KEY:
-        logging.info(
-            "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
-        )
-elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
+
+# NOTE: Use `sgbackend.SendGridBackend` as default
+# if `SENDGRID_API_KEY` is set in order to maintain backwards compatibility
+DEFAULT_EMAIL_BACKEND = (
+    "sgbackend.SendGridBackend"
+    if SENDGRID_API_KEY
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default=DEFAULT_EMAIL_BACKEND)
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_HOST = env("EMAIL_HOST", default="localhost")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
@@ -420,13 +432,13 @@ SWAGGER_SETTINGS = {
             "type": "apiKey",
             "in": "header",
             "name": "Authorization",
-            "description": "Every time you create a new Project Environment, an environment API key is automatically generated for you. This is all you need to pass in to get access to Flags etc. <br />Example value: <br />Token 884b1b4c6b4ddd112e7a0a139f09eb85e8c254ff",  # noqa
+            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
         },
         "Public": {
             "type": "apiKey",
             "in": "header",
             "name": "X-Environment-Key",
-            "description": "Things like creating new flags, environments, toggle flags or indeed anything that is possible from the administrative front end. <br />Example value: <br />FFnVjhp7xvkT5oTLq4q788",  # noqa
+            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
         },
     },
 }
@@ -435,8 +447,16 @@ SWAGGER_SETTINGS = {
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
+# Enable E2E tests
+ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
-FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
+# User email address used for E2E Signup test
+E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for Change email E2E test which is part of invite tests
+E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for the rest of the E2E tests
+E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
@@ -493,6 +513,11 @@ else:
                 "propagate": False,
             },
             "app_analytics": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+            "webhooks": {
                 "level": LOG_LEVEL,
                 "handlers": ["console"],
                 "propagate": False,
@@ -556,6 +581,12 @@ GET_IDENTITIES_ENDPOINT_CACHE_LOCATION = env.str(
     default=GET_IDENTITIES_ENDPOINT_CACHE_NAME,
 )
 
+BAD_ENVIRONMENTS_CACHE_LOCATION = "bad-environments"
+CACHE_BAD_ENVIRONMENTS_SECONDS = env.int("CACHE_BAD_ENVIRONMENTS_SECONDS", 0)
+CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES = env.int(
+    "CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES", 1
+)
+
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
@@ -589,6 +620,11 @@ CACHES = {
     PROJECT_SEGMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
+    },
+    BAD_ENVIRONMENTS_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": BAD_ENVIRONMENTS_CACHE_LOCATION,
+        "OPTIONS": {"MAX_ENTRIES": 50},
     },
     CHARGEBEE_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
@@ -633,6 +669,7 @@ TRENCH_AUTH = {
             "HANDLER": "custom_auth.mfa.backends.application.CustomApplicationBackend",
         },
     },
+    "SECRET_KEY_LENGTH": 32,
 }
 
 USER_CREATE_PERMISSIONS = env.list(
@@ -650,6 +687,7 @@ DJOSER = {
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
+        "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
     },
     "EMAIL": {
@@ -730,8 +768,9 @@ ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
-DISABLE_ANALYTICS_FEATURES = env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
-DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+DISABLE_ANALYTICS_FEATURES = env.bool(
+    "DISABLE_INFLUXDB_FEATURES", default=False
+) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
 FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
@@ -790,6 +829,10 @@ if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
 
+IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
+if IS_RBAC_INSTALLED:
+    INSTALLED_APPS.append("rbac")
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
@@ -831,6 +874,15 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
 
+ENABLE_CLEAN_UP_OLD_TASKS = env.bool("ENABLE_CLEAN_UP_OLD_TASKS", default=True)
+TASK_DELETE_RETENTION_DAYS = env.int("TASK_DELETE_RETENTION_DAYS", default=30)
+TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
+TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
+    "TASK_DELETE_INCLUDE_FAILED_TASKS", default=False
+)
+TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
+TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
+
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
@@ -858,6 +910,9 @@ PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
 )
 PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
 PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
+PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
+    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
+)
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
@@ -870,3 +925,103 @@ SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 
 # Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
 SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
+
+# Controls the app domain used in emails (currently invites and change requests).
+# If set, domain stored with `django.contrib.sites` is disregarded.
+DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
+# Used when no Django site is specified.
+DEFAULT_DOMAIN = "app.flagsmith.com"
+
+# Define the cooldown duration, in seconds, for password reset emails
+PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
+
+# Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
+MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
+
+FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = env.bool(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE", default=True
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY", default=None
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
+)
+
+# LDAP setting
+LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
+if LDAP_INSTALLED:
+    # The URL of the LDAP server.
+    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+    if LDAP_AUTH_URL:
+        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+
+    # Initiate TLS on connection.
+    LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)
+
+    # The LDAP search base for looking up users.
+    LDAP_AUTH_SEARCH_BASE = env.str(
+        "LDAP_AUTH_SEARCH_BASE", "ou=people,dc=example,dc=com"
+    )
+
+    # The LDAP class that represents a user.
+    LDAP_AUTH_OBJECT_CLASS = env.str("LDAP_AUTH_OBJECT_CLASS", "inetOrgPerson")
+
+    # User model fields mapped to the LDAP
+    # attributes that represent them.
+    LDAP_AUTH_USER_FIELDS = env.dict(
+        "LDAP_AUTH_USER_FIELDS",
+        {
+            "username": "uid",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "email": "mail",
+        },
+    )
+    # Sets the login domain for Active Directory users.
+    LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = env.str(
+        "LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN", None
+    )
+
+    # Path to a callable that takes a dict of {model_field_name: value}, and returns
+    # a string of the username to bind to the LDAP server.
+    # Use this to support different types of LDAP server.
+    LDAP_AUTH_FORMAT_USERNAME = env.str(
+        "LDAP_AUTH_FORMAT_USERNAME",
+        "django_python3_ldap.utils.format_username_openldap",
+    )
+
+    # Set connection/receive timeouts (in seconds) on the underlying `ldap3` library.
+    LDAP_AUTH_CONNECT_TIMEOUT = env.int("LDAP_AUTH_CONNECT_TIMEOUT", None)
+    LDAP_AUTH_RECEIVE_TIMEOUT = env.int("LDAP_AUTH_RECEIVE_TIMEOUT", None)
+
+    # Set this to add newly created users to an organisation
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = env.int(
+        "LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID", None
+    )
+
+    # Path to a callable that takes a user model, a dict of {ldap_field_name: [value]}
+    # a LDAP connection object (to allow further lookups), and saves any additional
+    # user relationships based on the LDAP data.
+    LDAP_AUTH_SYNC_USER_RELATIONS = env.str(
+        "LDAP_AUTH_SYNC_USER_RELATIONS", "django_python3_ldap.utils.sync_user_relations"
+    )
+
+    # Path to a callable that takes a dict of {ldap_field_name: value},
+    # returning a list of [ldap_search_filter]. The search filters will then be AND'd
+    # together when creating the final search filter.
+    LDAP_AUTH_FORMAT_SEARCH_FILTERS = env.str(
+        "LDAP_AUTH_FORMAT_SEARCH_FILTERS",
+        default="django_python3_ldap.utils.format_search_filters",
+    )
+
+    # List of LDAP group DN's that needs to be synced.
+    LDAP_SYNCED_GROUPS = env.list("LDAP_SYNCED_GROUPS", default=[], delimiter=":")
+
+    # DN of the LDAP group that is allowed to login
+    # If None no group check will be performed.
+    LDAP_LOGIN_GROUP = env.str("LDAP_LOGIN_GROUP", None)
+
+    # The LDAP user username and password used by `sync_ldap_users_and_groups` command
+    LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
+    LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)

@@ -39,6 +39,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
+
 let state = undefined
 try {
   // If a flagsmith.json file exists in /frontend, use it as the default flags and prevent fetching
@@ -51,6 +53,7 @@ flagsmith
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: Project.flagsmithAnalytics,
+    enableDynatrace,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     preventFetch: !!state,

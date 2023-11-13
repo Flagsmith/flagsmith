@@ -7,12 +7,14 @@ from app_analytics.analytics_db_service import (
 from app_analytics.tasks import track_feature_evaluation
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.fields import IntegerField
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from telemetry.serializers import TelemetrySerializer
 
 from environments.authentication import EnvironmentKeyAuthentication
@@ -37,6 +39,27 @@ class SDKAnalyticsFlags(GenericAPIView):
 
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
+
+    def get_serializer_class(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Serializer
+
+        environment_feature_names = set(
+            FeatureState.objects.filter(
+                environment=self.request.environment,
+                feature_segment=None,
+                identity=None,
+            ).values_list("feature__name", flat=True)
+        )
+
+        class _AnalyticsSerializer(Serializer):
+            def get_fields(self):
+                return {
+                    feature_name: IntegerField(required=False)
+                    for feature_name in environment_feature_names
+                }
+
+        return _AnalyticsSerializer
 
     def post(self, request, *args, **kwargs):
         """

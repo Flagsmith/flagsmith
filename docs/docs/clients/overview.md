@@ -1,0 +1,248 @@
+---
+description: Manage your Feature Flags and Remote Config in your REST APIs.
+sidebar_label: Overview
+sidebar_position: 1
+---
+
+# SDKs Overview
+
+Flagsmith ships with SDKs for a bunch of different programming languages. We also have a [REST API](rest.md) that you
+can use if you want to consume the API directly.
+
+Our SDKs are split into two different groups. These SDKs have different methods of operation due to the differences in
+their operating environment:
+
+1. **Client-side** (e.g. browser-based Javascript).
+2. **Server-side** (e.g. Java or Python).
+
+:::tip
+
+**Environment Keys** come in two different types: Client-side and Server-side keys. Make sure you use the correct key
+depending on the SDK you are using.
+
+:::
+
+## Client-side SDKS
+
+Client-side SDKs run in web browsers or on mobile devices. These runtimes execute within _untrusted environments_.
+Anyone using the Javascript SDK in a web browser, for example, can find the Client-side SDK, create a new Identity, look
+at their flags and
+[potentially write Traits to the Identity](/system-administration/security#preventing-client-sdks-from-setting-traits).
+
+Client-side SDKs are also limited to the
+[types of data that they have access to](/guides-and-examples/integration-approaches#segment-and-targeting-rules-are-not-leaked-to-the-client).
+
+Client-side Environment keys are designed to be shared publicly, for example in your HTML/JS code that is sent to a web
+browser.
+
+Client-side SDKs hit our [Edge API](../advanced-use/edge-api.md) directly to retrieve their flags.
+
+Read more about our Client-side SDKs for your language/platform:
+
+- [Javascript](/clients/javascript)
+- [Android/Kotlin](/clients/android)
+- [Flutter](/clients/flutter)
+- [iOS/Swift](/clients/ios)
+- [React & React Native](/clients/react)
+- [Next.js, Svelte and SSR](/clients/next-ssr)
+
+## Server-side SDKs
+
+[Server-side SDKs](/clients/server-side.md) run within _trusted environments_ - typically the server infrastructure that
+you have control over. Because of this you need to should not share your Server-side Environment keys publicly - they
+should be treated as secrets.
+
+:::tip
+
+The Server-side SDKs can operate in 2 different modes:
+
+1. `Remote Evaluation`
+2. `Local Evaluation`
+
+It's important to understand which mode is right for your use case, and what the pros and cons of each one are. This is
+detailed below.
+
+:::
+
+### Remote Evaluation
+
+In this mode, every time the SDK needs to get Flags, it will make a request to the Flagsmith API to get the Flags for
+the particular request.
+
+![Remote Evaluation Diagram](/img/sdk-remote-evaluation.svg)
+
+`Remote Evaluation` is the default mode; initialise the SDK and you will be running in `Remote Evaluation` mode.
+
+This is the same way that the [Client-side SDKs](#client-side-sdks) work.
+
+### Local Evaluation
+
+In this mode, all flag values are calculated locally, on your server. The Flagsmith SDK includes an implementation of
+the Flag Engine, and the engine runs within your server environment within the Flagsmith SDK.
+
+![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
+
+You have to configure the SDK to run in `Local Evaluation` mode. See the
+[SDK configuration options](server-side.md#configuring-the-sdk) for details on how to do that in your particular
+language.
+
+When the SDK is initialised in `Local Evaluation` mode, it will grab the entire set of details about the Environment
+from the Flagsmith API. This will include all the Flags, Flag values, Segment rules, Segment overrides etc for that
+Environment. This full complement of data about the Environment enables the Flagsmith SDK to run the Flag Engine
+_locally_ and _natively_ within your server infrastructure.
+
+The benefits to doing this are mainly one of latency and performance. Your server-side code does not need to hit the
+Flagsmith API each time a user requests their flags - the flags can be computed locally. Hence it does not need to block
+and wait for a response back from the Flagsmith API.
+
+:::tip
+
+The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
+sensitive (for example, your Segment Rules), the SDK requires a specific `Server-side Environment Key`. This is
+different to the regular `Client-side Environment Key`. The `Server-side Environment Key` should _not_ be shared, and
+should be considered sensitive data.
+
+:::
+
+In order to keep their Environment data up-to-date, SDKs running in `Local Evaluation` mode will poll the Flagsmith API
+regularly and update their local Environment data with any changes from the Flagsmith API. By default the SDK will poll
+the Flagsmith every `60` seconds; this rate is configurable within each SDK.
+
+It's important to understand the [pros and cons](#pros-cons-and-caveats) for running `Local Evaluation`.
+
+All our Client-side SDKs run in `Remote Evaluation` mode only; they cannot run in `Local Evaluation mode`. The reason
+for this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
+only allow Client-side SDKs to run in `Remote Evaluation` mode.
+
+:::info
+
+Because Clients are almost always operating remotely from your server infrastructure, there is little benefit to them
+running in `Local Evaluation` mode.
+
+:::
+
+## Networking Model
+
+When are network requests made, and when do you need to consider network latency? It depends on your evaluation mode,
+and whether you are using Client-side or Server-side SDKs!
+
+### Remote Evaluation
+
+#### Client-side
+
+- By default, client-side SDKs will initialise and retrieve all the Flags for an Environment and store them in local
+  memory. Flag evaluations within the SDK are then a simple lookup in memory with no associated network call.
+- If the context of an Identity changes, for example if a new Trait is added to the Identity, the SDK will make a new
+  call to the Flagsmith API to update the Traits of the Identity and receive new Flags, as the value of those flags may
+  have changed. This happens in one network call.
+- If an entirely new Identity is provided, the SDK will make a new call to the Flagsmith API to receive new Flags.
+- Other than the above two points, the SDK will not make further network requests to the Flagsmith API. If you wish you
+  can manually trigger a network call in code and refresh Flags locally.
+
+:::tip
+
+Exact Client-side specifics of initialisation and Flag retrieval depends on the language and platform. Check the docs
+for the relevant language platform for details.
+
+:::
+
+#### Server-side
+
+- Flagsmith server-side SDKs do not store Flags in local memory. Every Flag evaluation in your code will trigger a
+  network request.
+
+If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
+consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
+
+### Local Evaluation
+
+Local Evaluation mode is only available with Server-side SDKs.
+
+- When the SDK is initialised, it will make a network request to the Flagsmith API to receive all the Environment data
+  it needs to run Local Evaluations. The SDK receives a single JSON document with all this data.
+- Future evaluations are all computed locally within the SDK runtime. This means they are extremely fast as there is no
+  network latency to account for.
+- No further network calls take place for 60 seconds.
+- After 60 seconds have elapsed, the SDK will refresh the JSON Environment document with a network call to the Flagsmith
+  API.
+
+### Client-side SDK approaches
+
+Since Client-side SDKs will generally be associated with a single Identity (the person who owns the client device!), a
+common pattern for networking implementation is:
+
+1. The user launches your application for the first time. Since your application does not know who they are, a call to
+   get the default Environment Flags is made by the Flagsmith SDK.
+2. After the user logs in, make a second request to get the Flags with the new user Identity.
+3. Cache these flags locally on the device.
+4. Upon subsequent application launches, immediately read the flags from the cached store from step 3 and use those as
+   your application Flag values.
+5. In the background make a request to Flagsmith to refresh their Flags.
+6. Update both your application and the local cache with these fresh flags.
+
+### Things to note
+
+- Flagsmith always returns **all** Environment Flags during API calls. In fact, there is no way to request the state of
+  a single flag via our API.
+- The 60 second polling time in Local Evaluation mode is configurable.
+- You can provide your own caching layer (with a short TTL) in front of Local Evaluation mode requests if you wish -
+  this is not uncommon.
+
+## Pros, Cons and Caveats
+
+### Remote Evaluation
+
+- Identities are persisted within the Flagsmith Datastore.
+- Identity overrides specified within the Dashboard.
+- All Integrations work as designed.
+
+### Local Evaluation
+
+:::tip
+
+When running in Local Evaluation mode, our SDKs expect to be run as long-lived processes. Serverless platforms like AWS
+Lambda either break this contract or make it much more complicated. As a result, we do not recommend running our SDKs in
+Local Evaluation mode on top of platforms like Lambda where you do not have complete control over process lifetimes.
+
+Our [Edge Proxy](/advanced-use/edge-proxy/) is a good candidate if you need to run local evaluation mode alongside
+serverless platforms.
+
+:::
+
+The benefit of running in Local Evaluation mode is that you can process flag evaluations much more efficiently as they
+are all computed locally.
+
+- Identities are _not_ sent to the API and so are not persisted in the datastore.
+- Because Local mode does not connect to the datastore for each Flag request, it is not able to read the Trait data of
+  Identities from the API. This means that you have to provide the full complement of Traits when requesting the Flags
+  for a particular Identity. Our SDKs all provide relevant methods to achieve this.
+- [Identity overrides](../basic-features/managing-identities#identity-overrides) do not operate at all.
+- Analytics-based Integrations do not run.
+- In circumstances where you need to target a specific identity, you can do this by creating a segment to target that
+  specific user and subsequently adding a segment override for that segment.
+
+## SDK Compatibility
+
+### `In` Segment operator
+
+:::important
+
+Earlier SDK versions will not work in local evaluation mode if your environment has segments with the `In` operator
+defined.
+
+To keep local evaluation from breaking, please ensure you have your SDK versions updated before you add such segments to
+your environment.
+
+:::
+
+These minimum SDK versions support segments with the `In` operator in [local evaluation mode](#2---local-evaluation):
+
+- Python SDK: `3.3.0+`
+- Java SDK: `7.1.0+`
+- .NET SDK: `5.0.0+`
+- NodeJS SDK: `2.5.0+`
+- Ruby SDK: `3.2.0+`
+- PHP SDK: `4.1.0+`
+- Go SDK: `3.1.0+`
+- Rust SDK: `1.3.0+`
+- Elixir SDK: `2.0.0+`

@@ -5,20 +5,15 @@ from django.db.utils import IntegrityError
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
-from organisations.permissions.models import (
-    UserOrganisationPermission,
-    UserPermissionGroupOrganisationPermission,
-)
-from organisations.permissions.permissions import (
-    CREATE_PROJECT,
-    ORGANISATION_PERMISSIONS,
-)
+from organisations.permissions.models import UserOrganisationPermission
+from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import (
     Project,
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from users.models import FFAdminUser, UserPermissionGroup
+from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -53,9 +48,7 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        projects = self.user.get_permitted_projects(
-            ["VIEW_PROJECT", "CREATE_ENVIRONMENT"]
-        )
+        projects = self.user.get_permitted_projects(VIEW_PROJECT)
 
         # Then
         assert projects.count() == 2
@@ -68,11 +61,11 @@ class FFAdminUserTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project_1
         )
-        read_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
         user_project_permission.permissions.set([read_permission])
 
         # When
-        projects = self.user.get_permitted_projects(permissions=["VIEW_PROJECT"])
+        projects = self.user.get_permitted_projects(permission_key=VIEW_PROJECT)
 
         # Then
         assert projects.count() == 1
@@ -140,11 +133,10 @@ class FFAdminUserTestCase(TestCase):
     def test_has_organisation_permission_is_true_when_user_has_permission(self):
         # Given
         self.user.add_organisation(self.organisation)
-
+        user_organisation_permission = UserOrganisationPermission.objects.create(
+            user=self.user, organisation=self.organisation
+        )
         for permission_key, _ in ORGANISATION_PERMISSIONS:
-            user_organisation_permission = UserOrganisationPermission.objects.create(
-                user=self.user, organisation=self.organisation
-            )
             user_organisation_permission.permissions.through.objects.create(
                 permissionmodel_id=permission_key,
                 userorganisationpermission=user_organisation_permission,
@@ -171,47 +163,6 @@ class FFAdminUserTestCase(TestCase):
             )
             for permission_key, _ in ORGANISATION_PERMISSIONS
         )
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "user_permission_keys, group_permission_keys, expected_keys",
-    (
-        ([], [], set()),
-        ([CREATE_PROJECT], [], {CREATE_PROJECT}),
-        ([], [CREATE_PROJECT], {CREATE_PROJECT}),
-        ([CREATE_PROJECT], [CREATE_PROJECT], {CREATE_PROJECT}),
-    ),
-)
-def test_get_permission_keys_for_organisation(
-    user_permission_keys, group_permission_keys, expected_keys
-):
-    # Given
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test org")
-    user.add_organisation(organisation)
-    group = UserPermissionGroup.objects.create(
-        name="Test group", organisation=organisation
-    )
-    group.users.add(user)
-
-    if user_permission_keys:
-        user_permission = UserOrganisationPermission.objects.create(
-            user=user, organisation=organisation
-        )
-        user_permission.set_permissions(user_permission_keys)
-
-    if group_permission_keys:
-        group_permission = UserPermissionGroupOrganisationPermission.objects.create(
-            group=group, organisation=organisation
-        )
-        group_permission.set_permissions(group_permission_keys)
-
-    # When
-    permission_keys = user.get_permission_keys_for_organisation(organisation)
-
-    # Then
-    assert permission_keys == expected_keys
 
 
 @pytest.mark.django_db
@@ -287,6 +238,61 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
     # Then
     # extra group did not cause any errors and the user is removed from the group
     assert user_permission_group not in admin_user.permission_groups.all()
+
+
+@pytest.mark.django_db
+def test_delete_user():
+    # create a couple of users
+    email1 = "test1@example.com"
+    email2 = "test2@example.com"
+    email3 = "test3@example.com"
+    user1 = FFAdminUser.objects.create(email=email1)
+    user2 = FFAdminUser.objects.create(email=email2)
+    user3 = FFAdminUser.objects.create(email=email3)
+
+    # crete some organizations
+    org1 = Organisation.objects.create(name="org1")
+    org2 = Organisation.objects.create(name="org2")
+    org3 = Organisation.objects.create(name="org3")
+
+    # add the test user 1 to all the organizations
+    org1.users.add(user1)
+    org2.users.add(user1)
+    org3.users.add(user1)
+
+    # add test user 2 to org2 and user 3 to to org1
+    org2.users.add(user2)
+    org1.users.add(user3)
+
+    # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
+
+    # Delete user2
+    user2.delete(delete_orphan_organisations=True)
+    assert not FFAdminUser.objects.filter(email=email2).exists()
+
+    # All organisations remain since user 2 has org2 as only organization and it has 2 users
+    assert Organisation.objects.filter(name="org3").count() == 1
+    assert Organisation.objects.filter(name="org1").count() == 1
+    assert Organisation.objects.filter(name="org2").count() == 1
+
+    # Delete user1
+    user1.delete(delete_orphan_organisations=True)
+    assert not FFAdminUser.objects.filter(email=email1).exists()
+
+    # organization org3 and org2 are deleted since its only user is user1
+    assert Organisation.objects.filter(name="org3").count() == 0
+    assert Organisation.objects.filter(name="org2").count() == 0
+
+    # org1 remain
+    assert Organisation.objects.filter(name="org1").count() == 1
+
+    # user3 remain
+    assert FFAdminUser.objects.filter(email=email3).exists()
+
+    # Delete user3
+    user3.delete(delete_orphan_organisations=False)
+    assert not FFAdminUser.objects.filter(email=email3).exists()
+    assert Organisation.objects.filter(name="org1").count() == 1
 
 
 def test_user_create_calls_pipedrive_tracking(mocker, db, settings):

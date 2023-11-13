@@ -1,10 +1,10 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from audit.views import AuditLogViewSet
+from audit.views import AllAuditLogViewSet
 
 router = routers.DefaultRouter()
-router.register(r"", AuditLogViewSet, basename="audit")
+router.register(r"", AllAuditLogViewSet, basename="audit")
 
 
 urlpatterns = [url(r"^", include(router.urls))]

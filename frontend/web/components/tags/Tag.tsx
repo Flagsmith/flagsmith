@@ -1,9 +1,11 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import color from 'color'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
+import Utils from 'common/utils/utils'
+import Format from 'common/utils/format'
 
 type TagType = {
   className?: string
@@ -12,32 +14,29 @@ type TagType = {
   onClick?: (tag: TTag) => void
   selected?: boolean
   tag: Partial<TTag>
+  isTruncated?: boolean
 }
 
 const Tag: FC<TagType> = ({
   className,
   deselectedColor,
   hideNames,
+  isTruncated,
   onClick,
   selected,
   tag,
 }) => {
-  const [hover, setHover] = useState(false)
-
-  const toggleHover = () => {
-    if (onClick) {
-      setHover(!hover)
-    }
-  }
-
   const getColor = () => {
+    if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
+      return '#9DA4AE'
+    }
     if (selected) {
       return tag.color
     }
     return deselectedColor || tag.color
   }
 
-  if (!hideNames) {
+  if (!hideNames && !!onClick) {
     return (
       <ToggleChip
         color={getColor()}
@@ -49,30 +48,36 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  return (
+  return isTruncated && `${tag.label}`.length > 12 ? (
+    <Tooltip
+      plainText
+      title={
+        <div
+          onClick={() => onClick?.(tag as TTag)}
+          style={{
+            backgroundColor: `${color(getColor()).fade(0.92)}`,
+            border: `1px solid ${color(getColor()).fade(0.76)}`,
+            color: `${color(getColor()).darken(0.1)}`,
+          }}
+          className={cx('chip', className)}
+        >
+          {Format.truncateText(`${tag.label}`, 12)}
+        </div>
+      }
+    >
+      {tag.label}
+    </Tooltip>
+  ) : (
     <div
       onClick={() => onClick?.(tag as TTag)}
-      onMouseEnter={toggleHover}
-      onMouseLeave={toggleHover}
       style={{
-        backgroundColor: hover
-          ? `${color(getColor()).darken(0.1)}`
-          : getColor(),
+        backgroundColor: `${color(getColor()).fade(0.92)}`,
+        border: `1px solid ${color(getColor()).fade(0.76)}`,
+        color: `${color(getColor()).darken(0.1)}`,
       }}
-      className={cx('tag', { hideNames: hideNames, selected }, className)}
+      className={cx('chip', className)}
     >
-      <div>
-        {tag.label ? (
-          <Row space>
-            {hideNames ? '' : tag.label}
-            {selected && <span className='icon ion-md-checkmark' />}
-          </Row>
-        ) : (
-          <div className='text-center'>
-            {selected && <span className='icon ion-md-checkmark' />}
-          </div>
-        )}
-      </div>
+      {tag.label}
     </div>
   )
 }

@@ -38,28 +38,26 @@ const TagFilter: FC<TagFilterType> = ({
     }
   }
   const unTagged = !!showUntagged && {
-    color: '#666',
+    color: '#656D7B',
     id: '',
     label: 'Untagged',
   }
   return (
-    <Row className='tag-filter mx-2 mt-4'>
+    <Row className='tag-filter mt-2'>
       <div className='ml-1'>
         <Row>
           <Flex>
             <Row className='tag-filter-list'>
-              {children}
               {unTagged && (
-                <div className='mr-1'>
-                  <Tag
-                    key={unTagged.id}
-                    selected={isSelected(unTagged as any)}
-                    onClick={onSelect}
-                    className='px-2 py-2'
-                    tag={unTagged as any}
-                  />
-                </div>
+                <Tag
+                  key={unTagged.id}
+                  selected={isSelected(unTagged as any)}
+                  onClick={onSelect}
+                  className='px-2 py-2'
+                  tag={unTagged as any}
+                />
               )}
+              {children}
 
               {projectTags?.map((tag) => (
                 <Tag
@@ -88,8 +86,9 @@ const TagFilter: FC<TagFilterType> = ({
                 }
                 onClearAll && onClearAll()
               }}
-              style={{ marginBottom: 10 }}
-              className='btn--link mr-2'
+              className='mr-2'
+              theme='outline'
+              size='xSmall'
             >
               Clear Filters
             </Button>

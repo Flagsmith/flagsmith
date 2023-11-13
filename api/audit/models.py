@@ -3,7 +3,13 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model, Q
-from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModel,
+    hook,
+    priority,
+)
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
@@ -44,11 +50,12 @@ class AuditLog(LifecycleModel):
     related_object_type = models.CharField(max_length=20, null=True)
     related_object_uuid = models.CharField(max_length=36, null=True)
 
-    skip_signals = models.CharField(
+    skip_signals_and_hooks = models.CharField(
         null=True,
         blank=True,
-        help_text="comma separated list of signal functions to skip",
+        help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
+        db_column="skip_signals",
     )
     is_system_event = models.BooleanField(default=False)
 
@@ -60,9 +67,28 @@ class AuditLog(LifecycleModel):
         ordering = ("-created_date",)
 
     @property
+    def environment_document_updated(self) -> bool:
+        if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
+            return False
+        skip_signals_and_hooks = (
+            self.skip_signals_and_hooks.split(",")
+            if self.skip_signals_and_hooks
+            else []
+        )
+        return "send_environments_to_dynamodb" not in skip_signals_and_hooks
+
+    @property
     def history_record(self):
         klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.get(id=self.history_record_id)
+
+    @property
+    def environment_name(self) -> str:
+        return getattr(self.environment, "name", "unknown")
+
+    @property
+    def author_identifier(self) -> str:
+        return getattr(self.author, "email", "system")
 
     @staticmethod
     def get_history_record_model_class(
@@ -72,16 +98,19 @@ class AuditLog(LifecycleModel):
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    @hook(AFTER_SAVE)
-    def update_environments_updated_at(self):
-        # Don't update the environments updated_at if the audit log
-        # is of certain types (since they don't (directly) impact
-        # the value of a given feature in an environment)
-        if self.related_object_type in (
-            RelatedObjectType.CHANGE_REQUEST.name,
-            RelatedObjectType.EDGE_IDENTITY.name,
-        ):
-            return
+    @hook(BEFORE_CREATE)
+    def add_project(self):
+        if self.environment and self.project is None:
+            self.project = self.environment.project
+
+    @hook(
+        AFTER_CREATE,
+        priority=priority.HIGHEST_PRIORITY,
+        when="environment_document_updated",
+        is_now=True,
+    )
+    def process_environment_update(self):
+        from environments.tasks import process_environment_update
 
         environments_filter = Q()
         if self.environment_id:
@@ -93,7 +122,4 @@ class AuditLog(LifecycleModel):
             updated_at=self.created_date
         )
 
-    @hook(BEFORE_CREATE)
-    def add_project(self):
-        if self.environment and self.project is None:
-            self.project = self.environment.project
+        process_environment_update.delay(args=(self.id,))

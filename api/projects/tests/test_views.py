@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
+from features.models import FeatureSegment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -22,6 +23,11 @@ from projects.models import (
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
+)
+from projects.permissions import (
+    CREATE_ENVIRONMENT,
+    CREATE_FEATURE,
+    VIEW_PROJECT,
 )
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -59,8 +65,8 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     assert get_project_response.status_code == status.HTTP_200_OK
 
 
-def test_should_create_a_project_with_master_api_key_client(
-    settings, organisation, master_api_key_client
+def test_should_create_a_project_with_admin_master_api_key_client(
+    settings, organisation, admin_master_api_key_client
 ):
     # Given
     project_name = "project1"
@@ -69,7 +75,7 @@ def test_should_create_a_project_with_master_api_key_client(
     url = reverse("api-v1:projects:project-list")
 
     # When
-    response = master_api_key_client.post(url, data=data)
+    response = admin_master_api_key_client.post(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
@@ -82,7 +88,8 @@ def test_should_create_a_project_with_master_api_key_client(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_update_project(client, project, organisation):
     # Given
@@ -99,7 +106,8 @@ def test_can_update_project(client, project, organisation):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_list_project_permission(client, project):
     # Given
@@ -111,18 +119,18 @@ def test_can_list_project_permission(client, project):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        len(response.json()) == 5
+        len(response.json()) == 6
     )  # hard code how many permissions we expect there to be
 
 
 def test_my_permissions_for_a_project_return_400_with_master_api_key(
-    master_api_key_client, project, organisation
+    admin_master_api_key_client, project, organisation
 ):
     # Given
     url = reverse("api-v1:projects:project-my-permissions", args=[project.id])
 
     # When
-    response = master_api_key_client.get(url)
+    response = admin_master_api_key_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -226,7 +234,7 @@ class ProjectTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=user, project=project
         )
-        user_project_permission.add_permission("VIEW_PROJECT")
+        user_project_permission.add_permission(VIEW_PROJECT)
         url = reverse("api-v1:projects:project-detail", args=[project.id])
 
         # When
@@ -247,7 +255,7 @@ class ProjectTestCase(TestCase):
         user_project_permission = UserProjectPermission.objects.create(
             user=user, project=project
         )
-        user_project_permission.add_permission("VIEW_PROJECT")
+        user_project_permission.add_permission(VIEW_PROJECT)
         url = reverse("api-v1:projects:project-my-permissions", args=[project.id])
 
         # When
@@ -273,7 +281,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         # create a project user
         user = FFAdminUser.objects.create(email="user@test.com")
         user.add_organisation(self.organisation, OrganisationRole.USER)
-        read_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
         self.user_project_permission = UserProjectPermission.objects.create(
             user=user, project=self.project
         )
@@ -306,7 +314,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         new_user.add_organisation(self.organisation, OrganisationRole.USER)
         data = {
             "user": new_user.id,
-            "permissions": ["VIEW_PROJECT", "CREATE_ENVIRONMENT"],
+            "permissions": [VIEW_PROJECT, CREATE_ENVIRONMENT],
             "admin": False,
         }
 
@@ -329,7 +337,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
 
     def test_user_can_update_user_permission_for_a_project(self):
         # Given
-        data = {"permissions": ["CREATE_FEATURE"]}
+        data = {"permissions": [CREATE_FEATURE]}
 
         # When
         response = self.client.patch(
@@ -340,7 +348,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
 
         self.user_project_permission.refresh_from_db()
-        assert "CREATE_FEATURE" in self.user_project_permission.permissions.values_list(
+        assert CREATE_FEATURE in self.user_project_permission.permissions.values_list(
             "key", flat=True
         )
 
@@ -372,7 +380,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         # create a project user
         self.user = FFAdminUser.objects.create(email="user@test.com")
         self.user.add_organisation(self.organisation, OrganisationRole.USER)
-        read_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
+        read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
 
         self.user_permission_group = UserPermissionGroup.objects.create(
             name="Test group", organisation=self.organisation
@@ -416,7 +424,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         new_group.users.add(self.user)
         data = {
             "group": new_group.id,
-            "permissions": ["VIEW_PROJECT", "CREATE_ENVIRONMENT"],
+            "permissions": [VIEW_PROJECT, CREATE_ENVIRONMENT],
             "admin": False,
         }
 
@@ -441,7 +449,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
 
     def test_user_can_update_user_group_permission_for_a_project(self):
         # Given
-        data = {"permissions": ["CREATE_FEATURE"]}
+        data = {"permissions": [CREATE_FEATURE]}
 
         # When
         response = self.client.patch(
@@ -453,7 +461,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
 
         self.user_group_project_permission.refresh_from_db()
         assert (
-            "CREATE_FEATURE"
+            CREATE_FEATURE
             in self.user_group_project_permission.permissions.values_list(
                 "key", flat=True
             )
@@ -529,6 +537,88 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities
     mocked_identity_migrator.assert_not_called()
 
 
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_features(
+    admin_client, project, mocker, environment, feature, multivariate_feature, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    project.max_features_allowed = 1
+    project.save()
+
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segments(
+    admin_client,
+    project,
+    mocker,
+    environment,
+    feature,
+    settings,
+    feature_based_segment,
+    segment,
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    project.max_segments_allowed = 1
+    project.save()
+
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_overrides(
+    admin_client,
+    project,
+    mocker,
+    environment,
+    feature,
+    settings,
+    feature_segment,
+    multivariate_feature,
+    segment,
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # let's create another feature segment
+    FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Project is too large; Please contact support"
+    mocked_identity_migrator.assert_not_called()
+
+
 def test_list_project_with_uuid_filter_returns_correct_project(
     admin_client, project, mocker, settings, organisation
 ):
@@ -549,7 +639,8 @@ def test_list_project_with_uuid_filter_returns_correct_project(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_project_by_uuid(client, project, mocker, settings, organisation):
     # Given
@@ -564,7 +655,8 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_can_enable_realtime_updates_for_project(
     client, project, mocker, settings, organisation
@@ -588,7 +680,8 @@ def test_can_enable_realtime_updates_for_project(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_update_project(client, project, mocker, settings, organisation):
     # Given

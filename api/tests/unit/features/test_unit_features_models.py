@@ -76,33 +76,21 @@ def test_feature_states_get_environment_flags_queryset_filter_using_feature_name
 @pytest.mark.parametrize(
     "feature_state_version_generator",
     (
-        (None, None, False),
-        (2, None, True),
-        (None, 2, False),
-        (2, 3, False),
-        (3, 2, True),
+        # test the default case, this should never be true
+        (None, None, None, None, False),
+        # for the following 6 cases, ensure that we test in both directions
+        (2, now, None, None, True),
+        (None, None, 2, now, False),
+        (2, now, 3, now, False),
+        (3, now, 2, now, True),
+        (3, now, 2, yesterday, True),
+        (3, yesterday, 2, now, False),
     ),
     indirect=True,
 )
-def test_feature_state_gt_operator_for_versions(feature_state_version_generator):
+def test_feature_state_gt_operator(feature_state_version_generator):
     first, second, expected_result = feature_state_version_generator
-    assert (first > second) == expected_result
-
-
-@pytest.mark.parametrize(
-    "feature_state_live_from_generator",
-    (
-        (None, None, False),
-        (now, None, True),
-        (None, now, False),
-        (now, tomorrow, False),
-        (tomorrow, now, True),
-    ),
-    indirect=True,
-)
-def test_feature_state_gt_operator_for_live_from(feature_state_live_from_generator):
-    first, second, expected_result = feature_state_live_from_generator
-    assert (first > second) == expected_result
+    assert (first > second) is expected_result
 
 
 @pytest.mark.parametrize(
@@ -147,7 +135,7 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_change_request(
+def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncommitted_change_request(
     environment, feature, admin_user, mocker
 ):
     # Given
@@ -162,12 +150,12 @@ def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_cha
     )
 
     # When
-    message = feature_state.get_create_log_message(
+    related_object_id = feature_state.get_audit_log_related_object_id(
         mocker.MagicMock(id="history_instance")
     )  # history instance is irrelevant here
 
     # Then
-    assert message is None
+    assert related_object_id is None
 
 
 @pytest.mark.parametrize(
@@ -380,3 +368,78 @@ def test_feature_get_overrides_data(
 
     assert overrides_data[feature_3.id].num_identity_overrides is None
     assert overrides_data[feature_3.id].num_segment_overrides == 1
+
+
+def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(
+    feature, segment, feature_segment, environment
+):
+    # Given
+    v1_segment_override = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+    v2_segment_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=2,
+    )
+
+    # Then
+    assert v2_segment_override > v1_segment_override
+
+
+def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(
+    feature, segment, feature_segment, environment
+):
+    # Given
+    segment_override = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+    environment_default = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # Then
+    assert segment_override > environment_default
+
+
+def test_feature_state_clone_for_segment_override_clones_feature_segment(
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # When
+    cloned_fs = segment_featurestate.clone(env=environment_two, as_draft=True)
+
+    # Then
+    assert cloned_fs.feature_segment != segment_featurestate.feature_segment
+
+    assert (
+        cloned_fs.feature_segment.segment
+        == segment_featurestate.feature_segment.segment
+    )
+    assert (
+        cloned_fs.feature_segment.priority
+        == segment_featurestate.feature_segment.priority
+    )
+
+
+def test_feature_segment_clone(
+    feature_segment: FeatureSegment,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # When
+    cloned_feature_segment = feature_segment.clone(environment=environment_two)
+
+    # Then
+    assert cloned_feature_segment.id != feature_segment.id
+
+    assert cloned_feature_segment.priority == feature_segment.priority
+    assert cloned_feature_segment.segment == feature_segment.segment
+    assert cloned_feature_segment.feature == feature_segment.feature
+    assert cloned_feature_segment.environment == environment_two

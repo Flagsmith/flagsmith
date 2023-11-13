@@ -23,6 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
+    BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
 )
@@ -112,6 +113,11 @@ class Feature(
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+    group_owners = models.ManyToManyField(
+        "users.UserPermissionGroup", related_name="owned_features", blank=True
+    )
+
+    is_server_key_only = models.BooleanField(default=False)
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -463,11 +469,18 @@ class FeatureState(
                 )
             return True
 
-        if self.feature_segment_id:
+        if (
+            self.feature_segment_id
+            and self.feature_segment_id != other.feature_segment_id
+        ):
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
             return not (
-                other.identity_id or self.feature_segment < other.feature_segment
+                other.identity_id
+                or (
+                    other.feature_segment_id
+                    and self.feature_segment < other.feature_segment
+                )
             )
 
         if self.type == other.type:
@@ -477,11 +490,15 @@ class FeatureState(
             # further in the future can be lower than a feature state
             # whose live_from value is earlier.
             # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            is_more_recent_live_from = self.is_more_recent_live_from(other)
-            is_more_recent_version = self._is_more_recent_version(other)
-            return self.version is not None and (
-                is_more_recent_live_from or is_more_recent_version
-            )
+            if self.is_live:
+                if not other.is_live or self.is_more_recent_live_from(other):
+                    return True
+                elif self.live_from == other.live_from and self._is_more_recent_version(
+                    other
+                ):
+                    return True
+
+            return False
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -532,7 +549,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from > timezone.now()
+        return self.live_from and self.live_from > timezone.now()
 
     def clone(
         self,
@@ -547,15 +564,17 @@ class FeatureState(
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
-        clone.feature_segment = (
-            FeatureSegment.objects.get(
-                environment=env,
-                feature=clone.feature,
-                segment=self.feature_segment.segment,
+
+        if self.feature_segment:
+            # For now, we can only create a new feature segment if we are cloning to another environment
+            # TODO: with feature versioning, ensure that we clone regardless.
+            #  see this PR: https://github.com/Flagsmith/flagsmith/pull/2382
+            clone.feature_segment = (
+                self.feature_segment.clone(environment=env)
+                if env != self.environment
+                else self.feature_segment
             )
-            if self.feature_segment
-            else None
-        )
+
         clone.environment = env
         clone.version = None if as_draft else version or self.version
         clone.live_from = live_from
@@ -602,7 +621,13 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
-        identity_hash_key = identity.get_hash_key() if identity else None
+        identity_hash_key = (
+            identity.get_hash_key(
+                identity.environment.use_identity_composite_key_for_hashing
+            )
+            if identity
+            else None
+        )
         return self.get_feature_state_value_by_hash_key(identity_hash_key)
 
     def get_feature_state_value_defaults(self) -> dict:
@@ -653,30 +678,33 @@ class FeatureState(
         return getattr(self, "feature_state_value", None)
 
     @hook(BEFORE_CREATE)
-    def check_for_existing_feature_state(self):
-        # prevent duplicate feature states being created for an environment
+    @hook(BEFORE_SAVE, when="deleted", is_not=True)
+    def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
-
-        if FeatureState.objects.filter(
+        filter_ = Q(
             environment=self.environment,
             feature=self.feature,
             version=self.version,
             feature_segment=self.feature_segment,
             identity=self.identity,
-        ).exists():
+        )
+        if self.id:
+            filter_ &= ~Q(id=self.id)
+
+        if FeatureState.objects.filter(filter_).exists():
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"
             )
 
     @hook(BEFORE_CREATE)
-    def set_live_from_for_version_1(self):
+    def set_live_from(self):
         """
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
-        if self.version == 1 and not self.live_from:
+        if self.version is not None and self.live_from is None:
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
@@ -766,15 +794,7 @@ class FeatureState(
                 feature_state.identity_id,
             )
             current_feature_state = feature_states_dict.get(key)
-            # we use live_from here as a priority over the version since
-            # the version is given when change requests are committed,
-            # hence the version for a feature state that is scheduled
-            # further in the future can be lower than a feature state
-            # whose live_from value is earlier.
-            # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            if not current_feature_state or feature_state.is_more_recent_live_from(
-                current_feature_state
-            ):
+            if not current_feature_state or feature_state > current_feature_state:
                 feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
@@ -823,14 +843,11 @@ class FeatureState(
             and other.live_from is None
         )
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        if self.change_request_id and not self.change_request.committed_at:
-            # change requests create feature states that may not ever go live,
-            # since we already include the change requests in the audit log
-            # we don't want to create separate audit logs for the associated
-            # feature states
-            return
+    @property
+    def belongs_to_uncommited_change_request(self) -> bool:
+        return self.change_request_id and not self.change_request.committed_at
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
@@ -844,9 +861,6 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        if self.change_request_id and not self.change_request.committed_at:
-            return
-
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -876,6 +890,15 @@ class FeatureState(
             # Account for cascade deletes
             return None
 
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        # Change requests can create, update, or delete feature states that may never go live,
+        # since we already include the change requests in the audit log
+        # we don't want to create separate audit logs for the associated
+        # feature states
+        if self.belongs_to_uncommited_change_request:
+            return None
+        return super().get_audit_log_related_object_id(history_instance)
+
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)
 
@@ -884,7 +907,7 @@ class FeatureState(
             and self.feature_segment_id is None
             and self.identity_id is None
         ):
-            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+            kwargs["skip_signals_and_hooks"] = "send_environments_to_dynamodb"
 
         return kwargs
 

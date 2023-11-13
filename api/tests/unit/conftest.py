@@ -1,7 +1,5 @@
 import pytest
-from rest_framework.test import APIClient
 
-from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
@@ -100,23 +98,6 @@ def organisation_one_project_one_feature_one(organisation_one_project_one):
 
 
 @pytest.fixture()
-def master_api_key(organisation):
-    master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation
-    )
-    return master_api_key, key
-
-
-@pytest.fixture()
-def master_api_key_client(master_api_key):
-    # Can not use `api_client` fixture here because:
-    # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
-    api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
-    return api_client
-
-
-@pytest.fixture()
 def dynamo_enabled_project(organisation):
     return Project.objects.create(
         name="Dynamo enabled project",
@@ -183,4 +164,28 @@ def tag_two(project):
         color="#fffff",
         description="Test Tag2 description",
         project=project,
+    )
+
+
+@pytest.fixture()
+def project_two(organisation: Organisation) -> Project:
+    return Project.objects.create(name="Test Project Two", organisation=organisation)
+
+
+@pytest.fixture()
+def environment_two(project: Project) -> Environment:
+    return Environment.objects.create(name="Test Environment two", project=project)
+
+
+@pytest.fixture
+def project_two_environment(project_two: Project) -> Environment:
+    return Environment.objects.create(
+        name="Test Project two Environment", project=project_two
+    )
+
+
+@pytest.fixture
+def project_two_feature(project_two: Project) -> Feature:
+    return Feature.objects.create(
+        name="project_two_feature", project=project_two, initial_value="initial_value"
     )

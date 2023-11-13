@@ -11,10 +11,9 @@ inputs:
   environment:
     description: The value of the ENV environment variable to use for npm run env.
     required: true
-  enable_influxdb_features:
-    description: Boolean to enable / disable influxdb features
+  tests:
+    description: The space separated list of E2E tests to be executed.
     required: false
-    default: 'true'
 
 runs:
   using: composite
@@ -40,10 +39,10 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         STATIC_ASSET_CDN_URL: /
         ENV: ${{ inputs.environment }}
-        ENABLE_INFLUXDB_FEATURES: ${{ inputs.enable_influxdb_features }}
+        GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       run: |
         node -v
         npm run env
-        npm run test
+        npm run test -- ${{ inputs.tests }}
       shell: bash

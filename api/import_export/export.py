@@ -187,7 +187,7 @@ def export_features(organisation_id: int) -> typing.List[dict]:
             _EntityExportConfig(
                 Feature,
                 Q(project__organisation__id=organisation_id),
-                exclude_fields=["owners"],
+                exclude_fields=["owners", "group_owners"],
             ),
             _EntityExportConfig(
                 MultivariateFeatureOption,

@@ -1,13 +1,21 @@
+import typing
 from unittest.mock import MagicMock
 
 import pytest
 from core.request_origin import RequestOrigin
-from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
+from organisations.models import OrganisationRole
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
+
+if typing.TYPE_CHECKING:
+    from django.db.models import Model
+
+    from features.workflows.core.models import ChangeRequest
+    from organisations.models import Organisation
 
 
 @pytest.mark.parametrize(
@@ -180,7 +188,7 @@ def test_environment_get_environment_document(environment, django_assert_num_que
     # Given
 
     # When
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(3):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -197,8 +205,8 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
     )
-    mocked_environment_document_cache.get.return_value = build_environment_document(
-        environment
+    mocked_environment_document_cache.get.return_value = (
+        map_environment_to_environment_document(environment)
     )
 
     # When
@@ -222,7 +230,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     mocked_environment_document_cache.get.return_value = None
 
     # When
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(3):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -368,3 +376,23 @@ def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_projec
 
     # Then
     mocked_environment_api_key_wrapper.write_api_key.assert_not_called()
+
+
+def test_delete_environment_with_committed_change_request(
+    organisation: "Organisation",
+    environment: Environment,
+    change_request: "ChangeRequest",
+    change_request_feature_state: FeatureState,
+    django_user_model: typing.Type["Model"],
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+    change_request.approve(user)
+    change_request.commit(user)
+
+    # When
+    environment.delete()
+
+    # Then
+    assert environment.deleted_at is not None

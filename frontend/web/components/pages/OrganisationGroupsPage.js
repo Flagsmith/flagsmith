@@ -6,6 +6,8 @@ import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Permission from 'common/providers/Permission'
+import PageTitle from 'components/PageTitle'
 
 const OrganisationGroupsPage = class extends Component {
   static contextTypes = {
@@ -45,6 +47,7 @@ const OrganisationGroupsPage = class extends Component {
         group={group}
         push={this.context.router.history.push}
       />,
+      'p-0 side-modal',
     )
   }
 
@@ -56,26 +59,48 @@ const OrganisationGroupsPage = class extends Component {
             !!organisation && (
               <div>
                 <div>
-                  <Row space className='mt-4'>
-                    <h3 className='m-b-0'>User Groups</h3>
-                    <Button
-                      className='mr-2'
-                      id='btn-invite'
-                      onClick={() =>
-                        openModal(
-                          'Create Group',
-                          <CreateGroupModal orgId={organisation.id} />,
-                        )
-                      }
-                      type='button'
-                    >
-                      Create Group
-                    </Button>
-                  </Row>
-                  <p>
+                  <PageTitle
+                    cta={
+                      <>
+                        <Permission
+                          level='organisation'
+                          permission='MANAGE_USER_GROUPS'
+                          id={AccountStore.getOrganisation().id}
+                        >
+                          {({ permission }) => (
+                            <>
+                              {Utils.renderWithPermission(
+                                permission,
+                                Constants.organisationPermissions(
+                                  'Manage Groups',
+                                ),
+                                <Button
+                                  className='mr-2'
+                                  id='btn-invite'
+                                  disabled={!permission}
+                                  onClick={() =>
+                                    openModal(
+                                      'Create Group',
+                                      <CreateGroupModal
+                                        orgId={organisation.id}
+                                      />,
+                                    )
+                                  }
+                                  type='button'
+                                >
+                                  Create Group
+                                </Button>,
+                              )}
+                            </>
+                          )}
+                        </Permission>
+                      </>
+                    }
+                    title={'User Groups'}
+                  >
                     Groups allow you to manage permissions for viewing and
                     editing projects, features and environments.
-                  </p>
+                  </PageTitle>
                   <UserGroupList
                     onEditPermissions={this.editGroupPermissions}
                     showRemove

@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
-import Highlight from 'components/Highlight'
-import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Highlight from 'components/Highlight'
+import ErrorMessage from 'components/ErrorMessage'
 import TestWebhook from 'components/TestWebhook'
+import ViewDocs from 'components/ViewDocs'
 
 const exampleJSON = Constants.exampleAuditWebhook
 
@@ -48,134 +49,133 @@ const CreateAuditWebhook = class extends Component {
       state: { enabled, error, isSaving, url },
     } = this
     return (
-      <ProjectProvider id={this.props.projectId}>
-        {() => (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              this.save()
-            }}
-          >
-            <Row space>
-              <Flex className='mb-4 mr-4'>
-                <div>
-                  <label>URL (Expects a 200 response from POST)</label>
-                </div>
-                <Input
-                  ref={(e) => (this.input = e)}
-                  value={this.state.url}
-                  onChange={(e) =>
-                    this.setState({ url: Utils.safeParseEventValue(e) })
-                  }
-                  isValid={url && url.length}
-                  type='text'
-                  inputClassName='input--wide'
-                  placeholder='https://example.com/audit/'
-                />
-              </Flex>
-              <FormGroup className='mb-4 ml-1'>
-                <div>
-                  <label>Enabled</label>
-                </div>
-                <div>
+      <div className='px-4'>
+        <ProjectProvider id={this.props.projectId}>
+          {({ project }) => (
+            <form
+              className='mt-4'
+              onSubmit={(e) => {
+                e.preventDefault()
+                this.save()
+              }}
+            >
+              <Row space>
+                <Flex className='mb-4'>
+                  <div>
+                    <label>*URL (Expects a 200 response from POST)</label>
+                  </div>
+                  <Input
+                    ref={(e) => (this.input = e)}
+                    value={this.state.url}
+                    onChange={(e) =>
+                      this.setState({ url: Utils.safeParseEventValue(e) })
+                    }
+                    isValid={url && url.length}
+                    type='text'
+                    inputClassName='input--wide'
+                    placeholder='https://example.com/audit/'
+                  />
+                </Flex>
+                <Row className='ms-4'>
                   <Switch
                     defaultChecked={enabled}
                     checked={enabled}
                     onChange={(enabled) => this.setState({ enabled })}
                   />
+                  <span
+                    onClick={() => this.setState({ enabled: !enabled })}
+                    className='ms-2'
+                  >
+                    {' '}
+                    Enable
+                  </span>
+                </Row>
+              </Row>
+              <Flex className='mb-4'>
+                <div>
+                  <label>
+                    Secret (Optional) -{' '}
+                    <a
+                      className='text-info'
+                      target='_blank'
+                      href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
+                      rel='noreferrer'
+                    >
+                      More info
+                    </a>{' '}
+                  </label>
+                </div>
+                <Input
+                  ref={(e) => (this.input = e)}
+                  value={this.state.secret}
+                  onChange={(e) =>
+                    this.setState({ secret: Utils.safeParseEventValue(e) })
+                  }
+                  isValid={url && url.length}
+                  type='text'
+                  className='full-width'
+                  placeholder='Secret'
+                />
+              </Flex>
+              <Flex className='mb-4'>
+                {error && (
+                  <ErrorMessage error='Could not create a webhook for this url, please ensure you include http or https.' />
+                )}
+                <div className={isEdit ? 'footer' : ''}>
+                  <div className='mb-3'>
+                    <p className='text-right'>
+                      This will {isEdit ? 'update' : 'create'} a webhook for the
+                      Organisation{' '}
+                      <strong>{AccountStore.getOrganisation().name}</strong>
+                    </p>
+                  </div>
+                  <div className='justify-content-end flex-row'>
+                    <TestWebhook
+                      json={Constants.exampleAuditWebhook}
+                      webhook={this.state.url}
+                    />
+                    {isEdit ? (
+                      <Button
+                        className='ml-4'
+                        type='submit'
+                        data-test='update-feature-btn'
+                        id='update-feature-btn'
+                        disabled={isSaving || !url}
+                      >
+                        {isSaving ? 'Updating' : 'Update Webhook'}
+                      </Button>
+                    ) : (
+                      <Button
+                        className='ml-4'
+                        type='submit'
+                        disabled={isSaving || !url}
+                      >
+                        {isSaving ? 'Creating' : 'Create Webhook'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Flex>
+              <FormGroup className='ml-1'>
+                <div>
+                  <Row className={'mb-4'} space>
+                    <h6>Example Payload </h6>
+                    <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks' />
+                  </Row>
+
+                  <Highlight
+                    forceExpanded
+                    style={{ marginBottom: 10 }}
+                    className='json'
+                  >
+                    {exampleJSON}
+                  </Highlight>
                 </div>
               </FormGroup>
-            </Row>
-            <Flex className='mb-4 mr-4'>
-              <div>
-                <label>
-                  Secret (Optional) -{' '}
-                  <a
-                    className='text-info'
-                    target='_blank'
-                    href='https://docs.flagsmith.com/advanced-use/system-administration#validating-signature'
-                    rel='noreferrer'
-                  >
-                    More info
-                  </a>{' '}
-                </label>
-              </div>
-              <Input
-                ref={(e) => (this.input = e)}
-                value={this.state.secret}
-                onChange={(e) =>
-                  this.setState({ secret: Utils.safeParseEventValue(e) })
-                }
-                isValid={url && url.length}
-                type='text'
-                inputClassName='input--wide'
-                placeholder='Secret'
-              />
-            </Flex>
-            <Flex className='mb-4 mr-4'>
-              {error && (
-                <ErrorMessage error='Could not create a webhook for this url, please ensure you include http or https.' />
-              )}
-              <div className={isEdit ? 'footer' : ''}>
-                <div className='mb-3'>
-                  <p className='text-right'>
-                    This will {isEdit ? 'update' : 'create'} a webhook for the
-                    Organisation{' '}
-                    <strong>{AccountStore.getOrganisation().name}</strong>
-                  </p>
-                </div>
-                <div className='text-right'>
-                  <TestWebhook
-                    json={Constants.exampleAuditWebhook}
-                    webhook={this.state.url}
-                  />
-                </div>
-                <div className='text-right'>
-                  {isEdit ? (
-                    <Button
-                      className='mt-3'
-                      data-test='update-feature-btn'
-                      id='update-feature-btn'
-                      disabled={isSaving || !url}
-                    >
-                      {isSaving ? 'Creating' : 'Update Webhook'}
-                    </Button>
-                  ) : (
-                    <Button
-                      className='mt-3'
-                      data-test='create-feature-btn'
-                      id='create-feature-btn'
-                      disabled={isSaving || !url}
-                    >
-                      {isSaving ? 'Creating' : 'Create Webhook'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Flex>
-            <FormGroup className='mb-4 ml-1'>
-              <div>
-                <label>Example Payload </label>
-                <a
-                  className='link-dark ml-2'
-                  href='https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks'
-                  target='_blank'
-                  rel='noreferrer'
-                >
-                  View docs
-                </a>
-                <Highlight
-                  forceExpanded
-                  style={{ marginBottom: 10 }}
-                  className='json'
-                >
-                  {exampleJSON}
-                </Highlight>
-              </div>
-            </FormGroup>
-          </form>
-        )}
-      </ProjectProvider>
+            </form>
+          )}
+        </ProjectProvider>
+      </div>
     )
   }
 }

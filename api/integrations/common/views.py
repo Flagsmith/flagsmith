@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.exceptions import (
     NotFound,
@@ -7,14 +8,18 @@ from rest_framework.exceptions import (
 
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
+from projects.permissions import VIEW_PROJECT
 
 
-class IntegrationCommonViewSet(viewsets.ModelViewSet):
+class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):
     serializer_class = None
     pagination_class = None  # set here to ensure documentation is correct
     model_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
         environment_api_key = self.kwargs["environment_api_key"]
 
         try:
@@ -49,3 +54,31 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
         Get environment object from URL parameters in request.
         """
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
+
+
+class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
+    serializer_class = None
+    pagination_class = None
+    model_class = None
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
+        project = get_object_or_404(
+            self.request.user.get_permitted_projects(VIEW_PROJECT),
+            pk=self.kwargs["project_pk"],
+        )
+        return self.model_class.objects.filter(project=project)
+
+    def perform_create(self, serializer):
+        project_id = self.kwargs["project_pk"]
+        if self.model_class.objects.filter(project_id=project_id).exists():
+            raise ValidationError(
+                f"{self.model_class.__name__} for this project already exists."
+            )
+        serializer.save(project_id=project_id)
+
+    def perform_update(self, serializer):
+        project_id = self.kwargs["project_pk"]
+        serializer.save(project_id=project_id)

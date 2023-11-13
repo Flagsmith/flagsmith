@@ -1,8 +1,10 @@
+import importlib
 import logging
 import typing
 
 from core.helpers import get_current_site_url
 from core.models import (
+    AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -24,14 +26,17 @@ from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
+    CHANGE_REQUEST_DELETED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
-from audit.tasks import create_feature_state_went_live_audit_log
+from audit.tasks import (
+    create_feature_state_updated_by_change_request_audit_log,
+    create_feature_state_went_live_audit_log,
+)
 from features.models import FeatureState
 
 from .exceptions import (
     CannotApproveOwnChangeRequest,
-    ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
 
@@ -68,7 +73,6 @@ class ChangeRequest(
         related_name="change_requests",
     )
 
-    deleted_at = models.DateTimeField(null=True)
     committed_at = models.DateTimeField(null=True)
     committed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -98,7 +102,7 @@ class ChangeRequest(
         feature_states = list(self.feature_states.all())
 
         for feature_state in feature_states:
-            if not feature_state.live_from:
+            if not feature_state.live_from or feature_state.live_from < timezone.now():
                 feature_state.live_from = timezone.now()
 
             feature_state.version = FeatureState.get_next_version_number(
@@ -116,18 +120,11 @@ class ChangeRequest(
         self.committed_by = committed_by
         self.save()
 
-    def delete(self, *args, **kwargs):
-        now = timezone.now()
-        if self.committed_at and all(
-            fs.live_from <= now for fs in self.feature_states.all()
-        ):
-            raise ChangeRequestDeletionError(
-                "Cannot delete change request that has been committed."
-            )
-        super().delete(*args, **kwargs)
-
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return CHANGE_REQUEST_DELETED_MESSAGE % self.title
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if (
@@ -170,7 +167,7 @@ class ChangeRequest(
                 "Change request must be saved before it has a url attribute."
             )
         url = get_current_site_url()
-        url += f"/project/{self.environment.project.id}"
+        url += f"/project/{self.environment.project_id}"
         url += f"/environment/{self.environment.api_key}"
         url += f"/change-requests/{self.id}"
         return url
@@ -181,15 +178,16 @@ class ChangeRequest(
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def schedule_audit_log_creation_task_for_feature_state_going_live(self):
-        now = timezone.now()
-        feature_states = list(
-            self.feature_states.filter(live_from__gt=now).order_by("live_from")
-        )
-        for feature_state in feature_states:
-            create_feature_state_went_live_audit_log.delay(
-                delay_until=feature_state.live_from, args=(feature_state.id,)
-            )
+    def create_audit_log_for_related_feature_state(self):
+        for feature_state in self.feature_states.all():
+            if self.committed_at < feature_state.live_from:
+                create_feature_state_went_live_audit_log.delay(
+                    delay_until=feature_state.live_from, args=(feature_state.id,)
+                )
+            else:
+                create_feature_state_updated_by_change_request_audit_log.delay(
+                    args=(feature_state.id,)
+                )
 
 
 class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
@@ -272,3 +270,20 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
     def _get_environment(self):
         return self.change_request.environment
+
+
+class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):
+    change_request = models.ForeignKey(
+        ChangeRequest, on_delete=models.CASCADE, related_name="group_assignments"
+    )
+    group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
+
+    @hook(AFTER_SAVE)
+    def notify_group(self):
+        if settings.WORKFLOWS_LOGIC_INSTALLED:
+            workflows_tasks = importlib.import_module(
+                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.tasks"
+            )
+            workflows_tasks.notify_group_of_change_request_assignment.delay(
+                kwargs={"change_request_group_assignment_id": self.id}
+            )

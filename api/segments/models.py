@@ -282,7 +282,9 @@ class Condition(
 
         segment = self.rule.get_segment()
         return (
-            get_hashed_percentage_for_object_ids(object_ids=[segment.id, identity.id])
+            get_hashed_percentage_for_object_ids(
+                object_ids=[segment.id, identity.get_hash_key()]
+            )
             <= float_value
         )
 

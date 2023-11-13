@@ -1,0 +1,72 @@
+{
+    "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
+    "packages": {
+        ".": {
+            "release-type": "simple",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false,
+            "include-component-in-tag": false
+        }
+    },
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "changelog-sections": [
+        {
+            "type": "feat",
+            "hidden": false,
+            "section": "Features"
+        },
+        {
+            "type": "fix",
+            "hidden": false,
+            "section": "Bug Fixes"
+        },
+        {
+            "type": "infra",
+            "hidden": false,
+            "section": "Infrastructure (Flagsmith SaaS Only)"
+        },
+        {
+            "type": "docs",
+            "hidden": true,
+            "section": "Docs"
+        },
+        {
+            "type": "chore",
+            "hidden": true,
+            "section": "Other"
+        },
+        {
+            "type": "build",
+            "hidden": true,
+            "section": "Build"
+        },
+        {
+            "type": "deps",
+            "hidden": true,
+            "section": "Dependency Updates"
+        },
+        {
+            "type": "ci",
+            "hidden": true,
+            "section": "CI"
+        },
+        {
+            "type": "refactor",
+            "hidden": true,
+            "section": "Refactoring"
+        },
+        {
+            "type": "style",
+            "hidden": true,
+            "section": "Code Style"
+        },
+        {
+            "type": "test",
+            "hidden": true,
+            "section": "Tests"
+        }
+    ]
+}

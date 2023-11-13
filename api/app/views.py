@@ -5,13 +5,14 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.request import Request
 
 from . import utils
 
 logger = logging.getLogger(__name__)
 
 
-def version_info(request):
+def version_info(request: Request) -> JsonResponse:
     return JsonResponse(utils.get_version_info())
 
 
@@ -24,10 +25,7 @@ def index(request):
         return HttpResponse(status=405, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
-    context = {
-        "linkedin_api_key": settings.LINKEDIN_API_KEY,
-    }
-    return HttpResponse(template.render(context, request))
+    return HttpResponse(template.render(request=request))
 
 
 def project_overrides(request):
@@ -41,7 +39,6 @@ def project_overrides(request):
         "assetURL": "ASSET_URL",
         "crispChat": "CRISP_CHAT_API_KEY",
         "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
-        "disableInflux": "DISABLE_INFLUXDB_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
         "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",

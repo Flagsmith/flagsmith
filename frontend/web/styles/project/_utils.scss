@@ -64,8 +64,13 @@
 
 
 .disable-transitions {
+    .modal-dialog {
+        transition: none;
+        transform: none !important;
+    }
     .fade {
         transition: none!important;
+        opacity: 1;
     }
 }
 
@@ -89,10 +94,6 @@
 
 .mr-auto, .mx-auto {
     margin-right: auto!important;
-}
-
-.signup-form {
-    width: 485px;
 }
 
 .signup-icon {
@@ -143,6 +144,10 @@
         background-color: rgba(0,0,0,.2);
     }
 }
+.aside__environment-list-item.disabled {
+    color:#696969;
+    pointer-events: none;
+  }
 
 .justify-content-end {
     justify-content: flex-end;
@@ -167,5 +172,6 @@
     text-decoration: none;
     &:hover {
         text-decoration: none;
+        color: $bt-brand-primary-dark
     }
 }

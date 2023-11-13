@@ -127,8 +127,13 @@ class UserPermissionGroupPermission(BasePermission):
             return False
 
         return (
-            view.action == "list" and request.user.belongs_to(organisation.id)
-        ) or request.user.has_organisation_permission(organisation, MANAGE_USER_GROUPS)
+            view.action in ("list", "my_groups")
+            and request.user.belongs_to(organisation.id)
+            or view.detail is True  # delegate to has_object_permission / get_queryset
+            or request.user.has_organisation_permission(
+                organisation, MANAGE_USER_GROUPS
+            )
+        )
 
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")

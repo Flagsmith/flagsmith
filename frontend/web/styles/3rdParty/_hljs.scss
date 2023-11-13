@@ -1,110 +1,93 @@
+@import "../mixins/custom-scrollbar";
+
 @mixin transition($transition...) {
-  -moz-transition:    $transition;
-  -o-transition:      $transition;
+  -moz-transition: $transition;
+  -o-transition: $transition;
   -webkit-transition: $transition;
-  transition:         $transition;
+  transition: $transition;
 }
 @mixin transition-property($property...) {
-  -moz-transition-property:    $property;
-  -o-transition-property:      $property;
+  -moz-transition-property: $property;
+  -o-transition-property: $property;
   -webkit-transition-property: $property;
-  transition-property:         $property;
+  transition-property: $property;
 }
 @mixin transition-duration($duration...) {
-  -moz-transition-property:    $duration;
-  -o-transition-property:      $duration;
+  -moz-transition-property: $duration;
+  -o-transition-property: $duration;
   -webkit-transition-property: $duration;
-  transition-property:         $duration;
+  transition-property: $duration;
 }
 @mixin transition-timing-function($timing...) {
-  -moz-transition-timing-function:    $timing;
-  -o-transition-timing-function:      $timing;
+  -moz-transition-timing-function: $timing;
+  -o-transition-timing-function: $timing;
   -webkit-transition-timing-function: $timing;
-  transition-timing-function:         $timing;
+  transition-timing-function: $timing;
 }
 @mixin transition-delay($delay...) {
-  -moz-transition-delay:    $delay;
-  -o-transition-delay:      $delay;
+  -moz-transition-delay: $delay;
+  -o-transition-delay: $delay;
   -webkit-transition-delay: $delay;
-  transition-delay:         $delay;
+  transition-delay: $delay;
 }
-.invalid .value-editor .hljs{
-  border: 2px solid $brand-danger;
+.invalid .value-editor .hljs {
+  border: 2px solid $danger;
 }
 .value-editor {
   position: relative;
-  textarea,.hljs {
-    padding-top: 20px;
+  textarea,
+  .hljs {
+   padding: $input-padding-lg;
+   line-height: $line-height-lg;
+  }
+  &.code-medium{
+    .hljs{
+      padding: $input-padding;
+    }
   }
   textarea {
     min-height: 50px;
     padding-bottom: 5px;
     text-indent: 10px;
   }
-  &.light {
-    .select-language {
-      span {
-        color: $body-text;
-      }
-    }
-  }
   code {
     outline-color: transparent !important;
   }
   .select-language {
     position: absolute;
-    top: 5px;
-    right: 10px;
+    top: -24px;
+    right: 0;
     .active {
       span {
         margin: 0;
         opacity: 1;
       }
+      .language-icon{
+        color:$text-icon-dark;
+      }
     }
     span {
-      margin-right: 5px;
-      color: white;
-      font-weight: bold;
-      opacity: 0.5;
+      color: $text-icon-light-grey;
       cursor: pointer;
-      font-size: 12px;
+      font-size: $font-caption-sm;
+      line-height: $line-height-xxsm;
       &.active {
-        color: $btn-code-button-color-alt;
-        opacity: 1;
+        color: $text-icon-dark;
+        font-weight: 500;
       }
       &.primary {
-        opacity: 1;
-        color: $bt-brand-primary !important;
+        color: $primary !important;
       }
     }
-  }
-}
-.dark {
-  .hljs {
-    background: $bt-code-background-dark;
-  }
-  .hljs-header {
-    color: $btn-code-button-color-dark;
-    .hljs-description {
-      color: $btn-code-button-color-alt-dark;
-    }
-    background-color: $btn-code-button-background-dark;
-    &:hover {
-      background-color: $btn-code-button-background-dark-hover;
-
-    }
-    border: 1px solid $btn-code-button-background-dark;
-  }
-  :hover > .hljs-header {
-    background-color: $btn-code-button-background-dark-hover;
   }
 }
 .hljs {
   a {
     color: white !important;
     text-decoration: underline;
-    .hljs-regexp,.hljs-comment {
-      color: white !important;;
+    .hljs-regexp,
+    .hljs-comment {
+      color: white !important;
     }
   }
   cursor: text;
@@ -113,12 +96,19 @@
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  background: $bt-code-background;
-  border-radius: 10px;
+  background: $code-bg;
+  border-radius: $border-radius;
+  border: 1px solid $basic-alpha-8;
   &.no-pad {
     margin-bottom: 0;
   }
-
+  &-switch {
+    font-size: $font-sm;
+    line-height: $line-height-sm;
+    padding-left: 12px;
+    color: $text-icon-light;
+    margin-bottom: 0;
+  }
 }
 .yaml {
   .hljs-bullet {
@@ -145,27 +135,21 @@
     }
   }
 }
-.btn--docs {
-  background: transparent!important;
-  border-width: 1px !important;
-  border-color: $bt-brand-primary !important;
-  box-shadow: none !important;
-  &:hover {
-    color: $bt-brand-primary;
-  }
-}
+
 .hljs-docs {
   position: absolute;
   opacity: 0;
-  bottom:45px;
-  right: 140px;
+  top: 32px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
 }
 
 .btn.hljs-copy {
-  border-radius: 15px;
+  border-radius: $border-radius;
   opacity: 0;
   position: absolute;
-  bottom:45px;
+  bottom: 45px;
   right: 15px;
   &.top-right {
     top: 10px;
@@ -178,43 +162,45 @@
   border-top-left-radius: 0px;
 }
 
-:hover > .hljs-header {
-  background-color: $btn-code-button-background-hover;
-}
-
 .hljs-header {
   user-select: none;
-  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  background-color: $btn-code-button-background;
-  border: 1px solid $btn-code-button-border;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  background-color: $code-btn-bg;
+  font-family: $font-family-header;
   overflow: hidden;
-  @include transition(all .2s ease-in-out);
+  @include transition(all 0.2s ease-in-out);
   color: $btn-code-button-color;
   display: inline-block;
-  height: 34px;
-  line-height: 34px;
+  line-height: $line-height-xsm;
   font-weight: bold;
-  font-size: .8em;
-  padding-left: 10px;
-  padding-right: 10px;
-  border-radius: $border-radius-default;
+  font-size: $font-caption-sm;
+  padding: 7px 12px;
+  border-radius: $border-radius-sm;
   margin-right: 5px;
   margin-bottom: $input-padding-y/2;
   .hljs-description {
-    color: $btn-code-button-color-alt;
+    color: $code-btn-description-color;
   }
-
-}
-
-.hljs-description {
-
+  .hljs-icon {
+    padding-left: 6px;
+    &-left {
+      padding-right: 6px;
+    }
+  }
+  svg {
+    vertical-align: sub;
+  }
 }
 
 .hljs {
-  color: #bababa;
-  padding: 14px 14px 14px 14px;
+  color: $code-color;
+  padding: 32px;
 }
 
+.json {
+  border: none;
+}
 .hljs-strong,
 .hljs-emphasis {
   color: #a8a8a2;
@@ -226,7 +212,7 @@
 .hljs-number,
 .hljs-regexp,
 .hljs-literal {
-  color: #6896ba;
+  color: $info;
 }
 
 .hljs-code,
@@ -244,7 +230,7 @@
 .hljs-attribute,
 .hljs-name,
 .hljs-variable {
-  color: #cb7832;
+  color: $warning;
 }
 
 .hljs-params {
@@ -252,7 +238,7 @@
 }
 
 .hljs-string {
-  color: #6a8759;
+  color: $success;
 }
 
 .hljs-subst,
@@ -266,7 +252,7 @@
 .hljs-template-tag,
 .hljs-template-variable,
 .hljs-addition {
-  color: #e0c46c;
+  color: $secondary400;
 }
 
 .hljs-comment,
@@ -278,29 +264,32 @@
   overflow: hidden;
 }
 .value-editor pre code {
-  height:100%;
+  height: 100%;
 }
 
 code.txt {
-    font-size: 16px;
-    font-weight: 400;
-    background: transparent !important;
-    border: 1px solid $input-border-color;
-    font-family: "OpenSans", sans-serif;
-    color: $body-color;
+  font-size: 16px;
+  font-weight: 500;
+  background: transparent !important;
+  border: 1px solid $input-border-color;
+  font-family: 'OpenSans', sans-serif;
+  color: $text-icon-dark;
   &.empty {
-    color: rgba(46, 46, 46, 0.25) !important;
+    font-weight: normal;
+    color: $input-placeholder-color;
   }
-  &:focus, &:focus.empty {
-    color: $body-color !important;
-    border-color: $bt-input-border-active;
+  &:focus,
+  &:focus.empty {
+    font-weight: 500;
+    color: $text-icon-dark;
+    border-color: $primary;
   }
- }
+}
 
 .dark {
   code.txt {
-
-    &:focus, &:focus.empty {
+    &:focus,
+    &:focus.empty {
       color: white !important;
     }
     &.empty {
@@ -310,9 +299,15 @@ code.txt {
     background: $input-bg-dark !important;
     color: white;
   }
+  .hljs-header {
+    color: white;
+    path {
+      fill: white;
+    }
+  }
 }
 
-
-code[contenteditable="false"].hljs {
+code[contenteditable='false'].hljs {
   cursor: default !important;
+  @include customScrollDark();
 }

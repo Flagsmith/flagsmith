@@ -10,6 +10,12 @@ import Token from 'components/Token'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
+import { updateAccount } from 'common/services/useAccount'
+import { getStore } from 'common/store'
+import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
+import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
+import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -22,9 +28,6 @@ class TheComponent extends Component {
       ...AccountStore.getUser(),
     }
   }
-
-  componentDidMount() {}
-
   save = (e) => {
     Utils.preventDefault(e)
     const {
@@ -33,23 +36,34 @@ class TheComponent extends Component {
     if (isSaving || !first_name || !last_name) {
       return
     }
-    // _data.patch(`${Project.api}auth/users/me/`, {
-    _data
-      .put(`${Project.api}auth/users/me/`, {
-        email,
-        first_name,
-        id: AccountStore.model.id,
-        last_name,
-      })
-      .then(() => {
-        toast('Your account has been updated')
-      })
-      .catch(() =>
+    this.setState({ isSaving: true })
+    updateAccount(getStore(), {
+      email,
+      first_name,
+      id: AccountStore.model.id,
+      last_name,
+    }).then((res) => {
+      this.setState({ isSaving: false })
+      if (res.error) {
         this.setState({
           error:
             'There was an error setting your account, please check your details',
-        }),
-      )
+        })
+      } else {
+        toast('Your account has been updated')
+      }
+    })
+  }
+
+  confirmDeleteAccount = (lastUserOrganisations, id) => {
+    openModal(
+      'Are you sure?',
+      <ConfirmDeleteAccount
+        userId={id}
+        lastUserOrganisations={lastUserOrganisations}
+      />,
+      'p-0',
+    )
   }
 
   invalidateToken = () => {
@@ -57,8 +71,11 @@ class TheComponent extends Component {
       'Invalidate Token',
       <div>
         Invalidating your token will generate a new token to use with our API,{' '}
-        <strong>your current token will no longer work</strong>. Performing this
-        action will also log you out, are you sure you wish to do this?
+        <span className='text-dark font-weight-medium'>
+          your current token will no longer work
+        </span>
+        . Performing this action will also log you out, are you sure you wish to
+        do this?
       </div>,
       () => {
         _data.delete(`${Project.api}auth/token/`).then(() => {
@@ -81,7 +98,7 @@ class TheComponent extends Component {
     ) {
       return
     }
-    // _data.post(`${Project.api}auth/users/set_password/`, {
+    this.setState({ isSaving: true })
     _data
       .post(`${Project.api}auth/users/set_password/`, {
         current_password,
@@ -89,10 +106,12 @@ class TheComponent extends Component {
         re_new_password: new_password2,
       })
       .then(() => {
+        this.setState({ isSaving: false })
         toast('Your password has been updated')
       })
       .catch(() =>
         this.setState({
+          isSaving: false,
           passwordError:
             'There was an error setting your password, please check your details.',
         }),
@@ -106,6 +125,7 @@ class TheComponent extends Component {
         email,
         error,
         first_name,
+        id,
         last_name,
         new_password1,
         new_password2,
@@ -113,9 +133,15 @@ class TheComponent extends Component {
       },
     } = this
 
+    const lastUserOrganisations =
+      this.state.organisations.length >= 1
+        ? this.state.organisations?.filter((o) => o?.num_seats == 1)
+        : []
+
     return (
       <AccountProvider>
-        {({ isSaving }) => {
+        {({}) => {
+          const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
           const has2fPermission = Utils.getPlansPermission('2FA')
 
@@ -130,36 +156,75 @@ class TheComponent extends Component {
             </div>
           ) : (
             <div className='app-container container'>
-              <Tabs inline transparent uncontrolled>
-                <TabItem tabLabel='General' tabIcon='ion-md-settings'>
+              <PageTitle
+                cta={
+                  <Button
+                    id='logout-link'
+                    theme='secondary'
+                    onClick={AppActions.logout}
+                  >
+                    Log Out
+                  </Button>
+                }
+                title={'Account'}
+              />
+              <Tabs uncontrolled className='mt-0'>
+                <TabItem tabLabel='General'>
                   <div className='mt-4'>
+                    <h5 className='mb-5'>General Settings</h5>
                     <JSONReference
                       showNamesButton
                       title={'User'}
                       json={AccountStore.getUser()}
                     />
-                    <div className='col-md-8'>
-                      <form className='mb-4' onSubmit={this.save}>
+                    <div className='col-md-6'>
+                      <form className='mb-0' onSubmit={this.save}>
+                        <div>
+                          <InputGroup
+                            className='mt-2'
+                            title='Email Address'
+                            data-test='firstName'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                              readOnly: true,
+                            }}
+                            value={email}
+                            onChange={(e) =>
+                              this.setState({
+                                first_name: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            type='text'
+                            name='Email Address'
+                          />
+                          {Utils.getFlagsmithHasFeature('change_email') && (
+                            <div className='text-right mt-5'>
+                              <Button
+                                onClick={() =>
+                                  openModal(
+                                    'Change Email Address',
+                                    <ChangeEmailAddress
+                                      onComplete={() => {
+                                        closeModal()
+                                        AppActions.logout()
+                                      }}
+                                    />,
+                                    'p-0',
+                                  )
+                                }
+                                id='change-email-button'
+                                data-test='change-email-button'
+                                type='button'
+                                class='input-group-addon'
+                              >
+                                Change Email Address
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <InputGroup
-                          className='mt-2'
-                          title='Email Address'
-                          data-test='firstName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                            readOnly: true,
-                          }}
-                          value={email}
-                          onChange={(e) =>
-                            this.setState({
-                              first_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          type='text'
-                          name='Email Address'
-                        />
-                        <InputGroup
-                          className='mt-2'
+                          className='mt-2 mb-4'
                           title='First Name'
                           data-test='firstName'
                           inputProps={{
@@ -177,7 +242,7 @@ class TheComponent extends Component {
                           name='First Name*'
                         />
                         <InputGroup
-                          className='mt-2'
+                          className='mb-5'
                           title='Last Name'
                           data-test='lastName'
                           inputProps={{
@@ -204,14 +269,10 @@ class TheComponent extends Component {
                           </Button>
                         </div>
                       </form>
+                    </div>
+                    <hr className='py-0 my-4' />
+                    <div className='col-md-6'>
                       <Row>
-                        <Flex>
-                          <h5>Show JSON References</h5>
-                          <p>
-                            Enabling this will allow you to inspect the JSON of
-                            entities such as features within the platform.
-                          </p>
-                        </Flex>
                         <Switch
                           onChange={(v) => {
                             flagsmith.setTrait('json_inspect', v).then(() => {
@@ -219,127 +280,155 @@ class TheComponent extends Component {
                             })
                           }}
                           checked={flagsmith.getTrait('json_inspect')}
+                          className='mr-3'
                         />
+                        <h5 className='mb-0'>Show JSON References</h5>
                       </Row>
-                    </div>
-                  </div>
-                </TabItem>
-                <TabItem tabLabel='Keys' tabIcon='ion-md-key'>
-                  <div className='mt-4'>
-                    <div className='col-md-12'>
-                      <h5>API Token</h5>
-                      <p>
-                        You can use this token to integrate with our RESTful
-                        API, the documentation can be found{' '}
-                        <a href='https://api.flagsmith.com/api/v1/docs/'>
-                          here
-                        </a>
-                        .
+                      <p className='fs-small lh-sm mt-2'>
+                        Enabling this will allow you to inspect the JSON of
+                        entities such as features within the platform.
                       </p>
                     </div>
-                    <div className='col-md-12'>
-                      <Row>
-                        <Token style={{ width: 400 }} token={_data.token} />
+                    <hr className='py-0 my-4' />
+                    <div className='col-md-6'>
+                      <Row className='mt-4' space>
+                        <div className='col-md-7 pl-0'>
+                          <h5>Delete Account</h5>
+                          <p className='fs-small lh-sm mb-0'>
+                            Your account data will be permanently deleted.
+                          </p>
+                        </div>
                         <Button
-                          onClick={this.invalidateToken}
-                          className='btn btn-danger'
+                          id='delete-user-btn'
+                          data-test='delete-user-btn'
+                          onClick={() =>
+                            this.confirmDeleteAccount(lastUserOrganisations, id)
+                          }
+                          className='btn-with-icon btn-remove'
                         >
-                          Invalidate
+                          <Icon name='trash-2' width={20} fill='#EF4D56' />
                         </Button>
                       </Row>
                     </div>
                   </div>
                 </TabItem>
-                <TabItem tabLabel='Security' tabIcon='ion-md-lock'>
+                <TabItem tabLabel='Keys'>
+                  <div className='mt-4'>
+                    <div className='col-md-6'>
+                      <h5>API Token</h5>
+                      <p className='fs-small lh-sm'>
+                        You can use this token to integrate with our RESTful
+                        API, the documentation can be found{' '}
+                        <Button
+                          theme='text'
+                          href='https://api.flagsmith.com/api/v1/docs/'
+                          target='_blank'
+                          className='fw-normal'
+                        >
+                          here
+                        </Button>
+                        .
+                      </p>
+                    </div>
+                    <div className='col-md-6'>
+                      <Token className='full-width' token={_data.token} />
+                      <div className='text-right'>
+                        <Button
+                          onClick={this.invalidateToken}
+                          className='btn btn-danger  mt-5'
+                          theme='secondary'
+                        >
+                          Invalidate
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </TabItem>
+                <TabItem tabLabel='Security'>
                   <div className='mt-4'>
                     {AccountStore.model.auth_type === 'EMAIL' && (
-                      <div className='row'>
-                        <div className='col-md-12'>
-                          <h5>Change password</h5>
-                        </div>
-                        <div className='col-md-8'>
-                          <form className='mb-4' onSubmit={this.savePassword}>
-                            <InputGroup
-                              className='mt-2'
-                              title='Current Password'
-                              data-test='currentPassword'
-                              inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                              }}
-                              value={current_password}
-                              onChange={(e) =>
-                                this.setState({
-                                  current_password:
-                                    Utils.safeParseEventValue(e),
-                                })
+                      <div className='col-md-6'>
+                        <h5 className='mb-5'>Change password</h5>
+                        <form className='mb-0' onSubmit={this.savePassword}>
+                          <InputGroup
+                            title='Current Password'
+                            data-test='currentPassword'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                            }}
+                            value={current_password}
+                            onChange={(e) =>
+                              this.setState({
+                                current_password: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            isValid={
+                              current_password && current_password.length
+                            }
+                            type='password'
+                            name='Current Password*'
+                          />
+                          <InputGroup
+                            className='mt-4'
+                            title='New Password'
+                            data-test='newPassword'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                            }}
+                            value={new_password1}
+                            onChange={(e) =>
+                              this.setState({
+                                new_password1: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            isValid={new_password1 && new_password1.length}
+                            type='password'
+                            name='New Password*'
+                          />
+                          <InputGroup
+                            className='mt-4'
+                            title='Confirm New Password'
+                            data-test='newPassword'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                            }}
+                            value={new_password2}
+                            onChange={(e) =>
+                              this.setState({
+                                new_password2: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            isValid={new_password2 && new_password2.length}
+                            type='password'
+                            name='Confirm New Password*'
+                          />
+                          {passwordError && (
+                            <ErrorMessage>{passwordError}</ErrorMessage>
+                          )}
+                          <div className='text-right mt-5'>
+                            <Button
+                              type='submit'
+                              disabled={
+                                isSaving ||
+                                !new_password2 ||
+                                !new_password1 ||
+                                !current_password ||
+                                new_password1 !== new_password2
                               }
-                              isValid={
-                                current_password && current_password.length
-                              }
-                              type='password'
-                              name='Current Password*'
-                            />
-                            <InputGroup
-                              className='mt-2'
-                              title='New Password'
-                              data-test='newPassword'
-                              inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                              }}
-                              value={new_password1}
-                              onChange={(e) =>
-                                this.setState({
-                                  new_password1: Utils.safeParseEventValue(e),
-                                })
-                              }
-                              isValid={new_password1 && new_password1.length}
-                              type='password'
-                              name='New Password*'
-                            />
-                            <InputGroup
-                              className='mt-2'
-                              title='Confirm New Password'
-                              data-test='newPassword'
-                              inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                              }}
-                              value={new_password2}
-                              onChange={(e) =>
-                                this.setState({
-                                  new_password2: Utils.safeParseEventValue(e),
-                                })
-                              }
-                              isValid={new_password2 && new_password2.length}
-                              type='password'
-                              name='Confirm New Password*'
-                            />
-                            {passwordError && (
-                              <ErrorMessage>{passwordError}</ErrorMessage>
-                            )}
-                            <div className='text-right mt-2'>
-                              <Button
-                                type='submit'
-                                disabled={
-                                  isSaving ||
-                                  !new_password2 ||
-                                  !new_password1 ||
-                                  !current_password ||
-                                  new_password1 !== new_password2
-                                }
-                              >
-                                Save Password
-                              </Button>
-                            </div>
-                          </form>
-                        </div>
+                            >
+                              Save Password
+                            </Button>
+                          </div>
+                        </form>
                       </div>
                     )}
-                    <div>
-                      <h5>Two-Factor Authentication</h5>
-                      <p>
+                    <hr className='py-0 my-4' />
+                    <div className='col-md-6 col-sm-12'>
+                      <h5 className='mb-1'>Two-Factor Authentication</h5>
+                      <p className='fs-small lh-sm mb-4'>
                         Increase your account's security by enabling Two-Factor
                         Authentication (2FA).
                       </p>
@@ -356,8 +445,7 @@ class TheComponent extends Component {
                               openModal(
                                 'Payment plans',
                                 <PaymentModal viewOnly={false} />,
-                                null,
-                                { large: true },
+                                'modal-lg',
                               )
                             }}
                           >

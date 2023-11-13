@@ -25,4 +25,5 @@ env.yaml
 .envrc
 .vercel
 common/project.js
+*.tsbuildinfo
 flagsmith.json

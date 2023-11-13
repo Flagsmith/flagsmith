@@ -1,42 +1,72 @@
 .step-list {
-    list-style-type: none;
-    padding-left:0;
-    li{
-        height:40px;
-        width:40px;
-        padding:5px;
-        border:1px solid #2e2e2e;
-        border-radius: 50%;
+  list-style-type: none;
+  padding-left: 0;
+  li {
+    height: 40px;
+    width: 40px;
+    padding: 5px;
+    border: 1px solid #2e2e2e;
+    border-radius: 50%;
 
-        span{
-            display: block;
-            background:#2e2e2e;
-            height:28px;
-            width:28px;
-            line-height: 28px;
-            text-align: center;
-            border-radius: 50%;
-            margin:0 auto;
-            color:#fff;
-        }
+    span {
+      display: block;
+      background: #2e2e2e;
+      height: 28px;
+      width: 28px;
+      line-height: 28px;
+      text-align: center;
+      border-radius: 50%;
+      margin: 0 auto;
+      color: #fff;
     }
+  }
 }
 
-.search-list, .List {
-    overflow-x: hidden !important;
+.search-list,
+.List {
+  overflow-x: hidden !important;
+  .column {
+    flex-direction: column !important;
+  }
+}
+
+.overflow-visible .search-list,
+.overflow-visible .List {
+  overflow-x: visible !important;
 }
 
 .table-header {
-    line-height: 44px;
-    border-bottom: 1px solid $bt-input-border;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    font-weight: bold;
+  background-color: $panel-table-header-bc;
+  color: $panel-table-header-color;
+  font-weight: 500;
+  font-size: $panel-table-header-font-size;
+  line-height: $line-height-xsm;
+  min-height: $panel-table-header-min-height;
+}
+
+.table-column {
+  padding: 5px 12px;
 }
 
 .dark {
-    .table-header {
-        border-bottom: 1px solid $bt-input-border-dark;
+  .table-header {
+    background-color: transparent;
+  }
+}
 
-    }
+.collapsible-nested-list {
+  .list-container{
+    border-radius: $border-radius-default;
+    min-height: 60px;
+  }
+  .list-row{
+    background-color: #fafafb;
+    border: 1px solid rgba(101, 109, 123, 0.16);
+    border-radius: $border-radius-default;
+    opacity: 1;
+  }
+}
+
+.role-list {
+  justify-content: space-between
 }

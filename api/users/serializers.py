@@ -88,11 +88,28 @@ class UserIdsSerializer(serializers.Serializer):
         return data
 
 
-class UserPermissionGroupSerializerList(serializers.ModelSerializer):
+class UserPermissionGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPermissionGroup
         fields = ("id", "name", "users", "is_default", "external_id")
         read_only_fields = ("id",)
+
+
+class UserPermissionGroupSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPermissionGroup
+        fields = ("id", "name")
+        read_only_fields = ("id", "name")
+
+
+class ListUserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FFAdminUser
+        fields = ("id", "email", "first_name", "last_name", "last_login")
+
+
+class ListUserPermissionGroupSerializer(UserPermissionGroupSerializer):
+    users = ListUserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
 class UserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
@@ -106,7 +123,7 @@ class UserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
         return instance.id in self.context.get("group_admins", [])
 
 
-class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
+class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     # TODO: remove users from here and just add a summary of number of users
     users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 

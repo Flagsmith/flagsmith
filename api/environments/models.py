@@ -21,7 +21,6 @@ from django_lifecycle import (
     LifecycleModel,
     hook,
 )
-from flag_engine.api.document_builders import build_environment_document
 from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject
 
@@ -44,6 +43,7 @@ from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from metadata.models import Metadata
 from segments.models import Segment
+from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
+bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -108,12 +109,17 @@ class Environment(
             " will override the project `hide_disabled_flags`"
         ),
     )
-    use_mv_v2_evaluation = models.BooleanField(
+    use_identity_composite_key_for_hashing = models.BooleanField(
         default=True,
         help_text=(
-            "Enable this to have consistent multivariate evaluations across all SDKs(in"
-            " local and server side mode)"
+            "Enable this to have consistent multivariate and percentage split evaluations "
+            "across all SDKs (in local and server side mode)"
         ),
+        db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
+    )
+    hide_sensitive_data = models.BooleanField(
+        default=False,
+        help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
     objects = EnvironmentManager()
@@ -156,10 +162,8 @@ class Environment(
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
-        for feature_segment in self.feature_segments.all():
-            feature_segment.clone(clone)
 
-        # Since identities are closely tied to the enviroment
+        # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
         for feature_state in self.feature_states.filter(identity=None):
@@ -185,6 +189,9 @@ class Environment(
                 logger.warning("Requested environment with null api_key.")
                 return None
 
+            if cls.is_bad_key(api_key):
+                return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
@@ -196,18 +203,19 @@ class Environment(
                     "heap_config",
                     "dynatrace_config",
                 )
-                environment = (
-                    cls.objects.select_related(*select_related_args)
-                    .filter(Q(api_key=api_key) | Q(api_keys__key=api_key))
-                    .distinct()
-                    .defer("description")
-                    .get()
+                base_qs = cls.objects.select_related(*select_related_args).defer(
+                    "description"
                 )
+                qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
+                qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
+
+                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
                 environment_cache.set(
                     api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
                 )
             return environment
         except cls.DoesNotExist:
+            cls.set_bad_key(api_key)
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
@@ -221,7 +229,6 @@ class Environment(
         environments = list(
             cls.objects.filter_for_document_builder(environments_filter)
         )
-
         if not environments:
             return
 
@@ -257,6 +264,24 @@ class Environment(
             )
         )
 
+    @staticmethod
+    def is_bad_key(environment_key: str) -> bool:
+        return (
+            settings.CACHE_BAD_ENVIRONMENTS_SECONDS > 0
+            and bad_environments_cache.get(environment_key, 0)
+            >= settings.CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES
+        )
+
+    @staticmethod
+    def set_bad_key(environment_key: str) -> None:
+        if settings.CACHE_BAD_ENVIRONMENTS_SECONDS:
+            current_count = bad_environments_cache.get(environment_key, 0)
+            bad_environments_cache.set(
+                environment_key,
+                current_count + 1,
+                timeout=settings.CACHE_BAD_ENVIRONMENTS_SECONDS,
+            )
+
     def trait_persistence_allowed(self, request: Request) -> bool:
         return (
             self.allow_client_traits
@@ -285,7 +310,10 @@ class Environment(
         return segments
 
     @classmethod
-    def get_environment_document(cls, api_key: str) -> dict:
+    def get_environment_document(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
@@ -303,7 +331,10 @@ class Environment(
         return self.project.hide_disabled_flags
 
     @classmethod
-    def _get_environment_document_from_cache(cls, api_key: str) -> dict:
+    def _get_environment_document_from_cache(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         environment_document = environment_document_cache.get(api_key)
         if not environment_document:
             environment_document = cls._get_environment_document_from_db(api_key)
@@ -311,9 +342,12 @@ class Environment(
         return environment_document
 
     @classmethod
-    def _get_environment_document_from_db(cls, api_key: str) -> dict:
+    def _get_environment_document_from_db(
+        cls,
+        api_key: str,
+    ) -> dict[str, typing.Any]:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
-        return build_environment_document(environment)
+        return map_environment_to_environment_document(environment)
 
     def _get_environment(self):
         return self

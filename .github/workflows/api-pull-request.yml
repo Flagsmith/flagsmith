@@ -6,6 +6,12 @@ on:
       - api/**
       - .github/**
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - .github/**
+    branches:
+      - main
 
 defaults:
   run:
@@ -13,7 +19,6 @@ defaults:
 
 jobs:
   test:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     name: API Unit Tests
 
@@ -30,46 +35,46 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.10', '3.11']
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
+          cache: 'poetry'
 
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-all.txt
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-packages
 
-      - name: Check black formatting
-        run: black --check .
-
-      - name: Check flake8 linting
-        working-directory: . # working dir should be root due to conflicts with pre-commit
-        run: flake8 .
-
-      - name: Check isort imports
-        run: isort --check .
+      - name: Run Linters
+        run: make lint
 
       - name: Create analytics database
         env:
           PGPASSWORD: postgres
         run: createdb -h localhost -U postgres -p 5432 analytics
 
+      - name: Check for missing migrations
+        env:
+          DOTENV_OVERRIDE_FILE: .env-ci
+          opts: --no-input --dry-run --check
+        run: make django-make-migrations
+
       - name: Run Tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
-          ANALYTICS_DATABASE_URL:
-            postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/analytics
-          DJANGO_SETTINGS_MODULE: app.settings.test
-          LOG_LEVEL: INFO
-        run: |
-          pytest -p no:warnings
+          DOTENV_OVERRIDE_FILE: .env-ci
+        run: make test
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: PYTHON
