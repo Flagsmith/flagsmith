@@ -45,7 +45,7 @@ readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-django = "~3.2.19"
+django = "~3.2.23"
 rudder-sdk-python = "~1.0.5"
 analytics-python = "~1.4.0"
 backoff = "~1.10.0"
@@ -80,7 +80,7 @@ django-lifecycle = "~1.0.0"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
 flagsmith-flag-engine = "^4.1.0"
-boto3 = "~1.26.75"
+boto3 = "~1.28.78"
 slack-sdk = "~3.9.0"
 asgiref = "~3.5.0"
 semver = "~2.13.0"
@@ -129,6 +129,7 @@ pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.22"
 requests-mock = "^1.11.0"
+pdbpp = "^0.10.3"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]

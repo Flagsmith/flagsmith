@@ -145,6 +145,17 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             )
         )
 
+    @hook(AFTER_SAVE, when="stop_serving_flags", has_changed=True)
+    def rebuild_environments(self):
+        # Avoid circular imports.
+        from environments.models import Environment
+        from environments.tasks import rebuild_environment_document
+
+        for environment_id in Environment.objects.filter(
+            project__organisation=self
+        ).values_list("id", flat=True):
+            rebuild_environment_document.delay(args=(environment_id,))
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)

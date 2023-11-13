@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -35,6 +35,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -48,6 +49,7 @@ from .permissions import (
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -158,6 +160,41 @@ class FeatureViewSet(viewsets.ModelViewSet):
         return context
 
     @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        data = request.data
+
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=serializer.validated_data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(serializer.validated_data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
@@ -165,8 +202,14 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def add_owners(self, request, *args, **kwargs):
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         feature = self.get_object()
+
+        for user in FFAdminUser.objects.filter(
+            id__in=serializer.validated_data["user_ids"]
+        ):
+            if not user.has_project_permission(VIEW_PROJECT, feature.project):
+                raise serializers.ValidationError("Some users not found")
+
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
 

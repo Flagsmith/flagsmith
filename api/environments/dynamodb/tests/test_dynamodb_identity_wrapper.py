@@ -249,6 +249,7 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
         table_name,
     )
+    mocked_config = mocker.patch("environments.dynamodb.dynamodb_wrapper.Config")
     mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
 
     # When
@@ -256,7 +257,9 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Then
 
     assert dynamo_identity_wrapper.is_enabled is True
-    mocked_boto3.resource.assert_called_with("dynamodb")
+    mocked_boto3.resource.assert_called_with(
+        "dynamodb", config=mocked_config(tcp_keepalive=True)
+    )
     mocked_boto3.resource.return_value.Table.assert_called_with(table_name)
 
 

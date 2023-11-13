@@ -28,6 +28,7 @@ const Tabs = class extends React.Component {
             return (
               <Button
                 type='button'
+                theme={this.props.buttonTheme}
                 data-test={child.props['data-test']}
                 id={child.props.id}
                 key={`button${i}`}
