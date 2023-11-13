@@ -267,6 +267,10 @@
         {
             "source": "/system-administration/edge-proxy",
             "destination": "/advanced-use/edge-proxy"
+        },
+        {
+            "source": "/integrations/slack",
+            "destination": "/integrations/project-management/slack"
         }
     ]
 }
