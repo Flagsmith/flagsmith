@@ -368,6 +368,7 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    ldap_dn = models.CharField(blank=True, null=True, unique=True, max_length=255)
     is_default = models.BooleanField(
         default=False,
         help_text="If set to true, all new users will be added to this group",
