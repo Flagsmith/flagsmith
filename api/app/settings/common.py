@@ -517,6 +517,11 @@ else:
                 "handlers": ["console"],
                 "propagate": False,
             },
+            "webhooks": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
         },
     }
 
