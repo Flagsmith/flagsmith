@@ -1340,3 +1340,37 @@ def test_list_my_groups(organisation, api_client):
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
+
+
+def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
+    staff_client, admin_client, subscription, organisation
+):
+    # Given
+    cancellation_date = datetime.now(tz=UTC)
+    data = {
+        "content": {
+            "subscription": {
+                "status": "cancelled",
+                "id": subscription.subscription_id,
+                "current_term_end": datetime.timestamp(cancellation_date),
+            },
+            "customer": {
+                "email": "chargebee@bullet-train.io",
+            },
+        }
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+    assert organisation.num_seats == 2
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == 200
+
+    subscription.refresh_from_db()
+    assert subscription.cancellation_date == cancellation_date
+    organisation.refresh_from_db()
+    assert organisation.num_seats == 1
