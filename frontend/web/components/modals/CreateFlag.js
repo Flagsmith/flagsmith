@@ -479,6 +479,9 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
+    const manageSegmentsEnabled = Utils.getFlagsmithHasFeature(
+      'manage_segment_overrides_env_role',
+    )
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -1138,19 +1141,12 @@ const CreateFlag = class extends Component {
                                                   manageSegmentOverrides,
                                               }) => {
                                                 const isReadOnly =
-                                                  !manageSegmentOverrides ||
-                                                  noPermissions
-                                                const manageSegmentsEnabled =
-                                                  Utils.getFlagsmithHasFeature(
-                                                    'manage_segment_overrides_env_role',
-                                                  )
+                                                  manageSegmentsEnabled
+                                                    ? manageSegmentOverrides
+                                                    : noPermissions
                                                 return (
                                                   <SegmentOverrides
-                                                    readOnly={
-                                                      manageSegmentsEnabled
-                                                        ? isReadOnly
-                                                        : noPermissions
-                                                    }
+                                                    readOnly={isReadOnly}
                                                     showEditSegment
                                                     showCreateSegment={
                                                       this.state
@@ -1265,7 +1261,8 @@ const CreateFlag = class extends Component {
                                                                 !name ||
                                                                 invalid ||
                                                                 !savePermission ||
-                                                                !manageSegmentsOverrides
+                                                                (manageSegmentsEnabled &&
+                                                                  !manageSegmentsOverrides)
                                                               }
                                                             >
                                                               {isSaving

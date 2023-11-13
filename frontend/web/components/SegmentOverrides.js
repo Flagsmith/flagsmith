@@ -602,9 +602,8 @@ class TheComponent extends Component {
                         }}
                         theme='outline'
                         disabled={
-                          manageSegmentsEnabled
-                            ? !manageSegments || !!isLimitReached
-                            : false
+                          !!isLimitReached ||
+                          (manageSegmentsEnabled && !manageSegments)
                         }
                       >
                         Create Feature-Specific Segment
