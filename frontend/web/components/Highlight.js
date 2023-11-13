@@ -51,15 +51,6 @@ class Highlight extends React.Component {
 
   highlightCode = () => {
     const nodes = this.el.querySelectorAll('pre code')
-    if (nodes[0] && nodes[0].innerHTML && nodes[0].innerHTML.match(/[<>]/)) {
-      if (!this.state.focus) {
-        nodes[0].innerHTML = nodes[0].innerText
-      }
-      setTimeout(() => {
-        this.highlightCode()
-      }, 100)
-      return
-    }
     if (typeof hljs !== 'undefined') {
       for (let i = 0; i < nodes.length; i++) {
         hljs.highlightBlock(nodes[i])
@@ -184,9 +175,9 @@ class Highlight extends React.Component {
         </pre>
         {this.state.expandable && (
           <div className='expand text-center mt-2'>
-            <ButtonLink
+            <Button
+              theme='text'
               onClick={() => this.setState({ expanded: !this.state.expanded })}
-              className='btn--link-primary'
             >
               {this.state.expanded ? 'Hide' : 'Show More'}
               <span
@@ -196,7 +187,7 @@ class Highlight extends React.Component {
                     : 'ion-ios-arrow-down'
                 }`}
               />
-            </ButtonLink>
+            </Button>
           </div>
         )}
       </div>

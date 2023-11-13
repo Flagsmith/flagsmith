@@ -6,30 +6,33 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Count, QuerySet
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.models import Environment
-from environments.permissions.models import (
-    UserEnvironmentPermission,
-    UserPermissionGroupEnvironmentPermission,
-)
+from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
     Organisation,
     OrganisationRole,
     UserOrganisation,
 )
-from organisations.permissions.models import (
-    UserOrganisationPermission,
-    UserPermissionGroupOrganisationPermission,
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
 )
-from projects.models import (
-    Project,
-    UserPermissionGroupProjectPermission,
-    UserProjectPermission,
+from permissions.permission_service import (
+    get_permitted_environments_for_user,
+    get_permitted_projects_for_user,
+    is_user_environment_admin,
+    is_user_organisation_admin,
+    is_user_project_admin,
+    user_has_organisation_permission,
 )
+from projects.models import Project, UserProjectPermission
+from users.abc import UserABC
 from users.auth_type import AuthType
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
@@ -121,6 +124,23 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
 
+    def delete_orphan_organisations(self):
+        Organisation.objects.filter(
+            id__in=self.organisations.values_list("id", flat=True)
+        ).annotate(users_count=Count("users")).filter(users_count=1).delete()
+
+    def delete(
+        self,
+        delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
+    ):
+        if delete_orphan_organisations:
+            self.delete_orphan_organisations()
+        super().delete()
+
+    def set_password(self, raw_password):
+        super().set_password(raw_password)
+        self.password_reset_requests.all().delete()
+
     @property
     def auth_type(self):
         if self.google_user_id:
@@ -144,6 +164,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return None
         return " ".join([self.first_name, self.last_name]).strip()
 
+    def can_send_password_reset_email(self) -> bool:
+        limit = timezone.now() - timezone.timedelta(
+            seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
+        )
+        return (
+            self.password_reset_requests.filter(requested_at__gte=limit).count()
+            < settings.MAX_PASSWORD_RESET_EMAILS
+        )
+
     def join_organisation_from_invite_email(self, invite_email: "Invite"):
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
@@ -156,30 +185,19 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
-        subscription_metadata = organisation.subscription.get_subscription_metadata()
 
-        if (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and invite.organisation.num_seats >= subscription_metadata.seats
+        if settings.ENABLE_CHARGEBEE and organisation.over_plan_seats_limit(
+            additional_seats=1
         ):
-            organisation.subscription.add_single_seat()
+            if organisation.is_auto_seat_upgrade_available():
+                organisation.subscription.add_single_seat()
+            else:
+                raise SubscriptionDoesNotSupportSeatUpgrade()
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
-    def is_organisation_admin(
-        self, organisation: Organisation = None, organisation_id: int = None
-    ):
-        if not (organisation or organisation_id) or (organisation and organisation_id):
-            raise ValueError(
-                "Must provide exactly one of organisation or organisation_id"
-            )
-
-        role = (
-            self.get_organisation_role(organisation)
-            if organisation
-            else self.get_user_organisation_by_id(organisation_id)
-        )
-        return role and role == OrganisationRole.ADMIN.name
+    def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):
+        return is_user_organisation_admin(self, organisation)
 
     def get_admin_organisations(self):
         return Organisation.objects.filter(
@@ -212,133 +230,56 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if user_organisation:
             return user_organisation.role
 
-    def get_organisation_role_by_id(self, organisation_id: int) -> typing.Optional[str]:
-        user_organisation = self.get_user_organisation_by_id(organisation_id)
-        return user_organisation.role
-
     def get_organisation_join_date(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
         if user_organisation:
             return user_organisation.date_joined
 
-    def get_user_organisation(self, organisation):
+    def get_user_organisation(
+        self, organisation: typing.Union["Organisation", int]
+    ) -> UserOrganisation:
         try:
             return self.userorganisation_set.get(organisation=organisation)
         except UserOrganisation.DoesNotExist:
             logger.warning(
-                "User %d is not part of organisation %d" % (self.id, organisation.id)
+                "User %d is not part of organisation %d"
+                % (self.id, getattr(organisation, "id", organisation))
             )
 
-    def get_user_organisation_by_id(
-        self, organisation_id: int
-    ) -> typing.Optional[UserOrganisation]:
-        try:
-            return self.userorganisation_set.get(organisation__id=organisation_id)
-        except UserOrganisation.DoesNotExist:
-            logger.warning(
-                "User %d is not part of organisation %d" % (self.id, organisation_id)
-            )
+    def get_permitted_projects(
+        self, permission_key: str, tag_ids: typing.List[int] = None
+    ) -> QuerySet[Project]:
+        return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
-    def get_permitted_projects(self, permissions):
-        """
-        Get all projects that the user has the given permissions for.
-
-        Rules:
-            - User has the required permissions directly (UserProjectPermission)
-            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
-            - User is an admin for the organisation the project belongs to
-        """
-        user_permission_query = Q()
-        group_permission_query = Q()
-        for permission in permissions:
-            user_permission_query = user_permission_query & Q(
-                userpermission__permissions__key=permission
-            )
-            group_permission_query = group_permission_query & Q(
-                grouppermission__permissions__key=permission
-            )
-
-        user_query = Q(userpermission__user=self) & (
-            user_permission_query | Q(userpermission__admin=True)
-        )
-        group_query = Q(grouppermission__group__users=self) & (
-            group_permission_query | Q(grouppermission__admin=True)
-        )
-        organisation_query = Q(
-            organisation__userorganisation__user=self,
-            organisation__userorganisation__role=OrganisationRole.ADMIN.name,
-        )
-
-        query = user_query | group_query | organisation_query
-
-        return Project.objects.filter(query).distinct()
-
-    def has_project_permission(self, permission, project):
+    def has_project_permission(
+        self, permission: str, project: Project, tag_ids: typing.List[int] = None
+    ) -> bool:
         if self.is_project_admin(project):
             return True
+        return project in self.get_permitted_projects(permission, tag_ids=tag_ids)
 
-        return project in self.get_permitted_projects([permission])
-
-    def has_environment_permission(self, permission, environment):
-        if self.is_project_admin(environment.project):
-            return True
-
-        return self._is_environment_admin_or_has_permission(environment, permission)
-
-    def _is_environment_admin_or_has_permission(
-        self, environment: Environment, permission_key: str = None
+    def has_environment_permission(
+        self,
+        permission: str,
+        environment: Environment,
+        tag_ids: typing.List[int] = None,
     ) -> bool:
-        permission_query = Q(permissions__key=permission_key) | Q(admin=True)
-        return (
-            UserEnvironmentPermission.objects.filter(
-                Q(environment=environment, user=self) & permission_query
-            ).exists()
-            or UserPermissionGroupEnvironmentPermission.objects.filter(
-                Q(environment=environment, group__users=self) & permission_query
-            ).exists()
+        return environment in self.get_permitted_environments(
+            permission, environment.project, tag_ids=tag_ids
         )
 
-    def is_project_admin(self, project: Project, allow_org_admin: bool = True):
-        return (
-            (allow_org_admin and self.is_organisation_admin(project.organisation))
-            or UserProjectPermission.objects.filter(
-                admin=True, user=self, project=project
-            ).exists()
-            or UserPermissionGroupProjectPermission.objects.filter(
-                group__users=self, admin=True, project=project
-            ).exists()
-        )
+    def is_project_admin(self, project: Project) -> bool:
+        return is_user_project_admin(self, project)
 
     def get_permitted_environments(
-        self, permission_key: str, project: Project
+        self,
+        permission_key: str,
+        project: Project,
+        tag_ids: typing.List[int] = None,
+        prefetch_metadata: bool = False,
     ) -> QuerySet[Environment]:
-        """
-        Get all environments that the user has the given permissions for.
-
-        Rules:
-            - User has the required permissions directly (UserEnvironmentPermission)
-            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
-            - User is an admin for the project the environment belongs to
-            - User is an admin for the organisation the environment belongs to
-        """
-
-        if self.is_project_admin(project):
-            return project.environments.all()
-
-        permission_groups = self.permission_groups.all()
-        user_query = Q(userpermission__user=self) & (
-            Q(userpermission__permissions__key=permission_key)
-            | Q(userpermission__admin=True)
-        )
-        group_query = Q(grouppermission__group__in=permission_groups) & (
-            Q(grouppermission__permissions__key=permission_key)
-            | Q(grouppermission__admin=True)
-        )
-
-        return (
-            Environment.objects.filter(Q(project=project) & Q(user_query | group_query))
-            .distinct()
-            .defer("description")
+        return get_permitted_environments_for_user(
+            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
         )
 
     @staticmethod
@@ -359,69 +300,27 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         ]
 
     def belongs_to(self, organisation_id: int) -> bool:
-        return organisation_id in self.organisations.all().values_list("id", flat=True)
+        return self.userorganisation_set.filter(
+            organisation_id=organisation_id
+        ).exists()
 
     def is_environment_admin(
         self,
         environment: Environment,
-        allow_project_admin: bool = True,
-        allow_organisation_admin: bool = True,
-    ):
-        return (
-            (
-                allow_organisation_admin
-                and self.is_organisation_admin(environment.project.organisation)
-            )
-            or (
-                allow_project_admin
-                and self.is_project_admin(environment.project, allow_org_admin=False)
-            )
-            or UserEnvironmentPermission.objects.filter(
-                admin=True, user=self, environment=environment
-            ).exists()
-            or UserPermissionGroupEnvironmentPermission.objects.filter(
-                group__users=self, admin=True, environment=environment
-            ).exists()
-        )
+    ) -> bool:
+        return is_user_environment_admin(self, environment)
 
     def has_organisation_permission(
         self, organisation: Organisation, permission_key: str
     ) -> bool:
-        if self.is_organisation_admin(organisation):
-            return True
+        return user_has_organisation_permission(self, organisation, permission_key)
 
-        return permission_key is not None and (
-            UserOrganisationPermission.objects.filter(
-                user=self, organisation=organisation, permissions__key=permission_key
-            ).exists()
-            or UserPermissionGroupOrganisationPermission.objects.filter(
-                group__users=self,
-                organisation=organisation,
-                permissions__key=permission_key,
-            ).exists()
+    def add_to_group(
+        self, group: "UserPermissionGroup", group_admin: bool = False
+    ) -> None:
+        UserPermissionGroupMembership.objects.create(
+            ffadminuser=self, userpermissiongroup=group, group_admin=group_admin
         )
-
-    def get_permission_keys_for_organisation(
-        self, organisation: Organisation
-    ) -> typing.Iterable[str]:
-        user_permission = UserOrganisationPermission.objects.filter(
-            user=self, organisation=organisation
-        ).first()
-        group_permissions = UserPermissionGroupOrganisationPermission.objects.filter(
-            group__users=self, organisation=organisation
-        )
-
-        all_permission_keys = set()
-        for organisation_permission in [user_permission, *group_permissions]:
-            if organisation_permission is not None:
-                all_permission_keys.update(
-                    {
-                        permission.key
-                        for permission in organisation_permission.permissions.all()
-                    }
-                )
-
-        return all_permission_keys
 
     def is_group_admin(self, group_id) -> bool:
         return UserPermissionGroupMembership.objects.filter(
@@ -437,6 +336,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         UserPermissionGroupMembership.objects.filter(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
+
+
+# Since we can't enforce FFAdminUser to implement the  UserABC interface using inheritance
+# we use __subclasshook__[1] method on UserABC to check if FFAdminUser implements the required interface
+# [1]https://docs.python.org/3/library/abc.html#abc.ABCMeta.__subclasshook__
+assert issubclass(FFAdminUser, UserABC)
 
 
 class UserPermissionGroupMembership(models.Model):
@@ -467,6 +372,7 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    ldap_dn = models.CharField(blank=True, null=True, unique=True, max_length=255)
     is_default = models.BooleanField(
         default=False,
         help_text="If set to true, all new users will be added to this group",

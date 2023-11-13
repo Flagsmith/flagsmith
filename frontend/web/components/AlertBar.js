@@ -1,4 +1,5 @@
 import React from 'react'
+import ModalClose from './modals/base/ModalClose'
 
 const AlertBar = class extends React.Component {
   state = {}
@@ -24,11 +25,7 @@ const AlertBar = class extends React.Component {
         }`}
       >
         <Flex className='alert-bar__text'>{this.props.children}</Flex>
-        {!this.props.preventClose && (
-          <a className='close-btn' onClick={this.hide}>
-            <span className='icon ion-md-close' />
-          </a>
-        )}
+        {!this.props.preventClose && <ModalClose onClick={this.hide} />}
       </Row>
     )
   }

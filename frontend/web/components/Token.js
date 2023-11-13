@@ -16,36 +16,24 @@ class Token extends Component {
           inputProps={{
             readOnly: true,
           }}
-          value={
-            this.state.showToken
-              ? this.props.token
-              : this.props.token
-                  .split('')
-                  .map(() => '*')
-                  .join('')
-                  .trim()
-          }
+          value={this.props.token}
           style={this.props.style}
-          className={`${this.state.showToken ? 'font-weight-bold' : ''}`}
+          className={`${
+            this.state.showToken ? 'font-weight-bold' : ''
+          } full-width`}
+          type='password'
         />
-        {this.props.show ? (
-          <ButtonOutline
+        {this.props.show && (
+          <Button
+            theme='outline'
             style={{ width: 80 }}
-            className='btn-secondary ml-2 mr-4'
+            className='ml-2 mr-4'
             onClick={() => {
               navigator.clipboard.writeText(this.props.token)
               toast('Copied')
             }}
           >
             Copy
-          </ButtonOutline>
-        ) : (
-          <Button
-            style={{ width: 80 }}
-            className='ml-2 mr-4'
-            onClick={() => this.setState({ showToken: !this.state.showToken })}
-          >
-            {this.state.showToken ? 'Hide' : 'Show'}
           </Button>
         )}
       </Row>

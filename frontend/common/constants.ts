@@ -25,51 +25,67 @@ export default {
       '.NET': require('./code-help/create-user/create-user-dotnet')(
         envId,
         keywords,
+        userId,
       ),
       'Flutter': require('./code-help/create-user/create-user-flutter')(
         envId,
         keywords,
+        userId,
       ),
-      'Go': require('./code-help/create-user/create-user-go')(envId, keywords),
+      'Go': require('./code-help/create-user/create-user-go')(
+        envId,
+        keywords,
+        userId,
+      ),
       'Java': require('./code-help/create-user/create-user-java')(
         envId,
         keywords,
+        userId,
       ),
       'JavaScript': require('./code-help/create-user/create-user-js')(
         envId,
         keywords,
+        userId,
       ),
       'Next.js': require('./code-help/create-user/create-user-next')(
         envId,
         keywords,
+        userId,
       ),
       'Node JS': require('./code-help/create-user/create-user-node')(
         envId,
         keywords,
+        userId,
       ),
       'PHP': require('./code-help/create-user/create-user-php')(
         envId,
         keywords,
+        userId,
       ),
       'Python': require('./code-help/create-user/create-user-python')(
         envId,
         keywords,
+        userId,
       ),
       'React': require('./code-help/create-user/create-user-react')(
         envId,
         keywords,
+        userId,
       ),
       'React Native': require('./code-help/create-user/create-user-rn')(
         envId,
         keywords,
+        userId,
       ),
       'Ruby': require('./code-help/create-user/create-user-ruby')(
         envId,
         keywords,
+        userId,
       ),
       'Rust': require('./code-help/create-user/create-user-rust')(
         envId,
         keywords,
+        userId,
       ),
       'curl': require('./code-help/create-user/create-user-curl')(
         envId,
@@ -79,6 +95,7 @@ export default {
       'iOS': require('./code-help/create-user/create-user-ios')(
         envId,
         keywords,
+        userId,
       ),
     }),
 
@@ -191,6 +208,10 @@ export default {
       'React Native': 'javascript',
     },
   },
+  colours: {
+    primary: '#6837fc',
+    white: '#ffffff',
+  },
   defaultRule: {
     operator: 'EQUAL',
     property: '',
@@ -243,7 +264,6 @@ export default {
       'event': 'Organisation deleted',
     },
     'DELETE_USER': { 'category': 'Organisation', 'event': 'User deleted' },
-    'DEMO_ACCOUNT': { 'category': 'User', 'event': 'User demo login' },
     'EDIT_ENVIRONMENT': {
       'category': 'Environment',
       'event': 'Environment edited',
@@ -260,7 +280,6 @@ export default {
     },
     'INVITE': { 'category': 'Invite', 'event': 'Invite sent' },
     'LOGIN': { 'category': 'User', 'event': 'User login' },
-    'LOGIN_DEMO': { 'category': 'User', 'event': 'User demo login' },
     'OAUTH': (type: OAuthType) => ({
       'category': 'User',
       'event': `User oauth ${type}`,
@@ -385,6 +404,8 @@ export default {
   modals: {
     'PAYMENT': 'Payment Modal',
   },
+  organisationPermissions: (perm: string) =>
+    `To manage this feature you need the <i>${perm}</i> permission for this organisastion.<br/>Please contact a member of this organisation who has administrator privileges.`,
   pages: {
     'ACCOUNT': 'Account Page',
     'AUDIT_LOG': 'Audit Log Page',
@@ -407,6 +428,14 @@ export default {
     'USERS': 'Users Page',
     'WHAT_ARE_FEATURE_FLAGS': 'What are feature flags Page',
   },
+  projectColors: [
+    '#906AF6',
+    '#FAE392',
+    '#42D0EB',
+    '#56CCAD',
+    '#FFBE71',
+    '#F57C78',
+  ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
   roles: {

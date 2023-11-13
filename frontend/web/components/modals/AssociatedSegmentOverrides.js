@@ -9,16 +9,17 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import FlagSelect from 'components/FlagSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import { getStore } from 'common/store'
+import { getEnvironment } from 'common/services/useEnvironment'
 
 class TheComponent extends Component {
   state = {
     isLoading: true,
   }
-
   componentDidMount() {
     this.fetch()
   }
-
   fetch = () => {
     _data
       .get(
@@ -97,7 +98,7 @@ class TheComponent extends Component {
       (results && results[this.state.selectedEnv]) || [],
     )
     const addOverride = (
-      <div style={{ width: 300 }} className='p-2 ml-2'>
+      <div style={{ width: 300 }} className='my-4'>
         <WrappedSegmentOverrideAdd
           onSave={this.fetch}
           addItem={this.addItem}
@@ -132,10 +133,15 @@ class TheComponent extends Component {
           </a>
           .
         </InfoMessage>
+        <SegmentOverrideLimit
+          id={environment.api_key}
+          maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+        />
         <div>
           <InputGroup
             component={
               <EnvironmentSelect
+                projectId={this.props.projectId}
                 value={environment.api_key}
                 onChange={(selectedEnv) =>
                   this.setState({
@@ -149,13 +155,13 @@ class TheComponent extends Component {
             title='Environment'
           />
           <PanelSearch
-            header={addOverride}
+            searchPanel={addOverride}
             search={this.state.search}
             onChange={(search) => this.setState({ search })}
             filterRow={(row, search) =>
               row.feature.name.toLowerCase().includes(search.toLowerCase())
             }
-            className='no-pad'
+            className='no-pad panel-override'
             title='Associated Features'
             items={selectedResults}
             renderNoResults={
@@ -167,29 +173,12 @@ class TheComponent extends Component {
               </Panel>
             }
             renderRow={(v) => (
-              <div key={v.feature.id} className='m-3 mb-4'>
+              <div key={v.feature.id} className='list-item-override p-3 mb-4'>
                 <div
                   onClick={() => {
                     // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
                   }}
-                  className='list-item panel panel-without-heading py-3 clickable'
                 >
-                  <div>
-                    <strong>{v.feature.name}</strong>
-                  </div>
-                  <div className='list-item-footer faint'>
-                    <Row>
-                      <div>
-                        Created{' '}
-                        {moment(v.feature.created_date).format(
-                          'Do MMM YYYY HH:mma',
-                        )}
-                        {' - '}
-                        {v.feature.description || 'No description'}
-                      </div>
-                    </Row>
-                  </div>
-
                   <WrappedSegmentOverrides
                     onSave={this.fetch}
                     projectFlag={v.feature}
@@ -339,7 +328,7 @@ export default class SegmentOverridesInner extends Component {
           return (
             <div>
               {originalSegmentOverrides.length > 1 && (
-                <div style={{ width: 150 }}>
+                <div style={{ width: 165 }}>
                   <Tooltip
                     title={
                       <div className='chip mt-2'>
@@ -363,6 +352,7 @@ export default class SegmentOverridesInner extends Component {
               )}
 
               <SegmentOverrides
+                projectFlag={projectFlag}
                 feature={projectFlag.id}
                 id={id}
                 name=' '
@@ -391,12 +381,35 @@ export default class SegmentOverridesInner extends Component {
 }
 
 class SegmentOverridesInnerAdd extends Component {
-  state = {}
+  state = { totalSegmentOverrides: 0 }
+
+  fetchTotalSegmentOverrides() {
+    const { environmentId } = this.props
+    const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
+
+    if (!env) {
+      return
+    }
+
+    const id = env.api_key
+
+    getEnvironment(getStore(), { id }).then((res) => {
+      this.setState({
+        totalSegmentOverrides: res[1].data.total_segment_overrides,
+      })
+    })
+  }
 
   componentDidMount() {
     ES6Component(this)
+    this.fetchTotalSegmentOverrides()
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.environmentId !== this.props.environmentId) {
+      this.fetchTotalSegmentOverrides()
+    }
+  }
   render() {
     const { environmentId, id, ignoreFlags, projectId } = this.props
     const addValue = (featureId, feature) => {
@@ -426,6 +439,9 @@ class SegmentOverridesInnerAdd extends Component {
       // const newValue = ;
       // updateSegments(segmentOverrides.concat([newValue]))
     }
+    const segmentOverrideLimitAlert =
+      this.state.totalSegmentOverrides >=
+      ProjectStore.getMaxSegmentOverridesAllowed()
 
     return (
       <FeatureListProvider>
@@ -433,6 +449,7 @@ class SegmentOverridesInnerAdd extends Component {
           return (
             <div className='mt-2'>
               <FlagSelect
+                disabled={!!segmentOverrideLimitAlert}
                 onlyInclude={this.props.feature}
                 placeholder='Create a Segment Override...'
                 projectId={projectId}

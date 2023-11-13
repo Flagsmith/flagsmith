@@ -4,10 +4,17 @@ import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
+
+from features.models import Feature
+from organisations.models import Organisation
+from projects.models import Project
+from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
     # Given
@@ -34,7 +41,70 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client, feature_id",
+    [
+        (lazy_fixture("admin_client"), "undefined"),
+        (lazy_fixture("admin_client"), "89809"),
+    ],
+)
+def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature_id],
+    )
+
+    data = {
+        "type": "unicode",
+        "feature": feature_id,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
+    # Given
+    new_user = FFAdminUser.objects.create(email="testuser@mail.com")
+    organisation = Organisation.objects.create(name="Test Org")
+    new_project = Project.objects.create(name="Test project", organisation=organisation)
+    feature = Feature.objects.create(
+        name="New_feature",
+        project=new_project,
+    )
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature.id],
+    )
+
+    data = {
+        "type": "unicode",
+        "feature": feature.id,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    client = APIClient()
+    client.force_authenticate(user=new_user)
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
     # Given
@@ -54,7 +124,8 @@ def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
     project, mv_option_50_percent, client, feature
@@ -83,7 +154,8 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_update_default_percentage_allocation(
     project, mv_option_50_percent, client, feature
@@ -112,7 +184,8 @@ def test_can_update_default_percentage_allocation(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(
     project, mv_option_50_percent, client, feature
@@ -161,7 +234,8 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
     # Given
@@ -192,7 +266,8 @@ def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     project, environment, environment_api_key, client, feature
@@ -286,7 +361,8 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_modify_weight_of_2_variations_in_single_request(
     project, environment, environment_api_key, client, feature

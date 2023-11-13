@@ -1,3 +1,5 @@
+from enum import Enum
+
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 MAX_SEATS_IN_FREE_PLAN = 1
@@ -11,9 +13,11 @@ SUBSCRIPTION_DEFAULT_LIMITS = (
 
 CHARGEBEE = "CHARGEBEE"
 XERO = "XERO"
+AWS_MARKETPLACE = "AWS_MARKETPLACE"
 SUBSCRIPTION_PAYMENT_METHODS = [
     (CHARGEBEE, "Chargebee"),
     (XERO, "Xero"),
+    (AWS_MARKETPLACE, "AWS Marketplace"),
 ]
 
 FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
@@ -22,3 +26,8 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
     projects=MAX_PROJECTS_IN_FREE_PLAN,
 )
 FREE_PLAN_ID = "free"
+
+
+class SubscriptionCacheEntity(Enum):
+    INFLUX = "INFLUX"
+    CHARGEBEE = "CHARGEBEE"

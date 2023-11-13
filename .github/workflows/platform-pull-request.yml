@@ -3,12 +3,35 @@ name: Platform Pull Requests
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - docs/**
+      - infrastructure/**
 
 jobs:
-  run-e2e-tests:
-    if: github.event.pull_request.draft == false
+  validate-pr-title:
+    name: Validate Conventional Commit title
     runs-on: ubuntu-latest
-    name: Full E2E tests
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: | # mirrors changelog-sections in the /release-please-config.json
+            fix
+            feat
+            infra
+            docs
+            chore
+            build
+            deps
+            ci
+            refactor
+            style
+            test
+
+  run-e2e-tests-1:
+    runs-on: ubuntu-latest
+    name: E2E Local - Segments-1, Environment
 
     services:
       postgres:
@@ -24,42 +47,131 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Run Local API
-        uses: ./.github/actions/run-local-api
-        with:
-          e2e_test_token: some-token
-          # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
-          database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
-          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
-          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
-
       - name: Run E2E tests against local
-        uses: ./.github/actions/e2e-tests
+        uses: ./.github/actions/local-e2e-tests
         with:
-          e2e_test_token: some-token
           slack_token: ${{ secrets.SLACK_TOKEN }}
-          environment: local
-          enable_influxdb_features: false
+          tests: segment-part-1 environment
+          concurrency: 1
 
-  run-e2e-tests-docker-unified:
-    if: github.event.pull_request.draft == false
+  run-e2e-tests-2:
     runs-on: ubuntu-latest
-    name: Full E2E tests with unified image in Docker
+    name: E2E Local - Segments-2
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
 
-      - name: Run docker-compose with unified-image
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
+        with:
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          tests: segment-part-2
+          concurrency: 1
+
+  run-e2e-tests-3:
+    runs-on: ubuntu-latest
+    name: E2E Local - Segments-3, Signup, Flag, Invite, Project
+
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Run E2E tests against local
+        uses: ./.github/actions/local-e2e-tests
+        with:
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          tests: segment-part-3 signup flag invite project
+          concurrency: 2
+
+  run-e2e-segments-1-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: E2E Unified - Segments-1, Environment
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
         working-directory: frontend
         env:
-          E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-          ENV: staging
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          STATIC_ASSET_CDN_URL: /
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          docker-compose -f docker-compose-e2e-tests.yml build
-          docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-1 environment
+
+  run-e2e-segments-2-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: E2E Unified - Segments-2
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
+        working-directory: frontend
+        env:
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- segment-part-2
+
+  run-e2e-other-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: E2E Unified - Segments-3, Signup, Flag, Invite, Project
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
+        working-directory: frontend
+        env:
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=2 npm run test -- segment-part-3 signup flag invite project
 
   docker-build-unified:
     if: github.event.pull_request.draft == false
@@ -78,9 +190,11 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: false
+          cache-from: type=gha,scope=image-unified-fb
+          cache-to: type=gha,mode=max,scope=image-unified-fb
           tags: flagsmith/flagsmith:testing
 
   docker-build-api:
@@ -100,11 +214,12 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: api/Dockerfile
-          context: api/
           push: false
+          cache-from: type=gha,scope=image-api-fb
+          cache-to: type=gha,mode=max,scope=image-api-fb
           tags: flagsmith/flagsmith-api:testing
 
   docker-build-frontend:
@@ -124,65 +239,10 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: frontend/Dockerfile
-          context: frontend/
           push: false
+          cache-from: type=gha,scope=image-frontend-fb
+          cache-to: type=gha,mode=max,scope=image-frontend-fb
           tags: flagsmith/flagsmith-frontend:testing
-
-  web-deploy-branch-production:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-production-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Production Deployment
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-
-      - name: Determine Branch
-        id: branches
-        uses: transferwise/sanitize-branch-name@v1
-
-      - name: Deploy
-        uses: ./.github/actions/vercel-preview-deploy
-        with:
-          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          alias: flagsmith-${{ steps.branches.outputs.sanitized-branch-name }}
-          deployment_description: 'Production preview deployment'
-          env: prod
-
-  web-deploy-branch-staging:
-    # don't run this on PRs from forks (as the secrets are not available)
-    if: github.event.pull_request.head.repo.full_name == 'Flagsmith/flagsmith'
-    concurrency:
-      group: deploy-frontend-staging-${{github.ref}}
-      cancel-in-progress: true
-    name: Vercel Staging Deployment
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v3
-
-      - name: Determine Branch
-        id: branches
-        uses: transferwise/sanitize-branch-name@v1
-
-      - name: Deploy
-        uses: ./.github/actions/vercel-preview-deploy
-        with:
-          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          alias: flagsmith-staging-${{ steps.branches.outputs.sanitized-branch-name }}
-          deployment_description: 'Staging preview deployment'
-          env: staging

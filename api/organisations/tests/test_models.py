@@ -3,12 +3,15 @@ from unittest import mock
 
 import pytest
 from django.test import TestCase
+from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
+from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
+    OrganisationSubscriptionInformationCache,
     Subscription,
 )
 from organisations.subscriptions.constants import (
@@ -82,6 +85,41 @@ class OrganisationTestCase(TestCase):
         assert subscription.cancellation_date
 
 
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+    assert organisation.stop_serving_flags is False
+
+    # When
+    organisation.stop_serving_flags = True
+    organisation.save()
+
+    # Then
+    mocked_rebuild_environment_document.delay.assert_called_once_with(
+        args=(environment.id,)
+    )
+
+
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+
+    # When saving something irrelevant
+    organisation.alerted_over_plan_limit = True
+    organisation.save()
+
+    # Then the task should not be called
+    mocked_rebuild_environment_document.delay.assert_not_called()
+
+
 def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
     organisation, chargebee_subscription, mocker
 ):
@@ -114,7 +152,9 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
 
 def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
     # Given
-    mocker.patch("organisations.models.MAX_SEATS_IN_FREE_PLAN", 0)
+    organisation.subscription.max_seats = 0
+    organisation.subscription.save()
+
     mocked_get_subscription_metadata = mocker.patch(
         "organisations.models.Subscription.get_subscription_metadata",
         autospec=True,
@@ -122,6 +162,23 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     # Then
     assert organisation.over_plan_seats_limit() is True
     mocked_get_subscription_metadata.assert_not_called()
+
+
+def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
+    # Given
+    plan = "Scale-Up"
+    subscription_id = "subscription-id"
+    settings.AUTO_SEAT_UPGRADE_PLANS = [plan]
+
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id, plan=plan
+    )
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.is_auto_seat_upgrade_available() is True
 
 
 class SubscriptionTestCase(TestCase):
@@ -223,26 +280,30 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
 
 
 def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+    organisation,
     mocker,
 ):
     # Given
-    subscription = Subscription(
-        payment_method=CHARGEBEE, subscription_id="cb-subscription"
+    seats = 10
+    api_calls = 50000000
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation, allowed_seats=seats, allowed_30d_api_calls=api_calls
     )
 
-    expected_metadata = ChargebeeObjMetadata(seats=10, api_calls=50000000, projects=10)
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats, api_calls=api_calls, projects=10
+    )
     mock_cb_get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata"
+        "organisations.models.Subscription.get_subscription_metadata"
     )
     mock_cb_get_subscription_metadata.return_value = expected_metadata
 
     # When
-    subscription_metadata = subscription.get_subscription_metadata()
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     # Then
-    mock_cb_get_subscription_metadata.assert_called_once_with(
-        subscription.subscription_id
-    )
+    mock_cb_get_subscription_metadata.assert_called_once_with()
+
     assert subscription_metadata == expected_metadata
 
 
@@ -348,3 +409,24 @@ def test_organisation_update_clears_environment_caches(
 
     # Then
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
+
+
+@pytest.mark.parametrize(
+    "allowed_calls_30d, actual_calls_30d, expected_overage",
+    ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
+)
+def test_subscription_get_api_call_overage(
+    organisation, subscription, allowed_calls_30d, actual_calls_30d, expected_overage
+):
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=allowed_calls_30d,
+        api_calls_30d=actual_calls_30d,
+    )
+
+    # When
+    overage = subscription.get_api_call_overage()
+
+    # Then
+    assert overage == expected_overage

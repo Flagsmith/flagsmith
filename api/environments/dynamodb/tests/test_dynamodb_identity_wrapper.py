@@ -1,16 +1,26 @@
+import typing
+
 import pytest
 from boto3.dynamodb.conditions import Key
+from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.api.document_builders import (
-    build_environment_document,
-    build_identity_document,
-)
 from flag_engine.identities.builders import build_identity_model
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
-from segments.models import Segment
+from environments.identities.traits.models import Trait
+from segments.models import IN, Condition, Segment, SegmentRule
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_identity_to_identity_document,
+)
+
+if typing.TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from environments.models import Environment
+    from projects.models import Project
 
 
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
@@ -172,7 +182,7 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
 
-    expected_identity_document = build_identity_document(identity)
+    expected_identity_document = map_identity_to_identity_document(identity)
     identities = Identity.objects.filter(id=identity.id)
 
     # When
@@ -239,6 +249,7 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
         table_name,
     )
+    mocked_config = mocker.patch("environments.dynamodb.dynamodb_wrapper.Config")
     mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
 
     # When
@@ -246,7 +257,9 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Then
 
     assert dynamo_identity_wrapper.is_enabled is True
-    mocked_boto3.resource.assert_called_with("dynamodb")
+    mocked_boto3.resource.assert_called_with(
+        "dynamodb", config=mocked_config(tcp_keepalive=True)
+    )
     mocked_boto3.resource.return_value.Table.assert_called_with(table_name)
 
 
@@ -256,14 +269,14 @@ def test_get_segment_ids_returns_correct_segment_ids(
     # Given - two segments (one that matches the identity and one that does not)
     Segment.objects.create(name="Non matching segment", project=project)
 
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_get_item_from_uuid = mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
     )
     identity_uuid = identity_document["identity_uuid"]
 
-    environment_document = build_environment_document(environment)
+    environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
     )
@@ -280,11 +293,52 @@ def test_get_segment_ids_returns_correct_segment_ids(
     )
 
 
+def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
+    project: "Project", environment: "Environment", mocker: "MockerFixture"
+) -> None:
+    """
+    Specific test to cover https://github.com/Flagsmith/flagsmith/issues/2602
+    """
+    # Given
+    trait_key = "trait_key"
+
+    segment = Segment.objects.create(name="Test Segment", project=project)
+    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+    Condition.objects.create(
+        property=trait_key, operator=IN, value="1,2,3,4", rule=child_rule
+    )
+
+    identity = Identity.objects.create(environment=environment, identifier="identifier")
+    Trait.objects.create(
+        trait_key=trait_key, integer_value=1, value_type=INTEGER, identity=identity
+    )
+
+    identity_document = map_identity_to_identity_document(identity)
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+    identity_uuid = identity_document["identity_uuid"]
+
+    environment_document = map_environment_to_environment_document(environment)
+    mocked_environment_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+    )
+    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+
+    # Then
+    assert segment_ids == [segment.id]
+
+
 def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(
     project, environment, identity, mocker
 ):
     # Given
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
@@ -325,14 +379,14 @@ def test_get_segment_ids_throws_value_error_if_arguments_not_valid():
 def test_get_segment_ids_with_identity_model(identity, environment, mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     identity_model = build_identity_model(identity_document)
 
     mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
     )
 
-    environment_document = build_environment_document(environment)
+    environment_document = map_environment_to_environment_document(environment)
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
     )

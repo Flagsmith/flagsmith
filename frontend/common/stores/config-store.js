@@ -39,12 +39,15 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
+
 flagsmith
   .init({
     AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: Project.flagsmithAnalytics,
+    enableDynatrace,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: true,

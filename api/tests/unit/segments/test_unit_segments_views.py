@@ -4,7 +4,6 @@ import random
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from flag_engine.api.document_builders import build_identity_document
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
@@ -13,12 +12,14 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_filter_by_identity_to_get_only_matching_segments(
     project, client, environment, identity, trait, identity_matching_segment, segment
@@ -35,7 +36,8 @@ def test_can_filter_by_identity_to_get_only_matching_segments(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_cannot_create_segments_without_rules(project, client):
     # Given
@@ -50,7 +52,8 @@ def test_cannot_create_segments_without_rules(project, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_create_segments_with_boolean_condition(project, client):
     # Given
@@ -77,7 +80,8 @@ def test_can_create_segments_with_boolean_condition(project, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_create_segments_with_condition_that_has_null_value(project, client):
     # Given
@@ -102,7 +106,46 @@ def test_can_create_segments_with_condition_that_has_null_value(project, client)
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_segments_reaching_max_limit(project, client, settings):
+    # Given
+    # let's reduce the max segments allowed to 1
+    project.max_segments_allowed = 1
+    project.save()
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # Now, let's create the firs segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_201_CREATED
+
+    # Then
+    # Let's try to create a second segment
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        res.json()["project"]
+        == "The project has reached the maximum allowed segments limit."
+    )
+    assert project.segments.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_audit_log_created_when_segment_updated(project, segment, client):
     # Given
@@ -131,7 +174,8 @@ def test_audit_log_created_when_segment_updated(project, segment, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_audit_log_created_when_segment_created(project, client):
     # Given
@@ -156,7 +200,8 @@ def test_audit_log_created_when_segment_created(project, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     project,
@@ -169,7 +214,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     # Given
     Segment.objects.create(name="Non matching segment", project=project)
     expected_segment_ids = [identity_matching_segment.id]
-    identity_document = build_identity_document(identity)
+    identity_document = map_identity_to_identity_document(identity)
     identity_uuid = identity_document["identity_uuid"]
 
     edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
@@ -189,7 +234,8 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_associated_features_returns_all_the_associated_features(
     project, environment, feature, segment, segment_featurestate, client
@@ -215,7 +261,8 @@ def test_associated_features_returns_all_the_associated_features(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_can_create_feature_based_segment(project, client, feature):
     # Given
@@ -236,7 +283,8 @@ def test_can_create_feature_based_segment(project, client, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_segment_by_uuid(client, project, segment):
     # Given
@@ -254,7 +302,10 @@ def test_get_segment_by_uuid(client, project, segment):
 
 @pytest.mark.parametrize(
     "client, num_queries",
-    [(lazy_fixture("master_api_key_client"), 11), (lazy_fixture("admin_client"), 10)],
+    [
+        (lazy_fixture("admin_master_api_key_client"), 11),
+        (lazy_fixture("admin_client"), 10),
+    ],
 )
 def test_list_segments(django_assert_num_queries, project, client, num_queries):
     # Given
@@ -289,7 +340,8 @@ def test_list_segments(django_assert_num_queries, project, client, num_queries):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_search_segments(django_assert_num_queries, project, client):
     # Given
@@ -324,7 +376,8 @@ def test_search_segments(django_assert_num_queries, project, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segments_with_description_condition(project, client):
     # Given
@@ -359,7 +412,8 @@ def test_create_segments_with_description_condition(project, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_segment_add_new_condition(project, client, segment, segment_rule):
     # Given
@@ -424,7 +478,8 @@ def test_update_segment_add_new_condition(project, client, segment, segment_rule
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_segment_delete_existing_condition(
     project, client, segment, segment_rule
@@ -478,7 +533,8 @@ def test_update_segment_delete_existing_condition(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_segment_delete_existing_rule(project, client, segment, segment_rule):
     # Given

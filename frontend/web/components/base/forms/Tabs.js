@@ -1,4 +1,5 @@
-const classNames = require('classnames')
+import ModalHR from 'components/modals/ModalHR'
+import { oneOf } from 'prop-types'
 /**
  * Created by kylejohnson on 30/07/2016.
  */
@@ -14,12 +15,11 @@ const Tabs = class extends React.Component {
     const children = this.props.children.filter((c) => !!c)
     const value = this.props.uncontrolled ? this.state.value : this.props.value
     return (
-      <div
-        className={`tabs ${this.props.className || ''} ${
-          this.props.transparent ? 'tabs--transparent' : ''
-        } ${this.props.inline ? 'tabs--inline' : ''}`}
-      >
-        <div className='tabs-nav' style={isMobile ? { flexWrap: 'wrap' } : {}}>
+      <div className={`tabs ${this.props.className || ''}`}>
+        <div
+          className={`tabs-nav ${this.props.theme}`}
+          style={isMobile ? { flexWrap: 'wrap' } : {}}
+        >
           {children.map((child, i) => {
             const isSelected = value == i
             if (!child) {
@@ -28,6 +28,7 @@ const Tabs = class extends React.Component {
             return (
               <Button
                 type='button'
+                theme={this.props.buttonTheme}
                 data-test={child.props['data-test']}
                 id={child.props.id}
                 key={`button${i}`}
@@ -40,34 +41,21 @@ const Tabs = class extends React.Component {
                     this.props.onChange(i)
                   }
                 }}
-                className={`btn-tab btn-primary${
-                  isSelected ? ' tab-active' : ''
-                }`}
+                className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
               >
-                {child.props.tabIcon && (
-                  <span
-                    className={classNames('icon mr-2', child.props.tabIcon)}
-                  />
-                )}
                 {child.props.tabLabel}
               </Button>
             )
           })}
-          <div
-            className='tab-line'
-            style={{
-              left: `${(100 / children.length) * value}%`,
-              width: `${100 / children.length}%`,
-            }}
-          />
         </div>
+        {this.props.theme === 'tab' && <ModalHR className='tab-nav-hr' />}
         <div className='tabs-content'>
           {children.map((child, i) => {
             const isSelected = value === i
             return (
               <div
                 key={`content${i}`}
-                className={`tab-item${isSelected ? ' tab-active' : ''}`}
+                className={`tab-item ${isSelected ? ' tab-active' : ''}`}
               >
                 {child}
               </div>
@@ -81,14 +69,14 @@ const Tabs = class extends React.Component {
 
 Tabs.defaultProps = {
   className: '',
+  theme: 'tab',
   value: 0,
 }
 
 Tabs.propTypes = {
   children: RequiredElement,
-  inline: OptionalBool,
   onChange: OptionalFunc,
-  transparent: OptionalBool,
+  theme: oneOf(['tab', 'pill']),
   uncontrolled: OptionalBool,
   value: OptionalNumber,
 }

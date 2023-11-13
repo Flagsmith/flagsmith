@@ -3,11 +3,13 @@ import makeAsyncScriptLoader from 'react-async-script'
 import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import InfoMessage from 'components/InfoMessage'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
     AccountStore.getOrganisation().id,
   )
+
   if (
     Utils.getFlagsmithHasFeature('upgrade_subscription') &&
     activeSubscription
@@ -67,7 +69,21 @@ const PaymentModal = class extends Component {
   }
   render() {
     const viewOnly = this.props.viewOnly
-
+    const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
+    if (isAWS) {
+      return (
+        <InfoMessage>
+          Customers with AWS Marketplace subscriptions will need to{' '}
+          <a
+            href='https://www.flagsmith.com/contact-us'
+            target='_blank'
+            rel='noreferrer'
+          >
+            contact us
+          </a>
+        </InfoMessage>
+      )
+    }
     return (
       <div className='app-container container'>
         <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
@@ -261,6 +277,17 @@ const PaymentModal = class extends Component {
                                 <p>Online Ts and Cs</p>
                               </li>
                             </ul>
+                            <a
+                              onClick={() => {
+                                closeModal()
+                                Utils.openChat()
+                              }}
+                              href='#'
+                              className='pricing-cta blue'
+                              style={{ width: '100%' }}
+                            >
+                              Request more API calls
+                            </a>
                           </div>
                         </div>
                       </div>
@@ -281,10 +308,8 @@ const PaymentModal = class extends Component {
                             {!viewOnly ? (
                               <a
                                 onClick={() => {
-                                  if (window.zE) {
-                                    closeModal()
-                                    Utils.openChat()
-                                  }
+                                  closeModal()
+                                  Utils.openChat()
                                 }}
                                 href='#'
                                 className='pricing-cta blue'
@@ -366,12 +391,11 @@ const PaymentModal = class extends Component {
 }
 
 const WrappedPaymentModal = makeAsyncScriptLoader(
-  ConfigProvider(PaymentModal),
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
   },
-)
+)(ConfigProvider(PaymentModal))
 
 PaymentModal.propTypes = {}
 

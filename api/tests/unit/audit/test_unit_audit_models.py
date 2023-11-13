@@ -158,3 +158,41 @@ def test_audit_log_save_project_is_added_if_not_set(environment):
 
     # Then
     assert audit_log.project == environment.project
+
+
+def test_creating_audit_logs_creates_process_environment_update_task(
+    environment, mocker
+):
+    # Given
+    process_environment_update = mocker.patch(
+        "environments.tasks.process_environment_update"
+    )
+
+    # When
+    audit_log = AuditLog.objects.create(environment=environment)
+
+    # Then
+    process_environment_update.delay.assert_called_once_with(args=(audit_log.id,))
+
+    # and
+    environment.refresh_from_db()
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(
+    environment, mocker, project
+):
+    # Given
+    process_environment_update = mocker.patch(
+        "environments.tasks.process_environment_update"
+    )
+
+    # When
+    audit_log = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+    )
+
+    # Then
+    process_environment_update.delay.assert_not_called()
+    assert audit_log.created_date != environment.updated_at

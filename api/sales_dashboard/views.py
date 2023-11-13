@@ -9,6 +9,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, F, Q
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseRedirect,
@@ -23,6 +24,7 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
@@ -31,10 +33,17 @@ from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
 from organisations.tasks import (
-    update_organisation_subscription_information_caches,
+    update_organisation_subscription_information_cache,
+    update_organisation_subscription_information_influx_cache,
 )
 
-from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
+from .forms import (
+    EmailUsageForm,
+    EndTrialForm,
+    MaxAPICallsForm,
+    MaxSeatsForm,
+    StartTrialForm,
+)
 
 OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
@@ -86,20 +95,24 @@ class OrganisationList(ListView):
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
 
-        # Use the most recent OrganisationSubscriptionInformationCache object to determine when the caches
-        # were last updated.
+        # Use the most recent "influx_updated_at" in
+        # OrganisationSubscriptionInformationCache object to determine
+        # when the caches were last updated.
         try:
-            subscription_information_caches_updated_at = (
-                OrganisationSubscriptionInformationCache.objects.order_by("-updated_at")
+            subscription_information_caches_influx_updated_at = (
+                OrganisationSubscriptionInformationCache.objects.order_by(
+                    F("influx_updated_at").desc(nulls_last=True)
+                )
                 .first()
-                .updated_at.strftime("%H:%M:%S %d/%m/%Y")
+                .influx_updated_at.strftime("%H:%M:%S %d/%m/%Y")
             )
+
         except AttributeError:
-            subscription_information_caches_updated_at = None
+            subscription_information_caches_influx_updated_at = None
 
         data[
-            "subscription_information_caches_updated_at"
-        ] = subscription_information_caches_updated_at
+            "subscription_information_caches_influx_updated_at"
+        ] = subscription_information_caches_influx_updated_at
 
         return data
 
@@ -128,6 +141,7 @@ def organisation_info(request, organisation_id):
         "max_api_calls": subscription_metadata.api_calls,
         "max_seats": subscription_metadata.seats,
         "max_projects": subscription_metadata.projects,
+        "chargebee_email": subscription_metadata.chargebee_email,
         "identity_count_dict": identity_count_dict,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
@@ -179,6 +193,38 @@ def update_max_api_calls(request, organisation_id):
 
 
 @staff_member_required
+def organisation_start_trial(
+    request: HttpRequest, organisation_id: int
+) -> HttpResponse:
+    start_trial_form = StartTrialForm(request.POST)
+    if start_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        start_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
+
+
+@staff_member_required
+def organisation_end_trial(request: HttpRequest, organisation_id: int) -> HttpResponse:
+    end_trial_form = EndTrialForm(request.POST)
+    if end_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        end_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
+
+
+@staff_member_required
 def migrate_identities_to_edge(request, project_id):
     if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
         return HttpResponseBadRequest("DynamoDB is not enabled")
@@ -216,6 +262,18 @@ def download_org_data(request, organisation_id):
 
 
 @staff_member_required()
-def trigger_update_organisation_subscription_information_caches(request):
-    update_organisation_subscription_information_caches.delay()
+def trigger_update_organisation_subscription_information_influx_cache(request):
+    update_organisation_subscription_information_influx_cache.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def trigger_update_organisation_subscription_information_cache(request):
+    update_organisation_subscription_information_cache.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required()
+def trigger_update_chargebee_caches(request):
+    update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))

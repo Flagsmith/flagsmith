@@ -42,7 +42,10 @@
                 </tbody>
             </table>
 
-            <h2>Subscription</h2>
+            <h2>
+                Subscription
+                {%if chargebee_email%} - <a href="mailto:{{ chargebee_email }}">{{ chargebee_email }}</a>{% endif %}
+            </h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
                     <thead class="thead-dark">
@@ -78,6 +81,21 @@
                         </tr>
                     </tbody>
                 </table>
+                {%if organisation.subscription.is_in_trial %}
+                    <form action="{% url 'sales_dashboard:organisation_end_trial' organisation.id %}" method="post" class="form-inline float-right">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary mb-2">End Trial</button>
+                    </form>
+                {% else %}
+                    <form action="{% url 'sales_dashboard:organisation_start_trial' organisation.id %}" method="post" class="form-inline float-right">
+                        {% csrf_token %}
+                        <label class="sr-only" for="trialSeats">Seats</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" id="max_seats" name="max_seats" placeholder="Seats">
+                        <label class="sr-only" for="trialApiCalls">API Calls</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" id="max_api_calls" name="max_api_calls" placeholder="API Calls">
+                        <button type="submit" class="btn btn-primary mb-2">Start Trial</button>
+                    </form>
+                {% endif %}
             </div>
 
             <h2>Projects</h2>

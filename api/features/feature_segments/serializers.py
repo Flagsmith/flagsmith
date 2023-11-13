@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
+from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.models import FeatureSegment
 
 
@@ -11,6 +13,17 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super().validate(data)
+        environment = data["environment"]
+        if (
+            environment.feature_segments.count()
+            >= environment.project.max_segment_overrides_allowed
+        ):
+            raise serializers.ValidationError(
+                {
+                    "environment": "The environment has reached the maximum allowed segments overrides limit."
+                }
+            )
+
         segment = data["segment"]
         if segment.feature is not None and segment.feature != data["feature"]:
             raise serializers.ValidationError(
@@ -26,7 +39,7 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 class CreateSegmentOverrideFeatureSegmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ("segment", "priority")
+        fields = ("id", "segment", "priority", "uuid")
         read_only_fields = ("priority",)
 
 
@@ -98,6 +111,13 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
             raise serializers.ValidationError(
                 "All feature segments must belong to the same feature & environment."
             )
+
+        environment = environments.pop()
+
+        if not self.context["request"].user.has_environment_permission(
+            UPDATE_FEATURE_STATE, environment
+        ):
+            raise PermissionDenied("You do not have permission to perform this action.")
 
         return validated_attrs
 

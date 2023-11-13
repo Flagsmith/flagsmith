@@ -1,6 +1,7 @@
 /**
  * Created by kylejohnson on 25/07/2016.
  */
+import Icon from 'components/Icon'
 import React, { Component } from 'react'
 
 const InputGroup = class extends Component {
@@ -18,19 +19,21 @@ const InputGroup = class extends Component {
   render() {
     const { props } = this
     const id = this.props.id || Utils.GUID()
-    const { inputProps } = this.props
+    const { inputProps, size } = this.props
     return (
       <div
-        className={`${this.props.className} form-group ${
-          this.props.isInvalid ? 'invalid' : ''
-        }`}
+        className={`${
+          this.props.className ? this.props.className : ''
+        } form-group ${this.props.isInvalid ? 'invalid' : ''}`}
       >
         {this.props.tooltip ? (
           <Tooltip
             title={
               <label htmlFor={id} className='cols-sm-2 control-label'>
-                {props.title}{' '}
-                <span className='icon ion-ios-information-circle' />
+                <div>
+                  {props.title} <Icon name='info-outlined' />{' '}
+                  {props.unsaved && <div className='unread'>Unsaved</div>}
+                </div>
               </label>
             }
             place={this.props.tooltipPlace || 'right'}
@@ -40,9 +43,12 @@ const InputGroup = class extends Component {
         ) : (
           <Row>
             {!!props.title && (
-              <Flex className='mr-4'>
+              <Flex>
                 <label htmlFor={id} className='cols-sm-2 control-label'>
-                  {props.title}
+                  <div>
+                    {props.title}{' '}
+                    {props.unsaved && <div className='unread'>Unsaved</div>}
+                  </div>
                 </label>
               </Flex>
             )}
@@ -56,18 +62,6 @@ const InputGroup = class extends Component {
               </div>
             )}
           </Row>
-        )}
-
-        {inputProps && inputProps.error && (
-          <span>
-            <span> - </span>
-            <span
-              id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
-              className='text-danger'
-            >
-              {inputProps.error}
-            </span>
-          </span>
         )}
 
         <div>
@@ -102,11 +96,22 @@ const InputGroup = class extends Component {
                   type={props.type || 'text'}
                   id={id}
                   placeholder={props.placeholder}
+                  size={size}
                 />
               )}
             </div>
           )}
         </div>
+        {inputProps && inputProps.error && (
+          <span>
+            <span
+              id={props.inputProps.name ? `${props.inputProps.name}-error` : ''}
+              className='text-danger'
+            >
+              {inputProps.error}
+            </span>
+          </span>
+        )}
       </div>
     )
   }
@@ -118,6 +123,7 @@ InputGroup.propTypes = {
   isValid: propTypes.any,
   onChange: OptionalFunc,
   placeholder: OptionalString,
+  size: OptionalString,
   title: propTypes.any,
   type: OptionalString,
   value: OptionalString,

@@ -1,22 +1,27 @@
-import React, { FC, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { AuditLogItem } from 'common/types/responses'
+import { AuditLogItem, Environment, Project } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
+import ProjectProvider from 'common/providers/ProjectProvider'
 import JSONReference from './JSONReference'
 import { Link } from 'react-router-dom'
 import PanelSearch from './PanelSearch'
+import ProjectStore from 'common/stores/project-store'
+import Tag from './tags/Tag'
+import Constants from 'common/constants'
 
 type AuditLogType = {
   environmentId: string
   projectId: string
   pageSize: number
   onSearchChange?: (search: string) => void
+  searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
 }
 
-const widths = [200, 200, 200]
+const widths = [210, 210, 210]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -43,7 +48,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   const hasHadResults = useRef(false)
 
   const {
-    data: auditLog,
+    data: projectAuditLog,
     isError,
     isFetching,
   } = useGetAuditLogsQuery({
@@ -59,7 +64,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
     //eslint-disable-next-line
   }, [])
 
-  if (auditLog?.results) {
+  if (projectAuditLog?.results) {
     hasHadResults.current = true
   }
 
@@ -69,12 +74,22 @@ const AuditLog: FC<AuditLogType> = (props) => {
     environment,
     log,
   }: AuditLogItem) => {
+    const index = ProjectStore.getEnvs()?.findIndex((v) => {
+      return v.id === environment?.id
+    })
+    const colour = index === -1 ? 0 : index
     return (
-      <Row className='list-item py-2 audit__item' key={created_date}>
-        <span style={{ width: widths[0] }}>
+      <Row className='list-item list-item-sm' key={created_date}>
+        <div
+          className='table-column px-3 fs-small ln-sm'
+          style={{ width: widths[0] }}
+        >
           {moment(created_date).format('Do MMM YYYY HH:mma')}
-        </span>
-        <div style={{ width: widths[1] }}>
+        </div>
+        <div
+          className='table-column fs-small ln-sm'
+          style={{ width: widths[1] }}
+        >
           {author?.first_name} {author?.last_name}
         </div>
         {environment?.name ? (
@@ -84,21 +99,25 @@ const AuditLog: FC<AuditLogType> = (props) => {
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
             <Row>
-              <span className='flex-row chip'>{environment?.name}</span>
+              <Tag
+                tag={{
+                  color: Utils.getTagColour(colour),
+                  label: environment?.name,
+                }}
+                className='chip--sm'
+              />
             </Row>
           </Link>
         ) : (
-          <div style={{ width: widths[2] }} />
+          <div className='table-column' style={{ width: widths[2] }} />
         )}
-        <Flex>{log}</Flex>
+        <Flex className='table-column fs-small ln-sm'>{log}</Flex>
       </Row>
     )
   }
   const { env: envFilter } = Utils.fromParam()
 
-  const hasRbacPermission =
-    Utils.getPlansPermission('AUDIT') ||
-    !Utils.getFlagsmithHasFeature('scaleup_audit')
+  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
   if (!hasRbacPermission) {
     return (
       <div>
@@ -116,14 +135,18 @@ const AuditLog: FC<AuditLogType> = (props) => {
       title='Log entries'
       isLoading={isFetching}
       className='no-pad'
-      icon='ion-md-browsers'
-      items={auditLog?.results}
+      items={projectAuditLog?.results}
       filter={envFilter}
       search={searchInput}
+      searchPanel={props.searchPanel}
       onChange={(e: InputEvent) => {
         setSearchInput(Utils.safeParseEventValue(e))
       }}
-      paging={{ ...(auditLog || {}), page, pageSize: props.pageSize }}
+      paging={{
+        ...(projectAuditLog || {}),
+        page,
+        pageSize: props.pageSize,
+      }}
       nextPage={() => {
         setPage(page + 1)
       }}
@@ -137,17 +160,23 @@ const AuditLog: FC<AuditLogType> = (props) => {
       renderRow={renderRow}
       header={
         <Row className='table-header'>
-          <span style={{ width: widths[0] }}>Date</span>
-          <div style={{ width: widths[1] }}>User</div>
-          <div style={{ width: widths[2] }}>Environment</div>
-          <Flex>Content</Flex>
+          <div className='table-column px-3' style={{ width: widths[0] }}>
+            Date
+          </div>
+          <div className='table-column' style={{ width: widths[1] }}>
+            User
+          </div>
+          <div className='table-column' style={{ width: widths[2] }}>
+            Environment
+          </div>
+          <Flex className='table-column'>Content</Flex>
         </Row>
       }
       renderFooter={() => (
         <JSONReference
           className='mt-4 ml-2'
           title={'Audit'}
-          json={auditLog?.results}
+          json={projectAuditLog?.results}
         />
       )}
       renderNoResults={

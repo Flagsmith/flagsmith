@@ -1,6 +1,12 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
+const {
+  createGroupAdmin,
+  deleteGroupAdmin,
+  getGroups,
+} = require('../services/useGroup')
+const { getStore } = require('../store')
 
 const PAGE_SIZE = 999
 
@@ -17,35 +23,35 @@ const controller = {
             { user_ids: group.users.map((u) => u.id) },
           )
         }
-        prom.then(() => {
-          controller.getGroups(orgId)
+        prom.then((res) => {
+          if (Utils.getFlagsmithHasFeature('group_admins')) {
+            Promise.all(
+              (group.usersToAddAdmin || []).map((v) =>
+                createGroupAdmin(getStore(), {
+                  group: res.id,
+                  orgId,
+                  user: v.id,
+                }),
+              ),
+            ).then(() => {
+              controller.getGroups(orgId)
+            })
+          } else {
+            controller.getGroups(orgId)
+          }
         })
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  deleteGroup: (orgId, group) => {
-    store.saving()
-    data
-      .delete(`${Project.api}organisations/${orgId}/groups/${group}/`)
-      .then(() => {
-        controller.getGroups(orgId)
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  getGroups: (orgId, page) => {
+  getGroups: (orgId) => {
     store.loading()
-    store.orgId = orgId
-    const endpoint =
-      (page && `${page}`) || `${Project.api}organisations/${orgId}/groups/`
-    data.get(endpoint).then((res) => {
-      store.model = res && res.results
-      store.paging.next = res.next
-      store.paging.count = res.count
-      store.paging.previous = res.previous
-      store.paging.currentPage =
-        endpoint.indexOf('?page=') !== -1
-          ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6))
-          : 1
+    getGroups(
+      getStore(),
+      { orgId: `${orgId}`, page: 1 },
+      { forceRefetch: true },
+    ).then((response) => {
+      store.groups = response.data.results
+
       store.loaded()
       store.saved()
     })
@@ -74,7 +80,31 @@ const controller = {
             { user_ids: toRemove.map((u) => u.id) },
           ),
         ]).then(() => {
-          controller.getGroups(orgId)
+          if (Utils.getFlagsmithHasFeature('group_admins')) {
+            Promise.all(
+              (group.usersToAddAdmin || [])
+                .map((v) =>
+                  createGroupAdmin(getStore(), {
+                    group: group.id,
+                    orgId,
+                    user: v.id,
+                  }),
+                )
+                .concat(
+                  (group.usersToRemoveAdmin || []).map((v) =>
+                    deleteGroupAdmin(getStore(), {
+                      group: group.id,
+                      orgId,
+                      user: v.id,
+                    }),
+                  ),
+                ),
+            ).then(() => {
+              controller.getGroups(orgId)
+            })
+          } else {
+            controller.getGroups(orgId)
+          }
         })
       })
 
@@ -83,8 +113,8 @@ const controller = {
 }
 
 const store = Object.assign({}, BaseStore, {
-  getGroupsForEditing(id) {
-    return store.model && _.cloneDeep(_.find(store.model, { id })) // immutable
+  getGroups() {
+    return store.groups
   },
   getPaging() {
     return store.paging
@@ -99,21 +129,14 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.GET_GROUPS:
-      store.search = ''
-      controller.getGroups(action.orgId)
-      break
     case Actions.UPDATE_GROUP:
       controller.updateGroup(action.orgId, action.data)
       break
     case Actions.CREATE_GROUP:
       controller.createGroup(action.orgId, action.data)
       break
-    case Actions.GET_GROUPS_PAGE:
-      controller.getGroups(action.page)
-      break
-    case Actions.DELETE_GROUP:
-      controller.deleteGroup(action.orgId, action.data)
+    case Actions.GET_GROUPS:
+      controller.getGroups(action.orgId)
       break
     default:
   }

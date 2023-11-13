@@ -1,25 +1,17 @@
-FROM node:16
+FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
-RUN mkdir /srv/flagsmith && chown node:node /srv/flagsmith
-
-RUN apt-get update
-ARG CHROME_URL='https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_107.0.5304.121-1_amd64.deb'
-RUN wget -q $CHROME_URL
-RUN apt install -y ./google-chrome*.deb -f
-RUN apt-get clean
-
+# Build Flagsmith
 WORKDIR /srv/flagsmith
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc frontend/.nvmrc ./
+COPY frontend/bin/ ./bin/
+COPY frontend/env/ ./env/
 
-COPY --chown=node:node . .
-
-USER node
-
-RUN npm cache clean --force
-
+# Run npm ci before copying source code to improve caching of layers.
+ENV ENV=e2e
 RUN npm ci
 
-ENV ENV=e2e
+COPY frontend .
+COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
 
-EXPOSE 8080
-CMD ["npm",  "run", "test"]
+CMD ["bash", "-l"]

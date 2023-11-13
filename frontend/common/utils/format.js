@@ -160,6 +160,19 @@ const Format = {
     return str
   },
 
+  shortenNumber(number) {
+    // Converts a float number into a short literal with suffix for the magnitude:
+    // 1523125 > 1.5M
+    const suffixes = ['', 'K', 'M', 'B', 'T']
+    const numDigits = Math.floor(Math.log10(number)) + 1
+    const suffixIndex = Math.floor((numDigits - 1) / 3)
+
+    let shortValue = number / Math.pow(1000, suffixIndex)
+    shortValue = +parseFloat(shortValue).toFixed(1)
+
+    return shortValue + suffixes[suffixIndex]
+  },
+
   time(value) {
     // DATE > 10:00pm
     return Format.moment(value, 'hh:mm a')
@@ -173,6 +186,11 @@ const Format = {
       }
     }
     return text
+  },
+
+  userDisplayName(person) {
+    // {firstName:'John', lastName:'Doe', email: 'JD123@email.com'} > John Doe || JD123@email.com
+    return Format.fullName(person) || person.email
   },
 }
 

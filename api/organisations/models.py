@@ -20,12 +20,13 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_plan_meta_data,
     get_portal_url,
-    get_subscription_metadata,
+    get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
@@ -95,20 +96,33 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def has_subscription(self) -> bool:
         return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
+    def has_subscription_information_cache(self) -> bool:
+        return hasattr(self, "subscription_information_cache") and bool(
+            self.subscription_information_cache
+        )
+
     @property
     def is_paid(self):
         return self.has_subscription() and self.subscription.cancellation_date is None
 
-    def over_plan_seats_limit(self):
+    def over_plan_seats_limit(self, additional_seats: int = 0):
         if self.has_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats > susbcription_metadata.seats
+            return self.num_seats + additional_seats > susbcription_metadata.seats
 
-        return self.num_seats > MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats + additional_seats > getattr(
+            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
+        )
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
         self.save()
+
+    def is_auto_seat_upgrade_available(self) -> bool:
+        return (
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and self.subscription.can_auto_upgrade_seats
+        )
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
@@ -130,6 +144,17 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
                 )
             )
         )
+
+    @hook(AFTER_SAVE, when="stop_serving_flags", has_changed=True)
+    def rebuild_environments(self):
+        # Avoid circular imports.
+        from environments.models import Environment
+        from environments.tasks import rebuild_environment_document
+
+        for environment_id in Environment.objects.filter(
+            project__organisation=self
+        ).values_list("id", flat=True):
+            rebuild_environment_document.delay(args=(environment_id,))
 
 
 class UserOrganisation(models.Model):
@@ -203,14 +228,23 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
-
-        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+        if self.is_in_trial():
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
-            metadata = get_subscription_metadata(self.subscription_id)
+            if self.organisation.has_subscription_information_cache():
+                # Getting the data from the subscription information cache because
+                # data is guaranteed to be up to date by using a Chargebee webhook.
+                metadata = ChargebeeObjMetadata(
+                    seats=self.organisation.subscription_information_cache.allowed_seats,
+                    api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
+                    projects=self.organisation.subscription_information_cache.allowed_projects,
+                    chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+                )
+            else:
+                metadata = get_subscription_metadata_from_id(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
             metadata = XeroSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls, projects=None
@@ -231,6 +265,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         add_single_seat(self.subscription_id)
 
+    def get_api_call_overage(self):
+        subscription_info = self.organisation.subscription_information_cache
+        overage = (
+            subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
+        )
+        return overage if overage > 0 else 0
+
+    def is_in_trial(self) -> bool:
+        return self.subscription_id == TRIAL_SUBSCRIPTION_ID
+
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     name = models.CharField(max_length=100)
@@ -238,6 +282,8 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="webhooks"
     )
+    created_at = models.DateTimeField(null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(null=True, auto_now=True)
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -254,6 +300,8 @@ class OrganisationSubscriptionInformationCache(models.Model):
         on_delete=models.CASCADE,
     )
     updated_at = models.DateTimeField(auto_now=True)
+    chargebee_updated_at = models.DateTimeField(auto_now=False, null=True)
+    influx_updated_at = models.DateTimeField(auto_now=False, null=True)
 
     api_calls_24h = models.IntegerField(default=0)
     api_calls_7d = models.IntegerField(default=0)
@@ -261,3 +309,6 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
+    allowed_projects = models.IntegerField(default=1, blank=True, null=True)
+
+    chargebee_email = models.EmailField(blank=True, max_length=254, null=True)

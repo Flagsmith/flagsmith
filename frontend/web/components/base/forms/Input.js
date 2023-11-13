@@ -3,6 +3,7 @@
  */
 import MaskedInput from 'react-maskedinput'
 import cn from 'classnames'
+import Icon from 'components/Icon'
 
 const maskedCharacters = {
   'a': {
@@ -19,6 +20,14 @@ const maskedCharacters = {
     },
   },
 }
+
+const sizeClassNames = {
+  default: '',
+  large: 'input-lg',
+  small: 'input-sm',
+  xSmall: 'input-xsm',
+}
+
 const Input = class extends React.Component {
   static displayName = 'Input'
 
@@ -29,7 +38,6 @@ const Input = class extends React.Component {
       type: this.props.type,
     }
   }
-
   onFocus = (e) => {
     this.setState({
       isFocused: true,
@@ -65,11 +73,13 @@ const Input = class extends React.Component {
 
   render() {
     const {
+      disabled,
       inputClassName,
       isValid,
       mask,
       placeholderChar,
       showSuccess,
+      size,
       ...rest
     } = this.props
 
@@ -81,6 +91,7 @@ const Input = class extends React.Component {
         'input-container': true,
         invalid,
         'password': this.props.type === 'password',
+        'search': this.props.search,
         success,
       },
       this.props.className,
@@ -91,6 +102,7 @@ const Input = class extends React.Component {
         input: true,
       },
       inputClassName,
+      sizeClassNames[size],
     )
 
     return (
@@ -118,29 +130,49 @@ const Input = class extends React.Component {
             onBlur={this.onBlur}
             value={this.props.value}
             className={innerClassName}
-          />
-        )}
-        {invalid && (
-          <span
-            className={`input-icon-right text-danger icon ion ion-ios-close-circle-outline`}
-          />
-        )}
-        {success && (
-          <span
-            className={`input-icon-right text-success icon ion ion-ios-checkmark-circle-outline`}
+            disabled={disabled}
           />
         )}
         {this.props.type === 'password' && (
           <span
-            onClick={() =>
-              this.setState({
-                type: this.state.type === 'password' ? 'text' : 'password',
-              })
-            }
-            className={`input-icon-right icon ion ${
-              this.state.type === 'text' ? 'ion-ios-eye-off' : 'ion-ios-eye'
-            }`}
-          />
+            className={cn(
+              {
+                'clickable': true,
+                'input-icon-right': true,
+              },
+              sizeClassNames[size],
+            )}
+            onClick={() => {
+              if (!disabled) {
+                this.setState({
+                  type: this.state.type === 'password' ? 'text' : 'password',
+                })
+              }
+            }}
+          >
+            <Icon
+              name={this.state.type === 'text' ? 'eye' : 'eye-off'}
+              fill={invalid && '#ef4d56'}
+              width={
+                size &&
+                ((size === 'small' && 20) ||
+                  (size === 'xSmall' && 18) ||
+                  (size === 'large' && 24))
+              }
+            />
+          </span>
+        )}
+        {this.props.search && (
+          <span
+            className={cn(
+              {
+                'input-icon-right': true,
+              },
+              sizeClassNames[size],
+            )}
+          >
+            <Icon name='search' width={20} />
+          </span>
         )}
       </div>
     )
@@ -163,6 +195,8 @@ Input.propTypes = {
   onKeyDown: OptionalFunc,
   onSearchChange: OptionalFunc,
   placeholderChar: OptionalString,
+  search: propTypes.Boolean,
+  size: OptionalString,
 }
 
 export default Input

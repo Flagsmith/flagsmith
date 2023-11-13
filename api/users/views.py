@@ -3,13 +3,13 @@ from contextlib import suppress
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import QuerySet
-from django.http import Http404, HttpResponse
+from django.db.models import Q, QuerySet
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -36,6 +36,7 @@ from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
+    UserPermissionGroupSummarySerializer,
 )
 
 from .forms import InitConfigForm
@@ -57,7 +58,7 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         form.create_admin()
         form.update_site()
-        return HttpResponse("INSTALLATION CONFIGURED SUCCESSFULLY")
+        return JsonResponse({"message": "INSTALLATION CONFIGURED SUCCESSFULLY"})
 
 
 class AdminInitView(View):
@@ -69,10 +70,16 @@ class AdminInitView(View):
                 is_active=True,
             )
             admin.save()
-            return HttpResponse("ADMIN USER CREATED")
+            return JsonResponse(
+                {"adminUserCreated": True}, status=status.HTTP_201_CREATED
+            )
         else:
-            return HttpResponse(
-                "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM."
+            return JsonResponse(
+                {
+                    "adminUserCreated": False,
+                    "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -148,6 +155,9 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserPermissionGroup.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -155,21 +165,26 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if not self.request.user.has_organisation_permission(
             organisation, MANAGE_USER_GROUPS
         ):
-            qs = qs.filter(
-                userpermissiongroupmembership__ffadminuser=self.request.user,
-                userpermissiongroupmembership__group_admin=True,
-            )
+            q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
+            if self.action != "my_groups":
+                # my-groups returns a very cut down set of data, we can safely allow all users
+                # of the groups to retrieve them in this case, otherwise they must be a group
+                # admin.
+                q = q & Q(userpermissiongroupmembership__group_admin=True)
+            qs = qs.filter(q)
 
         return qs
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
+        elif self.action == "my_groups":
+            return UserPermissionGroupSummarySerializer
         return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.detail is True:
+        if not getattr(self, "swagger_fake_view", False) and self.detail is True:
             with suppress(ValueError):
                 context["group_admins"] = UserPermissionGroupMembership.objects.filter(
                     userpermissiongroup__id=int(self.kwargs["pk"]), group_admin=True
@@ -222,12 +237,19 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
 
+    @action(detail=False, methods=["GET"], url_path="my-groups")
+    def my_groups(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
+
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def make_user_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,
@@ -238,11 +260,11 @@ def make_user_group_admin(
     return Response()
 
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def remove_user_as_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,

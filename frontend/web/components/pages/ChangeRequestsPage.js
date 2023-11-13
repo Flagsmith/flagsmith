@@ -8,6 +8,10 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
+import { timeOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -63,42 +67,42 @@ const ChangeRequestsPage = class extends Component {
     const environment = ProjectStore.getEnvironment(environmentId)
 
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-
     return (
       <div
         data-test='change-requests-page'
         id='change-requests-page'
         className='app-container container'
       >
+        <PageTitle title={'Change Requests'}>
+          View and manage proposed feature state changes.
+        </PageTitle>
         <Flex>
-          <h3>Change Requests</h3>
-          <p>View and manage proposed feature state changes.</p>
           {!has4EyesPermission ? (
             <div className='mt-2'>
               <InfoMessage>
                 View and manage your feature changes with a Change Request flow
                 with our{' '}
-                <a
-                  href='#'
+                <Button
+                  theme='text'
                   onClick={() => {
                     openModal(
                       'Payment plans',
                       <PaymentModal viewOnly={false} />,
-                      null,
-                      { large: true },
+                      'modal-lg',
                     )
                   }}
                 >
                   Scale-up plan
-                </a>
+                </Button>
                 . Find out more{' '}
-                <a
+                <Button
+                  theme='text'
                   href='https://docs.flagsmith.com/advanced-use/change-requests'
                   target='_blank'
                   rel='noreferrer'
                 >
                   here
-                </a>
+                </Button>
                 .
               </InfoMessage>
             </div>
@@ -126,19 +130,27 @@ const ChangeRequestsPage = class extends Component {
                 }}
               >
                 <TabItem
-                  tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}
+                  tabLabel={
+                    <span className='flex-row justify-content-center'>
+                      Open
+                      {data && !!dataPaging.count && (
+                        <div className='counter-value ml-1'>
+                          {dataPaging.count}
+                        </div>
+                      )}
+                    </span>
+                  }
                 >
                   <PanelSearch
                     renderSearchWithNoResults
                     id='users-list'
                     title='Change Requests'
-                    className='mt-4 mx-2'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !data ||
                       !OrganisationStore.model
                     }
-                    icon='ion-md-git-pull-request'
                     items={data}
                     paging={dataPaging}
                     nextPage={() =>
@@ -164,7 +176,7 @@ const ChangeRequestsPage = class extends Component {
                     }
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={data}
                       />
@@ -188,47 +200,53 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
-                            <div>
-                              <ButtonLink>
-                                {title}
-                                {isScheduled && (
-                                  <span className='ml-1 mr-4 ion ion-md-time' />
-                                )}
-                              </ButtonLink>
-                              <div className='list-item-footer faint'>
-                                Created at{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>
+                              {title}
+                              {isScheduled && (
+                                <span className='ml-1 mr-4 ion'>
+                                  <IonIcon icon={timeOutline} />
+                                </span>
+                              )}
                             </div>
-                          </Row>
+                            <div className='list-item-subtitle mt-1'>
+                              Created at{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
+                            </div>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}
                   />
                 </TabItem>
                 <TabItem
-                  tabLabel={`Closed${
-                    dataClosedPaging ? ` (${dataClosedPaging.count})` : ''
-                  }`}
+                  tabLabel={
+                    <span className='flex-row justify-content-center'>
+                      Closed
+                    </span>
+                  }
                 >
                   <PanelSearch
                     renderSearchWithNoResults
                     id='users-list'
                     title='Change Requests'
-                    className='mt-4 mx-2'
+                    className='mt-4 no-pad'
                     isLoading={
                       ChangeRequestStore.isLoading ||
                       !data ||
                       !OrganisationStore.model
                     }
-                    icon='ion-md-git-pull-request'
                     items={dataClosed}
                     paging={dataClosedPaging}
                     nextPage={() =>
@@ -254,7 +272,7 @@ const ChangeRequestsPage = class extends Component {
                     }
                     renderFooter={() => (
                       <JSONReference
-                        className='mt-4'
+                        className='mt-4 ml-3'
                         title={'Change Requests'}
                         json={dataClosed}
                       />
@@ -268,21 +286,24 @@ const ChangeRequestsPage = class extends Component {
                       return (
                         <Link
                           to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}
+                          className='flex-row list-item clickable'
                         >
-                          <Row className='list-item clickable'>
-                            <span className='ion text-primary mr-4 icon ion-md-git-pull-request' />
-                            <div>
-                              <ButtonLink>{title}</ButtonLink>
-                              <div className='list-item-footer faint'>
-                                Live from{' '}
-                                {moment(created_at).format(
-                                  'Do MMM YYYY HH:mma',
-                                )}{' '}
-                                by {user && user.first_name}{' '}
-                                {user && user.last_name}
-                              </div>
+                          <Flex className='table-column px-3'>
+                            <div className='font-weight-medium'>{title}</div>
+                            <div className='list-item-subtitle mt-1'>
+                              Live from{' '}
+                              {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
+                              by {user && user.first_name}{' '}
+                              {user && user.last_name}
                             </div>
-                          </Row>
+                          </Flex>
+                          <div className='table-column'>
+                            <Icon
+                              name='chevron-right'
+                              fill='#9DA4AE'
+                              width={20}
+                            />
+                          </div>
                         </Link>
                       )
                     }}

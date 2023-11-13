@@ -3,6 +3,7 @@ import cx from 'classnames'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
+import Icon from './Icon'
 
 const toml = require('toml')
 const yaml = require('yaml')
@@ -95,11 +96,11 @@ class Validation extends Component {
         position='top'
         title={
           !this.state.error ? (
-            <span className='text-white ion-ios-checkmark-circle' />
+            <span className='language-icon ion-ios-checkmark-circle' />
           ) : (
             <span
               id='language-validation-error'
-              className='text-white ion-ios-warning'
+              className='language-icon ion-ios-warning'
             />
           )
         }
@@ -133,12 +134,16 @@ class ValueEditor extends Component {
     const { ...rest } = this.props
     return (
       <div
-        className={cx('value-editor', {
-          disabled: this.props.disabled,
-          light: this.state.language === 'txt',
-        })}
+        className={cx(
+          'value-editor',
+          {
+            disabled: this.props.disabled,
+            light: this.state.language === 'txt',
+          },
+          this.props.className,
+        )}
       >
-        <Row className='select-language'>
+        <Row className='select-language gap-1'>
           <span
             onMouseDown={(e) => {
               e.preventDefault()
@@ -193,11 +198,15 @@ class ValueEditor extends Component {
           <span
             onMouseDown={() => {
               const res = Clipboard.setString(this.props.value)
-              toast(res ? 'Clipboard set' : 'Could not set clipboard :(')
+              toast(
+                res ? 'Clipboard set' : 'Could not set clipboard :(',
+                res ? '' : 'danger',
+              )
             }}
             className={cx('txt primary')}
           >
-            <span className='ion ion-md-clipboard mr-0 ml-2 txt primary' /> copy
+            <Icon name='copy-outlined' fill={'#6837fc'} />
+            copy
           </span>
         </Row>
 

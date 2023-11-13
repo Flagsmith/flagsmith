@@ -1,5 +1,6 @@
 import amplitude from 'amplitude-js'
 import data from 'common/data/base/_data'
+const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 
 global.API = {
   ajaxHandler(store, res) {
@@ -38,10 +39,14 @@ global.API = {
         }
       })
   },
-  alias(id) {
-    if (id === Project.excludeAnalytics) return
+  alias(id, user = {}) {
+    if (Project.excludeAnalytics?.includes(id)) return
     if (Project.mixpanel) {
       mixpanel.alias(id)
+    }
+
+    if (enableDynatrace && user?.id) {
+      dtrum.identifyUser(`${user.id}`)
     }
 
     if (Project.heap) {
@@ -109,7 +114,7 @@ global.API = {
     }
   },
   identify(id, user = {}) {
-    if (id === Project.excludeAnalytics) return
+    if (Project.excludeAnalytics?.includes(id)) return
     try {
       const orgs =
         (user &&
@@ -141,13 +146,16 @@ global.API = {
         })
       }
 
+      if (enableDynatrace && user?.id) {
+        dtrum.identifyUser(`${user.id}`)
+      }
+
       if (Project.heap) {
         const plans = AccountStore.getPlans()
         heap.identify(id)
         heap.addUserProperties({
           // use human-readable names
           '$first_name': user.first_name,
-
           '$last_name': user.last_name,
           'USER_ID': id,
           email: id,
@@ -197,7 +205,7 @@ global.API = {
     })
   },
   register(email, firstName, lastName) {
-    if (email === Project.excludeAnalytics) return
+    if (Project.excludeAnalytics?.includes(email)) return
     if (Project.mixpanel) {
       mixpanel.register({
         'Email': email,
@@ -210,7 +218,7 @@ global.API = {
     if (Project.mixpanel) {
       mixpanel.reset()
     }
-    flagsmith.logout()
+    return flagsmith.logout()
   },
   setCookie(key, v) {
     try {

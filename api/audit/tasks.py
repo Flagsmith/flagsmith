@@ -3,15 +3,34 @@ import typing
 
 from django.contrib.auth import get_user_model
 
-from audit.constants import FEATURE_STATE_WENT_LIVE_MESSAGE
+from audit.constants import (
+    FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
+    FEATURE_STATE_WENT_LIVE_MESSAGE,
+)
 from audit.models import AuditLog, RelatedObjectType
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_went_live_audit_log(feature_state_id: int):
+    _create_feature_state_audit_log_for_change_request(
+        feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
+    )
+
+
+@register_task_handler(priority=TaskPriority.HIGHEST)
+def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):
+    _create_feature_state_audit_log_for_change_request(
+        feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
+    )
+
+
+def _create_feature_state_audit_log_for_change_request(
+    feature_state_id: int, msg_template: str
+):
     from features.models import FeatureState
 
     feature_state = FeatureState.objects.filter(id=feature_state_id).first()
@@ -25,7 +44,7 @@ def create_feature_state_went_live_audit_log(feature_state_id: int):
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
 
-    message = FEATURE_STATE_WENT_LIVE_MESSAGE % (
+    log = msg_template % (
         feature_state.feature.name,
         feature_state.change_request.title,
     )
@@ -34,12 +53,12 @@ def create_feature_state_went_live_audit_log(feature_state_id: int):
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         environment=feature_state.environment,
         project=feature_state.environment.project,
-        log=message,
+        log=log,
         is_system_event=True,
     )
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_audit_log_from_historical_record(
     history_instance_id: int,
     history_user_id: typing.Optional[int],
@@ -66,16 +85,19 @@ def create_audit_log_from_historical_record(
 
     environment, project = instance.get_environment_and_project()
 
+    related_object_id = instance.get_audit_log_related_object_id(history_instance)
+    related_object_type = instance.get_audit_log_related_object_type(history_instance)
+
+    if not related_object_id:
+        return
+
     log_message = {
         "+": instance.get_create_log_message,
         "-": instance.get_delete_log_message,
         "~": instance.get_update_log_message,
     }[history_instance.history_type](history_instance)
 
-    related_object_id = instance.get_audit_log_related_object_id(history_instance)
-    related_object_type = instance.get_audit_log_related_object_type(history_instance)
-
-    if not (log_message and related_object_id):
+    if not log_message:
         return
 
     AuditLog.objects.create(

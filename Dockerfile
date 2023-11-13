@@ -1,42 +1,35 @@
 # Step 1 - Build Front End Application
 FROM node:16 AS build-frontend
 
-# Copy the entire project - Webpack puts compiled assets into the Django folder
+# Copy the files required to install npm packages
 WORKDIR /app
-COPY . .
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
+COPY frontend/bin/ ./frontend/bin/
+COPY frontend/env/ ./frontend/env/
 
 RUN cd frontend && npm ci --quiet --production
+
+# Copy the entire project - Webpack puts compiled assets into the Django folder
+COPY . .
 ENV ENV=prod
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
-
 
 # Step 2 - Build Python virtualenv
 FROM python:3.11 as build-python
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
+COPY api/pyproject.toml api/poetry.lock api/Makefile ./
+ARG POETRY_VIRTUALENVS_CREATE=false
+RUN make install-poetry
+ENV PATH="$PATH:/root/.local/bin"
 
-# Set up venv
-RUN python -m venv /opt/venv
-# Make sure we use the virtualenv:
-ENV PATH="/opt/venv/bin:$PATH"
-
-COPY api/requirements.txt .
-
-# Make sure we are running latest pip and setuptools to avoid potential security warnings
-RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools
-
-# Install our python dependencies
-RUN pip install -r requirements.txt
-
+ARG POETRY_OPTS
+RUN make install-packages opts="${POETRY_OPTS}"
 
 # Step 3 - Build Django Application
 FROM python:3.11-slim as application
-
 WORKDIR /app
-COPY api /app/
 
 # Install SAML dependency if required
 ARG SAML_INSTALLED="0"
@@ -47,8 +40,12 @@ ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Copy the python venv from step 2
-COPY --from=build-python /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy the bin folder as well to copy the executables created in package installation
+COPY --from=build-python /usr/local/bin /usr/local/bin
+
+COPY api /app/
+COPY .release-please-manifest.json /app/.versions.json
 
 # Compile static Django assets
 RUN python /app/manage.py collectstatic --no-input

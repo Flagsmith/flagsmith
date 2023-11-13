@@ -95,6 +95,13 @@ class UserPermissionGroupSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
+class UserPermissionGroupSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPermissionGroup
+        fields = ("id", "name")
+        read_only_fields = ("id", "name")
+
+
 class ListUserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = FFAdminUser

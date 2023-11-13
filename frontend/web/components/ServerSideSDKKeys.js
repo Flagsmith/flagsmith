@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
+import ModalHR from './modals/ModalHR'
+import Icon from './Icon'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -26,29 +28,35 @@ class CreateServerSideKeyModal extends Component {
     return (
       <div>
         <form onSubmit={this.onSubmit}>
-          <div className='mb-2'>
-            This will create a Server-side Environment Key for the environment{' '}
-            <strong>
-              {ProjectStore.getEnvironment(this.props.environmentId).name}
-            </strong>
-            .
-          </div>
-          <InputGroup
-            title='Key Name'
-            placeholder='New Key'
-            className='mb-2'
-            id='jsTokenName'
-            inputProps={{
-              className: 'full-width modal-input',
-            }}
-            onChange={(e) =>
-              this.setState({ name: Utils.safeParseEventValue(e) })
-            }
-          />
-          <div className='text-right'>
-            <Button
-              disabled={!this.state.name || this.state.isSaving}
+          <div className='modal-body'>
+            <div className='mb-2'>
+              This will create a Server-side Environment Key for the environment{' '}
+              <strong>
+                {ProjectStore.getEnvironment(this.props.environmentId).name}
+              </strong>
+              .
+            </div>
+            <InputGroup
+              title='Key Name'
+              placeholder='New Key'
               className='mb-2'
+              id='jsTokenName'
+              inputProps={{
+                className: 'full-width modal-input',
+              }}
+              onChange={(e) =>
+                this.setState({ name: Utils.safeParseEventValue(e) })
+              }
+            />
+          </div>
+          <ModalHR />
+          <div className='modal-footer'>
+            <Button onClick={closeModal} theme='secondary' className={'mr-2'}>
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              disabled={!this.state.name || this.state.isSaving}
             >
               Create
             </Button>
@@ -95,16 +103,17 @@ class ServerSideSDKKeys extends Component {
             })
         }}
       />,
+      'p-0',
     )
   }
 
   remove = (id, name) => {
     openConfirm(
-      <h3>Delete Server-side Environment Keys</h3>,
-      <p>
+      'Delete Server-side Environment Keys',
+      <div>
         The key <strong>{name}</strong> will be permanently deleted, are you
         sure?
-      </p>,
+      </div>,
       () => {
         this.setState({ isSaving: true })
         _data
@@ -133,36 +142,33 @@ class ServerSideSDKKeys extends Component {
 
   render() {
     return (
-      <FormGroup className='m-y-3'>
-        <Row className='mb-3' space>
-          <div className='col-md-8 pl-0'>
-            <h3 className='m-b-0'>Server-side Environment Keys</h3>
-            <p>
-              Flags can be evaluated locally within your own Server environments
-              using our{' '}
-              <a
-                href='https://docs.flagsmith.com/clients/overview'
-                target='__blank'
-              >
-                Server-side Environment Keys
-              </a>
-              .
-            </p>
-            <p>
-              Server-side SDKs should be initialised with a Server-side
-              Environment Key.
-            </p>
-          </div>
-          <div className='col-md-4 pr-0'>
+      <FormGroup className='my-4'>
+        <div className='col-md-6'>
+          <h5 className='mb-2'>Server-side Environment Keys</h5>
+          <p className='fs-small lh-sm mb-0'>
+            Flags can be evaluated locally within your own Server environments
+            using our{' '}
             <Button
-              onClick={this.createKey}
-              className='float-right'
-              disabled={this.state.isSaving}
+              theme='text'
+              href='https://docs.flagsmith.com/clients/overview'
+              target='__blank'
             >
-              Create Server-side Environment Key
+              Server-side Environment Keys
             </Button>
-          </div>
-        </Row>
+            .
+          </p>
+          <p className='fs-small lh-sm mb-0'>
+            Server-side SDKs should be initialised with a Server-side
+            Environment Key.
+          </p>
+          <Button
+            onClick={this.createKey}
+            className='my-4'
+            disabled={this.state.isSaving}
+          >
+            Create Server-side Environment Key
+          </Button>
+        </div>
         {this.state.isLoading && (
           <div className='text-center'>
             <Loader />
@@ -181,20 +187,35 @@ class ServerSideSDKKeys extends Component {
               )
             }}
             renderRow={({ id, key, name }) => (
-              <div className='list-item'>
-                <Row>
-                  <Flex>{name}</Flex>
+              <Row className='list-item'>
+                <Flex className='table-column px-3 font-weight-medium'>
+                  {name}
+                </Flex>
+                <div className='table-column'>
                   <Token style={{ width: 280 }} token={key} />
-                  <button
+                </div>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        key,
+                      )
+                      toast('Copied')
+                    }}
+                    className='ml-2 btn-with-icon'
+                  >
+                    <Icon name='copy' width={20} fill='#656D7B' />
+                  </Button>
+                <div className='table-column'>
+                  <Button
                     onClick={() => this.remove(id, name)}
                     disabled={this.state.isSaving}
                     id='remove-feature'
-                    className='btn btn--with-icon'
+                    className='btn btn-with-icon'
                   >
-                    <RemoveIcon />
-                  </button>
-                </Row>
-              </div>
+                    <Icon name='trash-2' width={20} fill='#656D7B' />
+                  </Button>
+                </div>
+              </Row>
             )}
           />
         )}

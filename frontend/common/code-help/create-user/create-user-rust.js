@@ -1,4 +1,8 @@
-module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `
+module.exports = (
+  envId,
+  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
+  userId,
+) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {..Default::default()};
@@ -8,7 +12,9 @@ let flagsmith = Flagsmith::new(
 );
 
 // Identify the user
-let identity_flags = flagsmith.get_identity_flags("${userId}", None).unwrap();
+let identity_flags = flagsmith.get_identity_flags("${
+  userId || USER_ID
+}", None).unwrap();
 
 // get the state / value of the user's flags
 let is_enabled = identity_flags.is_feature_enabled("${FEATURE_NAME}").unwrap();

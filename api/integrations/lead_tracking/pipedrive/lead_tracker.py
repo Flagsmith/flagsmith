@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from django.conf import settings
 
@@ -6,6 +7,7 @@ from integrations.lead_tracking.lead_tracking import LeadTracker
 from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
+from .constants import MarketingStatus
 from .exceptions import EntityNotFoundError, MultipleMatchingOrganizationsError
 from .models import PipedriveLead, PipedriveOrganization, PipedrivePerson
 
@@ -60,17 +62,27 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
-        person = self._get_or_create_person(name=user.full_name, email=user.email)
+        person = self._get_or_create_person(
+            name=user.full_name,
+            email=user.email,
+            marketing_consent_given=user.marketing_consent_given,
+        )
 
         create_lead_kwargs = {
             "title": user.email,
             "organization_id": organization.id,
             "person_id": person.id,
-            "custom_fields": {
-                settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY: settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE,
-            },
+            "label_ids": self.get_label_ids_for_user(user),
+            "custom_fields": {},
         }
-        if user.sign_up_type:
+        if (
+            settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
+            and settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
+        ):
+            create_lead_kwargs["custom_fields"][
+                settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
+            ] = settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
+        if user.sign_up_type and settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY:
             create_lead_kwargs["custom_fields"][
                 settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY
             ] = user.sign_up_type
@@ -87,6 +99,12 @@ class PipedriveLeadTracker(LeadTracker):
         )
         return organization
 
+    @staticmethod
+    def get_label_ids_for_user(user: FFAdminUser) -> typing.List[str]:
+        if any(org.is_paid for org in user.organisations.all()):
+            return [settings.PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID]
+        return []
+
     def _get_org_by_domain(self, domain: str) -> PipedriveOrganization:
         matching_organizations = self.client.search_organizations(domain)
         if not matching_organizations:
@@ -95,7 +113,9 @@ class PipedriveLeadTracker(LeadTracker):
             raise MultipleMatchingOrganizationsError()
         return matching_organizations[0]
 
-    def _get_or_create_person(self, name: str, email: str) -> PipedrivePerson:
+    def _get_or_create_person(
+        self, name: str, email: str, marketing_consent_given: bool = False
+    ) -> PipedrivePerson:
         existing_persons = self.client.search_persons(email)
         if existing_persons:
             if len(existing_persons) > 1:
@@ -103,7 +123,12 @@ class PipedriveLeadTracker(LeadTracker):
             # if there are multiple persons, just return the first one in the list
             return existing_persons[0]
         else:
-            return self.client.create_person(name, email)
+            marketing_status = (
+                MarketingStatus.SUBSCRIBED
+                if marketing_consent_given
+                else MarketingStatus.NO_CONSENT
+            )
+            return self.client.create_person(name, email, marketing_status)
 
     def _get_client(self) -> PipedriveAPIClient:
         return PipedriveAPIClient(

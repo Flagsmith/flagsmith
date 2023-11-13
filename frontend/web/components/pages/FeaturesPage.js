@@ -3,7 +3,7 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow, { width } from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
@@ -12,6 +12,9 @@ import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import PageTitle from 'components/PageTitle'
+import { rocket } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -85,12 +88,10 @@ const FeaturesPage = class extends Component {
     openModal(
       'New Feature',
       <CreateFlagModal
-        router={this.context.router}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
       />,
-      null,
-      { className: 'side-modal fade create-feature-modal' },
+      'side-modal create-feature-modal',
     )
   }
 
@@ -112,7 +113,9 @@ const FeaturesPage = class extends Component {
     if (!error?.name && !error?.initial_value) {
       // Could not determine field level error, show generic toast.
       toast(
-        'We could not create this feature, please check the name is not in use.',
+        error.project ||
+          'We could not create this feature, please check the name is not in use.',
+        'danger',
       )
     }
   }
@@ -161,8 +164,20 @@ const FeaturesPage = class extends Component {
         className='app-container container'
       >
         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-          {({ environmentFlags, projectFlags }, { removeFlag, toggleFlag }) => {
-            const isLoading = FeatureListStore.isLoading
+          {(
+            {
+              environmentFlags,
+              maxFeaturesAllowed,
+              projectFlags,
+              totalFeatures,
+            },
+            { removeFlag, toggleFlag },
+          ) => {
+            const isLoading = !FeatureListStore.hasLoaded
+            const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
+              totalFeatures,
+              maxFeaturesAllowed,
+            )
             return (
               <div className='features-page'>
                 {isLoading && (!projectFlags || !projectFlags.length) && (
@@ -178,44 +193,60 @@ const FeaturesPage = class extends Component {
                       !!this.state.tags.length) &&
                       !isLoading) ? (
                       <div>
-                        <Row>
-                          <Flex>
-                            <h3>Features</h3>
-                            <p>
-                              View and manage{' '}
-                              <Tooltip
-                                title={<ButtonLink>feature flags</ButtonLink>}
-                                place='right'
-                              >
-                                {Constants.strings.FEATURE_FLAG_DESCRIPTION}
-                              </Tooltip>{' '}
-                              and{' '}
-                              <Tooltip
-                                title={<ButtonLink>remote config</ButtonLink>}
-                                place='right'
-                              >
-                                {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
-                              </Tooltip>{' '}
-                              for your selected environment.
-                            </p>
-                          </Flex>
-                          <FormGroup className='float-right'>
-                            {projectFlags && projectFlags.length
-                              ? this.createFeaturePermission((perm) => (
-                                  <div className='text-right'>
-                                    <Button
-                                      disabled={!perm || readOnly}
-                                      data-test='show-create-feature-btn'
-                                      id='show-create-feature-btn'
-                                      onClick={this.newFlag}
-                                    >
-                                      Create Feature
-                                    </Button>
-                                  </div>
-                                ))
-                              : null}
-                          </FormGroup>
-                        </Row>
+                        {featureLimitAlert.percentage &&
+                          Utils.displayLimitAlert(
+                            'features',
+                            featureLimitAlert.percentage,
+                          )}
+                        <PageTitle
+                          title={'Features'}
+                          cta={
+                            <>
+                              {projectFlags && projectFlags.length
+                                ? this.createFeaturePermission((perm) => (
+                                    <div className='text-right'>
+                                      <Button
+                                        disabled={
+                                          !perm ||
+                                          readOnly ||
+                                          featureLimitAlert.percentage >= 100
+                                        }
+                                        data-test='show-create-feature-btn'
+                                        id='show-create-feature-btn'
+                                        onClick={this.newFlag}
+                                      >
+                                        Create Feature
+                                      </Button>
+                                    </div>
+                                  ))
+                                : null}
+                            </>
+                          }
+                        >
+                          View and manage{' '}
+                          <Tooltip
+                            title={
+                              <Button className='fw-normal' theme='text'>
+                                feature flags
+                              </Button>
+                            }
+                            place='right'
+                          >
+                            {Constants.strings.FEATURE_FLAG_DESCRIPTION}
+                          </Tooltip>{' '}
+                          and{' '}
+                          <Tooltip
+                            title={
+                              <Button className='fw-normal' theme='text'>
+                                remote config
+                              </Button>
+                            }
+                            place='right'
+                          >
+                            {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+                          </Tooltip>{' '}
+                          for your selected environment.
+                        </PageTitle>
                         <Permission
                           level='environment'
                           permission={Utils.getManageFeaturePermission(
@@ -231,13 +262,41 @@ const FeaturesPage = class extends Component {
                               <PanelSearch
                                 className='no-pad'
                                 id='features-list'
-                                icon='ion-ios-rocket'
                                 title='Features'
                                 renderSearchWithNoResults
                                 itemHeight={65}
                                 isLoading={FeatureListStore.isLoading}
                                 paging={FeatureListStore.paging}
                                 search={this.state.search}
+                                header={
+                                  <Row className='table-header'>
+                                    <Flex className='table-column px-3'>
+                                      Name
+                                    </Flex>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[0] }}
+                                    >
+                                      Value
+                                    </div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[1] }}
+                                    >
+                                      <Switch disabled />
+                                    </div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[2] }}
+                                    ></div>
+                                    <div
+                                      className='table-column'
+                                      style={{ width: width[3] }}
+                                    >
+                                      Remove
+                                    </div>
+                                  </Row>
+                                }
                                 onChange={(e) => {
                                   this.setState(
                                     { search: Utils.safeParseEventValue(e) },
@@ -314,7 +373,7 @@ const FeaturesPage = class extends Component {
                                   },
                                 ]}
                                 items={projectFlags}
-                                header={
+                                searchPanel={
                                   <Row className='px-0 pt-0 pb-2'>
                                     <TagFilter
                                       showUntagged
@@ -369,8 +428,11 @@ const FeaturesPage = class extends Component {
                                             this.filter,
                                           )
                                         }}
-                                        className='px-2 py-2 ml-2 mr-2'
-                                        tag={{ label: 'Archived' }}
+                                        className='px-2 py-2 ml-2 mr-2 chip-info'
+                                        tag={{
+                                          color: '#0AADDF',
+                                          label: 'Archived',
+                                        }}
                                       />
                                     </TagFilter>
                                   </Row>
@@ -437,99 +499,104 @@ const FeaturesPage = class extends Component {
                         </FormGroup>
                       </div>
                     ) : (
-                      <div>
-                        <h3>Brilliant! Now create your features.</h3>
-
-                        <FormGroup>
-                          <Panel
-                            icon='ion-ios-rocket'
-                            title='1. creating a feature'
-                          >
-                            <p>
-                              You can create two types of features for your
-                              project:
-                              <ul>
-                                <li>
-                                  <strong>Feature Flags</strong>: These allows
-                                  you to toggle features on and off:
-                                  <p className='faint'>
-                                    EXAMPLE: You're working on a new messaging
-                                    feature for your app but only show it on
-                                    develop.
-                                  </p>
-                                </li>
-                                <li>
-                                  <strong>Remote configuration</strong>:
-                                  configuration for a particular feature
-                                  <p className='faint'>
-                                    EXAMPLE: This could be absolutely anything
-                                    from a font size for a website/mobile app or
-                                    an environment variable for a server
-                                  </p>
-                                </li>
-                              </ul>
-                            </p>
-                          </Panel>
-                        </FormGroup>
-                        <FormGroup>
-                          <Panel
-                            icon='ion-ios-settings'
-                            title='2. configuring features per environment'
-                          >
-                            <p>
-                              We've created 2 environments for you:{' '}
-                              <strong>Development</strong> and{' '}
-                              <strong>Production</strong>. When you create a
-                              feature it makes copies of them for each
-                              environment, allowing you to edit the values
-                              separately. You can create more environments too
-                              if you need to.
-                            </p>
-                          </Panel>
-                        </FormGroup>
-
-                        <FormGroup>
-                          <Panel
-                            icon='ion-ios-person'
-                            title='3. configuring features per user'
-                          >
-                            <p>
-                              When users login to your application, you can{' '}
-                              <strong>identify</strong> them using one of our
-                              SDKs, this will add them to the users page. From
-                              there you can configure their features. We've
-                              created an example user for you which you can see
-                              in the{' '}
-                              <Link
-                                className='btn--link'
-                                to={`/project/${projectId}/environment/${environmentId}/users`}
-                              >
-                                Users page
-                              </Link>
-                              .
-                              <p className='faint'>
-                                EXAMPLE: You're working on a new messaging
-                                feature for your app but only show it for that
-                                user.
-                              </p>
-                            </p>
-                          </Panel>
-                        </FormGroup>
-                        {this.createFeaturePermission((perm) => (
-                          <FormGroup className='text-center'>
-                            <Button
-                              disabled={!perm}
-                              className='btn-lg btn-primary'
-                              id='show-create-feature-btn'
-                              data-test='show-create-feature-btn'
-                              onClick={this.newFlag}
+                      !isLoading && (
+                        <div>
+                          <h3>Brilliant! Now create your features.</h3>
+                          <FormGroup>
+                            <Panel
+                              icon='ion-ios-settings'
+                              title='1. configuring features per environment'
                             >
-                              <span className='icon ion-ios-rocket' /> Create
-                              your first Feature
-                            </Button>
+                              <p>
+                                We've created 2 Environments for you:{' '}
+                                <strong>Development</strong> and{' '}
+                                <strong>Production</strong>. When you create a
+                                Feature it makes copies of them for each
+                                Environment, allowing you to edit the values
+                                separately. You can create more Environments too
+                                if you need to.
+                              </p>
+                            </Panel>
                           </FormGroup>
-                        ))}
-                      </div>
+                          <FormGroup>
+                            <Panel
+                              icon='ion-ios-rocket'
+                              title='2. creating a feature'
+                            >
+                              <p>
+                                Features in Flagsmith are made up of two
+                                different data types:
+                                <ul>
+                                  <li>
+                                    <strong>Booleans</strong>: These allows you
+                                    to toggle features on and off:
+                                    <p className='faint'>
+                                      EXAMPLE: You're working on a new messaging
+                                      feature for your app but only want to show
+                                      it in your Development Environment.
+                                    </p>
+                                  </li>
+                                  <li>
+                                    <strong>String Values</strong>:
+                                    configuration for a particular feature
+                                    <p className='faint'>
+                                      EXAMPLE: This could be absolutely anything
+                                      from a font size for a website/mobile app
+                                      or an environment variable for a server
+                                    </p>
+                                  </li>
+                                </ul>
+                              </p>
+                            </Panel>
+                          </FormGroup>
+                          <FormGroup>
+                            <Panel
+                              icon='ion-ios-person'
+                              title='3. configuring features per user'
+                            >
+                              <p>
+                                When users login to your application, you can{' '}
+                                <strong>Identify</strong> them using one of our
+                                SDKs, this will add them to the Identities page.
+                                From there you can configure their Features.
+                                We've created an example user for you which you
+                                can see in the{' '}
+                                <Link
+                                  className='btn-link'
+                                  to={`/project/${projectId}/environment/${environmentId}/users`}
+                                >
+                                  Identities page
+                                </Link>
+                                .
+                                <p className='faint'>
+                                  EXAMPLE: You're working on a new messaging
+                                  feature for your app but only want to show it
+                                  for that Identity.
+                                </p>
+                              </p>
+                            </Panel>
+                          </FormGroup>
+                          {this.createFeaturePermission((perm) => (
+                            <FormGroup className='text-center'>
+                              <Button
+                                disabled={!perm}
+                                className='btn-lg btn-primary'
+                                id='show-create-feature-btn'
+                                data-test='show-create-feature-btn'
+                                onClick={this.newFlag}
+                              >
+                                <span className='icon'>
+                                  <IonIcon
+                                    icon={rocket}
+                                    style={{ contain: 'none', height: '25px' }}
+                                  />
+                                </span>{' '}
+                                Create your first Feature
+                              </Button>
+                            </FormGroup>
+                          ))}
+                        </div>
+                      )
                     )}
                   </div>
                 )}

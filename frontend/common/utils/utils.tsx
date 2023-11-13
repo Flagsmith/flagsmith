@@ -14,10 +14,12 @@ import {
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
+import ErrorMessage from 'components/ErrorMessage'
+import WarningMessage from 'components/WarningMessage'
+import Constants from 'common/constants'
 
 const semver = require('semver')
 
-let flagsmithBetaFeatures: string[] | null = null
 const planNames = {
   enterprise: 'Enterprise',
   free: 'Free',
@@ -54,10 +56,40 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 100 - total
   },
 
+  calculateRemainingLimitsPercentage(
+    total: number | undefined,
+    max: number | undefined,
+    threshold = 90,
+  ) {
+    if (total === 0) {
+      return 0
+    }
+    const percentage = (total / max) * 100
+    if (percentage >= threshold) {
+      return {
+        percentage: Math.floor(percentage),
+      }
+    }
+    return 0
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
 
+  displayLimitAlert(type: string, percentage: number | undefined) {
+    const envOrProject =
+      type === 'segment overrides' ? 'environment' : 'project'
+    return percentage >= 100 ? (
+      <ErrorMessage
+        error={`Your ${envOrProject} reached the limit of ${type}, please contact support to discuss increasing this limit.`}
+      />
+    ) : percentage ? (
+      <WarningMessage
+        warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
+      />
+    ) : null
+  },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -97,10 +129,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return conditions.find((v) => v.value === operator)
   },
   getApproveChangeRequestPermission() {
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'APPROVE_CHANGE_REQUEST'
-    }
-    return 'VIEW_ENVIRONMENT'
+    return 'APPROVE_CHANGE_REQUEST'
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -126,6 +155,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         feature_state_value: projectFlag.initial_value,
         hide_from_client: false,
         is_archived: projectFlag.is_archived,
+        is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
         name: projectFlag.name,
         tags: projectFlag.tags,
@@ -139,6 +169,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         feature_state_value: identityFlag.feature_state_value,
         hide_from_client: environmentFlag.hide_from_client,
         is_archived: projectFlag.is_archived,
+        is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
         name: projectFlag.name,
         type: projectFlag.type,
@@ -150,6 +181,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       feature_state_value: environmentFlag.feature_state_value,
       hide_from_client: environmentFlag.hide_from_client,
       is_archived: projectFlag.is_archived,
+      is_server_key_only: projectFlag.is_server_key_only,
       multivariate_options: projectFlag.multivariate_options.map((v) => {
         const matching =
           multivariate_options &&
@@ -169,21 +201,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
   },
   getFlagsmithHasFeature(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-enabled`) === 'boolean') {
-        return flagsmith.getTrait(`${key}-opt-in-enabled`)
-      }
-    }
     return flagsmith.hasFeature(key)
   },
   getFlagsmithValue(key: string) {
-    const betaFeatures = Utils.parseBetaFeatures()
-    if (betaFeatures.includes(key)) {
-      if (typeof flagsmith.getTrait(`${key}-opt-in-value`) !== 'undefined') {
-        return flagsmith.getTrait(`${key}-opt-in-value`)
-      }
-    }
     return flagsmith.getValue(key)
   },
   getIdentitiesEndpoint(_project: ProjectType) {
@@ -210,28 +230,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'UPDATE_FEATURE_STATE'
-    }
-    return 'ADMIN'
+    return 'UPDATE_FEATURE_STATE'
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
-    if (
-      isChangeRequest &&
-      Utils.getFlagsmithHasFeature('update_feature_state_permission')
-    ) {
+    if (isChangeRequest) {
       return 'Create Change Request'
     }
-    if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-      return 'Update Feature State'
-    }
-    return 'Admin'
+    return 'Update Feature State'
   },
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
@@ -252,7 +260,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (plan && plan.includes('enterprise')) {
+    if (
+      global.flagsmithVersion?.backend.is_enterprise ||
+      (plan && plan.includes('enterprise'))
+    ) {
       return planNames.enterprise
     }
     return planNames.free
@@ -260,15 +271,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getPlanPermission: (plan: string, permission: string) => {
     let valid = true
     const planName = Utils.getPlanName(plan)
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
+
     if (!plan || planName === planNames.free) {
       return false
     }
     const isSideProjectOrGreater = planName !== planNames.sideProject
     const isScaleupOrGreater =
       isSideProjectOrGreater && planName !== planNames.startup
+    const isEnterprise = planName === planNames.enterprise
+
     switch (permission) {
       case 'FLAG_OWNERS': {
         valid = isScaleupOrGreater
@@ -291,7 +302,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         break
       }
       case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats')
+        valid = isScaleupOrGreater && !isEnterprise
         break
       }
       case 'FORCE_2FA': {
@@ -312,11 +323,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return valid
   },
-
   getPlansPermission: (permission: string) => {
-    if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-      return true
-    }
     const isOrgPermission = permission !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
@@ -332,6 +339,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       (perm) => !!perm,
     )
     return !!found
+  },
+
+  getProjectColour(index: number) {
+    return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -380,6 +391,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
     return false
+  },
+
+  getTagColour(index: number) {
+    return Constants.tagColors[index % (Constants.tagColors.length - 1)]
   },
 
   getTraitEndpoint(environmentId: string, userId: string) {
@@ -452,10 +467,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getViewIdentitiesPermission() {
-    if (Utils.getFlagsmithHasFeature('view_identities_permission')) {
-      return 'VIEW_IDENTITIES'
-    }
-    return 'MANAGE_IDENTITIES'
+    return 'VIEW_IDENTITIES'
   },
 
   isMigrating() {
@@ -499,29 +511,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       // @ts-ignore
       zE('messenger', 'open')
     }
-  },
-  parseBetaFeatures() {
-    if (!flagsmith.hasFeature('beta_features')) {
-      return []
-    }
-    if (flagsmithBetaFeatures) {
-      return flagsmithBetaFeatures
-    }
-    let res: Record<
-      string,
-      { flag: string; hasEnabled: boolean; description: string }[]
-    >
-    try {
-      res = JSON.parse(flagsmith.getValue('beta_features'))
-      const features: string[] = []
-      Object.keys(res).map((v) => {
-        res[v].map((v) => {
-          features.push(v.flag)
-        })
-      })
-      flagsmithBetaFeatures = features
-    } catch (e) {}
-    return flagsmithBetaFeatures || []
   },
 
   removeElementFromArray(array: any[], index: number) {

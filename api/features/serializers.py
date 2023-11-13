@@ -6,10 +6,16 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from users.serializers import UserIdsSerializer, UserListSerializer
+from projects.models import Project
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSummarySerializer,
+)
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -34,8 +40,21 @@ class FeatureOwnerInputSerializer(UserIdsSerializer):
         feature.owners.remove(*user_ids)
 
 
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
 class ProjectFeatureSerializer(serializers.ModelSerializer):
     owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
@@ -48,6 +67,8 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "group_owners",
+            "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
 
@@ -109,6 +130,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "project",
             "num_segment_overrides",
             "num_identity_overrides",
+            "is_server_key_only",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
@@ -117,14 +139,25 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             data["initial_value"] = str(data["initial_value"])
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Feature:
+        project = self.context["project"]
+        self.validate_project_features_limit(project)
+
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-        if user and not user.is_anonymous:
+        if user and getattr(user, "is_master_api_key_user", False) is False:
             instance.owners.add(user)
         return instance
+
+    def validate_project_features_limit(self, project: Project) -> None:
+        if project.features.count() >= project.max_features_allowed:
+            raise serializers.ValidationError(
+                {
+                    "project": "The Project has reached the maximum allowed features limit."
+                }
+            )
 
     def validate_multivariate_options(self, multivariate_options):
         if multivariate_options:
@@ -293,11 +326,30 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(e.message)
 
+    def validate_feature(self, feature):
+        if self.instance and self.instance.feature_id != feature.id:
+            raise serializers.ValidationError(
+                "Cannot change the feature of a feature state"
+            )
+        return feature
+
+    def validate_environment(self, environment):
+        if self.instance and self.instance.environment_id != environment.id:
+            raise serializers.ValidationError(
+                "Cannot change the environment of a feature state"
+            )
+        return environment
+
     def validate(self, attrs):
-        environment = attrs.get("environment")
+        environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
+        feature = attrs.get("feature")
+        if feature and feature.project_id != environment.project_id:
+            error = {"feature": "Feature does not exist in project"}
+            raise serializers.ValidationError(error)
+
         if identifier:
             try:
                 identity = Identity.objects.get(
@@ -393,9 +445,30 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
     class Meta:
         model = FeatureState
         fields = (
+            "id",
             "enabled",
             "feature_state_value",
             "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+        )
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
         )
 
     def _get_save_kwargs(self, field_name):
@@ -404,3 +477,21 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
         return kwargs
+
+    def create(self, validated_data: dict) -> FeatureState:
+        environment = validated_data["environment"]
+        self.validate_environment_segment_override_limit(environment)
+        return super().create(validated_data)
+
+    def validate_environment_segment_override_limit(
+        self, environment: Environment
+    ) -> None:
+        if (
+            environment.feature_segments.count()
+            >= environment.project.max_segment_overrides_allowed
+        ):
+            raise serializers.ValidationError(
+                {
+                    "environment": "The environment has reached the maximum allowed segments overrides limit."
+                }
+            )

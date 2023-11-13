@@ -12,6 +12,7 @@ from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
     UpgradeSeatsError,
+    UpgradeSeatsPaymentFailure,
 )
 from .cache import ChargebeeCache
 from .constants import ADDITIONAL_SEAT_ADDON_ID
@@ -20,6 +21,15 @@ from .metadata import ChargebeeObjMetadata
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 logger = logging.getLogger(__name__)
+
+CHARGEBEE_PAYMENT_ERROR_CODES = [
+    "payment_processing_failed",
+    "payment_method_verification_failed",
+    "payment_method_not_present",
+    "payment_gateway_currency_incompatible",
+    "payment_intent_invalid",
+    "payment_intent_invalid_amount",
+]
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -103,7 +113,28 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
-def get_subscription_metadata(
+def extract_subscription_metadata(
+    chargebee_subscription: dict,
+    customer_email: str,
+) -> ChargebeeObjMetadata:
+    chargebee_addons = chargebee_subscription.get("addons", [])
+    chargebee_cache = ChargebeeCache()
+    subscription_metadata: ChargebeeObjMetadata = chargebee_cache.plans[
+        chargebee_subscription["plan_id"]
+    ]
+    subscription_metadata.chargebee_email = customer_email
+
+    for addon in chargebee_addons:
+        quantity = addon.get("quantity") or 1
+        addon_metadata: ChargebeeObjMetadata = (
+            chargebee_cache.addons[addon["id"]] * quantity
+        )
+        subscription_metadata = subscription_metadata + addon_metadata
+
+    return subscription_metadata
+
+
+def get_subscription_metadata_from_id(
     subscription_id: str,
 ) -> typing.Optional[ChargebeeObjMetadata]:
     if not (subscription_id and subscription_id.strip() != ""):
@@ -111,19 +142,14 @@ def get_subscription_metadata(
         return None
 
     with suppress(ChargebeeAPIError):
-        subscription = chargebee.Subscription.retrieve(subscription_id).subscription
-        addons = subscription.addons or []
+        chargebee_result = chargebee.Subscription.retrieve(subscription_id)
+        chargebee_subscription = _convert_chargebee_subscription_to_dictionary(
+            chargebee_result.subscription
+        )
 
-        chargebee_cache = ChargebeeCache()
-        plan_metadata = chargebee_cache.plans[subscription.plan_id]
-        subscription_metadata = plan_metadata
-
-        for addon in addons:
-            quantity = getattr(addon, "quantity", None) or 1
-            addon_metadata = chargebee_cache.addons[addon.id] * quantity
-            subscription_metadata = subscription_metadata + addon_metadata
-
-        return subscription_metadata
+        return extract_subscription_metadata(
+            chargebee_subscription, chargebee_result.customer.email
+        )
 
 
 def cancel_subscription(subscription_id: str):
@@ -139,7 +165,6 @@ def add_single_seat(subscription_id: str):
     try:
         subscription = chargebee.Subscription.retrieve(subscription_id).subscription
         addons = subscription.addons or []
-
         current_seats = next(
             (
                 addon.quantity
@@ -161,9 +186,29 @@ def add_single_seat(subscription_id: str):
         )
 
     except ChargebeeAPIError as e:
+        api_error_code = e.json_obj["api_error_code"]
+        if api_error_code in CHARGEBEE_PAYMENT_ERROR_CODES:
+            logger.warning(
+                f"Payment declined ({api_error_code}) during additional "
+                f"seat upgrade to a CB subscription for subscription_id "
+                f"{subscription_id}"
+            )
+            raise UpgradeSeatsPaymentFailure() from e
+
         msg = (
             "Failed to add additional seat to CB subscription for subscription id: %s"
             % subscription_id
         )
         logger.error(msg)
         raise UpgradeSeatsError(msg) from e
+
+
+def _convert_chargebee_subscription_to_dictionary(
+    chargebee_subscription: chargebee.Subscription,
+) -> dict:
+    chargebee_subscription_dict = vars(chargebee_subscription)
+    # convert the addons into a list of dictionaries since vars don't do it recursively
+    addons = chargebee_subscription.addons or []
+    chargebee_subscription_dict["addons"] = [vars(addon) for addon in addons]
+
+    return chargebee_subscription_dict

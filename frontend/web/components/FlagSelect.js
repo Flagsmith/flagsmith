@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Select from 'react-select'
 import _data from 'common/data/base/_data'
 
 class FlagSelect extends Component {
@@ -60,12 +59,12 @@ class FlagSelect extends Component {
     )
     return (
       <Select
-        classNamePrefix='flag-select'
         value={
           this.props.value
             ? options.find((v) => v.value === this.props.value)
             : null
         }
+        isDisabled={this.props.disabled}
         onInputChange={this.search}
         placeholder={this.props.placeholder}
         onChange={(v) => this.props.onChange(v.value, v.flag)}

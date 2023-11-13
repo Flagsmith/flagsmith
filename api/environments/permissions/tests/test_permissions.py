@@ -16,6 +16,7 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
+from projects.permissions import CREATE_ENVIRONMENT
 from users.models import FFAdminUser
 
 mock_view = mock.MagicMock()
@@ -118,7 +119,7 @@ class EnvironmentPermissionsTestCase(TestCase):
     ):
         # Given
         create_environment_permission = ProjectPermissionModel.objects.get(
-            key="CREATE_ENVIRONMENT"
+            key=CREATE_ENVIRONMENT
         )
         user_project_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project

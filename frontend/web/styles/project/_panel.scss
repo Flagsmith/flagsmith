@@ -1,6 +1,5 @@
 .dark {
     .panel {
-        box-shadow: $card-default-dark;
         input {
             background-color: $input-bg-dark;
             color: $input-color-dark;
@@ -13,9 +12,6 @@
                     background-color: $panel-bg-darker;
                 }
             }
-        }
-
-        &--draggable {
         }
     }
 }
@@ -34,19 +30,16 @@
             @include transition(background 200ms ease-in-out);
         }
     }
-    border-radius:$border-radius-default;
-    box-shadow: $card-default;
-    border:1px solid #d6dbe0;
+
     input[type="text"] {
         opacity:1;
-        border-radius: $border-radius-default;
+        border-radius: $border-radius;
     }
 
     &--grey{
         background:$panel-grey-background;
-        border-radius: 4px;
-        //border:1px solid #d6dbe0;
-        //box-shadow: $card-default;
+        border-radius: $border-radius-lg;
+
         padding:20px;
 
     }
@@ -54,12 +47,8 @@
         border: none;
         background-color: transparent;
         box-shadow: none;
-        //padding: 20px;
         .panel-heading {
             background-color: transparent;
-        }
-        input[type="text"] {
-            background: $input-bg-alt;
         }
     }
     &--nested {
@@ -99,7 +88,7 @@
 
 .plan{
     background:#fff;
-    border-radius: $border-radius-default;
+    border-radius: $border-radius;
     box-shadow: $card-default;
     border:1px solid #d6dbe0;
     padding:10px;

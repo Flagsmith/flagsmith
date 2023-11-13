@@ -59,13 +59,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       name,
     })
   },
-
   createProject(name) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_PROJECT,
       name,
     })
   },
+
   deleteChangeRequest(id, cb) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_CHANGE_REQUEST,
@@ -77,13 +77,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ENVIRONMENT,
       env,
-    })
-  },
-  deleteGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_GROUP,
-      data,
-      orgId,
     })
   },
   deleteIdentityTrait(envId, identity, id) {
@@ -273,13 +266,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_GROUPS,
       orgId,
-    })
-  },
-  getGroupsPage(orgId, page) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_GROUPS_PAGE,
-      orgId,
-      page,
     })
   },
   getIdentity(envId, id) {

@@ -14,7 +14,10 @@ from segments.models import Segment
     "client, num_queries",
     [
         (lazy_fixture("admin_client"), 2),  # 1 for paging, 1 for result
-        (lazy_fixture("master_api_key_client"), 3),  # an extra one for master_api_key
+        (
+            lazy_fixture("admin_master_api_key_client"),
+            3,
+        ),  # an extra one for master_api_key
     ],
 )
 def test_list_feature_segments(
@@ -63,7 +66,7 @@ def test_list_feature_segments(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_client"), lazy_fixture("master_api_key_client")],
+    [lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")],
 )
 def test_list_feature_segments_is_feature_specific(
     segment,
@@ -94,7 +97,8 @@ def test_list_feature_segments_is_feature_specific(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_feature_segment(segment, feature, environment, client):
     # Given
@@ -114,8 +118,29 @@ def test_create_feature_segment(segment, feature, environment, client):
     assert response_json["id"]
 
 
+def test_create_feature_segment_without_permission_returns_403(
+    segment, feature, environment, test_user_client
+):
+    # Given
+    data = {
+        "feature": feature.id,
+        "segment": segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+
+    # When
+    response = test_user_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_delete_feature_segment(segment, feature, environment, client):
     # Given
@@ -133,9 +158,10 @@ def test_delete_feature_segment(segment, feature, environment, client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_priority_of_multiple_feature_segments(
+def test_update_priority_of_multiple_feature_segments(
     feature_segment,
     project,
     client,
@@ -171,8 +197,32 @@ def test_priority_of_multiple_feature_segments(
     assert json_response[1]["id"] == another_feature_segment.id
 
 
+def test_update_priority_returns_403_if_user_does_not_have_permission(
+    feature_segment,
+    project,
+    environment,
+    feature,
+    test_user_client,
+):
+    # Given
+    url = reverse("api-v1:features:feature-segment-update-priorities")
+
+    data = [
+        {"id": feature_segment.id, "priority": 1},
+    ]
+
+    # When
+    response = test_user_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_update_priorities_empty_list(client):
     # Given
@@ -187,7 +237,8 @@ def test_update_priorities_empty_list(client):
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_feature_segment_by_uuid(
     feature_segment, project, client, environment, feature
@@ -207,8 +258,24 @@ def test_get_feature_segment_by_uuid(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
+def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
+    feature_segment, project, test_user_client, environment, feature
+):
+    # Given
+    url = reverse(
+        "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
+    )
+
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_get_feature_segment_by_id(
     feature_segment, project, client, environment, feature
@@ -227,7 +294,8 @@ def test_get_feature_segment_by_id(
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(
     client, feature_based_segment, project, environment
@@ -254,7 +322,8 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
 
 
 @pytest.mark.parametrize(
-    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(
     client, feature_based_segment, project, environment, feature
@@ -271,3 +340,39 @@ def test_creating_segment_override_for_feature_based_segment_returns_201_for_cor
     response = client.post(url, data=json.dumps(data), content_type="application/json")
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_creating_segment_override_reaching_max_limit(
+    client, segment, environment, project, feature, feature_based_segment
+):
+    # Given
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    data = {
+        "feature": feature.id,
+        "segment": segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+    # let's create the first segment override
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # Then - Try to create another override
+    data = {
+        "feature": feature.id,
+        "segment": feature_based_segment.id,
+        "environment": environment.id,
+    }
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["environment"][0]
+        == "The environment has reached the maximum allowed segments overrides limit."
+    )
+    assert environment.feature_segments.count() == 1

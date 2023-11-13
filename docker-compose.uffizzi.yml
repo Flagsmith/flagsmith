@@ -38,10 +38,11 @@ services:
 
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
       DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
-      DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
+      DISABLE_ANALYTICS_FEATURES: 'true' # set to false to enable InfluxDB
       PREVENT_SIGNUP: 'false'
       ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
       DJANGO_SECRET_KEY: '**SoMeTeMpOrArYsEcReT!!'
+      EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
 
       ENV:
         dev # set to "prod" in production.

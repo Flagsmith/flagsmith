@@ -9,7 +9,6 @@
   background-color: $butter-bar-bg;
   text-align: center;
   line-height: 44px;
-  margin-top: -10px;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -42,7 +41,9 @@ bold, strong {
 .value-editor {
   &.disabled {
     code {
-      background: $input-placeholder-color !important;
+      background: $text-icon-light !important;
+      color: $text-icon-light-grey;
+      border: 1px solid $basic-alpha-8;
     }
     .select-language {
       display: none;
@@ -66,21 +67,6 @@ bold, strong {
 .faint-lg {
   color: $text-muted;
   font-size: 1.25em;
-}
-.dark {
-
-  .flag-example {
-    background-color: $dark-bg-0;
-
-  }
-}
-.flag-example {
-  margin-left: -15px;
-  margin-right: -15px;
-  padding: 20px;
-  background-color: $bt-brand-faint-alt;
-  margin-top: 20px;
-  margin-bottom: 20px;
 }
 
 .striped-section {
@@ -127,36 +113,6 @@ bold, strong {
   }
 }
 
-.chip .feature-value-container {
-  border-radius: 0;
-  padding: 2px 5px;
-  border-radius: 8px;
-}
-
-.feature-value-container {
-  display: inline-block;
-  font-size: 0.8em;
-  background: $bt-code-background;
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-  font-weight: bold;
-  .feature-value {
-    color: #fff;
-  }
-
-  &.string {
-    .quot {
-      color: #fff;
-    }
-
-    .feature-value {
-      color: #fff;
-    }
-  }
-}
 
 .maintenance {
   background: $bt-brand-primary-dark-desaturated-light;
@@ -190,14 +146,6 @@ bold, strong {
 body, html {
   height: 100%;
 }
-
-body {
-  background: $body-bg;
-  font-family: $font-family;
-  font-weight: 400;
-  color: $body-text;
-}
-
 
 body.dark {
   background-color: $body-bg-dark;
@@ -241,12 +189,8 @@ input:disabled {
   display: inline-block;
 }
 
-hr {
-  color: $bt-brand-faint-alt;
-}
-
 .form-group {
-  margin-bottom: $input-padding-y * 1.5;
+  margin-bottom: 1.5rem;
 }
 
 .header-icon {
@@ -324,6 +268,6 @@ hr {
   }
 }
 
-.flag-select__menu {
+.react-select__menu {
   z-index: 3 !important;
 }

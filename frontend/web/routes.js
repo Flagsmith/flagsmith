@@ -2,9 +2,7 @@ import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
-import BetaFeaturesPage from './components/pages/BetaFeaturesPage'
 import HomePage from './components/pages/HomePage'
-import DemoPage from './components/pages/DemoPage'
 import Maintenance from './components/Maintenance'
 import ProjectSelectPage from './components/pages/ProjectSelectPage'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
@@ -28,8 +26,9 @@ import ChangeRequestsPage from './components/pages/ChangeRequestsPage'
 import ChangeRequestPage from './components/pages/ChangeRequestPage'
 import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
-import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage'
+import ComparePage from './components/pages/ComparePage'
 import WidgetPage from './components/pages/WidgetPage'
+import BrokenPage from './components/pages/BrokenPage'
 
 export default (
   <App>
@@ -38,7 +37,6 @@ export default (
       <Route path='/login' exact component={HomePage} />
       <Route path='/404' exact component={NotFoundErrorPage} />
       <Route path='/signup' exact component={HomePage} />
-      <Route path='/demo' exact component={DemoPage} />
       <Route path='/signup' exact component={HomePage} />
       <Route path='/home' exact component={HomePage} />
       <Route path='/projects' exact component={ProjectSelectPage} />
@@ -76,6 +74,7 @@ export default (
       <Route path='/widget' exact component={WidgetPage} />
       <Route path='/invite/:id' exact component={InvitePage} />
       <Route path='/invite-link/:id' exact component={InvitePage} />
+      <Route path='/broken' exact component={BrokenPage} />
       <Route path='/oauth/:type' exact component={HomePage} />
       <Route path='/saml' exact component={HomePage} />
       <Route
@@ -116,7 +115,7 @@ export default (
       <Route
         path='/project/:projectId/environment/:environmentId/compare'
         exact
-        component={CompareEnvironmentsPage}
+        component={ComparePage}
       />
       <Route
         path='/project/:projectId/settings'
@@ -159,13 +158,8 @@ export default (
         exact
         component={AuditLogPage}
       />
-      <Route
-        path='/project/:projectId/beta-features'
-        exact
-        component={BetaFeaturesPage}
-      />
       <Route path='/create' exact component={CreateOrganisationPage} />
-      <Route component={NotFoundPage} />
+      <Route path='*' component={NotFoundPage} />
     </Switch>
   </App>
 )

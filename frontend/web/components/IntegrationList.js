@@ -31,67 +31,77 @@ class Integration extends Component {
       activeIntegrations.length
     )
     return (
-      <Panel
-        className='no-pad panel--transparent m-4'
-        title={
-          <Row style={{ flexWrap: 'noWrap' }}>
-            <Flex>
-              <img width={180} className='mr-4' src={image} />
-
-              <div className='subtitle mt-2'>
-                {description}{' '}
-                {docs && (
-                  <a href={docs} target='_blank' rel='noreferrer'>
-                    View docs
-                  </a>
-                )}
-              </div>
-            </Flex>
-            {showAdd && (
-              <Button
-                className='btn-lg btn-primary ml-4'
-                id='show-create-segment-btn'
-                data-test='show-create-segment-btn'
-                onClick={this.add}
-              >
-                <span className='icon ion-ios-apps text-white' /> Add
-                integration
-              </Button>
-            )}
+      <div className='panel panel-integrations p-4 mb-3'>
+        <Flex>
+          <img className='mb-2' src={image} />
+          <Row space style={{ flexWrap: 'noWrap' }}>
+            <div className='subtitle mt-2'>
+              {description}{' '}
+              {docs && (
+                <Button
+                  theme='text'
+                  href={docs}
+                  target='_blank'
+                  className='fw-normal'
+                >
+                  View docs
+                </Button>
+              )}
+            </div>
+            <Row style={{ flexWrap: 'noWrap' }}>
+              {activeIntegrations &&
+                activeIntegrations.map((integration) => (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      this.remove(integration)
+                      return false
+                    }}
+                    className='ml-3'
+                    theme='secondary'
+                    type='submit'
+                    size='xSmall'
+                    key={integration.id}
+                  >
+                    Delete Integration
+                  </Button>
+                ))}
+              {showAdd && (
+                <Button
+                  className='ml-3'
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={this.add}
+                  size='xSmall'
+                >
+                  Add Integration
+                </Button>
+              )}
+            </Row>
           </Row>
-        }
-      >
+        </Flex>
+
         {activeIntegrations &&
           activeIntegrations.map((integration) => (
             <div
               key={integration.id}
-              className='list-item clickable'
+              className='list-integrations clickable p-3 mt-3'
               onClick={() => this.edit(integration)}
             >
               <Row space>
                 <Flex>
                   <CreateEditIntegration
                     readOnly
+                    projectId={this.props.projectId}
                     data={integration}
                     integration={this.props.integration}
                   />
                 </Flex>
-                <Button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    this.remove(integration)
-                    return false
-                  }}
-                  className='btn btn--with-icon btn--condensed reveal--child btn--remove'
-                  type='submit'
-                >
-                  <RemoveIcon />
-                </Button>
               </Row>
             </div>
           ))}
-      </Panel>
+      </div>
     )
   }
 }
@@ -214,6 +224,7 @@ class IntegrationList extends Component {
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
+        modal
         integration={integration}
         data={
           params.environment
@@ -225,6 +236,7 @@ class IntegrationList extends Component {
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
+      'side-modal',
     )
   }
 
@@ -233,11 +245,13 @@ class IntegrationList extends Component {
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
+        modal
         integration={integration}
         data={data}
         projectId={this.props.projectId}
         onComplete={this.fetch}
       />,
+      'p-0',
     )
   }
 

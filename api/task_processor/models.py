@@ -1,13 +1,22 @@
-import json
 import typing
 import uuid
 from datetime import datetime
 
+import simplejson as json
 from django.db import models
 from django.utils import timezone
 
-from task_processor.exceptions import TaskProcessingError
+from task_processor.exceptions import TaskProcessingError, TaskQueueFullError
+from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
+
+
+class TaskPriority(models.IntegerChoices):
+    LOWER = 100
+    LOW = 75
+    NORMAL = 50
+    HIGH = 25
+    HIGHEST = 0
 
 
 class AbstractBaseTask(models.Model):
@@ -16,6 +25,7 @@ class AbstractBaseTask(models.Model):
     task_identifier = models.CharField(max_length=200)
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
+    is_locked = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -42,10 +52,13 @@ class AbstractBaseTask(models.Model):
         return json.loads(data)
 
     def mark_failure(self):
-        pass
+        self.unlock()
 
     def mark_success(self):
-        pass
+        self.unlock()
+
+    def unlock(self):
+        self.is_locked = False
 
     def run(self):
         return self.callable(*self.args, **self.kwargs)
@@ -68,6 +81,10 @@ class Task(AbstractBaseTask):
     # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
     completed = models.BooleanField(default=False)
+    objects = TaskManager()
+    priority = models.SmallIntegerField(
+        default=None, null=True, choices=TaskPriority.choices
+    )
 
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
@@ -84,42 +101,51 @@ class Task(AbstractBaseTask):
     def create(
         cls,
         task_identifier: str,
+        scheduled_for: datetime,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        queue_size: int = None,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
+        if queue_size and cls._is_queue_full(task_identifier, queue_size):
+            raise TaskQueueFullError(
+                f"Queue for task {task_identifier} is full. "
+                f"Max queue size is {queue_size}"
+            )
         return Task(
             task_identifier=task_identifier,
+            scheduled_for=scheduled_for,
+            priority=priority,
             serialized_args=cls.serialize_data(args or tuple()),
             serialized_kwargs=cls.serialize_data(kwargs or dict()),
         )
 
     @classmethod
-    def schedule_task(
-        cls,
-        schedule_for: datetime,
-        task_identifier: str,
-        *,
-        args: typing.Tuple[typing.Any] = None,
-        kwargs: typing.Dict[str, typing.Any] = None,
-    ) -> "Task":
-        task = cls.create(
-            task_identifier=task_identifier,
-            args=args,
-            kwargs=kwargs,
+    def _is_queue_full(cls, task_identifier: str, queue_size: int) -> bool:
+        return (
+            cls.objects.filter(
+                task_identifier=task_identifier,
+                completed=False,
+                num_failures__lt=3,
+            ).count()
+            > queue_size
         )
-        task.scheduled_for = schedule_for
-        return task
 
     def mark_failure(self):
+        super().mark_failure()
         self.num_failures += 1
 
     def mark_success(self):
+        super().mark_success()
         self.completed = True
 
 
 class RecurringTask(AbstractBaseTask):
     run_every = models.DurationField()
+    first_run_time = models.TimeField(blank=True, null=True)
+
+    objects = RecurringTaskManager()
 
     class Meta:
         constraints = [
@@ -131,10 +157,15 @@ class RecurringTask(AbstractBaseTask):
 
     @property
     def should_execute(self) -> bool:
+        now = timezone.now()
         last_task_run = self.task_runs.order_by("-started_at").first()
-        # if we have never run this task, then we should execute it
+
         if not last_task_run:
-            return True
+            # If we have never run this task, then we should execute it only if
+            # the time has passed after which we want to ensure this task runs.
+            # This allows us to control when intensive tasks should be run.
+            return not (self.first_run_time and self.first_run_time > now.time())
+
         # if the last run was at t- run_every, then we should execute it
         if (timezone.now() - last_task_run.started_at) >= self.run_every:
             return True
@@ -143,9 +174,7 @@ class RecurringTask(AbstractBaseTask):
         # more than 3 failures in t- run_every, then we should execute it
         if (
             last_task_run.result != TaskResult.SUCCESS.name
-            and self.task_runs.filter(
-                started_at__gte=(timezone.now() - self.run_every)
-            ).count()
+            and self.task_runs.filter(started_at__gte=(now - self.run_every)).count()
             <= 3
         ):
             return True

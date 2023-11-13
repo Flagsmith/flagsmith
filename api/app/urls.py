@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path
+from django.views.generic.base import TemplateView
 
 from users.views import password_reset_redirect
 
@@ -14,7 +15,7 @@ urlpatterns = [
     url(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
     url(r"^admin/", admin.site.urls),
     url(r"^health", include("health_check.urls", namespace="health")),
-    url(r"^version", views.version_info),
+    url(r"^version", views.version_info, name="version-info"),
     url(
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
@@ -32,6 +33,10 @@ urlpatterns = [
         name="project_overrides",
     ),
     path("processor/", include("task_processor.urls")),
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
 ]
 
 if settings.DEBUG:

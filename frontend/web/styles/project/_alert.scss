@@ -1,57 +1,115 @@
 .alert-shown {
+  .navbar {
+    margin-top: 60px;
+  }
+  .app-container {
+    margin-top: 130px;
+  }
+  .aside {
+    margin-top: 60px;
+    height: calc(100% - 60px);
+  }
+  &.hide {
     .navbar {
-        margin-top: 60px;
+      margin-top: 0;
     }
     .app-container {
-        margin-top: 130px;
+      margin-top: 70px;
     }
     .aside {
-        margin-top: 60px;
-        height: calc(100% - 60px);
+      margin-top: 0;
+      height: 100%;
     }
-    &.hide {
-        .navbar {
-            margin-top: 0;
-        }
-        .app-container {
-            margin-top: 70px;
-        }
-        .aside {
-            margin-top: 0;
-            height: 100%;
-        }
-    }
+  }
 }
+
 .alert {
-    border-radius: $default-border-radius;
-    .title {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 5px;
-        .ion {
-            font-size: 18px;
-        }
-    }
+  border-radius: $border-radius-lg;
+  line-height: $alert-line-height;
+  color: $alert-color;
+  font-size: $alert-font-size;
+  text-align: left;
+  .icon-alert {
+    margin-right: 0.75rem;
+  }
 }
+
+.alert-danger {
+  background-color: $alert-danger-bg;
+  border-color: $alert-danger-border-color;
+}
+
+.alert-warning {
+  background-color: $alert-warning-bg;
+  border-color: $alert-warning-border-color;
+}
+
 .alert-info {
-    text-align: left;
-    background-color: $bt-brand-primary-faint;
-    color: white;
-    border-color: transparent;
-    border-left: 5px solid $bt-brand-primary;
-    a {
-        color: white;
-        text-decoration: underline;
-    }
+  background-color: $alert-info-bg;
+  border-color: $alert-info-border-color;
+  .title {
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: $text-icon-dark;
+  }
+  a {
+    color: $primary;
+    font-weight: normal;
+  }
+  strong {
+    font-weight: 500;
+    color: $text-icon-dark;
+  }
 }
+
+.announcement {
+  margin: auto;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  .body {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .close-btn {
+    margin-top: -3px;
+    font-size: 20px;
+    color: $alert-announcement-close-btn;
+  }
+  .info-icon {
+    margin-top: 15px;
+  }
+}
+
 .dark {
-    .alert {
-        &.alert-info {
-            background: $bt-brand-primary-dark;
-            border-color: transparent;
-            border-color: lighten($bt-brand-primary-dark,5);
-            color: $header-color-dark;
-        }
+  .alert {
+    color: $alert-color-dark;
+    background-color: $success-solid-dark-alert;
+  }
+  .alert-info {
+    background-color: $info-solid-dark-alert;
+    .title {
+      color: $text-icon-light;
     }
+    a {
+      color: $primary;
+    }
+    strong {
+      color: $text-icon-light;
+    }
+  }
+  .alert-warning {
+    background-color: $warning-solid-dark-alert;
+  }
+  .alert-danger{
+    background-color: $danger-solid-dark-alert
+  }
+  .announcement {
+    .close-btn {
+      color: $alert-color-dark;
+    }
+  }
 }
-.text-info { color: $bt-brand-primary  !important;}
+.text-info {
+  color: $bt-brand-primary !important;
+}
