@@ -29,9 +29,6 @@ from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
@@ -123,7 +120,7 @@ def organisation_info(request, organisation_id):
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
     template = loader.get_template("sales_dashboard/organisation.html")
-    subscription_metadata = get_subscription_metadata(organisation)
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     identity_count_dict = {}
     identity_migration_status_dict = {}
