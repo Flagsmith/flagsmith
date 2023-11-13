@@ -47,7 +47,7 @@ class StartTrialForm(forms.Form):
 
 
 class EndTrialForm(forms.Form):
-    def save(self, organisation, commit=True):
+    def save(self, organisation: Organisation, commit: bool = True):
         organisation.subscription.max_seats = MAX_SEATS_IN_FREE_PLAN
         organisation.subscription.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
         organisation.subscription.subscription_id = ""
