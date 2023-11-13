@@ -78,6 +78,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     feature_analytics = models.BooleanField(
         default=False, help_text="Record feature analytics in InfluxDB"
     )
+    force_2fa = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["id"]

@@ -21,9 +21,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       identity,
     })
   },
-  confirmTwoFactor(pin, onError) {
+  confirmTwoFactor(pin, onError, isLoginPage) {
     Dispatcher.handleViewAction({
       actionType: Actions.CONFIRM_TWO_FACTOR,
+      isLoginPage,
       onError,
       pin,
     })
