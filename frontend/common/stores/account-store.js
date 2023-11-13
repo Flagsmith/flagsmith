@@ -2,6 +2,7 @@ const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
+import { sortBy } from 'lodash'
 
 const controller = {
   acceptInvite: (id) => {
@@ -275,6 +276,10 @@ const controller = {
 
   setUser(user) {
     if (user) {
+      const sortedOrganisations = sortBy(user.organisations, (v) => {
+        return v.name
+      })
+      user.organisations = sortedOrganisations
       store.model = user
       if (user && user.organisations) {
         store.organisation = user.organisations[0]

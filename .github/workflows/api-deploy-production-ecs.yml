@@ -3,7 +3,7 @@ name: API Deploy to Production ECS
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - '*'
     paths:
       - api/**
       - .github/**
@@ -39,7 +39,7 @@ jobs:
           flagsmith_saml_revision: v1.1.0
           flagsmith_workflows_revision: v1.2.5
           flagsmith_auth_controller_revision: v0.0.1
-          flagsmith_rbac_revision: v0.3.1
+          flagsmith_rbac_revision: v0.4.1
 
       - name: Deploy task processor to Production
         uses: ./.github/actions/task-processor-deploy-ecs

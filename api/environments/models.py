@@ -51,6 +51,7 @@ logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
+bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -161,10 +162,8 @@ class Environment(
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
-        for feature_segment in self.feature_segments.all():
-            feature_segment.clone(clone)
 
-        # Since identities are closely tied to the enviroment
+        # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
         for feature_state in self.feature_states.filter(identity=None):
@@ -190,6 +189,9 @@ class Environment(
                 logger.warning("Requested environment with null api_key.")
                 return None
 
+            if cls.is_bad_key(api_key):
+                return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
@@ -201,18 +203,19 @@ class Environment(
                     "heap_config",
                     "dynatrace_config",
                 )
-                environment = (
-                    cls.objects.select_related(*select_related_args)
-                    .filter(Q(api_key=api_key) | Q(api_keys__key=api_key))
-                    .distinct()
-                    .defer("description")
-                    .get()
+                base_qs = cls.objects.select_related(*select_related_args).defer(
+                    "description"
                 )
+                qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
+                qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
+
+                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
                 environment_cache.set(
                     api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
                 )
             return environment
         except cls.DoesNotExist:
+            cls.set_bad_key(api_key)
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
@@ -260,6 +263,24 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    @staticmethod
+    def is_bad_key(environment_key: str) -> bool:
+        return (
+            settings.CACHE_BAD_ENVIRONMENTS_SECONDS > 0
+            and bad_environments_cache.get(environment_key, 0)
+            >= settings.CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES
+        )
+
+    @staticmethod
+    def set_bad_key(environment_key: str) -> None:
+        if settings.CACHE_BAD_ENVIRONMENTS_SECONDS:
+            current_count = bad_environments_cache.get(environment_key, 0)
+            bad_environments_cache.set(
+                environment_key,
+                current_count + 1,
+                timeout=settings.CACHE_BAD_ENVIRONMENTS_SECONDS,
+            )
 
     def trait_persistence_allowed(self, request: Request) -> bool:
         return (

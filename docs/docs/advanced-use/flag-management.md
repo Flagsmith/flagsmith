@@ -7,7 +7,15 @@ Managing larger numbers of flags is made easier using some of the tools built in
 You can create tags within Flagsmith and tag Flags in order to organise them. Tags can also be used to filter the list
 of Flags in the event that you have a large number.
 
-![Image](/img/flag-tags.png)
+:::info Protected Tags
+
+Tags with the following names will prevent users from being able to delete tagged Flags via the dashboard:
+
+- `protected`
+- `donotdelete`
+- `permanent`
+
+:::
 
 ## Server-side only Flags
 
@@ -37,6 +45,13 @@ on that flag. Archiving the flag helps to keep your main list of flags under con
 By default, Flagsmith stores flags with lower case characters in order to minimise human error. If you want to store
 flags in a case-sensitive manner you can do this as a Project-wide setting from the Project Settings page.
 
+:::tip
+
+We don't recommend making your Flags case sensitive. This can lead to bugs related to case sensitivity and flags not
+being found at runtime.
+
+:::
+
 ## Feature Name Regular Expressions
 
 You can enforce feature name String formatting by way of a regular expression in the Project Settings area. If you want
@@ -46,8 +61,6 @@ flags to always be lower case, or camel case, or whatever your preference, you c
 
 You can specify members of your team as owners of individual Flags. This helps in larger teams when you need to identify
 who is responsible for a particular flag.
-
-<img width="75%" src="/img/flag-owners.png"/>
 
 ## Flag Defaults
 
@@ -65,10 +78,6 @@ You can compare Flags both across Environments and for individual Flags.
 
 Use the "Compare" menu item to get an overview of how flag values differ between any two Environments:
 
-![Image](/img/flag-compare-environment.png)
-
 ### Flag Comparison
 
 You can also view a the values of a single Flag against all the Environments within the Project:
-
-![Image](/img/flag-compare-flag.png)

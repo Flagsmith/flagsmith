@@ -68,8 +68,8 @@
                     "value": "flagsmith_environments"
                 },
                 {
-                    "name": "FE_E2E_TEST_USER_EMAIL",
-                    "value": "nightwatch@solidstategroup.com"
+                    "name": "ENABLE_FE_E2E",
+                    "value": "True"
                 },
                 {
                     "name": "GITHUB_CLIENT_ID",
@@ -144,6 +144,10 @@
                     "value": "flagsmith_environment_api_key"
                 },
                 {
+                    "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
+                    "value": "60"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },
@@ -165,11 +169,11 @@
                 },
                 {
                     "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up-12-months-v2-gbp,scale-up-12-months-v2-eur,scale-up-12-months-v2,scale-up-quarterly-v2-semiannual,scale-up-quarterly-v2,scale-up-v2"
+                    "value": "scale-up-12-months-v2-gbp,scale-up-12-months-v2-eur,scale-up-12-months-v2,scale-up-quarterly-v2-semiannual,scale-up-quarterly-v2,scale-up-v2,scale-up-24-months-v2"
                 },
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io"
+                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
                 },
                 {
                     "name":"EDGE_API_URL",

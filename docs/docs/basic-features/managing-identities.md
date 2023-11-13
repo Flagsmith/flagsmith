@@ -89,8 +89,6 @@ Flagsmith rather than in your core application.
 
 Traits are stored natively as either numbers, strings or booleans.
 
-![Image](/img/identity-details.png)
-
 ## Traits powering Segments
 
 Traits can be used within your application, but they can also be used to power

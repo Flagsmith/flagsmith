@@ -12,6 +12,11 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesProjectPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
+import ImportPage from './ImportPage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -22,7 +27,7 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { roles: [] }
     AppActions.getProject(this.props.match.params.projectId)
     this.getPermissions()
   }
@@ -39,6 +44,28 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
+    if (Utils.getFlagsmithHasFeature('show_role_management')) {
+      getRoles(
+        getStore(),
+        { organisation_id: AccountStore.getOrganisation().id },
+        { forceRefetch: true },
+      ).then((roles) => {
+        getRolesProjectPermissions(
+          getStore(),
+          {
+            organisation_id: AccountStore.getOrganisation().id,
+            project_id: this.props.match.params.projectId,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      })
+    }
   }
 
   onSave = () => {
@@ -452,7 +479,7 @@ const ProjectSettingsPage = class extends Component {
                         </form>
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
                           this.getPermissions()
@@ -461,8 +488,19 @@ const ProjectSettingsPage = class extends Component {
                         tabClassName='flat-panel'
                         id={this.props.match.params.projectId}
                         level='project'
+                        roleTabTitle='Project Permissions'
+                        role
+                        roles={this.state.roles}
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature('import_project') && (
+                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                        <ImportPage
+                          projectId={this.props.match.params.projectId}
+                          projectName={project.name}
+                        />
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

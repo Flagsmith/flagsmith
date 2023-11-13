@@ -1,8 +1,12 @@
 import cn from 'classnames'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const themeClassNames = {
   danger: 'alert-danger',
+  info: 'alert-info',
   success: 'alert',
+  warning: 'alert-warning',
 }
 
 const Message = class extends React.Component {
@@ -28,7 +32,9 @@ const Message = class extends React.Component {
         <Row space className={'flex-nowrap'}>
           <span>{this.props.children}</span>
           <a onClick={this.props.remove}>
-            <span className='icon ion-md-close' />
+            <span className='icon'>
+              <IonIcon icon={close} style={{ fontSize: '13px' }} />
+            </span>
           </a>
         </Row>
       </div>

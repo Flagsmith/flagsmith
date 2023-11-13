@@ -56,7 +56,7 @@ const CreateFlag = class extends Component {
       : {
           multivariate_options: [],
         }
-    const { allowEditDescription } = this.props
+    const { allowEditDescription, tab } = this.props
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -84,7 +84,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tab: Utils.fromParam().tab || 0,
+      tab: tab || 0,
       tags: tags || [],
     }
     AppActions.getGroups(AccountStore.getOrganisation().id)
@@ -855,6 +855,12 @@ const CreateFlag = class extends Component {
                 this.save(createFlag, isSaving)
               }
 
+              const featureLimitAlert =
+                Utils.calculateRemainingLimitsPercentage(
+                  project.total_features,
+                  project.max_features_allowed,
+                )
+
               return (
                 <Permission
                   level='project'
@@ -890,6 +896,11 @@ const CreateFlag = class extends Component {
                                   }
                                 >
                                   <FormGroup>
+                                    {featureLimitAlert.percentage &&
+                                      Utils.displayLimitAlert(
+                                        'features',
+                                        featureLimitAlert.percentage,
+                                      )}
                                     <Tooltip
                                       title={
                                         <h5 className='mb-4'>
@@ -1484,6 +1495,11 @@ const CreateFlag = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
+                                {featureLimitAlert.percentage &&
+                                  Utils.displayLimitAlert(
+                                    'features',
+                                    featureLimitAlert.percentage,
+                                  )}
                                 {Value(
                                   error,
                                   projectAdmin,
@@ -1520,7 +1536,8 @@ const CreateFlag = class extends Component {
                                         isSaving ||
                                         !name ||
                                         invalid ||
-                                        !regexValid
+                                        !regexValid ||
+                                        featureLimitAlert.percentage >= 100
                                       }
                                     >
                                       {isSaving ? 'Creating' : 'Create Feature'}
@@ -1529,7 +1546,6 @@ const CreateFlag = class extends Component {
                                 )}
                               </div>
                             )}
-
                             {identity && (
                               <div className='pr-3'>
                                 {identity ? (

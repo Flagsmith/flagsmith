@@ -69,7 +69,7 @@ having to block for a call to the Flagsmith API. A common workflow would then be
 
 The official [Javascript Client](/clients/javascript/) offers optional caching built in to the SDK.
 
-## Caching Flags on a Server
+## Caching Flags on a Server (Flagsmith Client)
 
 :::tip
 
@@ -81,7 +81,8 @@ When running the Flagsmith SDK within a Server environment, it is difficult for 
 caching infrastructure is available to it. For this reason, caching flags in a Server Environment needs to be integrated
 by hand. However, it's pretty simple!
 
-1. When a server starts up, get the Flags from the Flagsmith API. They will now be in memory within the server runtime.
+1. When your server (flagsmith client) starts up, get the Flags from the Flagsmith API. Flagsmith server will now store
+   the Flags in memory within the server runtime.
 2. If you have caching infrastructure available (for example, memcache, redis etc), you can then store the flags for
    that environment within your caching infrastructure.
 3. You can set up a [Web Hook](/system-administration/webhooks) within Flagsmith that sends flag change events to your

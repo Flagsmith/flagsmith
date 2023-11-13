@@ -17,6 +17,10 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -33,12 +37,39 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { env: {}, roles: [] }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
+    if (Utils.getFlagsmithHasFeature('show_role_management')) {
+      const env = ProjectStore.getEnvs().find(
+        (v) => v.api_key === this.props.match.params.environmentId,
+      )
+      this.setState({ env })
+      getRoles(
+        getStore(),
+        { organisation_id: AccountStore.getOrganisation().id },
+        { forceRefetch: true },
+      ).then((roles) => {
+        getRolesEnvironmentPermissions(
+          getStore(),
+          {
+            env_id: env.id,
+            organisation_id: AccountStore.getOrganisation().id,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      })
+    }
+
     this.props.getWebhooks()
   }
 
@@ -190,7 +221,7 @@ const EnvironmentSettingsPage = class extends Component {
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
     return (
-      <div className='app-container'>
+      <div className='app-container container'>
         <ProjectProvider
           onRemoveEnvironment={this.onRemoveEnvironment}
           id={this.props.match.params.projectId}
@@ -224,7 +255,7 @@ const EnvironmentSettingsPage = class extends Component {
               }, 10)
             }
             return (
-              <div className='app-container container'>
+              <>
                 <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
@@ -344,44 +375,40 @@ const EnvironmentSettingsPage = class extends Component {
                             </Row>
                           )}
                         </div>
-                        {Utils.getFlagsmithHasFeature(
-                          'configure_hide_sensitive_data',
-                        ) && (
-                          <div className='col-md-6 mt-4'>
-                            <Row className='mb-2'>
-                              <Switch
-                                checked={hide_sensitive_data}
-                                onChange={(v) => {
-                                  this.confirmToggle(
-                                    'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
-                                    'hide_sensitive_data',
-                                    hide_sensitive_data,
-                                  )
-                                }}
-                              />
-                              <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
-                            </Row>
-                            <p className='fs-small lh-sm'>
-                              Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or via
-                              our REST API. For full information on the excluded
-                              fields see documentation{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
-                                target='_blank'
-                                className='fw-normal'
-                              >
-                                here.
-                              </Button>
-                              <div className='text-danger'>
-                                Warning! Enabling this feature will change the
-                                response from the API and could break your
-                                existing code.
-                              </div>
-                            </p>
-                          </div>
-                        )}
+                        <div className='col-md-6 mt-4'>
+                          <Row className='mb-2'>
+                            <Switch
+                              checked={hide_sensitive_data}
+                              onChange={(v) => {
+                                this.confirmToggle(
+                                  'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'hide_sensitive_data',
+                                  hide_sensitive_data,
+                                )
+                              }}
+                            />
+                            <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
+                          </Row>
+                          <p className='fs-small lh-sm'>
+                            Exclude sensitive data from endpoints returning
+                            flags and identity information to the SDKs or via
+                            our REST API. For full information on the excluded
+                            fields see documentation{' '}
+                            <Button
+                              theme='text'
+                              href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
+                              target='_blank'
+                              className='fw-normal'
+                            >
+                              here.
+                            </Button>
+                            <div className='text-danger'>
+                              Warning! Enabling this feature will change the
+                              response from the API and could break your
+                              existing code.
+                            </div>
+                          </p>
+                        </div>
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <Switch
@@ -682,7 +709,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
@@ -690,8 +717,11 @@ const EnvironmentSettingsPage = class extends Component {
                           parentLevel='project'
                           parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                           id={this.props.match.params.environmentId}
+                          envId={env.id}
                           router={this.context.router}
                           level='environment'
+                          roleTabTitle='Environment Permissions'
+                          roles={this.state.roles}
                         />
                       </FormGroup>
                     </TabItem>
@@ -812,7 +842,7 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                   </Tabs>
                 )}
-              </div>
+              </>
             )
           }}
         </ProjectProvider>

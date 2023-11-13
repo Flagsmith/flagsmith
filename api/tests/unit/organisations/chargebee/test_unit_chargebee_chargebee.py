@@ -263,7 +263,8 @@ class ChargeBeeTestCase(TestCase):
 
 
 def test_extract_subscription_metadata(
-    mock_subscription_response, chargebee_object_metadata: ChargebeeObjMetadata
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
 ):
     # Given
     status = "status"
@@ -293,14 +294,17 @@ def test_extract_subscription_metadata(
     )
 
     # Then
-    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+    # Note that we multiply by 3 since the plan and the addons carry the same limits,
+    # so we have 1 plan + 2 addons.
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 3
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 3
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 3
     assert subscription_metadata.chargebee_email == customer_email
 
 
 def test_extract_subscription_metadata_when_addon_list_is_empty(
-    mock_subscription_response, chargebee_object_metadata: ChargebeeObjMetadata
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
 ):
     # Given
     status = "status"
@@ -329,16 +333,19 @@ def test_extract_subscription_metadata_when_addon_list_is_empty(
 
 
 def test_get_subscription_metadata_from_id(
-    mock_subscription_response, chargebee_object_metadata: ChargebeeObjMetadata
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
 ):
     # Given
     customer_email = "test@example.com"
-    subscription_id = mock_subscription_response.subscription.id
+    subscription_id = mock_subscription_response_with_addons.subscription.id
 
     # When
     subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
+    # Values here are multiplied by 2 because the both the plan and the addon included in
+    # the mock_subscription_response_with_addons fixture contain the same values.
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
@@ -425,6 +432,23 @@ def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription
     assert subscription_metadata is None
 
 
+def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_none(
+    mock_subscription_response: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    mock_subscription_response.addons = None
+    subscription_id = mock_subscription_response.subscription.id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls
+    assert subscription_metadata.projects == chargebee_object_metadata.projects
+
+
 def test_add_single_seat_with_existing_addon(mocker):
     # Given
     plan_id = "plan-id"
@@ -494,17 +518,19 @@ def test_add_single_seat_without_existing_addon(mocker):
 
 def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(mocker, caplog):
     # Given
-
-    # Chargebee's APIError requires additional arguments to instantiate it so instead
-    # we mock it with our own exception here to test that it is caught correctly
-    class MockException(Exception):
-        pass
-
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
-    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
-
-    mocked_chargebee.Subscription.update.side_effect = MockException
+    # Typical non-payment related error from Chargebee.
+    chargebee_response_data = {
+        "message": "82sa2Sqa5 not found",
+        "type": "invalid_request",
+        "api_error_code": "resource_not_found",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+    mocked_chargebee.Subscription.update.side_effect = APIError(
+        http_code=404, json_obj=chargebee_response_data
+    )
 
     # Let's create a (mocked) subscription object
     subscription_id = "sub-id"

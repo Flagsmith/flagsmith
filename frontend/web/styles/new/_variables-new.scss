@@ -25,6 +25,7 @@ $info-alfa-8: rgba(10, 173, 223, 0.08);
 $info-alfa-24: rgba(10, 173, 223, 0.24);
 $danger-alfa-8: rgba(255, 66, 75, 0.08);
 $danger-alfa-16: rgba(255, 66, 75, 0.16);
+$warning-alfa-8: rgba(255, 159, 0, 0.08);
 $primary-alfa-8: rgba(149, 108, 255, 0.08);
 $primary-alfa-16: rgba(149, 108, 255, 0.16);
 $primary-alfa-24: rgba(149, 108, 255, 0.24);
@@ -43,6 +44,15 @@ $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 $secondary-alfa-16: rgba(247, 213, 110, 0.16);
 $success-alfa-8: rgba(39, 171, 149, 0.08);
+$success-solid-alert: rgba(238, 248, 247);
+$info-solid-alert: rgba(236, 249, 252);
+$warning-solid-alert: rgba(255, 248, 240);
+$danger-solid-alert: rgba(254, 239, 241);
+
+$success-solid-dark-alert: rgba(17, 32, 46);
+$info-solid-dark-alert: rgba(15, 32, 52);
+$warning-solid-dark-alert: rgba(34, 31, 39);
+$danger-solid-dark-alert: rgba(34, 23, 40);
 
 $bg-light100: #ffffff;
 $bg-light200: #fafafb;
@@ -240,15 +250,17 @@ $checkbox-hover-border-color: $primary;
 $checkbox-checked-hover-border-color: $primary600;
 
 //Alert
-$alert-info-bg: $info-alfa-8;
+$alert-info-bg: $info-solid-alert;
 $alert-info-border-color: $info;
-$alert-danger-bg: $danger-alfa-8;
+$alert-danger-bg: $danger-solid-alert;
 $alert-danger-border-color: $danger;
-$alert-color: $body-text;
+$alert-warning-border-color: $warning;
+$alert-color: $text-icon-grey;
 $alert-font-weight: 500;
 $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
 $alert-color-dark: $white-alpha-48;
+$alert-announcement-close-btn: $text-icon-light-grey;
 
 //Tabs
 $tab-btn-line-height: 42px;

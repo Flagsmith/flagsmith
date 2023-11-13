@@ -11,6 +11,10 @@ import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import { informationCircleOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+
+let controller = new AbortController()
 
 const HomePage = class extends React.Component {
   static contextTypes = {
@@ -27,6 +31,42 @@ const HomePage = class extends React.Component {
     }
   }
 
+  addAlbacross() {
+    EventTarget.prototype.oldAddEventListener =
+      EventTarget.prototype.addEventListener
+    window._nQc = Project.albacross
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.async = true
+    script.src = 'https://serve.albacross.com/track.js'
+    script.id = 'albacross'
+
+    EventTarget.prototype.addEventListener = function (
+      type,
+      listener,
+      options = false,
+    ) {
+      const parsedOptions =
+        typeof options == 'boolean' ? { capture: options } : options
+
+      EventTarget.prototype.oldAddEventListener.call(this, type, listener, {
+        signal: controller.signal,
+        ...parsedOptions,
+      })
+    }
+
+    document.body.appendChild(script)
+  }
+
+  removeAlbacross() {
+    controller.abort()
+    controller = new AbortController()
+    EventTarget.prototype.addEventListener =
+      EventTarget.prototype.oldAddEventListener
+    document.body.removeChild(document.getElementById('albacross'))
+    delete window._nQc
+  }
+
   componentDidUpdate(prevProps) {
     if (this.props.location.pathname !== prevProps.location.pathname) {
       const emailField =
@@ -35,10 +75,31 @@ const HomePage = class extends React.Component {
       if (emailField) {
         emailField.focus()
       }
+      if (
+        Project.albacross &&
+        this.props.location.pathname.indexOf('signup') !== -1
+      ) {
+        this.addAlbacross()
+      } else if (document.getElementById('albacross')) {
+        this.removeAlbacross()
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    if (document.getElementById('albacross')) {
+      this.removeAlbacross()
     }
   }
 
   componentDidMount() {
+    if (
+      Project.albacross &&
+      this.props.location.pathname.indexOf('signup') !== -1
+    ) {
+      this.addAlbacross()
+    }
+
     document.body.classList.remove('dark')
     if (document.location.href.includes('oauth')) {
       const parts = location.href.split('oauth/')
@@ -289,7 +350,11 @@ const HomePage = class extends React.Component {
                                       >
                                         {isInvite && (
                                           <div className='notification flex-row'>
-                                            <span className='notification__icon ion-md-information-circle-outline mb-2' />
+                                            <span className='notification__icon mb-2'>
+                                              <IonIcon
+                                                icon={informationCircleOutline}
+                                              />
+                                            </span>
                                             <p className='notification__text pl-3'>
                                               Login to accept your invite
                                             </p>
@@ -482,7 +547,11 @@ const HomePage = class extends React.Component {
                                   )}
                                   {isInvite && (
                                     <div className='notification flex-row'>
-                                      <span className='notification__icon ion-md-information-circle-outline mb-2' />
+                                      <span className='notification__icon mb-2'>
+                                        <IonIcon
+                                          icon={informationCircleOutline}
+                                        />
+                                      </span>
                                       <p className='notification__text pl-3'>
                                         Create an account to accept your invite
                                       </p>
@@ -618,14 +687,15 @@ const HomePage = class extends React.Component {
                             </Card>
                             <Row className='justify-content-center'>
                               Have an account?{' '}
-                              <Link
-                                id='existing-member-btn'
-                                to={`/login${redirect}`}
+                              <Button
+                                theme='text'
+                                className='ml-1 fw-bold'
+                                onClick={() => {
+                                  window.location.href = `/login${redirect}`
+                                }}
                               >
-                                <Button theme='text' className='ml-1 fw-bold'>
-                                  Log in
-                                </Button>
-                              </Link>
+                                Log in
+                              </Button>
                             </Row>
                           </React.Fragment>
                         )}

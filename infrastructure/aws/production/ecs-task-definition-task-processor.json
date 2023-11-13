@@ -129,11 +129,7 @@
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
-                    "value": "280"
-                },
-                {
-                    "name": "ENABLE_CLEAN_UP_OLD_TASKS",
-                    "value": "False"
+                    "value": "45"
                 }
             ],
             "secrets": [
