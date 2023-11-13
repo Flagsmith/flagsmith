@@ -200,6 +200,7 @@
       background: $input-bg-dark !important;
       &:hover {
         background: $bg-dark200 !important;
+        color: white !important;
         cursor:pointer;
       }
       &--is-selected {
