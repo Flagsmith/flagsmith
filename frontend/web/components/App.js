@@ -275,7 +275,7 @@ const App = class extends Component {
       )
     }
     if (AccountStore.forced2Factor()) {
-      return <AccountSettingsPage />
+      return <AccountSettingsPage isLoginPage={true} />
     }
     const projectNotLoaded =
       !ProjectStore.model && document.location.href.includes('project/')

@@ -45,6 +45,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
             "persist_trait_data",
             "block_access_to_admin",
             "restrict_project_create_to_admin",
+            "force_2fa",
         )
         read_only_fields = (
             "id",

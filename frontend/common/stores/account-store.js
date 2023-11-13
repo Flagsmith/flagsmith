@@ -39,7 +39,7 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  confirmTwoFactor: (pin, onError) => {
+  confirmTwoFactor: (pin, onError, isLoginPage) => {
     store.saving()
 
     return data
@@ -50,6 +50,9 @@ const controller = {
         store.model.twoFactorConfirmed = true
 
         store.saved()
+        if (isLoginPage) {
+          window.location.href = `/projects`
+        }
       })
       .catch((e) => {
         if (onError) {
@@ -158,7 +161,7 @@ const controller = {
       })
       .then((res) => {
         API.trackEvent(Constants.events.LOGIN)
-
+        store.samlOrOauth = false
         if (res.ephemeral_token) {
           store.ephemeral_token = res.ephemeral_token
           store.model = {
@@ -189,6 +192,7 @@ const controller = {
         },
       )
       .then((res) => {
+        store.samlOrOauth = true
         if (res.ephemeral_token) {
           store.ephemeral_token = res.ephemeral_token
           store.model = {
@@ -381,8 +385,12 @@ const store = Object.assign({}, BaseStore, {
       return false
     }
 
+    if (store.samlOrOauth) {
+      return false
+    }
+
     return (
-      Utils.getFlagsmithHasFeature('forced_2fa') &&
+      Utils.getFlagsmithHasFeature('force_2fa') &&
       store.getOrganisations() &&
       store.getOrganisations().find((o) => o.force_2fa)
     )
@@ -505,7 +513,11 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.enableTwoFactor()
       break
     case Actions.CONFIRM_TWO_FACTOR:
-      controller.confirmTwoFactor(action.pin, action.onError)
+      controller.confirmTwoFactor(
+        action.pin,
+        action.onError,
+        action.isLoginPage,
+      )
       break
     case Actions.DISABLE_TWO_FACTOR:
       controller.disableTwoFactor()
