@@ -1,4 +1,4 @@
-@import "../mixins/custom-scrollbar";
+@import '../mixins/custom-scrollbar';
 
 @mixin transition($transition...) {
   -moz-transition: $transition;
@@ -37,11 +37,11 @@
   position: relative;
   textarea,
   .hljs {
-   padding: $input-padding-lg;
-   line-height: $line-height-lg;
+    padding: $input-padding-lg;
+    line-height: $line-height-lg;
   }
-  &.code-medium{
-    .hljs{
+  &.code-medium {
+    .hljs {
       padding: $input-padding;
     }
   }
@@ -62,8 +62,8 @@
         margin: 0;
         opacity: 1;
       }
-      .language-icon{
-        color:$text-icon-dark;
+      .language-icon {
+        color: $text-icon-dark;
       }
     }
     span {
@@ -304,6 +304,9 @@ code.txt {
     path {
       fill: white;
     }
+  }
+  .value-editor .select-language span.active {
+    color: white;
   }
 }
 

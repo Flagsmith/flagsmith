@@ -435,7 +435,7 @@ const Aside = class extends Component {
                                                 <Loader />
                                               </div>
                                             ) : (
-                                              <div className='aside__environment-nav list-unstyled mb-0'>
+                                              <div className='aside__environment-nav list-unstyled mb-0 mt-1'>
                                                 <NavLink
                                                   className='aside__environment-list-item'
                                                   id='features-link'
