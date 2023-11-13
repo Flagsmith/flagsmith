@@ -615,10 +615,8 @@ class TheComponent extends Component {
                   <div className='create-segment-overrides'>
                     <CreateSegmentModal
                       onComplete={(segment) => {
-                        if (this.state.selectedSegment) {
-                          this.props.setShowCreateSegment(false)
-                        } else {
-                          this.props.setShowCreateSegment(false)
+                        this.props.setShowCreateSegment(false)
+                        if (!this.state.selectedSegment) {
                           this.setState(
                             {
                               selectedSegment: {
