@@ -272,10 +272,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return is_user_project_admin(self, project)
 
     def get_permitted_environments(
-        self, permission_key: str, project: Project, tag_ids: typing.List[int] = None
+        self,
+        permission_key: str,
+        project: Project,
+        tag_ids: typing.List[int] = None,
+        prefetch_metadata: bool = False,
     ) -> QuerySet[Environment]:
         return get_permitted_environments_for_user(
-            self, project, permission_key, tag_ids
+            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
         )
 
     @staticmethod

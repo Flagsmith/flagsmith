@@ -104,6 +104,7 @@ def get_permitted_environments_for_user(
     project: Project,
     permission_key: str,
     tag_ids: List[int] = None,
+    prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     """
     Get all environments that the user has the given permissions for.
@@ -130,7 +131,16 @@ def get_permitted_environments_for_user(
     )
     filter_ = base_filter & Q(project=project)
 
-    return Environment.objects.filter(filter_).distinct().defer("description")
+    queryset = Environment.objects.filter(filter_)
+    if prefetch_metadata:
+        queryset = queryset.prefetch_related("metadata")
+
+    # Description is defered due to Oracle support where a
+    # query can't have a where clause if description is in
+    # the select parameters. This leads to an N+1 query for
+    # lists of environments when description is included, as
+    # each environment object re-queries the DB seperately.
+    return queryset.distinct().defer("description")
 
 
 def get_permitted_environments_for_master_api_key(
