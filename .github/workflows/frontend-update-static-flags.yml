@@ -1,0 +1,50 @@
+name: Frontend Update Static Flags
+
+on: [push, pull_request]
+#on:
+#  schedule:
+#    - cron: 0 8 * * 1-5
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  check-static-flags-updated:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Pull Updated Static Flags
+        id: get_changes
+        run: |
+          npm ci
+          npm run static:generate
+          echo "changed=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request for new flags if required
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+        if: steps.get_changes.outputs.changed != 0
+        run: |
+          git config user.email "bot@flagsmith.com"
+          git config user.name "Flagsmith Bot"
+          git checkout -B static-flags-updated
+          git add env/flagsmith.json
+          git commit -m "Static Flags Updated"
+          git push --set-upstream origin static-flags-updated
+          gh pr create -B main -H static-flags-updated --title 'Static Flags Updated' --body 'Created by Github action'
