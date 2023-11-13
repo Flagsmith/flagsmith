@@ -133,7 +133,12 @@ def register_task_handler(  # noqa: C901
     :param TaskPriority priority: task priority.
     :param bool transaction_on_commit: (`SEPARATE_THREAD` task run method only)
         Whether to wrap the task call in `transanction.on_commit`. Defaults to `True`.
-    :rtype: TaskProtocol
+        We need this for the task to be able to access data committed with the current
+        transaction. If the task is invoked outside of a transaction, it will start
+        immediately.
+        Pass `False` if you want the task to start immediately regardless of current
+        transaction.
+    :rtype: TaskHandler
     """
 
     def wrapper(f: typing.Callable[P, None]) -> TaskHandler[P]:
