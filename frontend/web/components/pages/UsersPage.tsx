@@ -204,7 +204,15 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     className='flex-row flex flex-1 table-column'
                   >
                     <div className='font-weight-medium'>{identifier}</div>
-                    <Icon name='chevron-right' width={22} />
+                    <Icon
+                      name='chevron-right'
+                      width={22}
+                      fill={
+                        Utils.getFlagsmithHasFeature('dark_mode')
+                          ? '#FFF'
+                          : '#656D7B'
+                      }
+                    />
                   </Link>
                   <div className='table-column'>
                     <Button

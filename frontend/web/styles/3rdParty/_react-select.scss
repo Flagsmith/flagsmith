@@ -148,6 +148,7 @@
     cursor: pointer;
     &:hover {
       background: $bg-light200 !important;
+      cursor:pointer;
     }
     &--is-selected {
       background-color: $primary-alfa-8 !important;
@@ -198,7 +199,12 @@
       color: white !important;
       background: $input-bg-dark !important;
       &:hover {
-        background: $primary !important;
+        background: $bg-dark200 !important;
+        color: white !important;
+        cursor:pointer;
+      }
+      &--is-selected {
+        background-color: $primary-alfa-16 !important;
       }
     }
   }
