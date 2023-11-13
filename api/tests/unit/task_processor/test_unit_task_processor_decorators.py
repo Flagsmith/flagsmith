@@ -59,6 +59,8 @@ def test_register_task_handler_run_in_thread__transaction_commit__true__default(
     kwargs = {"bar": "baz"}
 
     # When
+    # TODO Switch to pytest-django's django_capture_on_commit_callbacks
+    # fixture when migrating to Django 4
     with capture_on_commit_callbacks(execute=True):
         my_function.run_in_thread(args=args, kwargs=kwargs)
 
