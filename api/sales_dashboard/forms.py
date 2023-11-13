@@ -37,7 +37,7 @@ class StartTrialForm(forms.Form):
     max_seats = forms.IntegerField()
     max_api_calls = forms.IntegerField()
 
-    def save(self, organisation, commit=True):
+    def save(self, organisation: Organisation, commit: bool = True):
         organisation.subscription.max_seats = self.cleaned_data["max_seats"]
         organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
         organisation.subscription.subscription_id = TRIAL_SUBSCRIPTION_ID
