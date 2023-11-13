@@ -171,7 +171,7 @@ Local Evaluation mode is only available with Server-side SDKs.
 Since Client-side SDKs will generally be associated with a single Identity (the person who owns the client device!), a
 common pattern for networking implementation is:
 
-1. The user launches your application for the first time. Since your application does not know how they are, a call to
+1. The user launches your application for the first time. Since your application does not know who they are, a call to
    get the default Environment Flags is made by the Flagsmith SDK.
 2. After the user logs in, make a second request to get the Flags with the new user Identity.
 3. Cache these flags locally on the device.
