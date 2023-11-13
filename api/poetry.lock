@@ -933,6 +933,20 @@ django-ipware = ">=3"
 setuptools = "*"
 
 [[package]]
+name = "django-capture-on-commit-callbacks"
+version = "1.11.0"
+description = "Capture and make assertions on transaction.on_commit() callbacks."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-capture-on-commit-callbacks-1.11.0.tar.gz", hash = "sha256:ee5a79dc74937a0318c192b54d904ce0826ced47748d160bf15324fc77e98c41"},
+    {file = "django_capture_on_commit_callbacks-1.11.0-py3-none-any.whl", hash = "sha256:a75300586390411a7e4641128c4251fdc5db25b6e76543329d82fb2c2bc71163"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-cors-headers"
 version = "3.5.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
@@ -4341,4 +4355,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5ac91f0f0d80b41a8798bd5fbeb49e30da1186a9d8b8343f3bf013cfda1fddc6"
+content-hash = "6fcfd26eb38ab86df49a98ddb6da7afbd484f50fca8798612eac0f658afd8b6a"

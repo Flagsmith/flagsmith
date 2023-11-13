@@ -145,6 +145,17 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             )
         )
 
+    @hook(AFTER_SAVE, when="stop_serving_flags", has_changed=True)
+    def rebuild_environments(self):
+        # Avoid circular imports.
+        from environments.models import Environment
+        from environments.tasks import rebuild_environment_document
+
+        for environment_id in Environment.objects.filter(
+            project__organisation=self
+        ).values_list("id", flat=True):
+            rebuild_environment_document.delay(args=(environment_id,))
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -217,7 +228,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
-        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+        if self.is_in_trial():
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
@@ -260,6 +271,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
         )
         return overage if overage > 0 else 0
+
+    def is_in_trial(self) -> bool:
+        return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):

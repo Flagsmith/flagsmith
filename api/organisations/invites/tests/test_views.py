@@ -1,16 +1,20 @@
 import json
+import typing
 from datetime import timedelta
 
 import pytest
+from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock.plugin import MockerFixture
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from organisations.invites.models import Invite, InviteLink
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser
 
 
@@ -282,7 +286,6 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     settings.ENABLE_CHARGEBEE = True
     settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
-
     # When
     response = test_user_client.post(url)
 
@@ -291,6 +294,61 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     assert (
         response.json()["detail"]
         == "Please Upgrade your plan to add additional seats/users"
+    )
+
+
+@pytest.mark.parametrize(
+    "invite_object, url",
+    [
+        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
+        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+    ],
+)
+def test_join_organisation_returns_400_if_payment_fails(
+    test_user_client: APIClient,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    invite_object: typing.Union[Invite, InviteLink],
+    url: str,
+    subscription: Subscription,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+):
+    # Given
+    settings.ENABLE_CHARGEBEE = True
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+
+    url = reverse(url, args=[invite_object.hash])
+
+    subscription.plan = "scale-up"
+    subscription.subscription_id = "chargemepls"
+    subscription.save()
+
+    mocked_cb_subscription = mocker.MagicMock(addons=[])
+
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    mocked_chargebee.Subscription.retrieve.return_value = mocked_cb_subscription
+
+    chargebee_response_data = {
+        "message": "Subscription cannot be created as the payment collection failed. Gateway Error: Card declined.",
+        "type": "payment",
+        "api_error_code": "payment_processing_failed",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    mocked_chargebee.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When
+    response = test_user_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "Joining the organisation has failed due to a payment issue. Please contact your organisation's admin."
     )
 
 
