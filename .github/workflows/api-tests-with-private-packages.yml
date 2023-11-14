@@ -1,7 +1,7 @@
 name: Run API Unit tests with private package
 
 on:
-  push:
+  merge_group:
     branches:
       - main
     paths:
