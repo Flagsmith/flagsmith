@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.81.1](https://github.com/Flagsmith/flagsmith/compare/v2.81.0...v2.81.1) (2023-11-14)
+
+
+### Bug Fixes
+
+* try self-hosted runner for the private cloud image ([#2969](https://github.com/Flagsmith/flagsmith/issues/2969)) ([99180cd](https://github.com/Flagsmith/flagsmith/commit/99180cdbf3cc3362efbb80eb83d131d066ae0f5f))
+
 ## [2.81.0](https://github.com/Flagsmith/flagsmith/compare/v2.80.0...v2.81.0) (2023-11-14)
 
 
