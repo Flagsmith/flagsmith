@@ -19,6 +19,8 @@ from audit.constants import (
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
+from environments.permissions.models import UserEnvironmentPermission
 from features.models import (
     Feature,
     FeatureSegment,
@@ -785,6 +787,74 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
     mocked_get_feature_evaluation_data.assert_called_with(
         feature=feature, period=30, environment_id=environment.id
     )
+
+
+def test_create_segment_override_forbidden(
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    # When
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # Staff client lacks permission to create segment.
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 403
+    assert response.data == {
+        "detail": "You do not have permission to perform this action."
+    }
+
+
+def test_create_segment_override_staff(
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    # When
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == 201
+    assert response.data["feature_segment"]["segment"] == segment.id
 
 
 def test_create_segment_override(admin_client, feature, segment, environment):

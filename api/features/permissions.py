@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 from environments.permissions.constants import (
     TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
 )
@@ -166,8 +167,7 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
             Environment, api_key=view.kwargs["environment_api_key"]
         )
 
-        # TODO: create dedicated permission for creating segment overrides
         return request.user.has_environment_permission(
-            permission=UPDATE_FEATURE_STATE,
+            permission=MANAGE_SEGMENT_OVERRIDES,
             environment=environment,
         )

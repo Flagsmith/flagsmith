@@ -5,7 +5,7 @@ ENABLE_AXES = False
 
 ALLOWED_HOSTS.extend([".ngrok.io", "127.0.0.1", "localhost"])
 
-INSTALLED_APPS.extend(["debug_toolbar"])
+INSTALLED_APPS.extend(["debug_toolbar", "django_extensions"])
 
 MIDDLEWARE.extend(["debug_toolbar.middleware.DebugToolbarMiddleware"])
 

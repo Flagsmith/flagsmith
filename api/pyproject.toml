@@ -129,6 +129,7 @@ pip-tools = "~6.13.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.22"
 requests-mock = "^1.11.0"
+django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
 django-capture-on-commit-callbacks = "^1.11.0"
 

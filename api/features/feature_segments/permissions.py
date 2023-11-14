@@ -3,7 +3,7 @@ from contextlib import suppress
 from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
-from environments.permissions.constants import UPDATE_FEATURE_STATE
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 
 
 class FeatureSegmentPermissions(IsAuthenticated):
@@ -25,12 +25,12 @@ class FeatureSegmentPermissions(IsAuthenticated):
                 environment = Environment.objects.get(id=int(environment))
 
                 return request.user.has_environment_permission(
-                    UPDATE_FEATURE_STATE, environment
+                    MANAGE_SEGMENT_OVERRIDES, environment
                 )
 
         return False
 
     def has_object_permission(self, request, view, obj):
         return request.user.has_environment_permission(
-            UPDATE_FEATURE_STATE, environment=obj.environment
+            MANAGE_SEGMENT_OVERRIDES, environment=obj.environment
         )
