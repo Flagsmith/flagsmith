@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-dockerhub:
-    runs-on: self-image
+    runs-on: self-hosted
     name: Platform Publish Docker Image
 
     steps:
