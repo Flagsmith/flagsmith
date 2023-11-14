@@ -11,6 +11,7 @@ from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
+    OrganisationRole,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -24,6 +25,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -64,7 +66,8 @@ class OrganisationTestCase(TestCase):
     ):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-
+        user = FFAdminUser.objects.create(email="test@example.com")
+        user.add_organisation(organisation, role=OrganisationRole.ADMIN)
         Subscription.objects.filter(organisation=organisation).update(
             subscription_id="subscription_id", payment_method=CHARGEBEE
         )
