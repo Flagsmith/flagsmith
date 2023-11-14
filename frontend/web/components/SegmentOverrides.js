@@ -434,7 +434,7 @@ class TheComponent extends Component {
       id: this.props.environmentId,
     }).then((res) => {
       this.setState({
-        totalSegmentOverrides: res[0].data.total_segment_overrides,
+        totalSegmentOverrides: res.data.total_segment_overrides,
       })
     })
   }
