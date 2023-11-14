@@ -237,7 +237,7 @@
             "destination": "/integrations/analytics/heap"
         },
         {
-            "source": "/analytics/mixpanel",
+            "source": "/integrations/mixpanel",
             "destination": "/integrations/analytics/mixpanel"
         },
         {

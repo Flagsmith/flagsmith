@@ -78,6 +78,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     feature_analytics = models.BooleanField(
         default=False, help_text="Record feature analytics in InfluxDB"
     )
+    force_2fa = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["id"]
@@ -228,12 +229,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
+
         if self.is_in_trial():
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
-
-        if self.payment_method == CHARGEBEE and self.subscription_id:
+        elif self.payment_method == CHARGEBEE and self.subscription_id:
             if self.organisation.has_subscription_information_cache():
                 # Getting the data from the subscription information cache because
                 # data is guaranteed to be up to date by using a Chargebee webhook.
@@ -247,17 +248,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
                 metadata = get_subscription_metadata_from_id(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
             metadata = XeroSubscriptionMetadata(
-                seats=self.max_seats, api_calls=self.max_api_calls, projects=None
+                seats=self.max_seats, api_calls=self.max_api_calls
             )
 
-        if not metadata:
-            metadata = BaseSubscriptionMetadata(
-                seats=self.max_seats,
-                api_calls=self.max_api_calls,
-                projects=MAX_PROJECTS_IN_FREE_PLAN,
-            )
-
-        return metadata
+        return metadata or BaseSubscriptionMetadata(
+            seats=self.max_seats,
+            api_calls=self.max_api_calls,
+            projects=MAX_PROJECTS_IN_FREE_PLAN,
+        )
 
     def add_single_seat(self):
         if not self.can_auto_upgrade_seats:
