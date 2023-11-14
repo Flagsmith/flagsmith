@@ -100,6 +100,7 @@ Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 | View Environment       | Can see the Environment within their account              |
 | Update Feature State   | Update the state or value for a given feature             |
 | Manage Identities      | View and update Identities                                |
+| Segment Overrides      | View and update Segment Overrides                         |
 | Create Change Request  | Creating a new Change Request                             |
 | Approve Change Request | Approving or denying existing Change Requests             |
 | View Identities        | Viewing Identities                                        |
