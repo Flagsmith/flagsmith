@@ -479,7 +479,7 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
-    const manageSegmentsEnabled = Utils.getFlagsmithHasFeature(
+    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
       'manage_segment_overrides_env_role',
     )
     let regexValid = true
@@ -1141,8 +1141,8 @@ const CreateFlag = class extends Component {
                                                   manageSegmentOverrides,
                                               }) => {
                                                 const isReadOnly =
-                                                  manageSegmentsEnabled
-                                                    ? manageSegmentOverrides
+                                                  manageSegmentOverridesEnabled
+                                                    ? !manageSegmentOverrides
                                                     : noPermissions
                                                 return (
                                                   <SegmentOverrides
@@ -1261,7 +1261,7 @@ const CreateFlag = class extends Component {
                                                                 !name ||
                                                                 invalid ||
                                                                 !savePermission ||
-                                                                (manageSegmentsEnabled &&
+                                                                (manageSegmentOverridesEnabled &&
                                                                   !manageSegmentsOverrides)
                                                               }
                                                             >
