@@ -401,7 +401,7 @@ class SegmentOverridesInnerAdd extends Component {
 
     getEnvironment(getStore(), { id }).then((res) => {
       this.setState({
-        totalSegmentOverrides: res[1].data.total_segment_overrides,
+        totalSegmentOverrides: res.data.total_segment_overrides,
       })
     })
   }
