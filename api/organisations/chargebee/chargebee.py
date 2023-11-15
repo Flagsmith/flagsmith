@@ -181,7 +181,7 @@ def add_single_seat(subscription_id: str):
                     {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": current_seats + 1}
                 ],
                 "prorate": True,
-                "invoice_immediately": True,
+                "invoice_immediately": False,
             },
         )
 

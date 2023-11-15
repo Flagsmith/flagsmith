@@ -480,7 +480,7 @@ def test_add_single_seat_with_existing_addon(mocker):
                 {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": addon_quantity + 1}
             ],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
 
@@ -511,7 +511,7 @@ def test_add_single_seat_without_existing_addon(mocker):
         {
             "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
 
@@ -555,7 +555,7 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(mocker, c
         {
             "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
     assert len(caplog.records) == 1
