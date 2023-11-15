@@ -33,6 +33,7 @@ from organisations.subscriptions.constants import (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
 )
@@ -183,6 +184,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
+    # Free and cancelled subscriptions are blank.
+    billing_status = models.CharField(
+        max_length=20,
+        choices=SUBSCRIPTION_BILLING_STATUSES,
+        blank=True,
+        null=True,
+    )
     payment_method = models.CharField(
         max_length=20,
         choices=SUBSCRIPTION_PAYMENT_METHODS,
@@ -212,6 +220,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
+        self.billing_status = ""
         self.save()
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
