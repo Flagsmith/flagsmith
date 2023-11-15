@@ -237,7 +237,7 @@
             "destination": "/integrations/analytics/heap"
         },
         {
-            "source": "/analytics/mixpanel",
+            "source": "/integrations/mixpanel",
             "destination": "/integrations/analytics/mixpanel"
         },
         {
@@ -267,6 +267,10 @@
         {
             "source": "/system-administration/edge-proxy",
             "destination": "/advanced-use/edge-proxy"
+        },
+        {
+            "source": "/integrations/slack",
+            "destination": "/integrations/project-management/slack"
         }
     ]
 }

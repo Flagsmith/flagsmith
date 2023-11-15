@@ -100,7 +100,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 raise ValidationError("Invalid or missing value for project parameter.")
 
             return self.request.user.get_permitted_environments(
-                "VIEW_ENVIRONMENT", project=project
+                "VIEW_ENVIRONMENT", project=project, prefetch_metadata=True
             )
 
         # Permission class handles validation of permissions for other actions
