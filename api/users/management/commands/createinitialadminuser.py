@@ -2,9 +2,13 @@ import argparse
 import sys
 from typing import Any
 
-from django.core.management import BaseCommand, CommandError
+from django.conf import settings
+from django.core.management import BaseCommand
 
-from users.services import create_initial_superuser, is_initial_config_allowed
+from users.services import (
+    create_initial_superuser,
+    should_skip_create_initial_superuser,
+)
 
 
 class Command(BaseCommand):
@@ -31,8 +35,13 @@ class Command(BaseCommand):
         password_stdin: bool,
         **options: Any,
     ) -> None:
-        if not is_initial_config_allowed():
-            raise CommandError("Flagsmith admin user already configured")
+        if any(
+            [
+                should_skip_create_initial_superuser(),
+                not settings.ALLOW_ADMIN_INITIATION_VIA_CLI,
+            ]
+        ):
+            return self.stdout.write("Skipping initial user creation.")
         admin_initial_password = sys.stdin.read().strip() if password_stdin else None
         create_initial_superuser(
             admin_email=admin_email,

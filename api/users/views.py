@@ -37,7 +37,10 @@ from users.serializers import (
     UserPermissionGroupSerializerDetail,
     UserPermissionGroupSummarySerializer,
 )
-from users.services import create_initial_superuser, is_initial_config_allowed
+from users.services import (
+    create_initial_superuser,
+    should_skip_create_initial_superuser,
+)
 
 from .forms import InitConfigForm
 
@@ -50,7 +53,7 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
     )
 
     def has_permission(self):
-        return is_initial_config_allowed()
+        return not should_skip_create_initial_superuser()
 
     def handle_no_permission(self):
         raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
@@ -63,18 +66,18 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
 
 class AdminInitView(View):
     def get(self, request):
-        if is_initial_config_allowed():
-            create_initial_superuser()
+        if should_skip_create_initial_superuser():
             return JsonResponse(
-                {"adminUserCreated": True},
-                status=status.HTTP_201_CREATED,
+                {
+                    "adminUserCreated": False,
+                    "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        create_initial_superuser()
         return JsonResponse(
-            {
-                "adminUserCreated": False,
-                "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.",
-            },
-            status=status.HTTP_400_BAD_REQUEST,
+            {"adminUserCreated": True},
+            status=status.HTTP_201_CREATED,
         )
 
 

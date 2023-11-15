@@ -393,10 +393,16 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
+ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
+)
+ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=True
+)
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
-ALLOW_ADMIN_INITIATION_VIA_URL = True
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_INITIAL_PASSWORD = "password"
+# or running python manage.py createinitialadminuser
+ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
+ADMIN_INITIAL_PASSWORD = env("ADMIN_INITIAL_PASSWORD", default="password")
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 

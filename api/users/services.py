@@ -3,8 +3,8 @@ from django.conf import settings
 from users.models import FFAdminUser
 
 
-def is_initial_config_allowed() -> bool:
-    return not FFAdminUser.objects.count()
+def should_skip_create_initial_superuser() -> bool:
+    return FFAdminUser.objects.count()
 
 
 def create_initial_superuser(
