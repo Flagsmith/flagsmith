@@ -38,11 +38,9 @@ class Command(BaseCommand):
         password_stdin: bool,
         **options: Any,
     ) -> None:
-        if any(
-            [
-                should_skip_create_initial_superuser(),
-                not settings.ALLOW_ADMIN_INITIATION_VIA_CLI,
-            ]
+        if (
+            not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
+            or should_skip_create_initial_superuser()
         ):
             logger.debug("Skipping initial user creation.")
             return

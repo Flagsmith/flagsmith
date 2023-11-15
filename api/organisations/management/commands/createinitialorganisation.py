@@ -35,12 +35,7 @@ class Command(BaseCommand):
         organisation_name: str | None,
         **options: Any,
     ) -> None:
-        if any(
-            [
-                Organisation.objects.count(),
-                not settings.ALLOW_ADMIN_INITIATION_VIA_CLI,
-            ]
-        ):
+        if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or Organisation.objects.count():
             logger.debug("Skipping initial organisation creation.")
             return
         organisation = Organisation.objects.create(

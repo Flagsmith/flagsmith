@@ -38,12 +38,10 @@ class Command(BaseCommand):
         organisation = Organisation.objects.filter(
             name=organisation_name or settings.ORGANISATION_NAME
         ).first()
-        if any(
-            [
-                not organisation,
-                Project.objects.count(),
-                not settings.ALLOW_ADMIN_INITIATION_VIA_CLI,
-            ]
+        if (
+            not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
+            or not organisation
+            or Project.objects.count()
         ):
             logger.debug("Skipping initial organisation creation.")
             return
