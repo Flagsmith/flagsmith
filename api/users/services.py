@@ -16,3 +16,9 @@ def create_initial_superuser(
         password=admin_initial_password or settings.ADMIN_INITIAL_PASSWORD,
         is_active=True,
     )
+
+
+def get_initial_superuser(
+    admin_email: str | None = None,
+) -> FFAdminUser | None:
+    return FFAdminUser.objects.filter(email=admin_email or settings.ADMIN_EMAIL).first()

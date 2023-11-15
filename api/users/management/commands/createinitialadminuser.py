@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 from typing import Any
 
@@ -9,6 +10,8 @@ from users.services import (
     create_initial_superuser,
     should_skip_create_initial_superuser,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -41,7 +44,8 @@ class Command(BaseCommand):
                 not settings.ALLOW_ADMIN_INITIATION_VIA_CLI,
             ]
         ):
-            return self.stdout.write("Skipping initial user creation.")
+            logger.debug("Skipping initial user creation.")
+            return
         admin_initial_password = sys.stdin.read().strip() if password_stdin else None
         create_initial_superuser(
             admin_email=admin_email,

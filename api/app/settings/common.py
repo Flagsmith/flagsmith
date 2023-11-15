@@ -393,16 +393,26 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
+# Initialisation settings
+# If `ALLOW_ADMIN_INITIATION_VIA_CLI` setting is turned on, Flagsmith will attempt to create
+#   1. A superuser
+#   2. An organisation
+#   3. A project
+# with initial values on startup.
+# The initialisation fails fast if any of those entities are present.
+# Tweak (or set via environment) the settings below for custom names, etc.
 ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
     "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
 )
 ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
     "ALLOW_ADMIN_INITIATION_VIA_CLI", default=True
 )
-# Used on init to create admin user for the site, update accordingly before hitting /auth/init
-# or running python manage.py createinitialadminuser
+
 ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
 ADMIN_INITIAL_PASSWORD = env("ADMIN_INITIAL_PASSWORD", default="password")
+ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
+PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
+
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
