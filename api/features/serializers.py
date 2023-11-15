@@ -10,6 +10,7 @@ from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import UserIdsSerializer, UserListSerializer
 from util.drf_writable_nested.serializers import (
@@ -215,6 +216,29 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             return self.context["overrides_data"][instance.id].num_identity_overrides
         except (KeyError, AttributeError):
             return None
+
+
+class FeatureSerializerWithMetadata(
+    SerializerWithMetadata, ListCreateFeatureSerializer
+):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(ListCreateFeatureSerializer.Meta):
+        fields = ListCreateFeatureSerializer.Meta.fields + ("metadata",)
+
+    def get_project(self, validated_data: dict = None) -> Project:
+        view = self.context.get("view")
+
+        if view and "project_pk" in view.kwargs:
+            project_pk = view.kwargs["project_pk"]
+            try:
+                return Project.objects.get(pk=project_pk)
+            except Project.DoesNotExist:
+                raise serializers.ValidationError("Project not found.")
+
+        raise serializers.ValidationError(
+            "Unable to retrieve project for metadata validation."
+        )
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):

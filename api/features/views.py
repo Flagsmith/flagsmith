@@ -51,6 +51,7 @@ from .serializers import (
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
+    FeatureSerializerWithMetadata,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -95,9 +96,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return {
-            "list": ListCreateFeatureSerializer,
-            "retrieve": ListCreateFeatureSerializer,
-            "create": ListCreateFeatureSerializer,
+            "list": FeatureSerializerWithMetadata,
+            "retrieve": FeatureSerializerWithMetadata,
+            "create": FeatureSerializerWithMetadata,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
