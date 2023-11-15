@@ -68,9 +68,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       })
   }
 
-  const createImportLDProjects = (LDKey: string, projectId: string) => {
+  const createImportLDProjects = (LDKey: string, key: string, projectId: string) => {
     createLaunchDarklyProjectImport({
-      body: { project_key: 'default', token: LDKey },
+      body: { project_key: key, token: LDKey },
       project_id: projectId,
     })
   }
@@ -124,7 +124,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   listClassName='row mt-n2 gy-4'
                   title='Launch Darkly Projects'
                   items={projects}
-                  renderRow={({ name }, i) => {
+                  renderRow={({ name, key }, i) => {
                     return (
                       <>
                         <Button
@@ -132,11 +132,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                           onClick={() =>
                             openConfirm(
                               'Import LaunchDarkly project',
-                              <div>
-                                {`Are you sure you want import ${name} to ${projectName}`}
-                              </div>,
+                              <span>
+                                Flagsmith will import{' '}
+                                {<strong>{name}</strong>} to {<strong>{projectName}</strong>}.
+                                Are you sure?
+                              </span>,
                               () => {
-                                createImportLDProjects(LDKey, projectId)
+                                createImportLDProjects(LDKey, key, projectId)
                               },
                               () => {
                                 return
