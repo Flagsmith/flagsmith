@@ -122,7 +122,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   id='projects-list'
                   className='no-pad panel-projects'
                   listClassName='row mt-n2 gy-4'
-                  title='Launch Darkly Projects'
+                  title='LaunchDarkly Projects'
                   items={projects}
                   renderRow={({ name, key }, i) => {
                     return (
