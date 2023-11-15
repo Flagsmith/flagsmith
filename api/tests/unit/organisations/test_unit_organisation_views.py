@@ -35,6 +35,8 @@ from organisations.subscriptions.constants import (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    SUBSCRIPTION_BILLING_STATUS_ACTIVE,
+    SUBSCRIPTION_BILLING_STATUS_DUNNING,
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
@@ -1340,3 +1342,91 @@ def test_list_my_groups(organisation, api_client):
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
+
+
+def test_payment_failed_chargebee_webhook(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_ACTIVE
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {
+                "subscription_id": subscription.subscription_id,
+                "dunning_status": "in_progress",
+            },
+        },
+        "event_type": "payment_failed",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_DUNNING
+
+
+def test_payment_succeeded_chargebee_webhook(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {
+                "subscription_id": subscription.subscription_id,
+            },
+        },
+        "event_type": "payment_succeeded",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
+
+
+def test_list_organisations_shows_dunning(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
+    subscription.save()
+    url = reverse("api-v1:organisations:organisation-list")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 1
+    _subscription = response.data["results"][0]["subscription"]
+    assert _subscription["id"] == subscription.id
+    assert _subscription["billing_status"] == SUBSCRIPTION_BILLING_STATUS_DUNNING
