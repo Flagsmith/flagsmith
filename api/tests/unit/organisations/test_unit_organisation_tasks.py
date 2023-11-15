@@ -1,7 +1,6 @@
 import uuid
 from datetime import timedelta
 
-import pytest
 from django.utils import timezone
 
 from organisations.models import (
@@ -13,9 +12,7 @@ from organisations.tasks import finish_subscription_cancellation
 from users.models import FFAdminUser
 
 
-@pytest.mark.django_db
-def test_finish_subscription_cancellation():
-    # Given
+def test_finish_subscription_cancellation(db: None):
     organisation1 = Organisation.objects.create()
     organisation2 = Organisation.objects.create()
     organisation3 = Organisation.objects.create()
