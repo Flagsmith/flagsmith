@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from environments.permissions.constants import UPDATE_FEATURE_STATE
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 from features.models import FeatureSegment
 
 
@@ -117,7 +117,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
         environment = feature_segments[0].environment
 
         if not self.context["request"].user.has_environment_permission(
-            UPDATE_FEATURE_STATE, environment
+            MANAGE_SEGMENT_OVERRIDES, environment
         ):
             raise PermissionDenied("You do not have permission to perform this action.")
 

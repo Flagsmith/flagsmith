@@ -892,9 +892,7 @@ def test_user_can_list_environment_permission(client, environment):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert (
-        len(response.json()) == 6
-    )  # hard code how many permissions we expect there to be
+    assert len(response.json()) == 7
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(

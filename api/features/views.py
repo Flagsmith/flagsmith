@@ -738,8 +738,8 @@ def organisation_has_got_feature(request, organisation):
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
     responses={200: CreateSegmentOverrideFeatureStateSerializer()},
 )
-@permission_classes([CreateSegmentOverridePermissions()])
 @api_view(["POST"])
+@permission_classes([CreateSegmentOverridePermissions])
 def create_segment_override(
     request: Request, environment_api_key: str, feature_pk: int
 ):
