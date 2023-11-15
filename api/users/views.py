@@ -1,6 +1,5 @@
 from contextlib import suppress
 
-from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q, QuerySet
@@ -38,6 +37,7 @@ from users.serializers import (
     UserPermissionGroupSerializerDetail,
     UserPermissionGroupSummarySerializer,
 )
+from users.services import create_initial_superuser, is_initial_config_allowed
 
 from .forms import InitConfigForm
 
@@ -50,7 +50,7 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
     )
 
     def has_permission(self):
-        return FFAdminUser.objects.count() == 0
+        return is_initial_config_allowed()
 
     def handle_no_permission(self):
         raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
@@ -63,24 +63,19 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
 
 class AdminInitView(View):
     def get(self, request):
-        if FFAdminUser.objects.count() == 0:
-            admin = FFAdminUser.objects.create_superuser(
-                settings.ADMIN_EMAIL,
-                settings.ADMIN_INITIAL_PASSWORD,
-                is_active=True,
-            )
-            admin.save()
+        if is_initial_config_allowed():
+            create_initial_superuser()
             return JsonResponse(
-                {"adminUserCreated": True}, status=status.HTTP_201_CREATED
+                {"adminUserCreated": True},
+                status=status.HTTP_201_CREATED,
             )
-        else:
-            return JsonResponse(
-                {
-                    "adminUserCreated": False,
-                    "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return JsonResponse(
+            {
+                "adminUserCreated": False,
+                "message": "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 @method_decorator(

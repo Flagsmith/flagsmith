@@ -5,6 +5,7 @@ from django.contrib.sites.models import Site
 from django.forms import HiddenInput, fields
 
 from users.models import FFAdminUser
+from users.services import create_initial_superuser
 
 
 class CustomUserAdminForm(UserChangeForm):
@@ -16,7 +17,6 @@ class CustomUserAdminForm(UserChangeForm):
 
 
 class InitConfigForm(forms.Form):
-    username = forms.CharField(max_length=200)
     email = forms.EmailField()
 
     password = forms.CharField(max_length=32, widget=forms.PasswordInput)
@@ -29,11 +29,9 @@ class InitConfigForm(forms.Form):
     )
 
     def create_admin(self):
-        FFAdminUser.objects.create_superuser(
-            email=self.cleaned_data["email"],
-            password=self.cleaned_data["password"],
-            username=self.cleaned_data["username"],
-            is_active=True,
+        create_initial_superuser(
+            admin_email=self.cleaned_data["email"],
+            admin_initial_password=self.cleaned_data["password"],
         )
 
     def update_site(self):
