@@ -1172,7 +1172,7 @@ def test_make_user_group_admin_success(
 
 
 def test_make_user_group_admin_forbidden(
-    staff_client: FFAdminUser,
+    staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
 ):
@@ -1238,7 +1238,7 @@ def test_remove_user_as_group_admin_success(
 
 
 def test_remove_user_as_group_admin_forbidden(
-    staff_client: FFAdminUser,
+    staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
 ):
@@ -1343,7 +1343,10 @@ def test_list_my_groups(organisation, api_client):
 
 
 def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
-    staff_client, admin_client, subscription, organisation
+    staff_client: APIClient,
+    admin_client: APIClient,
+    subscription: Subscription,
+    organisation: Organisation,
 ):
     # Given
     cancellation_date = datetime.now(tz=UTC)
