@@ -175,7 +175,10 @@ $animation-timing-function: ease-in-out;
       }
 
       &:hover {
-        color: $aside-nav-hover-dark;
+        color: $aside-nav-active-color-dark;
+        path {
+          fill: $aside-nav-active-color-dark;
+        }
       }
     }
 
@@ -293,7 +296,7 @@ $animation-timing-function: ease-in-out;
   }
   &__environments-wrapper {
     .collapsible__header {
-      padding: 8px 0px;
+      padding: 12px 0px;
       &:hover {
         color: $aside-nav-hover;
         svg {

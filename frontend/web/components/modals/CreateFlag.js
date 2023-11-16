@@ -479,6 +479,9 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
+    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
+      'manage_segment_overrides_env_role',
+    )
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -1126,38 +1129,63 @@ const CreateFlag = class extends Component {
                                               )}
                                           </Row>
                                           {this.props.segmentOverrides ? (
-                                            <SegmentOverrides
-                                              readOnly={noPermissions}
-                                              showEditSegment
-                                              showCreateSegment={
-                                                this.state.showCreateSegment
+                                            <Permission
+                                              level='environment'
+                                              permission={
+                                                'MANAGE_SEGMENT_OVERRIDES'
                                               }
-                                              setShowCreateSegment={(
-                                                showCreateSegment,
-                                              ) =>
-                                                this.setState({
-                                                  showCreateSegment,
-                                                })
-                                              }
-                                              feature={projectFlag.id}
-                                              projectId={this.props.projectId}
-                                              multivariateOptions={
-                                                multivariate_options
-                                              }
-                                              environmentId={
-                                                this.props.environmentId
-                                              }
-                                              value={
-                                                this.props.segmentOverrides
-                                              }
-                                              controlValue={initial_value}
-                                              onChange={(v) => {
-                                                this.setState({
-                                                  segmentsChanged: true,
-                                                })
-                                                this.props.updateSegments(v)
+                                              id={this.props.environmentId}
+                                            >
+                                              {({
+                                                permission:
+                                                  manageSegmentOverrides,
+                                              }) => {
+                                                const isReadOnly =
+                                                  manageSegmentOverridesEnabled
+                                                    ? !manageSegmentOverrides
+                                                    : noPermissions
+                                                return (
+                                                  <SegmentOverrides
+                                                    readOnly={isReadOnly}
+                                                    showEditSegment
+                                                    showCreateSegment={
+                                                      this.state
+                                                        .showCreateSegment
+                                                    }
+                                                    setShowCreateSegment={(
+                                                      showCreateSegment,
+                                                    ) =>
+                                                      this.setState({
+                                                        showCreateSegment,
+                                                      })
+                                                    }
+                                                    feature={projectFlag.id}
+                                                    projectId={
+                                                      this.props.projectId
+                                                    }
+                                                    multivariateOptions={
+                                                      multivariate_options
+                                                    }
+                                                    environmentId={
+                                                      this.props.environmentId
+                                                    }
+                                                    value={
+                                                      this.props
+                                                        .segmentOverrides
+                                                    }
+                                                    controlValue={initial_value}
+                                                    onChange={(v) => {
+                                                      this.setState({
+                                                        segmentsChanged: true,
+                                                      })
+                                                      this.props.updateSegments(
+                                                        v,
+                                                      )
+                                                    }}
+                                                  />
+                                                )
                                               }}
-                                            />
+                                            </Permission>
                                           ) : (
                                             <div className='text-center'>
                                               <Loader />
@@ -1206,24 +1234,44 @@ const CreateFlag = class extends Component {
                                                       ),
                                                     ),
                                                     <div className='text-right'>
-                                                      <Button
-                                                        onClick={
-                                                          saveFeatureSegments
+                                                      <Permission
+                                                        level='environment'
+                                                        permission={
+                                                          'MANAGE_SEGMENT_OVERRIDES'
                                                         }
-                                                        type='button'
-                                                        data-test='update-feature-segments-btn'
-                                                        id='update-feature-segments-btn'
-                                                        disabled={
-                                                          isSaving ||
-                                                          !name ||
-                                                          invalid ||
-                                                          !savePermission
+                                                        id={
+                                                          this.props
+                                                            .environmentId
                                                         }
                                                       >
-                                                        {isSaving
-                                                          ? 'Updating'
-                                                          : 'Update Segment Overrides'}
-                                                      </Button>
+                                                        {({
+                                                          permission:
+                                                            manageSegmentsOverrides,
+                                                        }) => {
+                                                          return (
+                                                            <Button
+                                                              onClick={
+                                                                saveFeatureSegments
+                                                              }
+                                                              type='button'
+                                                              data-test='update-feature-segments-btn'
+                                                              id='update-feature-segments-btn'
+                                                              disabled={
+                                                                isSaving ||
+                                                                !name ||
+                                                                invalid ||
+                                                                !savePermission ||
+                                                                (manageSegmentOverridesEnabled &&
+                                                                  !manageSegmentsOverrides)
+                                                              }
+                                                            >
+                                                              {isSaving
+                                                                ? 'Updating'
+                                                                : 'Update Segment Overrides'}
+                                                            </Button>
+                                                          )
+                                                        }}
+                                                      </Permission>
                                                     </div>,
                                                   )
                                                 }
