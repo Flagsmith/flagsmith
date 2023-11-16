@@ -4,6 +4,7 @@ import logging
 import typing
 from typing import Type, Union
 
+import backoff
 import requests
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
@@ -23,7 +24,7 @@ from webhooks.sample_webhook_data import (
     organisation_webhook_data,
 )
 
-from .models import AbstractBaseExportableWebhookModel
+from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
 
 if typing.TYPE_CHECKING:
@@ -121,12 +122,12 @@ def call_organisation_webhooks(
     )
 
 
-def call_integration_webhook(config, data):
+def call_integration_webhook(config: AbstractBaseWebhookModel, data: typing.Mapping):
     return _call_webhook(config, data)
 
 
 def trigger_sample_webhook(
-    webhook: AbstractBaseExportableWebhookModel, webhook_type: WebhookType
+    webhook: AbstractBaseWebhookModel, webhook_type: WebhookType
 ) -> requests.models.Response:
     data = WEBHOOK_SAMPLE_DATA.get(webhook_type)
     serializer = WebhookSerializer(data=data)
@@ -137,8 +138,13 @@ def trigger_sample_webhook(
     return _call_webhook(webhook, serializer.data)
 
 
+@backoff.on_exception(
+    wait_gen=backoff.expo,
+    exception=requests.exceptions.RequestException,
+    max_tries=settings.WEBHOOK_BACKOFF_RETRIES,
+)
 def _call_webhook(
-    webhook: AbstractBaseExportableWebhookModel,
+    webhook: AbstractBaseWebhookModel,
     data: typing.Mapping,
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
