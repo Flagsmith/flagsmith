@@ -94,7 +94,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def num_seats(self):
         return self.users.count()
 
-    def has_subscription(self) -> bool:
+    def has_paid_subscription(self) -> bool:
+        # Includes subscriptions that are canceled.
+        # See is_paid for active paid subscriptions only.
         return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
     def has_subscription_information_cache(self) -> bool:
@@ -104,10 +106,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def is_paid(self):
-        return self.has_subscription() and self.subscription.cancellation_date is None
+        return (
+            self.has_paid_subscription() and self.subscription.cancellation_date is None
+        )
 
     def over_plan_seats_limit(self, additional_seats: int = 0):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
             return self.num_seats + additional_seats > susbcription_metadata.seats
 
@@ -127,7 +131,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             self.subscription.cancel()
 
     @hook(AFTER_CREATE)
@@ -172,6 +176,8 @@ class UserOrganisation(models.Model):
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
+    # Even though it is not enforced at the database level,
+    # every organisation has a subscription.
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
