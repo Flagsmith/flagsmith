@@ -1,9 +1,14 @@
 from contextlib import suppress
 
+from core.helpers import get_current_site_url
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q, QuerySet
-from django.http import Http404, JsonResponse
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -140,13 +145,13 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         )
 
 
-def password_reset_redirect(request, uidb64, token):
-    protocol = "https" if request.is_secure() else "https"
-    current_site = get_current_site(request)
-    domain = current_site.domain
-    return redirect(
-        protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token
-    )
+def password_reset_redirect(
+    request: HttpRequest,
+    uidb64: str,
+    token: str,
+) -> HttpResponseRedirect:
+    current_site_url = get_current_site_url(request)
+    return redirect(f"{current_site_url}/password-reset/{uidb64}/{token}")
 
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
