@@ -83,7 +83,7 @@ class Segment(
     def get_update_log_message(self, history_instance, delta) -> str | None:
         return SEGMENT_UPDATED_MESSAGE % self.name
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         return self.project
 
 
@@ -352,5 +352,5 @@ class Condition(
             setattr(self, "segment", self.rule.get_segment())
         return self.segment
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         return self.rule.get_segment().project
