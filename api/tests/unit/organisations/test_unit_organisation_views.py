@@ -1344,7 +1344,6 @@ def test_list_my_groups(organisation, api_client):
 
 def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
     staff_client: APIClient,
-    admin_client: APIClient,
     subscription: Subscription,
     organisation: Organisation,
 ):
