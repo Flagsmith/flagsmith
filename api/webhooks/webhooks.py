@@ -18,7 +18,6 @@ from organisations.models import OrganisationWebhook
 from projects.models import Organisation
 from task_processor.decorators import register_task_handler
 from task_processor.task_run_method import TaskRunMethod
-from webhooks.constants import WEBHOOK_BACKOFF_BASE, WEBHOOK_BACKOFF_RETRIES
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,
@@ -65,7 +64,7 @@ def call_environment_webhooks(
     environment_id: int,
     data: typing.Mapping,
     event_type: str,
-    retries: int = WEBHOOK_BACKOFF_RETRIES,
+    retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
     """
     Call environment webhooks.
@@ -96,12 +95,12 @@ def call_organisation_webhooks(
     organisation_id: int,
     data: typing.Mapping,
     event_type: str,
-    retries: int = WEBHOOK_BACKOFF_RETRIES,
+    retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
     """
     Call organisation webhooks.
 
-    :param organisationt_id: The ID of the organisationt for which webhooks will be triggered.
+    :param organisation_id: The ID of the organisation for which webhooks will be triggered.
     :param data: A mapping containing the data to be sent in the webhook request.
     :param event_type: The type of event to trigger the webhook.
     :param retries: The number of times to retry the webhook in case of failure (int, default is 3).
@@ -123,7 +122,7 @@ def call_organisation_webhooks(
 
 
 def call_integration_webhook(config, data):
-    return _call_webhook(config.id, data)
+    return _call_webhook(config, data)
 
 
 def trigger_sample_webhook(
@@ -165,7 +164,7 @@ def call_webhook_with_failure_mail_after_retries(
     data: typing.Mapping,
     webhook_type: str,
     send_failure_mail: bool = False,
-    max_retries: int = WEBHOOK_BACKOFF_RETRIES,
+    max_retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
     try_count: int = 1,
 ):
     """
@@ -212,7 +211,9 @@ def call_webhook_with_failure_mail_after_retries(
             call_webhook_with_failure_mail_after_retries.delay(
                 delay_until=(
                     timezone.now()
-                    + timezone.timedelta(seconds=WEBHOOK_BACKOFF_BASE**try_count)
+                    + timezone.timedelta(
+                        seconds=settings.WEBHOOK_BACKOFF_BASE**try_count
+                    )
                     if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
                     else None
                 ),
@@ -234,7 +235,7 @@ def _call_webhooks(
     data: typing.Mapping,
     event_type: str,
     webhook_type: WebhookType,
-    retries: int = WEBHOOK_BACKOFF_RETRIES,
+    retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
