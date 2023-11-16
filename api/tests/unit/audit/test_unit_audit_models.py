@@ -7,7 +7,7 @@ from webhooks.webhooks import WebhookEventType
 
 def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     # Given
-    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks.delay")
+    mock_call_webhooks = mocker.patch("audit.signals.call_organisation_webhooks")
 
     audit_log = AuditLog(project=project, log="Some audit log")
 
@@ -15,7 +15,7 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(project, mocker):
     audit_log.save()
 
     # Then
-    mock_call_webhooks.assert_called_once_with(
+    mock_call_webhooks.delay.assert_called_once_with(
         args=(
             project.organisation.id,
             AuditLogSerializer(instance=audit_log).data,
