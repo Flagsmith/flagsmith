@@ -35,6 +35,7 @@ def reverse(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ("environment_permissions", "0001_initial"),
         ("permissions", "0004_add_create_project_permission"),
     ]
     operations = [migrations.RunPython(delete_orphan_migrations, reverse_code=reverse)]
