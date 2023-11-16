@@ -12,7 +12,7 @@
                 <h1 class="h2 float-left">
                     Organisation: <strong>{{organisation.name}}</strong>
                     - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong>
-                    {% if organisation.has_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %} 
+                    {% if organisation.has_paid_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %}
                 </h1>
                 <div class="float-right"><a href="/admin/organisations/organisation/{{organisation.id}}/change">Django Admin</a></div>
                 <div class="float-right">

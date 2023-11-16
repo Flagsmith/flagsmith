@@ -12,6 +12,7 @@ from django.core import mail
 from django.db.models import Model
 from django.urls import reverse
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
@@ -433,7 +434,7 @@ class OrganisationTestCase(TestCase):
         # Since subscription is created using organisation.id rather than
         # organisation and we already have evaluated subscription(by add_organisation)
         # attribute of organisation(before we created the subscription) we need to
-        # refresh organisation for `has_subscription` to work properly
+        # refresh organisation for `has_paid_subscription` to work properly
         organisation.refresh_from_db()
 
         # and
@@ -441,7 +442,7 @@ class OrganisationTestCase(TestCase):
 
         # and
         assert (
-            organisation.has_subscription()
+            organisation.has_paid_subscription()
             and organisation.subscription.subscription_id == subscription_id
             and organisation.subscription.customer_id == customer_id
         )
@@ -904,14 +905,14 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     )
 
 
-def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
-    mocker, organisation, admin_client
-):
+def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_subscription(
+    mocker: MockerFixture, organisation: Organisation, admin_client: APIClient
+) -> None:
     # Given
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata_from_id"
     )
-
+    assert organisation.subscription.subscription_id is None
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
         args=[organisation.pk],
@@ -921,7 +922,15 @@ def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subsc
     response = admin_client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {
+        "chargebee_email": None,
+        "max_api_calls": 50000,
+        "max_projects": 1,
+        "max_seats": 1,
+        "payment_source": None,
+    }
+
     get_subscription_metadata.assert_not_called()
 
 
