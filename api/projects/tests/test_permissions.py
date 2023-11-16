@@ -393,8 +393,7 @@ def test_free_plan_has_only_fixed_projects_permission():
     mock_request.user = user
 
     for i in range(MAX_PROJECTS_IN_FREE_PLAN):
-        result = project_permissions.has_permission(mock_request, mock_view)
+        assert project_permissions.has_permission(mock_request, mock_view)
         Project.objects.create(name=f"Test project{i}", organisation=organisation)
-        assert result
 
     assert not project_permissions.has_permission(mock_request, mock_view)
