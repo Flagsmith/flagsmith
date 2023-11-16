@@ -45,6 +45,8 @@ def _assert_bootstrapped(
 
 def test_bootstrap__empty_instance__creates_expected(settings: SettingsWrapper) -> None:
     # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
     expected_user_email = "test@example.com"
     expected_user_password = "foobar"
     expected_organisation_name = "Test Org"
@@ -68,9 +70,12 @@ def test_bootstrap__empty_instance__creates_expected(settings: SettingsWrapper) 
 
 
 def test_bootstrap__empty_instance__cli_overrides__creates_expected(
+    settings: SettingsWrapper,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
     expected_user_email = "test@example.com"
     expected_user_password = "foobar"
     expected_organisation_name = "Test Org"
@@ -108,8 +113,13 @@ def test_bootstrap__empty_instance__cli_overrides__creates_expected(
         lazy_fixture("project"),
     ],
 )
-def test_bootstrap__used_instance__skip_expected(existing_data: Model) -> None:
+def test_bootstrap__used_instance__skip_expected(
+    settings: SettingsWrapper,
+    existing_data: Model,
+) -> None:
     # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
     expected_users = FFAdminUser.objects.all()
     expected_organisations = Organisation.objects.all()
     expected_projects = Project.objects.all()
@@ -123,12 +133,9 @@ def test_bootstrap__used_instance__skip_expected(existing_data: Model) -> None:
     Project.objects.all() == expected_projects
 
 
-def test_bootstrap__allow_admin_initiation_via_cli__false__skip_expected(
+def test_bootstrap__allow_admin_initiation_via_cli__false_by_default__skip_expected(
     settings: SettingsWrapper,
 ) -> None:
-    # Given
-    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = False
-
     # When
     call_command("bootstrap")
 

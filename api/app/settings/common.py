@@ -405,7 +405,7 @@ ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
     "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
 )
 ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
-    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=True
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=False
 )
 
 ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
