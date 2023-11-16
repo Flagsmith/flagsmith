@@ -28,9 +28,7 @@ class AbstractBasePermissionModel(
     abstract_base_auditable_model_factory(
         RelatedObjectType.GRANT,
         audited_m2m_fields=["permissions"],
-        audit_create=True,
-        audit_update=True,
-        audit_delete=True,
+        default_messages=True,
     ),
 ):
     class Meta:

@@ -176,12 +176,84 @@ class _AbstractBaseAuditableModel(models.Model):
         return None
 
 
-# TODO #2797 later: get IP address from request
-def get_history_user(
-    instance: typing.Any, request: HttpRequest
-) -> typing.Optional["FFAdminUser"]:
-    user = getattr(request, "user", None)
-    return None if getattr(user, "is_master_api_key_user", False) else user
+def _get_action(model: _AbstractBaseAuditableModel, field: str) -> str:
+    new_value = getattr(model, field)
+    if new_value is True:
+        return "set true"
+    if new_value is False:
+        return "set false"
+    if new_value is None:
+        return "set null"
+
+    return "updated"
+
+
+class _AbstractDefaultAuditableModel(_AbstractBaseAuditableModel):
+    """
+    A base Model class that provides default loggers for create/update/delete auditing.
+    """
+
+    class Meta:
+        abstract = True
+
+    def get_create_log_message(self, history_instance) -> str | None:
+        return CREATED_MESSAGE.format(
+            model_name=self.get_audit_log_model_name(history_instance),
+            identity=self.get_audit_log_identity(),
+        )
+
+    def get_update_log_message(self, history_instance, delta: ModelDelta) -> str | None:
+        if not history_instance.prev_record:
+            logger.warning(f"No previous record for {self}")
+            return None
+
+        m2m_fields = {
+            field.name: field for field in self.history.model._history_m2m_fields
+        }
+        model_name = self.get_audit_log_model_name(history_instance)
+        identity = self.get_audit_log_identity()
+
+        def describe(change: ModelChange) -> str:
+            message = UPDATED_MESSAGE.format(
+                model_name=model_name,
+                identity=identity,
+                field=change.field,
+                action=_get_action(self, change.field),
+            )
+
+            if m2m_field := m2m_fields.get(change.field):
+
+                def get_identity(pk):
+                    obj = m2m_field.related_model.objects.filter(pk=pk).first()
+                    # related model MUST implement get_audit_log_identity
+                    return obj.get_audit_log_identity() if obj else "None"
+
+                reverse_field_name = m2m_field.m2m_reverse_field_name()
+                old_values = {
+                    through[reverse_field_name]: through for through in change.old
+                }
+                new_values = {
+                    through[reverse_field_name]: through for through in change.new
+                }
+                for pk in new_values.keys() - old_values.keys():
+                    message += f"; added: {get_identity(pk)}"
+                for pk in old_values.keys() - new_values.keys():
+                    message += f"; removed: {get_identity(pk)}"
+                for pk in new_values.keys() & old_values.keys():
+                    related_identity = get_identity(pk)
+                    for field in old_values[pk].keys() | new_values[pk].keys():
+                        if old_values[pk].get(field) != new_values[pk].get(field):
+                            message += f"; {field} changed: {related_identity}"
+
+            return message
+
+        return "; ".join(describe(change) for change in delta.changes) or None
+
+    def get_delete_log_message(self, history_instance) -> str | None:
+        return DELETED_MESSAGE.format(
+            model_name=self.get_audit_log_model_name(history_instance),
+            identity=self.get_audit_log_identity(),
+        )
 
 
 # TODO remove (some of) this once django-simple-history > 3.4.0 is released
@@ -312,6 +384,7 @@ class HistoricalRecords(BaseHistoricalRecords):
             if not inherited:
                 return  # set in abstract
 
+        # FIX IS HERE
         # connect additional m2m signal handlers
         for field in self.get_m2m_fields_from_model(sender):
             models.signals.post_save.connect(
@@ -334,119 +407,26 @@ class HistoricalRecords(BaseHistoricalRecords):
                 weak=False,
             )
 
+    # FIX IS HERE
     def post_m2m_save_or_delete(self, instance, created, cls, attr, **kwargs):
         # call post_save on parent model
         instance_attr = cls._meta.get_field(attr).m2m_field_name()
         self.post_save(getattr(instance, instance_attr), False, **kwargs)
 
 
-class AuditCreateMixin(_AbstractBaseAuditableModel):
-    def get_create_log_message(self, history_instance) -> str | None:
-        return CREATED_MESSAGE.format(
-            model_name=self.get_audit_log_model_name(history_instance),
-            identity=self.get_audit_log_identity(),
-        )
-
-    class Meta:
-        abstract = True
+def _get_history_user(
+    instance: models.Model, request: HttpRequest
+) -> typing.Optional["FFAdminUser"]:
+    user = getattr(request, "user", None)
+    return None if getattr(user, "is_master_api_key_user", False) else user
 
 
-def _get_action(model: _AbstractBaseAuditableModel, field: str) -> str:
-    new_value = getattr(model, field)
-    if new_value is True:
-        return "set true"
-    if new_value is False:
-        return "set false"
-    if new_value is None:
-        return "set null"
-
-    return "updated"
-
-
-class AuditUpdateMixin(_AbstractBaseAuditableModel):
-    def get_update_log_message(self, history_instance, delta: ModelDelta) -> str | None:
-        if not history_instance.prev_record:
-            logger.warning(f"No previous record for {self}")
-            return None
-
-        m2m_fields = {
-            field.name: field for field in self.history.model._history_m2m_fields
-        }
-        model_name = self.get_audit_log_model_name(history_instance)
-        identity = self.get_audit_log_identity()
-
-        def describe(change: ModelChange) -> str:
-            message = UPDATED_MESSAGE.format(
-                model_name=model_name,
-                identity=identity,
-                field=change.field,
-                action=_get_action(self, change.field),
-            )
-
-            if m2m_field := m2m_fields.get(change.field):
-
-                def get_identity(pk):
-                    obj = m2m_field.related_model.objects.filter(pk=pk).first()
-                    # related model MUST implement get_audit_log_identity
-                    return obj.get_audit_log_identity() if obj else "None"
-
-                reverse_field_name = m2m_field.m2m_reverse_field_name()
-                old_values = {
-                    through[reverse_field_name]: through for through in change.old
-                }
-                new_values = {
-                    through[reverse_field_name]: through for through in change.new
-                }
-                for pk in new_values.keys() - old_values.keys():
-                    message += f"; added: {get_identity(pk)}"
-                for pk in old_values.keys() - new_values.keys():
-                    message += f"; removed: {get_identity(pk)}"
-                for pk in new_values.keys() & old_values.keys():
-                    related_identity = get_identity(pk)
-                    for field in old_values[pk].keys() | new_values[pk].keys():
-                        if old_values[pk].get(field) != new_values[pk].get(field):
-                            message += f"; {field} changed: {related_identity}"
-
-            return message
-
-        return "; ".join(describe(change) for change in delta.changes) or None
-
-    class Meta:
-        abstract = True
-
-
-class AuditDeleteMixin(_AbstractBaseAuditableModel):
-    def get_delete_log_message(self, history_instance) -> str | None:
-        return DELETED_MESSAGE.format(
-            model_name=self.get_audit_log_model_name(history_instance),
-            identity=self.get_audit_log_identity(),
-        )
-
-    class Meta:
-        abstract = True
-
-
-def _make_auditable_base(
-    related_object_type: RelatedObjectType,
-    audit_create: bool,
-    audit_update: bool,
-    audit_delete: bool,
-) -> typing.Type[_AbstractBaseAuditableModel]:
-    mixins = []
-    if audit_create:
-        mixins.append(AuditCreateMixin)
-    if audit_update:
-        mixins.append(AuditUpdateMixin)
-    if audit_delete:
-        mixins.append(AuditDeleteMixin)
-
-    class AuditableBase(*mixins, _AbstractBaseAuditableModel):
-        class Meta:
-            abstract = True
-
-    AuditableBase.related_object_type = related_object_type
-
-    return AuditableBase
+def _get_base_model(default_messages: bool):
+    return (
+        _AbstractDefaultAuditableModel
+        if default_messages
+        else _AbstractBaseAuditableModel
+    )
 
 
 def abstract_base_auditable_model_factory(
@@ -454,29 +434,25 @@ def abstract_base_auditable_model_factory(
     unaudited_fields: typing.Sequence[str] | None = None,
     audited_m2m_fields: typing.Sequence[str] | None = None,
     *,
-    audit_create: bool = False,
-    audit_update: bool = False,
-    audit_delete: bool = False,
+    default_messages: bool = False,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     """Create abstract base for model with history and audit methods"""
 
-    # make base with requested audit properties/methods
-    AuditableBase = _make_auditable_base(
-        related_object_type, audit_create, audit_update, audit_delete
-    )
-
-    # make base adding requested history properties/models
-    class AuditableBaseWithHistory(AuditableBase):
+    # make base with requested audit and history properties/methods
+    # type ignored due to https://github.com/microsoft/pyright/issues/5326
+    class AuditableBaseWithHistory(_get_base_model(default_messages)):  # type: ignore
         history = HistoricalRecords(
             bases=[BaseHistoricalModel],
             excluded_fields=unaudited_fields or (),
             m2m_fields=audited_m2m_fields or (),
-            get_user=get_history_user,
+            get_user=_get_history_user,
             inherit=True,
         )
 
         class Meta:
             abstract = True
+
+    AuditableBaseWithHistory.related_object_type = related_object_type
 
     return AuditableBaseWithHistory
 
@@ -488,9 +464,7 @@ def register_auditable_model(
     unaudited_fields: typing.Sequence[str] | None = None,
     audited_m2m_fields: typing.Sequence[str] | None = None,
     *,
-    audit_create: bool = False,
-    audit_update: bool = False,
-    audit_delete: bool = False,
+    default_messages: bool = False,
 ) -> None:
     """Add history and audit methods to existing model"""
 
@@ -501,17 +475,13 @@ def register_auditable_model(
         bases=[BaseHistoricalModel],
         excluded_fields=unaudited_fields or (),
         m2m_fields=audited_m2m_fields or (),
-        get_user=get_history_user,
+        get_user=_get_history_user,
     )
 
-    # make base with requested audit properties/methods
-    AuditableBase = _make_auditable_base(
-        related_object_type, audit_create, audit_update, audit_delete
-    )
-
-    # copy audit properties/methods to existing model
-    for attr in AuditableBase.__dict__:
+    # copy requested audit properties/methods to existing model
+    setattr(model, "related_object_type", related_object_type)
+    for attr, attr_value in (_get_base_model(default_messages)).__dict__.items():
         try:
             getattr(model, attr)
         except AttributeError:
-            setattr(model, attr, getattr(AuditableBase, attr))
+            setattr(model, attr, attr_value)

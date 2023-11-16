@@ -59,8 +59,7 @@ class Project(
     abstract_base_auditable_model_factory(
         RelatedObjectType.PROJECT,
         UNAUDITED_PROJECT_FIELDS,
-        audit_create=True,
-        audit_delete=True,
+        default_messages=True,
     ),
 ):
     name = models.CharField(max_length=2000)
