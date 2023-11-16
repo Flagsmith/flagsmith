@@ -116,9 +116,7 @@ class FFAdminUser(
         RelatedObjectType.USER,
         UNAUDITED_USER_FIELDS,
         ["organisations"],
-        audit_create=True,
-        audit_update=True,
-        audit_delete=True,
+        default_messages=True,
     ),
     AbstractUser,
 ):
@@ -419,9 +417,7 @@ class UserPermissionGroup(
     abstract_base_auditable_model_factory(
         RelatedObjectType.GROUP,
         audited_m2m_fields=["users"],
-        audit_create=True,
-        audit_update=True,
-        audit_delete=True,
+        default_messages=True,
     )
 ):
     """
@@ -476,12 +472,12 @@ class UserPermissionGroup(
         return [self.organisation]
 
 
-def _mfa_method_get_audit_log_identity(self) -> str:
+def _mfa_method_get_audit_log_identity(self: MFAMethod) -> str:
     return f"{self.user.email} / {self.name}"
 
 
 def _mfa_method_get_organisations(
-    self, delta=None
+    self: MFAMethod, delta=None
 ) -> typing.Iterable[Organisation] | None:
     return self.user._get_organisations()
 
@@ -492,9 +488,7 @@ register_auditable_model(
     __package__,
     RelatedObjectType.USER_MFA_METHOD,
     ["_backup_codes"],
-    audit_create=True,
-    audit_update=True,
-    audit_delete=True,
+    default_messages=True,
 )
 MFAMethod.get_audit_log_identity = _mfa_method_get_audit_log_identity
 MFAMethod._get_organisations = _mfa_method_get_organisations
