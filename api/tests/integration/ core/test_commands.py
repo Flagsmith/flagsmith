@@ -121,3 +121,18 @@ def test_bootstrap__used_instance__skip_expected(existing_data: Model) -> None:
     FFAdminUser.objects.all() == expected_users
     Organisation.objects.all() == expected_organisations
     Project.objects.all() == expected_projects
+
+
+def test_bootstrap__allow_admin_initiation_via_cli__false__skip_expected(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = False
+
+    # When
+    call_command("bootstrap")
+
+    # Then
+    assert not FFAdminUser.objects.count()
+    assert not Organisation.objects.count()
+    assert not Project.objects.count()
