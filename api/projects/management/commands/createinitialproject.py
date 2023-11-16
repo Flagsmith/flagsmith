@@ -43,7 +43,7 @@ class Command(BaseCommand):
             or not organisation
             or Project.objects.count()
         ):
-            logger.debug("Skipping initial organisation creation.")
+            logger.debug("Skipping initial project creation.")
             return
         project = Project.objects.create(
             name=project_name or settings.PROJECT_NAME,
