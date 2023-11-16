@@ -38,7 +38,7 @@ class OrganisationTestCase(TestCase):
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
 
-    def test_has_subscription_true(self):
+    def test_has_paid_subscription_true(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
         Subscription.objects.filter(organisation=organisation).update(
@@ -49,14 +49,14 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
 
         # Then
-        assert organisation.has_subscription()
+        assert organisation.has_paid_subscription()
 
-    def test_has_subscription_missing_subscription_id(self):
+    def test_has_paid_subscription_missing_subscription_id(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
 
         # Then
-        assert not organisation.has_subscription()
+        assert not organisation.has_paid_subscription()
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_cancel_subscription_cancels_chargebee_subscription(
