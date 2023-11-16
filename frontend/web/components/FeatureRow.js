@@ -198,6 +198,7 @@ class TheComponent extends Component {
                   rowGap: 4,
                   wordBreak: 'break-all',
                 }}
+                
               >
                 <span className='me-2'>
                   {created_date ? (
@@ -219,6 +220,24 @@ class TheComponent extends Component {
                     name
                   )}
                 </span>
+                <Tooltip
+                  html
+                  title={
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigator.clipboard.writeText(
+                          projectFlag.name,
+                        )
+                        toast('Copied')
+                      }}
+                    >
+                      <Icon name='copy' width={20} fill='#9DA4AE' />
+                    </div>
+                  }
+                >
+                  Copy feature name
+                </Tooltip>
 
                 {!!projectFlag.num_segment_overrides && (
                   <div
