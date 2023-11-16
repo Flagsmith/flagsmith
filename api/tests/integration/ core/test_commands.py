@@ -133,6 +133,6 @@ def test_bootstrap__allow_admin_initiation_via_cli__false__skip_expected(
     call_command("bootstrap")
 
     # Then
-    assert not FFAdminUser.objects.count()
-    assert not Organisation.objects.count()
-    assert not Project.objects.count()
+    assert not FFAdminUser.objects.exists()
+    assert not Organisation.objects.exists()
+    assert not Project.objects.exists()

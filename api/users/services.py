@@ -4,7 +4,7 @@ from users.models import FFAdminUser
 
 
 def should_skip_create_initial_superuser() -> bool:
-    return FFAdminUser.objects.count()
+    return FFAdminUser.objects.exists()
 
 
 def create_initial_superuser(

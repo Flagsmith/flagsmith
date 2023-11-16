@@ -41,7 +41,7 @@ class Command(BaseCommand):
         if (
             not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
             or not organisation
-            or Project.objects.count()
+            or Project.objects.exists()
         ):
             logger.debug("Skipping initial project creation.")
             return
