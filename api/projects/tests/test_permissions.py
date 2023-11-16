@@ -376,6 +376,7 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
 @pytest.mark.django_db
 def test_free_plan_has_only_fixed_projects_permission():
+    # Given
     organisation = Organisation.objects.create(name="Test organisation")
 
     user = FFAdminUser.objects.create(email="admin@test.com")
@@ -387,13 +388,15 @@ def test_free_plan_has_only_fixed_projects_permission():
 
     project_permissions = ProjectPermissions()
 
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.data = {"name": "Test", "organisation": organisation.id}
-    mock_request.user = user
+    mock_view = mock.MagicMock(action="create", detail=False)
+    mock_request = mock.MagicMock(
+        data={"name": "Test", "organisation": organisation.id}, user=user
+    )
 
+    # When
     for i in range(MAX_PROJECTS_IN_FREE_PLAN):
         assert project_permissions.has_permission(mock_request, mock_view)
         Project.objects.create(name=f"Test project{i}", organisation=organisation)
 
+    # Then - free projects limit should be exhausted
     assert not project_permissions.has_permission(mock_request, mock_view)

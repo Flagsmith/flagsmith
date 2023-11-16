@@ -38,7 +38,7 @@ class ProjectPermissions(IsAuthenticated):
         if view.action == "create" and request.user.belongs_to(
             int(request.data.get("organisation"))
         ):
-            organisation = Organisation.objects.get(
+            organisation = Organisation.objects.select_related("subscription").get(
                 id=int(request.data.get("organisation"))
             )
 
@@ -49,7 +49,10 @@ class ProjectPermissions(IsAuthenticated):
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
-            if subscription_metadata.projects and total_projects_created >= subscription_metadata.projects:
+            if (
+                subscription_metadata.projects
+                and total_projects_created >= subscription_metadata.projects
+            ):
                 return False
             if organisation.restrict_project_create_to_admin:
                 return request.user.is_organisation_admin(organisation.pk)
