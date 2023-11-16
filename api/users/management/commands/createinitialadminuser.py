@@ -45,10 +45,18 @@ class Command(BaseCommand):
             logger.debug("Skipping initial user creation.")
             return
         admin_initial_password = sys.stdin.read().strip() if password_stdin else None
-        create_initial_superuser(
+        response = create_initial_superuser(
             admin_email=admin_email,
             admin_initial_password=admin_initial_password,
         )
         self.stdout.write(
-            self.style.SUCCESS('Superuser "%s" created successfully.' % admin_email)
+            self.style.SUCCESS(
+                'Superuser "%s" created successfully.' % response.user.email
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Please go to the following page and choose a password: %s"
+                % response.password_reset_url
+            )
         )

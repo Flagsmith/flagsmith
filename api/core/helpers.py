@@ -1,9 +1,13 @@
+import re
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-INSECURE_DOMAINS = frozenset(["localhost", "127.0.0.1"])
+INSECURE_DOMAINS = ("localhost", "127.0.0.1")
+
+_insecure_domain_pattern = re.compile(rf'({"|".join(INSECURE_DOMAINS)})(:\d+)?')
 
 
 def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
@@ -16,7 +20,7 @@ def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
 
     if request:
         scheme = request.scheme
-    elif domain in INSECURE_DOMAINS:
+    elif _insecure_domain_pattern.match(domain):
         scheme = "http"
     else:
         scheme = "https"

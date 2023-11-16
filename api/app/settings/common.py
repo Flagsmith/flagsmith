@@ -409,7 +409,6 @@ ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
 )
 
 ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
-ADMIN_INITIAL_PASSWORD = env("ADMIN_INITIAL_PASSWORD", default="password")
 ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
 PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
 

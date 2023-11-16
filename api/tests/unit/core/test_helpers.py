@@ -91,7 +91,9 @@ def test_get_current_site__insecure_request__return_expected(
     assert url == f"http://{expected_domain}"
 
 
-@pytest.mark.parametrize("expected_domain", ["localhost", "127.0.0.1"])
+@pytest.mark.parametrize(
+    "expected_domain", ["localhost", "127.0.0.1", "localhost:4219"]
+)
 def test_get_current_site__localhost__return_expected(
     settings: "SettingsWrapper",
     expected_domain: str,

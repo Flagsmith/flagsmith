@@ -64,9 +64,14 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
         raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
 
     def form_valid(self, form):
-        form.create_admin()
         form.update_site()
-        return JsonResponse({"message": "INSTALLATION CONFIGURED SUCCESSFULLY"})
+        password_reset_url = form.create_admin().password_reset_url
+        return JsonResponse(
+            {
+                "message": "INSTALLATION CONFIGURED SUCCESSFULLY",
+                "passwordResetUrl": password_reset_url,
+            }
+        )
 
 
 class AdminInitView(View):
@@ -79,9 +84,12 @@ class AdminInitView(View):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        create_initial_superuser()
+        response = create_initial_superuser()
         return JsonResponse(
-            {"adminUserCreated": True},
+            {
+                "adminUserCreated": True,
+                "passwordResetUrl": response.password_reset_url,
+            },
             status=status.HTTP_201_CREATED,
         )
 
