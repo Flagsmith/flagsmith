@@ -286,7 +286,7 @@ def chargebee_webhook(request):
                 "Couldn't get unique subscription for ChargeBee id %s"
                 % subscription_data.get("id")
             )
-            logger.error(error_message)
+            logger.warning(error_message)
             return Response(status=status.HTTP_200_OK)
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":

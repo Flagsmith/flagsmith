@@ -4,6 +4,8 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ModalHR from './ModalHR'
 import Icon from 'components/Icon'
+import { add } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const InviteUsers = class extends Component {
   static displayName = 'InviteUsers'
@@ -153,7 +155,9 @@ const InviteUsers = class extends Component {
                     }
                   >
                     {isSaving ? 'Sending' : 'Invite additional member'}
-                    <span className='pl-2 icon ion-ios-add' />
+                    <span className='pl-2 icon'>
+                      <IonIcon icon={add} style={{ fontSize: '13px' }} />
+                    </span>
                   </Button>
                 </div>
 

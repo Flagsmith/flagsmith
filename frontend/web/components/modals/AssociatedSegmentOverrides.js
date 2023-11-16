@@ -110,6 +110,7 @@ class TheComponent extends Component {
           id={this.props.id}
           projectId={this.props.projectId}
           environmentId={this.state.selectedEnv}
+          readOnly={this.props.readOnly}
         />
       </div>
     )
@@ -196,6 +197,7 @@ class TheComponent extends Component {
                     id={this.props.id}
                     projectId={this.props.projectId}
                     environmentId={v.env.api_key}
+                    readOnly={this.props.readOnly}
                   />
                 </div>
               </div>
@@ -296,6 +298,7 @@ export default class SegmentOverridesInner extends Component {
       originalSegmentOverrides,
       projectFlag,
       projectId,
+      readOnly,
       segmentOverrides,
       updateSegments,
     } = this.props
@@ -366,11 +369,14 @@ export default class SegmentOverridesInner extends Component {
                 value={segmentOverride}
                 controlValue={projectFlag.feature_state_value}
                 onChange={updateSegments}
+                readOnly={readOnly}
               />
               <div className='text-right'>
-                <Button disabled={this.state.isSaving} onClick={save}>
-                  {this.state.isSaving ? 'Saving' : 'Save'}
-                </Button>
+                {!readOnly && (
+                  <Button disabled={this.state.isSaving} onClick={save}>
+                    {this.state.isSaving ? 'Saving' : 'Save'}
+                  </Button>
+                )}
               </div>
             </div>
           )
@@ -395,7 +401,7 @@ class SegmentOverridesInnerAdd extends Component {
 
     getEnvironment(getStore(), { id }).then((res) => {
       this.setState({
-        totalSegmentOverrides: res[1].data.total_segment_overrides,
+        totalSegmentOverrides: res.data.total_segment_overrides,
       })
     })
   }
@@ -411,7 +417,7 @@ class SegmentOverridesInnerAdd extends Component {
     }
   }
   render() {
-    const { environmentId, id, ignoreFlags, projectId } = this.props
+    const { environmentId, id, ignoreFlags, projectId, readOnly } = this.props
     const addValue = (featureId, feature) => {
       const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
       const item = {
@@ -448,14 +454,16 @@ class SegmentOverridesInnerAdd extends Component {
         {() => {
           return (
             <div className='mt-2'>
-              <FlagSelect
-                disabled={!!segmentOverrideLimitAlert}
-                onlyInclude={this.props.feature}
-                placeholder='Create a Segment Override...'
-                projectId={projectId}
-                ignore={ignoreFlags}
-                onChange={addValue}
-              />
+              {!readOnly && (
+                <FlagSelect
+                  disabled={!!segmentOverrideLimitAlert}
+                  onlyInclude={this.props.feature}
+                  placeholder='Create a Segment Override...'
+                  projectId={projectId}
+                  ignore={ignoreFlags}
+                  onChange={addValue}
+                />
+              )}
             </div>
           )
         }}

@@ -19,6 +19,16 @@ urlpatterns = [
         name="update_seats",
     ),
     path(
+        "organisations/<int:organisation_id>/organisation_start_trial",
+        views.organisation_start_trial,
+        name="organisation_start_trial",
+    ),
+    path(
+        "organisations/<int:organisation_id>/organisation_end_trial",
+        views.organisation_end_trial,
+        name="organisation_end_trial",
+    ),
+    path(
         "organisations/<int:project_id>/migrate_identities",
         views.migrate_identities_to_edge,
         name="migrate_identities",

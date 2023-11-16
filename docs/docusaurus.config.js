@@ -72,10 +72,6 @@ module.exports = {
                     href: 'https://discord.gg/hFhxNtXzgm',
                     position: 'left',
                 },
-                {
-                    type: 'docsVersionDropdown',
-                    position: 'right',
-                },
             ],
         },
         footer: {
@@ -140,17 +136,6 @@ module.exports = {
                     routeBasePath: '/',
                     // Please change this to your repo.
                     editUrl: 'https://github.com/flagsmith/flagsmith/tree/main/docs/',
-                    lastVersion: 'current',
-                    versions: {
-                        current: {
-                            label: 'v2.0',
-                            badge: false,
-                        },
-                        'v1.0': {
-                            label: 'v1.0',
-                            badge: false,
-                        },
-                    },
                 },
                 theme: {
                     customCss: require.resolve('./src/css/custom.css'),
