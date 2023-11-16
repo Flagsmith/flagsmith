@@ -2,6 +2,8 @@
 import React, { PureComponent } from 'react'
 import propTypes from 'prop-types'
 import cn from 'classnames'
+import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 export default class Paging extends PureComponent {
   static displayName = 'Paging'
@@ -36,9 +38,13 @@ export default class Paging extends PureComponent {
       <Row className=' paging py-0' style={isLoading ? { opacity: 0.5 } : {}}>
         <Button
           disabled={isLoading || !paging.previous}
-          className='icon btn-paging ion-ios-arrow-back'
+          className='icon btn-paging mt-1'
           onClick={() => prevPage()}
-        />
+        >
+          <div>
+            <IonIcon icon={chevronBackOutline} />
+          </div>
+        </Button>
         {paging.currentPage ? (
           <Row>
             {!range.includes(0) && !noPages && (
@@ -124,10 +130,14 @@ export default class Paging extends PureComponent {
           )
         )}
         <Button
-          className='icon btn-paging ion-ios-arrow-forward'
+          className='icon btn-paging mt-1'
           disabled={isLoading || !paging.next}
           onClick={() => nextPage()}
-        />
+        >
+          <div>
+            <IonIcon icon={chevronForwardOutline} />
+          </div>
+        </Button>
       </Row>
     )
   }
