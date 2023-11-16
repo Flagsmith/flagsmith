@@ -347,7 +347,7 @@ class Environment(
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
         return map_environment_to_environment_document(environment)
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self
 
 

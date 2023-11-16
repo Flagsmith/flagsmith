@@ -142,7 +142,7 @@ class ChangeRequest(
         ):
             return self.committed_by
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
     def is_approved(self):
@@ -261,7 +261,7 @@ class ChangeRequestApproval(
     def get_audit_log_author(self, history_instance) -> "FFAdminUser":
         return self.user
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.change_request.environment
 
 

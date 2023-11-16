@@ -112,14 +112,14 @@ class _AbstractBaseAuditableModel(models.Model):
         self, delta: ModelDelta | None
     ) -> tuple[typing.Iterable[Organisation], Project | None, Environment | None]:
         # attempt to get environment to log against
-        environment = self._get_environment(delta)
+        environment = self.get_environment(delta)
         # attempt to get project to log against, falling back to environment (if any) project
-        project = self._get_project(delta) or (
+        project = self.get_project(delta) or (
             environment.project if environment else None
         )
         # attempt to get organisations to log against, falling back to project (if any) organisations
         # (organisations may be [] e.g. for an organisation-less user, but must not be None)
-        if (organisations := self._get_organisations(delta)) is None:
+        if (organisations := self.get_organisations(delta)) is None:
             organisations = [project.organisation] if project else None
         # it should never be the case that we still don't know the organisations
         if organisations is None:
@@ -163,15 +163,15 @@ class _AbstractBaseAuditableModel(models.Model):
         else:
             return self._meta.verbose_name or self.__class__.__name__
 
-    def _get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
         """Return the related organisations for this model."""
         return None
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         """Return the related project for this model."""
         return None
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         """Return the related environment for this model."""
         return None
 

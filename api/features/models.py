@@ -199,7 +199,7 @@ class Feature(
     def get_update_log_message(self, history_instance, delta) -> str | None:
         return FEATURE_UPDATED_MESSAGE % self.name
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         return self.project
 
 
@@ -375,7 +375,7 @@ class FeatureSegment(
             self.segment.name,
         )
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
 
@@ -894,10 +894,10 @@ class FeatureState(
 
         return kwargs
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.environment
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         return self.feature.project
 
     def _is_more_recent_version(self, other: "FeatureState") -> bool:
@@ -962,5 +962,5 @@ class FeatureStateValue(
 
         return FEATURE_STATE_VALUE_UPDATED_MESSAGE % feature.name
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.feature_state.environment

@@ -83,7 +83,7 @@ class MultivariateFeatureOption(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
-    def _get_project(self, delta=None) -> Project | None:
+    def get_project(self, delta=None) -> Project | None:
         return self.feature.project
 
 
@@ -147,5 +147,5 @@ class MultivariateFeatureStateValue(
 
         return self.feature_state.feature_id
 
-    def _get_environment(self, delta=None) -> Environment | None:
+    def get_environment(self, delta=None) -> Environment | None:
         return self.feature_state.environment

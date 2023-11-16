@@ -50,8 +50,8 @@ def _create_feature_state_audit_log_for_change_request(
         feature_state.change_request.title,
     )
     AuditLog.objects.create(
-        environment=feature_state._get_environment(),
-        project=feature_state._get_project(),
+        environment=feature_state.get_environment(),
+        project=feature_state.get_project(),
         log=log,
         related_object_id=feature_state.pk,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
@@ -163,7 +163,7 @@ def create_segment_priorities_changed_audit_log(
 
     # all feature segments should have the same value for environment and feature
     feature_segment = feature_segments[0]
-    environment = feature_segment._get_environment()
+    environment = feature_segment.get_environment()
     feature = feature_segment.feature
 
     AuditLog.objects.create(
@@ -202,7 +202,7 @@ def create_audit_log_user_logged_in(
             ip_address=ip_address,
             is_system_event=True,
         )
-        for organisation in user._get_organisations() or []
+        for organisation in user.get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)
 
@@ -233,7 +233,7 @@ def create_audit_log_user_logged_out(
             ip_address=ip_address,
             is_system_event=True,
         )
-        for organisation in user._get_organisations() or []
+        for organisation in user.get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)
 
@@ -268,6 +268,6 @@ def create_audit_log_user_login_failed(
             ip_address=ip_address,
             is_system_event=True,
         )
-        for organisation in user._get_organisations() or []
+        for organisation in user.get_organisations() or []
     ]
     AuditLog.objects.bulk_create(audit_logs)

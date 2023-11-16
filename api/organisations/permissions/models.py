@@ -28,7 +28,7 @@ class UserOrganisationPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.organisation.name}"
 
-    def _get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
 
 
@@ -51,7 +51,7 @@ class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.organisation.name}"
 
-    def _get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
 
 

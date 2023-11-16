@@ -354,7 +354,7 @@ class FFAdminUser(
             ffadminuser=self, userpermissiongroup__id=group_id
         ).update(group_admin=False)
 
-    def _get_organisations(
+    def get_organisations(
         self, delta: ModelDelta | None = None
     ) -> typing.Iterable[Organisation] | None:
         for change in delta.changes if delta else []:
@@ -447,7 +447,7 @@ class UserPermissionGroup(
     def get_audit_log_identity(self) -> str:
         return self.name
 
-    def _get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
+    def get_organisations(self, delta=None) -> typing.Iterable[Organisation] | None:
         return [self.organisation]
 
 
