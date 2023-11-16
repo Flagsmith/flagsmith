@@ -272,7 +272,6 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
-
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]
         customer_email: str = request.data["content"]["customer"]["email"]
@@ -310,7 +309,9 @@ def chargebee_webhook(request):
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(
+                    subscription_data.get("current_term_end")
+                ).replace(tzinfo=timezone.utc),
                 update_chargebee=False,
             )
 

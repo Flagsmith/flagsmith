@@ -157,6 +157,20 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
+    def cancel_users(self):
+        remaining_seat_holder = (
+            UserOrganisation.objects.filter(
+                organisation=self,
+                role=OrganisationRole.ADMIN,
+            )
+            .order_by("date_joined")
+            .first()
+        )
+
+        UserOrganisation.objects.filter(
+            organisation=self,
+        ).exclude(id=remaining_seat_holder.id).delete()
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -213,6 +227,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
         self.save()
+        # If the date is in the future, a recurring task takes it.
+        if cancellation_date <= timezone.now():
+            self.organisation.cancel_users()
+
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 
