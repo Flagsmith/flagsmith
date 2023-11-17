@@ -1214,68 +1214,71 @@ const CreateFlag = class extends Component {
                                                   }
                                                 </strong>
                                               </p>
-                                              <Permission
-                                                level='environment'
-                                                permission={Utils.getManageFeaturePermission(
-                                                  is4Eyes,
-                                                  identity,
-                                                )}
-                                                id={this.props.environmentId}
-                                              >
-                                                {({
-                                                  permission: savePermission,
-                                                }) =>
-                                                  Utils.renderWithPermission(
-                                                    savePermission,
-                                                    Constants.environmentPermissions(
-                                                      Utils.getManageFeaturePermissionDescription(
-                                                        is4Eyes,
-                                                        identity,
-                                                      ),
-                                                    ),
-                                                    <div className='text-right'>
-                                                      <Permission
-                                                        level='environment'
-                                                        permission={
-                                                          'MANAGE_SEGMENT_OVERRIDES'
-                                                        }
-                                                        id={
-                                                          this.props
-                                                            .environmentId
-                                                        }
-                                                      >
-                                                        {({
-                                                          permission:
-                                                            manageSegmentsOverrides,
-                                                        }) => {
-                                                          return (
-                                                            <Button
-                                                              onClick={
-                                                                saveFeatureSegments
-                                                              }
-                                                              type='button'
-                                                              data-test='update-feature-segments-btn'
-                                                              id='update-feature-segments-btn'
-                                                              disabled={
-                                                                isSaving ||
-                                                                !name ||
-                                                                invalid ||
-                                                                !savePermission ||
-                                                                (manageSegmentOverridesEnabled &&
-                                                                  !manageSegmentsOverrides)
-                                                              }
-                                                            >
-                                                              {isSaving
-                                                                ? 'Updating'
-                                                                : 'Update Segment Overrides'}
-                                                            </Button>
-                                                          )
-                                                        }}
-                                                      </Permission>
-                                                    </div>,
-                                                  )
-                                                }
-                                              </Permission>
+                                              <div className='text-right'>
+                                                <Permission
+                                                  level='environment'
+                                                  permission={Utils.getManageFeaturePermission(
+                                                    is4Eyes,
+                                                    identity,
+                                                  )}
+                                                  id={this.props.environmentId}
+                                                >
+                                                  {({
+                                                    permission: savePermission,
+                                                  }) => (
+                                                    <Permission
+                                                      level='environment'
+                                                      permission={
+                                                        'MANAGE_SEGMENT_OVERRIDES'
+                                                      }
+                                                      id={
+                                                        this.props.environmentId
+                                                      }
+                                                    >
+                                                      {({
+                                                        permission:
+                                                          manageSegmentsOverrides,
+                                                      }) => {
+                                                        return Utils.renderWithPermission(
+                                                          manageSegmentOverridesEnabled
+                                                            ? manageSegmentsOverrides
+                                                            : savePermission,
+                                                          Constants.environmentPermissions(
+                                                            manageSegmentOverridesEnabled
+                                                              ? 'Manage segment overrides'
+                                                              : Utils.getManageFeaturePermissionDescription(
+                                                                  is4Eyes,
+                                                                  identity,
+                                                                ),
+                                                          ),
+                                                          <Button
+                                                            onClick={
+                                                              saveFeatureSegments
+                                                            }
+                                                            type='button'
+                                                            data-test='update-feature-segments-btn'
+                                                            id='update-feature-segments-btn'
+                                                            disabled={
+                                                              isSaving ||
+                                                              !name ||
+                                                              invalid ||
+                                                              (!manageSegmentOverridesEnabled &&
+                                                                !savePermission) ||
+                                                              (manageSegmentOverridesEnabled &&
+                                                                !manageSegmentsOverrides)
+                                                            }
+                                                          >
+                                                            {isSaving
+                                                              ? 'Updating'
+                                                              : 'Update Segment Overrides'}
+                                                          </Button>,
+                                                        )
+                                                      }}
+                                                    </Permission>
+                                                  )}
+                                                </Permission>
+                                              </div>
+                                              ,
                                             </div>
                                           )}
                                         </div>
