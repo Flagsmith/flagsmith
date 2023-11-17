@@ -20,6 +20,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from organisations.chargebee import webhook_handlers
 from organisations.exceptions import (
     OrganisationHasNoSubscription,
     SubscriptionNotFound,
@@ -46,10 +47,6 @@ from organisations.serializers import (
     PortalUrlSerializer,
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
-)
-from organisations.subscriptions.constants import (
-    SUBSCRIPTION_BILLING_STATUS_ACTIVE,
-    SUBSCRIPTION_BILLING_STATUS_DUNNING,
 )
 from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
@@ -265,89 +262,16 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-def chargebee_webhook_payment_failed(request: Request) -> Response:
-    if "content" not in request.data:
-        logger.warning("Missing `content` field from chargebee webhook")
-        return Response(status=status.HTTP_200_OK)
-
-    if "invoice" not in request.data["content"]:
-        logger.warning("Missing `invoice` field from chargebee webhook")
-        return Response(status=status.HTTP_200_OK)
-
-    invoice = request.data["content"]["invoice"]
-
-    # If dunning hasn't started ignore the declined payment.
-    if invoice.get("dunning_status") != "in_progress":
-        return Response(status=status.HTTP_200_OK)
-
-    if "subscription_id" not in invoice:
-        logger.info("Payment declined for non-subscription related charge, skipping.")
-        return Response(status=status.HTTP_200_OK)
-
-    subscription_id = invoice["subscription_id"]
-    try:
-        subscription = Subscription.objects.get(subscription_id=subscription_id)
-    except Subscription.DoesNotExist:
-        logger.warning(
-            "No matching subscription for chargebee payment "
-            f"failed webhook for subscription id {subscription_id}"
-        )
-        return Response(status=status.HTTP_200_OK)
-    except Subscription.MultipleObjectsReturned:
-        logger.warning(
-            "Multiple matching subscriptions for chargebee payment "
-            f"failed webhook for subscription id {subscription_id}"
-        )
-        return Response(status=status.HTTP_200_OK)
-
-    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
-    subscription.save()
-
-    return Response(status=status.HTTP_200_OK)
-
-
-def chargebee_webhook_payment_succeeded(request: Request) -> Response:
-    if "content" not in request.data:
-        logger.warning("Missing `content` field from chargebee webhook")
-        return Response(status=status.HTTP_200_OK)
-
-    if "invoice" not in request.data["content"]:
-        logger.warning("Missing `invoice` field from chargebee webhook")
-        return Response(status=status.HTTP_200_OK)
-
-    invoice = request.data["content"]["invoice"]
-
-    if "subscription_id" not in invoice:
-        logger.info("Payment succeeded for non-subscription related charge, skipping.")
-        return Response(status=status.HTTP_200_OK)
-
-    subscription_id = invoice["subscription_id"]
-    try:
-        subscription = Subscription.objects.get(subscription_id=subscription_id)
-    except Subscription.DoesNotExist:
-        logger.warning(
-            "No matching subscription for chargebee payment "
-            f"succeeded webhook for subscription id {subscription_id}"
-        )
-        return Response(status=status.HTTP_200_OK)
-    except Subscription.MultipleObjectsReturned:
-        logger.warning(
-            "Multiple matching subscriptions for chargebee payment "
-            f"succeeded webhook for subscription id {subscription_id}"
-        )
-        return Response(status=status.HTTP_200_OK)
-
-    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_ACTIVE
-    subscription.save()
-
-    return Response(status=status.HTTP_200_OK)
-
-
 @api_view(["POST"])
 @authentication_classes([BasicAuthentication])
 def chargebee_webhook(request: Request) -> Response:
     """
     Endpoint to handle webhooks from chargebee.
+
+    Payment failure and payment succeeded webhooks are filtered out and processed
+    to determine which of our subscriptions are in a dunning state.
+
+    The remaining webhooks are processed if they have subscription data:
 
      - If subscription is active, check to see if plan has changed and update if so. Always update cancellation date to
        None to ensure that if a subscription is reactivated, it is updated on our end.
@@ -358,9 +282,9 @@ def chargebee_webhook(request: Request) -> Response:
     event_type = request.data.get("event_type")
 
     if event_type == "payment_failed":
-        return chargebee_webhook_payment_failed(request)
+        return webhook_handlers.payment_failed(request)
     if event_type == "payment_succeeded":
-        return chargebee_webhook_payment_succeeded(request)
+        return webhook_handlers.payment_succeeded(request)
 
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]
