@@ -449,6 +449,7 @@ class UserPermissionGroup(
 
 # methods to graft onto MFAModel
 
+
 def _mfa_method_get_audit_log_identity(self: MFAMethod) -> str:
     return f"{self.user.email} / {self.name}"
 

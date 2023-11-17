@@ -125,9 +125,10 @@ def test_condition_get_update_log_message(segment, segment_rule, mocker):
     )
 
     mock_history_instance = mocker.MagicMock()
+    mock_delta = mocker.MagicMock()
 
     # When
-    msg = condition.get_update_log_message(mock_history_instance)
+    msg = condition.get_update_log_message(mock_history_instance, mock_delta)
 
     # Then
     assert msg == f"Condition updated on segment '{segment.name}'."

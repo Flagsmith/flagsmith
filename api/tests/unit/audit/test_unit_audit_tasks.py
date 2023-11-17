@@ -58,11 +58,17 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
 ):
     # Given
     mock_environment = mocker.MagicMock()
+    mock_project = mocker.MagicMock()
+    mock_orgnisation = mocker.MagicMock()
 
     instance = mocker.MagicMock()
     instance.get_audit_log_author.return_value = None
     instance.get_create_log_message.return_value = None
-    instance.get_environment_and_project.return_value = (mock_environment, None)
+    instance.get_organisations_project_environment.return_value = (
+        [mock_orgnisation],
+        mock_project,
+        mock_environment,
+    )
     history_instance = mocker.MagicMock(
         history_id=1, instance=instance, master_api_key=None, history_type="+"
     )
@@ -109,11 +115,17 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     related_object_type = RelatedObjectType.ENVIRONMENT
 
     mock_environment = mocker.MagicMock()
+    mock_project = mocker.MagicMock()
+    mock_orgnisation = mocker.MagicMock()
 
     instance = mocker.MagicMock()
     instance.get_audit_log_author.return_value = None
     instance.get_create_log_message.return_value = log_message
-    instance.get_environment_and_project.return_value = mock_environment, None
+    instance.get_organisations_project_environment.return_value = (
+        [mock_orgnisation],
+        mock_project,
+        mock_environment,
+    )
     instance.get_audit_log_related_object_id.return_value = related_object_id
     instance.get_audit_log_related_object_type.return_value = related_object_type
     instance.get_extra_audit_log_kwargs.return_value = {}
