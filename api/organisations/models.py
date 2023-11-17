@@ -220,7 +220,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
-        self.billing_status = ""
+        self.billing_status = None
         self.save()
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
