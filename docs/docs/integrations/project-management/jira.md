@@ -8,7 +8,9 @@ View your Flagsmith flags inside Jira.
 
 :::tip
 
-The Jira integration is currently in beta. Please contact us to join the beta!
+- The Jira integration is currently in beta. Please contact us to join the beta!
+- The Jira integration is currently only supported with our hosted Flagsmith SaaS service. We are working on making it
+  possible for those self hosting Flagsmith to use their own Jira app. Stay tuned!
 
 :::
 
