@@ -380,10 +380,7 @@ def test_free_plan_has_only_fixed_projects_permission():
     organisation = Organisation.objects.create(name="Test organisation")
 
     user = FFAdminUser.objects.create(email="admin@test.com")
-    user_permission_group = UserPermissionGroup.objects.create(
-        name="Users", organisation=organisation
-    )
-    user_permission_group.users.add(user)
+
     user.add_organisation(organisation, OrganisationRole.ADMIN)
 
     project_permissions = ProjectPermissions()

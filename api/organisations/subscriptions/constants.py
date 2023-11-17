@@ -4,9 +4,9 @@ from django.conf import settings
 
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
-MAX_SEATS_IN_FREE_PLAN = settings.MAX_SEATS_IN_FREE_PLAN or 1
+MAX_SEATS_IN_FREE_PLAN = settings.MAX_SEATS_IN_FREE_PLAN
 MAX_API_CALLS_IN_FREE_PLAN = 50000
-MAX_PROJECTS_IN_FREE_PLAN = settings.MAX_PROJECTS_IN_FREE_PLAN or 1
+MAX_PROJECTS_IN_FREE_PLAN = settings.MAX_PROJECTS_IN_FREE_PLAN
 SUBSCRIPTION_DEFAULT_LIMITS = (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
