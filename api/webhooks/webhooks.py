@@ -211,7 +211,7 @@ def call_webhook_with_failure_mail_after_retries(
                     webhook,
                     data,
                     webhook_type,
-                    f"N/A ({exc.__class__.__name__})",
+                    f"{f'HTTP {exc.response.status_code}' if exc.response else 'N/A'} ({exc.__class__.__name__})",
                 )
         else:
             call_webhook_with_failure_mail_after_retries.delay(
