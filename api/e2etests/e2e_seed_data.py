@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
@@ -34,11 +35,46 @@ def seed_data() -> None:
     )
     org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
 
+    # Create projects
     project: Project = Project.objects.create(
         name="My Test Project", organisation=organisation
     )
-    Environment.objects.create(name="Development", project=project)
+    project2: Project = Project.objects.create(
+        name="My Test Project 2", organisation=organisation
+    )
+    project3: Project = Project.objects.create(
+        name="My Test Project 3", organisation=organisation
+    )
+    project4: Project = Project.objects.create(
+        name="My Test Project 4", organisation=organisation
+    )
+    # Create environments
+    TEST_DEV_ENV = "Development"
+    Environment.objects.create(name=TEST_DEV_ENV, project=project)
     Environment.objects.create(name="Production", project=project)
+
+    project2_dev_env: Environment = Environment.objects.create(
+        name=TEST_DEV_ENV, project=project2
+    )
+    project3_dev_env: Environment = Environment.objects.create(
+        name=TEST_DEV_ENV, project=project3
+    )
+    project4_dev_env: Environment = Environment.objects.create(
+        name=TEST_DEV_ENV, project=project4
+    )
+
+    # Create Identities
+    Identity.objects.create(
+        identifier=settings.E2E_IDENTITY, environment=project2_dev_env
+    )
+
+    Identity.objects.create(
+        identifier=settings.E2E_IDENTITY, environment=project3_dev_env
+    )
+
+    Identity.objects.create(
+        identifier=settings.E2E_IDENTITY, environment=project4_dev_env
+    )
 
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
