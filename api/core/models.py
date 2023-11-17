@@ -259,7 +259,7 @@ class _AbstractDefaultAuditableModel(_AbstractBaseAuditableModel):
 # TODO remove (some of) this once django-simple-history > 3.4.0 is released
 # the rest should be contributed back to the project when possible
 class HistoricalRecords(BaseHistoricalRecords):
-    # apply merged patch https://github.com/jazzband/django-simple-history/pull/1218
+    # apply merged patch: https://github.com/jazzband/django-simple-history/pull/1218
     def create_historical_record_m2ms(self, history_instance, instance):
         for field in history_instance._history_m2m_fields:
             m2m_history_model = self.m2m_models[field]
@@ -300,7 +300,7 @@ class HistoricalRecords(BaseHistoricalRecords):
                 field=field,
             )
 
-    # apply merged patch https://github.com/jazzband/django-simple-history/pull/1243
+    # apply merged patch: https://github.com/jazzband/django-simple-history/pull/1243
     def get_m2m_fields_from_model(self, model):
         m2m_fields = set(self.m2m_fields)
         try:
@@ -313,7 +313,7 @@ class HistoricalRecords(BaseHistoricalRecords):
         ]
         return [getattr(model, field_name).field for field_name in field_names]
 
-    # fix https://github.com/jazzband/django-simple-history/issues/1268
+    # fix: https://github.com/jazzband/django-simple-history/issues/1268
     # TODO create issue and PR applying this change to the superclass
     def create_historical_record(self, instance, history_type, using=None):
         using = using if self.use_base_model_db else None
@@ -364,13 +364,25 @@ class HistoricalRecords(BaseHistoricalRecords):
             using=using,
         )
 
-    # fix: should check settings
-    # TODO create issue and PR adding these changes to the superclass
-    def m2m_changed(self, instance, action, attr, pk_set, reverse, **_):
+    # fix: should check SIMPLE_HISTORY_ENABLED setting
+    # fix: should forward `using` parameter
+    # workaround: https://github.com/jazzband/django-simple-history/issues/1048
+    # TODO create issue(s) and PR(s) adding these changes to the superclass
+    def m2m_changed(self, instance, action, attr, pk_set, reverse, using, **_):
         # FIX IS HERE
         if not getattr(settings, "SIMPLE_HISTORY_ENABLED", True):
             return
-        super().m2m_changed(instance, action, attr, pk_set, reverse)
+        # WORKAROUND IS HERE
+        if reverse:
+            raise RuntimeError("Cannot track history using reverse m2m accessor")
+
+        if hasattr(instance, "skip_history_when_saving"):
+            return
+
+        if action in ("post_add", "post_remove", "post_clear"):
+            # It should be safe to ~ this since the row must exist to modify m2m on it
+            # FIX IS HERE
+            self.create_historical_record(instance, "~", using=using)
 
     # fix: m2m fields not tracked when through model used directly
     # TODO create issue and PR adding these changes to the superclass

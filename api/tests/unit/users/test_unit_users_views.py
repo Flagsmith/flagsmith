@@ -39,19 +39,17 @@ def test_delete_user():
     user2 = FFAdminUser.objects.create_user(email=email2, password=password)
     user3 = FFAdminUser.objects.create_user(email=email3, password=password)
 
-    # crete some organizations
+    # create some organisations
     org1 = Organisation.objects.create(name="org1")
     org2 = Organisation.objects.create(name="org2")
     org3 = Organisation.objects.create(name="org3")
 
-    # add the test user 1 to all the organizations
-    org1.users.add(user1)
-    org2.users.add(user1)
-    org3.users.add(user1)
+    # add the test user 1 to all the organizations (cannot use Organisation.users reverse accessor)
+    user1.organisations.add(org1, org2, org3)
 
     # add test user 2 to org2 and user 3 to to org1
-    org2.users.add(user2)
-    org1.users.add(user3)
+    user2.organisations.add(org2)
+    user3.organisations.add(org1)
 
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 
