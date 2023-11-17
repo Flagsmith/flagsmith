@@ -1,6 +1,5 @@
 import argparse
 import logging
-import sys
 from typing import Any
 
 from django.conf import settings
@@ -17,13 +16,6 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            "--password-stdin",
-            dest="password_stdin",
-            action="store_true",
-            default=False,
-            help="Initial password for the superuser. Provide the password through STDIN",
-        )
-        parser.add_argument(
             "--email",
             type=str,
             dest="admin_email",
@@ -35,7 +27,6 @@ class Command(BaseCommand):
         self,
         *args: Any,
         admin_email: str | None,
-        password_stdin: bool,
         **options: Any,
     ) -> None:
         if (
@@ -44,10 +35,8 @@ class Command(BaseCommand):
         ):
             logger.debug("Skipping initial user creation.")
             return
-        admin_initial_password = sys.stdin.read().strip() if password_stdin else None
         response = create_initial_superuser(
             admin_email=admin_email,
-            admin_initial_password=admin_initial_password,
         )
         self.stdout.write(
             self.style.SUCCESS(
