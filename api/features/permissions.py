@@ -2,6 +2,8 @@ from contextlib import suppress
 
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
 from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
@@ -12,7 +14,7 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import Feature
+from features.models import Feature, FeatureState
 from projects.models import Project
 from projects.permissions import CREATE_FEATURE, DELETE_FEATURE
 from projects.permissions import (
@@ -77,11 +79,7 @@ class FeaturePermissions(IsAuthenticated):
 
 
 class FeatureStatePermissions(IsAuthenticated):
-    def has_permission(self, request, view):
-        action_permission_map = {
-            "list": VIEW_ENVIRONMENT,
-            "create": UPDATE_FEATURE_STATE,
-        }
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
         if not super().has_permission(request, view):
             return False
 
@@ -98,7 +96,17 @@ class FeatureStatePermissions(IsAuthenticated):
                 environment = Environment.objects.get(id=int(environment))
 
                 tag_ids = None
-                required_permission = action_permission_map.get(view.action)
+
+                if view.action == "list":
+                    required_permission = VIEW_ENVIRONMENT
+                elif (
+                    view.action == "create"
+                    and request.data.get("feature_segment") is not None
+                ):
+                    required_permission = MANAGE_SEGMENT_OVERRIDES
+                else:
+                    required_permission = UPDATE_FEATURE_STATE
+
                 if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
                     feature_id = request.data.get("feature")
                     feature = Feature.objects.get(id=feature_id)
@@ -113,13 +121,19 @@ class FeatureStatePermissions(IsAuthenticated):
         except (Environment.DoesNotExist, Feature.DoesNotExist):
             return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self, request: Request, view: GenericViewSet, obj: FeatureState
+    ) -> bool:
+        permission = (
+            MANAGE_SEGMENT_OVERRIDES if obj.feature_segment_id else UPDATE_FEATURE_STATE
+        )
+
         tag_ids = None
-        if UPDATE_FEATURE_STATE in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+        if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(
-            UPDATE_FEATURE_STATE, environment=obj.environment, tag_ids=tag_ids
+            permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 
