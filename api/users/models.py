@@ -272,10 +272,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return is_user_project_admin(self, project)
 
     def get_permitted_environments(
-        self, permission_key: str, project: Project, tag_ids: typing.List[int] = None
+        self,
+        permission_key: str,
+        project: Project,
+        tag_ids: typing.List[int] = None,
+        prefetch_metadata: bool = False,
     ) -> QuerySet[Environment]:
         return get_permitted_environments_for_user(
-            self, project, permission_key, tag_ids
+            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
         )
 
     @staticmethod
@@ -368,6 +372,7 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    ldap_dn = models.CharField(blank=True, null=True, unique=True, max_length=255)
     is_default = models.BooleanField(
         default=False,
         help_text="If set to true, all new users will be added to this group",

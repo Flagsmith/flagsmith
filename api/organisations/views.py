@@ -19,10 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.exceptions import (
-    OrganisationHasNoSubscription,
-    SubscriptionNotFound,
-)
+from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -183,19 +180,15 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise SubscriptionNotFound()
-
         subscription_details = organisation.subscription.get_subscription_metadata()
         serializer = self.get_serializer(instance=subscription_details)
-
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         redirect_url = get_current_site(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
@@ -210,8 +203,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         serializer = self.get_serializer(
             data={
                 "subscription_id": organisation.subscription.subscription_id,
@@ -272,7 +265,6 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
-
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]
         customer_email: str = request.data["content"]["customer"]["email"]
@@ -286,7 +278,7 @@ def chargebee_webhook(request):
                 "Couldn't get unique subscription for ChargeBee id %s"
                 % subscription_data.get("id")
             )
-            logger.error(error_message)
+            logger.warning(error_message)
             return Response(status=status.HTTP_200_OK)
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
@@ -310,7 +302,9 @@ def chargebee_webhook(request):
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(
+                    subscription_data.get("current_term_end")
+                ).replace(tzinfo=timezone.utc),
                 update_chargebee=False,
             )
 

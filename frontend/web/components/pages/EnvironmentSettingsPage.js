@@ -18,6 +18,10 @@ import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import MyMetadataSelect from 'components/MyMetadataSelect'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -34,12 +38,39 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = { showMetadataList: false }
+    this.state = { env: {}, roles: [], showMetadataList: false }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
+    if (Utils.getFlagsmithHasFeature('show_role_management')) {
+      const env = ProjectStore.getEnvs().find(
+        (v) => v.api_key === this.props.match.params.environmentId,
+      )
+      this.setState({ env })
+      getRoles(
+        getStore(),
+        { organisation_id: AccountStore.getOrganisation().id },
+        { forceRefetch: true },
+      ).then((roles) => {
+        getRolesEnvironmentPermissions(
+          getStore(),
+          {
+            env_id: env.id,
+            organisation_id: AccountStore.getOrganisation().id,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      })
+    }
+
     this.props.getWebhooks()
   }
 
@@ -680,7 +711,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
@@ -688,8 +719,11 @@ const EnvironmentSettingsPage = class extends Component {
                           parentLevel='project'
                           parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                           id={this.props.match.params.environmentId}
+                          envId={env.id}
                           router={this.context.router}
                           level='environment'
+                          roleTabTitle='Environment Permissions'
+                          roles={this.state.roles}
                         />
                       </FormGroup>
                     </TabItem>

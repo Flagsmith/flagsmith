@@ -78,6 +78,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     feature_analytics = models.BooleanField(
         default=False, help_text="Record feature analytics in InfluxDB"
     )
+    force_2fa = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["id"]
@@ -93,7 +94,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def num_seats(self):
         return self.users.count()
 
-    def has_subscription(self) -> bool:
+    def has_paid_subscription(self) -> bool:
+        # Includes subscriptions that are canceled.
+        # See is_paid for active paid subscriptions only.
         return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
     def has_subscription_information_cache(self) -> bool:
@@ -103,10 +106,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def is_paid(self):
-        return self.has_subscription() and self.subscription.cancellation_date is None
+        return (
+            self.has_paid_subscription() and self.subscription.cancellation_date is None
+        )
 
     def over_plan_seats_limit(self, additional_seats: int = 0):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
             return self.num_seats + additional_seats > susbcription_metadata.seats
 
@@ -126,7 +131,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             self.subscription.cancel()
 
     @hook(AFTER_CREATE)
@@ -145,6 +150,31 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             )
         )
 
+    @hook(AFTER_SAVE, when="stop_serving_flags", has_changed=True)
+    def rebuild_environments(self):
+        # Avoid circular imports.
+        from environments.models import Environment
+        from environments.tasks import rebuild_environment_document
+
+        for environment_id in Environment.objects.filter(
+            project__organisation=self
+        ).values_list("id", flat=True):
+            rebuild_environment_document.delay(args=(environment_id,))
+
+    def cancel_users(self):
+        remaining_seat_holder = (
+            UserOrganisation.objects.filter(
+                organisation=self,
+                role=OrganisationRole.ADMIN,
+            )
+            .order_by("date_joined")
+            .first()
+        )
+
+        UserOrganisation.objects.filter(
+            organisation=self,
+        ).exclude(id=remaining_seat_holder.id).delete()
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -160,6 +190,8 @@ class UserOrganisation(models.Model):
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
+    # Even though it is not enforced at the database level,
+    # every organisation has a subscription.
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
@@ -201,6 +233,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
         self.save()
+        # If the date is in the future, a recurring task takes it.
+        if cancellation_date <= timezone.now():
+            self.organisation.cancel_users()
+
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 
@@ -217,12 +253,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
-        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+
+        if self.is_in_trial():
             metadata = BaseSubscriptionMetadata(
                 seats=self.max_seats, api_calls=self.max_api_calls
             )
-
-        if self.payment_method == CHARGEBEE and self.subscription_id:
+        elif self.payment_method == CHARGEBEE and self.subscription_id:
             if self.organisation.has_subscription_information_cache():
                 # Getting the data from the subscription information cache because
                 # data is guaranteed to be up to date by using a Chargebee webhook.
@@ -236,17 +272,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
                 metadata = get_subscription_metadata_from_id(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
             metadata = XeroSubscriptionMetadata(
-                seats=self.max_seats, api_calls=self.max_api_calls, projects=None
+                seats=self.max_seats, api_calls=self.max_api_calls
             )
 
-        if not metadata:
-            metadata = BaseSubscriptionMetadata(
-                seats=self.max_seats,
-                api_calls=self.max_api_calls,
-                projects=MAX_PROJECTS_IN_FREE_PLAN,
-            )
-
-        return metadata
+        return metadata or BaseSubscriptionMetadata(
+            seats=self.max_seats,
+            api_calls=self.max_api_calls,
+            projects=MAX_PROJECTS_IN_FREE_PLAN,
+        )
 
     def add_single_seat(self):
         if not self.can_auto_upgrade_seats:
@@ -260,6 +293,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             subscription_info.api_calls_30d - subscription_info.allowed_30d_api_calls
         )
         return overage if overage > 0 else 0
+
+    def is_in_trial(self) -> bool:
+        return self.subscription_id == TRIAL_SUBSCRIPTION_ID
 
 
 class OrganisationWebhook(AbstractBaseExportableWebhookModel):

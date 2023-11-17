@@ -1,23 +1,31 @@
 import json
 import uuid
+from typing import Callable
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.constants import FEATURE_DELETED_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
+from environments.permissions.constants import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+)
+from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
+from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_list_feature_states_from_simple_view_set(
@@ -529,9 +537,11 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_add_owners_adds_owner(client, project):
+def test_add_owners_fails_if_user_not_found(client, project):
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
+
+    # Users have no association to the project or organisation.
     user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
     user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
     url = reverse(
@@ -541,26 +551,209 @@ def test_add_owners_adds_owner(client, project):
     data = {"user_ids": [user_1.id, user_2.id]}
 
     # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data == ["Some users not found"]
+    assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_owners_adds_owner(staff_user, admin_user, client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    ).add_permission(VIEW_PROJECT)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"user_ids": [staff_user.id, admin_user.id]}
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    json_response = response.json()
+    # Then
+    assert len(json_response["owners"]) == 2
+    assert json_response["owners"][0] == {
+        "id": staff_user.id,
+        "email": staff_user.email,
+        "first_name": staff_user.first_name,
+        "last_name": staff_user.last_name,
+        "last_login": None,
+    }
+    assert json_response["owners"][1] == {
+        "id": admin_user.id,
+        "email": admin_user.email,
+        "first_name": admin_user.first_name,
+        "last_name": admin_user.last_name,
+        "last_login": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_group_owners_adds_group_owner(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Second Group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_1)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    data = {"group_ids": [group_1.id, group_2.id]}
+
+    # When
     json_response = client.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
 
     # Then
-    assert len(json_response["owners"]) == 2
-    assert json_response["owners"][0] == {
-        "id": user_1.id,
-        "email": user_1.email,
-        "first_name": user_1.first_name,
-        "last_name": user_1.last_name,
-        "last_login": None,
+    assert len(json_response["group_owners"]) == 2
+    assert json_response["group_owners"][0] == {
+        "id": group_1.id,
+        "name": group_1.name,
     }
-    assert json_response["owners"][1] == {
-        "id": user_2.id,
-        "email": user_2.email,
-        "first_name": user_2.first_name,
-        "last_name": user_2.last_name,
-        "last_login": None,
+    assert json_response["group_owners"][1] == {
+        "id": group_2.id,
+        "name": group_2.name,
     }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_remove_group_owners_removes_group_owner(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="To be removed group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="To be kept group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_1)
+
+    feature.group_owners.add(group_1.id, group_2.id)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    # Note that only group_1 is set to be removed.
+    data = {"group_ids": [group_1.id]}
+
+    # When
+    json_response = client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+
+    # Then
+    assert len(json_response["group_owners"]) == 1
+    assert json_response["group_owners"][0] == {
+        "id": group_2.id,
+        "name": group_2.name,
+    }
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_remove_group_owners_when_nonexistent(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="To be removed group", organisation=organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+
+    assert feature.group_owners.count() == 0
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    # Note that group_1 is not present, but it should work
+    # anyway since there may have been a double request or two
+    # users working at the same time.
+    data = {"group_ids": [group_1.id]}
+
+    # When
+    json_response = client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    ).json()
+
+    # Then
+    assert len(json_response["group_owners"]) == 0
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_add_group_owners_with_wrong_org_group(client, project):
+    # Given
+    feature = Feature.objects.create(name="Test Feature", project=project)
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+    organisation = project.organisation
+    other_organisation = Organisation.objects.create(name="Orgy")
+
+    group_1 = UserPermissionGroup.objects.create(
+        name="Valid Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Invalid Group", organisation=other_organisation
+    )
+    user_1.add_organisation(organisation, OrganisationRole.ADMIN)
+    user_2.add_organisation(other_organisation, OrganisationRole.ADMIN)
+    group_1.users.add(user_1)
+    group_2.users.add(user_2)
+
+    url = reverse(
+        "api-v1:projects:project-features-add-group-owners",
+        args=[project.id, feature.id],
+    )
+
+    data = {"group_ids": [group_1.id, group_2.id]}
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == 400
+    response.json() == {"non_field_errors": ["Some groups not found"]}
 
 
 @pytest.mark.parametrize(
@@ -1114,3 +1307,161 @@ def test_create_feature_with_required_metadata_returns_201(
         == required_a_feature_metadata_field.field.id
     )
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+
+    url = reverse("api-v1:features:featurestates-list")
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    assert FeatureState.objects.filter(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    ).exists()
+
+
+def test_create_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])
+
+    url = reverse("api-v1:features:featurestates-list")
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+
+    url = reverse(
+        "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
+    )
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+        feature_state_value__string_value="foo",
+    ).exists()
+
+
+def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])
+
+    url = reverse(
+        "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
+    )
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

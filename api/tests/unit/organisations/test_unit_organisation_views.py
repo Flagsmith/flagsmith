@@ -1,14 +1,18 @@
 import json
 from datetime import datetime, timedelta
+from typing import Type
 from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.db.models import Model
 from django.urls import reverse
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
@@ -430,7 +434,7 @@ class OrganisationTestCase(TestCase):
         # Since subscription is created using organisation.id rather than
         # organisation and we already have evaluated subscription(by add_organisation)
         # attribute of organisation(before we created the subscription) we need to
-        # refresh organisation for `has_subscription` to work properly
+        # refresh organisation for `has_paid_subscription` to work properly
         organisation.refresh_from_db()
 
         # and
@@ -438,7 +442,7 @@ class OrganisationTestCase(TestCase):
 
         # and
         assert (
-            organisation.has_subscription()
+            organisation.has_paid_subscription()
             and organisation.subscription.subscription_id == subscription_id
             and organisation.subscription.customer_id == customer_id
         )
@@ -718,24 +722,35 @@ class ChargeBeeWebhookTestCase(TestCase):
         # and
         assert not mail.outbox
 
-    def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(
-        self,
-    ):
-        # Given
-        data = {
-            "content": {
-                "subscription": {"status": "active", "id": "some-random-id"},
-                "customer": {"email": self.cb_user.email},
-            }
+
+def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
+    api_client: APIClient, caplog: LogCaptureFixture, django_user_model: Type[Model]
+):
+    # Given
+    subscription_id = "some-random-id"
+    cb_user = django_user_model.objects.create(email="test@example.com", is_staff=True)
+    api_client.force_authenticate(cb_user)
+
+    data = {
+        "content": {
+            "subscription": {"status": "active", "id": subscription_id},
+            "customer": {"email": cb_user.email},
         }
+    }
+    url = reverse("api-v1:chargebee-webhook")
 
-        # When
-        res = self.client.post(
-            self.url, data=json.dumps(data), content_type="application/json"
-        )
+    # When
+    res = api_client.post(url, data=json.dumps(data), content_type="application/json")
 
-        # Then
-        assert res.status_code == status.HTTP_200_OK
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+    assert len(caplog.records) == 1
+    assert caplog.record_tuples[0] == (
+        "organisations.views",
+        30,
+        f"Couldn't get unique subscription for ChargeBee id {subscription_id}",
+    )
 
 
 @pytest.mark.django_db
@@ -890,14 +905,14 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     )
 
 
-def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
-    mocker, organisation, admin_client
-):
+def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_subscription(
+    mocker: MockerFixture, organisation: Organisation, admin_client: APIClient
+) -> None:
     # Given
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata_from_id"
     )
-
+    assert organisation.subscription.subscription_id is None
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
         args=[organisation.pk],
@@ -907,7 +922,15 @@ def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subsc
     response = admin_client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {
+        "chargebee_email": None,
+        "max_api_calls": 50000,
+        "max_projects": 1,
+        "max_seats": 1,
+        "payment_source": None,
+    }
+
     get_subscription_metadata.assert_not_called()
 
 
@@ -1157,6 +1180,27 @@ def test_make_user_group_admin_success(
     )
 
 
+def test_make_user_group_admin_forbidden(
+    staff_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    url = reverse(
+        "api-v1:organisations:make-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_remove_user_as_group_admin_user_does_not_belong_to_group(
     admin_client, admin_user, organisation, user_permission_group
 ):
@@ -1200,6 +1244,27 @@ def test_remove_user_as_group_admin_success(
         ).group_admin
         is False
     )
+
+
+def test_remove_user_as_group_admin_forbidden(
+    staff_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+):
+    # Given
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation)
+    another_user.permission_groups.add(user_permission_group)
+    another_user.make_group_admin(user_permission_group.id)
+    url = reverse(
+        "api-v1:organisations:remove-user-group-admin",
+        args=[organisation.id, user_permission_group.id, another_user.id],
+    )
+
+    # When
+    response = staff_client.post(url)
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_list_user_groups_as_group_admin(organisation, api_client):
@@ -1284,3 +1349,39 @@ def test_list_my_groups(organisation, api_client):
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
+
+
+def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
+    staff_client: APIClient,
+    subscription: Subscription,
+    organisation: Organisation,
+):
+    # Given
+    cancellation_date = datetime.now(tz=UTC)
+    data = {
+        "content": {
+            "subscription": {
+                "status": "cancelled",
+                "id": subscription.subscription_id,
+                "current_term_end": datetime.timestamp(cancellation_date),
+            },
+            "customer": {
+                "email": "chargebee@bullet-train.io",
+            },
+        }
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+    assert organisation.num_seats == 2
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == 200
+
+    subscription.refresh_from_db()
+    assert subscription.cancellation_date == cancellation_date
+    organisation.refresh_from_db()
+    assert organisation.num_seats == 1

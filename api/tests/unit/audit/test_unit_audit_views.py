@@ -11,7 +11,9 @@ from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
 
-def test_audit_log_can_be_filtered_by_environments(admin_client, project, environment):
+def test_audit_log_can_be_filtered_by_environments(
+    admin_client: APIClient, project: Project, environment: Environment
+) -> None:
     # Given
     audit_env = Environment.objects.create(name="env_n", project=project)
 
@@ -30,7 +32,9 @@ def test_audit_log_can_be_filtered_by_environments(admin_client, project, enviro
     assert response.json()["results"][0]["environment"]["id"] == audit_env.id
 
 
-def test_audit_log_can_be_filtered_by_log_text(admin_client, project, environment):
+def test_audit_log_can_be_filtered_by_log_text(
+    admin_client: APIClient, project: Project, environment: Environment
+) -> None:
     # Given
     flag_state_updated_log = "Flag state updated"
     flag_state_deleted_log = "flag state deleted"
@@ -52,8 +56,11 @@ def test_audit_log_can_be_filtered_by_log_text(admin_client, project, environmen
 
 
 def test_audit_log_can_be_filtered_by_project(
-    admin_client, project, environment, organisation
-):
+    admin_client: APIClient,
+    project: Project,
+    environment: Environment,
+    organisation: Organisation,
+) -> None:
     # Given
     another_project = Project.objects.create(
         name="another_project", organisation=organisation
@@ -75,8 +82,11 @@ def test_audit_log_can_be_filtered_by_project(
 
 
 def test_audit_log_can_be_filtered_by_is_system_event(
-    admin_client, project, environment, organisation
-):
+    admin_client: APIClient,
+    project: Project,
+    environment: Environment,
+    organisation: Organisation,
+) -> None:
     # Given
     AuditLog.objects.create(project=project, is_system_event=True)
     AuditLog.objects.create(
@@ -100,7 +110,7 @@ def test_regular_user_cannot_list_audit_log(
     organisation: Organisation,
     django_user_model: typing.Type[Model],
     api_client: APIClient,
-):
+) -> None:
     # Given
     AuditLog.objects.create(environment=environment)
     url = reverse("api-v1:audit-list")
@@ -120,7 +130,7 @@ def test_admin_user_cannot_list_audit_log_of_another_organisation(
     organisation: Organisation,
     project: Project,
     django_user_model: typing.Type[Model],
-):
+) -> None:
     # Given
     another_organisation = Organisation.objects.create(name="another organisation")
     user = django_user_model.objects.create(email="test@example.com")

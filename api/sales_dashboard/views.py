@@ -9,6 +9,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, F, Q
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseRedirect,
@@ -28,15 +29,18 @@ from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
 )
 
-from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
+from .forms import (
+    EmailUsageForm,
+    EndTrialForm,
+    MaxAPICallsForm,
+    MaxSeatsForm,
+    StartTrialForm,
+)
 
 OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
@@ -116,7 +120,7 @@ def organisation_info(request, organisation_id):
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
     template = loader.get_template("sales_dashboard/organisation.html")
-    subscription_metadata = get_subscription_metadata(organisation)
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     identity_count_dict = {}
     identity_migration_status_dict = {}
@@ -183,6 +187,38 @@ def update_max_api_calls(request, organisation_id):
         max_api_calls_form.save(organisation)
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required
+def organisation_start_trial(
+    request: HttpRequest, organisation_id: int
+) -> HttpResponse:
+    start_trial_form = StartTrialForm(request.POST)
+    if start_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        start_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
+
+
+@staff_member_required
+def organisation_end_trial(request: HttpRequest, organisation_id: int) -> HttpResponse:
+    end_trial_form = EndTrialForm(request.POST)
+    if end_trial_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        end_trial_form.save(organisation)
+
+    return HttpResponseRedirect(
+        reverse(
+            "sales_dashboard:organisation_info",
+            kwargs={"organisation_id": organisation_id},
+        )
+    )
 
 
 @staff_member_required
