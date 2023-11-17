@@ -181,14 +181,14 @@ def environment(project):
 @pytest.fixture()
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
-) -> typing.Callable[[list[str], int], None]:
+) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
     """
 
     def _with_environment_permissions(
-        permission_keys: list[str], environment_id: typing.Optional[int] = None
+        permission_keys: list[str], environment_id: int | None = None
     ) -> UserEnvironmentPermission:
         environment_id = environment_id or environment.id
         uep, __ = UserEnvironmentPermission.objects.get_or_create(

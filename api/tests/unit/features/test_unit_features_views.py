@@ -17,6 +17,7 @@ from environments.permissions.constants import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
 )
+from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -1274,12 +1275,14 @@ def test_cannot_update_feature_of_a_feature_state(
 
 def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
     environment: Environment,
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
-):
+) -> None:
     # Given
     with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
 
@@ -1311,12 +1314,14 @@ def test_create_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_create_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
     environment: Environment,
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
-):
+) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])
 
@@ -1344,13 +1349,15 @@ def test_create_segment_override__using_simple_feature_state_viewset__denies_upd
 
 def test_update_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
     staff_client: APIClient,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
     environment: Environment,
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
     segment_featurestate: FeatureState,
-):
+) -> None:
     # Given
     with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
 
@@ -1388,13 +1395,15 @@ def test_update_segment_override__using_simple_feature_state_viewset__allows_man
 
 def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
-    with_environment_permissions: Callable[[list[str], int], None],
+    with_environment_permissions: Callable[
+        [list[str], int | None], UserEnvironmentPermission
+    ],
     environment: Environment,
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
     segment_featurestate: FeatureState,
-):
+) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])
 
