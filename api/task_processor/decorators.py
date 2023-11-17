@@ -59,7 +59,7 @@ class TaskHandler(typing.Generic[P]):
         delay_until: datetime | None = None,
         # TODO @khvn26 consider typing `args` and `kwargs` with `ParamSpec`
         # (will require a change to the signature)
-        args: tuple[typing.Any] = (),
+        args: tuple[typing.Any, ...] = (),
         kwargs: dict[str, typing.Any] | None = None,
     ) -> Task | None:
         logger.debug("Request to run task '%s' asynchronously.", self.task_identifier)
