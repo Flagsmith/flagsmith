@@ -21,10 +21,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
 from organisations.chargebee import webhook_handlers
-from organisations.exceptions import (
-    OrganisationHasNoSubscription,
-    SubscriptionNotFound,
-)
+from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -185,19 +182,15 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise SubscriptionNotFound()
-
         subscription_details = organisation.subscription.get_subscription_metadata()
         serializer = self.get_serializer(instance=subscription_details)
-
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         redirect_url = get_current_site(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
@@ -212,8 +205,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         serializer = self.get_serializer(
             data={
                 "subscription_id": organisation.subscription.subscription_id,
@@ -323,7 +316,9 @@ def chargebee_webhook(request: Request) -> Response:
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(
+                    subscription_data.get("current_term_end")
+                ).replace(tzinfo=timezone.utc),
                 update_chargebee=False,
             )
 

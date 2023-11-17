@@ -95,7 +95,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     def num_seats(self):
         return self.users.count()
 
-    def has_subscription(self) -> bool:
+    def has_paid_subscription(self) -> bool:
+        # Includes subscriptions that are canceled.
+        # See is_paid for active paid subscriptions only.
         return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
     def has_subscription_information_cache(self) -> bool:
@@ -105,10 +107,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def is_paid(self):
-        return self.has_subscription() and self.subscription.cancellation_date is None
+        return (
+            self.has_paid_subscription() and self.subscription.cancellation_date is None
+        )
 
     def over_plan_seats_limit(self, additional_seats: int = 0):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
             return self.num_seats + additional_seats > susbcription_metadata.seats
 
@@ -128,7 +132,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
-        if self.has_subscription():
+        if self.has_paid_subscription():
             self.subscription.cancel()
 
     @hook(AFTER_CREATE)
@@ -158,6 +162,20 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
+    def cancel_users(self):
+        remaining_seat_holder = (
+            UserOrganisation.objects.filter(
+                organisation=self,
+                role=OrganisationRole.ADMIN,
+            )
+            .order_by("date_joined")
+            .first()
+        )
+
+        UserOrganisation.objects.filter(
+            organisation=self,
+        ).exclude(id=remaining_seat_holder.id).delete()
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -173,6 +191,8 @@ class UserOrganisation(models.Model):
 
 
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
+    # Even though it is not enforced at the database level,
+    # every organisation has a subscription.
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
@@ -222,6 +242,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.cancellation_date = cancellation_date
         self.billing_status = None
         self.save()
+        # If the date is in the future, a recurring task takes it.
+        if cancellation_date <= timezone.now():
+            self.organisation.cancel_users()
+
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 

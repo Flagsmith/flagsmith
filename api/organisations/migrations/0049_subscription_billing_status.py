@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('organisations', '0047_organisation_force_2fa'),
+        ('organisations', '0048_add_default_subscription_to_orphaned_organisations'),
     ]
 
     operations = [
