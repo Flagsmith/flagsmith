@@ -1,16 +1,22 @@
 import json
 import uuid
+from typing import Callable
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from audit.constants import FEATURE_DELETED_MESSAGE
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
+from environments.permissions.constants import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -1264,3 +1270,153 @@ def test_cannot_update_feature_of_a_feature_state(
     assert (
         response.json()["feature"][0] == "Cannot change the feature of a feature state"
     )
+
+
+def test_create_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[[list[str], int], None],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+):
+    # Given
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+
+    url = reverse("api-v1:features:featurestates-list")
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    assert FeatureState.objects.filter(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    ).exists()
+
+
+def test_create_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[[list[str], int], None],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+):
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])
+
+    url = reverse("api-v1:features:featurestates-list")
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_segment_override__using_simple_feature_state_viewset__allows_manage_segment_overrides(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[[list[str], int], None],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+):
+    # Given
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+
+    url = reverse(
+        "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
+    )
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+        feature_state_value__string_value="foo",
+    ).exists()
+
+
+def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
+    staff_client: APIClient,
+    with_environment_permissions: Callable[[list[str], int], None],
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    feature_segment: FeatureSegment,
+    segment_featurestate: FeatureState,
+):
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])
+
+    url = reverse(
+        "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
+    )
+
+    data = {
+        "feature": feature.id,
+        "environment": environment.id,
+        "feature_segment": feature_segment.id,
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+        },
+    }
+
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
