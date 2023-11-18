@@ -11,6 +11,7 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
+import { Actionables } from './Actionables'
 
 export const width = [200, 65, 48, 75, 450]
 class TheComponent extends Component {
@@ -18,7 +19,9 @@ class TheComponent extends Component {
     router: propTypes.object.isRequired,
   }
 
-  state = {}
+  state = {
+    features_compact_view: Utils.getFlagsmithValue('features_compact_view'),
+  }
 
   confirmToggle = (projectFlag, environmentFlag, cb) => {
     openModal(
@@ -191,13 +194,15 @@ class TheComponent extends Component {
                   wordBreak: 'break-all',
                 }}
               >
-                <span className='me-2'>
-                  {created_date ? (
+                <span className='me-2'>{name}</span>
+
+                <Actionables>
+                  {created_date && (
                     <Tooltip
-                      place='right'
+                      place='top'
                       title={
                         <span>
-                          {name}
+                          {/* {name} */}
                           <span className={'ms-1'}></span>
                           <Icon name='info-outlined' />
                         </span>
@@ -207,10 +212,71 @@ class TheComponent extends Component {
                         'Do MMM YYYY HH:mma',
                       )}`}
                     </Tooltip>
-                  ) : (
-                    name
                   )}
-                </span>
+                  {AccountStore.getOrganisationRole() === 'ADMIN' &&
+                    !this.props.hideAudit && (
+                      <Tooltip
+                        html
+                        title={
+                          <div
+                            onClick={() => {
+                              this.context.router.history.push(
+                                `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                              )
+                            }}
+                            data-test={`feature-history-${this.props.index}`}
+                          >
+                            <Icon name='clock' width={20} fill='#9DA4AE' />
+                          </div>
+                        }
+                      >
+                        Feature history
+                      </Tooltip>
+                    )}
+                  {!this.props.hideRemove && (
+                    <Permission
+                      level='project'
+                      permission='DELETE_FEATURE'
+                      id={projectId}
+                    >
+                      {({ permission: removeFeaturePermission }) =>
+                        Utils.renderWithPermission(
+                          removeFeaturePermission,
+                          Constants.projectPermissions('Delete Feature'),
+                          <Tooltip
+                            html
+                            title={
+                              <Button
+                                disabled={
+                                  !removeFeaturePermission ||
+                                  readOnly ||
+                                  isProtected
+                                }
+                                onClick={() =>
+                                  this.confirmRemove(projectFlag, () => {
+                                    removeFlag(projectId, projectFlag)
+                                  })
+                                }
+                                className='btn btn-with-icon'
+                                data-test={`remove-feature-btn-${this.props.index}`}
+                              >
+                                <Icon
+                                  name='trash-2'
+                                  width={20}
+                                  fill='#656D7B'
+                                />
+                              </Button>
+                            }
+                          >
+                            {isProtected
+                              ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
+                              : 'Remove feature'}
+                          </Tooltip>,
+                        )
+                      }
+                    </Permission>
+                  )}
+                </Actionables>
 
                 {!!projectFlag.num_segment_overrides && (
                   <div
@@ -278,14 +344,16 @@ class TheComponent extends Component {
                   value={projectFlag.tags}
                 />
               </Row>
-              {description && (
-                <div
-                  className='list-item-subtitle mt-1'
-                  style={{ lineHeight: '20px', width: width[4] }}
-                >
-                  {description}
-                </div>
-              )}
+              {description &&
+                !this.state.features_compact_view ===
+                  true(
+                    <div
+                      className='list-item-subtitle mt-1'
+                      style={{ lineHeight: '20px', width: width[4] }}
+                    >
+                      {description}
+                    </div>,
+                  )}
             </Flex>
           </Row>
         </Flex>
@@ -333,79 +401,6 @@ class TheComponent extends Component {
               )
             }}
           />
-        </div>
-        <div
-          className='table-column'
-          style={{ width: width[2] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
-              >
-                Feature history
-              </Tooltip>
-            )}
-        </div>
-        <div
-          className='table-column'
-          style={{ width: width[3] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {!this.props.hideRemove && (
-            <Permission
-              level='project'
-              permission='DELETE_FEATURE'
-              id={projectId}
-            >
-              {({ permission: removeFeaturePermission }) =>
-                Utils.renderWithPermission(
-                  removeFeaturePermission,
-                  Constants.projectPermissions('Delete Feature'),
-                  <Tooltip
-                    html
-                    title={
-                      <Button
-                        disabled={
-                          !removeFeaturePermission || readOnly || isProtected
-                        }
-                        onClick={() =>
-                          this.confirmRemove(projectFlag, () => {
-                            removeFlag(projectId, projectFlag)
-                          })
-                        }
-                        className='btn btn-with-icon'
-                        data-test={`remove-feature-btn-${this.props.index}`}
-                      >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
-                    }
-                  >
-                    {isProtected
-                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                      : 'Remove feature'}
-                  </Tooltip>,
-                )
-              }
-            </Permission>
-          )}
         </div>
       </Row>
     )

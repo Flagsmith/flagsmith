@@ -4,6 +4,7 @@ import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './Icon'
 import classNames from 'classnames'
+import Switch from './Switch'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -35,6 +36,11 @@ const PanelSearch = class extends Component {
       sortBy: defaultSortingOption ? defaultSortingOption.value : null,
       sortOrder: defaultSortingOption ? defaultSortingOption.order : null,
     }
+  }
+
+  toggleFeatureViewMode = () => {
+    const newValue = !Utils.getFlagsmithHasFeature('features_compact_view')
+    flagsmith.setTrait('features_compact_view', newValue)
   }
 
   filter() {
@@ -155,7 +161,9 @@ const PanelSearch = class extends Component {
           this.props.actionButton ? (
             <Row>
               {!!this.props.filterElement && this.props.filterElement}
-
+              <Row>
+                <Switch onChange={this.toggleFeatureViewMode()} />
+              </Row>
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover

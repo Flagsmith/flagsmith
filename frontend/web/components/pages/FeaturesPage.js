@@ -285,7 +285,7 @@ const FeaturesPage = class extends Component {
                                     >
                                       <Switch disabled />
                                     </div>
-                                    <div
+                                    {/* <div
                                       className='table-column'
                                       style={{ width: width[2] }}
                                     ></div>
@@ -294,7 +294,7 @@ const FeaturesPage = class extends Component {
                                       style={{ width: width[3] }}
                                     >
                                       Remove
-                                    </div>
+                                    </div> */}
                                   </Row>
                                 }
                                 onChange={(e) => {

@@ -1,0 +1,44 @@
+.actionables {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: relative;
+    height: 100%;
+    margin-right: 0.5rem;
+
+    .list {
+        display: none;
+    }
+
+    .showActions {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items:center;
+        justify-content: flex-start;
+        position: absolute;
+        top: -6px;
+        left: 20px;
+        width: 200px;
+        height: calc(100% + 8px);
+        gap: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
+        background-color: $bg-light300;
+        border-radius: $border-radius-default;
+        cursor: default;
+    }
+
+    .showActions * {
+        display: block;
+        // height: inherit;
+        margin: 0 !important;
+    }
+}
+
+.dark .actionables {
+    .showActions {
+        background-color: $bg-dark200;
+    }
+}
