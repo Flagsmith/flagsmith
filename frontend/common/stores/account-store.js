@@ -82,12 +82,14 @@ const controller = {
       API.postEvent(`${name}`)
     }
 
-    if (
-      Utils.getFlagsmithHasFeature('relay_events_key') &&
-      Utils.getFlagsmithValue('relay_events_key')
-    ) {
+    const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+    const sendRelayEvent =
+      Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+    if (sendRelayEvent) {
       try {
-        dataRelay.sendEvent(AccountStore.getUser())
+        dataRelay.sendEvent(AccountStore.getUser(), {
+          apiKey: relayEventKey,
+        })
       } catch (e) {}
     }
     data.post(`${Project.api}organisations/`, { name }).then((res) => {
