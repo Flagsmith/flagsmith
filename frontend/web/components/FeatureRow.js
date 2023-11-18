@@ -17,9 +17,25 @@ class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      hoveredIndex: null,
+    };
+  }
+  handleMouseEnter = (index) => {
+    this.setState({ hoveredIndex: index });
+  };
+
+  handleMouseLeave = () => {
+    this.setState({ hoveredIndex: null });
+  };
 
   state = {}
-
+  componentDidUpdate(){
+    console.log(this.state.hoveredIndex,this.props.index)
+  }
   confirmToggle = (projectFlag, environmentFlag, cb) => {
     openModal(
       'Toggle Feature',
@@ -37,6 +53,7 @@ class TheComponent extends Component {
     const { environmentFlags, projectFlag } = this.props
     const { feature, tab } = Utils.fromParam()
     const { id } = projectFlag
+   
     if (`${id}` === feature) {
       this.editFeature(projectFlag, environmentFlags[id], tab)
     }
@@ -175,6 +192,8 @@ class TheComponent extends Component {
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
+        onMouseEnter={() => this.handleMouseEnter(this.props.index)}
+         onMouseLeave={this.handleMouseLeave}
         onClick={() =>
           !readOnly && this.editFeature(projectFlag, environmentFlags[id])
         }
@@ -192,18 +211,19 @@ class TheComponent extends Component {
                 }}
               >
                 <span className='me-2'>
+              
                   {created_date ? (
                     <Tooltip
                       place='right'
                       title={
                         <span>
-                          {name}
+                        {name}
                           <span className={'ms-1'}></span>
                           <Icon name='info-outlined' />
                         </span>
                       }
                     >
-                      {`Created ${moment(created_date).format(
+                        {`Created ${moment(created_date).format(
                         'Do MMM YYYY HH:mma',
                       )}`}
                     </Tooltip>
@@ -272,11 +292,12 @@ class TheComponent extends Component {
                     }
                   </Tooltip>
                 )}
-                <TagValues
+              {this.state.hoveredIndex === this.props.index ?"":<TagValues
                   inline
                   projectId={`${projectId}`}
                   value={projectFlag.tags}
                 />
+                }
               </Row>
               {description && (
                 <div
@@ -354,7 +375,7 @@ class TheComponent extends Component {
                     }}
                     data-test={`feature-history-${this.props.index}`}
                   >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
+                   {this.state.hoveredIndex === this.props.index  && <Icon name='clock' width={24} fill='#9DA4AE' />}
                   </div>
                 }
               >
@@ -394,7 +415,7 @@ class TheComponent extends Component {
                         className='btn btn-with-icon'
                         data-test={`remove-feature-btn-${this.props.index}`}
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                     {this.state.hoveredIndex === this.props.index  &&  <Icon name='trash-2' width={20} fill='#656D7B' />}
                       </Button>
                     }
                   >

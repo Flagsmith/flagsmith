@@ -456,6 +456,7 @@ const FeaturesPage = class extends Component {
                                   </>
                                 )}
                                 renderRow={(projectFlag, i) => (
+                              
                                   <FeatureRow
                                     environmentFlags={environmentFlags}
                                     projectFlags={projectFlags}
