@@ -23,7 +23,12 @@ const WarningMessage: FC<WarningMessageType> = (props) => {
       </span>
       {warningMessage}
       {enabledButton && (
-        <Button className='btn ml-3' onClick={() => {}}>
+        <Button
+          className='btn ml-3'
+          onClick={() => {
+            document.location.replace('/organisation-settings')
+          }}
+        >
           Upgrade plan
         </Button>
       )}

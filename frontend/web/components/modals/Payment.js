@@ -66,7 +66,6 @@ const Payment = class extends Component {
 
   onSave = () => {
     toast('Account Updated')
-    closeModal()
   }
   render() {
     const viewOnly = this.props.viewOnly
@@ -503,17 +502,16 @@ const Payment = class extends Component {
                             </Row>
                           </li>
                         </ul>
-                          <a
-                              onClick={() => {
-                                  closeModal()
-                                  Utils.openChat()
-                              }}
-                              href='#'
-                              className='pricing-cta blue'
-                              style={{ width: '100%' }}
-                          >
-                              Request more API calls
-                          </a>
+                        <a
+                          onClick={() => {
+                            Utils.openChat()
+                          }}
+                          href='#'
+                          className='pricing-cta blue mt-4'
+                          style={{ width: '100%' }}
+                        >
+                          Request more API calls
+                        </a>
                       </div>
                     </div>
                   </Flex>
@@ -708,12 +706,11 @@ const Payment = class extends Component {
 }
 
 const WrappedPayment = makeAsyncScriptLoader(
-  ConfigProvider(Payment),
   'https://js.chargebee.com/v2/chargebee.js',
   {
     removeOnUnmount: true,
   },
-)(ConfigProvider(PaymentModal))
+)(ConfigProvider(Payment))
 
 Payment.propTypes = {}
 

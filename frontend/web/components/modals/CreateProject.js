@@ -61,7 +61,7 @@ const CreateProject = class extends Component {
                     <a
                       href='#'
                       onClick={() => {
-                          document.location.replace('/organisation-settings')
+                        document.location.replace('/organisation-settings')
                       }}
                     >
                       Startup plan
