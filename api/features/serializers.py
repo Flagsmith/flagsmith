@@ -11,7 +11,11 @@ from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
 from projects.models import Project
-from users.serializers import UserIdsSerializer, UserListSerializer
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSummarySerializer,
+)
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -36,8 +40,21 @@ class FeatureOwnerInputSerializer(UserIdsSerializer):
         feature.owners.remove(*user_ids)
 
 
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
 class ProjectFeatureSerializer(serializers.ModelSerializer):
     owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
@@ -50,6 +67,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "group_owners",
             "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
@@ -129,7 +147,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-        if user and not user.is_anonymous:
+        if user and getattr(user, "is_master_api_key_user", False) is False:
             instance.owners.add(user)
         return instance
 
@@ -308,11 +326,30 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(e.message)
 
+    def validate_feature(self, feature):
+        if self.instance and self.instance.feature_id != feature.id:
+            raise serializers.ValidationError(
+                "Cannot change the feature of a feature state"
+            )
+        return feature
+
+    def validate_environment(self, environment):
+        if self.instance and self.instance.environment_id != environment.id:
+            raise serializers.ValidationError(
+                "Cannot change the environment of a feature state"
+            )
+        return environment
+
     def validate(self, attrs):
-        environment = attrs.get("environment")
+        environment = attrs.get("environment") or self.context["environment"]
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
+        feature = attrs.get("feature")
+        if feature and feature.project_id != environment.project_id:
+            error = {"feature": "Feature does not exist in project"}
+            raise serializers.ValidationError(error)
+
         if identifier:
             try:
                 identity = Identity.objects.get(

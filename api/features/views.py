@@ -5,7 +5,6 @@ from functools import reduce
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
-from core.permissions import HasMasterAPIKey
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
@@ -14,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -36,6 +35,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -45,13 +45,11 @@ from .permissions import (
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
-    MasterAPIKeyEnvironmentFeatureStatePermissions,
-    MasterAPIKeyFeaturePermissions,
-    MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -79,12 +77,8 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 @swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
-@permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_by_uuid(request, uuid):
-    if getattr(request, "master_api_key", None):
-        accessible_projects = request.master_api_key.organisation.projects.all()
-    else:
-        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
         "multivariate_options", "owners", "tags"
     )
@@ -98,7 +92,7 @@ def get_feature_by_uuid(request, uuid):
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
 class FeatureViewSet(viewsets.ModelViewSet):
-    permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
+    permission_classes = [FeaturePermissions]
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -114,12 +108,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return Feature.objects.none()
 
-        if self.request.user.is_anonymous:
-            accessible_projects = (
-                self.request.master_api_key.organisation.projects.all()
-            )
-        else:
-            accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
+        accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
@@ -171,6 +160,41 @@ class FeatureViewSet(viewsets.ModelViewSet):
         return context
 
     @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        data = request.data
+
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=serializer.validated_data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(serializer.validated_data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
@@ -178,8 +202,14 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def add_owners(self, request, *args, **kwargs):
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         feature = self.get_object()
+
+        for user in FFAdminUser.objects.filter(
+            id__in=serializer.validated_data["user_ids"]
+        ):
+            if not user.has_project_permission(VIEW_PROJECT, feature.project):
+                raise serializers.ValidationError("Some users not found")
+
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
 
@@ -312,6 +342,12 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         else:
             return FeatureStateSerializerCreate
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ["update", "create"]:
+            context["environment"] = self.get_environment_from_request()
+        return context
+
     def get_queryset(self):
         """
         Override queryset to filter based on provided URL parameters.
@@ -354,46 +390,26 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         return environment
 
-    def get_identity_from_request(self, environment):
-        """
-        Get identity object from URL parameters in request.
-        """
-        identity = Identity.objects.get(pk=self.kwargs["identity_pk"])
-        return identity
-
     def create(self, request, *args, **kwargs):
         """
         DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
-        environment = self.get_environment_from_request()
-        if (
-            environment.project.organisation
-            not in self.request.user.organisations.all()
-        ):
-            return Response(status.HTTP_403_FORBIDDEN)
-
-        data["environment"] = environment.id
-
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        feature_id = int(data["feature"])
-
-        if feature_id not in [
-            feature.id for feature in environment.project.features.all()
-        ]:
-            error = {"detail": "Feature does not exist in project"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        environment = self.get_environment_from_request()
+        data["environment"] = environment.id
 
         identity_pk = self.kwargs.get("identity_pk")
         if identity_pk:
             data["identity"] = identity_pk
 
         serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
+
+        if serializer.is_valid(raise_exception=True):
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -407,10 +423,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
-        else:
-            logger.error(serializer.errors)
-            error = {"detail": "Couldn't create feature state."}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         """
@@ -478,10 +490,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
 
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
-    permission_classes = [
-        EnvironmentFeatureStatePermissions
-        | MasterAPIKeyEnvironmentFeatureStatePermissions
-    ]
+    permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(feature_segment=None)
@@ -523,6 +532,20 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ]
+    ),
+)
 class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -530,7 +553,7 @@ class SimpleFeatureStateViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = WritableNestedFeatureStateSerializer
-    permission_classes = [FeatureStatePermissions | MasterAPIKeyFeatureStatePermissions]
+    permission_classes = [FeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
@@ -556,12 +579,8 @@ class SimpleFeatureStateViewSet(
     responses={200: WritableNestedFeatureStateSerializer()}, method="get"
 )
 @api_view(["GET"])
-@permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_state_by_uuid(request, uuid):
-    if getattr(request, "master_api_key", None):
-        accessible_projects = request.master_api_key.organisation.projects.all()
-    else:
-        accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = FeatureState.objects.filter(
         feature__project__in=accessible_projects
     ).select_related("feature_state_value")
@@ -575,6 +594,7 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    throttle_classes = []
     pagination_class = None
 
     @swagger_auto_schema(
@@ -713,8 +733,8 @@ def organisation_has_got_feature(request, organisation):
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
     responses={200: CreateSegmentOverrideFeatureStateSerializer()},
 )
-@permission_classes([CreateSegmentOverridePermissions()])
 @api_view(["POST"])
+@permission_classes([CreateSegmentOverridePermissions])
 def create_segment_override(
     request: Request, environment_api_key: str, feature_pk: int
 ):

@@ -9,6 +9,7 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from django.contrib.sites.shortcuts import get_current_site
+from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
@@ -18,13 +19,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.exceptions import (
-    OrganisationHasNoSubscription,
-    SubscriptionNotFound,
-)
+from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
     OrganisationRole,
+    OrganisationSubscriptionInformationCache,
     OrganisationWebhook,
     Subscription,
 )
@@ -53,6 +52,8 @@ from projects.serializers import ProjectListSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
+
+from .chargebee import extract_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -179,9 +180,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise SubscriptionNotFound()
-
         subscription_details = organisation.subscription.get_subscription_metadata()
         serializer = self.get_serializer(instance=subscription_details)
         return Response(serializer.data)
@@ -189,8 +187,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         redirect_url = get_current_site(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
@@ -205,8 +203,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         serializer = self.get_serializer(
             data={
                 "subscription_id": organisation.subscription.subscription_id,
@@ -267,29 +265,46 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
-
     if request.data.get("content") and "subscription" in request.data.get("content"):
-        subscription_data = request.data["content"]["subscription"]
+        subscription_data: dict = request.data["content"]["subscription"]
+        customer_email: str = request.data["content"]["customer"]["email"]
 
         try:
             existing_subscription = Subscription.objects.get(
                 subscription_id=subscription_data.get("id")
             )
         except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
-            error_message = (
+            error_message: str = (
                 "Couldn't get unique subscription for ChargeBee id %s"
                 % subscription_data.get("id")
             )
-            logger.error(error_message)
+            logger.warning(error_message)
             return Response(status=status.HTTP_200_OK)
-
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
+            subscription_metadata = extract_subscription_metadata(
+                chargebee_subscription=subscription_data,
+                customer_email=customer_email,
+            )
+            OrganisationSubscriptionInformationCache.objects.update_or_create(
+                organisation_id=existing_subscription.organisation_id,
+                defaults={
+                    "chargebee_updated_at": timezone.now(),
+                    "allowed_30d_api_calls": subscription_metadata.api_calls,
+                    "allowed_seats": subscription_metadata.seats,
+                    "organisation_id": existing_subscription.organisation_id,
+                    "allowed_projects": subscription_metadata.projects,
+                    "chargebee_email": subscription_metadata.chargebee_email,
+                },
+            )
+
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(
+                    subscription_data.get("current_term_end")
+                ).replace(tzinfo=timezone.utc),
                 update_chargebee=False,
             )
 

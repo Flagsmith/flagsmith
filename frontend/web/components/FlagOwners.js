@@ -3,6 +3,8 @@ import data from 'common/data/base/_data'
 import UserSelect from './UserSelect'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 class TheComponent extends Component {
   state = {}
@@ -69,12 +71,14 @@ class TheComponent extends Component {
                     <Row
                       key={u.id}
                       onClick={() => this.removeOwner(u.id)}
-                      className='chip chip-user mr-2'
+                      className='chip mr-2'
                     >
                       <span className='font-weight-bold'>
                         {u.first_name} {u.last_name}
                       </span>
-                      <span className='chip-icon ion ion-ios-close' />
+                      <span className='chip-icon ion'>
+                        <IonIcon icon={close} />
+                      </span>
                     </Row>
                   ))}
                 {!ownerUsers.length && <div>This flag has no assignees</div>}

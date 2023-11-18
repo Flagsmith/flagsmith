@@ -6,6 +6,7 @@ $primary: #6837fc;
 $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
+$primary900: #1d113e;
 $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
@@ -27,6 +28,7 @@ $info-alfa-8: rgba(10, 173, 223, 0.08);
 $info-alfa-24: rgba(10, 173, 223, 0.24);
 $danger-alfa-8: rgba(255, 66, 75, 0.08);
 $danger-alfa-16: rgba(255, 66, 75, 0.16);
+$warning-alfa-8: rgba(255, 159, 0, 0.08);
 $primary-alfa-8: rgba(149, 108, 255, 0.08);
 $primary-alfa-16: rgba(149, 108, 255, 0.16);
 $primary-alfa-24: rgba(149, 108, 255, 0.24);
@@ -44,17 +46,21 @@ $white-alpha-48: rgba(255, 255, 255, 0.48);
 $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 $secondary-alfa-16: rgba(247, 213, 110, 0.16);
-$theme-colors: (
-  primary: $primary,
-  danger: $danger,
-  success: $success,
-  info: $info,
-  warning: $warning,
-  dark: $text-icon-dark,
-  // add any additional color below
-);
+$success-alfa-8: rgba(39, 171, 149, 0.08);
+$success-solid-alert: rgba(238, 248, 247);
+$info-solid-alert: rgba(236, 249, 252);
+$warning-solid-alert: rgba(255, 248, 240);
+$danger-solid-alert: rgba(254, 239, 241);
+
+$success-solid-dark-alert: rgba(17, 32, 46);
+$info-solid-dark-alert: rgba(15, 32, 52);
+$warning-solid-dark-alert: rgba(34, 31, 39);
+$danger-solid-dark-alert: rgba(34, 23, 40);
+
+$bg-light100: #ffffff;
 $bg-light200: #fafafb;
 $bg-light300: #eff1f4;
+$bg-light500: #e0e3e9;
 $bg-dark100: #2d3443;
 $bg-dark200: #202839;
 $bg-dark300: #161d30;
@@ -64,6 +70,7 @@ $bg-dark500: #0f1425;
 //Body
 $body-text: $text-icon-dark;
 $body-text-dark: white;
+$body-bg-dark: $bg-dark500;
 
 $border-radius-sm: 4px;
 $border-radius: 6px;
@@ -74,7 +81,7 @@ $border-radius-xlg: 10px;
 $btn-line-height-xsm: 32px;
 $btn-line-height-sm: 40px;
 $btn-line-height: 48px;
-$btn-line-height-lg: 54px;
+$btn-line-height-lg: 56px;
 
 $btn-padding-y: 0;
 $btn-font-weight: 700;
@@ -113,16 +120,16 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $bg-dark500;
+  border-color: $white-alpha-16;
 }
 
 //Modal
 $modal-content-color: $text-icon-grey;
-$modal-content-color-dark: $text-icon-light-grey;
+$modal-content-color-dark: $text-icon-light;
 $modal-sm: 500px;
 $modal-md: 620px;
 $modal-lg: 900px;
-$modal-bg-dark: $bg-dark100;
+$modal-bg-dark: $bg-dark400;
 $modal-border-radius: 18px;
 $modal-footer-border-width: 0;
 $modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
@@ -148,7 +155,7 @@ $container-max-widths: (
   md: 720px,
   lg: 940px,
   xl: 1140px,
-  xxl: 1141px,
+  xxl: 1200px,
 );
 
 //Typography
@@ -161,6 +168,8 @@ $line-height-xlg: 28px;
 $line-height-xsm: 18px;
 $line-height-xxsm: 16px;
 $body-color: $text-icon-dark;
+$body-text-dark: $text-icon-light;
+$header-color-dark: $text-icon-light;
 $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
@@ -187,7 +196,7 @@ $h6-line-height: 24px;
 
 //Input
 $input-bg: #fff;
-$input-bg-dark: $bg-dark200;
+$input-bg-dark: $bg-dark300;
 $input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
@@ -244,13 +253,17 @@ $checkbox-hover-border-color: $primary;
 $checkbox-checked-hover-border-color: $primary600;
 
 //Alert
-$alert-info-bg: $info-alfa-8;
+$alert-info-bg: $info-solid-alert;
 $alert-info-border-color: $info;
-$alert-danger-bg: $danger-alfa-8;
+$alert-danger-bg: $danger-solid-alert;
 $alert-danger-border-color: $danger;
+$alert-warning-border-color: $warning;
 $alert-color: $text-icon-grey;
+$alert-font-weight: 500;
 $alert-font-size: $font-sm;
 $alert-line-height: $line-height-sm;
+$alert-color-dark: $white-alpha-48;
+$alert-announcement-close-btn: $text-icon-light-grey;
 
 //Tabs
 $tab-btn-line-height: 42px;
@@ -284,3 +297,43 @@ $panel-list-item-sub-line-height: $line-height-xsm;
 $panel-list-item-sub-color: $text-icon-grey;
 $panel-grey-background: $bg-light200;
 $panel-grey-background-dark: $bg-dark300;
+
+//Nav
+$nav-background: $text-icon-light;
+$nav-background-dark: $bg-dark400;
+$nav-icon-color-dark: $text-icon-grey;
+$nav-link-color-dark: $text-icon-light;
+$nav-link-color-active-dark: $text-icon-light;
+
+//Aside
+$aside-bg: $primary900;
+$aside-bg-dark: $bg-dark300;
+$aside-nav-collapse: $primary900;
+$aside-nav-collapse-dark: $bg-dark300;
+$aside-nav-color: $text-icon-light-grey;
+$aside-nav-active-color: $text-icon-light;
+$aside-width: 300px;
+$aside-nav-hover: $primary400;
+$aside-nav-hover-dark: $primary400;
+$aside-nav-active: $primary;
+$aside-nav-active-dark: $primary;
+$aside-nav-active-color-dark: $text-icon-light;
+
+$bt-scrollbar-track: $white-alpha-16;
+$bt-scrollbar-thumb: $bg-light300;
+$bt-scrollbar-thumb-hover: $bg-light300;
+
+$bt-scrollbar-track-dark: $basic-alpha-16;
+$bt-scrollbar-thumb-dark: $bg-dark300;
+$bt-scrollbar-thumb-dark-hover: $bg-dark300;
+
+$theme-colors: (
+  light200: $bg-light200,
+  primary: $primary,
+  danger: $danger,
+  success: $success,
+  info: $info,
+  warning: $warning,
+  dark: $text-icon-dark,
+  // add any additional color below
+);

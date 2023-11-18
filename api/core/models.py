@@ -4,6 +4,7 @@ import uuid
 
 from django.db import models
 from django.db.models import Manager
+from django.http import HttpRequest
 from simple_history.models import HistoricalRecords
 from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
@@ -132,6 +133,13 @@ class _AbstractBaseAuditableModel(models.Model):
         return None
 
 
+def get_history_user(
+    instance: typing.Any, request: HttpRequest
+) -> typing.Optional["FFAdminUser"]:
+    user = getattr(request, "user", None)
+    return None if getattr(user, "is_master_api_key_user", False) else user
+
+
 def abstract_base_auditable_model_factory(
     historical_records_excluded_fields: typing.List[str] = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
@@ -139,6 +147,7 @@ def abstract_base_auditable_model_factory(
         history = HistoricalRecords(
             bases=[BaseHistoricalModel],
             excluded_fields=historical_records_excluded_fields or [],
+            get_user=get_history_user,
             inherit=True,
         )
 

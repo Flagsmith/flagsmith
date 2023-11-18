@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import cx from 'classnames'
 import NavLink from 'react-router-dom/NavLink'
+import Icon from './Icon'
 
 const OrganisationSelect = class extends Component {
   static displayName = 'OrganisationSelect'
@@ -14,48 +14,44 @@ const OrganisationSelect = class extends Component {
     return (
       <AccountProvider>
         {({ user }) => (
-          <div>
+          <Row>
+            <div style={{ width: '500px' }}>
+              <Select
+                value={{
+                  label: AccountStore.getOrganisation().name,
+                  value: AccountStore.getOrganisation().id,
+                }}
+                onChange={({ value }) => {
+                  API.setCookie('organisation', `${value}`)
+                  this.props.onChange && this.props.onChange(value)
+                }}
+                options={
+                  user &&
+                  user.organisations &&
+                  user.organisations.map((organisation) => {
+                    return { label: organisation.name, value: organisation.id }
+                  })
+                }
+                className='select-lg react-select'
+              />
+            </div>
+            {AccountStore.getOrganisationRole() === 'ADMIN' && (
+              <NavLink
+                id='organisation-settings-link'
+                activeClassName='active'
+                className='btn btn-with-icon ml-3 btn-lg px-3'
+                to='/organisation-settings'
+              >
+                <Icon name='setting' fill='#656D7B' />
+              </NavLink>
+            )}
+
             {user &&
               user.organisations &&
               user.organisations.map((organisation) => (
-                <div key={organisation.id}>
-                  <Row
-                    className={cx('popover-bt__list-item', {
-                      active:
-                        AccountStore.getOrganisation().id === organisation.id,
-                    })}
-                  >
-                    <a
-                      href='#'
-                      onClick={() => {
-                        API.setCookie('organisation', `${organisation.id}`)
-                        this.props.onChange && this.props.onChange(organisation)
-                      }}
-                    >
-                      {organisation.name}
-                    </a>
-                    {AccountStore.getOrganisationRole() === 'ADMIN' && (
-                      <NavLink
-                        id='organisation-settings-link'
-                        activeClassName='active'
-                        onClick={() => {
-                          this.props.onChange &&
-                            this.props.onChange(organisation)
-                        }}
-                        className='btn btn-link text-nowrap btn-sm edit'
-                        to='/organisation-settings'
-                      >
-                        <span
-                          style={{ fontSize: 16, marginRight: 4 }}
-                          className='icon--primary ion ion-md-settings'
-                        />
-                        {'Manage'}
-                      </NavLink>
-                    )}
-                  </Row>
-                </div>
+                <div key={organisation.id}></div>
               ))}
-          </div>
+          </Row>
         )}
       </AccountProvider>
     )

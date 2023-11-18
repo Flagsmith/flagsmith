@@ -139,7 +139,7 @@ Released **25 October 2022**
 Released **20 October 2022**
 
 - Add functionality to support adding users to a default user group on joining an organisation
-- Add new index to identites to improve dashboard performance
+- Add new index to identities to improve dashboard performance
 - IS_SET and IS_NOT_SET segment operators
 - Add statsd metrics
 

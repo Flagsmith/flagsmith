@@ -1,5 +1,6 @@
 import React from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
+import ProjectStore from 'common/stores/project-store'
 
 const FeatureListProvider = class extends React.Component {
   static displayName = 'FeatureListProvider'
@@ -11,8 +12,9 @@ const FeatureListProvider = class extends React.Component {
       isLoading: FeatureListStore.isLoading,
       isSaving: FeatureListStore.isSaving,
       lastSaved: FeatureListStore.getLastSaved(),
+      maxFeaturesAllowed: ProjectStore.getMaxFeaturesAllowed(),
       projectFlags: FeatureListStore.getProjectFlags(),
-      usageData: FeatureListStore.getFeatureUsage(),
+      totalFeatures: ProjectStore.getTotalFeatures(),
     }
     ES6Component(this)
     this.listenTo(FeatureListStore, 'change', () => {
@@ -22,7 +24,9 @@ const FeatureListProvider = class extends React.Component {
         isLoading: FeatureListStore.isLoading,
         isSaving: FeatureListStore.isSaving,
         lastSaved: FeatureListStore.getLastSaved(),
+        maxFeaturesAllowed: ProjectStore.getMaxFeaturesAllowed(),
         projectFlags: FeatureListStore.getProjectFlags(),
+        totalFeatures: ProjectStore.getTotalFeatures(),
         usageData: FeatureListStore.getFeatureUsage(),
       })
     })

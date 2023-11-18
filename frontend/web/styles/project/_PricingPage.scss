@@ -43,6 +43,11 @@
     align-items: flex-start;
   }
 }
+.dark {
+	.pricing-type {
+		color: #d8d8d8;
+	}
+}
 .pricing-type {
   color: $basic-alpha-48;
   font-size: $font-sm;

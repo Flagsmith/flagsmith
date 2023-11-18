@@ -503,6 +503,17 @@ const Payment = class extends Component {
                             </Row>
                           </li>
                         </ul>
+                          <a
+                              onClick={() => {
+                                  closeModal()
+                                  Utils.openChat()
+                              }}
+                              href='#'
+                              className='pricing-cta blue'
+                              style={{ width: '100%' }}
+                          >
+                              Request more API calls
+                          </a>
                       </div>
                     </div>
                   </Flex>
@@ -702,7 +713,7 @@ const WrappedPayment = makeAsyncScriptLoader(
   {
     removeOnUnmount: true,
   },
-)
+)(ConfigProvider(PaymentModal))
 
 Payment.propTypes = {}
 

@@ -3,12 +3,15 @@ from unittest import mock
 
 import pytest
 from django.test import TestCase
+from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
+from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
+    OrganisationRole,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -22,6 +25,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -36,7 +40,7 @@ class OrganisationTestCase(TestCase):
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
 
-    def test_has_subscription_true(self):
+    def test_has_paid_subscription_true(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
         Subscription.objects.filter(organisation=organisation).update(
@@ -47,14 +51,14 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
 
         # Then
-        assert organisation.has_subscription()
+        assert organisation.has_paid_subscription()
 
-    def test_has_subscription_missing_subscription_id(self):
+    def test_has_paid_subscription_missing_subscription_id(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
 
         # Then
-        assert not organisation.has_subscription()
+        assert not organisation.has_paid_subscription()
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_cancel_subscription_cancels_chargebee_subscription(
@@ -62,7 +66,8 @@ class OrganisationTestCase(TestCase):
     ):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-
+        user = FFAdminUser.objects.create(email="test@example.com")
+        user.add_organisation(organisation, role=OrganisationRole.ADMIN)
         Subscription.objects.filter(organisation=organisation).update(
             subscription_id="subscription_id", payment_method=CHARGEBEE
         )
@@ -81,6 +86,41 @@ class OrganisationTestCase(TestCase):
         # refresh subscription object
         subscription.refresh_from_db()
         assert subscription.cancellation_date
+
+
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+    assert organisation.stop_serving_flags is False
+
+    # When
+    organisation.stop_serving_flags = True
+    organisation.save()
+
+    # Then
+    mocked_rebuild_environment_document.delay.assert_called_once_with(
+        args=(environment.id,)
+    )
+
+
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+
+    # When saving something irrelevant
+    organisation.alerted_over_plan_limit = True
+    organisation.save()
+
+    # Then the task should not be called
+    mocked_rebuild_environment_document.delay.assert_not_called()
 
 
 def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
@@ -243,26 +283,30 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
 
 
 def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+    organisation,
     mocker,
 ):
     # Given
-    subscription = Subscription(
-        payment_method=CHARGEBEE, subscription_id="cb-subscription"
+    seats = 10
+    api_calls = 50000000
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation, allowed_seats=seats, allowed_30d_api_calls=api_calls
     )
 
-    expected_metadata = ChargebeeObjMetadata(seats=10, api_calls=50000000, projects=10)
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats, api_calls=api_calls, projects=10
+    )
     mock_cb_get_subscription_metadata = mocker.patch(
-        "organisations.models.get_subscription_metadata"
+        "organisations.models.Subscription.get_subscription_metadata"
     )
     mock_cb_get_subscription_metadata.return_value = expected_metadata
 
     # When
-    subscription_metadata = subscription.get_subscription_metadata()
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
 
     # Then
-    mock_cb_get_subscription_metadata.assert_called_once_with(
-        subscription.subscription_id
-    )
+    mock_cb_get_subscription_metadata.assert_called_once_with()
+
     assert subscription_metadata == expected_metadata
 
 

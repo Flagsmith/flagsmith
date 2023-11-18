@@ -133,7 +133,6 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
-    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -148,6 +147,8 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     "integrations.dynatrace",
+    "integrations.flagsmith",
+    "integrations.launch_darkly",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -217,19 +218,24 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+        "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
+        "user": USER_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -248,8 +254,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    # Add master api key object to request
-    "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -443,8 +447,16 @@ SWAGGER_SETTINGS = {
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
+# Enable E2E tests
+ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
-FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
+# User email address used for E2E Signup test
+E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for Change email E2E test which is part of invite tests
+E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
+# User email address used for the rest of the E2E tests
+E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
@@ -501,6 +513,11 @@ else:
                 "propagate": False,
             },
             "app_analytics": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+            "webhooks": {
                 "level": LOG_LEVEL,
                 "handlers": ["console"],
                 "propagate": False,
@@ -564,6 +581,12 @@ GET_IDENTITIES_ENDPOINT_CACHE_LOCATION = env.str(
     default=GET_IDENTITIES_ENDPOINT_CACHE_NAME,
 )
 
+BAD_ENVIRONMENTS_CACHE_LOCATION = "bad-environments"
+CACHE_BAD_ENVIRONMENTS_SECONDS = env.int("CACHE_BAD_ENVIRONMENTS_SECONDS", 0)
+CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES = env.int(
+    "CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES", 1
+)
+
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
@@ -597,6 +620,11 @@ CACHES = {
     PROJECT_SEGMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
+    },
+    BAD_ENVIRONMENTS_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": BAD_ENVIRONMENTS_CACHE_LOCATION,
+        "OPTIONS": {"MAX_ENTRIES": 50},
     },
     CHARGEBEE_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
@@ -909,3 +937,91 @@ PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60
 
 # Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
 MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
+
+FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = env.bool(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE", default=True
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY", default=None
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
+)
+
+# LDAP setting
+LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
+if LDAP_INSTALLED:
+    # The URL of the LDAP server.
+    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+    if LDAP_AUTH_URL:
+        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+
+    # Initiate TLS on connection.
+    LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)
+
+    # The LDAP search base for looking up users.
+    LDAP_AUTH_SEARCH_BASE = env.str(
+        "LDAP_AUTH_SEARCH_BASE", "ou=people,dc=example,dc=com"
+    )
+
+    # The LDAP class that represents a user.
+    LDAP_AUTH_OBJECT_CLASS = env.str("LDAP_AUTH_OBJECT_CLASS", "inetOrgPerson")
+
+    # User model fields mapped to the LDAP
+    # attributes that represent them.
+    LDAP_AUTH_USER_FIELDS = env.dict(
+        "LDAP_AUTH_USER_FIELDS",
+        {
+            "username": "uid",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "email": "mail",
+        },
+    )
+    # Sets the login domain for Active Directory users.
+    LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = env.str(
+        "LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN", None
+    )
+
+    # Path to a callable that takes a dict of {model_field_name: value}, and returns
+    # a string of the username to bind to the LDAP server.
+    # Use this to support different types of LDAP server.
+    LDAP_AUTH_FORMAT_USERNAME = env.str(
+        "LDAP_AUTH_FORMAT_USERNAME",
+        "django_python3_ldap.utils.format_username_openldap",
+    )
+
+    # Set connection/receive timeouts (in seconds) on the underlying `ldap3` library.
+    LDAP_AUTH_CONNECT_TIMEOUT = env.int("LDAP_AUTH_CONNECT_TIMEOUT", None)
+    LDAP_AUTH_RECEIVE_TIMEOUT = env.int("LDAP_AUTH_RECEIVE_TIMEOUT", None)
+
+    # Set this to add newly created users to an organisation
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = env.int(
+        "LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID", None
+    )
+
+    # Path to a callable that takes a user model, a dict of {ldap_field_name: [value]}
+    # a LDAP connection object (to allow further lookups), and saves any additional
+    # user relationships based on the LDAP data.
+    LDAP_AUTH_SYNC_USER_RELATIONS = env.str(
+        "LDAP_AUTH_SYNC_USER_RELATIONS", "django_python3_ldap.utils.sync_user_relations"
+    )
+
+    # Path to a callable that takes a dict of {ldap_field_name: value},
+    # returning a list of [ldap_search_filter]. The search filters will then be AND'd
+    # together when creating the final search filter.
+    LDAP_AUTH_FORMAT_SEARCH_FILTERS = env.str(
+        "LDAP_AUTH_FORMAT_SEARCH_FILTERS",
+        default="django_python3_ldap.utils.format_search_filters",
+    )
+
+    # List of LDAP group DN's that needs to be synced.
+    LDAP_SYNCED_GROUPS = env.list("LDAP_SYNCED_GROUPS", default=[], delimiter=":")
+
+    # DN of the LDAP group that is allowed to login
+    # If None no group check will be performed.
+    LDAP_LOGIN_GROUP = env.str("LDAP_LOGIN_GROUP", None)
+
+    # The LDAP user username and password used by `sync_ldap_users_and_groups` command
+    LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
+    LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)

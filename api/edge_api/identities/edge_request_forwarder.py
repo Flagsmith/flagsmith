@@ -7,6 +7,7 @@ from django.conf import settings
 
 from environments.dynamodb.migrator import IdentityMigrator
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 
 def _should_forward(project_id: int) -> bool:
@@ -14,7 +15,7 @@ def _should_forward(project_id: int) -> bool:
     return bool(migrator.is_migration_done)
 
 
-@register_task_handler()
+@register_task_handler(queue_size=2000, priority=TaskPriority.LOW)
 def forward_identity_request(
     request_method: str,
     headers: dict,
@@ -35,7 +36,7 @@ def forward_identity_request(
     requests.get(url, params=query_params, headers=headers, timeout=5)
 
 
-@register_task_handler()
+@register_task_handler(queue_size=2000, priority=TaskPriority.LOW)
 def forward_trait_request(
     request_method: str,
     headers: dict,
@@ -52,7 +53,6 @@ def forward_trait_request_sync(
         return
 
     url = settings.EDGE_API_URL + "traits/"
-    payload = payload
     payload = json.dumps(payload)
     requests.post(
         url,
@@ -62,7 +62,7 @@ def forward_trait_request_sync(
     )
 
 
-@register_task_handler()
+@register_task_handler(queue_size=1000, priority=TaskPriority.LOW)
 def forward_trait_requests(
     request_method: str,
     headers: str,

@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
-import { FixedSizeList as List } from 'react-window'
+import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-
+import Icon from './Icon'
+import classNames from 'classnames'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -13,6 +14,7 @@ const PanelSearch = class extends Component {
     goToPage: OptionalFunc,
     isLoading: OptionalBool,
     items: propTypes.any,
+    listClassName: OptionalString,
     nextPage: OptionalFunc,
     noResultsText: OptionalString,
     paging: OptionalObject,
@@ -89,20 +91,29 @@ const PanelSearch = class extends Component {
   }
 
   renderContainer = (children) => {
-    const renderRow = ({ index, style }) => (
-      <div style={style}>{this.props.renderRow(children[index])}</div>
-    )
+    const renderRow = ({ index, key, style }) => {
+      return (
+        <div key={key} style={style}>
+          {this.props.renderRow(children[index])}
+        </div>
+      )
+    }
     if (children && children.length > 100 && this.props.itemHeight) {
       return (
-        <List
-          style={{ overflowX: 'hidden' }}
-          height={this.props.itemHeight * 10}
-          itemCount={children.length}
-          itemSize={this.props.itemHeight}
-          width='100%'
-        >
-          {renderRow}
-        </List>
+        <div>
+          <AutoSizer disableHeight>
+            {({ width }) => (
+              <List
+                style={{ overflowX: 'hidden' }}
+                width={width}
+                height={this.props.itemHeight * 10}
+                rowCount={children.length}
+                rowHeight={this.props.itemHeight}
+                rowRenderer={renderRow}
+              />
+            )}
+          </AutoSizer>
+        </div>
       )
     }
     return children.map(this.props.renderRow)
@@ -148,9 +159,18 @@ const PanelSearch = class extends Component {
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>
                   <Popover
-                    renderTitle={(toggle) => (
-                      <a onClick={toggle} className='text-muted'>
-                        <div className='flex-column ion ion-md-funnel' />
+                    renderTitle={(toggle, isActive) => (
+                      <a
+                        onClick={toggle}
+                        className='flex-row'
+                        style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      >
+                        <span className='mr-1'>
+                          <Icon
+                            name='height'
+                            fill={isActive ? '#6837FC' : '#656d7b'}
+                          />
+                        </span>
                         {currentSort ? currentSort.label : 'Unsorted'}
                       </a>
                     )}
@@ -167,19 +187,19 @@ const PanelSearch = class extends Component {
                               toggle()
                             }}
                           >
-                            <Row space>
-                              <Row className='flex-1'>{sortOption.label}</Row>
+                            <Row space className='px-3 py-2'>
+                              <div>{sortOption.label}</div>
                               {currentSort &&
                                 currentSort.value === sortOption.value && (
-                                  <Row>
-                                    <div
-                                      className={`flex-column ion ${
+                                  <div>
+                                    <Icon
+                                      name={
                                         sortOrder === 'asc'
-                                          ? 'ion-ios-arrow-up'
-                                          : 'ion-ios-arrow-down'
-                                      }`}
+                                          ? 'chevron-up'
+                                          : 'chevron-down'
+                                      }
                                     />
-                                  </Row>
+                                  </div>
                                 )}
                             </Row>
                           </a>
@@ -192,7 +212,7 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div style={{ width: 175 }}>
+                    <div style={{ width: 140 }}>
                       <Select
                         size='select-sm'
                         styles={{
@@ -267,7 +287,7 @@ const PanelSearch = class extends Component {
         {this.props.searchPanel}
         <div
           id={this.props.id}
-          className='search-list'
+          className={classNames('search-list', this.props.listClassName)}
           style={isLoading ? { opacity: 0.5 } : {}}
         >
           {this.props.header}

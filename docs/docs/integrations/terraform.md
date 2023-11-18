@@ -1,7 +1,7 @@
 ---
 title: Terraform Provider
 sidebar_label: Terraform
-sidebar_position: 20
+sidebar_position: 90
 hide_title: true
 ---
 
@@ -141,5 +141,5 @@ flagsmith_feature.new_standard_feature: Modifications complete after 1s
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
 
-To bring an existing Flagsmith feature into Terraform (and start tracking it's state) you can go ahead and
+To bring an existing Flagsmith feature into Terraform (and start tracking state) you can go ahead and
 [import](https://registry.terraform.io/providers/Flagsmith/flagsmith/latest/docs/resources/feature#import) it.

@@ -77,9 +77,31 @@ def test_user_client(api_client, test_user):
 
 
 @pytest.fixture()
-def organisation(db, admin_user):
+def staff_user(django_user_model):
+    """
+    A non-admin user fixture.
+
+    To add to an environment with permissions use the fixture
+    with_environment_permissions, or similar with the fixture
+
+
+    This fixture is attached to the organisation fixture.
+    """
+    return django_user_model.objects.create(email="staff@example.com")
+
+
+@pytest.fixture()
+def staff_client(staff_user):
+    client = APIClient()
+    client.force_authenticate(user=staff_user)
+    return client
+
+
+@pytest.fixture()
+def organisation(db, admin_user, staff_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+    staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org
 
 
@@ -154,6 +176,52 @@ def segment_rule(segment):
 @pytest.fixture()
 def environment(project):
     return Environment.objects.create(name="Test Environment", project=project)
+
+
+@pytest.fixture()
+def with_environment_permissions(
+    environment: Environment, staff_user: FFAdminUser
+) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+    """
+    Add environment permissions to the staff_user fixture.
+    Defaults to associating to the environment fixture.
+    """
+
+    def _with_environment_permissions(
+        permission_keys: list[str], environment_id: int | None = None
+    ) -> UserEnvironmentPermission:
+        environment_id = environment_id or environment.id
+        uep, __ = UserEnvironmentPermission.objects.get_or_create(
+            environment_id=environment_id, user=staff_user
+        )
+        uep.permissions.add(*permission_keys)
+
+        return uep
+
+    return _with_environment_permissions
+
+
+@pytest.fixture()
+def with_project_permissions(
+    project: Project, staff_user: FFAdminUser
+) -> typing.Callable:
+    """
+    Add project permissions to the staff_user fixture.
+    Defaults to associating to the project fixture.
+    """
+
+    def _with_project_permissions(
+        permission_keys: list[str], project_id: typing.Optional[int] = None
+    ) -> UserProjectPermission:
+        project_id = project_id or project.id
+        upp, __ = UserProjectPermission.objects.get_or_create(
+            project_id=project_id, user=staff_user
+        )
+        upp.permissions.add(*permission_keys)
+
+        return upp
+
+    return _with_project_permissions
 
 
 @pytest.fixture()
@@ -292,19 +360,44 @@ def environment_api_key(environment):
 
 
 @pytest.fixture()
-def master_api_key(organisation) -> typing.Tuple[MasterAPIKey, str]:
+def admin_master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
     master_api_key, key = MasterAPIKey.objects.create_key(
-        name="test_key", organisation=organisation
+        name="test_key", organisation=organisation, is_admin=True
     )
     return master_api_key, key
 
 
 @pytest.fixture()
-def master_api_key_client(master_api_key):
+def master_api_key(organisation: Organisation) -> typing.Tuple[MasterAPIKey, str]:
+    master_api_key, key = MasterAPIKey.objects.create_key(
+        name="test_key", organisation=organisation, is_admin=False
+    )
+    return master_api_key, key
+
+
+@pytest.fixture
+def master_api_key_object(
+    master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> MasterAPIKey:
+    return master_api_key[0]
+
+
+@pytest.fixture
+def admin_master_api_key_object(
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> MasterAPIKey:
+    return admin_master_api_key[0]
+
+
+@pytest.fixture()
+def admin_master_api_key_client(
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+) -> APIClient:
+    key = admin_master_api_key[1]
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
-    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + key)
     return api_client
 
 

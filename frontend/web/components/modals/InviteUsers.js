@@ -4,6 +4,8 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ModalHR from './ModalHR'
 import Icon from 'components/Icon'
+import { add } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const InviteUsers = class extends Component {
   static displayName = 'InviteUsers'
@@ -154,13 +156,12 @@ const InviteUsers = class extends Component {
                     }
                   >
                     <Row>
-                      <span className='mr-2'>
-                        <Icon name='plus' width={18} fill='#6837FC' />
+                      <span className='pl-2 icon'>
+                        <IonIcon icon={add} style={{ fontSize: '13px' }} />
                       </span>
                       <span>
                         {isSaving ? 'Sending' : 'Invite additional member'}
                       </span>
-                    </Row>
                   </Button>
                 </div>
 

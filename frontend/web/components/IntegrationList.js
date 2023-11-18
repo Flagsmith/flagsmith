@@ -32,13 +32,18 @@ class Integration extends Component {
     )
     return (
       <div className='panel panel-integrations p-4 mb-3'>
-        <Flex className='mb-3'>
+        <Flex>
           <img className='mb-2' src={image} />
           <Row space style={{ flexWrap: 'noWrap' }}>
             <div className='subtitle mt-2'>
               {description}{' '}
               {docs && (
-                <Button theme='text' href={docs} target='_blank'>
+                <Button
+                  theme='text'
+                  href={docs}
+                  target='_blank'
+                  className='fw-normal'
+                >
                   View docs
                 </Button>
               )}
@@ -70,7 +75,7 @@ class Integration extends Component {
                   onClick={this.add}
                   size='xSmall'
                 >
-                  Add integration
+                  Add Integration
                 </Button>
               )}
             </Row>
@@ -81,13 +86,14 @@ class Integration extends Component {
           activeIntegrations.map((integration) => (
             <div
               key={integration.id}
-              className='list-integrations clickable p-3'
+              className='list-integrations clickable p-3 mt-3'
               onClick={() => this.edit(integration)}
             >
               <Row space>
                 <Flex>
                   <CreateEditIntegration
                     readOnly
+                    projectId={this.props.projectId}
                     data={integration}
                     integration={this.props.integration}
                   />

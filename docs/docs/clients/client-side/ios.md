@@ -36,8 +36,6 @@ The SDK is initialised against a single environment within a project on [https:/
 for example the Development or Production environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-![Image](/img/api-key.png)
-
 ### Initialization
 
 Within your application delegate (usually _AppDelegate.swift_) add:
@@ -121,7 +119,46 @@ Flagsmith.shared.getTraits(forIdentity: "test_user@test.com") {(result) in
 }
 ```
 
-### Swift Concurrency
+## Override Default Configuration
+
+In `AppDelegate.swift`:
+
+```swift
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // Override point for customization after application launch.
+    Flagsmith.shared.apiKey = "<add your API key from the Flagsmith settings page>"
+
+    // set cache on / off (defaults to off)
+    Flagsmith.shared.cacheConfig.useCache = true
+
+    // set custom cache to use (defaults to shared URLCache)
+    //Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE>
+
+    // set skip API on / off (defaults to off)
+    Flagsmith.shared.cacheConfig.skipAPI = false
+
+    // set cache TTL in seconds (defaults to 0, i.e. infinite)
+    Flagsmith.shared.cacheConfig.cacheTTL = 90
+
+    // set analytics on or off
+    Flagsmith.shared.enableAnalytics = true
+
+    // set the analytics flush period in seconds
+    Flagsmith.shared.analyticsFlushPeriod = 10
+
+    Flagsmith.shared.getFeatureFlags() { (result) in
+        print(result)
+    }
+    Flagsmith.shared.hasFeatureFlag(withID: "freeze_delinquent_accounts") { (result) in
+        print(result)
+    }
+    //Flagsmith.shared.setTrait(Trait(key: "<my_key>", value: "<my_value>"), forIdentity: "<my_identity>") { (result) in print(result) }
+    //Flagsmith.shared.getIdentity("<my_key>") { (result) in print(result) }
+    return true
+}
+```
+
+## Swift Concurrency
 
 When running with Swift version 5.5.2 and greater (Xcode 13.2), `async` versions of the Flagsmith API become available.
 These are provided using the generic
@@ -149,7 +186,7 @@ func determineAppConfiguration() async throws {
 }
 ```
 
-### Providing Default Flags
+## Providing Default Flags
 
 You can define default flag values when initialising the SDK. This ensures that your application works as intended in
 the event that it cannot receive a response from our API.

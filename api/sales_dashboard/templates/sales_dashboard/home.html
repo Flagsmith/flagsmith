@@ -12,17 +12,17 @@
         <h1 class="h2">Organisations</h1>
         <div class="float-right">
           <div class='float-left'>
-            <form method="POST" action="{% url 'sales_dashboard:update-chargebee-cache' %}">
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-cache' %}">
               {% csrf_token %}
-              <input type="submit" value="Update chargebee cache" class="btn btn-primary m-1">
+              <input type="submit" value="Update subscription data" class="btn btn-primary m-1">
             </form>
           </div>
           <div class='float-left'>
-            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-influx-cache' %}">
               {% csrf_token %}
-              <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
+              <input type="submit" value="Update only influx data" class="btn btn-primary m-1">
             </form>
-            <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
+            <small class="p-1">Last Influx data updated at: {{ subscription_information_caches_influx_updated_at|default:"never" }}</small>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@
           <tbody>
             {% for org in object_list %}
             <tr class="
-              {% if org.has_subscription and not org.is_paid %}table-danger
+              {% if org.has_paid_subscription and not org.is_paid %}table-danger
               {% elif org.num_users > org.subscription_information_cache.allowed_seats %}table-warning
               {% elif org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}table-warning
               {% endif %}"

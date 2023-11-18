@@ -21,15 +21,9 @@ dependencies:
 
 ## Basic Usage
 
-The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
-for example the Development or Production environment. You can find your environment key in the Environment settings
-page.
-
-![Image](/img/api-key.png)
+The SDK is initialised against a single Environment. You can find your Environment key in the Environment settings page.
 
 ### Retrieving feature flags for your project
-
-Sign Up and create an account at [https://flagsmith.com/](https://flagsmith.com/)
 
 In your application, initialise the Flagsmith client with your API key:
 
@@ -47,7 +41,7 @@ await flagsmithClient.initialize();
 await flagsmithClient.getFeatureFlags(reload: true) // fetch updates from api
 ```
 
-if you prefer async initialization then you should use
+If you prefer async initialization then you can use:
 
 ```dart
 import 'package:flagsmith/flagsmith.dart';
@@ -68,7 +62,7 @@ To check if a feature flag exists:
 bool featureExists = await flagsmithClient.hasFeatureFlag("my_test_feature");
 ```
 
-Check if Feature flag exist and is enabled:
+Check if a feature flag exist and is enabled:
 
 ```dart
 bool featureEnabled = await flagsmithClient.isFeatureFlagEnabled("my_test_feature");
@@ -90,7 +84,7 @@ if (myRemoteConfig != null) {
 }
 ```
 
-To listen for fetch request state
+To listen for fetch request state:
 
 ```dart
 flagsmithClient.loading.listen((state){
@@ -123,7 +117,7 @@ StreamBuilder(
 
 ## Cached flags
 
-You can use caches instead of async/await
+You can use caches instead of async/await:
 
 ```dart
 final config = FlagsmithConfig(
@@ -150,9 +144,7 @@ bool isFeatureEnabled = flagsmithClient.hasCachedFeatureFlag('feature');
 
 ### Identifying users
 
-Identifying users allows you to target specific users from the [Flagsmith dashboard](https://flagsmith.com/).
-
-To check if a feature exists for a given user Identity:
+To check if a feature exists for an Identity:
 
 ```dart
 final user = Identity(identifier: 'flagsmith_sample_user');
@@ -164,7 +156,7 @@ if (featureEnabled) {
 }
 ```
 
-To get the configuration value for a feature flag for given a user Identity:
+To get the feature flag configuration value for an Identity:
 
 ```dart
 final myRemoteConfig = await flagsmithClient.getFeatureFlagValue('my_test_feature', user: user);
@@ -175,7 +167,7 @@ if (myRemoteConfig != null) {
 }
 ```
 
-To get the user traits for given user Identity:
+To get the user traits for an Identity:
 
 ```dart
 final userTraits = await flagsmithClient.getTraits(user)
@@ -186,7 +178,7 @@ if (userTraits != null && userTraits) {
 }
 ```
 
-To get user trait for given user Identity and specific Trait key:
+To get the trait value for an Identity and specific Trait key:
 
 ```dart
 final userTrait = await flagsmithClient.getTrait(user, 'cookies_key');
@@ -197,7 +189,7 @@ if (userTrait != null) {
 }
 ```
 
-Or get user traits for given user Identity and specific Trait keys:
+Or get user traits for an Identity and specific Trait keys:
 
 ```dart
 final userTraits = await flagsmithClient.getTraits(user, keys: ['cookies_key', 'other_trait']);
@@ -208,7 +200,7 @@ if (userTraits != null) {
 }
 ```
 
-To update a user trait for given user Identity:
+To update a user trait for an Identity:
 
 ```dart
 final userTrait = await flagsmithClient.getTrait(user, 'cookies_key');
@@ -223,7 +215,7 @@ if (userTrait != null) {
 
 ## Reset storage
 
-To reset storage and re-seed default values
+To reset storage and re-seed default values:
 
 ```dart
 await flagsmithClient.reset();
@@ -251,6 +243,39 @@ final flagsmithClient = FlagsmithClient(
           sendTimeout: 500,
           storeType = StoreType.inMemory,
           caches: true,
+      ), apiKey: 'YOUR_ENV_API_KEY');
+```
+
+## Real-time Flag Updates
+
+:::tip
+
+Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
+
+Real-time Flags are currently in beta. Please contact us to join the beta!
+
+:::
+
+Real-time flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
+
+```dart
+final flagsmithClient = FlagsmithClient(
+      config: FlagsmithConfig(
+          enableRealtimeUpdates: true,
+      ), apiKey: 'YOUR_ENV_API_KEY');
+```
+
+This will use the default Flagsmith realtime updates URI: `'https://realtime.flagsmith.com/sse/environments/'`, with a
+reconnect interval of 29000 milliseconds.
+
+You can change this configuration with your own SSE connection:
+
+```dart
+final flagsmithClient = FlagsmithClient(
+      config: FlagsmithConfig(
+          enableRealtimeUpdates: true,
+          realtimeUpdatesBaseURI: 'https://your_sse_endpoint.com/sse/',
+          reconnctToSSEInterval: 15000,
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 

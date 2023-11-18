@@ -14,6 +14,7 @@ import { getStore } from 'common/store'
 import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
 
 class TheComponent extends Component {
@@ -151,11 +152,23 @@ class TheComponent extends Component {
                 One of your organisations has enfoced Two-Factor Authentication,
                 please enable it to continue.
               </p>
-              <TwoFactor />
+              <TwoFactor isLoginPage={true} />
             </div>
           ) : (
             <div className='app-container container'>
-              <Tabs uncontrolled>
+              <PageTitle
+                cta={
+                  <Button
+                    id='logout-link'
+                    theme='secondary'
+                    onClick={AppActions.logout}
+                  >
+                    Log Out
+                  </Button>
+                }
+                title={'Account'}
+              />
+              <Tabs uncontrolled className='mt-0'>
                 <TabItem tabLabel='General'>
                   <div className='mt-4'>
                     <h5 className='mb-5'>General Settings</h5>

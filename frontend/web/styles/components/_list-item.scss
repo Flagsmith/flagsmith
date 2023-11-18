@@ -9,6 +9,10 @@
       vertical-align: sub;
     }
   }
+  &.change-request-item {
+    min-height: auto;
+    padding: 20px 0px;
+  }
 
   &-subtitle {
     font-size: $panel-list-item-sub-font-size;
@@ -37,7 +41,7 @@
     &.clickable:hover .btn-link {
       color: $primary400;
     }
-    .btn-link {
+      .btn-link {
       color: $primary400;
       path {
         fill: $primary400;

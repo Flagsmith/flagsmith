@@ -1,28 +1,21 @@
 import React, { Component } from 'react'
 import propTypes from 'prop-types'
 import NavLink from 'react-router-dom/NavLink'
-import ProjectSelect from './ProjectSelect'
-import AsideProjectButton from './AsideProjectButton'
 import AsideTitleLink from './AsideTitleLink'
 import Collapsible from './Collapsible'
-import ProjectSettingsIcon from './svg/ProjectSettingsIcon'
-import AuditLogIcon from './svg/AuditLogIcon'
 import OrgSettingsIcon from './svg/OrgSettingsIcon'
 import EnvironmentDropdown from './EnvironmentDropdown'
-import CreateProjectModal from './modals/CreateProject'
-import UserSettingsIcon from './svg/UserSettingsIcon'
-import DocumentationIcon from './svg/DocumentationIcon'
-import NavIconSmall from './svg/NavIconSmall'
-import PlusIcon from './svg/PlusIcon'
-import FeaturesIcon from './svg/FeaturesIcon'
-import UsersIcon from './svg/UsersIcon'
-import SegmentsIcon from './svg/SegmentsIcon'
-import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import getBuildVersion from 'project/getBuildVersion'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import Icon from './Icon'
+import ProjectSelect from './ProjectSelect'
+import AsideProjectButton from './AsideProjectButton'
+import Constants from 'common/constants'
+import { star, warning, pricetag } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const Aside = class extends Component {
   static displayName = 'Aside'
@@ -39,26 +32,30 @@ const Aside = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { isOpenProject: false }
     ES6Component(this)
-    AppActions.getProject(this.props.projectId)
-    if (this.props.environmentId && this.props.environmentId !== 'create') {
-      AppActions.getChangeRequests(this.props.environmentId, {})
-    }
-    this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
-    this.listenTo(ProjectStore, 'loaded', () => {
-      const environment = ProjectStore.getEnvironment(this.props.environmentId)
-      if (environment) {
-        AppActions.getChangeRequests(
-          this.props.environmentId,
-          Utils.changeRequestsEnabled(
-            environment.minimum_change_request_approvals,
-          )
-            ? {}
-            : { live_from_after: new Date().toISOString() },
-        )
+    if (!this.props.disabled) {
+      AppActions.getProject(this.props.projectId)
+      if (this.props.environmentId && this.props.environmentId !== 'create') {
+        AppActions.getChangeRequests(this.props.environmentId, {})
       }
-    })
+      this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate())
+      this.listenTo(ProjectStore, 'loaded', () => {
+        const environment = ProjectStore.getEnvironment(
+          this.props.environmentId,
+        )
+        if (environment) {
+          AppActions.getChangeRequests(
+            this.props.environmentId,
+            Utils.changeRequestsEnabled(
+              environment.minimum_change_request_approvals,
+            )
+              ? {}
+              : { live_from_after: new Date().toISOString() },
+          )
+        }
+      })
+    }
   }
 
   componentDidMount() {
@@ -68,20 +65,22 @@ const Aside = class extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const environment = ProjectStore.getEnvironment(this.props.environmentId)
-    if (this.props.projectId !== prevProps.projectId) {
-      AppActions.getProject(prevProps.projectId)
-    }
-    if (this.props.environmentId !== prevProps.environmentId) {
-      if (environment) {
-        AppActions.getChangeRequests(
-          this.props.environmentId,
-          Utils.changeRequestsEnabled(
-            environment.minimum_change_request_approvals,
+    if (!this.props.disabled) {
+      const environment = ProjectStore.getEnvironment(this.props.environmentId)
+      if (this.props.projectId !== prevProps.projectId) {
+        AppActions.getProject(this.props.projectId)
+      }
+      if (this.props.environmentId !== prevProps.environmentId) {
+        if (environment) {
+          AppActions.getChangeRequests(
+            this.props.environmentId,
+            Utils.changeRequestsEnabled(
+              environment.minimum_change_request_approvals,
+            )
+              ? {}
+              : { live_from_after: new Date().toISOString() },
           )
-            ? {}
-            : { live_from_after: new Date().toISOString() },
-        )
+        }
       }
     }
   }
@@ -90,23 +89,8 @@ const Aside = class extends Component {
     AppActions.refreshOrganisation()
   }
 
-  newProject = () => {
-    openModal(
-      'Create Project',
-      <CreateProjectModal
-        onSave={({ environmentId, projectId }) => {
-          AppActions.getProject(projectId)
-          this.context.router.history.push(
-            `/project/${projectId}/environment/${environmentId}/features?new=true`,
-          )
-        }}
-      />,
-      'side-modal',
-    )
-  }
-
   render() {
-    const { asideIsVisible, toggleAside } = this.props
+    const { asideIsVisible, disabled, toggleAside } = this.props
     let integrations = Utils.getFlagsmithValue('integrations') || '[]'
     integrations = JSON.parse(integrations)
     const environmentId =
@@ -162,134 +146,122 @@ const Aside = class extends Component {
                     </div>
                   )}
                   <div className='row ml-0 mr-0 aside__wrapper'>
-                    <div
-                      className={`aside__projects-sidebar ${
-                        this.props.className || ''
-                      }`}
-                    >
-                      <div className='flex-row justify-content-center'>
-                        <div className='flex-column'>
-                          <Link to='/projects'>
-                            <NavIconSmall className='aside__logo' />
-                          </Link>
-                        </div>
-
-                        <div className='flex-column'>
-                          <div className='aside__projects-item'>
-                            <div className='flex-row justify-content-center'>
-                              <div className='flex-column mb-3'>
-                                <Tooltip
-                                  title={
-                                    <Button
-                                      onClick={this.newProject}
-                                      className='btn--transparent aside__add-btn'
-                                    >
-                                      <a id='create-project-link'>
-                                        <PlusIcon width={18} />
-                                      </a>
-                                    </Button>
-                                  }
-                                  place='right'
-                                >
-                                  Create Project
-                                </Tooltip>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <ProjectSelect
-                          renderRow={(project, onClick) => (
-                            <AsideProjectButton
-                              data-test={`switch-project-${project.name.toLowerCase()}${
-                                this.props.projectId === `${project.id}`
-                                  ? '-active'
-                                  : ''
-                              }`}
-                              key={project.id}
-                              onClick={onClick}
-                              className={
-                                this.props.projectId === `${project.id}`
-                                  ? 'active'
-                                  : ''
-                              }
-                              name={project.name}
-                              projectLetter={`${project.name[0]}`.toUpperCase()}
-                            />
-                          )}
-                          projectId={this.props.projectId}
-                          environmentId={environmentId}
-                          clearableValue={false}
-                          onChange={(project) => {
-                            AppActions.getProject(project.id)
-                            if (project.environments[0]) {
-                              this.context.router.history.push(
-                                `/project/${project.id}/environment/${project.environments[0].api_key}/features`,
-                              )
-                            } else {
-                              this.context.router.history.push(
-                                `/project/${project.id}/environment/create`,
-                              )
-                            }
-                            AsyncStorage.setItem(
-                              'lastEnv',
-                              JSON.stringify({
-                                environmentId: project.environments[0].api_key,
-                                orgId: AccountStore.getOrganisation().id,
-                                projectId: project.id,
-                              }),
-                            )
-                          }}
-                        />
-                      </div>
-                    </div>
                     {
                       <React.Fragment>
-                        <div className='aside__main-content px-0'>
-                          <div className='pl-4 pr-4 pt-4'>
-                            <Row>
-                              <h1 className='aside__project-title'>
-                                {project && project.name ? project.name : '...'}
-                              </h1>
-                              {Utils.getFlagsmithHasFeature(
-                                'edge_identities',
-                              ) && (
-                                <div className='text-center'>
-                                  <span
-                                    style={{
-                                      border: 'none',
-                                      bottom: 2,
-                                      left: 5,
-                                      position: 'relative',
+                        <div
+                          className={`aside__main-content px-0 ${
+                            disabled ? 'disabled' : ''
+                          }`}
+                        >
+                          <a href={'/projects'} className='nav-logo'>
+                            <Icon name='nav-logo' />
+                          </a>
+                          <hr className='my-0 py-0' />
+                          <Collapsible
+                            data-test={
+                              project?.name
+                                ? `switch-project-${project?.name
+                                    ?.replace(/ /g, '-')
+                                    .toLowerCase()}`
+                                : ''
+                            }
+                            title={
+                              project && project.name ? (
+                                <Column className='mx-0'>
+                                  <div>{project.name}</div>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'edge_identities',
+                                  ) && (
+                                    <div className='mt-2'>
+                                      <span
+                                        style={{
+                                          border: 'none',
+                                        }}
+                                        className='chip chip--active bg-secondary'
+                                      >
+                                        <a
+                                          data-test={
+                                            Utils.getIsEdge()
+                                              ? 'edge-project'
+                                              : 'core-project'
+                                          }
+                                          href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
+                                          className='text-white font-weight-bold'
+                                        >
+                                          {Utils.getIsEdge() ? (
+                                            'Edge'
+                                          ) : Utils.isMigrating() ? (
+                                            <Tooltip title='Migrating to Edge'>
+                                              Depending on the amount of project
+                                              data, migrating can take a while.
+                                              Refresh the page to track
+                                              progress.
+                                            </Tooltip>
+                                          ) : (
+                                            'Core'
+                                          )}
+                                        </a>
+                                      </span>
+                                    </div>
+                                  )}
+                                </Column>
+                              ) : (
+                                'No Project'
+                              )
+                            }
+                            onClickOutside={() => {
+                              this.setState({ isOpenProject: false })
+                            }}
+                            onClick={() => {
+                              this.setState((prev) => {
+                                return {
+                                  isOpenProject: !prev.isOpenProject,
+                                }
+                              })
+                            }}
+                            active={this.state.isOpenProject}
+                            isProjectSelect
+                            className='collapsible-project'
+                          >
+                            <ProjectSelect
+                              renderRow={(_project, onClick) => {
+                                return (
+                                  <AsideProjectButton
+                                    key={_project.id}
+                                    onClick={() => {
+                                      this.setState({ isOpenProject: false })
+                                      onClick()
                                     }}
-                                    className='chip chip--active bg-secondary'
-                                  >
-                                    <a
-                                      data-test={
-                                        Utils.getIsEdge()
-                                          ? 'edge-project'
-                                          : 'core-project'
-                                      }
-                                      href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
-                                      className='text-white font-weight-bold'
-                                    >
-                                      {Utils.getIsEdge() ? (
-                                        'Edge'
-                                      ) : Utils.isMigrating() ? (
-                                        <Tooltip title='Migrating to Edge'>
-                                          Depending on the amount of project
-                                          data, migrating can take a while.
-                                          Refresh the page to track progress.
-                                        </Tooltip>
-                                      ) : (
-                                        'Core'
-                                      )}
-                                    </a>
-                                  </span>
-                                </div>
-                              )}
-                            </Row>
-                          </div>
+                                    name={_project.name}
+                                    active={project.id === _project.id}
+                                  />
+                                )
+                              }}
+                              projectId={this.props.projectId}
+                              environmentId={environmentId}
+                              onChange={(project) => {
+                                AppActions.getProject(project.id)
+                                if (project.environments[0]) {
+                                  this.context.router.history.push(
+                                    `/project/${project.id}/environment/${project.environments[0].api_key}/features`,
+                                  )
+                                } else {
+                                  this.context.router.history.push(
+                                    `/project/${project.id}/environment/create`,
+                                  )
+                                }
+                                AsyncStorage.setItem(
+                                  'lastEnv',
+                                  JSON.stringify({
+                                    environmentId:
+                                      project.environments[0].api_key,
+                                    orgId: AccountStore.getOrganisation().id,
+                                    projectId: project.id,
+                                  }),
+                                )
+                              }}
+                            />
+                          </Collapsible>
                           <Permission
                             level='project'
                             permission='ADMIN'
@@ -300,10 +272,12 @@ const Aside = class extends Component {
                                 <NavLink
                                   id='project-settings-link'
                                   activeClassName='active'
-                                  className='aside__nav-item mt-4'
+                                  className='aside__nav-item mx-3 mt-2'
                                   to={`/project/${this.props.projectId}/settings`}
                                 >
-                                  <ProjectSettingsIcon className='aside__nav-item--icon' />
+                                  <span className='mr-2'>
+                                    <Icon name='options-2' />
+                                  </span>
                                   Project Settings
                                 </NavLink>
                               )
@@ -313,19 +287,23 @@ const Aside = class extends Component {
                           <NavLink
                             to={`/project/${project.id}/environment/${environmentId}/segments`}
                             id='segments-link'
-                            className='aside__nav-item'
+                            className='aside__nav-item mx-3'
                           >
-                            <SegmentsIcon className='aside__nav-item--icon' />
+                            <span className='mr-2'>
+                              <Icon name='pie-chart' />
+                            </span>
                             Segments
                           </NavLink>
                           <NavLink
                             id='integrations-link'
                             activeClassName='active'
-                            className='aside__nav-item'
+                            className='aside__nav-item mx-3'
                             to={`/project/${project.id}/environment/${environmentId}/compare`}
                             exact
                           >
-                            <span className='icon ion-md-git-pull-request aside__nav-item--icon' />
+                            <span className='mr-2'>
+                              <Icon name='bar-chart' />
+                            </span>
                             Compare
                           </NavLink>
 
@@ -340,10 +318,12 @@ const Aside = class extends Component {
                                 <NavLink
                                   id='audit-log-link'
                                   activeClassName='active'
-                                  className='aside__nav-item'
+                                  className='aside__nav-item mx-3'
                                   to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
                                 >
-                                  <AuditLogIcon className='aside__nav-item--icon' />
+                                  <span className='mr-2'>
+                                    <Icon name='list' />
+                                  </span>
                                   Audit Log
                                 </NavLink>
                               )
@@ -355,9 +335,11 @@ const Aside = class extends Component {
                               title={
                                 <a
                                   href='#'
-                                  className='aside__nav-item disabled'
+                                  className='aside__nav-item disabled mx-3'
                                 >
-                                  <AuditLogIcon className='aside__nav-item--icon' />
+                                  <span className='mr-2'>
+                                    <Icon name='list' />
+                                  </span>
                                   Audit Log
                                 </a>
                               }
@@ -376,17 +358,20 @@ const Aside = class extends Component {
                                   <NavLink
                                     id='integrations-link'
                                     activeClassName='active'
-                                    className='aside__nav-item'
+                                    className='aside__nav-item mx-3'
                                     to={`/project/${this.props.projectId}/integrations`}
                                     exact
                                   >
-                                    <i className='icon mr-2 ion-ios-apps aside__nav-item--icon' />
+                                    <span className='mr-2'>
+                                      <Icon name='layers' />
+                                    </span>
                                     Integrations
                                   </NavLink>
                                 )
                               }
                             </Permission>
                           )}
+                          <hr className='my-0 py-0 mt-2' />
                           <Permission
                             level='project'
                             permission='CREATE_ENVIRONMENT'
@@ -396,15 +381,14 @@ const Aside = class extends Component {
                               permission && (
                                 <NavLink
                                   id='create-env-link'
-                                  className='aside__header-link'
+                                  className='aside__header-link mt-2'
                                   to={`/project/${this.props.projectId}/environment/create`}
                                   exact
                                 >
                                   <AsideTitleLink
                                     tooltip='Create Environment'
                                     className='mt-4'
-                                    title='Environments'
-                                    iconClassName='ion-md-add'
+                                    title='Create Environment'
                                   />
                                 </NavLink>
                               )
@@ -451,62 +435,98 @@ const Aside = class extends Component {
                                                 <Loader />
                                               </div>
                                             ) : (
-                                              <div className='aside__environment-nav list-unstyled mb-0'>
+                                              <div className='aside__environment-nav list-unstyled mb-0 mt-1'>
                                                 <NavLink
                                                   className='aside__environment-list-item'
                                                   id='features-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                                 >
-                                                  <FeaturesIcon className='aside__environment-list-item--icon' />
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='rocket'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Features
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item'
+                                                  className='aside__environment-list-item mt-1'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                                 >
-                                                  <span className='ion icon ion-ios-timer aside__environment-list-item--icon' />
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='timer'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Scheduling
                                                   {scheduled ? (
-                                                    <span className='ml-1 unread'>
+                                                    <span className='ml-1 unread d-inline'>
                                                       {scheduled}
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
                                                 <NavLink
                                                   activeClassName='active'
-                                                  className='aside__environment-list-item'
+                                                  className='aside__environment-list-item mt-1'
                                                   id='change-requests-link'
                                                   to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                 >
-                                                  <span className='ion icon ion-md-git-pull-request aside__environment-list-item--icon' />
+                                                  <span className='mr-2'>
+                                                    <Icon
+                                                      name='request'
+                                                      fill='#9DA4AE'
+                                                    />
+                                                  </span>
                                                   Change Requests{' '}
                                                   {changeRequests ? (
-                                                    <span className='unread'>
+                                                    <span className='unread d-inline'>
                                                       {changeRequests}
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
-                                                {manageIdentityPermission && (
+                                                {Utils.renderWithPermission(
+                                                  manageIdentityPermission,
+                                                  Constants.environmentPermissions(
+                                                    'View Identities',
+                                                  ),
                                                   <NavLink
                                                     id='users-link'
-                                                    className='aside__environment-list-item'
+                                                    className={`aside__environment-list-item ${
+                                                      !manageIdentityPermission &&
+                                                      'disabled'
+                                                    } mt-1`}
                                                     exact
                                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                                   >
-                                                    <UsersIcon className='aside__environment-list-item--icon' />
+                                                    <span className='mr-2'>
+                                                      <Icon
+                                                        name='people'
+                                                        fill={
+                                                          manageIdentityPermission
+                                                            ? '#9DA4AE'
+                                                            : '#696969'
+                                                        }
+                                                      />
+                                                    </span>
                                                     Identities
-                                                  </NavLink>
+                                                  </NavLink>,
                                                 )}
 
                                                 {environmentAdmin && (
                                                   <NavLink
                                                     id='env-settings-link'
-                                                    className='aside__environment-list-item'
+                                                    className='aside__environment-list-item mt-1'
                                                     to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                                   >
-                                                    <EnvironmentSettingsIcon className='aside__environment-list-item--icon' />
+                                                    <span className='mr-2'>
+                                                      <Icon
+                                                        name='settings-2'
+                                                        fill='#9DA4AE'
+                                                      />
+                                                    </span>
                                                     Settings
                                                   </NavLink>
                                                 )}
@@ -551,25 +571,33 @@ const Aside = class extends Component {
                                 className='aside__nav-item'
                                 href='https://docs.flagsmith.com'
                               >
-                                <i className='icon mr-2 ion-ios-star aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon
+                                    icon={star}
+                                  />
+                                </i>
                                 Super cool demo feature!
                               </a>
                             )}
 
                             {Utils.getFlagsmithHasFeature('broken_feature') && (
                               <Link to='/broken' className='aside__nav-item'>
-                                <i className='icon mr-2 ion-ios-warning aside__nav-item--icon' />
+                                <i className='icon mr-2 aside__nav-item--icon'>
+                                  <IonIcon icon={warning} />
+                                </i>
                                 Demo Broken Feature
                               </Link>
                             )}
                             {this.state.version && (
-                              <div className='text-muted text-small text-center'>
+                              <div className='px-4 fs-small lh-sm text-white my-3'>
                                 {this.state.version.tag !== 'Unknown' && (
                                   <Tooltip
                                     html
                                     title={
                                       <span>
-                                        <span className='ml-2 icon ion-ios-pricetag' />{' '}
+                                        <span className='ml-2 icon'>
+                                          <IonIcon icon={pricetag} />
+                                        </span>{' '}
                                         {this.state.version.tag}
                                       </span>
                                     }
@@ -610,24 +638,6 @@ const Aside = class extends Component {
                                   Organisation
                                 </NavLink>
                               )}
-
-                            <a
-                              href='https://docs.flagsmith.com'
-                              target='_blank'
-                              className='aside__nav-item hidden-sm-up'
-                              rel='noreferrer'
-                            >
-                              <DocumentationIcon className='aside__nav-item--icon' />
-                              Documentation
-                            </a>
-                            <NavLink
-                              id='account-settings-link'
-                              className='aside__nav-item hidden-sm-up'
-                              to={`/project/${this.props.projectId}/environment/${environmentId}/account`}
-                            >
-                              <UserSettingsIcon className='aside__nav-item--icon' />
-                              Account Settings
-                            </NavLink>
                           </div>
                         </div>
                       </React.Fragment>

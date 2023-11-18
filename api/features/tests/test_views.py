@@ -19,6 +19,8 @@ from audit.constants import (
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
+from environments.permissions.models import UserEnvironmentPermission
 from features.models import (
     Feature,
     FeatureSegment,
@@ -717,7 +719,8 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
     # Given
@@ -736,7 +739,8 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_deleted_features_are_not_listed(client, project, environment, feature):
     # Given
@@ -752,7 +756,8 @@ def test_deleted_features_are_not_listed(client, project, environment, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
 def test_get_feature_evaluation_data(project, feature, environment, mocker, client):
     # Given
@@ -784,6 +789,74 @@ def test_get_feature_evaluation_data(project, feature, environment, mocker, clie
     )
 
 
+def test_create_segment_override_forbidden(
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    # When
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # Staff client lacks permission to create segment.
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 403
+    assert response.data == {
+        "detail": "You do not have permission to perform this action."
+    }
+
+
+def test_create_segment_override_staff(
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    # When
+    enabled = True
+    string_value = "foo"
+    data = {
+        "feature_state_value": {"string_value": string_value},
+        "enabled": enabled,
+        "feature_segment": {"segment": segment.id},
+    }
+    user_environment_permission = UserEnvironmentPermission.objects.create(
+        user=staff_user, admin=False, environment=environment
+    )
+    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == 201
+    assert response.data["feature_segment"]["segment"] == segment.id
+
+
 def test_create_segment_override(admin_client, feature, segment, environment):
     # Given
     url = reverse(
@@ -813,3 +886,20 @@ def test_create_segment_override(admin_client, feature, segment, environment):
     assert created_override is not None
     assert created_override.enabled is enabled
     assert created_override.get_feature_state_value() == string_value
+
+
+def test_get_flags_is_not_throttled_by_user_throttle(
+    api_client, environment, feature, settings
+):
+    # Given
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    url = reverse("api-v1:flags")
+
+    # When
+    for _ in range(10):
+        response = api_client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK

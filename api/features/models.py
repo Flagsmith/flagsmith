@@ -23,6 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
+    BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
 )
@@ -112,6 +113,10 @@ class Feature(
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+    group_owners = models.ManyToManyField(
+        "users.UserPermissionGroup", related_name="owned_features", blank=True
+    )
+
     is_server_key_only = models.BooleanField(default=False)
 
     history_record_class_path = "features.models.HistoricalFeature"
@@ -559,15 +564,17 @@ class FeatureState(
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
-        clone.feature_segment = (
-            FeatureSegment.objects.get(
-                environment=env,
-                feature=clone.feature,
-                segment=self.feature_segment.segment,
+
+        if self.feature_segment:
+            # For now, we can only create a new feature segment if we are cloning to another environment
+            # TODO: with feature versioning, ensure that we clone regardless.
+            #  see this PR: https://github.com/Flagsmith/flagsmith/pull/2382
+            clone.feature_segment = (
+                self.feature_segment.clone(environment=env)
+                if env != self.environment
+                else self.feature_segment
             )
-            if self.feature_segment
-            else None
-        )
+
         clone.environment = env
         clone.version = None if as_draft else version or self.version
         clone.live_from = live_from
@@ -671,18 +678,21 @@ class FeatureState(
         return getattr(self, "feature_state_value", None)
 
     @hook(BEFORE_CREATE)
-    def check_for_existing_feature_state(self):
-        # prevent duplicate feature states being created for an environment
+    @hook(BEFORE_SAVE, when="deleted", is_not=True)
+    def check_for_duplicate_feature_state(self):
         if self.version is None:
             return
-
-        if FeatureState.objects.filter(
+        filter_ = Q(
             environment=self.environment,
             feature=self.feature,
             version=self.version,
             feature_segment=self.feature_segment,
             identity=self.identity,
-        ).exists():
+        )
+        if self.id:
+            filter_ &= ~Q(id=self.id)
+
+        if FeatureState.objects.filter(filter_).exists():
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"

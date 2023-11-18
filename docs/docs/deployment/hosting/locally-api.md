@@ -13,12 +13,11 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-python manage.py createcachetable
 make serve
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and
-provide DNS settings for your installation.
+provide DNS settings for your installation or run `make test` from the `api` directory to run the test suite.
 
 Note: if you're running on on MacOS and you find some issues installing the dependencies (specifically around pyre2),
 you may need to run the following:
@@ -437,9 +436,19 @@ You can run Flagsmith as a single application/docker container using our unified
 [Docker Hub](https://hub.docker.com/repository/docker/flagsmith/flagsmith) but you can also run the front end as part of
 the Django Application. Steps to do this:
 
-1. `cd frontend; npm run bundledjango`
-2. `cd ../api; python manage.py collectstatic`
-3. `python manage.py runserver`
+```bash
+# Update packages and build django.
+cd frontend
+npm install
+npm run bundledjango
+
+# Copy additional assets with Django
+cd ../api
+python manage.py collectstatic
+
+# Boot the server
+python manage.py runserver
+```
 
 ### How it works
 

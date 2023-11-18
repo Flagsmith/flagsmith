@@ -18,8 +18,12 @@ import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
+import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
+import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
+import { globeOutline } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const CodeHelp = require('../../components/CodeHelp')
 const Panel = require('../../components/base/grid/Panel')
@@ -67,6 +71,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   })
   const [removeSegment] = useDeleteSegmentMutation()
   const hasHadResults = useRef(false)
+
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxSegmentsAllowed(),
+  )
 
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -154,6 +163,42 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       id='segments-page'
       className='app-container container'
     >
+      <PageTitle
+        cta={
+          segments && (segments.length || searchInput) ? (
+            <>
+              {renderWithPermission(
+                manageSegmentsPermission,
+                'Manage segments',
+                <Button
+                  disabled={
+                    hasNoOperators ||
+                    !manageSegmentsPermission ||
+                    segmentsLimitAlert.percentage >= 100
+                  }
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={newSegment}
+                >
+                  Create Segment
+                </Button>,
+              )}
+            </>
+          ) : null
+        }
+        title={'Segments'}
+      >
+        Create and manage groups of users with similar traits. Segments can be
+        used to override features within the features page for any environment.{' '}
+        <Button
+          theme='text'
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-segments'
+          className='fw-normal'
+        >
+          Learn more.
+        </Button>
+      </PageTitle>
       <div className='segments-page'>
         {isLoading && !hasHadResults.current && !segments && !searchInput && (
           <div className='centered-container'>
@@ -162,42 +207,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         )}
         {(!isLoading || segments || searchInput) && (
           <div>
+            {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
             {hasHadResults.current ||
             (segments && (segments.length || searchInput)) ? (
               <div>
-                <Row className='justify-content-between'>
-                  <Flex style={{ maxWidth: '700px' }}>
-                    <h4>Segments</h4>
-                    <p>
-                      Create and manage groups of users with similar traits.
-                      Segments can be used to override features within the
-                      features page for any environment.{' '}
-                      <Button
-                        theme='text'
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/managing-segments'
-                      >
-                        Learn about Segments.
-                      </Button>
-                    </p>
-                  </Flex>
-                  <FormGroup className='float-right'>
-                    <div className='text-right'>
-                      {renderWithPermission(
-                        manageSegmentsPermission,
-                        'Manage segments',
-                        <Button
-                          disabled={hasNoOperators || !manageSegmentsPermission}
-                          id='show-create-segment-btn'
-                          data-test='show-create-segment-btn'
-                          onClick={newSegment}
-                        >
-                          Create Segment
-                        </Button>,
-                      )}
-                    </div>
-                  </FormGroup>
-                </Row>
                 {hasNoOperators && <HowToUseSegmentsMessage />}
 
                 <FormGroup>
@@ -249,19 +262,18 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                 : undefined
                             }
                           >
-                            <div
+                            <Row
                               data-test={`segment-${i}-name`}
                               className='font-weight-medium'
                             >
                               {name}
                               {feature && (
-                                <div className='unread ml-2 px-2'>
-                                  {' '}
+                                <div className='chip chip--xs ml-2'>
                                   Feature-Specific
                                 </div>
                               )}
-                            </div>
-                            <div className='list-item-subtitle'>
+                            </Row>
+                            <div className='list-item-subtitle mt-1'>
                               {description || 'No description'}
                             </div>
                           </Flex>
@@ -347,8 +359,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                       data-test='show-create-segment-btn'
                       onClick={newSegment}
                     >
-                      <span className='icon ion-ios-globe' /> Create your first
-                      Segment
+                      <span className='icon icon-inner'>
+                        <IonIcon icon={globeOutline} style={{height: '25px', contain: 'none'}}/>
+                      </span>
+                      Create your first Segment
                     </Button>,
                   )}
                 </FormGroup>

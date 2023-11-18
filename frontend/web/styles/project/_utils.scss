@@ -96,10 +96,6 @@
     margin-right: auto!important;
 }
 
-.signup-form {
-    width: 485px;
-}
-
 .signup-icon {
     width: 64px;
     path {
@@ -148,6 +144,10 @@
         background-color: rgba(0,0,0,.2);
     }
 }
+.aside__environment-list-item.disabled {
+    color:#696969;
+    pointer-events: none;
+  }
 
 .justify-content-end {
     justify-content: flex-end;

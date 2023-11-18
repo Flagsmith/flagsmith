@@ -35,6 +35,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
+import ProjectStore from 'common/stores/project-store'
+import Icon from 'components/Icon'
+import Permission from 'common/providers/Permission'
 
 type PageType = {
   number: number
@@ -133,6 +136,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [tab, setTab] = useState(0)
 
   const isError = createError || updateError
+  const isLimitReached =
+    ProjectStore.getTotalSegments() >= ProjectStore.getMaxSegmentsAllowed()
+
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    ProjectStore.getTotalSegments(),
+    ProjectStore.getMaxSegmentsAllowed(),
+    THRESHOLD,
+  )
 
   const addRule = (type = 'ANY') => {
     const newRules = cloneDeep(rules)
@@ -335,6 +347,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </a>
             .
           </InfoMessage>
+          {segmentsLimitAlert.percentage &&
+            Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
         </div>
       )}
 
@@ -364,7 +378,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </Flex>
         </div>
       )}
-
       {!condensed && (
         <InputGroup
           className='mb-3'
@@ -467,7 +480,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             ) : (
               <Button
-                disabled={isSaving || !name || !isValid}
+                disabled={isSaving || !name || !isValid || isLimitReached}
                 type='submit'
                 data-test='create-segment'
                 id='create-feature-btn'
@@ -490,11 +503,29 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <AssociatedSegmentOverrides
-                feature={segment.feature}
-                projectId={projectId}
-                id={segment.id}
-              />
+              <Permission
+                level='environment'
+                permission={'MANAGE_SEGMENT_OVERRIDES'}
+                id={environmentId}
+              >
+                {({ permission: manageSegmentOverrides }) => {
+                  const manageSegmentOverridesEnabled =
+                    Utils.getFlagsmithHasFeature(
+                      'manage_segment_overrides_env_role',
+                    )
+                  const isReadOnly = !manageSegmentOverrides
+                  return (
+                    <AssociatedSegmentOverrides
+                      feature={segment.feature}
+                      projectId={projectId}
+                      id={segment.id}
+                      readOnly={
+                        manageSegmentOverridesEnabled ? isReadOnly : false
+                      }
+                    />
+                  )
+                }}
+              </Permission>
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
@@ -584,17 +615,35 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                 <div className='font-weight-medium'>
                                   {identifier}
                                 </div>
-                                <div
-                                  className={`${
-                                    inSegment
-                                      ? 'font-weight-medium text-primary'
-                                      : 'text-muted fs-small lh-sm'
+                                <Row
+                                  className={`font-weight-medium fs-small lh-sm ${
+                                    inSegment ? 'text-primary' : 'faint'
                                   }`}
                                 >
-                                  {inSegment
-                                    ? 'User in segment'
-                                    : 'Not in segment'}
-                                </div>
+                                  {inSegment ? (
+                                    <>
+                                      <Icon
+                                        name='checkmark-circle'
+                                        width={20}
+                                        fill='#6837FC'
+                                      />
+                                      <span className='ml-1'>
+                                        User in segment
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Icon
+                                        name='minus-circle'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                      <span className='ml-1'>
+                                        Not in segment
+                                      </span>
+                                    </>
+                                  )}
+                                </Row>
                               </Row>
                             )
                           }}

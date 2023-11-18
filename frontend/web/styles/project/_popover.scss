@@ -1,173 +1,169 @@
-@import "../mixins/box-shadow-mixin";
-@import "../mixins/transition-mixin";
+@import '../mixins/box-shadow-mixin';
+@import '../mixins/transition-mixin';
 
 .dark {
-    .popover {
-        background-color: $dark-bg-2;
-        &-bt {
-            &:before {
-                border-left: 15px solid transparent;
-                border-right: 15px solid transparent;
-                border-bottom: 16px solid $dark-bg-2;
-            }
+  .popover {
+    background-color: $dark-bg-2;
+    &-bt {
+      &:before {
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 16px solid $dark-bg-2;
+      }
 
-            &__title {
-                color: $dark-highlight-color;
-                border-bottom: 1px solid $dark-bg-2;
-            }
+      &__title {
+        color: $dark-highlight-color;
+        border-bottom: 1px solid $dark-bg-2;
+      }
 
-            &__list-item{
-                border-bottom: 1px solid $dark-bg-0 !important;
+      &__list-item {
+        border-bottom: 1px solid $dark-bg-0 !important;
 
-                .btn {
-                    color: $bt-link-color-dark !important;
-                }
-
-                a {
-                    color: $dark-color !important;
-                    &:hover {
-                        color: $dark-highlight-color !important;
-                        //background-color: $bt-brand-faint-alt;
-                        text-decoration: none;
-                    }
-                }
-                border-bottom: 1px solid $dark-bg-2;
-            }
+        .btn {
+          color: $bt-link-color-dark !important;
         }
+
+        a {
+          color: $dark-color !important;
+          &:hover {
+            color: $dark-highlight-color !important;
+            //background-color: $bt-brand-faint-alt;
+            text-decoration: none;
+          }
+        }
+        border-bottom: 1px solid $dark-bg-2;
+      }
     }
+  }
 }
 
 .popover-bottom {
-    .popover-inner {
-        margin-top:10px;
-        left:0;
-    }
+  .popover-inner {
+    margin-top: 10px;
+    left: 0;
+  }
 }
 
 .popover {
-    border: none;
-    background-color: $body-bg;
-    z-index: 2000;
-    width: auto;
-    transform-origin: top;
-    position: absolute;
-    overflow: hidden;
-    transform: scaleY(0);
-    opacity: 0;
-    min-width: 200px;
+  border: none;
+  background-color: $body-bg;
+  z-index: 2000;
+  width: auto;
+  transform-origin: top;
+  position: absolute;
+  overflow: hidden;
+  transform: scaleY(0);
+  opacity: 0;
+  min-width: 200px;
 
-    #logout-link {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+  #logout-link {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  &.show {
+    box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15);
+    transform: scaleY(1);
+    height: auto;
+    opacity: 1;
+    border-bottom-left-radius: $border-radius-lg;
+    border-bottom-right-radius: $border-radius-lg;
+  }
+
+  &-bt {
+    border-radius: $border-radius;
+    overflow: visible;
+
+    &.aside-select {
+      padding-bottom: 0;
     }
 
-    &.show {
-        @include box-shadow();
-        transform: scaleY(1);
-        height: auto;
-        opacity: 1;
+    &__title {
+      display: flex;
+      justify-content: center;
+      padding: 0.75em;
+      font-family: $font-family-header;
+      text-align: center;
+      font-weight: 500;
+      color: $header-color;
+      margin: 0 10px 10px 10px;
+      border-bottom: 1px solid $input-border-color;
     }
 
-    &-bt {
-        border-radius: $border-radius;
-        overflow: visible;
-
-        &.aside-select {
-            padding-bottom: 0;
+    &__list-item {
+      .btn {
+        position: absolute;
+        right: 10px;
+        height: 24px;
+        line-height: 20px;
+        padding: 0 2px;
+        width: 50px;
+        border-color: transparent !important;
+        font-weight: bold;
+        &:hover {
+          box-shadow: none !important;
         }
+        color: $bt-link-color !important;
+      }
 
-        &__title {
-            display: flex;
-            justify-content: center;
-            padding: .75em;
-            font-family: $font-family-header;
-            text-align: center;
-            font-weight: 500;
-            color: $header-color;
-            margin: 0 10px 10px 10px;
-            border-bottom: 1px solid $input-border-color;
+      &.active {
+        font-weight: bold;
+      }
+
+      &:hover {
+        background-color: $primary-alfa-8;
+        color: $text-icon-dark;
+      }
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      font-family: $font-family;
+      a {
+        width: 100%;
+        color: $body-text !important;
+
+        &:hover {
+          color: $bt-brand-primary !important;
+          //background-color: $bt-brand-faint-alt;
+          text-decoration: none;
         }
-
-        &__list-item{
-            .btn {
-                position: absolute;
-                right: 10px;
-                height: 24px;
-                line-height: 20px;
-                padding: 0 2px;
-                width: 50px;
-                border-color: transparent !important;
-                font-weight: bold;
-                &:hover {
-                    box-shadow: none !important;
-                }
-                color: $bt-link-color !important;
-            }
-
-            &.active {
-                font-weight: bold;
-            }
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            font-family: $font-family;
-            padding-left: 10px;
-            padding-right: 40px;
-            line-height: 44px;
-            a {
-                width: 100%;
-                color: $body-text !important;
-
-                &:hover {
-                    color: $bt-brand-primary !important;
-                    //background-color: $bt-brand-faint-alt;
-                    text-decoration: none;
-                }
-                &.edit {
-                    position: absolute;
-                    right: 0;
-                    left: 200px
-                }
-            }
-            padding-right: 50px;
+        &.edit {
+          position: absolute;
+          right: 0;
+          left: 200px;
         }
+      }
     }
+  }
 }
 
 .popover-right .popover-inner {
-    left: auto;
-    right: 303px;
-    top: 60px;
-    .popover {
-        width: 300px;
-    }
+  left: auto;
+  right: 303px;
+  top: 60px;
+  .popover {
+    width: 300px;
+  }
 }
 
 .popover-inner {
-    position: absolute !important;
-    left: 10px;
-    &__content {
-        border-bottom-left-radius: $border-radius;
-        border-bottom-right-radius: $border-radius;
-        overflow: hidden;
-    }
+  position: absolute !important;
+  left: 10px;
 }
 
+.btn-container {
+  padding: 10px;
 
+  .btn {
+    color: white;
 
-.btn-container{
-    padding:10px;
-
-    .btn{
-        color:white;
-
-        &:hover{
-            color:#fff;
-            background:darken($bt-brand-secondary,5);
-        }
+    &:hover {
+      color: #fff;
+      background: darken($bt-brand-secondary, 5);
     }
+  }
 }
 
 .popover a {
-    font-weight: 400;
+  font-weight: 400;
 }

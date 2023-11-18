@@ -19,6 +19,16 @@ urlpatterns = [
         name="update_seats",
     ),
     path(
+        "organisations/<int:organisation_id>/organisation_start_trial",
+        views.organisation_start_trial,
+        name="organisation_start_trial",
+    ),
+    path(
+        "organisations/<int:organisation_id>/organisation_end_trial",
+        views.organisation_end_trial,
+        name="organisation_end_trial",
+    ),
+    path(
         "organisations/<int:project_id>/migrate_identities",
         views.migrate_identities_to_edge,
         name="migrate_identities",
@@ -39,9 +49,14 @@ urlpatterns = [
         name="download-org-data",
     ),
     path(
-        "update-organisation-subscription-information-caches",
-        views.trigger_update_organisation_subscription_information_caches,
-        name="update-organisation-subscription-information-caches",
+        "update-organisation-subscription-information-influx-cache",
+        views.trigger_update_organisation_subscription_information_influx_cache,
+        name="update-organisation-subscription-information-influx-cache",
+    ),
+    path(
+        "update-organisation-subscription-information-cache",
+        views.trigger_update_organisation_subscription_information_cache,
+        name="update-organisation-subscription-information-cache",
     ),
     path(
         "update-chargebee-cache",
