@@ -64,7 +64,7 @@ const OrganisationSettingsPage = class extends Component {
       AccountStore.getUser() &&
       AccountStore.getOrganisationRole() !== 'ADMIN'
     ) {
-      this.context.router.history.replace('/projects')
+      this.setState({ permissionsError: true })
     }
   }
 
@@ -351,6 +351,18 @@ const OrganisationSettingsPage = class extends Component {
     const verifySeatsLimit = Utils.getFlagsmithHasFeature(
       'verify_seats_limit_for_invite_links',
     )
+
+    if (this.state.permissionsError) {
+      return (
+        <div className='app-container container'>
+          <PageTitle title='Manage' />
+          <InfoMessage>
+            You do not have permissions to manage this organisation. Please
+            contact an organisation admin.
+          </InfoMessage>
+        </div>
+      )
+    }
 
     return (
       <div className='app-container container'>
