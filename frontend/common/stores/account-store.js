@@ -2,6 +2,7 @@ const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
+import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 
 const controller = {
@@ -79,6 +80,15 @@ const controller = {
     } else {
       // eslint-disable-next-line camelcase
       API.postEvent(`${name}`)
+    }
+
+    if (
+      Utils.getFlagsmithHasFeature('relay_events_key') &&
+      Utils.getFlagsmithValue('relay_events_key')
+    ) {
+      try {
+        dataRelay.sendEvent(AccountStore.getUser())
+      } catch (e) {}
     }
     data.post(`${Project.api}organisations/`, { name }).then((res) => {
       store.model.organisations = store.model.organisations.concat([
