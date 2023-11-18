@@ -24,7 +24,6 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
-import DocumentationIcon from './svg/DocumentationIcon'
 
 const App = class extends Component {
   static propTypes = {
@@ -365,16 +364,6 @@ const App = class extends Component {
                                       Projects
                                     </NavLink>
                                   )}
-                                  <Headway className='nav-link cursor-pointer' />
-                                  <a
-                                    href='https://docs.flagsmith.com'
-                                    target='_blank'
-                                    className='nav-link p-2'
-                                    rel='noreferrer'
-                                  >
-                                    <DocumentationIcon />
-                                    Docs
-                                  </a>
                                   <NavLink
                                     id='account-settings-link'
                                     data-test='account-settings-link'
