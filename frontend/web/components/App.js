@@ -24,6 +24,7 @@ import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
+import DocumentationIcon from './svg/DocumentationIcon'
 
 const App = class extends Component {
   static propTypes = {

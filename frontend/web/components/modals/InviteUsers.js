@@ -162,6 +162,7 @@ const InviteUsers = class extends Component {
                       <span>
                         {isSaving ? 'Sending' : 'Invite additional member'}
                       </span>
+                    </Row>
                   </Button>
                 </div>
 
