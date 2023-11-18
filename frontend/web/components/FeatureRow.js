@@ -20,7 +20,8 @@ class TheComponent extends Component {
   }
 
   state = {
-    features_compact_view: Utils.getFlagsmithValue('features_compact_view'),
+    features_compact_view: propTypes.compactView,
+    showActions: false,
   }
 
   confirmToggle = (projectFlag, environmentFlag, cb) => {
@@ -36,13 +37,28 @@ class TheComponent extends Component {
     )
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.compactView !== prevProps.compactView) {
+      this.setState({ features_compact_view: this.props.compactView })
+    }
+  }
+
   componentDidMount() {
     const { environmentFlags, projectFlag } = this.props
     const { feature, tab } = Utils.fromParam()
+    console.log(this.state)
     const { id } = projectFlag
     if (`${id}` === feature) {
       this.editFeature(projectFlag, environmentFlags[id], tab)
     }
+  }
+
+  showActions = () => {
+    this.setState({ showActions: true })
+  }
+
+  hideActions = () => {
+    this.setState({ showActions: false })
   }
 
   confirmRemove = (projectFlag, cb) => {
@@ -181,6 +197,10 @@ class TheComponent extends Component {
         onClick={() =>
           !readOnly && this.editFeature(projectFlag, environmentFlags[id])
         }
+        onMouseEnter={this.showActions}
+        onMouseLeave={this.hideActions}
+        onTouchStart={this.showActions}
+        onBlur={this.hideActions}
       >
         <Flex className='table-column'>
           <Row>
@@ -196,7 +216,7 @@ class TheComponent extends Component {
               >
                 <span className='me-2'>{name}</span>
 
-                <Actionables>
+                <Actionables showActions={this.state.showActions}>
                   {created_date && (
                     <Tooltip
                       place='top'
@@ -344,16 +364,14 @@ class TheComponent extends Component {
                   value={projectFlag.tags}
                 />
               </Row>
-              {description &&
-                !this.state.features_compact_view ===
-                  true(
-                    <div
-                      className='list-item-subtitle mt-1'
-                      style={{ lineHeight: '20px', width: width[4] }}
-                    >
-                      {description}
-                    </div>,
-                  )}
+              {description && !this.state.features_compact_view && (
+                <div
+                  className='list-item-subtitle mt-1'
+                  style={{ lineHeight: '20px', width: width[4] }}
+                >
+                  {description}
+                </div>
+              )}
             </Flex>
           </Row>
         </Flex>

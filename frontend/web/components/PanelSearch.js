@@ -5,6 +5,7 @@ import Input from './base/forms/Input'
 import Icon from './Icon'
 import classNames from 'classnames'
 import Switch from './Switch'
+import { AsyncStorage } from 'polyfill-react-native'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -25,6 +26,8 @@ const PanelSearch = class extends Component {
     searchPanel: OptionalNode,
     sorting: OptionalArray,
     title: propTypes.node,
+    toggleViewMode: OptionalFunc,
+    viewMode: OptionalBool,
   }
 
   constructor(props, context) {
@@ -32,15 +35,11 @@ const PanelSearch = class extends Component {
     const defaultSortingOption = _.find(_.get(props, 'sorting', []), {
       default: true,
     })
+
     this.state = {
       sortBy: defaultSortingOption ? defaultSortingOption.value : null,
       sortOrder: defaultSortingOption ? defaultSortingOption.order : null,
     }
-  }
-
-  toggleFeatureViewMode = () => {
-    const newValue = !Utils.getFlagsmithHasFeature('features_compact_view')
-    flagsmith.setTrait('features_compact_view', newValue)
   }
 
   filter() {
@@ -162,7 +161,12 @@ const PanelSearch = class extends Component {
             <Row>
               {!!this.props.filterElement && this.props.filterElement}
               <Row>
-                <Switch onChange={this.toggleFeatureViewMode()} />
+                {this.props.toggleViewMode && (
+                  <Switch
+                    onChange={() => this.props.toggleViewMode()}
+                    checked={this.props.viewMode}
+                  />
+                )}
               </Row>
               {!!this.props.sorting && (
                 <Row className='mr-3 relative'>

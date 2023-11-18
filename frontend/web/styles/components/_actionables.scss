@@ -3,9 +3,10 @@
     flex-direction: row;
     align-items: flex-start;
     justify-content: flex-start;
-    position: relative;
     height: 100%;
     margin-right: 0.5rem;
+    width: 20px;
+    transition: width 0.6s cubic-bezier(0.5, 0, 0.2, 1);
 
     .list {
         display: none;
@@ -17,17 +18,14 @@
         flex-wrap: nowrap;
         align-items:center;
         justify-content: flex-start;
-        position: absolute;
-        top: -6px;
-        left: 20px;
-        width: 200px;
         height: calc(100% + 8px);
         gap: 8px;
         padding-left: 8px;
         padding-right: 8px;
+        cursor: default;
         background-color: $bg-light300;
         border-radius: $border-radius-default;
-        cursor: default;
+
     }
 
     .showActions * {
@@ -35,10 +33,17 @@
         // height: inherit;
         margin: 0 !important;
     }
+
+    .hideIcon {
+        display: none;
+    }
 }
 
 .dark .actionables {
-    .showActions {
+
+    .showActions{
         background-color: $bg-dark200;
+        border-radius: $border-radius-default;
+
     }
 }

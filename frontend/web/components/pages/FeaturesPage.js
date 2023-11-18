@@ -26,6 +26,7 @@ const FeaturesPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {
+      compactView: false,
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
@@ -82,6 +83,19 @@ const FeaturesPage = class extends Component {
         projectId: params.projectId,
       }),
     )
+  }
+
+  toggleFeatureViewMode = () => {
+    const newValue = !this.state.compactView
+    AsyncStorage.setItem(
+      'features_compact_view',
+      JSON.stringify({
+        enabled: newValue,
+      }),
+    )
+    this.setState({
+      compactView: newValue,
+    })
   }
 
   newFlag = () => {
@@ -268,6 +282,8 @@ const FeaturesPage = class extends Component {
                                 isLoading={FeatureListStore.isLoading}
                                 paging={FeatureListStore.paging}
                                 search={this.state.search}
+                                toggleViewMode={this.toggleFeatureViewMode}
+                                viewMode={this.state.compactView}
                                 header={
                                   <Row className='table-header'>
                                     <Flex className='table-column px-3'>
@@ -467,6 +483,7 @@ const FeaturesPage = class extends Component {
                                     toggleFlag={toggleFlag}
                                     removeFlag={removeFlag}
                                     projectFlag={projectFlag}
+                                    compactView={this.state.compactView}
                                   />
                                 )}
                                 filterRow={() => true}
