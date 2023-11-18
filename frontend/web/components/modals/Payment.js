@@ -506,7 +506,6 @@ const Payment = class extends Component {
                           onClick={() => {
                             Utils.openChat()
                           }}
-                          href='#'
                           className='pricing-cta blue mt-4'
                           style={{ width: '100%' }}
                         >
