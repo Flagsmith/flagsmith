@@ -1,6 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
 import Icon from './Icon'
+import Button from './base/forms/Button'
 
 export default class ErrorMessage extends PureComponent {
   static displayName = 'ErrorMessage'
