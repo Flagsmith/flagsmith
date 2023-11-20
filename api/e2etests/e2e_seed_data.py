@@ -63,9 +63,9 @@ def seed_data() -> None:
 
     # Create identities
     identities_test_data = [
-        {"identifier": settings.E2E_IDENTITY, "environment": environments[1]},
         {"identifier": settings.E2E_IDENTITY, "environment": environments[2]},
         {"identifier": settings.E2E_IDENTITY, "environment": environments[3]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[4]},
     ]
 
     for identity_info in identities_test_data:
