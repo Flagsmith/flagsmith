@@ -7,7 +7,7 @@ import Icon from './Icon'
 export type MetadataSelectType = {
   disabled: boolean
   contentType: number
-  metadataList: [] | undefined
+  metadata: [] | undefined
   value: number[] | undefined
   isOpen: boolean
   onAdd: (id: number, isUser: boolean) => void
@@ -17,14 +17,20 @@ export type MetadataSelectType = {
 const MetadataSelect: FC<MetadataSelectType> = ({
   disabled,
   isOpen,
-  metadataList,
+  metadata,
   onAdd,
   onRemove,
   onToggle,
   value,
 }) => {
   const [filter, setFilter] = useState<string>('')
-
+  const metadataList =
+    metadata &&
+    metadata.filter((v) => {
+      const search = filter.toLowerCase()
+      if (!search) return true
+      return `${v.name}`.toLowerCase().includes(search)
+    })
   return (
     <InlineModal
       title='Metadata'
