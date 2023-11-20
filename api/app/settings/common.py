@@ -53,6 +53,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
+MAX_PROJECTS_IN_FREE_PLAN = 1
+
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
 GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
@@ -393,10 +395,25 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
-# Used on init to create admin user for the site, update accordingly before hitting /auth/init
-ALLOW_ADMIN_INITIATION_VIA_URL = True
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_INITIAL_PASSWORD = "password"
+# Initialisation settings
+# If `ALLOW_ADMIN_INITIATION_VIA_CLI` setting is set to True, Flagsmith will attempt to create
+#   1. A superuser
+#   2. An organisation
+#   3. A project
+# with initial values on startup.
+# Initialisation is skipped if it's been performed before or if `ALLOW_ADMIN_INITIATION_VIA_CLI` is set to False.
+# Tweak (or set via environment) the settings below for custom names, etc.
+ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
+)
+ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=False
+)
+
+ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
+ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
+PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
+
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
