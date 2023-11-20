@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
+import { number } from "prop-types"
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -308,6 +310,14 @@ export type RolePermissionUser = {
   id: number
 }
 
+export type metadata = {
+    id: 0,
+    name: string,
+    type: number,
+    description?: string,
+    organisation: 0
+  }
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -376,8 +386,18 @@ export type Res = {
   rolePermissionGroup: { id: string }
   getSubscriptionMetadata: { id: string }
   environment: Environment
-  metadataModelField: { id: string }
-  metadata: { id: string }
+  metadataModelField: {
+    id: string 
+    field: number
+    content_type: number
+    is_required_for?: [
+      {
+        content_type: number
+        object_id: number
+      }
+    ]
+  }
+  metadata: PagedResponse<metadata[]> 
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   // END OF TYPES
