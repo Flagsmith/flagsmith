@@ -16,9 +16,11 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from organisations.chargebee import webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
@@ -255,9 +257,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
 @api_view(["POST"])
 @authentication_classes([BasicAuthentication])
-def chargebee_webhook(request):
+def chargebee_webhook(request: Request) -> Response:
     """
     Endpoint to handle webhooks from chargebee.
+
+    Payment failure and payment succeeded webhooks are filtered out and processed
+    to determine which of our subscriptions are in a dunning state.
+
+    The remaining webhooks are processed if they have subscription data:
 
      - If subscription is active, check to see if plan has changed and update if so. Always update cancellation date to
        None to ensure that if a subscription is reactivated, it is updated on our end.
@@ -265,6 +272,13 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
+    event_type = request.data.get("event_type")
+
+    if event_type == "payment_failed":
+        return webhook_handlers.payment_failed(request)
+    if event_type == "payment_succeeded":
+        return webhook_handlers.payment_succeeded(request)
+
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]
         customer_email: str = request.data["content"]["customer"]["email"]
