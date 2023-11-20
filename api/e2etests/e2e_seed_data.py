@@ -35,46 +35,41 @@ def seed_data() -> None:
     )
     org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
 
-    # Create projects
-    project: Project = Project.objects.create(
-        name="My Test Project", organisation=organisation
-    )
-    project2: Project = Project.objects.create(
-        name="My Test Project 2", organisation=organisation
-    )
-    project3: Project = Project.objects.create(
-        name="My Test Project 3", organisation=organisation
-    )
-    project4: Project = Project.objects.create(
-        name="My Test Project 4", organisation=organisation
-    )
-    # Create environments
-    TEST_DEV_ENV = "Development"
-    Environment.objects.create(name=TEST_DEV_ENV, project=project)
-    Environment.objects.create(name="Production", project=project)
+    project_test_data = [
+        {
+            "name": "My Test Project",
+            "environments": [
+                "Development",
+                "Production",
+            ],
+        },
+        {"name": "My Test Project 2", "environments": ["Development"]},
+        {"name": "My Test Project 3", "environments": ["Development"]},
+        {"name": "My Test Project 4", "environments": ["Development"]},
+    ]
 
-    project2_dev_env: Environment = Environment.objects.create(
-        name=TEST_DEV_ENV, project=project2
-    )
-    project3_dev_env: Environment = Environment.objects.create(
-        name=TEST_DEV_ENV, project=project3
-    )
-    project4_dev_env: Environment = Environment.objects.create(
-        name=TEST_DEV_ENV, project=project4
-    )
+    # Create projects and environments
+    projects = []
+    environments = []
+    for project_info in project_test_data:
+        project = Project.objects.create(
+            name=project_info["name"], organisation=organisation
+        )
+        projects.append(project)
 
-    # Create Identities
-    Identity.objects.create(
-        identifier=settings.E2E_IDENTITY, environment=project2_dev_env
-    )
+        for env_name in project_info["environments"]:
+            environment = Environment.objects.create(name=env_name, project=project)
+            environments.append(environment)
 
-    Identity.objects.create(
-        identifier=settings.E2E_IDENTITY, environment=project3_dev_env
-    )
+    # Create identities
+    identities_test_data = [
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[1]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[2]},
+        {"identifier": settings.E2E_IDENTITY, "environment": environments[3]},
+    ]
 
-    Identity.objects.create(
-        identifier=settings.E2E_IDENTITY, environment=project4_dev_env
-    )
+    for identity_info in identities_test_data:
+        Identity.objects.create(**identity_info)
 
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
