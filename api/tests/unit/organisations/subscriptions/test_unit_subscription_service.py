@@ -1,8 +1,9 @@
+from django.conf import settings
+
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     MAX_API_CALLS_IN_FREE_PLAN,
-    MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     XERO,
 )
@@ -20,7 +21,7 @@ def test_get_subscription_metadata_returns_default_values_if_org_does_not_have_s
     # Then
     assert subscription_metadata.api_calls == MAX_API_CALLS_IN_FREE_PLAN
     assert subscription_metadata.seats == MAX_SEATS_IN_FREE_PLAN
-    assert subscription_metadata.projects == MAX_PROJECTS_IN_FREE_PLAN
+    assert subscription_metadata.projects == settings.MAX_PROJECTS_IN_FREE_PLAN
     assert subscription_metadata.payment_source is None
 
 

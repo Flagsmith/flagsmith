@@ -1,6 +1,7 @@
 from unittest import TestCase, mock
 
 import pytest
+from django.conf import settings
 
 from organisations.models import Organisation, OrganisationRole
 from projects.models import (
@@ -16,8 +17,8 @@ from projects.permissions import (
 )
 from users.models import FFAdminUser, UserPermissionGroup
 
-mock_request = mock.MagicMock
-mock_view = mock.MagicMock
+mock_request = mock.MagicMock()
+mock_view = mock.MagicMock()
 
 
 @pytest.mark.django_db
@@ -371,3 +372,28 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
         # Then - exception thrown
         assert not result
+
+
+@pytest.mark.django_db
+def test_free_plan_has_only_fixed_projects_permission():
+    # Given
+    organisation = Organisation.objects.create(name="Test organisation")
+
+    user = FFAdminUser.objects.create(email="admin@test.com")
+
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+    project_permissions = ProjectPermissions()
+
+    mock_view = mock.MagicMock(action="create", detail=False)
+    mock_request = mock.MagicMock(
+        data={"name": "Test", "organisation": organisation.id}, user=user
+    )
+
+    # When
+    for i in range(settings.MAX_PROJECTS_IN_FREE_PLAN):
+        assert project_permissions.has_permission(mock_request, mock_view)
+        Project.objects.create(name=f"Test project{i}", organisation=organisation)
+
+    # Then - free projects limit should be exhausted
+    assert not project_permissions.has_permission(mock_request, mock_view)
