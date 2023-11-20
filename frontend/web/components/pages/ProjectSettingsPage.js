@@ -21,7 +21,7 @@ import CreateMetadata from 'components/modals/CreateMetadata'
 import { getListMetadata, deleteMetadata } from 'common/services/useMetadata'
 import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
 
-const metadataWidth = [200, 150, 150, 70, 450]
+const metadataWidth = [200, 150, 150, 90]
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -209,13 +209,22 @@ const ProjectSettingsPage = class extends Component {
     closeModal()
   }
 
-  deleteMetadata = (id) => {
-    toast('Metadata has been deleted')
-    deleteMetadata(getStore(), {
-      id,
-    }).then(() => {
-      this.getMetadata()
-    })
+  deleteMetadata = (id, name) => {
+    openConfirm(
+      'Delete Metadata',
+      <div>
+        {'Are you sure you want to delete '}
+        <strong>{name}</strong>
+        {' metadata?'}
+      </div>,
+      () =>
+        deleteMetadata(getStore(), {
+          id,
+        }).then(() => {
+          this.getMetadata()
+          toast('Metadata has been deleted')
+        }),
+    )
   }
 
   createMetadata = () => {
@@ -636,12 +645,6 @@ const ProjectSettingsPage = class extends Component {
                                   </div>
                                   <div
                                     className='table-column'
-                                    style={{ width: metadataWidth[2] }}
-                                  >
-                                    Action
-                                  </div>
-                                  <div
-                                    className='table-column'
                                     style={{ width: metadataWidth[3] }}
                                   >
                                     Remove
@@ -653,16 +656,14 @@ const ProjectSettingsPage = class extends Component {
                                   space
                                   className='list-item clickable cursor-pointer'
                                   key={metadata.id}
+                                  onClick={() => {
+                                    this.editMetadata(
+                                      metadata.id,
+                                      metadata.content_type_fields,
+                                    )
+                                  }}
                                 >
-                                  <Flex
-                                    onClick={() => {
-                                      this.editMetadata(
-                                        metadata.id,
-                                        metadata.content_type_fields,
-                                      )
-                                    }}
-                                    className='table-column px-3'
-                                  >
+                                  <Flex className='table-column px-3'>
                                     <div className='font-weight-medium mb-1'>
                                       {metadata.name}
                                     </div>
@@ -674,19 +675,8 @@ const ProjectSettingsPage = class extends Component {
                                       display: 'flex',
                                       width: '185px',
                                     }}
-                                    onClick={() => {
-                                      this.editMetadata(
-                                        metadata.id,
-                                        metadata.content_type_fields,
-                                      )
-                                    }}
                                   >
-                                    <div
-                                      className='table-column'
-                                      onClick={() => {
-                                        this.editMetadata(metadata.id)
-                                      }}
-                                    >
+                                    <div className='table-column'>
                                       {metadata.content_type_fields.find(
                                         (m) =>
                                           m.content_type ===
@@ -714,7 +704,6 @@ const ProjectSettingsPage = class extends Component {
                                                     name='required'
                                                     width={20}
                                                   />
-                                                  {'Required'}
                                                 </>
                                               ) : (
                                                 <>
@@ -723,7 +712,6 @@ const ProjectSettingsPage = class extends Component {
                                                     width={20}
                                                     fill='#20c997'
                                                   />
-                                                  {'Enabled'}
                                                 </>
                                               )}
                                             </>
@@ -733,7 +721,6 @@ const ProjectSettingsPage = class extends Component {
                                                 name='close-circle'
                                                 width={20}
                                               />
-                                              {'Disabled'}
                                             </>
                                           )}
                                         </>
@@ -743,7 +730,6 @@ const ProjectSettingsPage = class extends Component {
                                             name='close-circle'
                                             width={20}
                                           />
-                                          {'Disabled'}
                                         </>
                                       )}
                                     </div>
@@ -751,22 +737,10 @@ const ProjectSettingsPage = class extends Component {
                                   <div
                                     className='table-column'
                                     style={{ width: '150px' }}
-                                    onClick={() => {
-                                      this.editMetadata(
-                                        metadata.id,
-                                        metadata.content_type_fields,
-                                      )
-                                    }}
                                   >
                                     <div
                                       className='table-column'
                                       style={{ width: '150px' }}
-                                      onClick={() => {
-                                        this.editMetadata(
-                                          metadata.id,
-                                          metadata.content_type_fields,
-                                        )
-                                      }}
                                     >
                                       {metadata.content_type_fields.find(
                                         (m) =>
@@ -794,7 +768,6 @@ const ProjectSettingsPage = class extends Component {
                                                     name='required'
                                                     width={20}
                                                   />
-                                                  {'Required'}
                                                 </>
                                               ) : (
                                                 <>
@@ -803,7 +776,6 @@ const ProjectSettingsPage = class extends Component {
                                                     width={20}
                                                     fill='#20c997'
                                                   />
-                                                  {'Enabled'}
                                                 </>
                                               )}
                                             </>
@@ -813,7 +785,6 @@ const ProjectSettingsPage = class extends Component {
                                                 name='close-circle'
                                                 width={20}
                                               />
-                                              {'Disabled'}
                                             </>
                                           )}
                                         </>
@@ -823,14 +794,13 @@ const ProjectSettingsPage = class extends Component {
                                             name='close-circle'
                                             width={20}
                                           />
-                                          {'Disabled'}
                                         </>
                                       )}
                                     </div>
                                   </div>
                                   <div
                                     className='table-column'
-                                    style={{ width: '185px' }}
+                                    style={{ width: metadataWidth[2] }}
                                     onClick={() => {
                                       this.editMetadata(
                                         metadata.id,
@@ -874,7 +844,6 @@ const ProjectSettingsPage = class extends Component {
                                                     name='required'
                                                     width={20}
                                                   />
-                                                  {'Required'}
                                                 </>
                                               ) : (
                                                 <>
@@ -883,7 +852,6 @@ const ProjectSettingsPage = class extends Component {
                                                     width={20}
                                                     fill='#20c997'
                                                   />
-                                                  {'Enabled'}
                                                 </>
                                               )}
                                             </>
@@ -893,7 +861,6 @@ const ProjectSettingsPage = class extends Component {
                                                 name='close-circle'
                                                 width={20}
                                               />
-                                              {'Disabled'}
                                             </>
                                           )}
                                         </>
@@ -903,36 +870,23 @@ const ProjectSettingsPage = class extends Component {
                                             name='close-circle'
                                             width={20}
                                           />
-                                          {'Disabled'}
                                         </>
                                       )}
                                     </div>
                                   </div>
-                                  <div className='table-column'>
-                                    <Button
-                                      theme='text'
-                                      size='small'
-                                      onClick={() => {
-                                        this.editMetadata(
-                                          metadata.id,
-                                          metadata.content_type_fields,
-                                        )
-                                      }}
-                                    >
-                                      <Icon
-                                        name='edit'
-                                        width={18}
-                                        fill='#6837FC'
-                                      />{' '}
-                                      Edit Metadata
-                                    </Button>
-                                  </div>
-                                  <div className='table-column'>
+                                  <div
+                                    className='table-column'
+                                    style={{ width: '86px' }}
+                                  >
                                     <Button
                                       id='delete-invite'
                                       type='button'
-                                      onClick={() => {
-                                        this.deleteMetadata(metadata.id)
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        this.deleteMetadata(
+                                          metadata.id,
+                                          metadata.name,
+                                        )
                                       }}
                                       className='btn btn-with-icon'
                                     >
