@@ -241,6 +241,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           skip:
             !id ||
             envId ||
+            !role?.organisation ||
             !Utils.getFlagsmithHasFeature('show_role_management'),
         },
       )
