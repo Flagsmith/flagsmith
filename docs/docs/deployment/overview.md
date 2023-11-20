@@ -179,31 +179,48 @@ the platform. For example, if you wanted to disable Google OAuth authentication,
 
 The list of the flags and remote config we're currently using in production is below:
 
-| Flag Name                     | Description                                                                              | Text Value                                                                                                    |
-| ----------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `4eyes`                       | Whether to enable the [Change Requests](../advanced-use/change-requests.md) feature      | None                                                                                                          |
-| `butter_bar`                  | markdown to show at the top of the dashboard page                                        | None                                                                                                          |
-| `case_sensitive_flags`        | Enables the project setting to allow case sensitive flags                                | None                                                                                                          |
-| `compare_environments`        | Compare feature flag changes across environments                                         | None                                                                                                          |
-| `dark_mode`                   | Enables Dark Mode in UI [See Below](#dark-mode)                                          | None                                                                                                          |
-| `disable_create_org`          | Turning this on will prevent users from creating any additional organisations            | None                                                                                                          |
-| `feature_name_regex`          | Enables the project setting to add a regex matcher to validate feature names             | None                                                                                                          |
-| `flag_analytics`              | Flag usage chart - requires additional infrastructure ([See here](#flag-analytics))      | None                                                                                                          |
-| `force_2fa`                   | Enables the organisation setting to force 2 factor authentication                        | None                                                                                                          |
-| `integration_data`            | Configures integrations                                                                  | [See Below](#integration_data)                                                                                |
-| `integrations`                | Which third party integrations are displayed                                             | `["amplitude","datadog","dynatrace","heap","mixpanel","new-relic","rudderstack","segment","slack","webhook"]` |
-| `oauth_github`                | Configure Github OAuth                                                                   | [See Below](#oauth_github)                                                                                    |
-| `oauth_google`                | Configure Google OAuth                                                                   | [See Below](#oauth_google)                                                                                    |
-| `rotate_api_token`            | Enables the ability to rotate a user's access token                                      | [See Below](#oauth_google)                                                                                    |
-| `saml`                        | Enables SAML authentication                                                              | [See Below](#oauth_google)                                                                                    |
-| `scaleup_audit`               | Disables audit log for anyone under scale-up plan                                        | None                                                                                                          |
-| `segment_associated_features` | Enables the ability to see features associated with a segment                            | None                                                                                                          |
-| `segment_operators`           | Determines what rules are shown when creating a segment                                  | [See Below](#segment_operators)                                                                               |
-| `serverside_sdk_keys`         | Enable Server-side Environment Keys                                                      | None                                                                                                          |
-| `sso_idp`                     | Set this to your configured SAML organisation name to automatically redirect to your IdP | None                                                                                                          |
-| `tag_environments`            | Enables an environment setting to add a UI hint to your environments (e.g. for prod)     | None                                                                                                          |
-| `try_it`                      | Whether to show the try it buttons                                                       | None                                                                                                          |
-| `usage_chart`                 | Organisation Analytics usage chart - requires InfluxDB                                   | None                                                                                                          |
+| Flag Name                             | Description                                                                                                                                     | Text Value                                                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `4eyes`                               | Whether to enable the Change Requests feature                                                                                                   | None                                                                                                         |
+| `announcement`                        | Shows an announcement at the top of the app                                                                                                     | None                                                                                                         |
+| `butter_bar`                          | Show html in a butter bar for certain users                                                                                                     | None                                                                                                         |
+| `case_sensitive_flags`                | Enables the project setting to allow case sensitive flags                                                                                       | None                                                                                                         |
+| `change_email`                        | <https://github.com/orgs/Flagsmith/projects/2/views/1?pane=issue&itemId=25447990>                                                               | None                                                                                                         |
+| `compare_environments`                | Compare feature flag changes across environments                                                                                                | None                                                                                                         |
+| `compare_identities`                  |                                                                                                                                                 | None                                                                                                         |
+| `configure_hide_sensitive_data`       | If the value is true, the hide sensitive data switch will be displayed in the environment settings.                                             | None                                                                                                         |
+| `consistent_hashing_setting`          | Displays the setting to control the `use_identity_composite_key_for_hashing` environment attribute                                              | None                                                                                                         |
+| `dark_mode`                           | Enables Dark Mode in UI See Below                                                                                                               | None                                                                                                         |
+| `disable_create_org`                  | Turning this on will prevent users from creating any additional organisations                                                                   | None                                                                                                         |
+| `disable_users_as_reviewers`          | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page.  | None                                                                                                         |
+| `enable_groups_as_reviewers`          | If enabled, this flag will show the Assigned groups section in the Change Requests and in the Create Change Request modal in the Features page. | None                                                                                                         |
+| `enable_metadata`                     | If enabled, metadata can be handled                                                                                                             | None                                                                                                         |
+| `feature_name_regex`                  | Enables the project setting to add a regex matcher to validate feature names                                                                    | None                                                                                                         |
+| `feature_versioning`                  | Opt into feature versioning for your environment                                                                                                | None                                                                                                         |
+| `flag_analytics`                      | Flag usage chart - requires additional infrastructure ([See here](/deployment/overview#flag-analytics))                                         | None                                                                                                         |
+| `force_2fa`                           | Enables the organisation setting to force 2 factor authentication                                                                               | None                                                                                                         |
+| `group_admins`                        | Ability to configure admins within a group who can manage the membership of other users in that group                                           | None                                                                                                         |
+| `hide_disabled_flags_environment`     |                                                                                                                                                 | None                                                                                                         |
+| `import_project`                      | if enabled, shows the "import" tab within the Project settings                                                                                  | None                                                                                                         |
+| `integration_data`                    | Integration config for different providers                                                                                                      | [See Below](#integration_data)                                                                               |
+| `integrations`                        | Defines the integrations we display                                                                                                             | ["amplitude","datadog","dynatrace","new-relic","segment","rudderstack","webhook","slack", "heap","mixpanel"] |
+| `is_server_key_only`                  | Adds is_server_key_only setting for flags                                                                                                       | None                                                                                                         |
+| `mailing_list`                        | Determines if mailing list consent is shown on signup                                                                                           | None                                                                                                         |
+| `max_api_calls_alert`                 | If enabled, shows an alert message in the top banner when the organization is over a 70% of its API calls limit                                 | None                                                                                                         |
+| `oauth_github`                        | GitHub login key                                                                                                                                | [See Below](#oauth_github)                                                                                   |
+| `oauth_google`                        | Google login key                                                                                                                                | [See Below](#oauth_google)                                                                                   |
+| `payments_enabled`                    | Determines whether to show payment UI / seats                                                                                                   | None                                                                                                         |
+| `plan_based_access`                   | Controls rbac and 2f based on plans                                                                                                             | None                                                                                                         |
+| `rotate_api_token`                    | Enables the ability to rotate a user's access token                                                                                             | [See Below](#oauth_google)                                                                                   |
+| `saml`                                | Enables SAML authentication                                                                                                                     | [See](deployment/configuration/authentication/SAML)                                                          |
+| `segment_associated_features`         | Enables the ability to see features associated with a segment                                                                                   | None                                                                                                         |
+| `segment_operators`                   | Determines what rules are shown when creating a segment                                                                                         | [See Below](#segment_operators)                                                                              |
+| `serverside_sdk_keys`                 | Enable Server-side Environment Keys                                                                                                             | None                                                                                                         |
+| `show_role_management`                | Show role management tab in OrganisationalSettingsPage                                                                                          | None                                                                                                         |
+| `sso_idp`                             | For self hosted, this will automatically redirect to the pre configured IdP                                                                     | None                                                                                                         |
+| `tag_environments`                    | Enables an environment setting to add a UI hint to your environments (e.g. for prod)                                                            | None                                                                                                         |
+| `usage_chart`                         | Organisation Analytics usage chart -                                                                                                            | None                                                                                                         |
+| `verify_seats_limit_for_invite_links` | Determines whether to show los invite links                                                                                                     | None                                                                                                         |
 
 ### `integration_data`
 
@@ -556,7 +573,7 @@ Flagsmith has a soft dependency on InfluxDB to store time-series data. You don't
 platform; by default this data will be stored in Postgres. If you are running very high traffic loads, you might be
 interested in deploying InfluxDB.
 
-1. Create a user account in influxdb. You can visit http://localhost:8086/
+1. Create a user account in influxdb. You can visit <http://localhost:8086/>
 2. Go into Data > Buckets and create three new buckets called `default`, `default_downsampled_15m` and
    `default_downsampled_1h`
 3. Go into Data > Tokens and grab your access token.
@@ -575,15 +592,15 @@ interested in deploying InfluxDB.
 option task = {name: "Downsample (API Requests)", every: 15m}
 
 data = from(bucket: "default")
-	|> range(start: -duration(v: int(v: task.every) * 2))
-	|> filter(fn: (r) =>
-		(r._measurement == "api_call"))
+ |> range(start: -duration(v: int(v: task.every) * 2))
+ |> filter(fn: (r) =>
+  (r._measurement == "api_call"))
 
 data
-	|> aggregateWindow(fn: sum, every: 15m)
-	|> filter(fn: (r) =>
-		(exists r._value))
-	|> to(bucket: "default_downsampled_15m")
+ |> aggregateWindow(fn: sum, every: 15m)
+ |> filter(fn: (r) =>
+  (exists r._value))
+ |> to(bucket: "default_downsampled_15m")
 ```
 
 Once this task has run you will see data coming into the Organisation API Usage area.
@@ -595,15 +612,15 @@ Once this task has run you will see data coming into the Organisation API Usage 
 option task = {name: "Downsample (Flag Evaluations)", every: 15m}
 
 data = from(bucket: "default")
-	|> range(start: -duration(v: int(v: task.every) * 2))
-	|> filter(fn: (r) =>
-		(r._measurement == "feature_evaluation"))
+ |> range(start: -duration(v: int(v: task.every) * 2))
+ |> filter(fn: (r) =>
+  (r._measurement == "feature_evaluation"))
 
 data
-	|> aggregateWindow(fn: sum, every: 15m)
-	|> filter(fn: (r) =>
-		(exists r._value))
-	|> to(bucket: "default_downsampled_15m")
+ |> aggregateWindow(fn: sum, every: 15m)
+ |> filter(fn: (r) =>
+  (exists r._value))
+ |> to(bucket: "default_downsampled_15m")
 ```
 
 Once this task has run, and you have made some flag evaluations with analytics enabled (see documentation
@@ -617,15 +634,15 @@ feature in your dashboard.
 option task = {name: "Downsample API 1h", every: 1h}
 
 data = from(bucket: "default")
-	|> range(start: -duration(v: int(v: task.every) * 2))
-	|> filter(fn: (r) =>
-		(r._measurement == "api_call"))
+ |> range(start: -duration(v: int(v: task.every) * 2))
+ |> filter(fn: (r) =>
+  (r._measurement == "api_call"))
 
 data
-	|> aggregateWindow(fn: sum, every: 1h)
+ |> aggregateWindow(fn: sum, every: 1h)
     |> filter(fn: (r) =>
       (exists r._value))
-	|> to(bucket: "default_downsampled_1h")
+ |> to(bucket: "default_downsampled_1h")
 ```
 
 9. Create another new task with the following query. This will downsample your per millisecond flag evaluation data down
@@ -635,20 +652,20 @@ data
 option task = {name: "Downsample API 1h - Flag Analytics", every: 1h}
 
 data = from(bucket: "default")
-	|> range(start: -duration(v: int(v: task.every) * 2))
-	|> filter(fn: (r) =>
-		(r._measurement == "feature_evaluation"))
-	|> filter(fn: (r) =>
-		(r._field == "request_count"))
-	|> group(columns: ["feature_id", "environment_id"])
+ |> range(start: -duration(v: int(v: task.every) * 2))
+ |> filter(fn: (r) =>
+  (r._measurement == "feature_evaluation"))
+ |> filter(fn: (r) =>
+  (r._field == "request_count"))
+ |> group(columns: ["feature_id", "environment_id"])
 
 data
-	|> aggregateWindow(fn: sum, every: 1h)
+ |> aggregateWindow(fn: sum, every: 1h)
     |> filter(fn: (r) =>
       (exists r._value))
-	|> set(key: "_measurement", value: "feature_evaluation")
-	|> set(key: "_field", value: "request_count")
-	|> to(bucket: "default_downsampled_1h")
+ |> set(key: "_measurement", value: "feature_evaluation")
+ |> set(key: "_field", value: "request_count")
+ |> to(bucket: "default_downsampled_1h")
 ```
 
 ## Manual Installation

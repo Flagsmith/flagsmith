@@ -6,9 +6,10 @@ from sse import (
     send_environment_update_message_for_project,
 )
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGH)
 def rebuild_environment_document(environment_id: int):
     wrapper = DynamoEnvironmentWrapper()
     if wrapper.is_enabled:
@@ -16,7 +17,7 @@ def rebuild_environment_document(environment_id: int):
         wrapper.write_environment(environment)
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def process_environment_update(audit_log_id: int):
     audit_log = AuditLog.objects.get(id=audit_log_id)
 

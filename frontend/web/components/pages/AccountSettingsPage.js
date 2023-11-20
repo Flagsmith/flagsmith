@@ -152,7 +152,7 @@ class TheComponent extends Component {
                 One of your organisations has enfoced Two-Factor Authentication,
                 please enable it to continue.
               </p>
-              <TwoFactor />
+              <TwoFactor isLoginPage={true} />
             </div>
           ) : (
             <div className='app-container container'>

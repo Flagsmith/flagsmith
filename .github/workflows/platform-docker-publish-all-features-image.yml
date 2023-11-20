@@ -7,13 +7,13 @@ on:
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
-  FLAGSMITH_RBAC_REVISION: v0.3.1
+  FLAGSMITH_RBAC_REVISION: v0.4.1
   FLAGSMITH_WORKFLOWS_REVISION: v1.2.5
   FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
 
 jobs:
   build-dockerhub:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Platform Publish Docker Image
 
     steps:

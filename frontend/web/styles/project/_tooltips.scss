@@ -48,3 +48,13 @@
     }
   }
 }
+.dark {
+  .question-tooltip {
+    .__react_component_tooltip {
+      &.type-dark {
+        background-color: $bg-light100;
+        color: $text-icon-dark;
+      }
+    }
+  }
+}

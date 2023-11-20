@@ -1,5 +1,7 @@
+import os
 import typing
 import uuid
+from contextlib import suppress
 
 from django.db import migrations
 
@@ -8,9 +10,16 @@ from permissions.models import PermissionModel
 
 class PostgresOnlyRunSQL(migrations.RunSQL):
     @classmethod
-    def from_sql_file(cls, file_path: str, reverse_sql: str) -> "PostgresOnlyRunSQL":
-        with open(file_path) as f:
-            return cls(f.read(), reverse_sql=reverse_sql)
+    def from_sql_file(
+        cls,
+        file_path: typing.Union[str, os.PathLike],
+        reverse_sql: typing.Union[str, os.PathLike] = None,
+    ) -> "PostgresOnlyRunSQL":
+        with open(file_path) as forward_sql:
+            with suppress(FileNotFoundError, TypeError):
+                with open(reverse_sql) as reverse_sql_file:
+                    reverse_sql = reverse_sql_file.read()
+            return cls(forward_sql.read(), reverse_sql=reverse_sql)
 
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
         if schema_editor.connection.vendor != "postgresql":

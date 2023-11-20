@@ -275,7 +275,7 @@ const App = class extends Component {
       )
     }
     if (AccountStore.forced2Factor()) {
-      return <AccountSettingsPage />
+      return <AccountSettingsPage isLoginPage={true} />
     }
     const projectNotLoaded =
       !ProjectStore.model && document.location.href.includes('project/')
@@ -286,7 +286,8 @@ const App = class extends Component {
       Utils.getFlagsmithValue('announcement'),
     )
     const dismissed = flagsmith.getTrait('dismissed_announcement')
-    const showBanner = !dismissed || dismissed !== announcementValue.id
+    const showBanner =
+      announcementValue && (!dismissed || dismissed !== announcementValue.id)
 
     return (
       <Provider store={getStore()}>

@@ -46,11 +46,8 @@ export async function getEnvironment(
     typeof environmentService.endpoints.getEnvironment.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     environmentService.endpoints.getEnvironment.initiate(data, options),
-  )
-  return Promise.all(
-    store.dispatch(environmentService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS

@@ -54,6 +54,7 @@ $info-solid-dark-alert: rgba(15, 32, 52);
 $warning-solid-dark-alert: rgba(34, 31, 39);
 $danger-solid-dark-alert: rgba(34, 23, 40);
 
+$bg-light100: #ffffff;
 $bg-light200: #fafafb;
 $bg-light300: #eff1f4;
 $bg-light500: #e0e3e9;
@@ -66,6 +67,7 @@ $bg-dark500: #0f1425;
 //Body
 $body-text: $text-icon-dark;
 $body-text-dark: white;
+$body-bg-dark: $bg-dark500;
 
 $border-radius-sm: 4px;
 $border-radius: 6px;
@@ -120,11 +122,11 @@ $hr-opacity: 1;
 
 //Modal
 $modal-content-color: $text-icon-grey;
-$modal-content-color-dark: $text-icon-light-grey;
+$modal-content-color-dark: $text-icon-light;
 $modal-sm: 500px;
 $modal-md: 620px;
 $modal-lg: 900px;
-$modal-bg-dark: $bg-dark100;
+$modal-bg-dark: $bg-dark400;
 $modal-border-radius: 18px;
 $modal-footer-border-width: 0;
 $modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
@@ -331,4 +333,3 @@ $theme-colors: (
   dark: $text-icon-dark,
   // add any additional color below
 );
-

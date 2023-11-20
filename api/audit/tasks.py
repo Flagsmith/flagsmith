@@ -9,18 +9,19 @@ from audit.constants import (
 )
 from audit.models import AuditLog, RelatedObjectType
 from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_went_live_audit_log(feature_state_id: int):
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
     )
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
@@ -57,7 +58,7 @@ def _create_feature_state_audit_log_for_change_request(
     )
 
 
-@register_task_handler()
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_audit_log_from_historical_record(
     history_instance_id: int,
     history_user_id: typing.Optional[int],

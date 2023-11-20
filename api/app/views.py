@@ -25,10 +25,7 @@ def index(request):
         return HttpResponse(status=405, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
-    context = {
-        "linkedin_api_key": settings.LINKEDIN_API_KEY,
-    }
-    return HttpResponse(template.render(context, request))
+    return HttpResponse(template.render(request=request))
 
 
 def project_overrides(request):

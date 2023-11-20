@@ -3,8 +3,10 @@ from unittest import mock
 
 import pytest
 from django.test import TestCase
+from pytest_mock import MockerFixture
 from rest_framework.test import override_settings
 
+from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
@@ -81,6 +83,41 @@ class OrganisationTestCase(TestCase):
         # refresh subscription object
         subscription.refresh_from_db()
         assert subscription.cancellation_date
+
+
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+    assert organisation.stop_serving_flags is False
+
+    # When
+    organisation.stop_serving_flags = True
+    organisation.save()
+
+    # Then
+    mocked_rebuild_environment_document.delay.assert_called_once_with(
+        args=(environment.id,)
+    )
+
+
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+
+    # When saving something irrelevant
+    organisation.alerted_over_plan_limit = True
+    organisation.save()
+
+    # Then the task should not be called
+    mocked_rebuild_environment_document.delay.assert_not_called()
 
 
 def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(

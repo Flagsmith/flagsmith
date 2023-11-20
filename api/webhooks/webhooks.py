@@ -1,5 +1,6 @@
 import enum
 import json
+import logging
 import typing
 
 import requests
@@ -22,6 +23,8 @@ from .serializers import WebhookSerializer
 
 if typing.TYPE_CHECKING:
     import environments  # noqa
+
+logger = logging.getLogger(__name__)
 
 WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
 
@@ -98,7 +101,13 @@ def _call_webhook(
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
-    return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
+    try:
+        return requests.post(
+            str(webhook.url), data=json_data, headers=headers, timeout=10
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.debug("Error calling webhook", exc_info=exc)
+        raise
 
 
 def _call_webhook_email_on_error(
