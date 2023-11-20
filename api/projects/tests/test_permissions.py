@@ -1,9 +1,9 @@
 from unittest import TestCase, mock
 
 import pytest
+from django.conf import settings
 
 from organisations.models import Organisation, OrganisationRole
-from organisations.subscriptions.constants import MAX_PROJECTS_IN_FREE_PLAN
 from projects.models import (
     Project,
     ProjectPermissionModel,
@@ -391,7 +391,7 @@ def test_free_plan_has_only_fixed_projects_permission():
     )
 
     # When
-    for i in range(MAX_PROJECTS_IN_FREE_PLAN):
+    for i in range(settings.MAX_PROJECTS_IN_FREE_PLAN):
         assert project_permissions.has_permission(mock_request, mock_view)
         Project.objects.create(name=f"Test project{i}", organisation=organisation)
 
