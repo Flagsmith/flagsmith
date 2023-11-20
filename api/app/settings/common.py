@@ -950,11 +950,12 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
 
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
-if LDAP_INSTALLED:
-    # The URL of the LDAP server.
-    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
-    if LDAP_AUTH_URL:
-        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+# The URL of the LDAP server.
+LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+
+if LDAP_INSTALLED and LDAP_AUTH_URL:
+    AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+    INSTALLED_APPS.append("flagsmith_ldap")
 
     # Initiate TLS on connection.
     LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)
