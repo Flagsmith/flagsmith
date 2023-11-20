@@ -18,21 +18,21 @@ class Command(BaseCommand):
             type=str,
             dest="admin_email",
             help="Email address for the superuser",
-            default=None,
+            default=settings.ADMIN_EMAIL,
         )
         parser.add_argument(
             "--organisation-name",
             type=str,
             dest="organisation_name",
             help="Organisation name",
-            default=None,
+            default=settings.ORGANISATION_NAME,
         )
 
     def handle(
         self,
         *args: Any,
-        admin_email: str | None,
-        organisation_name: str | None,
+        admin_email: str,
+        organisation_name: str,
         **options: Any,
     ) -> None:
         if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or Organisation.objects.exists():

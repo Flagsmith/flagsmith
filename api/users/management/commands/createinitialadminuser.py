@@ -20,13 +20,13 @@ class Command(BaseCommand):
             type=str,
             dest="admin_email",
             help="Email address for the superuser",
-            default=None,
+            default=settings.ADMIN_EMAIL,
         )
 
     def handle(
         self,
         *args: Any,
-        admin_email: str | None,
+        admin_email: str,
         **options: Any,
     ) -> None:
         if (

@@ -18,26 +18,24 @@ class Command(BaseCommand):
             type=str,
             dest="organisation_name",
             help="Project name",
-            default=None,
+            default=settings.ORGANISATION_NAME,
         )
         parser.add_argument(
             "--project-name",
             type=str,
             dest="project_name",
             help="Project name",
-            default=None,
+            default=settings.PROJECT_NAME,
         )
 
     def handle(
         self,
         *args: Any,
-        organisation_name: str | None,
-        project_name: str | None,
+        organisation_name: str,
+        project_name: str,
         **options: Any,
     ) -> None:
-        organisation = Organisation.objects.filter(
-            name=organisation_name or settings.ORGANISATION_NAME
-        ).first()
+        organisation = Organisation.objects.filter(name=organisation_name).first()
         if (
             not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
             or not organisation
@@ -46,7 +44,7 @@ class Command(BaseCommand):
             logger.debug("Skipping initial project creation.")
             return
         project = Project.objects.create(
-            name=project_name or settings.PROJECT_NAME,
+            name=project_name,
             organisation=organisation,
         )
         self.stdout.write(

@@ -48,9 +48,16 @@ def _assert_bootstrapped(
     # Bootstrap logged as expected.
     capture_result = capsys.readouterr()
     assert not capture_result.err
-    assert 'Superuser "test@example.com" created successfully.' in capture_result.out
-    assert 'Organisation "Test Org" created successfully.' in capture_result.out
-    assert 'Project "Test Project" created successfully.' in capture_result.out
+    assert (
+        f'Superuser "{expected_user_email}" created successfully.' in capture_result.out
+    )
+    assert (
+        f'Organisation "{expected_organisation_name}" created successfully.'
+        in capture_result.out
+    )
+    assert (
+        f'Project "{expected_project_name}" created successfully.' in capture_result.out
+    )
 
     # The password reset link is correct.
     _, password_reset_url = capture_result.out.split("\n")[1].split(
@@ -136,17 +143,17 @@ def test_bootstrap__used_instance__skip_expected(
     # Given
     settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
 
-    expected_users = FFAdminUser.objects.all()
-    expected_organisations = Organisation.objects.all()
-    expected_projects = Project.objects.all()
+    expected_users = [*FFAdminUser.objects.all()]
+    expected_organisations = [*Organisation.objects.all()]
+    expected_projects = [*Project.objects.all()]
 
     # When
     call_command("bootstrap")
 
     # Then
-    FFAdminUser.objects.all() == expected_users
-    Organisation.objects.all() == expected_organisations
-    Project.objects.all() == expected_projects
+    [*FFAdminUser.objects.all()] == expected_users
+    [*Organisation.objects.all()] == expected_organisations
+    [*Project.objects.all()] == expected_projects
 
 
 def test_bootstrap__allow_admin_initiation_via_cli__false_by_default__skip_expected(
