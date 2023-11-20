@@ -2,6 +2,7 @@ const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
+import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 
 const controller = {
@@ -80,6 +81,7 @@ const controller = {
       // eslint-disable-next-line camelcase
       API.postEvent(`${name}`)
     }
+
     data.post(`${Project.api}organisations/`, { name }).then((res) => {
       store.model.organisations = store.model.organisations.concat([
         { ...res, role: 'ADMIN' },
@@ -87,6 +89,15 @@ const controller = {
       AsyncStorage.setItem('user', JSON.stringify(store.model))
       store.savedId = res.id
       store.saved()
+
+      const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+      const sendRelayEvent =
+        Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+      if (sendRelayEvent) {
+        dataRelay.sendEvent(AccountStore.getUser(), {
+          apiKey: relayEventKey,
+        })
+      }
     })
   },
   deleteOrganisation: () => {

@@ -328,8 +328,9 @@ const PanelSearch = class extends Component {
               goToPage={goToPage}
             />
           )}
-
-          {this.props.renderFooter && this.props.renderFooter()}
+          {this.props.renderFooter && (
+            <div className='panel-footer'>{this.props.renderFooter()}</div>
+          )}
         </div>
       </Panel>
     )

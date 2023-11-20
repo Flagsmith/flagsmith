@@ -167,7 +167,7 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
 
 def export_features(organisation_id: int) -> typing.List[dict]:
     """
-    Export all features and related entities (including ChangeRequests)
+    Export all features and related entities, except ChangeRequests.
     """
 
     feature_states = []

@@ -11,7 +11,7 @@ class Token extends Component {
   render() {
     if (!this.props.token) return null
     return (
-      <Row>
+      <Row className='flex-nowrap'>
         <Input
           inputProps={{
             readOnly: true,
@@ -26,8 +26,7 @@ class Token extends Component {
         {this.props.show && (
           <Button
             theme='outline'
-            style={{ width: 80 }}
-            className='ml-2 mr-4'
+            className='ml-2'
             onClick={() => {
               navigator.clipboard.writeText(this.props.token)
               toast('Copied')

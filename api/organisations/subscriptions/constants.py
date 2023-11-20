@@ -20,6 +20,18 @@ SUBSCRIPTION_PAYMENT_METHODS = [
     (AWS_MARKETPLACE, "AWS Marketplace"),
 ]
 
+
+# Active means payments for the subscription are being processed
+# without issue, dunning means the subscription is still ongoing
+# but payments for one or more of the invoices are being retried.
+SUBSCRIPTION_BILLING_STATUS_ACTIVE = "ACTIVE"
+SUBSCRIPTION_BILLING_STATUS_DUNNING = "DUNNING"
+SUBSCRIPTION_BILLING_STATUSES = [
+    (SUBSCRIPTION_BILLING_STATUS_ACTIVE, "Active"),
+    (SUBSCRIPTION_BILLING_STATUS_DUNNING, "Dunning"),
+]
+
+
 FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
     seats=MAX_SEATS_IN_FREE_PLAN,
     api_calls=MAX_API_CALLS_IN_FREE_PLAN,

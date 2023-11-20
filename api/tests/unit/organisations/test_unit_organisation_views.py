@@ -12,6 +12,7 @@ from django.core import mail
 from django.db.models import Model
 from django.urls import reverse
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
@@ -35,6 +36,8 @@ from organisations.subscriptions.constants import (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    SUBSCRIPTION_BILLING_STATUS_ACTIVE,
+    SUBSCRIPTION_BILLING_STATUS_DUNNING,
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
@@ -433,7 +436,7 @@ class OrganisationTestCase(TestCase):
         # Since subscription is created using organisation.id rather than
         # organisation and we already have evaluated subscription(by add_organisation)
         # attribute of organisation(before we created the subscription) we need to
-        # refresh organisation for `has_subscription` to work properly
+        # refresh organisation for `has_paid_subscription` to work properly
         organisation.refresh_from_db()
 
         # and
@@ -441,7 +444,7 @@ class OrganisationTestCase(TestCase):
 
         # and
         assert (
-            organisation.has_subscription()
+            organisation.has_paid_subscription()
             and organisation.subscription.subscription_id == subscription_id
             and organisation.subscription.customer_id == customer_id
         )
@@ -904,14 +907,14 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     )
 
 
-def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
-    mocker, organisation, admin_client
-):
+def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_subscription(
+    mocker: MockerFixture, organisation: Organisation, admin_client: APIClient
+) -> None:
     # Given
     get_subscription_metadata = mocker.patch(
         "organisations.models.get_subscription_metadata_from_id"
     )
-
+    assert organisation.subscription.subscription_id is None
     url = reverse(
         "api-v1:organisations:organisation-get-subscription-metadata",
         args=[organisation.pk],
@@ -921,7 +924,15 @@ def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subsc
     response = admin_client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {
+        "chargebee_email": None,
+        "max_api_calls": 50000,
+        "max_projects": 1,
+        "max_seats": 1,
+        "payment_source": None,
+    }
+
     get_subscription_metadata.assert_not_called()
 
 
@@ -1172,7 +1183,7 @@ def test_make_user_group_admin_success(
 
 
 def test_make_user_group_admin_forbidden(
-    staff_client: FFAdminUser,
+    staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
 ):
@@ -1238,7 +1249,7 @@ def test_remove_user_as_group_admin_success(
 
 
 def test_remove_user_as_group_admin_forbidden(
-    staff_client: FFAdminUser,
+    staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
 ):
@@ -1340,3 +1351,231 @@ def test_list_my_groups(organisation, api_client):
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
+
+
+def test_payment_failed_chargebee_webhook(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_ACTIVE
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {
+                "subscription_id": subscription.subscription_id,
+                "dunning_status": "in_progress",
+            },
+        },
+        "event_type": "payment_failed",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_DUNNING
+
+
+def test_payment_failed_chargebee_webhook_when_not_dunning(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_ACTIVE
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {
+                "subscription_id": subscription.subscription_id,
+                "dunning_status": "inactive",  # Key field
+            },
+        },
+        "event_type": "payment_failed",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+
+    # Since the dunning inactive keep subscription active
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
+
+
+def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
+    staff_client: APIClient,
+    subscription: Subscription,
+    organisation: Organisation,
+):
+    # Given
+    cancellation_date = datetime.now(tz=UTC)
+    data = {
+        "content": {
+            "subscription": {
+                "status": "cancelled",
+                "id": subscription.subscription_id,
+                "current_term_end": datetime.timestamp(cancellation_date),
+            },
+            "customer": {
+                "email": "chargebee@bullet-train.io",
+            },
+        }
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+    assert organisation.num_seats == 2
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+
+    subscription.refresh_from_db()
+    assert subscription.cancellation_date == cancellation_date
+    organisation.refresh_from_db()
+    assert organisation.num_seats == 1
+
+
+def test_payment_failed_chargebee_webhook_no_subscription_id(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_ACTIVE
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {  # Missing subscription id
+                "dunning_status": "in_progress",
+            },
+        },
+        "event_type": "payment_failed",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
+
+
+def test_payment_succeeded_chargebee_webhook(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {
+                "subscription_id": subscription.subscription_id,
+            },
+        },
+        "event_type": "payment_succeeded",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
+
+
+def test_payment_succeeded_chargebee_webhook_no_subscription_id(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
+    subscription.subscription_id = "best_id"
+    subscription.save()
+
+    data = {
+        "id": "someId",
+        "occurred_at": 1699630568,
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "invoice": {"not_subscription_id": "irrelevant data"},
+        },
+        "event_type": "payment_succeeded",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    subscription.refresh_from_db()
+    assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_DUNNING
+
+
+def test_list_organisations_shows_dunning(
+    staff_client: FFAdminUser, subscription: Subscription
+):
+    # Given
+    subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
+    subscription.save()
+    url = reverse("api-v1:organisations:organisation-list")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 1
+    _subscription = response.data["results"][0]["subscription"]
+    assert _subscription["id"] == subscription.id
+    assert _subscription["billing_status"] == SUBSCRIPTION_BILLING_STATUS_DUNNING
