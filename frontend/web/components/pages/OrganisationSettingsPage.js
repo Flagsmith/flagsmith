@@ -591,7 +591,8 @@ const OrganisationSettingsPage = class extends Component {
                                       </Row>
                                     </div>
                                     <div className='align-self-start'>
-                                      {organisation.subscription && (
+                                      {organisation.subscription
+                                        ?.subscription_id && (
                                         <Button
                                           theme='secondary'
                                           href='https://flagsmith.chargebeeportal.com/'
