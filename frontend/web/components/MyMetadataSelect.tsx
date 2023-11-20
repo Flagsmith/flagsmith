@@ -31,7 +31,7 @@ const MyMetadataSelect: FC<MyMetadataSelectType> = ({
     }
   }, [metadata, metadataModelField])
 
-  return <MetadataSelect {...props} metadataList={metadataList} />
+  return <MetadataSelect {...props} metadata={metadataList} />
 }
 
 export default MyMetadataSelect
