@@ -35,6 +35,7 @@ def seed_data() -> None:
     )
     org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
 
+    # We add different projects and environments to give each e2e test its own isolated context.
     project_test_data = [
         {
             "name": "My Test Project",
@@ -61,7 +62,9 @@ def seed_data() -> None:
             environment = Environment.objects.create(name=env_name, project=project)
             environments.append(environment)
 
-    # Create identities
+    # We're only creating identities for 3 of the 5 environments because
+    # they are necessary for the environments created above and to keep
+    # the e2e tests isolated."
     identities_test_data = [
         {"identifier": settings.E2E_IDENTITY, "environment": environments[2]},
         {"identifier": settings.E2E_IDENTITY, "environment": environments[3]},
