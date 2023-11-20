@@ -259,11 +259,11 @@ class FeatureSerializerWithMetadata(
         )
 
 
-class UpdateFeatureSerializer(ListCreateFeatureSerializer):
+class UpdateFeatureSerializer(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
 
-    class Meta(ListCreateFeatureSerializer.Meta):
-        read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
             "name",
