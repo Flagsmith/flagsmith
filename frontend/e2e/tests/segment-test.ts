@@ -34,7 +34,6 @@ export const testSegment1 = async () => {
 
   await click('#project-select-1')
 
-
   log('Create Feature')
 
   await createRemoteConfig(0, 'mv_flag', 'big', null, null, [
