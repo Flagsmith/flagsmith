@@ -15,11 +15,19 @@ Flagsmith makes it easy to create and manage features flags across web, mobile, 
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
-Get up and running in 1 minute via our [Self Hosted Repository](https://github.com/Flagsmith/self-hosted):
+Get up and running in less than a minute via our [Self Hosted Repository](https://github.com/Flagsmith/self-hosted):
 
 ```bash
 git clone git@github.com:flagsmith/self-hosted.git
 docker-compose -f self-hosted/docker-compose.yml up
+```
+
+The application will bootstrap an admin user, organisation, and project for you. You'll find a link to set your password
+in your Compose logs:
+
+```
+Superuser "admin@example.com" created successfully.
+Please go to the following page and choose a password: https://localhost:8000/password-reset/confirm/.../...
 ```
 
 ![Flagsmith Screenshot](static-files/screenshot.png)

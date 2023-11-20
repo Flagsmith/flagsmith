@@ -5,6 +5,10 @@ from django.contrib.sites.models import Site
 from django.forms import HiddenInput, fields
 
 from users.models import FFAdminUser
+from users.services import (
+    CreateInitialSuperuserResponse,
+    create_initial_superuser,
+)
 
 
 class CustomUserAdminForm(UserChangeForm):
@@ -16,10 +20,8 @@ class CustomUserAdminForm(UserChangeForm):
 
 
 class InitConfigForm(forms.Form):
-    username = forms.CharField(max_length=200)
     email = forms.EmailField()
 
-    password = forms.CharField(max_length=32, widget=forms.PasswordInput)
     site_name = forms.CharField(
         max_length=50, help_text="A human-readable “verbose” name for the website"
     )
@@ -28,12 +30,9 @@ class InitConfigForm(forms.Form):
         help_text="The fully qualified domain name associated with the website. For example, www.example.com",
     )
 
-    def create_admin(self):
-        FFAdminUser.objects.create_superuser(
-            email=self.cleaned_data["email"],
-            password=self.cleaned_data["password"],
-            username=self.cleaned_data["username"],
-            is_active=True,
+    def create_admin(self) -> CreateInitialSuperuserResponse:
+        return create_initial_superuser(
+            admin_email=self.cleaned_data["email"],
         )
 
     def update_site(self):

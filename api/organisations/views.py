@@ -8,7 +8,7 @@ from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
-from django.contrib.sites.shortcuts import get_current_site
+from core.helpers import get_current_site_url
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -191,7 +191,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         organisation = self.get_object()
         if not organisation.has_paid_subscription():
             raise OrganisationHasNoPaidSubscription()
-        redirect_url = get_current_site(request)
+        redirect_url = get_current_site_url(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
         )
