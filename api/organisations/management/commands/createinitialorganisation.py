@@ -38,9 +38,7 @@ class Command(BaseCommand):
         if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or Organisation.objects.exists():
             logger.debug("Skipping initial organisation creation.")
             return
-        organisation = Organisation.objects.create(
-            name=organisation_name or settings.ORGANISATION_NAME
-        )
+        organisation = Organisation.objects.create(name=organisation_name)
         initial_superuser = get_initial_superuser(admin_email)
         initial_superuser.add_organisation(organisation, OrganisationRole.ADMIN)
         self.stdout.write(
