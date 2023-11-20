@@ -92,7 +92,7 @@ const UserGroupsList: FC<UserGroupsListType> = ({
               openModal(
                 'Edit Group',
                 <CreateGroup isEdit orgId={orgId} group={group} />,
-                'side-modal create-feature-modal',
+                'side-modal',
               )
             }
           }

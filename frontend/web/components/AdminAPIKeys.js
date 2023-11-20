@@ -3,7 +3,6 @@ import data from 'common/data/base/_data'
 import InfoMessage from './InfoMessage'
 import Token from './Token'
 import JSONReference from './JSONReference'
-import ModalHR from './modals/ModalHR'
 import Button from './base/forms/Button'
 import DateSelect from './DateSelect'
 import Icon from './Icon'
@@ -43,7 +42,7 @@ export class CreateAPIKey extends PureComponent {
         <div className='modal-body flex flex-column flex-fill px-4'>
           {!this.state.key && (
             <div>
-              <Flex className='mb-4 mt-4'>
+              <Flex className='mb-3 mt-4'>
                 <div>
                   <label>Name</label>
                 </div>
@@ -62,38 +61,25 @@ export class CreateAPIKey extends PureComponent {
                 <div>
                   <label>Expiry</label>
                 </div>
-                <Row>
-                  <DateSelect
-                    onChange={(e) => {
-                      this.setState({
-                        expiry_date: e.toISOString(),
-                      })
-                    }}
-                    selected={
-                      this.state.expiry_date
-                        ? moment(this.state.expiry_date)._d
-                        : null
-                    }
-                    value={
-                      this.state.expiry_date
-                        ? `${moment(this.state.expiry_date).format(
-                            'Do MMM YYYY hh:mma',
-                          )}`
-                        : 'Never'
-                    }
-                  />
-
-                  <div className='ml-2'>
-                    <Button
-                      disabled={!this.state.expiry_date}
-                      onClick={() => this.setState({ expiry_date: null })}
-                      theme='secondary'
-                      size='large'
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </Row>
+                <DateSelect
+                  onChange={(e) => {
+                    this.setState({
+                      expiry_date: e.toISOString(),
+                    })
+                  }}
+                  selected={
+                    this.state.expiry_date
+                      ? moment(this.state.expiry_date)._d
+                      : null
+                  }
+                  value={
+                    this.state.expiry_date
+                      ? `${moment(this.state.expiry_date).format(
+                          'Do MMM YYYY hh:mma',
+                        )}`
+                      : 'Never'
+                  }
+                />
               </Flex>
             </div>
           )}
@@ -105,16 +91,21 @@ export class CreateAPIKey extends PureComponent {
                 store it.
               </InfoMessage>
 
-              <Token show style={{ width: '435px' }} token={this.state.key} />
+              <Token show token={this.state.key} />
             </div>
           )}
           {this.state.key ? (
             <div />
           ) : (
             <>
-              <div className='modal-footer mt-2 px-0'>
-                <Button onClick={closeModal} theme='secondary' className='mr-2'>
-                  Cancel
+              <div className='modal-footer my-5 p-0'>
+                <Button
+                  disabled={!this.state.expiry_date}
+                  onClick={() => this.setState({ expiry_date: null })}
+                  theme='secondary'
+                  className='mr-2'
+                >
+                  Clear Date
                 </Button>
                 <Button
                   onClick={this.submit}
@@ -203,18 +194,21 @@ export default class AdminAPIKeys extends PureComponent {
           title={'Terraform API Keys'}
           json={apiKeys}
         />
-        <Column className='mt-4 ml-0'>
-          <h5 className='mb-0'>Terraform API Keys</h5>
-          <p className='mb-4 fs-small lh-sm'>
-            Terraform API keys are used to authenticate with the Admin API.{' '}
+        <Column className='my-4 ml-0 col-md-6'>
+          <h5 className='mb-1'>Terraform API Keys</h5>
+          <p className='mb-0 fs-small lh-sm'>
+            Terraform API keys are used to authenticate with the Admin API.
+          </p>
+          <div className='mb-4 fs-small lh-sm'>
             <Button
               theme='text'
               href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
               target='_blank'
+              className='fw-normal'
             >
               Learn about Terraform Keys.
             </Button>
-          </p>
+          </div>
           <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
             Create Terraform API Key
           </Button>
