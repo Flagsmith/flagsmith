@@ -1,6 +1,7 @@
 import pytest
 from core.constants import STRING
 from django.test import TestCase
+from flag_engine.segments.constants import EQUAL
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -8,7 +9,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db

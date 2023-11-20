@@ -3,6 +3,7 @@ import typing
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from flag_engine.segments.constants import EQUAL
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -45,7 +46,7 @@ from projects.models import (
 )
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 

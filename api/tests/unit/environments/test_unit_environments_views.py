@@ -6,6 +6,7 @@ import pytest
 from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from flag_engine.segments.constants import EQUAL
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -25,7 +26,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
-from segments.models import EQUAL, Condition, SegmentRule
+from segments.models import Condition, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
 
