@@ -58,3 +58,33 @@
     }
   }
 }
+
+.recharts-tooltip {
+  background-color: $text-icon-light;
+  border-radius: $border-radius-lg;
+}
+
+.yAxis {
+  font-size: $font-caption-sm;
+  line-height: $line-height-xxsm;
+  font-weight: 500;
+}
+.xAxis {
+  font-size: $font-caption-xs;
+  line-height: $line-height-xxsm;
+  font-weight: 500;
+}
+
+.dark {
+  .recharts-tooltip-header {
+    color: $text-icon-dark;
+  }
+  .xAxis {
+    color: $text-icon-light-grey;
+  }
+  .recharts-wrapper {
+    line {
+      stroke: $bg-dark100;
+    }
+  }
+}

@@ -49,6 +49,7 @@ const TestWebhook: FC<TestWebhookType> = ({ json, webhook }) => {
         disabled={loading || !webhook}
         onClick={submit}
         theme='secondary'
+        size='small'
       >
         Test your webhook
       </Button>

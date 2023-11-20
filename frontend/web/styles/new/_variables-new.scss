@@ -10,9 +10,12 @@ $primary900: #1d113e;
 $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
+$success400: #56ccad;
+$success600: #13787b;
 $info: #0aaddf;
 $warning: #ff9f43;
 $secondary400: #fae392;
+$secondary500: #f7d56e;
 $secondary600: #d4b050;
 $secondary: #fae392;
 $text-icon-dark: #1a2634;
@@ -117,7 +120,7 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $white-alpha-16;
+  border-color: $basic-alpha-16;
 }
 
 //Modal
@@ -280,6 +283,7 @@ $code-bg: $bg-dark200;
 
 //Panels
 $panel-border-color: $basic-alpha-16;
+$panel-border-color-dark: $white-alpha-16;
 $panel-border-radius: $border-radius-lg;
 $panel-table-header-bc: $bg-light200;
 $panel-table-header-color: $text-icon-grey;

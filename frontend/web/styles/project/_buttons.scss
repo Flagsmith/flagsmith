@@ -98,6 +98,19 @@ button.btn {
       color: $text-icon-dark;
     }
   }
+  &-success {
+    background-color: $success;
+    &:hover,
+    &:focus {
+      background-color: $success400;
+      color: $text-icon-light;
+    }
+
+    &.btn:active {
+      background-color: $success600;
+      color: $text-icon-light;
+    }
+  }
 
   &--transparent {
     background-color: transparent;
@@ -366,6 +379,13 @@ $add-btn-size: 34px;
       &:active {
         color: white;
         background-color: $btn-secondary-active-bg-dark;
+      }
+    }
+    &.btn-success {
+      &:hover,
+      &:focus {
+        background-color: $success400;
+        color: $text-icon-light;
       }
     }
 

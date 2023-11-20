@@ -8,7 +8,6 @@ import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
 import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
-import PaymentModal from 'components/modals/Payment'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -21,6 +20,7 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
+import { Link } from 'react-router-dom'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -433,21 +433,15 @@ const EnvironmentSettingsPage = class extends Component {
                             <h5 className='mb-0 ml-3'>Change Requests</h5>
                           </Row>
                           {!has4EyesPermission ? (
-                            <p className='fs-small lh-sm mb-0'>
+                            <p className='fs-small lh-sm'>
                               View and manage your feature changes with a Change
                               Request flow with our{' '}
-                              <Button
-                                theme='text'
-                                onClick={() => {
-                                  openModal(
-                                    'Payment plans',
-                                    <PaymentModal viewOnly={false} />,
-                                    'modal-lg',
-                                  )
-                                }}
+                              <Link
+                                to='/organisation-settings'
+                                className='btn-link'
                               >
                                 Scale-up plan
-                              </Button>
+                              </Link>
                               . Find out more{' '}
                               <Button
                                 theme='text'
