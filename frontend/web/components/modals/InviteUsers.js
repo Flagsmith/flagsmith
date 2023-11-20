@@ -142,9 +142,10 @@ const InviteUsers = class extends Component {
                   </Row>
                 ))}
 
-                <div className='text-right'>
+                <div className='text-right mt-4'>
                   <Button
                     theme='outline'
+                    size='small'
                     id='btn-add-invite'
                     disabled={isSaving || !this.isValid()}
                     type='button'
@@ -154,30 +155,34 @@ const InviteUsers = class extends Component {
                       })
                     }
                   >
-                    {isSaving ? 'Sending' : 'Invite additional member'}
-                    <span className='pl-2 icon'>
-                      <IonIcon icon={add} style={{ fontSize: '13px' }} />
-                    </span>
+                    <Row>
+                      <span className='pl-2 icon'>
+                        <IonIcon icon={add} style={{ fontSize: '13px' }} />
+                      </span>
+                      <span>
+                        {isSaving ? 'Sending' : 'Invite additional member'}
+                      </span>
+                    </Row>
                   </Button>
                 </div>
 
-                <div className='mt-3'>
+                <div className='mt-5'>
                   Users without administrator privileges will need to be invited
-                  to individual projects.{' '}
-                  <Button
-                    theme='text'
-                    target='_blank'
-                    href='https://docs.flagsmith.com/system-administration/rbac'
-                  >
-                    Learn about User Roles.
-                  </Button>
+                  to individual projects.
+                  <div>
+                    <Button
+                      theme='text'
+                      target='_blank'
+                      href='https://docs.flagsmith.com/system-administration/rbac'
+                      className='fw-normal'
+                    >
+                      Learn about User Roles.
+                    </Button>
+                  </div>
                 </div>
                 {error && <Error error={error} />}
               </div>
-              <div className='modal-footer'>
-                <Button onClick={closeModal} className='mr-2' theme='secondary'>
-                  Cancel
-                </Button>
+              <div className='modal-footer pt-5'>
                 <Button
                   id='btn-send-invite'
                   disabled={isSaving || !this.isValid()}

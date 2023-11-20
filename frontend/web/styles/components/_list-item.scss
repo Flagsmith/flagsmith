@@ -38,13 +38,14 @@
 .dark {
   .list-item {
     color: $text-icon-light;
-    &.change-request-item {
-      .btn-link {
-        color: $primary;
-      }
-    }
     &.clickable:hover .btn-link {
-      color: white;
+      color: $primary400;
+    }
+      .btn-link {
+      color: $primary400;
+      path {
+        fill: $primary400;
+      }
     }
   }
 }

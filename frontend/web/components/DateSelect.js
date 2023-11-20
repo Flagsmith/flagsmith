@@ -102,7 +102,7 @@ const DateSelect = ({ onChange, onSelect, selected, value }) => {
         open={isOpen}
       />
       <span className='calendar-icon'>
-        <Icon name='calendar' />
+        <Icon name='calendar' fill={isOpen ? '#1A2634' : '#9DA4AE'} />
       </span>
     </Flex>
   )
