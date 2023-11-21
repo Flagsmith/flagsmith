@@ -48,6 +48,29 @@ __all__ = (
 )
 
 
+def map_traits_to_trait_models(traits: Iterable["Trait"]) -> list[TraitModel]:
+    return [
+        TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
+        for trait in traits
+    ]
+
+
+def map_segment_to_engine(
+    segment: "Segment",
+) -> SegmentModel:
+    segment_rules = segment.rules.all()
+
+    # No reading from ORM past this point!
+
+    return SegmentModel(
+        id=segment.pk,
+        name=segment.name,
+        rules=[
+            map_segment_rule_to_engine(segment_rule) for segment_rule in segment_rules
+        ],
+    )
+
+
 def map_segment_rule_to_engine(
     segment_rule: "SegmentRule",
 ) -> SegmentRuleModel:
@@ -167,7 +190,7 @@ def map_environment_to_engine(
         int,
         Iterable["SegmentRule"],
     ] = {segment.pk: segment.rules.all() for segment in project_segments}
-    project_segment_feature_states_by_segment_id = _get_project_segment_feature_states(
+    project_segment_feature_states_by_segment_id = _get_segment_feature_states(
         project_segments,
         environment.pk,
     )
@@ -330,19 +353,30 @@ def map_environment_api_key_to_engine(
     )
 
 
-def map_identity_to_engine(identity: "Identity") -> IdentityModel:
+def map_identity_to_engine(
+    identity: "Identity",
+    *,
+    with_overrides: bool = True,
+    with_traits: bool = True,
+) -> IdentityModel:
     environment_api_key = identity.environment.api_key
 
     # Read relationships - grab all the data needed from the ORM here.
-    identity_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
-        identity.identity_features.all(),
-    )
-    multivariate_feature_state_values_by_feature_state_id = {
-        feature_state.pk: feature_state.multivariate_feature_state_values.all()
-        for feature_state in identity_feature_states
-    }
+    if with_overrides:
+        identity_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
+            identity.identity_features.all(),
+        )
+        multivariate_feature_state_values_by_feature_state_id = {
+            feature_state.pk: feature_state.multivariate_feature_state_values.all()
+            for feature_state in identity_feature_states
+        }
+    else:
+        identity_feature_states = []
+        multivariate_feature_state_values_by_feature_state_id = {}
 
-    identity_traits: Iterable["Trait"] = identity.identity_traits.all()
+    identity_traits: Iterable["Trait"] = (
+        identity.identity_traits.all() if with_traits else []
+    )
 
     # Prepare relationships.
     identity_feature_state_models = [
@@ -352,10 +386,7 @@ def map_identity_to_engine(identity: "Identity") -> IdentityModel:
         )
         for feature_state in identity_feature_states
     ]
-    identity_trait_models = [
-        TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
-        for trait in identity_traits
-    ]
+    identity_trait_models = map_traits_to_trait_models(identity_traits)
 
     return IdentityModel(
         # Attributes:
@@ -388,12 +419,12 @@ def _get_prioritised_feature_states(
     return list(prioritised_feature_state_by_feature_id.values())
 
 
-def _get_project_segment_feature_states(
-    project_segments: Iterable["Segment"],
+def _get_segment_feature_states(
+    segments: Iterable["Segment"],
     environment_id: int,
 ) -> Dict[int, List["FeatureState"]]:
     feature_states_by_segment_id = {}
-    for segment in project_segments:
+    for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
         for feature_segment in segment.feature_segments.all():
             if feature_segment.environment_id != environment_id:

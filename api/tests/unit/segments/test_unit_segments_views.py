@@ -4,6 +4,7 @@ import random
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from flag_engine.segments.constants import EQUAL
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
@@ -11,7 +12,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()

@@ -2,8 +2,6 @@ import logging
 import typing
 from copy import deepcopy
 
-import semver
-from core.constants import BOOLEAN, FLOAT, INTEGER
 from core.models import (
     AbstractBaseExportableModel,
     SoftDeleteExportableModel,
@@ -11,15 +9,18 @@ from core.models import (
 )
 from django.core.exceptions import ValidationError
 from django.db import models
-from flag_engine.utils.semver import is_semver, remove_semver_suffix
+from flag_engine.segments import constants
+from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
-from environments.identities.helpers import (
-    get_hashed_percentage_for_object_ids,
-)
 from features.models import Feature
 from projects.models import Project
+from util.mappers.engine import (
+    map_identity_to_engine,
+    map_segment_to_engine,
+    map_traits_to_trait_models,
+)
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -27,30 +28,6 @@ if typing.TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-try:
-    import re2 as re
-
-    logger.info("Using re2 library for regex.")
-except ImportError:
-    logger.warning("Unable to import re2. Falling back to re.")
-    import re
-
-# Condition Types
-EQUAL = "EQUAL"
-GREATER_THAN = "GREATER_THAN"
-LESS_THAN = "LESS_THAN"
-LESS_THAN_INCLUSIVE = "LESS_THAN_INCLUSIVE"
-CONTAINS = "CONTAINS"
-GREATER_THAN_INCLUSIVE = "GREATER_THAN_INCLUSIVE"
-NOT_CONTAINS = "NOT_CONTAINS"
-NOT_EQUAL = "NOT_EQUAL"
-REGEX = "REGEX"
-PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
-MODULO = "MODULO"
-IS_SET = "IS_SET"
-IS_NOT_SET = "IS_NOT_SET"
-IN = "IN"
 
 
 class Segment(
@@ -109,9 +86,18 @@ class Segment(
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
-        rules = self.rules.all()
-        return rules.count() > 0 and all(
-            rule.does_identity_match(identity, traits) for rule in rules
+        segment_model = map_segment_to_engine(self)
+        identity_model = map_identity_to_engine(
+            identity,
+            with_overrides=False,
+            with_traits=not traits,
+        )
+        trait_models = map_traits_to_trait_models(traits) if traits else None
+
+        return evaluate_identity_in_segment(
+            identity=identity_model,
+            segment=segment_model,
+            override_traits=trait_models,
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
@@ -155,34 +141,6 @@ class SegmentRule(AbstractBaseExportableModel):
             str(self.segment) if self.segment else str(self.rule),
         )
 
-    def does_identity_match(
-        self, identity: "Identity", traits: typing.List["Trait"] = None
-    ) -> bool:
-        matches_conditions = False
-        conditions = self.conditions.all()
-
-        if conditions.count() == 0:
-            matches_conditions = True
-        elif self.type == self.ALL_RULE:
-            matches_conditions = all(
-                condition.does_identity_match(identity, traits)
-                for condition in conditions
-            )
-        elif self.type == self.ANY_RULE:
-            matches_conditions = any(
-                condition.does_identity_match(identity, traits)
-                for condition in conditions
-            )
-        elif self.type == self.NONE_RULE:
-            matches_conditions = not any(
-                condition.does_identity_match(identity, traits)
-                for condition in conditions
-            )
-
-        return matches_conditions and all(
-            rule.does_identity_match(identity, traits) for rule in self.rules.all()
-        )
-
     def get_segment(self):
         """
         rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
@@ -203,20 +161,20 @@ class Condition(
     related_object_type = RelatedObjectType.SEGMENT
 
     CONDITION_TYPES = (
-        (EQUAL, "Exactly Matches"),
-        (GREATER_THAN, "Greater than"),
-        (LESS_THAN, "Less than"),
-        (CONTAINS, "Contains"),
-        (GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
-        (LESS_THAN_INCLUSIVE, "Less than or equal to"),
-        (NOT_CONTAINS, "Does not contain"),
-        (NOT_EQUAL, "Does not match"),
-        (REGEX, "Matches regex"),
-        (PERCENTAGE_SPLIT, "Percentage split"),
-        (MODULO, "Modulo Operation"),
-        (IS_SET, "Is set"),
-        (IS_NOT_SET, "Is not set"),
-        (IN, "In"),
+        (constants.EQUAL, "Exactly Matches"),
+        (constants.GREATER_THAN, "Greater than"),
+        (constants.LESS_THAN, "Less than"),
+        (constants.CONTAINS, "Contains"),
+        (constants.GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
+        (constants.LESS_THAN_INCLUSIVE, "Less than or equal to"),
+        (constants.NOT_CONTAINS, "Does not contain"),
+        (constants.NOT_EQUAL, "Does not match"),
+        (constants.REGEX, "Matches regex"),
+        (constants.PERCENTAGE_SPLIT, "Percentage split"),
+        (constants.MODULO, "Modulo Operation"),
+        (constants.IS_SET, "Is set"),
+        (constants.IS_NOT_SET, "Is not set"),
+        (constants.IN, "In"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
@@ -240,162 +198,6 @@ class Condition(
             self.operator,
             self.value,
         )
-
-    def does_identity_match(  # noqa: C901
-        self, identity: "Identity", traits: typing.List["Trait"] = None
-    ) -> bool:
-        if self.operator == PERCENTAGE_SPLIT:
-            return self._check_percentage_split_operator(identity)
-
-        # we allow passing in traits to handle when they aren't
-        # persisted for certain organisations
-        traits = identity.identity_traits.all() if traits is None else traits
-        matching_trait = next(
-            filter(lambda t: t.trait_key == self.property, traits), None
-        )
-        if matching_trait is None:
-            return self.operator == IS_NOT_SET
-
-        if self.operator in (IS_SET, IS_NOT_SET):
-            return self.operator == IS_SET
-        elif self.operator == MODULO:
-            if matching_trait.value_type in [INTEGER, FLOAT]:
-                return self._check_modulo_operator(matching_trait.trait_value)
-        elif self.operator == IN:
-            return str(matching_trait.trait_value) in self.value.split(",")
-        elif matching_trait.value_type == INTEGER:
-            return self.check_integer_value(matching_trait.integer_value)
-        elif matching_trait.value_type == FLOAT:
-            return self.check_float_value(matching_trait.float_value)
-        elif matching_trait.value_type == BOOLEAN:
-            return self.check_boolean_value(matching_trait.boolean_value)
-        elif is_semver(self.value):
-            return self.check_semver_value(matching_trait.string_value)
-
-        return self.check_string_value(matching_trait.string_value)
-
-    def _check_percentage_split_operator(self, identity):
-        try:
-            float_value = float(self.value) / 100.0
-        except ValueError:
-            return False
-
-        segment = self.rule.get_segment()
-        return (
-            get_hashed_percentage_for_object_ids(
-                object_ids=[segment.id, identity.get_hash_key()]
-            )
-            <= float_value
-        )
-
-    def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
-        try:
-            divisor, remainder = self.value.split("|")
-            divisor = float(divisor)
-            remainder = float(remainder)
-        except ValueError:
-            return False
-
-        return value % divisor == remainder
-
-    def check_integer_value(self, value: int) -> bool:
-        try:
-            int_value = int(str(self.value))
-        except ValueError:
-            return False
-
-        if self.operator == EQUAL:
-            return value == int_value
-        elif self.operator == GREATER_THAN:
-            return value > int_value
-        elif self.operator == GREATER_THAN_INCLUSIVE:
-            return value >= int_value
-        elif self.operator == LESS_THAN:
-            return value < int_value
-        elif self.operator == LESS_THAN_INCLUSIVE:
-            return value <= int_value
-        elif self.operator == NOT_EQUAL:
-            return value != int_value
-
-        return False
-
-    def check_float_value(self, value: float) -> bool:
-        try:
-            float_value = float(str(self.value))
-        except ValueError:
-            return False
-
-        if self.operator == EQUAL:
-            return value == float_value
-        elif self.operator == GREATER_THAN:
-            return value > float_value
-        elif self.operator == GREATER_THAN_INCLUSIVE:
-            return value >= float_value
-        elif self.operator == LESS_THAN:
-            return value < float_value
-        elif self.operator == LESS_THAN_INCLUSIVE:
-            return value <= float_value
-        elif self.operator == NOT_EQUAL:
-            return value != float_value
-
-        return False
-
-    def check_boolean_value(self, value: bool) -> bool:
-        if self.value in ("False", "false", "0"):
-            bool_value = False
-        elif self.value in ("True", "true", "1"):
-            bool_value = True
-        else:
-            return False
-
-        if self.operator == EQUAL:
-            return value == bool_value
-        elif self.operator == NOT_EQUAL:
-            return value != bool_value
-
-        return False
-
-    def check_semver_value(self, value: str) -> bool:
-        try:
-            condition_version_info = semver.VersionInfo.parse(
-                remove_semver_suffix(self.value)
-            )
-        except ValueError:
-            return False
-
-        if self.operator == EQUAL:
-            return value == condition_version_info
-        elif self.operator == GREATER_THAN:
-            return value > condition_version_info
-        elif self.operator == GREATER_THAN_INCLUSIVE:
-            return value >= condition_version_info
-        elif self.operator == LESS_THAN:
-            return value < condition_version_info
-        elif self.operator == LESS_THAN_INCLUSIVE:
-            return value <= condition_version_info
-        elif self.operator == NOT_EQUAL:
-            return value != condition_version_info
-
-        return False
-
-    def check_string_value(self, value: str) -> bool:
-        try:
-            str_value = str(self.value)
-        except ValueError:
-            return False
-
-        if self.operator == EQUAL:
-            return value == str_value
-        elif self.operator == NOT_EQUAL:
-            return value != str_value
-        elif self.operator == CONTAINS:
-            return str_value in value
-        elif self.operator == NOT_CONTAINS:
-            return str_value not in value
-        elif self.operator == REGEX:
-            return re.compile(str(self.value)).match(value) is not None
-
-        return False
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Condition updated on segment '{self._get_segment().name}'."

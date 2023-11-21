@@ -3,12 +3,13 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.admin import AdminSite
+from flag_engine.segments.constants import EQUAL
 
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.admin import ProjectAdmin
 from projects.models import Project
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 if typing.TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
