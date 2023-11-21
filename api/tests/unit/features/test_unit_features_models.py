@@ -3,20 +3,22 @@ from unittest import mock
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
+from users.models import FFAdminUser
 
 now = timezone.now()
 yesterday = now - timedelta(days=1)
@@ -437,46 +439,6 @@ class FeatureStateTest(TestCase):
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
 
-    def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
-        self,
-    ):
-        # Given
-        feature_2 = Feature.objects.create(name="feature_2", project=self.project)
-        feature_2_v1_feature_state = FeatureState.objects.get(feature=feature_2)
-
-        feature_1_v2_feature_state = FeatureState.objects.create(
-            feature=self.feature,
-            enabled=True,
-            version=2,
-            environment=self.environment,
-            live_from=timezone.now(),
-        )
-        FeatureState.objects.create(
-            feature=self.feature,
-            enabled=False,
-            version=None,
-            environment=self.environment,
-        )
-
-        identity = Identity.objects.create(
-            identifier="identity", environment=self.environment
-        )
-        FeatureState.objects.create(
-            feature=self.feature, identity=identity, environment=self.environment
-        )
-
-        # When
-        environment_feature_states = FeatureState.get_environment_flags_list(
-            environment_id=self.environment.id,
-            additional_filters=Q(feature_segment=None, identity=None),
-        )
-
-        # Then
-        assert set(environment_feature_states) == {
-            feature_1_v2_feature_state,
-            feature_2_v1_feature_state,
-        }
-
     def test_feature_state_type_environment(self):
         # Given
         feature_state = FeatureState.objects.get(
@@ -644,65 +606,6 @@ def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(
     mock_get_mv_feature_state_value.assert_called_once_with(identity.composite_key)
 
 
-def test_feature_state_get_environment_flags_queryset_returns_only_latest_versions(
-    feature, environment
-):
-    # Given
-    feature_state_v1 = FeatureState.objects.get(
-        feature=feature, environment=environment, feature_segment=None, identity=None
-    )
-
-    feature_state_v2 = feature_state_v1.clone(
-        env=environment, live_from=timezone.now(), version=2
-    )
-    feature_state_v1.clone(env=environment, as_draft=True)  # draft feature state
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id
-    )
-
-    # Then
-    assert feature_states.count() == 1
-    assert feature_states.first() == feature_state_v2
-
-
-def test_project_hide_disabled_flags_have_no_effect_on_feature_state_get_environment_flags_queryset(
-    environment, project
-):
-    # Given
-    project.hide_disabled_flags = True
-    project.save()
-    # two flags - one disable on enabled
-    Feature.objects.create(default_enabled=False, name="disable_flag", project=project)
-    Feature.objects.create(default_enabled=True, name="enabled_flag", project=project)
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id
-    )
-    # Then
-    assert feature_states.count() == 2
-
-
-def test_feature_states_get_environment_flags_queryset_filter_using_feature_name(
-    environment, project
-):
-    # Given
-    flag_1_name = "flag_1"
-    Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
-    Feature.objects.create(default_enabled=True, name="flag_2", project=project)
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id, feature_name=flag_1_name
-    )
-
-    # Then
-    assert feature_states.count() == 1
-    assert feature_states.first().feature.name == "flag_1"
-
-
 @pytest.mark.parametrize(
     "feature_state_version_generator",
     (
@@ -733,9 +636,12 @@ def test_feature_state_gt_operator(feature_state_version_generator):
         (1, tomorrow, False),
     ),
 )
-def test_feature_state_is_live(version, live_from, expected_is_live):
+def test_feature_state_is_live(version, live_from, expected_is_live, environment):
     assert (
-        FeatureState(version=version, live_from=live_from).is_live == expected_is_live
+        FeatureState(
+            version=version, live_from=live_from, environment=environment
+        ).is_live
+        == expected_is_live
     )
 
 
@@ -765,8 +671,8 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncommitted_change_request(
-    environment, feature, admin_user, mocker
+def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
+    environment, feature, admin_user
 ):
     # Given
     change_request = ChangeRequest.objects.create(
@@ -779,13 +685,25 @@ def test_feature_state_get_audit_log_related_object_id_returns_nothing_if_uncomm
         version=None,
     )
 
-    # When
-    related_object_id = feature_state.get_audit_log_related_object_id(
-        mocker.MagicMock(id="history_instance")
-    )  # history instance is irrelevant here
+    # Then
+    assert feature_state.get_skip_create_audit_log() is True
+
+
+def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
+    environment_v2_versioning, feature
+):
+    # Given
+    environment_feature_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_state = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        environment_feature_version=environment_feature_version,
+    )
 
     # Then
-    assert related_object_id is None
+    assert feature_state.get_skip_create_audit_log() is True
 
 
 @pytest.mark.parametrize(
@@ -950,56 +868,6 @@ def test_feature_segment_update_priorities_when_changes(
     )
 
 
-def test_feature_get_overrides_data(
-    feature,
-    environment,
-    identity,
-    segment,
-    feature_segment,
-    identity_featurestate,
-    segment_featurestate,
-):
-    # Given
-    # we create some other features with overrides to ensure we're only getting data
-    # for each individual feature
-    feature_2 = Feature.objects.create(project=feature.project, name="feature_2")
-    FeatureState.objects.create(
-        feature=feature_2, environment=environment, identity=identity
-    )
-
-    feature_3 = Feature.objects.create(project=feature.project, name="feature_3")
-    feature_segment_for_feature_3 = FeatureSegment.objects.create(
-        feature=feature_3, segment=segment, environment=environment
-    )
-    FeatureState.objects.create(
-        feature=feature_3,
-        environment=environment,
-        feature_segment=feature_segment_for_feature_3,
-    )
-
-    # and an override for another identity that has been deleted
-    another_identity = Identity.objects.create(
-        identifier="another-identity", environment=environment
-    )
-    fs_to_delete = FeatureState.objects.create(
-        feature=feature, environment=environment, identity=another_identity
-    )
-    fs_to_delete.delete()
-
-    # When
-    overrides_data = Feature.get_overrides_data(environment.id)
-
-    # Then
-    assert overrides_data[feature.id].num_identity_overrides == 1
-    assert overrides_data[feature.id].num_segment_overrides == 1
-
-    assert overrides_data[feature_2.id].num_identity_overrides == 1
-    assert overrides_data[feature_2.id].num_segment_overrides == 0
-
-    assert overrides_data[feature_3.id].num_identity_overrides is None
-    assert overrides_data[feature_3.id].num_segment_overrides == 1
-
-
 def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(
     feature, segment, feature_segment, environment
 ):
@@ -1073,3 +941,92 @@ def test_feature_segment_clone(
     assert cloned_feature_segment.segment == feature_segment.segment
     assert cloned_feature_segment.feature == feature_segment.feature
     assert cloned_feature_segment.environment == environment_two
+
+
+def test_create_feature_creates_feature_states_in_all_environments_and_environment_feature_version(
+    project: "Project",
+) -> None:
+    # Given
+    Environment.objects.create(
+        project=project, name="Environment 1", use_v2_feature_versioning=True
+    )
+    Environment.objects.create(
+        project=project, name="Environment 2", use_v2_feature_versioning=True
+    )
+
+    # When
+    feature = Feature.objects.create(name="test_feature", project=project)
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(feature=feature).count() == 2
+    assert feature.feature_states.count() == 2
+
+
+def test_webhooks_are_called_when_feature_state_is_updated(
+    mocker: MockerFixture, feature_state: FeatureState
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature_state.enabled = not feature_state.enabled
+    feature_state.save()
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+
+
+def test_webhooks_are_called_when_feature_state_is_created(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature_state = FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+
+
+def test_webhooks_are_not_called_for_feature_state_with_environment_feature_version(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_segment = FeatureSegment.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        segment=segment,
+        environment_feature_version=new_version,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment_feature_version=new_version,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+    )
+    new_version.publish(admin_user)
+
+    # Then
+    mock_trigger_feature_state_change_webhooks.assert_not_called()

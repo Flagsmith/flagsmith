@@ -82,6 +82,9 @@ class _AbstractBaseAuditableModel(models.Model):
     class Meta:
         abstract = True
 
+    def get_skip_create_audit_log(self) -> bool:
+        return False
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         """Override if audit log records should be written when model is created"""
         return None
