@@ -1,5 +1,29 @@
+import pytest
+
 from users.models import FFAdminUser
-from users.signals import create_pipedrive_lead_signal
+from users.signals import create_pipedrive_lead_signal, warn_insecure
+
+
+@pytest.mark.django_db
+def test_warn_insecure_emits_a_warning_when_no_user_exists(recwarn, django_user_model):
+    # When
+    warn_insecure(django_user_model)
+
+    # Then
+    assert len(recwarn) == 1
+    w = recwarn.pop()
+    assert issubclass(w.category, RuntimeWarning)
+
+
+@pytest.mark.django_db
+def test_warn_insecure_emits_no_warning_when_user_exists(
+    admin_user, recwarn, django_user_model
+):
+    # When
+    warn_insecure(django_user_model)
+
+    # Then
+    assert len(recwarn) == 0
 
 
 def test_create_pipedrive_lead_signal_calls_task_if_user_created(
