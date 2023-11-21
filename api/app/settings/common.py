@@ -53,6 +53,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
+MAX_PROJECTS_IN_FREE_PLAN = 1
+
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
 GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
@@ -394,10 +396,25 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
-# Used on init to create admin user for the site, update accordingly before hitting /auth/init
-ALLOW_ADMIN_INITIATION_VIA_URL = True
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_INITIAL_PASSWORD = "password"
+# Initialisation settings
+# If `ALLOW_ADMIN_INITIATION_VIA_CLI` setting is set to True, Flagsmith will attempt to create
+#   1. A superuser
+#   2. An organisation
+#   3. A project
+# with initial values on startup.
+# Initialisation is skipped if it's been performed before or if `ALLOW_ADMIN_INITIATION_VIA_CLI` is set to False.
+# Tweak (or set via environment) the settings below for custom names, etc.
+ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
+)
+ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=False
+)
+
+ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
+ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
+PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
+
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
@@ -458,6 +475,8 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+#  Identity for E2E segment tests
+E2E_IDENTITY = "test-identity"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
@@ -951,11 +970,12 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
 
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
-if LDAP_INSTALLED:
-    # The URL of the LDAP server.
-    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
-    if LDAP_AUTH_URL:
-        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+# The URL of the LDAP server.
+LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+
+if LDAP_INSTALLED and LDAP_AUTH_URL:
+    AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+    INSTALLED_APPS.append("flagsmith_ldap")
 
     # Initiate TLS on connection.
     LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)

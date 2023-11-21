@@ -3,12 +3,12 @@ import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import PaymentModal from 'components/modals/Payment'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import { Link } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -81,20 +81,8 @@ const ChangeRequestsPage = class extends Component {
             <div className='mt-2'>
               <InfoMessage>
                 View and manage your feature changes with a Change Request flow
-                with our{' '}
-                <Button
-                  theme='text'
-                  onClick={() => {
-                    openModal(
-                      'Payment plans',
-                      <PaymentModal viewOnly={false} />,
-                      'modal-lg',
-                    )
-                  }}
-                >
-                  Scale-up plan
-                </Button>
-                . Find out more{' '}
+                with our <Link to='/organisation-settings'>Scale-up plan</Link>.
+                Find out more{' '}
                 <Button
                   theme='text'
                   href='https://docs.flagsmith.com/advanced-use/change-requests'

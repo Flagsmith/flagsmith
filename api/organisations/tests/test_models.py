@@ -11,6 +11,7 @@ from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
+    OrganisationRole,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -24,6 +25,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -38,7 +40,7 @@ class OrganisationTestCase(TestCase):
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
 
-    def test_has_subscription_true(self):
+    def test_has_paid_subscription_true(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
         Subscription.objects.filter(organisation=organisation).update(
@@ -49,14 +51,14 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
 
         # Then
-        assert organisation.has_subscription()
+        assert organisation.has_paid_subscription()
 
-    def test_has_subscription_missing_subscription_id(self):
+    def test_has_paid_subscription_missing_subscription_id(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
 
         # Then
-        assert not organisation.has_subscription()
+        assert not organisation.has_paid_subscription()
 
     @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_cancel_subscription_cancels_chargebee_subscription(
@@ -64,7 +66,8 @@ class OrganisationTestCase(TestCase):
     ):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-
+        user = FFAdminUser.objects.create(email="test@example.com")
+        user.add_organisation(organisation, role=OrganisationRole.ADMIN)
         Subscription.objects.filter(organisation=organisation).update(
             subscription_id="subscription_id", payment_method=CHARGEBEE
         )

@@ -104,11 +104,7 @@ class TheComponent extends Component {
     )
 
     if (this.props.condensed) {
-      return Utils.renderWithPermission(
-        permission,
-        Constants.environmentPermissions(
-          Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-        ),
+      return (
         <Flex
           onClick={() =>
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
@@ -168,14 +164,10 @@ class TheComponent extends Component {
               data-test={`feature-value-${this.props.index}`}
             />
           </Flex>
-        </Flex>,
+        </Flex>
       )
     }
-    return Utils.renderWithPermission(
-      permission,
-      Constants.environmentPermissions(
-        Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-      ),
+    return (
       <Row
         className={`list-item ${readOnly ? '' : 'clickable'} ${
           this.props.widget ? 'py-1' : 'py-2'
@@ -415,7 +407,7 @@ class TheComponent extends Component {
             </Permission>
           )}
         </div>
-      </Row>,
+      </Row>
     )
   }
 }
