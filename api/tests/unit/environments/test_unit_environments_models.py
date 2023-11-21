@@ -7,6 +7,7 @@ from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import OrganisationRole
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
@@ -16,6 +17,7 @@ if typing.TYPE_CHECKING:
 
     from features.workflows.core.models import ChangeRequest
     from organisations.models import Organisation
+    from projects.models import Project
 
 
 @pytest.mark.parametrize(
@@ -396,3 +398,22 @@ def test_delete_environment_with_committed_change_request(
 
     # Then
     assert environment.deleted_at is not None
+
+
+def test_create_environment_creates_feature_states_in_all_environments_and_environment_feature_version(
+    project: "Project",
+) -> None:
+    # Given
+    Feature.objects.create(name="test_feature_1", project=project)
+    Feature.objects.create(name="test_feature_2", project=project)
+
+    # When
+    environment = Environment.objects.create(
+        project=project, name="Environment 1", use_v2_feature_versioning=True
+    )
+
+    # Then
+    assert (
+        EnvironmentFeatureVersion.objects.filter(environment=environment).count() == 2
+    )
+    assert environment.feature_states.count() == 2

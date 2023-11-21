@@ -34,7 +34,9 @@ from audit.tasks import (
     create_feature_state_went_live_audit_log,
 )
 from features.models import FeatureState
+from features.versioning.tasks import trigger_update_version_webhooks
 
+from ...versioning.models import EnvironmentFeatureVersion
 from .exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestNotApprovedError,
@@ -99,26 +101,63 @@ class ChangeRequest(
 
         logger.debug("Committing change request #%d", self.id)
 
-        feature_states = list(self.feature_states.all())
-
-        for feature_state in feature_states:
-            if not feature_state.live_from or feature_state.live_from < timezone.now():
-                feature_state.live_from = timezone.now()
-
-            feature_state.version = FeatureState.get_next_version_number(
-                environment_id=feature_state.environment_id,
-                feature_id=feature_state.feature_id,
-                feature_segment_id=feature_state.feature_segment_id,
-                identity_id=feature_state.identity_id,
-            )
-
-        FeatureState.objects.bulk_update(
-            feature_states, fields=["live_from", "version"]
-        )
+        self._publish_feature_states()
+        self._publish_environment_feature_versions(committed_by)
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+    def _publish_feature_states(self) -> None:
+        now = timezone.now()
+
+        if feature_states := list(self.feature_states.all()):
+            for feature_state in feature_states:
+                if not feature_state.live_from or feature_state.live_from < now:
+                    feature_state.live_from = now
+
+                feature_state.version = FeatureState.get_next_version_number(
+                    environment_id=feature_state.environment_id,
+                    feature_id=feature_state.feature_id,
+                    feature_segment_id=feature_state.feature_segment_id,
+                    identity_id=feature_state.identity_id,
+                )
+
+            FeatureState.objects.bulk_update(
+                feature_states, fields=["live_from", "version"]
+            )
+
+    def _publish_environment_feature_versions(
+        self, published_by: "FFAdminUser"
+    ) -> None:
+        now = timezone.now()
+
+        if environment_feature_versions := list(
+            self.environment_feature_versions.all()
+        ):
+            for environment_feature_version in environment_feature_versions:
+                if (
+                    not environment_feature_version.live_from
+                    or environment_feature_version.live_from < now
+                ):
+                    environment_feature_version.live_from = now
+
+                environment_feature_version.publish(published_by, persist=False)
+
+            EnvironmentFeatureVersion.objects.bulk_update(
+                environment_feature_versions,
+                fields=["published_at", "published_by", "live_from"],
+            )
+
+            for environment_feature_version in environment_feature_versions:
+                trigger_update_version_webhooks.delay(
+                    kwargs={
+                        "environment_feature_version_uuid": str(
+                            environment_feature_version.uuid
+                        )
+                    },
+                    delay_until=environment_feature_version.live_from,
+                )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title

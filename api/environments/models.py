@@ -18,6 +18,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_UPDATE,
     LifecycleModel,
     hook,
 )
@@ -41,6 +42,7 @@ from environments.dynamodb import (
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.exceptions import FeatureVersioningError
 from metadata.models import Metadata
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
@@ -124,26 +126,23 @@ class Environment(
 
     objects = EnvironmentManager()
 
+    use_v2_feature_versioning = models.BooleanField(default=False)
+
     class Meta:
         ordering = ["id"]
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
-        features = self.project.features.all()
-        for feature in features:
-            FeatureState.objects.create(
-                feature=feature,
-                environment=self,
-                identity=None,
-                enabled=False
-                if self.project.prevent_flag_defaults
-                else feature.default_enabled,
-            )
+        FeatureState.create_initial_feature_states_for_environment(environment=self)
 
     @hook(AFTER_UPDATE)
     def clear_environment_cache(self):
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
+
+    @hook(BEFORE_UPDATE, when="use_v2_feature_versioning", was=True, is_now=False)
+    def validate_use_v2_feature_versioning(self):
+        raise FeatureVersioningError("Cannot revert from v2 feature versioning.")
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
