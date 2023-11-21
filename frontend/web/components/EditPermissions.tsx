@@ -241,6 +241,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           skip:
             !id ||
             envId ||
+            // TODO: In the future, perhaps use inherited components to avoid issues with merging multiple contexts into a single component.
             !role?.organisation ||
             !Utils.getFlagsmithHasFeature('show_role_management'),
         },
@@ -734,6 +735,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   } = props
   const [tab, setTab] = useState()
   const editUserPermissions = (user: User) => {
+    console.log('DEBUG: user:', user)
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
       <EditPermissionsModal
