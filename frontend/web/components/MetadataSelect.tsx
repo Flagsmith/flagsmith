@@ -10,8 +10,8 @@ export type MetadataSelectType = {
   metadata: [] | undefined
   value: number[] | undefined
   isOpen: boolean
-  onAdd: (id: number, isUser: boolean) => void
-  onRemove: (id: number, isUser: boolean) => void
+  onAdd: (id: number) => void
+  onRemove: (id: number) => void
   onToggle: () => void
 }
 const MetadataSelect: FC<MetadataSelectType> = ({
@@ -53,9 +53,9 @@ const MetadataSelect: FC<MetadataSelectType> = ({
                 onClick={() => {
                   const isRemove = value?.includes(v.id)
                   if (isRemove && onRemove) {
-                    onRemove(v.id, false)
+                    onRemove(v.id)
                   } else if (!isRemove && onAdd) {
-                    onAdd(v.id, false)
+                    onAdd(v.id)
                   }
                 }}
                 space

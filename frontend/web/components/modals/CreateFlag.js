@@ -32,6 +32,11 @@ import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
 import MyMetadataSelect from 'components/MyMetadataSelect'
+import { close as closeIcon } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
+import { getListMetadata } from 'common/services/useMetadata'
+import { getMetadataModelFieldList } from 'common/services/useMetadataModelField'
+import { getStore } from 'common/store'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -82,6 +87,7 @@ const CreateFlag = class extends Component {
       is_archived,
       is_server_key_only,
       metadata: [],
+      metadataList: [],
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
@@ -167,6 +173,22 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
+    getListMetadata(getStore(), {
+      organisation: AccountStore.getOrganisation().id,
+    }).then((metadata) => {
+      getMetadataModelFieldList(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((metadataModelField) => {
+        const metadataForContentType = metadata.data.results.filter((meta) => {
+          return metadataModelField.data.results.some(
+            (item) =>
+              item.field === meta.id &&
+              item.content_type === Constants.contentTypes.flag,
+          )
+        })
+        this.setState({ metadataList: metadataForContentType })
+      })
+    })
   }
 
   componentWillUnmount() {
@@ -209,7 +231,7 @@ const CreateFlag = class extends Component {
       )
     }
   }
-  save = (func, isSaving) => {
+  save = (func, isSaving, metadataAdded) => {
     const {
       environmentFlag,
       environmentId,
@@ -266,6 +288,7 @@ const CreateFlag = class extends Component {
             initial_value,
             is_archived,
             is_server_key_only,
+            metadata: metadataAdded,
             multivariate_options: this.state.multivariate_options,
             name,
             tags: this.state.tags,
@@ -461,8 +484,9 @@ const CreateFlag = class extends Component {
     })
   }
 
-  getMetadataList = (metadataList, metadata) =>
-    metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
+  getMetadataList = (metadataList, metadata) => {
+    return metadataList.filter((v) => metadata.find((a) => a.metadata === v.id))
+  }
 
   render() {
     const {
@@ -472,12 +496,13 @@ const CreateFlag = class extends Component {
       enabledSegment,
       hide_from_client,
       initial_value,
+      metadata,
+      metadataList,
       multivariate_options,
       name,
     } = this.state
     const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
-
-    // const metadataList = this.getApprovals(metadata, this.state.metadata || [])
+    const metadataAdded = this.getMetadataList(metadataList, metadata)
 
     const { identity, identityName, isEdit, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
@@ -533,27 +558,53 @@ const CreateFlag = class extends Component {
         {metadataEnable && (
           <FormGroup className='mb-5 setting'>
             <InputGroup
-              title={'Metadata*'}
+              title={'Metadata'}
               tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} flags`}
               tooltipPlace='left'
               component={
-                <Button
-                  size='xSmall'
-                  type='button'
-                  theme='outline'
-                  onClick={() =>
-                    this.setState({
-                      showMetadataList: !this.state.showMetadataList,
-                    })
-                  }
-                >
-                  Add Metadata
-                </Button>
+                <div>
+                  <Row>
+                    {metadataAdded?.map((m) => (
+                      <Row
+                        key={m.id}
+                        onClick={() => this.removeMetadata(m.id)}
+                        className='chip'
+                        style={{ marginBottom: 4, marginTop: 4 }}
+                      >
+                        <span className='font-weight-bold'>{m.name}</span>
+                        <span className='chip-icon ion'>
+                          <IonIcon
+                            icon={closeIcon}
+                            style={{ fontSize: '13px' }}
+                          />
+                        </span>
+                      </Row>
+                    ))}
+                    <Button
+                      size='xSmall'
+                      type='button'
+                      theme='outline'
+                      onClick={() =>
+                        this.setState({
+                          showMetadataList: !this.state.showMetadataList,
+                        })
+                      }
+                    >
+                      Add Metadata
+                    </Button>
+                  </Row>
+                </div>
               }
             />
             <MyMetadataSelect
               contentType={Constants.contentTypes.flag}
               isOpen={this.state.showMetadataList}
+              value={metadataAdded && metadataAdded.map((v) => v.id)}
+              onAdd={this.addMetadata}
+              onRemove={this.removeMetadata}
+              setMetadataList={(ml) => {
+                this.setState({ metadataList: ml })
+              }}
               onToggle={() =>
                 this.setState({
                   showMetadataList: !this.state.showMetadataList,
@@ -908,7 +959,7 @@ const CreateFlag = class extends Component {
               }
 
               const onCreateFeature = () => {
-                this.save(createFlag, isSaving)
+                this.save(createFlag, isSaving, metadataAdded)
               }
 
               const featureLimitAlert =
