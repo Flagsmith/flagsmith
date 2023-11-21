@@ -17,7 +17,6 @@ checkstyle.txt
 
 # These get baked into the docker container on build
 src/CI_COMMIT_SHA
-src/IMAGE_TAG
 
 
 # Web

@@ -2,14 +2,25 @@ from contextlib import suppress
 
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
+from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
+from environments.permissions.constants import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
+)
 from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from features.models import Feature, FeatureState
 from projects.models import Project
-from projects.permissions import CREATE_FEATURE, DELETE_FEATURE, VIEW_PROJECT
+from projects.permissions import CREATE_FEATURE, DELETE_FEATURE
+from projects.permissions import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_PROJECT_PERMISSIONS,
+)
+from projects.permissions import VIEW_PROJECT
 
 ACTION_PERMISSIONS_MAP = {
     "retrieve": VIEW_PROJECT,
@@ -18,6 +29,8 @@ ACTION_PERMISSIONS_MAP = {
     "create": CREATE_FEATURE,
     "add_owners": CREATE_FEATURE,
     "remove_owners": CREATE_FEATURE,
+    "add_group_owners": CREATE_FEATURE,
+    "remove_group_owners": CREATE_FEATURE,
     "update": CREATE_FEATURE,
     "partial_update": CREATE_FEATURE,
 }
@@ -27,6 +40,10 @@ class FeaturePermissions(IsAuthenticated):
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
+
+        if view.detail:
+            # handled by has_object_permission
+            return True
 
         try:
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
@@ -46,8 +63,13 @@ class FeaturePermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
+            tag_ids = []
+            required_permission = ACTION_PERMISSIONS_MAP.get(view.action)
+            if required_permission in TAG_SUPPORTED_PROJECT_PERMISSIONS:
+                tag_ids = list(obj.tags.values_list("id", flat=True))
+
             return request.user.has_project_permission(
-                ACTION_PERMISSIONS_MAP[view.action], obj.project
+                ACTION_PERMISSIONS_MAP[view.action], obj.project, tag_ids=tag_ids
             )
 
         if view.action == "segments":
@@ -57,11 +79,7 @@ class FeaturePermissions(IsAuthenticated):
 
 
 class FeatureStatePermissions(IsAuthenticated):
-    def has_permission(self, request, view):
-        action_permission_map = {
-            "list": VIEW_ENVIRONMENT,
-            "create": UPDATE_FEATURE_STATE,
-        }
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
         if not super().has_permission(request, view):
             return False
 
@@ -76,17 +94,46 @@ class FeatureStatePermissions(IsAuthenticated):
 
             if environment and (isinstance(environment, int) or environment.isdigit()):
                 environment = Environment.objects.get(id=int(environment))
+
+                tag_ids = None
+
+                if view.action == "list":
+                    required_permission = VIEW_ENVIRONMENT
+                elif (
+                    view.action == "create"
+                    and request.data.get("feature_segment") is not None
+                ):
+                    required_permission = MANAGE_SEGMENT_OVERRIDES
+                else:
+                    required_permission = UPDATE_FEATURE_STATE
+
+                if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+                    feature_id = request.data.get("feature")
+                    feature = Feature.objects.get(id=feature_id)
+
+                    tag_ids = list(feature.tags.values_list("id", flat=True))
+
                 return request.user.has_environment_permission(
-                    action_permission_map.get(view.action), environment
+                    required_permission, environment, tag_ids=tag_ids
                 )
             return False
 
-        except Environment.DoesNotExist:
+        except (Environment.DoesNotExist, Feature.DoesNotExist):
             return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self, request: Request, view: GenericViewSet, obj: FeatureState
+    ) -> bool:
+        permission = (
+            MANAGE_SEGMENT_OVERRIDES if obj.feature_segment_id else UPDATE_FEATURE_STATE
+        )
+
+        tag_ids = None
+        if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+            tag_ids = list(obj.feature.tags.values_list("id", flat=True))
+
         return request.user.has_environment_permission(
-            UPDATE_FEATURE_STATE, environment=obj.environment
+            permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 
@@ -134,8 +181,7 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
             Environment, api_key=view.kwargs["environment_api_key"]
         )
 
-        # TODO: create dedicated permission for creating segment overrides
         return request.user.has_environment_permission(
-            permission=UPDATE_FEATURE_STATE,
+            permission=MANAGE_SEGMENT_OVERRIDES,
             environment=environment,
         )

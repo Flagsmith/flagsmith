@@ -152,6 +152,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
 class SDKIdentities(SDKAPIView):
     serializer_class = IdentifyWithTraitsSerializer
     pagination_class = None  # set here to ensure documentation is correct
+    throttle_classes = []
 
     @swagger_auto_schema(
         responses={200: SDKIdentitiesResponseSerializer()},

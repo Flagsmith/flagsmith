@@ -29,8 +29,16 @@ configuration._’
 
 ## Supported Features
 
+:::info
+
+The Okta integration sits on top of SAML. As a result you can also take advantage of
+[SAML Group Sync](/system-administration/saml#group-sync) is part of the Okta integration.
+
+:::
+
 - IdP-initiated SSO
 - SP-initiated SSO
+- Group Sync
 
 ## Procedure
 

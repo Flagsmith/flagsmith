@@ -134,6 +134,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
           theme='text'
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-identities'
+          className='fw-normal'
         >
           Learn more.
         </Button>
@@ -203,7 +204,15 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     className='flex-row flex flex-1 table-column'
                   >
                     <div className='font-weight-medium'>{identifier}</div>
-                    <Icon name='chevron-right' width={22} />
+                    <Icon
+                      name='chevron-right'
+                      width={22}
+                      fill={
+                        Utils.getFlagsmithHasFeature('dark_mode')
+                          ? '#FFF'
+                          : '#656D7B'
+                      }
+                    />
                   </Link>
                   <div className='table-column'>
                     <Button
@@ -255,12 +264,11 @@ const UsersPage: FC<UsersPageType> = (props) => {
           />
         </FormGroup>
         <FormGroup>
-          <p className='faint mt-4'>
+          <p className='text-muted col-md-8 fs-small lh-sm mt-4'>
             Identities are created for your environment automatically when
-            calling identify/get flags from any of the SDKs.
-            <br />
-            We've created <strong>user_123456</strong> for you so you always
-            have an example identity to test with on your environments.
+            calling identify/get flags from any of the SDKs. We've created{' '}
+            <strong>user_123456</strong> for you so you always have an example
+            identity to test with on your environments.
           </p>
           <div className='row'>
             <div className='col-md-12'>

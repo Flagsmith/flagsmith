@@ -16,24 +16,45 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
+      x-bake:
+        cache-from:
+          - type=gha,scope=image-e2e-unified-api
+        cache-to:
+          - type=gha,mode=max,scope=image-e2e-unified-api
+        tags:
+          - frontend_flagsmith-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
-      FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+      ENABLE_FE_E2E: 'True'
       DJANGO_ALLOWED_HOSTS: '*'
       DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
       DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      ACCESS_LOG_LOCATION: /dev/shm/log.txt
     ports:
       - 8000:8000
     depends_on:
       - db
     links:
       - db:db
+    healthcheck:
+      test: "[ -e /dev/shm/log.txt ] && exit 0 || exit 1"
+      start_period: 60s
+      interval: 10s
+      timeout: 3s
+      retries: 30
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.e2e
+      context: ../
+      dockerfile: frontend/Dockerfile.e2e
+      x-bake:
+        cache-from:
+          - type=gha,scope=image-e2e-unified-fe
+        cache-to:
+          - type=gha,mode=max,scope=image-e2e-unified-fe
+        tags:
+          - frontend_frontend
     platform: linux/amd64
     environment:
       E2E_TEST_TOKEN_DEV: some-token
@@ -43,7 +64,9 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - flagsmith-api
+      flagsmith-api:
+        condition: service_healthy
+
     links:
       - flagsmith-api:flagsmith-api
     command: [npm, run, test]

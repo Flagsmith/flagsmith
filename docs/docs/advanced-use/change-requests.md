@@ -20,8 +20,6 @@ Change Requests are configured at the Environment level. To enable Change Reques
 Enable 4 Eyes Change Request Approvals, and select how many approvals you would like for each Change Request to be
 applied.
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/change-request-enable.png"/></div>
-
 ## Creating a Change Request
 
 :::info
@@ -32,8 +30,6 @@ Any user that has permission to _Update_ a Feature within the Environment can cr
 
 Once an Environment is configured with Change Requests enabled, attempting to change a flag value will prompt you to
 create a new Change Request.
-
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/change-request-create.png"/></div>
 
 You will need to provide:
 
@@ -51,16 +47,10 @@ Any user that has permission to write to the Environment containing the Change R
 
 Change Requests awaiting approval are listed in the Change Request area.
 
-![Listing Change Requests](/img/change-request-list.png)
-
 Clicking on a Change Request brings up the details of the request, and the current and new Flag values.
-
-![Approving a Change Requests](/img/change-request-approve.png)
 
 ## Publishing a Change Request
 
 When the required number of approvals have been made, you will be able to publish the Change Request.
-
-![Publishing a Change Requests](/img/change-request-publish.png)
 
 The Change Request will immediately come into effect once the Publish Change button is clicked.

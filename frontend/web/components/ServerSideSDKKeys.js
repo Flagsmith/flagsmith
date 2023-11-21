@@ -194,6 +194,17 @@ class ServerSideSDKKeys extends Component {
                 <div className='table-column'>
                   <Token style={{ width: 280 }} token={key} />
                 </div>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        key,
+                      )
+                      toast('Copied')
+                    }}
+                    className='ml-2 btn-with-icon'
+                  >
+                    <Icon name='copy' width={20} fill='#656D7B' />
+                  </Button>
                 <div className='table-column'>
                   <Button
                     onClick={() => this.remove(id, name)}

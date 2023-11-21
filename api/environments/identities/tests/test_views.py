@@ -4,9 +4,10 @@ from unittest import mock
 from unittest.case import TestCase
 
 import pytest
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from django.test import override_settings
 from django.urls import reverse
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -20,9 +21,26 @@ from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
-from segments import models
 from segments.models import Condition, Segment, SegmentRule
 from util.tests import Helper
+
+
+def test_get_identities_is_not_throttled_by_user_throttle(
+    environment, feature, identity, api_client, settings
+):
+    # Given
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity.identifier}"
+
+    # When
+    for _ in range(10):
+        response = api_client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -352,7 +370,7 @@ class SDKIdentitiesTestCase(APITestCase):
         trait = Trait.objects.create(
             identity=self.identity,
             trait_key="trait_key",
-            value_type="STRING",
+            value_type=STRING,
             string_value="trait_value",
         )
 
@@ -404,7 +422,7 @@ class SDKIdentitiesTestCase(APITestCase):
         Trait.objects.create(
             identity=self.identity,
             trait_key=trait_key,
-            value_type="STRING",
+            value_type=STRING,
             string_value=trait_value,
         )
         segment = Segment.objects.create(name="Test Segment", project=self.project)
@@ -458,7 +476,7 @@ class SDKIdentitiesTestCase(APITestCase):
         Trait.objects.create(
             identity=self.identity,
             trait_key=trait_key,
-            value_type="STRING",
+            value_type=STRING,
             string_value=trait_value,
         )
         segment = Segment.objects.create(name="Test Segment", project=self.project)
@@ -510,7 +528,7 @@ class SDKIdentitiesTestCase(APITestCase):
             [segment.id, self.identity.id]
         )
         Condition.objects.create(
-            operator=models.PERCENTAGE_SPLIT,
+            operator=PERCENTAGE_SPLIT,
             value=(identity_percentage_value + (1 - identity_percentage_value) / 2)
             * 100.0,
             rule=segment_rule,
@@ -557,7 +575,7 @@ class SDKIdentitiesTestCase(APITestCase):
             [segment.id, self.identity.id]
         )
         Condition.objects.create(
-            operator=models.PERCENTAGE_SPLIT,
+            operator=PERCENTAGE_SPLIT,
             value=identity_percentage_value / 2,
             rule=segment_rule,
         )
@@ -610,13 +628,13 @@ class SDKIdentitiesTestCase(APITestCase):
         trait_1 = Trait.objects.create(
             identity=self.identity,
             trait_key="trait_key_1",
-            value_type="STRING",
+            value_type=STRING,
             string_value="trait_value",
         )
         trait_2 = Trait.objects.create(
             identity=self.identity,
             trait_key="trait_key_2",
-            value_type="STRING",
+            value_type=STRING,
             string_value="trait_value",
         )
 

@@ -24,23 +24,23 @@ To get up and running quickly, we're going to use the hosted service at flagsmit
 Head over to [Flagsmith](https://app.flagsmith.com/signup) and create an account. We're going to create an Organisation
 and a Project.
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_1.png"/></div>
+![Create Organisation](/img/quickstart/demo_create_1.png)
 
 Flagsmith manages Flags with Projects, so let's create one now:
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_2.png"/></div>
+![Create Project](/img/quickstart/demo_create_2.png)
 
 Flagsmith organises Projects into separate Environments. When you create a Project, Flagsmith automatically creates
 `Development` and `Production` Environments. We will come to these Environments later. Let's go ahead and create our
 first Flag. This flag will control whether a button shows on our web page.
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_3.png"/></div>
+![Flagsmith Overview](/img/quickstart/demo_create_3.png)
 
 Flags within Flagsmith are a combination of both: A Boolean value - the `Flag State` and then optionally: A
 String/Integer/Float value - the `Flag Value`. For now, we're only going to use the `Boolean` value of the flag to
 control whether the button shows. Create a flag called `show_demo_button`, and leave it as Disabled by default:
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_4.png"/></div>
+![Flagsmith Overview](/img/quickstart/demo_create_4.png)
 
 ## 2. Import the Javascript SDK
 
@@ -78,7 +78,7 @@ We can now connect to the Flagsmith API and get our Flags. When you initialise t
 Environment ID. This way, the SDK knows which Project and Environment to grab flags for. Head to the Environment
 Settings page within Flagsmith, and copy the API key:
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_6.png"/></div>
+![SDK Keys](/img/quickstart/demo_create_6.png)
 
 Then paste your API key into the code below:
 
@@ -156,7 +156,7 @@ If we go back and refresh our browser, you will see that the button has now disa
 We've now put the control of the button visibility behind our Flagsmith Flag! You can now go back to the Flagsmith
 dashboard and enable the flag:
 
-<div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_10.png"/></div>
+![Flag View](/img/quickstart/demo_create_10.png)
 
 Return to your browser, refresh the page, and the button will re-appear.
 

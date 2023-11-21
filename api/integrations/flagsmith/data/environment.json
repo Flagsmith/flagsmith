@@ -1,0 +1,20 @@
+{
+  "api_key": "masked",
+  "feature_states": [],
+  "id": 0,
+  "name": "Production",
+  "project": {
+    "hide_disabled_flags": false,
+    "id": 0,
+    "name": "Flagsmith API",
+    "organisation": {
+      "feature_analytics": false,
+      "id": 0,
+      "name": "Flagsmith",
+      "persist_trait_data": true,
+      "stop_serving_flags": false
+    },
+    "segments": []
+  },
+  "use_identity_composite_key_for_hashing": true
+}

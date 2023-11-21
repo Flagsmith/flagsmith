@@ -50,10 +50,8 @@ button.
 
 Flags default to On (true) or Off (false). You can also optionally store and override String and numerical (int and
 float) values. The Flagsmith SDKs allow you to call both `hasFeature` as well as `getValue` on the same flag. These
-calls will retrive both the Boolean value as well as the String/Numerical value if specified. The SDKs generally return
+calls will retrieve both the Boolean value as well as the String/Numerical value if specified. The SDKs generally return
 False/Null if the flag is missing or the value is not set, but there are variations between different languages.
-
-![Image](/img/create-feature.png)
 
 ## Multi-Variate Flags
 
@@ -78,8 +76,6 @@ the Control value.
 
 If you are getting the Flags for an Identity, the Flagsmith engine will send the value based on the defined Weightings,
 as specified within the Environment.
-
-![Image](/img/multi-variate-flags.png)
 
 In the screenshot above, roughly half our user population will receive the value `normal`, roughly one quarter (25%)
 will receive `large` and roughly one quarter (25%) will receive `huge`. Note that you can use 100% as a weighting to

@@ -7,6 +7,7 @@ const pipedrive = require('pipedrive')
 const spm = require('./middleware/single-page-middleware')
 const path = require('path')
 const app = express()
+const dataRelay = require('data-relay/node')
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
@@ -110,6 +111,7 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
+    { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
   ]
   let output = values.map(getVariable).join('')
   let dynatrace = ''
@@ -262,15 +264,13 @@ app.get('/version', (req, res) => {
   }
 
   try {
-    imageTag = fs
-      .readFileSync('IMAGE_TAG', 'utf8')
-      .replace(/(\r\n|\n|\r)/gm, '')
+    releasePleaseManifest = JSON.parse(fs.readFileSync('./.versions.json', 'utf8'))
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': releasePleaseManifest["."], 'package_versions': releasePleaseManifest })
   } catch (err) {
     // eslint-disable-next-line
-    console.log('Unable to read IMAGE_TAG')
+    console.log('Unable to read .versions.json file')
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag})
   }
-
-  res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag })
 })
 
 app.use(bodyParser.json())
@@ -389,11 +389,22 @@ app.post('/api/webflow/webhook', (req, res) => {
 
               console.log('Adding Note.')
               pipedriveNotesApi.addNote(newNote).then(
-                (noteData) => {
+                async (noteData) => {
                   console.log(
                     `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
                   )
-
+                  //todo: Tidy up above with async calls and call destinations in parallel
+                  if (process.env.DATA_RELAY_API_KEY && postToSlack) {
+                    try {
+                      await dataRelay
+                          .sendEvent(
+                              req.body.data,
+                              { apiKey: process.env.DATA_RELAY_API_KEY },
+                          )
+                    } catch (e) {
+                        console.log('Error sending Contact us form sent to Relay:\r\n', e, formMessage)
+                    }
+                  }
                   return res.status(200).json({})
                 },
                 (error) => {

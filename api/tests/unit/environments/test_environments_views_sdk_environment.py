@@ -1,11 +1,12 @@
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
+from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 
 def test_get_environment_document(
@@ -81,3 +82,22 @@ def test_get_environment_document_fails_with_invalid_key(
     # We get a 403 since only the server side API keys are able to access the
     # environment document
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_environment_document_is_not_throttled_by_user_throttle(
+    environment, feature, settings, environment_api_key
+):
+    # Given
+    settings.REST_FRAMEWORK = {"DEFAULT_THROTTLE_RATES": {"user": "1/minute"}}
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+
+    url = reverse("api-v1:environment-document")
+
+    # When
+    for _ in range(10):
+        response = client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK

@@ -62,8 +62,6 @@ We can now make use of [Flagsmith Segments](/basic-features/managing-segments.md
 group.
 
 Create a Segment, add a rule that will include our team (in our case we match against the domain name of an email
-Trait), and override the `fcm_marketing_beta` Flag with this Segment:
-
-![Overriding the Flag for our Segment](/img/guides/fcm-segment.png)
+Trait), and override the `fcm_marketing_beta` Flag with this Segment.
 
 We're now able to test these messages with our entire team, no further code or deployments required!

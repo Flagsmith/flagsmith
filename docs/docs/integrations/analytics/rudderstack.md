@@ -30,13 +30,8 @@ For flags that contain remote config values, Flagsmith will pass the value of th
 
 :::
 
-Identity flag values are passed into RudderStack.
-
-Here's a demo user in Flagsmith:
-
-![RudderStack](/img/integrations/segment/segment-integration-2.png)
-
-If we make the call to the Flagsmith API to get the flags for this user:
+Identity flag values are passed into RudderStack. If we make the call to the Flagsmith API to get the flags for an
+Identity:
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \

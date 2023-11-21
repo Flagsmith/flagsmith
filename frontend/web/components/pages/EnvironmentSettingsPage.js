@@ -8,7 +8,6 @@ import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'
 import ServerSideSDKKeys from 'components/ServerSideSDKKeys'
-import PaymentModal from 'components/modals/Payment'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
@@ -17,6 +16,11 @@ import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
+import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
+import AccountStore from 'common/stores/account-store'
+import { Link } from 'react-router-dom'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -33,12 +37,39 @@ const EnvironmentSettingsPage = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {}
+    this.state = { env: {}, roles: [] }
     AppActions.getProject(this.props.match.params.projectId)
   }
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
+    if (Utils.getFlagsmithHasFeature('show_role_management')) {
+      const env = ProjectStore.getEnvs().find(
+        (v) => v.api_key === this.props.match.params.environmentId,
+      )
+      this.setState({ env })
+      getRoles(
+        getStore(),
+        { organisation_id: AccountStore.getOrganisation().id },
+        { forceRefetch: true },
+      ).then((roles) => {
+        getRolesEnvironmentPermissions(
+          getStore(),
+          {
+            env_id: env.id,
+            organisation_id: AccountStore.getOrganisation().id,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      })
+    }
+
     this.props.getWebhooks()
   }
 
@@ -199,7 +230,7 @@ const EnvironmentSettingsPage = class extends Component {
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
 
     return (
-      <div className='app-container'>
+      <div className='app-container container'>
         <ProjectProvider
           onRemoveEnvironment={this.onRemoveEnvironment}
           id={this.props.match.params.projectId}
@@ -234,8 +265,8 @@ const EnvironmentSettingsPage = class extends Component {
               }, 10)
             }
             return (
-              <div className='app-container container'>
-                <PageTitle title='Environment Settings' />
+              <>
+                <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
                     <Loader />
@@ -355,75 +386,71 @@ const EnvironmentSettingsPage = class extends Component {
                           )}
                         </div>
                         {Utils.getFlagsmithHasFeature('feature_versioning') && (
-                          <div>
-                            <div className='col-md-6 mt-4'>
-                              <Row>
-                                <Switch
-                                  disabled={use_v2_feature_versioning}
-                                  className='float-right'
-                                  checked={use_v2_feature_versioning}
-                                  onChange={(v) => {
-                                    this.confirmToggle(
-                                      'Enable "Feature Versioning"',
-                                      'Allows you to attach versions to updating feature values and segment overrides.',
-                                      'use_v2_feature_versioning',
-                                    )
-                                  }}
-                                />
-                                <h5 className='mb-0 ml-3'>
-                                  Feature versioning
-                                </h5>
-                              </Row>
+                            <div>
+                              <div className='col-md-6 mt-4'>
+                                <Row>
+                                  <Switch
+                                      disabled={use_v2_feature_versioning}
+                                      className='float-right'
+                                      checked={use_v2_feature_versioning}
+                                      onChange={(v) => {
+                                        this.confirmToggle(
+                                            'Enable "Feature Versioning"',
+                                            'Allows you to attach versions to updating feature values and segment overrides.',
+                                            'use_v2_feature_versioning',
+                                        )
+                                      }}
+                                  />
+                                  <h5 className='mb-0 ml-3'>
+                                    Feature versioning
+                                  </h5>
+                                </Row>
 
-                              <p className='fs-small lh-sm'>
-                                Allows you to attach versions to updating
-                                feature values and segment overrides.
-                                <br />
-                                <strong>
-                                  Warning! Enabling this is irreversable
-                                </strong>
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {Utils.getFlagsmithHasFeature(
-                          'configure_hide_sensitive_data',
-                        ) && (
-                          <div className='col-md-6 mt-4'>
-                            <Row className='mb-2'>
-                              <Switch
-                                checked={hide_sensitive_data}
-                                onChange={(v) => {
-                                  this.confirmToggle(
-                                    'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
-                                    'hide_sensitive_data',
-                                    hide_sensitive_data,
-                                  )
-                                }}
-                              />
-                              <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
-                            </Row>
-                            <p className='fs-small lh-sm'>
-                              Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or via
-                              our REST API. For full information on the excluded
-                              fields see documentation{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
-                                target='_blank'
-                                className='fw-normal'
-                              >
-                                here.
-                              </Button>
-                              <div className='text-danger'>
-                                Warning! Enabling this feature will change the
-                                response from the API and could break your
-                                existing code.
+                                <p className='fs-small lh-sm'>
+                                  Allows you to attach versions to updating
+                                  feature values and segment overrides.
+                                  <br />
+                                  <strong>
+                                    Warning! Enabling this is irreversable
+                                  </strong>
+                                </p>
                               </div>
-                            </p>
-                          </div>
+                            </div>
                         )}
+                        <div className='col-md-6 mt-4'>
+                          <Row className='mb-2'>
+                            <Switch
+                              checked={hide_sensitive_data}
+                              onChange={(v) => {
+                                this.confirmToggle(
+                                  'The data returned from the API will change and could break your existing code. Are you sure that you want to change this value?',
+                                  'hide_sensitive_data',
+                                  hide_sensitive_data,
+                                )
+                              }}
+                            />
+                            <h5 className='mb-0 ml-3'>Hide sensitive data</h5>
+                          </Row>
+                          <p className='fs-small lh-sm'>
+                            Exclude sensitive data from endpoints returning
+                            flags and identity information to the SDKs or via
+                            our REST API. For full information on the excluded
+                            fields see documentation{' '}
+                            <Button
+                              theme='text'
+                              href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
+                              target='_blank'
+                              className='fw-normal'
+                            >
+                              here.
+                            </Button>
+                            <div className='text-danger'>
+                              Warning! Enabling this feature will change the
+                              response from the API and could break your
+                              existing code.
+                            </div>
+                          </p>
+                        </div>
                         <FormGroup className='mt-4 col-md-6'>
                           <Row className='mb-2'>
                             <Switch
@@ -449,21 +476,15 @@ const EnvironmentSettingsPage = class extends Component {
                             <h5 className='mb-0 ml-3'>Change Requests</h5>
                           </Row>
                           {!has4EyesPermission ? (
-                            <p className='fs-small lh-sm mb-0'>
+                            <p className='fs-small lh-sm'>
                               View and manage your feature changes with a Change
                               Request flow with our{' '}
-                              <Button
-                                theme='text'
-                                onClick={() => {
-                                  openModal(
-                                    'Payment plans',
-                                    <PaymentModal viewOnly={false} />,
-                                    'modal-lg',
-                                  )
-                                }}
+                              <Link
+                                to='/organisation-settings'
+                                className='btn-link'
                               >
                                 Scale-up plan
-                              </Button>
+                              </Link>
                               . Find out more{' '}
                               <Button
                                 theme='text'
@@ -725,7 +746,7 @@ const EnvironmentSettingsPage = class extends Component {
                         environmentId={this.props.match.params.environmentId}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Members'>
+                    <TabItem tabLabel='Permissions'>
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
@@ -733,8 +754,11 @@ const EnvironmentSettingsPage = class extends Component {
                           parentLevel='project'
                           parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                           id={this.props.match.params.environmentId}
+                          envId={env.id}
                           router={this.context.router}
                           level='environment'
+                          roleTabTitle='Environment Permissions'
+                          roles={this.state.roles}
                         />
                       </FormGroup>
                     </TabItem>
@@ -855,7 +879,7 @@ const EnvironmentSettingsPage = class extends Component {
                     </TabItem>
                   </Tabs>
                 )}
-              </div>
+              </>
             )
           }}
         </ProjectProvider>

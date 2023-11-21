@@ -57,6 +57,7 @@ export type Environment = {
   minimum_change_request_approvals?: number
   allow_client_traits: boolean
   hide_sensitive_data: boolean
+  total_segment_overrides?: number
   use_v2_feature_versioning: boolean
 }
 export type Project = {
@@ -70,7 +71,27 @@ export type Project = {
   use_edge_identities: boolean
   prevent_flag_defaults: boolean
   enable_realtime_updates: boolean
+  max_segments_allowed?: number | null
+  max_features_allowed?: number | null
+  max_segment_overrides_allowed?: number | null
+  total_features?: number
+  total_segments?: number
   environments: Environment[]
+}
+
+export type LaunchDarklyProjectImport = {
+  id: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  completed_at: string
+  status: {
+      requested_environment_count: number
+      requested_flag_count: number
+      result: string || null
+      error_message: string || null
+  },
+  project: number
 }
 
 export type User = {
@@ -287,7 +308,18 @@ export type Account = {
   auth_type: AuthType
   is_superuser: boolean
 }
+export type Role = {
+  id: number
+  name: string
+  description?: string
+  organisation: number
+}
 
+export type RolePermissionUser = {
+  user: number
+  role: number
+  id: number
+}
 export type FeatureVersion = {
   created_at: string
   updated_at: string
@@ -298,7 +330,6 @@ export type FeatureVersion = {
   published_by: number | null
   created_by: number | null
 }
-
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -360,9 +391,16 @@ export type Res = {
   }
   featureVersion: FeatureVersion
   versionFeatureState: FeatureState[]
-
+  roles: Role[]
+  rolePermission: { id: string }
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
+  rolesPermissionUsers: RolePermissionUser
+  rolePermissionGroup: { id: string }
+  getSubscriptionMetadata: { id: string }
+  environment: Environment
+  launchDarklyProjectImport: LaunchDarklyProjectImport
+  launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   segmentPriorities: {}
   featureSegment: { id: string }
   featureVersions: PagedResponse<FeatureVersion>

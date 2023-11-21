@@ -28,13 +28,8 @@ For flags that contain remote config values, Flagsmith will pass the value of th
 
 :::
 
-Identity flag values are passed into Mixpanel.
-
-Here's a demo user in Flagsmith:
-
-![Mixpanel](/img/integrations/mixpanel/mixpanel-integration-2.png)
-
-If we make the call to the Flagsmith API to get the flags for this user:
+Identity flag values are passed into Mixpanel. If we make the call to the Flagsmith API to get the flags for an
+Identity:
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \

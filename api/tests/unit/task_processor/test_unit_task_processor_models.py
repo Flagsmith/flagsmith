@@ -23,7 +23,12 @@ def test_task_run():
     args = ["foo"]
     kwargs = {"arg_two": "bar"}
 
-    task = Task.create(my_callable.task_identifier, args=args, kwargs=kwargs)
+    task = Task.create(
+        my_callable.task_identifier,
+        scheduled_for=timezone.now(),
+        args=args,
+        kwargs=kwargs,
+    )
 
     # When
     result = task.run()

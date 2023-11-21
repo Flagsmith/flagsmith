@@ -182,3 +182,10 @@ def project_two_environment(project_two: Project) -> Environment:
     return Environment.objects.create(
         name="Test Project two Environment", project=project_two
     )
+
+
+@pytest.fixture
+def project_two_feature(project_two: Project) -> Feature:
+    return Feature.objects.create(
+        name="project_two_feature", project=project_two, initial_value="initial_value"
+    )

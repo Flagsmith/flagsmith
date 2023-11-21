@@ -21,9 +21,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       identity,
     })
   },
-  confirmTwoFactor(pin, onError) {
+  confirmTwoFactor(pin, onError, isLoginPage) {
     Dispatcher.handleViewAction({
       actionType: Actions.CONFIRM_TWO_FACTOR,
+      isLoginPage,
       onError,
       pin,
     })
@@ -59,13 +60,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       name,
     })
   },
-
   createProject(name) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_PROJECT,
       name,
     })
   },
+
   deleteChangeRequest(id, cb) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_CHANGE_REQUEST,

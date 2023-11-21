@@ -5,17 +5,6 @@ MANAGE_IDENTITIES = "MANAGE_IDENTITIES"
 VIEW_IDENTITIES = "VIEW_IDENTITIES"
 CREATE_CHANGE_REQUEST = "CREATE_CHANGE_REQUEST"
 APPROVE_CHANGE_REQUEST = "APPROVE_CHANGE_REQUEST"
+MANAGE_SEGMENT_OVERRIDES = "MANAGE_SEGMENT_OVERRIDES"
 
-ENVIRONMENT_PERMISSIONS = [
-    (VIEW_ENVIRONMENT, "View permission for the given environment."),
-    (UPDATE_FEATURE_STATE, "Update the state or value for a given feature state."),
-    (MANAGE_IDENTITIES, "Manage identities in the given environment."),
-    (
-        CREATE_CHANGE_REQUEST,
-        "Permission to create change requests in the given environment.",
-    ),
-    (
-        APPROVE_CHANGE_REQUEST,
-        "Permission to approve change requests in the given environment.",
-    ),
-]
+TAG_SUPPORTED_PERMISSIONS = [UPDATE_FEATURE_STATE]

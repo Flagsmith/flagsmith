@@ -72,14 +72,20 @@ const controller = {
   },
 
   deleteProject: (id) => {
+    const idInt = parseInt(id)
     store.saving()
     if (store.model) {
-      store.model.projects = _.filter(store.model.projects, (p) => p.id !== id)
+      store.model.projects = _.filter(
+        store.model.projects,
+        (p) => p.id !== idInt,
+      )
       store.model.keyedProjects = _.keyBy(store.model.projects, 'id')
     }
     API.trackEvent(Constants.events.REMOVE_PROJECT)
     data.delete(`${Project.api}projects/${id}/`).then(() => {
+      AsyncStorage.removeItem('lastEnv')
       store.trigger('removed')
+      store.saved()
     })
   },
   deleteUser: (id) => {

@@ -1,5 +1,6 @@
 import enum
 import json
+import logging
 import typing
 
 import requests
@@ -9,6 +10,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
+from django.utils import timezone
 
 from environments.models import Webhook
 from organisations.models import OrganisationWebhook
@@ -23,6 +25,8 @@ from .serializers import WebhookSerializer
 if typing.TYPE_CHECKING:
     import environments  # noqa
 
+logger = logging.getLogger(__name__)
+
 WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
 
 
@@ -30,6 +34,7 @@ class WebhookEventType(enum.Enum):
     FLAG_UPDATED = "FLAG_UPDATED"
     FLAG_DELETED = "FLAG_DELETED"
     AUDIT_LOG_CREATED = "AUDIT_LOG_CREATED"
+    NEW_VERSION_PUBLISHED = "NEW_VERSION_PUBLISHED"
 
 
 class WebhookType(enum.Enum):
@@ -43,7 +48,9 @@ WEBHOOK_SAMPLE_DATA = {
 }
 
 
-def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
+def get_webhook_model(
+    webhook_type: WebhookType,
+) -> typing.Union[typing.Type[WebhookModels]]:
     if webhook_type == WebhookType.ORGANISATION:
         return OrganisationWebhook
     if webhook_type == WebhookType.ENVIRONMENT:
@@ -98,7 +105,13 @@ def _call_webhook(
         signature = sign_payload(json_data, key=webhook.secret)
         headers.update({FLAGSMITH_SIGNATURE_HEADER: signature})
 
-    return requests.post(str(webhook.url), data=json_data, headers=headers, timeout=10)
+    try:
+        return requests.post(
+            str(webhook.url), data=json_data, headers=headers, timeout=10
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.debug("Error calling webhook", exc_info=exc)
+        raise
 
 
 def _call_webhook_email_on_error(
@@ -120,7 +133,11 @@ def _call_webhook_email_on_error(
 
 
 def _call_webhooks(webhooks, data, event_type, webhook_type):
-    webhook_data = {"event_type": event_type.value, "data": data}
+    webhook_data = {
+        "event_type": event_type.value,
+        "data": data,
+        "triggered_at": timezone.now().isoformat(),
+    }
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:

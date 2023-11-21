@@ -2,11 +2,12 @@ import React, { Component } from 'react'
 import InviteUsersModal from 'components/modals/InviteUsers'
 import UserGroupList from 'components/UserGroupList'
 import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
-import PaymentModal from 'components/modals/Payment'
+import Payment from 'components/modals/Payment'
 import CreateGroupModal from 'components/modals/CreateGroup'
 import withAuditWebhooks from 'common/providers/withAuditWebhooks'
 import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
 import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
+import ConfirmDeleteRole from 'components/modals/ConfirmDeleteRole'
 import Button from 'components/base/forms/Button'
 import { EditPermissionsModal } from 'components/EditPermissions'
 import AdminAPIKeys from 'components/AdminAPIKeys'
@@ -19,10 +20,14 @@ import OrganisationUsage from 'components/OrganisationUsage'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Format from 'common/utils/format'
+import CreateRole from 'components/modals/CreateRole'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
+import { getStore } from 'common/store'
+import { getRoles } from 'common/services/useRole'
 
-const widths = [170, 150, 80]
+const widths = [450, 150, 100]
+const rolesWidths = [250, 600, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -35,6 +40,7 @@ const OrganisationSettingsPage = class extends Component {
     this.state = {
       manageSubscriptionLoaded: true,
       role: 'ADMIN',
+      roles: [],
     }
     if (!AccountStore.getOrganisation()) {
       return
@@ -44,13 +50,21 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   componentDidMount = () => {
+    getRoles(
+      getStore(),
+      { organisation_id: AccountStore.getOrganisation().id },
+      { forceRefetch: true },
+    ).then((roles) => {
+      this.setState({ roles: roles.data.results })
+    })
+    AppActions.getGroups(AccountStore.getOrganisation().id)
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
     $('body').trigger('click')
     if (
       AccountStore.getUser() &&
       AccountStore.getOrganisationRole() !== 'ADMIN'
     ) {
-      this.context.router.history.replace('/projects')
+      this.setState({ permissionsError: true })
     }
   }
 
@@ -210,7 +224,7 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  editUserPermissions = (user) => {
+  editUserPermissions = (user, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -220,13 +234,14 @@ const OrganisationSettingsPage = class extends Component {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
         level='organisation'
+        roles={roles}
         user={user}
       />,
       'p-0 side-modal',
     )
   }
 
-  editGroupPermissions = (group) => {
+  editGroupPermissions = (group, roles) => {
     openModal(
       'Edit Organisation Permissions',
       <EditPermissionsModal
@@ -238,6 +253,7 @@ const OrganisationSettingsPage = class extends Component {
         }}
         level='organisation'
         group={group}
+        roles={roles}
         push={this.context.router.history.push}
       />,
       'p-0 side-modal',
@@ -262,6 +278,69 @@ const OrganisationSettingsPage = class extends Component {
     return 'Within 30 days'
   }
 
+  createRole = (organisationId) => {
+    openModal(
+      'Create Role',
+      <CreateRole
+        organisationId={organisationId}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role created')
+            closeModal()
+          })
+        }}
+      />,
+      'side-modal',
+    )
+  }
+  deleteRole = (role) => {
+    openModal(
+      'Remove Role',
+      <ConfirmDeleteRole
+        role={role}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role Deleted')
+          })
+        }}
+      />,
+      'p-0',
+    )
+  }
+  editRole = (role, users, groups) => {
+    openModal(
+      'Edit Role and Permissions',
+      <CreateRole
+        organisationId={role.organisation}
+        isEdit
+        role={role}
+        onComplete={() => {
+          getRoles(
+            getStore(),
+            { organisation_id: AccountStore.getOrganisation().id },
+            { forceRefetch: true },
+          ).then((roles) => {
+            this.setState({ roles: roles.data.results })
+            toast('Role updated')
+          })
+        }}
+        users={users}
+        groups={groups}
+      />,
+      'side-modal',
+    )
+  }
+
   render() {
     const {
       props: { webhooks, webhooksLoading },
@@ -273,6 +352,18 @@ const OrganisationSettingsPage = class extends Component {
       'verify_seats_limit_for_invite_links',
     )
 
+    if (this.state.permissionsError) {
+      return (
+        <div className='app-container container'>
+          <PageTitle title='Manage' />
+          <InfoMessage>
+            You do not have permissions to manage this organisation. Please
+            contact an organisation admin.
+          </InfoMessage>
+        </div>
+      )
+    }
+
     return (
       <div className='app-container container'>
         <PageTitle title='Manage' />
@@ -282,6 +373,7 @@ const OrganisationSettingsPage = class extends Component {
               <OrganisationProvider>
                 {({
                   error,
+                  groups,
                   invalidateInviteLink,
                   inviteLinks,
                   invites,
@@ -304,7 +396,6 @@ const OrganisationSettingsPage = class extends Component {
                   const needsUpgradeForAdditionalSeats =
                     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
                     (!autoSeats && usedSeats)
-
                   return (
                     <div>
                       <Tabs
@@ -314,20 +405,20 @@ const OrganisationSettingsPage = class extends Component {
                       >
                         <TabItem tabLabel='General'>
                           <FormGroup className='mt-4'>
-                            <div className='mt-4'>
-                              <div>
-                                <JSONReference
-                                  title={'Organisation'}
-                                  json={organisation}
-                                />
+                            <h5 className='mb-5'>General Settings</h5>
+                            <JSONReference
+                              title={'Organisation'}
+                              json={organisation}
+                            />
+                            <div className='mt-2'>
+                              <div className='col-md-8'>
                                 <form
                                   key={organisation.id}
                                   onSubmit={this.save}
                                 >
-                                  <h5>Organisation Name</h5>
                                   <Row>
-                                    <Column className='ml-0'>
-                                      <Input
+                                    <Flex>
+                                      <InputGroup
                                         ref={(e) => (this.input = e)}
                                         data-test='organisation-name'
                                         value={
@@ -342,195 +433,208 @@ const OrganisationSettingsPage = class extends Component {
                                         type='text'
                                         inputClassName='input--wide'
                                         placeholder='My Organisation'
+                                        title='Organisation Name'
+                                        inputProps={{
+                                          className: 'full-width',
+                                        }}
                                       />
-                                    </Column>
+                                    </Flex>
                                     <Button
                                       type='submit'
                                       disabled={this.saveDisabled()}
-                                      className='float-right'
+                                      className='ml-3'
                                     >
-                                      {isSaving ? 'Saving' : 'Save'}
+                                      {isSaving ? 'Updating' : 'Update Name'}
                                     </Button>
                                   </Row>
                                 </form>
-                                <div>
-                                  <Row space className='mt-4'>
-                                    <h5 className='m-b-0'>Organisation ID</h5>
-                                  </Row>
-                                  <p className='fs-small lh-sm'>
-                                    {organisation.id}
-                                  </p>
-                                </div>
-                                {paymentsEnabled && !isAWS && (
-                                  <div className='plan plan--current flex-row m-t-2'>
-                                    <div className='plan__prefix'>
-                                      <img
-                                        src='/static/images/nav-logo.svg'
-                                        className='plan__prefix__image'
-                                        alt='BT'
-                                      />
-                                    </div>
-                                    <div className='plan__details flex flex-1'>
-                                      <p className='fs-small lh-sm m-b-0'>
-                                        Your plan
-                                      </p>
-                                      <h5 className='m-b-0'>
-                                        {Utils.getPlanName(
-                                          _.get(
-                                            organisation,
-                                            'subscription.plan',
-                                          ),
-                                        )
-                                          ? Utils.getPlanName(
-                                              _.get(
-                                                organisation,
-                                                'subscription.plan',
-                                              ),
-                                            )
-                                          : 'Free'}
-                                      </h5>
-                                      {!!chargebee_email && (
-                                        <p>
-                                          Management Email:{' '}
-                                          <strong>{chargebee_email}</strong>
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div>
-                                      {organisation.subscription && (
-                                        <a
-                                          className='btn btn-primary mr-2'
-                                          href='https://flagsmith.chargebeeportal.com/'
-                                          target='_blank'
-                                          rel='noreferrer'
-                                        >
-                                          Manage Invoices
-                                        </a>
-                                      )}
-                                      {organisation.subscription ? (
-                                        <button
-                                          disabled={
-                                            !this.state.manageSubscriptionLoaded
-                                          }
-                                          type='button'
-                                          className='btn btn-primary text-center ml-auto mt-2 mb-2'
-                                          onClick={() => {
-                                            if (this.state.chargebeeURL) {
-                                              window.location =
-                                                this.state.chargebeeURL
-                                            } else {
-                                              openModal(
-                                                'Payment plans',
-                                                <PaymentModal
-                                                  viewOnly={false}
-                                                />,
-                                                'modal-lg',
-                                              )
-                                            }
-                                          }}
-                                        >
-                                          Manage payment plan
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type='button'
-                                          className='btn btn-primary text-center ml-auto mt-2 mb-2'
-                                          onClick={() =>
-                                            openModal(
-                                              'Payment Plans',
-                                              <PaymentModal viewOnly={false} />,
-                                              'modal-lg',
-                                            )
-                                          }
-                                        >
-                                          View plans
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                          </FormGroup>
-                          {Utils.getFlagsmithHasFeature('force_2fa') && (
-                            <div>
-                              <Row space className='mt-4'>
-                                <h5 className='m-b-0'>Enforce 2FA</h5>
-                                {!force2faPermission ? (
-                                  <Tooltip
-                                    title={
+                              <hr className='mt-0 mb-4' />
+                              {Utils.getFlagsmithHasFeature('force_2fa') && (
+                                <div className='col-md-6'>
+                                  <Row className='mt-4 mb-2'>
+                                    {!force2faPermission ? (
+                                      <Tooltip
+                                        title={
+                                          <Switch
+                                            checked={organisation.force_2fa}
+                                            onChange={this.save2FA}
+                                          />
+                                        }
+                                      >
+                                        To access this feature please upgrade
+                                        your account to scaleup or higher."
+                                      </Tooltip>
+                                    ) : (
                                       <Switch
                                         checked={organisation.force_2fa}
                                         onChange={this.save2FA}
                                       />
-                                    }
-                                  >
-                                    To access this feature please upgrade your
-                                    account to scaleup or higher."
-                                  </Tooltip>
-                                ) : (
-                                  <Switch
-                                    checked={organisation.force_2fa}
-                                    onChange={this.save2FA}
-                                  />
-                                )}
-                              </Row>
-                              <p className='fs-small lh-sm'>
-                                Enabling this setting forces users within the
-                                organisation to setup 2 factor security.
-                              </p>
-                            </div>
-                          )}
-                          {Utils.getFlagsmithHasFeature(
-                            'restrict_project_create_to_admin',
-                          ) && (
-                            <FormGroup className='mt-4'>
-                              <h5>Admin Settings</h5>
-                              <div className='row'>
-                                <div className='col-md-10'>
+                                    )}
+                                    <h5 className='mb-0 ml-3'>Enforce 2FA</h5>
+                                  </Row>
                                   <p className='fs-small lh-sm'>
-                                    Only allow organisation admins to create
-                                    projects
+                                    Enabling this setting forces users within
+                                    the organisation to setup 2 factor security.
                                   </p>
                                 </div>
-                                <div className='col-md-2 text-right'>
-                                  <Switch
-                                    checked={
-                                      organisation.restrict_project_create_to_admin
-                                    }
-                                    onChange={() =>
-                                      this.setAdminCanCreateProject(
-                                        !organisation.restrict_project_create_to_admin,
-                                      )
-                                    }
-                                  />
+                              )}
+                              {Utils.getFlagsmithHasFeature(
+                                'restrict_project_create_to_admin',
+                              ) && (
+                                <FormGroup className='mt-4 col-md-6'>
+                                  <h5>Admin Settings</h5>
+                                  <Row className='mb-2'>
+                                    <Switch
+                                      checked={
+                                        organisation.restrict_project_create_to_admin
+                                      }
+                                      onChange={() =>
+                                        this.setAdminCanCreateProject(
+                                          !organisation.restrict_project_create_to_admin,
+                                        )
+                                      }
+                                    />
+                                    <p className='fs-small ml-3 mb-0 lh-sm'>
+                                      Only allow organisation admins to create
+                                      projects
+                                    </p>
+                                  </Row>
+                                </FormGroup>
+                              )}
+                              {paymentsEnabled && !isAWS && (
+                                <div>
+                                  <Row space className='plan p-4 mb-4'>
+                                    <div>
+                                      <div className='mb-4'>
+                                        <img
+                                          src='/static/images/nav-logo.svg'
+                                          alt='BT'
+                                          width={190}
+                                          height={40}
+                                        />
+                                      </div>
+                                      <Row>
+                                        <div>
+                                          <Row
+                                            className='mr-3'
+                                            style={{ width: '230px' }}
+                                          >
+                                            <div className='plan-icon'>
+                                              <Icon name='layers' width={32} />
+                                            </div>
+                                            <div>
+                                              <p className='fs-small lh-sm mb-0'>
+                                                Your plan
+                                              </p>
+                                              <h4 className='mb-0'>
+                                                {Utils.getPlanName(
+                                                  _.get(
+                                                    organisation,
+                                                    'subscription.plan',
+                                                  ),
+                                                )
+                                                  ? Utils.getPlanName(
+                                                      _.get(
+                                                        organisation,
+                                                        'subscription.plan',
+                                                      ),
+                                                    )
+                                                  : 'Free'}
+                                              </h4>
+                                            </div>
+                                          </Row>
+                                        </div>
+                                        <div>
+                                          <Row
+                                            style={{ width: '230px' }}
+                                            className='mr-3'
+                                          >
+                                            <div className='plan-icon'>
+                                              <h4
+                                                className='mb-0 text-center'
+                                                style={{ width: '32px' }}
+                                              >
+                                                ID
+                                              </h4>
+                                            </div>
+                                            <div>
+                                              <p className='fs-small lh-sm mb-0'>
+                                                Organisation ID
+                                              </p>
+                                              <h4 className='mb-0'>
+                                                {organisation.id}
+                                              </h4>
+                                            </div>
+                                          </Row>
+                                        </div>
+                                        {!!chargebee_email && (
+                                          <div>
+                                            <Row style={{ width: '230px' }}>
+                                              <div className='plan-icon'>
+                                                <Icon
+                                                  name='layers'
+                                                  width={32}
+                                                />
+                                              </div>
+                                              <div>
+                                                <p className='fs-small lh-sm mb-0'>
+                                                  Management Email
+                                                </p>
+                                                <h6 className='mb-0'>
+                                                  {chargebee_email}
+                                                </h6>
+                                              </div>
+                                            </Row>
+                                          </div>
+                                        )}
+                                      </Row>
+                                    </div>
+                                    <div className='align-self-start'>
+                                      {organisation.subscription
+                                        ?.subscription_id && (
+                                        <Button
+                                          theme='secondary'
+                                          href='https://flagsmith.chargebeeportal.com/'
+                                          target='_blank'
+                                          className='btn'
+                                        >
+                                          Manage Invoices
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </Row>
+                                  <Payment viewOnly={false} />
                                 </div>
-                              </div>
-                            </FormGroup>
-                          )}
-                          <FormGroup className='mt-4'>
-                            <h5>Delete Organisation</h5>
-                            <div className='row'>
-                              <div className='col-md-10'>
+                              )}
+                            </div>
+                          </FormGroup>
+                          <hr className='my-4' />
+                          <FormGroup className='mt-4 col-md-6'>
+                            <Row space>
+                              <div className='col-md-7'>
+                                <h5 className='mn-2'>Delete Organisation</h5>
                                 <p className='fs-small lh-sm'>
                                   This organisation will be permanently deleted,
                                   along with all projects and features.
                                 </p>
                               </div>
-                              <div className='col-md-2 text-right'>
-                                <Button
-                                  id='delete-org-btn'
-                                  onClick={() =>
-                                    this.confirmRemove(organisation, () => {
-                                      deleteOrganisation()
-                                    })
-                                  }
-                                  className='btn btn--with-icon ml-auto btn--remove'
-                                >
-                                  <RemoveIcon />
-                                </Button>
-                              </div>
-                            </div>
+                              <Button
+                                id='delete-org-btn'
+                                onClick={() =>
+                                  this.confirmRemove(organisation, () => {
+                                    deleteOrganisation()
+                                  })
+                                }
+                                className='btn-with-icon btn-remove'
+                              >
+                                <Icon
+                                  name='trash-2'
+                                  width={20}
+                                  fill='#EF4D56'
+                                />
+                              </Button>
+                            </Row>
                           </FormGroup>
                         </TabItem>
 
@@ -551,21 +655,26 @@ const OrganisationSettingsPage = class extends Component {
                           />
 
                           <FormGroup className='mt-4'>
-                            <h5>Manage Users and Permissions</h5>
-                            <p className='fs-small lh-sm'>
-                              Flagsmith lets you manage fine-grained permissions
-                              for your projects and environments, invite members
-                              as a user or an administrator and then set
-                              permission in your Project and Environment
-                              settings.{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/rbac'
-                                target='_blank'
-                              >
-                                Learn about User Roles.
-                              </Button>
-                            </p>
+                            <div className='col-md-8'>
+                              <h5 className='mb-2'>
+                                Manage Users and Permissions
+                              </h5>
+                              <p className='mb-4 fs-small lh-sm'>
+                                Flagsmith lets you manage fine-grained
+                                permissions for your projects and environments,
+                                invite members as a user or an administrator and
+                                then set permission in your Project and
+                                Environment settings.{' '}
+                                <Button
+                                  theme='text'
+                                  href='https://docs.flagsmith.com/system-administration/rbac'
+                                  target='_blank'
+                                  className='fw-normal'
+                                >
+                                  Learn about User Roles.
+                                </Button>
+                              </p>
+                            </div>
                             <div>
                               <div>
                                 <div>
@@ -579,14 +688,13 @@ const OrganisationSettingsPage = class extends Component {
                                       <Tabs theme='pill' uncontrolled>
                                         <TabItem tabLabel='Members'>
                                           <Row space className='mt-4'>
-                                            <h5 className='m-b-0'>
+                                            <h5 className='mb-0'>
                                               Team Members
                                             </h5>
                                             <Button
                                               disabled={
                                                 needsUpgradeForAdditionalSeats
                                               }
-                                              style={{ width: 180 }}
                                               id='btn-invite'
                                               onClick={() =>
                                                 openModal(
@@ -596,87 +704,84 @@ const OrganisationSettingsPage = class extends Component {
                                                 )
                                               }
                                               type='button'
+                                              size='small'
                                             >
                                               Invite members
                                             </Button>
                                           </Row>
                                           <FormGroup className='mt-2'>
                                             {paymentsEnabled && !isLoading && (
-                                              <InfoMessage>
-                                                {'You are currently using '}
-                                                <strong
-                                                  className={
-                                                    overSeats
-                                                      ? 'text-danger'
-                                                      : ''
-                                                  }
-                                                >
-                                                  {`${organisation.num_seats} of ${max_seats}`}
-                                                </strong>
-                                                {` seat${
-                                                  organisation.num_seats === 1
-                                                    ? ''
-                                                    : 's'
-                                                } `}{' '}
-                                                for your plan.{' '}
-                                                {usedSeats && (
-                                                  <>
-                                                    {overSeats &&
-                                                    (!verifySeatsLimit ||
-                                                      !autoSeats) ? (
-                                                      <strong>
-                                                        If you wish to invite
-                                                        any additional members,
-                                                        please{' '}
-                                                        {
-                                                          <a
-                                                            href='#'
-                                                            onClick={
-                                                              Utils.openChat
-                                                            }
-                                                          >
-                                                            Contact us
-                                                          </a>
-                                                        }
-                                                        .
-                                                      </strong>
-                                                    ) : needsUpgradeForAdditionalSeats ? (
-                                                      <strong>
-                                                        If you wish to invite
-                                                        any additional members,
-                                                        please{' '}
-                                                        {
-                                                          <a
-                                                            href='#'
-                                                            onClick={() =>
-                                                              openModal(
-                                                                'Payment Plans',
-                                                                <PaymentModal
-                                                                  viewOnly={
-                                                                    false
-                                                                  }
-                                                                />,
-                                                                'modal-lg',
-                                                              )
-                                                            }
-                                                          >
-                                                            Upgrade your plan
-                                                          </a>
-                                                        }
-                                                        .
-                                                      </strong>
-                                                    ) : (
-                                                      <strong>
-                                                        You will automatically
-                                                        be charged $20/month for
-                                                        each additional member
-                                                        that joins your
-                                                        organisation.
-                                                      </strong>
-                                                    )}
-                                                  </>
-                                                )}
-                                              </InfoMessage>
+                                              <div className='col-md-6 mt-3 mb-4'>
+                                                <InfoMessage>
+                                                  {'You are currently using '}
+                                                  <strong
+                                                    className={
+                                                      overSeats
+                                                        ? 'text-danger'
+                                                        : ''
+                                                    }
+                                                  >
+                                                    {`${organisation.num_seats} of ${max_seats}`}
+                                                  </strong>
+                                                  {` seat${
+                                                    organisation.num_seats === 1
+                                                      ? ''
+                                                      : 's'
+                                                  } `}{' '}
+                                                  for your plan.{' '}
+                                                  {usedSeats && (
+                                                    <>
+                                                      {overSeats &&
+                                                      (!verifySeatsLimit ||
+                                                        !autoSeats) ? (
+                                                        <strong>
+                                                          If you wish to invite
+                                                          any additional
+                                                          members, please{' '}
+                                                          {
+                                                            <a
+                                                              href='#'
+                                                              onClick={
+                                                                Utils.openChat
+                                                              }
+                                                            >
+                                                              Contact us
+                                                            </a>
+                                                          }
+                                                          .
+                                                        </strong>
+                                                      ) : needsUpgradeForAdditionalSeats ? (
+                                                        <strong>
+                                                          If you wish to invite
+                                                          any additional
+                                                          members, please{' '}
+                                                          {
+                                                            <a
+                                                              href='#'
+                                                              onClick={() =>
+                                                                this.setState({
+                                                                  tab: 0,
+                                                                })
+                                                              }
+                                                            >
+                                                              Upgrade your plan
+                                                            </a>
+                                                          }
+                                                          .
+                                                        </strong>
+                                                      ) : (
+                                                        <strong>
+                                                          You will automatically
+                                                          be charged $20/month
+                                                          for each additional
+                                                          member that joins your
+                                                          organisation.
+                                                        </strong>
+                                                      )}
+                                                    </>
+                                                  )}
+                                                </InfoMessage>
+                                              </div>
                                             )}
                                             {inviteLinks &&
                                               (!verifySeatsLimit ||
@@ -689,8 +794,8 @@ const OrganisationSettingsPage = class extends Component {
                                                   <div className='mt-3'>
                                                     <Row>
                                                       <div
-                                                        className='mr-2'
-                                                        style={{ width: 280 }}
+                                                        className='mr-3'
+                                                        style={{ width: 257 }}
                                                       >
                                                         <Select
                                                           value={{
@@ -724,6 +829,7 @@ const OrganisationSettingsPage = class extends Component {
                                                               value: 'USER',
                                                             },
                                                           ]}
+                                                          className='react-select select-sm'
                                                         />
                                                       </div>
                                                       {inviteLinks.find(
@@ -735,7 +841,7 @@ const OrganisationSettingsPage = class extends Component {
                                                           <Flex className='mr-4'>
                                                             <Input
                                                               style={{
-                                                                width: '100%',
+                                                                width: 257,
                                                               }}
                                                               value={`${
                                                                 document
@@ -751,21 +857,19 @@ const OrganisationSettingsPage = class extends Component {
                                                               }`}
                                                               data-test='invite-link'
                                                               inputClassName='input input--wide'
-                                                              className='full-width'
                                                               type='text'
                                                               readonly='readonly'
                                                               title={
                                                                 <h3>Link</h3>
                                                               }
                                                               placeholder='Link'
+                                                              size='small'
                                                             />
                                                           </Flex>
                                                           <Row>
                                                             <Button
-                                                              className='btn-secondary'
-                                                              style={{
-                                                                width: 180,
-                                                              }}
+                                                              theme='secondary'
+                                                              size='small'
                                                               onClick={() => {
                                                                 navigator.clipboard.writeText(
                                                                   `${
@@ -790,7 +894,8 @@ const OrganisationSettingsPage = class extends Component {
                                                               Copy Invite Link
                                                             </Button>
                                                             <Button
-                                                              className='ml-4'
+                                                              className='ml-3'
+                                                              size='small'
                                                               type='button'
                                                               onClick={() => {
                                                                 openConfirm(
@@ -817,7 +922,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       )}
                                                     </Row>
                                                   </div>
-                                                  <p className='mt-3'>
+                                                  <p className='my-4 col-md-8'>
                                                     Anyone with link can join as
                                                     a standard user, once they
                                                     have joined you can edit
@@ -827,6 +932,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       theme='text'
                                                       target='_blank'
                                                       href='https://docs.flagsmith.com/advanced-use/permissions'
+                                                      className='fw-normal'
                                                     >
                                                       Learn about User Roles.
                                                     </Button>
@@ -890,6 +996,7 @@ const OrganisationSettingsPage = class extends Component {
                                                   if (role !== 'ADMIN') {
                                                     this.editUserPermissions(
                                                       user,
+                                                      this.state.roles,
                                                     )
                                                   }
                                                 }
@@ -1206,12 +1313,11 @@ const OrganisationSettingsPage = class extends Component {
                                         </TabItem>
                                         <TabItem tabLabel='Groups'>
                                           <div>
-                                            <Row space className='mt-4'>
-                                              <h5 className='m-b-0'>
+                                            <Row space className='mt-4 mb-1'>
+                                              <h5 className='mb-0'>
                                                 User Groups
                                               </h5>
                                               <Button
-                                                className='mr-2'
                                                 id='btn-invite'
                                                 onClick={() =>
                                                   openModal(
@@ -1223,19 +1329,23 @@ const OrganisationSettingsPage = class extends Component {
                                                   )
                                                 }
                                                 type='button'
+                                                size='small'
                                               >
                                                 Create Group
                                               </Button>
                                             </Row>
-                                            <p className='fs-small lh-sm'>
+                                            <p className='col-md-8 mb-4'>
                                               Groups allow you to manage
                                               permissions for viewing and
                                               editing projects, features and
                                               environments.
                                             </p>
                                             <UserGroupList
-                                              onEditPermissions={
-                                                this.editGroupPermissions
+                                              onEditPermissions={(group) =>
+                                                this.editGroupPermissions(
+                                                  group,
+                                                  this.state.roles,
+                                                )
                                               }
                                               showRemove
                                               orgId={
@@ -1244,6 +1354,152 @@ const OrganisationSettingsPage = class extends Component {
                                             />
                                           </div>
                                         </TabItem>
+                                        {Utils.getFlagsmithHasFeature(
+                                          'show_role_management',
+                                        ) && (
+                                          <TabItem tabLabel='Roles'>
+                                            {hasRbacPermission ? (
+                                              <>
+                                                <Row space className='mt-4'>
+                                                  <h5 className='m-b-0'>
+                                                    Roles
+                                                  </h5>
+                                                  <Button
+                                                    className='mr-2'
+                                                    id='btn-invite'
+                                                    onClick={() =>
+                                                      this.createRole(
+                                                        organisation.id,
+                                                        users,
+                                                      )
+                                                    }
+                                                    type='button'
+                                                  >
+                                                    Create Role
+                                                  </Button>
+                                                </Row>
+                                                <p className='fs-small lh-sm'>
+                                                  Create custom roles, assign
+                                                  permissions, and keys to the
+                                                  role, and then you can assign
+                                                  roles to users and/or groups.
+                                                </p>
+                                                <PanelSearch
+                                                  id='org-members-list'
+                                                  title={'Roles'}
+                                                  className='no-pad'
+                                                  items={this.state.roles}
+                                                  itemHeight={65}
+                                                  header={
+                                                    <Row className='table-header px-3'>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[0],
+                                                        }}
+                                                      >
+                                                        Roles
+                                                      </div>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[1],
+                                                        }}
+                                                      >
+                                                        Description
+                                                      </div>
+                                                      <div className='table-column text-center'>
+                                                        Remove
+                                                      </div>
+                                                    </Row>
+                                                  }
+                                                  renderRow={(role) => (
+                                                    <Row
+                                                      className='list-item clickable cursor-pointer'
+                                                      key={role.id}
+                                                    >
+                                                      <Row
+                                                        onClick={() => {
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
+                                                        }}
+                                                        className='table-column px-3'
+                                                        style={{
+                                                          width: rolesWidths[0],
+                                                        }}
+                                                      >
+                                                        {role.name}
+                                                      </Row>
+                                                      <Row
+                                                        className='table-column px-3'
+                                                        onClick={() => {
+                                                          this.editRole(
+                                                            role,
+                                                            users,
+                                                            groups,
+                                                          )
+                                                        }}
+                                                        style={{
+                                                          width: rolesWidths[1],
+                                                        }}
+                                                      >
+                                                        {role.description}
+                                                      </Row>
+                                                      <div
+                                                        style={{
+                                                          width: rolesWidths[2],
+                                                        }}
+                                                        className='table-column text-center px-3'
+                                                      >
+                                                        <Button
+                                                          id='remove-role'
+                                                          type='button'
+                                                          onClick={() => {
+                                                            this.deleteRole(
+                                                              role,
+                                                            )
+                                                          }}
+                                                          className='btn btn-with-icon'
+                                                        >
+                                                          <Icon
+                                                            name='trash-2'
+                                                            width={20}
+                                                            fill='#656D7B'
+                                                          />
+                                                        </Button>
+                                                      </div>
+                                                    </Row>
+                                                  )}
+                                                  renderNoResults={
+                                                    <Panel
+                                                      title={
+                                                        'Organisation roles'
+                                                      }
+                                                      className='no-pad'
+                                                    >
+                                                      <div className='search-list'>
+                                                        <Row className='list-item p-3 text-muted'>
+                                                          You currently have no
+                                                          organisation roles
+                                                        </Row>
+                                                      </div>
+                                                    </Panel>
+                                                  }
+                                                  isLoading={false}
+                                                />
+                                              </>
+                                            ) : (
+                                              <div className='mt-4'>
+                                                <InfoMessage>
+                                                  To use <strong>role</strong>{' '}
+                                                  features you have to upgrade
+                                                  your plan.
+                                                </InfoMessage>
+                                              </div>
+                                            )}
+                                          </TabItem>
+                                        )}
                                       </Tabs>
                                     </div>
                                   )}
@@ -1257,8 +1513,8 @@ const OrganisationSettingsPage = class extends Component {
                           <FormGroup className='mt-4'>
                             <JSONReference title={'Webhooks'} json={webhooks} />
 
-                            <Column className='mb-3 ml-0'>
-                              <h5 className='m-b-0'>Audit Webhooks</h5>
+                            <Column className='mb-3 ml-0 col-md-8'>
+                              <h5 className='mb-2'>Audit Webhooks</h5>
                               <p className='fs-small lh-sm mb-4'>
                                 Audit webhooks let you know when audit logs
                                 occur, you can configure 1 or more audit
@@ -1266,6 +1522,7 @@ const OrganisationSettingsPage = class extends Component {
                                 <Button
                                   theme='text'
                                   href='https://docs.flagsmith.com/system-administration/webhooks'
+                                  className='fw-normal'
                                 >
                                   Learn about Audit Webhooks.
                                 </Button>

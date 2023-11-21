@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -35,8 +35,10 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
+from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
+from .features_service import get_overrides_data
 from .models import Feature, FeatureState
 from .permissions import (
     CreateSegmentOverridePermissions,
@@ -48,6 +50,7 @@ from .permissions import (
 from .serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -66,6 +69,10 @@ from .serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
+from .versioning.versioning_service import (
+    get_environment_flags_list,
+    get_environment_flags_queryset,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -152,10 +159,47 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 user=self.request.user,
             )
         if self.action == "list" and "environment" in self.request.query_params:
-            environment_id = self.request.query_params["environment"]
-            context["overrides_data"] = Feature.get_overrides_data(environment_id)
+            environment = get_object_or_404(
+                Environment, id=self.request.query_params["environment"]
+            )
+            context["overrides_data"] = get_overrides_data(environment)
 
         return context
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        data = request.data
+
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=serializer.validated_data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(serializer.validated_data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @swagger_auto_schema(
+        request_body=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):
+        feature = self.get_object()
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
 
     @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
@@ -165,8 +209,14 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def add_owners(self, request, *args, **kwargs):
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         feature = self.get_object()
+
+        for user in FFAdminUser.objects.filter(
+            id__in=serializer.validated_data["user_ids"]
+        ):
+            if not user.has_project_permission(VIEW_PROJECT, feature.project):
+                raise serializers.ValidationError("Some users not found")
+
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
 
@@ -299,6 +349,12 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         else:
             return FeatureStateSerializerCreate
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ["update", "create"]:
+            context["environment"] = self.get_environment_from_request()
+        return context
+
     def get_queryset(self):
         """
         Override queryset to filter based on provided URL parameters.
@@ -310,8 +366,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         try:
             environment = Environment.objects.get(api_key=environment_api_key)
-            queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment.id,
+            queryset = get_environment_flags_queryset(
+                environment=environment,
                 feature_name=self.request.query_params.get("feature_name"),
             )
             queryset = self._apply_query_param_filters(queryset)
@@ -341,46 +397,26 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         return environment
 
-    def get_identity_from_request(self, environment):
-        """
-        Get identity object from URL parameters in request.
-        """
-        identity = Identity.objects.get(pk=self.kwargs["identity_pk"])
-        return identity
-
     def create(self, request, *args, **kwargs):
         """
         DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
-        environment = self.get_environment_from_request()
-        if (
-            environment.project.organisation
-            not in self.request.user.organisations.all()
-        ):
-            return Response(status.HTTP_403_FORBIDDEN)
-
-        data["environment"] = environment.id
-
         if "feature" not in data:
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        feature_id = int(data["feature"])
-
-        if feature_id not in [
-            feature.id for feature in environment.project.features.all()
-        ]:
-            error = {"detail": "Feature does not exist in project"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        environment = self.get_environment_from_request()
+        data["environment"] = environment.id
 
         identity_pk = self.kwargs.get("identity_pk")
         if identity_pk:
             data["identity"] = identity_pk
 
         serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
+
+        if serializer.is_valid(raise_exception=True):
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -394,10 +430,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
                 headers=headers,
             )
-        else:
-            logger.error(serializer.errors)
-            error = {"detail": "Couldn't create feature state."}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         """
@@ -507,6 +539,20 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "environment",
+                openapi.IN_QUERY,
+                "ID of the environment.",
+                required=True,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ]
+    ),
+)
 class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -522,13 +568,11 @@ class SimpleFeatureStateViewSet(
             return FeatureState.objects.all()
 
         try:
-            environment_id = self.request.query_params.get("environment")
-            if not environment_id:
+            if not (environment_id := self.request.query_params.get("environment")):
                 raise ValidationError("'environment' GET parameter is required.")
 
-            queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment_id
-            )
+            environment = get_object_or_404(Environment, id=environment_id)
+            queryset = get_environment_flags_queryset(environment=environment)
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
             )
@@ -555,6 +599,7 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    throttle_classes = []
     pagination_class = None
 
     @swagger_auto_schema(
@@ -580,8 +625,8 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-            feature_states = FeatureState.get_environment_flags_list(
-                environment_id=request.environment.id,
+            feature_states = get_environment_flags_list(
+                environment=request.environment,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
             )
@@ -598,8 +643,8 @@ class SDKFeatureStates(GenericAPIView):
             data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                FeatureState.get_environment_flags_list(
-                    environment_id=request.environment.id,
+                get_environment_flags_list(
+                    environment=request.environment,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
@@ -627,8 +672,8 @@ class SDKFeatureStates(GenericAPIView):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                FeatureState.get_environment_flags_list(
-                    environment_id=environment.id,
+                get_environment_flags_list(
+                    environment=environment,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
@@ -693,8 +738,8 @@ def organisation_has_got_feature(request, organisation):
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
     responses={200: CreateSegmentOverrideFeatureStateSerializer()},
 )
-@permission_classes([CreateSegmentOverridePermissions()])
 @api_view(["POST"])
+@permission_classes([CreateSegmentOverridePermissions])
 def create_segment_override(
     request: Request, environment_api_key: str, feature_pk: int
 ):

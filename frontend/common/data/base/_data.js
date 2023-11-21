@@ -1,3 +1,4 @@
+import Project from 'common/project'
 const getQueryString = (params) => {
   const esc = encodeURIComponent
   return Object.keys(params)
@@ -15,11 +16,15 @@ module.exports = {
       method,
       timeout: 60000,
     }
+    const isExternal = !_url.startsWith(Project.api)
 
     if (method !== 'get')
       options.headers['Content-Type'] = 'application/json; charset=utf-8'
 
-    if (this.token) {
+    if (
+      (this.token && !isExternal) ||
+      (this.token && isExternal && method !== 'get')
+    ) {
       // add auth tokens to headers of all requests
       options.headers.AUTHORIZATION = `Token ${this.token}`
     }
@@ -51,7 +56,7 @@ module.exports = {
     }
 
     return fetch(url, options)
-      .then(this.status)
+      .then((response) => this.status(response, isExternal))
       .then((response) => {
         // always return json
         let contentType = response.headers.get('content-type')
@@ -88,12 +93,12 @@ module.exports = {
     this.token = _token
   },
 
-  status(response) {
+  status(response, isExternal) {
     // handle ajax requests
     if (response.status >= 200 && response.status < 300) {
       return Promise.resolve(response)
     }
-    if (response.status === 401) {
+    if (!isExternal && response.status === 401) {
       AppActions.setUser(null)
     }
     response

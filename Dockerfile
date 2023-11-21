@@ -1,11 +1,16 @@
 # Step 1 - Build Front End Application
 FROM node:16 AS build-frontend
 
-# Copy the entire project - Webpack puts compiled assets into the Django folder
+# Copy the files required to install npm packages
 WORKDIR /app
-COPY . .
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
+COPY frontend/bin/ ./frontend/bin/
+COPY frontend/env/ ./frontend/env/
 
 RUN cd frontend && npm ci --quiet --production
+
+# Copy the entire project - Webpack puts compiled assets into the Django folder
+COPY . .
 ENV ENV=prod
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
@@ -40,6 +45,7 @@ COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/
 COPY --from=build-python /usr/local/bin /usr/local/bin
 
 COPY api /app/
+COPY .release-please-manifest.json /app/.versions.json
 
 # Compile static Django assets
 RUN python /app/manage.py collectstatic --no-input
