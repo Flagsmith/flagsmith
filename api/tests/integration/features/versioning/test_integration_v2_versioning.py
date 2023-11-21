@@ -7,8 +7,6 @@ from django.urls import reverse
 from rest_framework import status
 from tests.test_helpers import generate_segment_data
 
-from segments.models import EQUAL
-
 from .types import (
     GetEnvironmentFlagsResponseJSONCallable,
     GetIdentityFlagsResponseJSONCallable,
@@ -374,7 +372,7 @@ def test_v2_versioning_multiple_segment_overrides(
             generate_segment_data(
                 segment_name="segment_1",
                 project_id=project,
-                condition_tuples=[(trait_key_1, EQUAL, trait_value_1)],
+                condition_tuples=[(trait_key_1, "EQUAL", trait_value_1)],
             )
         ),
         content_type="application/json",
@@ -387,7 +385,7 @@ def test_v2_versioning_multiple_segment_overrides(
             generate_segment_data(
                 segment_name="segment_2",
                 project_id=project,
-                condition_tuples=[(trait_key_2, EQUAL, trait_value_2)],
+                condition_tuples=[(trait_key_2, "EQUAL", trait_value_2)],
             )
         ),
         content_type="application/json",
