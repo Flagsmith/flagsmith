@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     "environments.identities.traits",
     "features",
     "features.multivariate",
+    "features.versioning",
     "features.workflows.core",
     "segments",
     "app",

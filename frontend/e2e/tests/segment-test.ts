@@ -137,7 +137,6 @@ export const testSegment2 = async () => {
   await login(E2E_USER, PASSWORD)
   await click('#project-select-2')
 
-
   log('Create segments')
   await gotoSegments()
   await createSegment(0, 'segment_1', [
@@ -222,7 +221,6 @@ export const testSegment3 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-3')
-
 
   log('Create features')
   await gotoFeatures()

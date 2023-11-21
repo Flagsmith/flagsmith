@@ -6,7 +6,9 @@ import pytest
 from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from flag_engine.segments.constants import EQUAL
 from pytest_lazyfixture import lazy_fixture
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -25,7 +27,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
-from segments.models import EQUAL, Condition, SegmentRule
+from segments.models import Condition, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -927,3 +929,26 @@ def test_partial_environment_update(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_cannot_enable_v2_versioning_for_environment_already_enabled(
+    environment_v2_versioning: Environment,
+    admin_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-enable-v2-versioning",
+        args=[environment_v2_versioning.api_key],
+    )
+
+    mock_enable_v2_versioning = mocker.patch("environments.views.enable_v2_versioning")
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"detail": "Environment already using v2 versioning."}
+
+    mock_enable_v2_versioning.delay.assert_not_called()
