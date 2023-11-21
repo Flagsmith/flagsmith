@@ -162,11 +162,14 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
       <div>
         <h4>What do these numbers mean?</h4>
         <h5>Flags</h5>
-        <p>This is a single call to get the Environment Flag defaults, without providing an Identity. Note that if you trigger an update of flags via the SDK, this will count as an additional call.</p>
+        <p>This is a single call to get the Environment Flag defaults, without providing an Identity.
+            Note that if you trigger an update of flags via the SDK, this will count as an additional call.</p>
         <p><a href='https://docs.flagsmith.com/basic-features/managing-features' target='_blank'>Learn more.</a></p>
         <h5>Identities</h5>
-        <p>This is a single call to get the flags for a specific Identity. If this is the first time flags have been requested for that Identity,
-            it will be persisted in our datastore. Note that this number is <em>not</em> a total count of Identities in the datastore, but the number of times an Identity has requested their flags. Note that if you trigger an update of flags via the SDK, this will count as an additional call.</p>
+        <p>This is a single call to get the flags for a specific Identity.
+            If this is the first time flags have been requested for that Identity, it will be persisted in our datastore.
+            Note that this number is <em>not</em> a total count of Identities in the datastore, but the number of times an Identity has requested their flags.
+            Note that if you trigger an update of flags via the SDK, this will count as an additional call.</p>
         <p><a href='https://docs.flagsmith.com/basic-features/managing-identities' target='_blank'>Learn more.</a></p>
         <h5>Environment Document</h5>
         <p>This is a single call made by Server-Side SDKs, when running in Local Evaluation Mode, to get the entire Environment dataset so the SDK can run flag evaluations locally.</p>
