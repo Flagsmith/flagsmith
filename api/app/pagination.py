@@ -64,6 +64,9 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
 
 
 class EdgeIdentityPagination(CustomPagination):
+    max_page_size = 100
+    page_size = 100
+
     def paginate_queryset(self, dynamo_queryset, request, view=None):
         last_evaluated_key = dynamo_queryset.get("LastEvaluatedKey")
         if last_evaluated_key:
