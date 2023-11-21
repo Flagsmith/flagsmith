@@ -128,7 +128,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: Flagsmith/actions/ec2-runner/stop@v0.2.0
-        id: start
         with:
           github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
