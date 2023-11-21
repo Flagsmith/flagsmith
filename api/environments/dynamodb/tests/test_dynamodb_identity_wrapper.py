@@ -5,12 +5,13 @@ from boto3.dynamodb.conditions import Key
 from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.builders import build_identity_model
+from flag_engine.segments.constants import IN
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from segments.models import IN, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from util.mappers import (
     map_environment_to_environment_document,
     map_identity_to_identity_document,
