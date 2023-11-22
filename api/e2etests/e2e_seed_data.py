@@ -7,7 +7,6 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from users.models import FFAdminUser
-from util.mappers import map_engine_identity_to_identity_document
 
 # Password used by all the test users
 PASSWORD = "str0ngp4ssw0rd!"
@@ -75,15 +74,14 @@ def seed_data() -> None:
     ]
 
     for identity_info in identities_test_data:
-        Identity.objects.create(**identity_info)
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            identity = EngineIdentity(
+            engine_identity = EngineIdentity(
                 identifier=identity_info["identifier"],
                 environment_api_key=identity_info["environment"],
             )
-            EdgeIdentity.dynamo_wrapper.put_item(
-                map_engine_identity_to_identity_document(identity)
-            )
+            EdgeIdentity(engine_identity).save()
+        else:
+            Identity.objects.create(**identity_info)
 
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
