@@ -7,7 +7,7 @@ from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
-from flag_engine.segments.constants import ALL_RULE
+from flag_engine.segments.constants import ALL_RULE, EQUAL
 from moto import mock_s3
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -42,7 +42,7 @@ from organisations.invites.models import InviteLink
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 
 def test_export_organisation(db):
@@ -248,6 +248,32 @@ def test_export_features(project, environment, segment, admin_user):
     # states associated with a change request are no longer associated with that CR.
     assert "workflows_core.changerequest" not in json_export
     assert not re.findall(r"\"change_request\": \[\"[a-z0-9\-]{36}\"\]", json_export)
+
+    # TODO: test whether the export is importable
+
+
+def test_export_features_with_environment_feature_version(
+    project, environment, segment, admin_user
+):
+    # Given
+    # an environment configured to use v2 feature versioning
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    # a standard feature
+    Feature.objects.create(project=project, name="standard_feature")
+
+    # When
+    export = export_features(organisation_id=project.organisation_id)
+
+    # Then
+    assert export
+
+    for item in export:
+        if item["model"] == "versioning.EnvironmentFeatureVersion":
+            assert item["fields"]["uuid"]
+        elif item["model"] == "features.FeatureState":
+            assert item["fields"]["environment_feature_version"]
 
     # TODO: test whether the export is importable
 

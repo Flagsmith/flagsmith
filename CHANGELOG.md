@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.83.0](https://github.com/Flagsmith/flagsmith/compare/v2.82.0...v2.83.0) (2023-11-21)
+
+
+### Features
+
+* introduce dunning billing status ([#2976](https://github.com/Flagsmith/flagsmith/issues/2976)) ([975c7b0](https://github.com/Flagsmith/flagsmith/commit/975c7b0d6438cd973ccd62b590436e4c2568b9d4))
+
+
+### Bug Fixes
+
+* **api:** validate before creating projects based on current subscription ([#2869](https://github.com/Flagsmith/flagsmith/issues/2869)) ([f32159e](https://github.com/Flagsmith/flagsmith/commit/f32159e3fd821c6dc7bfbd50a0c3d22374f1b558))
+* **edge-identity-view:** reduce max page size to 100 ([#2937](https://github.com/Flagsmith/flagsmith/issues/2937)) ([6c4807f](https://github.com/Flagsmith/flagsmith/commit/6c4807f0b2dd2ee770d2d712b2955a9fd71c37a0))
+* Move and merge features tests into proper location ([#3002](https://github.com/Flagsmith/flagsmith/issues/3002)) ([5f3482c](https://github.com/Flagsmith/flagsmith/commit/5f3482c8c376c6dd283ab4aff36dedb67825facc))
+
 ## [2.82.0](https://github.com/Flagsmith/flagsmith/compare/v2.81.1...v2.82.0) (2023-11-20)
 
 

@@ -4,6 +4,7 @@ import uuid
 import pytest
 from django.test import Client as DjangoClient
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.test import APIClient
 from tests.integration.helpers import create_mv_option_with_api
 
@@ -77,6 +78,7 @@ def environment(admin_client, project, environment_api_key, settings) -> int:
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
+        "allow_client_traits": True,
     }
     url = reverse("api-v1:environments:environment-list")
 
@@ -112,6 +114,29 @@ def identity(admin_client, identity_identifier, environment, environment_api_key
     )
     response = admin_client.post(url, data=identity_data)
     return response.json()["id"]
+
+
+@pytest.fixture()
+def identity_with_traits_matching_segment(
+    admin_client: APIClient,
+    environment_api_key,
+    identity: int,
+    segment_condition_value: str,
+    segment_condition_property: str,
+) -> int:
+    trait_data = {
+        "trait_key": segment_condition_property,
+        "string_value": segment_condition_value,
+    }
+    url = reverse(
+        "api-v1:environments:identities-traits-list",
+        args=[environment_api_key, identity],
+    )
+    res = admin_client.post(
+        url, data=json.dumps(trait_data), content_type="application/json"
+    )
+    assert res.status_code == status.HTTP_201_CREATED
+    return identity
 
 
 @pytest.fixture()
@@ -169,6 +194,31 @@ def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
 
 
 @pytest.fixture()
+def mv_feature_option_value():
+    return "foo"
+
+
+@pytest.fixture()
+def mv_feature_option(
+    project: int,
+    admin_client: "APIClient",
+    mv_feature: int,
+    mv_feature_option_value: str,
+) -> int:
+    data = {
+        "string_value": mv_feature_option_value,
+        "type": "unicode",
+        "default_percentage_allocation": 0,
+        "feature": mv_feature,
+    }
+    url = reverse("api-v1:projects:feature-mv-options-list", args=[project, mv_feature])
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def feature_2(admin_client, project, default_feature_value, feature_2_name):
     data = {
         "name": feature_2_name,
@@ -194,12 +244,46 @@ def segment_name():
 
 
 @pytest.fixture()
-def segment(admin_client, project, segment_name):
+def segment_condition_property():
+    return "foo"
+
+
+@pytest.fixture()
+def segment_condition_value():
+    return "bar"
+
+
+@pytest.fixture()
+def segment(
+    admin_client,
+    project,
+    segment_name,
+    segment_condition_property,
+    segment_condition_value,
+):
     url = reverse("api-v1:projects:project-segments-list", args=[project])
     data = {
         "name": segment_name,
         "project": project,
-        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [
+                    {
+                        "type": "ANY",
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "property": segment_condition_property,
+                                "operator": "EQUAL",
+                                "value": segment_condition_value,
+                            }
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
     }
 
     response = admin_client.post(

@@ -38,6 +38,7 @@ class WebhookEventType(enum.Enum):
     FLAG_UPDATED = "FLAG_UPDATED"
     FLAG_DELETED = "FLAG_DELETED"
     AUDIT_LOG_CREATED = "AUDIT_LOG_CREATED"
+    NEW_VERSION_PUBLISHED = "NEW_VERSION_PUBLISHED"
 
 
 class WebhookType(enum.Enum):

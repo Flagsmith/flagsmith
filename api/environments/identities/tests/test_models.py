@@ -1,6 +1,13 @@
 import pytest
 from core.constants import FLOAT
 from django.utils import timezone
+from flag_engine.segments.constants import (
+    EQUAL,
+    GREATER_THAN,
+    GREATER_THAN_INCLUSIVE,
+    LESS_THAN_INCLUSIVE,
+    NOT_EQUAL,
+)
 from rest_framework.test import APITestCase
 
 from environments.identities.models import Identity
@@ -15,16 +22,7 @@ from features.models import (
 from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import (
-    EQUAL,
-    GREATER_THAN,
-    GREATER_THAN_INCLUSIVE,
-    LESS_THAN_INCLUSIVE,
-    NOT_EQUAL,
-    Condition,
-    Segment,
-    SegmentRule,
-)
+from segments.models import Condition, Segment, SegmentRule
 
 from .helpers import (
     create_trait_for_identity,
