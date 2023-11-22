@@ -26,13 +26,29 @@ import {
   waitAndRefresh,
   waitForElementVisible,
 } from '../helpers.cafe'
+import Utils from '../../common/utils/utils'
 import { E2E_USER, PASSWORD } from '../config'
 
 export const testSegment1 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
 
-  await click('#project-select-1')
+  if (Utils.getFlagsmithHasFeature('use_api_e2e_seed_data')) {
+    await click('#project-select-1')
+  } else {
+    log('Create Organisation')
+    await click(byId('create-organisation-btn'))
+    await setText('[name="orgName"]', 'Bullet Train Ltd 2')
+    await click('#create-org-btn')
+    await waitForElementVisible(byId('project-select-page'))
+
+    log('Create Project')
+
+    await click('.btn-project-create')
+    await setText(byId('projectName'), 'My Segment Test Project')
+    await click(byId('create-project-btn'))
+    await waitForElementVisible(byId('features-page'))
+  }
 
   log('Create Feature')
 
@@ -135,7 +151,23 @@ export const testSegment1 = async () => {
 export const testSegment2 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-2')
+
+  if (Utils.getFlagsmithHasFeature('use_api_e2e_seed_data')) {
+    await click('#project-select-2')
+  } else {
+    log('Create Organisation')
+    await click(byId('create-organisation-btn'))
+    await setText('[name="orgName"]', 'Bullet Train Ltd 3')
+    await click('#create-org-btn')
+    await waitForElementVisible(byId('project-select-page'))
+
+    log('Create Project')
+
+    await click('.btn-project-create')
+    await setText(byId('projectName'), 'My Segment Test Project 2')
+    await click(byId('create-project-btn'))
+    await waitForElementVisible(byId('features-page'))
+  }
 
   log('Create segments')
   await gotoSegments()
@@ -220,7 +252,23 @@ export const testSegment2 = async () => {
 export const testSegment3 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-3')
+
+  if (Utils.getFlagsmithHasFeature('use_api_e2e_seed_data')) {
+    await click('#project-select-3')
+  } else {
+    log('Create Organisation')
+    await click(byId('create-organisation-btn'))
+    await setText('[name="orgName"]', 'Bullet Train Ltd 4')
+    await click('#create-org-btn')
+    await waitForElementVisible(byId('project-select-page'))
+
+    log('Create Project')
+
+    await click('.btn-project-create')
+    await setText(byId('projectName'), 'My Segment Test Project 3')
+    await click(byId('create-project-btn'))
+    await waitForElementVisible(byId('features-page'))
+  }
 
   log('Create features')
   await gotoFeatures()

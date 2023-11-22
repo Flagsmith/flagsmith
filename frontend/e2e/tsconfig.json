@@ -6,9 +6,10 @@
     "allowJs": true,
     "esModuleInterop": true,
     "baseUrl": ".",
+    "jsx": "react",
     "lib": [
       "dom"
     ],
     "skipLibCheck": true
-  },
+  }
 }
