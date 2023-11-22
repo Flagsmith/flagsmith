@@ -46,7 +46,7 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),
@@ -56,7 +56,7 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/?environment=${query.env_id}`,
         }),
@@ -66,7 +66,7 @@ export const rolePermissionService = service
         Res['rolePermission'],
         Req['getRolePermission']
       >({
-        providesTags: (res) => [{ id: res?.id, type: 'RolePermission' }],
+        providesTags: (res) => [{ id: res?.id, type: 'rolePermission' }],
         query: (query: Req['getRolePermission']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/?project=${query.project_id}`,
         }),

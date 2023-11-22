@@ -462,6 +462,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   ))}
               </div>
             </TabItem>
+            {/* add padding:0*/}
             <TabItem
               tabLabel={<Row className='justify-content-center'>Groups</Row>}
             >
