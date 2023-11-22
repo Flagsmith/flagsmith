@@ -77,7 +77,7 @@ def seed_data() -> None:
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
             engine_identity = EngineIdentity(
                 identifier=identity_info["identifier"],
-                environment_api_key=identity_info["environment"],
+                environment_api_key=identity_info["environment"].api_key,
             )
             EdgeIdentity(engine_identity).save()
         else:
