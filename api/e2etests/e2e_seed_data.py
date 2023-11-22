@@ -1,5 +1,7 @@
 from django.conf import settings
+from flag_engine.identities.models import IdentityModel as EngineIdentity
 
+from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole, Subscription
@@ -72,7 +74,14 @@ def seed_data() -> None:
     ]
 
     for identity_info in identities_test_data:
-        Identity.objects.create(**identity_info)
+        if settings.IDENTITIES_TABLE_NAME_DYNAMO:
+            engine_identity = EngineIdentity(
+                identifier=identity_info["identifier"],
+                environment_api_key=identity_info["environment"],
+            )
+            EdgeIdentity(engine_identity).save()
+        else:
+            Identity.objects.create(**identity_info)
 
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
