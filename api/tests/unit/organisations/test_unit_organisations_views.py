@@ -1176,7 +1176,8 @@ def test_make_user_group_admin_success(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     url = reverse(
         "api-v1:organisations:make-user-group-admin",
         args=[organisation.id, user_permission_group.id, another_user.id],
@@ -1241,7 +1242,8 @@ def test_remove_user_as_group_admin_success(
     # Given
     another_user = FFAdminUser.objects.create(email="another_user@example.com")
     another_user.add_organisation(organisation)
-    another_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(another_user)
     another_user.make_group_admin(user_permission_group.id)
     url = reverse(
         "api-v1:organisations:remove-user-group-admin",

@@ -471,7 +471,8 @@ def test_retrieve_user_permission_group_includes_group_admin(
 ):
     # Given
     group_admin_user = FFAdminUser.objects.create(email="groupadminuser@example.com")
-    group_admin_user.permission_groups.add(user_permission_group)
+    # cannot use User.permission_groups reverse accessor
+    user_permission_group.users.add(group_admin_user)
     group_admin_user.make_group_admin(user_permission_group.id)
 
     url = reverse(

@@ -206,7 +206,9 @@ class FFAdminUser(
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
         self.join_organisation_from_invite(invite_email)
-        self.permission_groups.add(*invite_email.permission_groups.all())
+        # cannot use User.permission_groups reverse accessor
+        for group in invite_email.permission_groups.all():
+            group.users.add(self)
         invite_email.delete()
 
     def join_organisation_from_invite_link(self, invite_link: "InviteLink"):
@@ -241,8 +243,9 @@ class FFAdminUser(
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
-        default_groups = organisation.permission_groups.filter(is_default=True)
-        self.permission_groups.add(*default_groups)
+        # cannot use User.permission_groups reverse accessor
+        for group in organisation.permission_groups.filter(is_default=True):
+            group.users.add(self)
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
@@ -250,7 +253,9 @@ class FFAdminUser(
         self.environment_permissions.filter(
             environment__project__organisation=organisation
         ).delete()
-        self.permission_groups.remove(*organisation.permission_groups.all())
+        # cannot use User.permission_groups reverse accessor
+        for group in organisation.permission_groups.filter(users=self):
+            group.users.remove(self)
 
     def get_organisation_role(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
