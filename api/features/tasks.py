@@ -193,7 +193,7 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
 
 
 def _save_feature_state_value_with_type(
-    value: Union[int, bool, str], feature_state_value: FeatureStateValue
+    value: Optional[Union[int, bool, str]], feature_state_value: FeatureStateValue
 ) -> None:
     if isinstance(value, int):
         feature_state_value.type = INTEGER
@@ -209,7 +209,7 @@ def _save_feature_state_value_with_type(
 
 
 def _create_multivariate_feature_option(
-    value: Union[int, bool, str],
+    value: Optional[Union[int, bool, str]],
     feature: Feature,
     default_percentage_allocation: Union[int, float],
 ) -> MultivariateFeatureOption:
