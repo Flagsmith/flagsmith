@@ -890,6 +890,7 @@ def test_feature_import(
     file_data = b"[]"
     uploaded_file = SimpleUploadedFile("test.23.json", file_data)
     data = {"file": uploaded_file}
+
     # When
     response = admin_client.post(url, data=data, format="multipart")
 
@@ -913,11 +914,13 @@ def test_feature_import_unauthorized(
         + "?strategy=overwrite"
     )
     file_data = b"[]"
-    # When
-
     uploaded_file = SimpleUploadedFile("test.23.json", file_data)
     data = {"file": uploaded_file}
+
+    # When
     response = staff_client.post(url, data=data, format="multipart")
+
+    # Then
     assert response.status_code == 403
 
 
