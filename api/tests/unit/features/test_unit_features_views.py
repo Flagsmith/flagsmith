@@ -648,15 +648,16 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     client, project, environment, feature, feature_state, settings, mocker
 ):
     # Given
+    mock_dynamo_environment_wrapper = mocker.patch(
+        "environments.models.environment_wrapper"
+    )
+
     project.enable_dynamo_db = True
     project.save()
 
     url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment.api_key, feature_state.id],
-    )
-    mock_dynamo_environment_wrapper = mocker.patch(
-        "environments.models.environment_wrapper"
     )
 
     # When
