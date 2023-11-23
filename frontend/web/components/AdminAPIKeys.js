@@ -6,14 +6,17 @@ import JSONReference from './JSONReference'
 import Button from './base/forms/Button'
 import DateSelect from './DateSelect'
 import Icon from './Icon'
-import Switch from 'components/Switch'
+import Switch from './Switch'
+import MyRoleSelect from './MyRoleSelect'
 
 export class CreateAPIKey extends PureComponent {
   state = {
     expiry_date: null,
-    isRoleAPIKey: false,
+    is_admin: true,
     key: '',
     name: '',
+    roles: [],
+    showRoles: false,
   }
 
   submit = () => {
@@ -25,6 +28,7 @@ export class CreateAPIKey extends PureComponent {
         }/master-api-keys/`,
         {
           expiry_date: this.state.expiry_date,
+          is_admin: this.state.is_admin,
           name: this.state.name,
           organisation: AccountStore.getOrganisation().id,
         },
@@ -38,7 +42,49 @@ export class CreateAPIKey extends PureComponent {
       })
   }
 
+  updateApiKey = (prefix) => {
+    data
+      .put(
+        `${Project.api}organisations/${
+          AccountStore.getOrganisation().id
+        }/master-api-keys/${prefix}/`,
+        {
+          expiry_date: this.state.expiry_date,
+          is_admin: this.state.is_admin,
+          name: this.state.name,
+          revoked: false,
+        },
+      )
+      .then((res) => {
+        // console.log('DEBUG: res:', res)
+        this.props.onSuccess()
+      })
+  }
+
+  getApiKeyByPrefix = (prefix) => {
+    data
+      .get(
+        `${Project.api}organisations/${
+          AccountStore.getOrganisation().id
+        }/master-api-keys/${prefix}/`,
+      )
+      .then((res) => {
+        this.setState({
+          expiry_date: res.expiry_date,
+          is_admin: res.is_admin,
+          name: res.name,
+        })
+      })
+  }
+
+  componentDidMount() {
+    this.getApiKeyByPrefix(this.props.prefix)
+  }
+
   render() {
+    const { expiry_date, is_admin, roles, showRoles } = this.state
+    const buttonText = this.props.isEdit ? 'Update' : 'Create'
+    const buttonSavingText = this.props.isEdit ? 'Updating' : 'Creating'
     return (
       <>
         <div className='modal-body flex flex-column flex-fill px-4'>
@@ -59,29 +105,40 @@ export class CreateAPIKey extends PureComponent {
                   placeholder='e.g. Admin API Key'
                 />
               </Flex>
-              {this.props.idEdit && (
+              <Row className='mb-3 mt-4'>
+                <label className='mr-2'>Is admin</label>
                 <Switch
-                  onChange={(value) =>
+                  onChange={() => {
                     this.setState({
-                      isRoleAPIKey: value,
+                      is_admin: !is_admin,
                     })
-                  }
+                  }}
+                  checked={is_admin}
                 />
-              )}
-              {this.props.idEdit && (
-                <Flex className='mb-3 mt-4'>
-                  <label>Select a role</label>
-                  <Select
-                    isDisabled={false}
-                    options={[
-                      { label: 'Role 1', value: '1' },
-                      { label: 'role 2', value: '2' },
-                      { label: 'role 3', value: '3' },
-                      { label: 'role 4', value: '4' },
-                    ]}
-                    onChange={(v) => this.setState({ value: v.value })}
-                  />
-                </Flex>
+              </Row>
+              {!is_admin && (
+                <Row className='mb-3 mt-4'>
+                  <Button
+                    theme='text'
+                    onClick={() => this.setState({ showRoles: !showRoles })}
+                  >
+                    Select roles
+                  </Button>
+                  {Utils.getFlagsmithHasFeature('show_role_management') && (
+                    <div className='px-4'>
+                      <MyRoleSelect
+                        orgId={AccountStore.getOrganisation().id}
+                        // value={rolesSelected.map((v) => v.role)}
+                        // onAdd={addRole}
+                        // onRemove={removeOwner}
+                        isOpen={showRoles}
+                        onToggle={() =>
+                          this.setState({ showRoles: !showRoles })
+                        }
+                      />
+                    </div>
+                  )}
+                </Row>
               )}
               <Flex>
                 <div>
@@ -93,16 +150,10 @@ export class CreateAPIKey extends PureComponent {
                       expiry_date: e.toISOString(),
                     })
                   }}
-                  selected={
-                    this.state.expiry_date
-                      ? moment(this.state.expiry_date)._d
-                      : null
-                  }
+                  selected={expiry_date ? moment(expiry_date)._d : null}
                   value={
-                    this.state.expiry_date
-                      ? `${moment(this.state.expiry_date).format(
-                          'Do MMM YYYY hh:mma',
-                        )}`
+                    expiry_date
+                      ? `${moment(expiry_date).format('Do MMM YYYY hh:mma')}`
                       : 'Never'
                   }
                 />
@@ -126,7 +177,7 @@ export class CreateAPIKey extends PureComponent {
             <>
               <div className='modal-footer my-5 p-0'>
                 <Button
-                  disabled={!this.state.expiry_date}
+                  disabled={!expiry_date}
                   onClick={() => this.setState({ expiry_date: null })}
                   theme='secondary'
                   className='mr-2'
@@ -134,10 +185,18 @@ export class CreateAPIKey extends PureComponent {
                   Clear Date
                 </Button>
                 <Button
-                  onClick={this.submit}
-                  disabled={this.state.isSaving || !this.state.name}
+                  onClick={
+                    this.props.isEdit
+                      ? () => this.updateApiKey(this.props.prefix)
+                      : this.submit
+                  }
+                  disabled={
+                    this.state.isSaving ||
+                    !this.state.name ||
+                    (!is_admin && !roles.length)
+                  }
                 >
-                  {this.state.isSaving ? 'Creating' : 'Create'}
+                  {this.state.isSaving ? buttonSavingText : buttonText}
                 </Button>
               </div>
             </>
@@ -165,10 +224,28 @@ export default class AdminAPIKeys extends PureComponent {
     openModal(
       'New Admin API Key',
       <CreateAPIKey
-        idEdit
         onSuccess={() => {
           this.setState({ isLoading: true })
           this.fetch()
+        }}
+      />,
+      'p-0 side-modal',
+    )
+  }
+
+  editAPIKey = (name, masterAPIKey, prefix) => {
+    console.log('DEBUG: masterAPIKey:', masterAPIKey, prefix)
+    openModal(
+      `${name} API Key`,
+      <CreateAPIKey
+        isEdit
+        masterAPIKey={masterAPIKey}
+        prefix={prefix}
+        onSuccess={() => {
+          this.setState({ isLoading: true })
+          this.fetch()
+          closeModal()
+          toast('Api key Updated')
         }}
       />,
       'p-0 side-modal',
@@ -267,7 +344,7 @@ export default class AdminAPIKeys extends PureComponent {
                 <Row
                   className='list-item'
                   key={v.id}
-                  onClick={this.createAPIKey}
+                  onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
                 >
                   <Flex className='table-column px-3'>
                     <div className='font-weight-medium mb-1'>{v.name}</div>
