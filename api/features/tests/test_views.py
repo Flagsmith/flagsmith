@@ -525,12 +525,17 @@ class ProjectFeatureTestCase(TestCase):
         with mock.patch(
             "environments.models.environment_wrapper"
         ) as mock_dynamo_environment_wrapper:
-
             self.project.enable_dynamo_db = True
             self.project.save()
 
-            url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-            data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
+            url = reverse(
+                "api-v1:projects:project-features-list", args=[self.project.id]
+            )
+            data = {
+                "name": "Test feature flag",
+                "type": "FLAG",
+                "project": self.project.id,
+            }
 
             # When
             self.client.post(url, data=data)
