@@ -40,7 +40,8 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             q = q & Q(log__icontains=search)
 
         return AuditLog.objects.filter(q).select_related(
-            "project", "environment", "author"
+            # TODO #2797: data migrate missing organisation values and rename _organisation
+            "_organisation", "project", "environment", "author"
         )
 
     def _get_base_filters(self) -> Q:
