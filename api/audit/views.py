@@ -41,7 +41,10 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         return AuditLog.objects.filter(q).select_related(
             # TODO #2797: data migrate missing organisation values and rename _organisation
-            "_organisation", "project", "environment", "author"
+            "_organisation",
+            "project",
+            "environment",
+            "author",
         )
 
     def _get_base_filters(self) -> Q:
