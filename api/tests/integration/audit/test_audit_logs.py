@@ -16,4 +16,5 @@ def test_audit_logs_only_makes_two_queries(
         res = admin_client.get(url, {"project": project})
 
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["count"] == 3
+    # new project/permission/feature + new environment/permission/feature
+    assert res.json()["count"] == 6
