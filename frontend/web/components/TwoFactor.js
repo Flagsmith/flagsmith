@@ -13,7 +13,7 @@ export default class TheComponent extends PureComponent {
   onError = () => this.setState({ error: true })
 
   render() {
-    // const { props } = this;
+    const { isLoginPage } = this.props
     return (
       <div>
         <AccountProvider>
@@ -38,7 +38,11 @@ export default class TheComponent extends PureComponent {
                 }
                 onRegister={() => {
                   this.setState({ error: null })
-                  confirmTwoFactor(this.state.pin, this.onError)
+                  confirmTwoFactor(
+                    this.state.pin,
+                    this.onError,
+                    isLoginPage || false,
+                  )
                 }}
               />
             </div>

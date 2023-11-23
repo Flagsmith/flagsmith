@@ -184,7 +184,9 @@ const CreateEditIntegration = class extends Component {
                   </label>
                 </div>
                 {this.props.readOnly ? (
-                  <div className='mb-3'>{this.state.data[field.key]}</div>
+                  <div className='mb-3'>
+                    {field.hidden ? this.state.data[field.key].replace(/./g, '*') : this.state.data[field.key]}
+                  </div>
                 ) : field.options ? (
                   <div className='full-width mb-2'>
                     <Select
@@ -216,7 +218,7 @@ const CreateEditIntegration = class extends Component {
                     value={this.state.data[field.key]}
                     onChange={(e) => this.update(field.key, e)}
                     isValid={!!this.state.data[field.key]}
-                    type='text'
+                    type={field.hidden ? 'password' : 'text'}
                     className='full-width mb-2'
                   />
                 )}

@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 
 import * as DOMPurify from 'dompurify'
 import Utils from 'common/utils/utils'
+import { informationCircle } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const ReactTooltip = require('react-tooltip')
 
@@ -20,7 +22,9 @@ type TooltipProps = {
 
 const StyledTooltip = ({ children }: StyledTooltipProps) => (
   <div className='flex-row'>
-    <div className='icon--tooltip ion-ios-information-circle mr-1'></div>
+    <div className='icon--new-tooltip mr-1'>
+      <IonIcon icon={informationCircle} />
+    </div>
     <span>{`${children}`}</span>
   </div>
 )

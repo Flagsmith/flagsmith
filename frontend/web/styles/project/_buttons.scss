@@ -98,6 +98,19 @@ button.btn {
       color: $text-icon-dark;
     }
   }
+  &-success {
+    background-color: $success;
+    &:hover,
+    &:focus {
+      background-color: $success400;
+      color: $text-icon-light;
+    }
+
+    &.btn:active {
+      background-color: $success600;
+      color: $text-icon-light;
+    }
+  }
 
   &--transparent {
     background-color: transparent;
@@ -147,7 +160,7 @@ button.btn {
     &.btn-sm {
       padding: 0 10px;
     }
-    &.btn-lg{
+    &.btn-lg {
       line-height: $btn-line-height-lg;
     }
     &.btn-remove {
@@ -296,7 +309,7 @@ button.btn {
     color: $text-icon-dark;
     font-weight: bold;
   }
-  &.btn-with-icon{
+  &.btn-with-icon {
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
@@ -366,6 +379,13 @@ $add-btn-size: 34px;
       &:active {
         color: white;
         background-color: $btn-secondary-active-bg-dark;
+      }
+    }
+    &.btn-success {
+      &:hover,
+      &:focus {
+        background-color: $success400;
+        color: $text-icon-light;
       }
     }
 
@@ -440,7 +460,8 @@ $add-btn-size: 34px;
         }
       }
 
-      &.btn:hover {
+      &.btn:hover,
+      &.btn:focus,&.btn:active {
         background-color: $bg-dark200;
         color: $text-icon-light;
         & .btn-project-letter {
@@ -448,8 +469,11 @@ $add-btn-size: 34px;
         }
       }
     }
-    &.btn-with-icon{
+    &.btn-with-icon {
       background-color: $basic-alpha-8;
+      &.btn-remove {
+        background-color: $danger-alfa-8;
+      }
     }
   }
 

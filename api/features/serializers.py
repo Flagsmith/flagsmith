@@ -11,7 +11,11 @@ from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
 from projects.models import Project
-from users.serializers import UserIdsSerializer, UserListSerializer
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSummarySerializer,
+)
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -36,8 +40,21 @@ class FeatureOwnerInputSerializer(UserIdsSerializer):
         feature.owners.remove(*user_ids)
 
 
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
 class ProjectFeatureSerializer(serializers.ModelSerializer):
     owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
@@ -50,6 +67,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
             "default_enabled",
             "type",
             "owners",
+            "group_owners",
             "is_server_key_only",
         )
         writeonly_fields = ("initial_value", "default_enabled")
@@ -422,12 +440,18 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 
 class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
     feature_state_value = FeatureStateValueSerializer()
-    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
 
     class Meta:
         model = FeatureState
         fields = (
             "id",
+            "feature",
             "enabled",
             "feature_state_value",
             "feature_segment",
@@ -439,6 +463,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "multivariate_feature_state_values",
         )
 
         read_only_fields = (
@@ -451,6 +476,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "feature",
         )
 
     def _get_save_kwargs(self, field_name):
@@ -458,6 +484,9 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
         if field_name == "feature_segment":
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
+            kwargs["environment_feature_version"] = self.context.get(
+                "environment_feature_version"
+            )
         return kwargs
 
     def create(self, validated_data: dict) -> FeatureState:

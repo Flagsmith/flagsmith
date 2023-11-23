@@ -1,10 +1,14 @@
 from contextlib import suppress
 
-from django.conf import settings
+from core.helpers import get_current_site_url
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q, QuerySet
-from django.http import Http404, JsonResponse
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -33,10 +37,14 @@ from users.models import (
 from users.serializers import (
     ListUserPermissionGroupSerializer,
     ListUsersQuerySerializer,
-    MyUserPermissionGroupsSerializer,
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
+    UserPermissionGroupSummarySerializer,
+)
+from users.services import (
+    create_initial_superuser,
+    should_skip_create_initial_superuser,
 )
 
 from .forms import InitConfigForm
@@ -50,30 +58,25 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
     )
 
     def has_permission(self):
-        return FFAdminUser.objects.count() == 0
+        return not should_skip_create_initial_superuser()
 
     def handle_no_permission(self):
         raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
 
     def form_valid(self, form):
-        form.create_admin()
         form.update_site()
-        return JsonResponse({"message": "INSTALLATION CONFIGURED SUCCESSFULLY"})
+        password_reset_url = form.create_admin().password_reset_url
+        return JsonResponse(
+            {
+                "message": "INSTALLATION CONFIGURED SUCCESSFULLY",
+                "passwordResetUrl": password_reset_url,
+            }
+        )
 
 
 class AdminInitView(View):
     def get(self, request):
-        if FFAdminUser.objects.count() == 0:
-            admin = FFAdminUser.objects.create_superuser(
-                settings.ADMIN_EMAIL,
-                settings.ADMIN_INITIAL_PASSWORD,
-                is_active=True,
-            )
-            admin.save()
-            return JsonResponse(
-                {"adminUserCreated": True}, status=status.HTTP_201_CREATED
-            )
-        else:
+        if should_skip_create_initial_superuser():
             return JsonResponse(
                 {
                     "adminUserCreated": False,
@@ -81,6 +84,14 @@ class AdminInitView(View):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        response = create_initial_superuser()
+        return JsonResponse(
+            {
+                "adminUserCreated": True,
+                "passwordResetUrl": response.password_reset_url,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 @method_decorator(
@@ -142,13 +153,13 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         )
 
 
-def password_reset_redirect(request, uidb64, token):
-    protocol = "https" if request.is_secure() else "https"
-    current_site = get_current_site(request)
-    domain = current_site.domain
-    return redirect(
-        protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token
-    )
+def password_reset_redirect(
+    request: HttpRequest,
+    uidb64: str,
+    token: str,
+) -> HttpResponseRedirect:
+    current_site_url = get_current_site_url(request)
+    return redirect(f"{current_site_url}/password-reset/{uidb64}/{token}")
 
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
@@ -179,7 +190,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
         elif self.action == "my_groups":
-            return MyUserPermissionGroupsSerializer
+            return UserPermissionGroupSummarySerializer
         return ListUserPermissionGroupSerializer
 
     def get_serializer_context(self):
@@ -245,11 +256,11 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         return self.list(request, organisation_pk)
 
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def make_user_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,
@@ -260,11 +271,11 @@ def make_user_group_admin(
     return Response()
 
 
-@permission_classes([IsAuthenticated(), NestedIsOrganisationAdminPermission()])
 @api_view(["POST"])
+@permission_classes([IsAuthenticated, NestedIsOrganisationAdminPermission])
 def remove_user_as_group_admin(
     request: Request, organisation_pk: int, group_pk: int, user_pk: int
-):
+) -> Response:
     user = get_object_or_404(
         FFAdminUser,
         userorganisation__organisation_id=organisation_pk,

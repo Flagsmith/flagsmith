@@ -10,6 +10,7 @@ export type GroupSelectType = {
   groups: UserGroup[] | UserGroupSummary[] | undefined
   value: number[] | undefined
   isOpen: boolean
+  size: string
   onAdd: (id: number, isUser: boolean) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
@@ -21,6 +22,7 @@ const GroupSelect: FC<GroupSelectType> = ({
   onAdd,
   onRemove,
   onToggle,
+  size,
   value,
 }) => {
   const [filter, setFilter] = useState<string>('')
@@ -31,12 +33,13 @@ const GroupSelect: FC<GroupSelectType> = ({
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
+  const modalClassName = `inline-modal--tags${size}`
   return (
     <InlineModal
       title='Groups'
       isOpen={isOpen}
       onClose={onToggle}
-      className='inline-modal--tags'
+      className={modalClassName}
     >
       <Input
         disabled={disabled}
@@ -44,6 +47,7 @@ const GroupSelect: FC<GroupSelectType> = ({
         onChange={(e: InputEvent) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
         placeholder='Type or choose a Group'
+        search
       />
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {grouplist &&

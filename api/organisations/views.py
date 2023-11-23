@@ -8,7 +8,7 @@ from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
-from django.contrib.sites.shortcuts import get_current_site
+from core.helpers import get_current_site_url
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -16,13 +16,12 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.exceptions import (
-    OrganisationHasNoSubscription,
-    SubscriptionNotFound,
-)
+from organisations.chargebee import webhook_handlers
+from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -183,20 +182,16 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise SubscriptionNotFound()
-
         subscription_details = organisation.subscription.get_subscription_metadata()
         serializer = self.get_serializer(instance=subscription_details)
-
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
-        redirect_url = get_current_site(request)
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
+        redirect_url = get_current_site_url(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
         )
@@ -210,8 +205,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     )
     def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription():
-            raise OrganisationHasNoSubscription()
+        if not organisation.has_paid_subscription():
+            raise OrganisationHasNoPaidSubscription()
         serializer = self.get_serializer(
             data={
                 "subscription_id": organisation.subscription.subscription_id,
@@ -262,9 +257,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
 @api_view(["POST"])
 @authentication_classes([BasicAuthentication])
-def chargebee_webhook(request):
+def chargebee_webhook(request: Request) -> Response:
     """
     Endpoint to handle webhooks from chargebee.
+
+    Payment failure and payment succeeded webhooks are filtered out and processed
+    to determine which of our subscriptions are in a dunning state.
+
+    The remaining webhooks are processed if they have subscription data:
 
      - If subscription is active, check to see if plan has changed and update if so. Always update cancellation date to
        None to ensure that if a subscription is reactivated, it is updated on our end.
@@ -272,6 +272,12 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
+    event_type = request.data.get("event_type")
+
+    if event_type == "payment_failed":
+        return webhook_handlers.payment_failed(request)
+    if event_type == "payment_succeeded":
+        return webhook_handlers.payment_succeeded(request)
 
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]
@@ -286,7 +292,7 @@ def chargebee_webhook(request):
                 "Couldn't get unique subscription for ChargeBee id %s"
                 % subscription_data.get("id")
             )
-            logger.error(error_message)
+            logger.warning(error_message)
             return Response(status=status.HTTP_200_OK)
         subscription_status = subscription_data.get("status")
         if subscription_status == "active":
@@ -310,7 +316,9 @@ def chargebee_webhook(request):
 
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                datetime.fromtimestamp(
+                    subscription_data.get("current_term_end")
+                ).replace(tzinfo=timezone.utc),
                 update_chargebee=False,
             )
 

@@ -7,14 +7,27 @@ on:
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
-  FLAGSMITH_RBAC_REVISION: v0.3.1
+  FLAGSMITH_RBAC_REVISION: v0.4.1
   FLAGSMITH_WORKFLOWS_REVISION: v1.2.5
   FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
 
 jobs:
-  build-dockerhub:
+  start-runner:
     runs-on: ubuntu-latest
+    outputs:
+      runner-label: ${{ steps.start.outputs.runner-label }}
+      instance-id: ${{ steps.start.outputs.instance-id }}
+    steps:
+      - uses: Flagsmith/actions/ec2-runner/start@v0.2.0
+        id: start
+        with:
+          github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
+
+  build-dockerhub:
     name: Platform Publish Docker Image
+    needs: [start-runner]
+    runs-on: ${{ needs.start-runner.outputs.runner-label }}
 
     steps:
       - name: Cloning repo
@@ -108,3 +121,15 @@ jobs:
           build-args: |
             SAML_INSTALLED=1
             POETRY_OPTS=--with saml,auth-controller
+
+  stop-runner:
+    needs: [start-runner, build-dockerhub]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Flagsmith/actions/ec2-runner/stop@v0.2.0
+        with:
+          github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
+          runner-label: ${{ needs.start-runner.outputs.runner-label }}
+          instance-id: ${{ needs.start-runner.outputs.instance-id }}
