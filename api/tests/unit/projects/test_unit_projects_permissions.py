@@ -242,7 +242,6 @@ class ProjectPermissionPermissionsTestCase(TestCase):
 
         mock_view.kwargs = {"project_pk": self.project.id}
 
-        breakpoint()
         self.read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
         self.user_project_permission = UserProjectPermission.objects.create(
             user=self.user, project=self.project
@@ -309,7 +308,7 @@ class ProjectPermissionPermissionsTestCase(TestCase):
         mock_request.user = self.org_admin
         actions = ["update", "destroy"]
         mock_view.detail = True
-        breakpoint()
+
         # When
         results = []
         for action in actions:
