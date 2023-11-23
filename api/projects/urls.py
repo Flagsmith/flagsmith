@@ -4,7 +4,7 @@ from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
 from features.multivariate.views import MultivariateFeatureOptionViewSet
-from features.views import FeatureViewSet
+from features.views import FeatureExportListView, FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
@@ -73,5 +73,10 @@ urlpatterns = [
         "<int:project_pk>/all-user-permissions/<int:user_pk>/",
         get_user_project_permissions,
         name="all-user-permissions",
+    ),
+    path(
+        "<int:project_id>/feature-exports/",
+        FeatureExportListView.as_view(),
+        name="feature-exports",
     ),
 ]
