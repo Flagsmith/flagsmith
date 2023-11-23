@@ -18,7 +18,7 @@
     "lint:fix": "npx eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
-    "dev": "ENV=dev cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
+    "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "npx webpack --config ./webpack/webpack.config.prod.js",
     "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
   },
