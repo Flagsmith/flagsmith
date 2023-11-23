@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 from functools import reduce
@@ -16,7 +17,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
-from rest_framework.generics import GenericAPIView, get_object_or_404
+from rest_framework.generics import (
+    GenericAPIView,
+    ListAPIView,
+    get_object_or_404,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
@@ -33,23 +38,32 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.constants import MAX_FEATURE_IMPORT_SIZE
+from features.tasks import import_features_for_environment
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
-from .models import Feature, FeatureState
+from .models import Feature, FeatureExport, FeatureImport, FeatureState
 from .permissions import (
+    CreateFeatureExportPermissions,
     CreateSegmentOverridePermissions,
+    DownloadFeatureExportPermissions,
     EnvironmentFeatureStatePermissions,
+    FeatureExportListPermissions,
+    FeatureImportPermissions,
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
 )
 from .serializers import (
+    CreateFeatureExportSerializer,
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
+    FeatureExportSerializer,
     FeatureGroupOwnerInputSerializer,
+    FeatureImportSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -67,7 +81,10 @@ from .serializers import (
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
-from .tasks import trigger_feature_state_change_webhooks
+from .tasks import (
+    export_features_for_environment,
+    trigger_feature_state_change_webhooks,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -731,7 +748,7 @@ def organisation_has_got_feature(request, organisation):
 @swagger_auto_schema(
     method="POST",
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])
@@ -747,3 +764,94 @@ def create_segment_override(
     serializer.is_valid(raise_exception=True)
     serializer.save(environment=environment, feature=feature)
     return Response(serializer.data, status=201)
+
+
+@swagger_auto_schema(
+    method="POST",
+    request_body=CreateFeatureExportSerializer(),
+    responses={201: CreateFeatureExportSerializer()},
+)
+@api_view(["POST"])
+@permission_classes([CreateFeatureExportPermissions])
+def create_feature_export(request: Request) -> Response:
+    serializer = CreateFeatureExportSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    export_features_for_environment.delay(
+        kwargs={
+            "environment_id": serializer.validated_data["environment_id"],
+            "tag_ids": serializer.validated_data["tag_ids"],
+        }
+    )
+
+    return Response(serializer.validated_data, status=201)
+
+
+@swagger_auto_schema(
+    method="POST",
+    responses={201: FeatureImportSerializer()},
+)
+@api_view(["POST"])
+@permission_classes([FeatureImportPermissions])
+def feature_import(request: Request, environment_id: int) -> Response:
+    uploaded_file = request.FILES["file"]
+
+    if uploaded_file.size > MAX_FEATURE_IMPORT_SIZE:
+        return Response(
+            {"detail": "File is too large"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    strategy = request.query_params.get("strategy").upper()
+
+    if not strategy:
+        return Response(
+            {"detail": "A feature import strategy query param must be supplied."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    file_content = uploaded_file.read().decode("utf-8")
+    feature_import = FeatureImport.objects.create(
+        environment_id=environment_id,
+        strategy=strategy,
+        data=file_content,
+    )
+    serializer = FeatureImportSerializer(feature_import)
+    import_features_for_environment.delay(
+        kwargs={"feature_import_id": feature_import.id}
+    )
+    return Response(serializer.data, status=201)
+
+
+@api_view(["GET"])
+@permission_classes([DownloadFeatureExportPermissions])
+def download_feature_export(request: Request, feature_export_id: int) -> Response:
+    feature_export = get_object_or_404(FeatureExport, id=feature_export_id)
+
+    response = Response(
+        json.loads(feature_export.data), content_type="application/json"
+    )
+    response.headers[
+        "Content-Disposition"
+    ] = f"attachment; filename=feature_export.{feature_export_id}.json"
+    return response
+
+
+class FeatureExportListView(ListAPIView):
+    serializer_class = FeatureExportSerializer
+    permission_classes = [FeatureExportListPermissions]
+
+    def get_queryset(self) -> QuerySet[FeatureExport]:
+        environment_ids = []
+        user = self.request.user
+
+        for environment in Environment.objects.filter(
+            project_id=self.kwargs["project_id"],
+        ):
+            if user.is_environment_admin(environment):
+                environment_ids.append(environment.id)
+
+        # Order by environment name to match environment list order.
+        return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
+            "environment__name"
+        )
