@@ -446,12 +446,18 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 
 class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
     feature_state_value = FeatureStateValueSerializer()
-    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
 
     class Meta:
         model = FeatureState
         fields = (
             "id",
+            "feature",
             "enabled",
             "feature_state_value",
             "feature_segment",
@@ -463,6 +469,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "multivariate_feature_state_values",
         )
 
         read_only_fields = (
@@ -475,6 +482,7 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
             "environment",
             "identity",
             "change_request",
+            "feature",
         )
 
     def _get_save_kwargs(self, field_name):
@@ -482,6 +490,9 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
         if field_name == "feature_segment":
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
+            kwargs["environment_feature_version"] = self.context.get(
+                "environment_feature_version"
+            )
         return kwargs
 
     def create(self, validated_data: dict) -> FeatureState:

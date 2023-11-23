@@ -31,7 +31,6 @@ from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
-    MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
@@ -287,7 +286,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return metadata or BaseSubscriptionMetadata(
             seats=self.max_seats,
             api_calls=self.max_api_calls,
-            projects=MAX_PROJECTS_IN_FREE_PLAN,
+            projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
         )
 
     def add_single_seat(self):

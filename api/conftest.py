@@ -3,6 +3,7 @@ import typing
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from flag_engine.segments.constants import EQUAL
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -23,6 +24,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from metadata.models import (
     Metadata,
@@ -45,7 +47,7 @@ from projects.models import (
 )
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -222,6 +224,12 @@ def with_project_permissions(
         return upp
 
     return _with_project_permissions
+
+
+@pytest.fixture()
+def environment_v2_versioning(environment):
+    enable_v2_versioning(environment.id)
+    return environment
 
 
 @pytest.fixture()

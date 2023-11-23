@@ -34,7 +34,6 @@ from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     MAX_API_CALLS_IN_FREE_PLAN,
-    MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
     SUBSCRIPTION_BILLING_STATUS_DUNNING,
@@ -928,7 +927,9 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
     assert response.data == {
         "chargebee_email": None,
         "max_api_calls": 50000,
-        "max_projects": 1,
+        # MAX_PROJECTS_IN_FREE_PLAN is set to 10 in tests, as there are tests that needs to create more
+        # than 1 project within a single organisation using the default subscription
+        "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "max_seats": 1,
         "payment_source": None,
     }
@@ -954,7 +955,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
     assert response.json() == {
         "max_seats": MAX_SEATS_IN_FREE_PLAN,
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,
-        "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
+        "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
         "chargebee_email": None,
     }
