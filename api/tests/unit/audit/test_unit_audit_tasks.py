@@ -166,22 +166,18 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     )
 
     # Then
-    mocked_audit_log_model_class.objects.bulk_create.assert_called_once_with(
-        [
-            AuditLog(
-                organisation=mock_organisation,
-                environment=mock_environment,
-                project=mock_project,
-                history_record_id=history_instance.history_id,
-                history_record_class_path=history_record_class_path,
-                author=history_user,
-                ip_address=history_instance.ip_address,
-                related_object_id=related_object_id,
-                related_object_type=related_object_type.name,
-                log=log_message,
-                master_api_key=None,
-            )
-        ]
+    mocked_audit_log_model_class.assert_called_once_with(
+        organisation=mock_organisation,
+        environment=mock_environment,
+        project=mock_project,
+        history_record_id=history_instance.history_id,
+        history_record_class_path=history_record_class_path,
+        author=history_user,
+        ip_address=history_instance.ip_address,
+        related_object_id=related_object_id,
+        related_object_type=related_object_type.name,
+        log=log_message,
+        master_api_key=None,
     )
 
 
