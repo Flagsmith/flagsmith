@@ -5,7 +5,7 @@ require('colors')
 const fs = require('fs-extra')
 const path = require('path')
 
-const env = process.env.ENV || 'dev'
+const env = process.env.ENV || 'selfhosted'
 const src = path.resolve(__dirname, `../env/project_${env}.js`)
 const target = path.resolve(__dirname, '../common/project.js')
 
