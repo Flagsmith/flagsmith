@@ -11,11 +11,15 @@ COPY --chown=node:node frontend/package.json frontend/package-lock.json frontend
 COPY --chown=node:node frontend/bin/ ./bin/
 COPY --chown=node:node frontend/env/ ./env/
 
-RUN npm ci --quiet --production
+# since ENV is only used for the purposes of copying the correct
+# project_${env}.js file to common/project.js, this is a build arg
+# which subsequently gets set as an environment variable. This is
+# done to avoid confusion since it is not a required run time var.
+ARG ENV=selfhosted
+RUN ENV=${ENV} npm ci --quiet --production
 
 COPY --chown=node:node frontend .
 COPY .release-please-manifest.json .
-ENV ENV=prod
 RUN npm run bundle
 
 
@@ -26,7 +30,6 @@ USER node
 WORKDIR /srv/bt
 COPY --from=build --chown=node:node /srv/bt/ .
 
-ENV ENV=prod
 ENV NODE_ENV=production
 
 EXPOSE 8080
