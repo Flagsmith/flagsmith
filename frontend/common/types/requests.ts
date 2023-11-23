@@ -132,5 +132,9 @@ export type Req = {
   createLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectImport: { project_id: string }
   getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
+  getRoleMasterApiKey: { id: string }
+  updateRoleMasterApiKey: { id: string }
+  deleteRoleMasterApiKey: { id: string }
+  createRoleMasterApiKey: {}
   // END OF TYPES
 }

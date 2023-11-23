@@ -378,5 +378,6 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  roleMasterApiKey: {id:string}
   // END OF TYPES
 }
