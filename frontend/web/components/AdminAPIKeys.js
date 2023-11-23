@@ -6,10 +6,12 @@ import JSONReference from './JSONReference'
 import Button from './base/forms/Button'
 import DateSelect from './DateSelect'
 import Icon from './Icon'
+import Switch from 'components/Switch'
 
 export class CreateAPIKey extends PureComponent {
   state = {
     expiry_date: null,
+    isRoleAPIKey: false,
     key: '',
     name: '',
   }
@@ -57,6 +59,30 @@ export class CreateAPIKey extends PureComponent {
                   placeholder='e.g. Admin API Key'
                 />
               </Flex>
+              {this.props.idEdit && (
+                <Switch
+                  onChange={(value) =>
+                    this.setState({
+                      isRoleAPIKey: value,
+                    })
+                  }
+                />
+              )}
+              {this.props.idEdit && (
+                <Flex className='mb-3 mt-4'>
+                  <label>Select a role</label>
+                  <Select
+                    isDisabled={false}
+                    options={[
+                      { label: 'Role 1', value: '1' },
+                      { label: 'role 2', value: '2' },
+                      { label: 'role 3', value: '3' },
+                      { label: 'role 4', value: '4' },
+                    ]}
+                    onChange={(v) => this.setState({ value: v.value })}
+                  />
+                </Flex>
+              )}
               <Flex>
                 <div>
                   <label>Expiry</label>
@@ -139,6 +165,7 @@ export default class AdminAPIKeys extends PureComponent {
     openModal(
       'New Admin API Key',
       <CreateAPIKey
+        idEdit
         onSuccess={() => {
           this.setState({ isLoading: true })
           this.fetch()
@@ -195,9 +222,9 @@ export default class AdminAPIKeys extends PureComponent {
           json={apiKeys}
         />
         <Column className='my-4 ml-0 col-md-6'>
-          <h5 className='mb-1'>Terraform API Keys</h5>
+          <h5 className='mb-1'>Manage API Keys</h5>
           <p className='mb-0 fs-small lh-sm'>
-            Terraform API keys are used to authenticate with the Admin API.
+            API keys are used to authenticate with the Admin API.
           </p>
           <div className='mb-4 fs-small lh-sm'>
             <Button
@@ -206,11 +233,11 @@ export default class AdminAPIKeys extends PureComponent {
               target='_blank'
               className='fw-normal'
             >
-              Learn about Terraform Keys.
+              Learn about Keys.
             </Button>
           </div>
           <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
-            Create Terraform API Key
+            Create API Key
           </Button>
         </Column>
         {this.state.isLoading && (
@@ -237,7 +264,11 @@ export default class AdminAPIKeys extends PureComponent {
             }
             renderRow={(v) =>
               !v.revoked && (
-                <Row className='list-item' key={v.id}>
+                <Row
+                  className='list-item'
+                  key={v.id}
+                  onClick={this.createAPIKey}
+                >
                   <Flex className='table-column px-3'>
                     <div className='font-weight-medium mb-1'>{v.name}</div>
                     <div className='list-item-subtitle'>
@@ -252,7 +283,10 @@ export default class AdminAPIKeys extends PureComponent {
                     style={{ width: '80px' }}
                   >
                     <Button
-                      onClick={() => this.remove(v)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        this.remove(v)
+                      }}
                       className='btn btn-with-icon'
                     >
                       <Icon name='trash-2' width={20} fill='#656D7B' />
