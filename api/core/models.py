@@ -124,7 +124,7 @@ class _AbstractBaseAuditableModel(models.Model):
         # it should never be the case that we still don't know the organisations
         if organisations is None:
             raise RuntimeError(
-                f"{self.__class__.__name__}: One of _get_organisations(), _get_project() or _get_environment() must "
+                f"{self.__class__.__name__}: One of get_organisations(), get_project() or get_environment() must "
                 "be implemented and return a non-null value"
             )
         return organisations, project, environment
@@ -450,9 +450,11 @@ def abstract_base_auditable_model_factory(
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     """Create abstract base for model with history and audit methods"""
 
+    AuditableBase = _get_base_model(default_messages)
+
     # make base with requested audit and history properties/methods
     # type ignored due to https://github.com/microsoft/pyright/issues/5326
-    class AuditableBaseWithHistory(_get_base_model(default_messages)):  # type: ignore
+    class AuditableBaseWithHistory(AuditableBase):  # type: ignore
         history = HistoricalRecords(
             bases=[BaseHistoricalModel],
             excluded_fields=unaudited_fields or (),
@@ -490,10 +492,13 @@ def register_auditable_model(
         get_user=_get_history_user,
     )
 
+    AuditableBase = _get_base_model(default_messages)
+
     # copy requested audit properties/methods to existing model
     setattr(model, "related_object_type", related_object_type)
-    for attr, attr_value in (_get_base_model(default_messages)).__dict__.items():
+    for attr in _AbstractBaseAuditableModel.__dict__:
         try:
-            getattr(model, attr)
+            if attr != "Meta":
+                getattr(model, attr)
         except AttributeError:
-            setattr(model, attr, attr_value)
+            setattr(model, attr, getattr(AuditableBase, attr))

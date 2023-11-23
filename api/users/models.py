@@ -452,7 +452,7 @@ class UserPermissionGroup(
         return [self.organisation]
 
 
-# methods to graft onto MFAModel
+# methods to graft onto MFAMethod
 
 
 def _mfa_method_get_audit_log_identity(self: MFAMethod) -> str:
@@ -462,7 +462,7 @@ def _mfa_method_get_audit_log_identity(self: MFAMethod) -> str:
 def _mfa_method_get_organisations(
     self: MFAMethod, delta=None
 ) -> typing.Iterable[Organisation] | None:
-    return self.user._get_organisations()
+    return self.user.get_organisations()
 
 
 # audit user MFA method create/update/delete
@@ -474,4 +474,4 @@ register_auditable_model(
     default_messages=True,
 )
 MFAMethod.get_audit_log_identity = _mfa_method_get_audit_log_identity
-MFAMethod._get_organisations = _mfa_method_get_organisations
+MFAMethod.get_organisations = _mfa_method_get_organisations
