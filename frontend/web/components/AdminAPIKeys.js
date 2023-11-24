@@ -79,7 +79,6 @@ export class CreateAPIKey extends PureComponent {
         }/master-api-keys/${prefix}/`,
       )
       .then((res) => {
-        console.log('DEBUG: res:', res)
         this.setState({
           expiry_date: res.expiry_date,
           is_admin: res.is_admin,
@@ -89,19 +88,63 @@ export class CreateAPIKey extends PureComponent {
       })
   }
 
-  removeRoleApiKey = (roleId) => {
-    const roleSelected = this.state.roles.find((item) => item.id === roleId)
-    console.log('DEBUG: roleSelected:', roleSelected)
-    deleteRoleMasterApiKey(getStore(), {
-      id: roleSelected.id,
-      org_id: AccountStore.getOrganisation().id,
-      role_id: roleSelected.role,
-    }).then(() => {
-      toast('Role API Key was removed')
-    })
+  removeRoleApiKey = (roleId, isEdit) => {
+    const roleSelected = this.state.roles.find((item) => item.role === roleId)
+    if (isEdit) {
+      deleteRoleMasterApiKey(getStore(), {
+        id: roleSelected.id,
+        org_id: AccountStore.getOrganisation().id,
+        role_id: roleSelected.role,
+      }).then(() => {
+        toast('Role API Key was removed')
+      })
+    }
     this.setState({
-      roles: (this.state.roles || []).filter((v) => v.id !== roleId),
+      roles: (this.state.roles || []).filter((v) => v.role !== roleId),
     })
+  }
+
+  addRole = (role, isEdit) => {
+    console.log('DEBUG: roleId:', role)
+    if (isEdit) {
+      const roleSelected = this.state.roles.find(
+        (item) => item.role === role.role,
+      )
+      createRoleMasterApiKey(getStore(), {
+        org_id: AccountStore.getOrganisation().id,
+        role_id: roleSelected.role,
+      }).then(() => {
+        toast('Role API Key was added')
+      })
+
+    //   const roleExists = this.state.roles.some(
+    //     (existingRole) => existingRole.id === role.id,
+    //   )
+
+    //   if (!roleExists) {
+    //     this.setState({
+    //       roles: [
+    //         ...(this.state.roles || []),
+    //         {
+    //           id: role.id,
+    //           master_api_key: role.master_api_key,
+    //           role: role.role,
+    //           role_name: role.name,
+    //         },
+    //       ],
+    //     })
+    //   }
+    }
+    this.setState({
+      roles: [
+        ...(this.state.roles || []),
+        {
+          role: role.id,
+          role_name: role.name,
+        },
+      ],
+    })
+    console.log('DEBUG: this.state.roles:', this.state.roles)
   }
 
   render() {
@@ -146,7 +189,9 @@ export class CreateAPIKey extends PureComponent {
                     {roles?.map((r) => (
                       <Row
                         key={r.id}
-                        onClick={() => this.removeRoleApiKey(r.id)}
+                        onClick={() =>
+                          this.removeRoleApiKey(r.role, this.props.isEdit)
+                        }
                         className='chip'
                       >
                         <span className='font-weight-bold'>{r.role_name}</span>
@@ -169,9 +214,10 @@ export class CreateAPIKey extends PureComponent {
                     {Utils.getFlagsmithHasFeature('show_role_management') && (
                       <div className='px-4'>
                         <MyRoleSelect
+                          isRoleApiKey
                           orgId={AccountStore.getOrganisation().id}
                           value={roles.map((v) => v.role)}
-                          // onAdd={addRole}
+                          onAdd={this.addRole}
                           onRemove={this.removeRoleApiKey}
                           isOpen={showRoles}
                           onToggle={() =>

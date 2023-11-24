@@ -10,6 +10,7 @@ export type RoleSelectType = {
   roles: Role[] | undefined
   value: number[] | undefined
   isOpen: boolean
+  isRoleApiKey: boolean
   onAdd: (id: number, isUser: boolean) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
@@ -17,6 +18,7 @@ export type RoleSelectType = {
 const RoleSelect: FC<RoleSelectType> = ({
   disabled,
   isOpen,
+  isRoleApiKey,
   onAdd,
   onRemove,
   onToggle,
@@ -55,9 +57,9 @@ const RoleSelect: FC<RoleSelectType> = ({
                 onClick={() => {
                   const isRemove = value?.includes(v.id)
                   if (isRemove && onRemove) {
-                    onRemove(v.id, false)
+                    onRemove(v.id)
                   } else if (!isRemove && onAdd) {
-                    onAdd(v.id, false)
+                    onAdd(isRoleApiKey ? v : v.id)
                   }
                 }}
                 space
