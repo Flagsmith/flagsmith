@@ -12,7 +12,10 @@ def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(
     user = django_user_model.objects.create(username="test_user")
     mock_request = rf.get("/url")
     mock_request.user = user
-    mock_view = mock.MagicMock(basename="organisation-webhooks")
+    mock_view = mock.MagicMock(
+        basename="organisation-webhooks",
+        kwargs={"organisation_pk": organisation.id},
+    )
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
@@ -27,7 +30,10 @@ def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(
     user.add_organisation(organisation, role=OrganisationRole.ADMIN)
     mock_request = rf.get("/url")
     mock_request.user = user
-    mock_view = mock.MagicMock(basename="organisation-webhooks")
+    mock_view = mock.MagicMock(
+        basename="organisation-webhooks",
+        kwargs={"organisation_pk": organisation.id},
+    )
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
@@ -41,7 +47,10 @@ def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(
     user = django_user_model.objects.create(username="test_user")
     mock_request = rf.get("/url")
     mock_request.user = user
-    mock_view = mock.MagicMock(basename="environments-webhooks")
+    mock_view = mock.MagicMock(
+        basename="environments-webhooks",
+        kwargs={"environment_api_key": environment.api_key},
+    )
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
@@ -59,7 +68,10 @@ def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
     mock_request = rf.get("/url")
     mock_request.user = user
 
-    mock_view = mock.MagicMock(basename="environments-webhooks")
+    mock_view = mock.MagicMock(
+        basename="environments-webhooks",
+        kwargs={"environment_api_key": environment.api_key},
+    )
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
