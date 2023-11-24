@@ -105,46 +105,36 @@ export class CreateAPIKey extends PureComponent {
   }
 
   addRole = (role, isEdit) => {
-    console.log('DEBUG: roleId:', role)
     if (isEdit) {
-      const roleSelected = this.state.roles.find(
-        (item) => item.role === role.role,
-      )
       createRoleMasterApiKey(getStore(), {
+        body: { master_api_key: this.props.masterAPIKey },
         org_id: AccountStore.getOrganisation().id,
-        role_id: roleSelected.role,
-      }).then(() => {
+        role_id: role.id,
+      }).then((res) => {
         toast('Role API Key was added')
+        this.setState({
+          roles: [
+            ...(this.state.roles || []),
+            {
+              id: res.data.id,
+              master_api_key: res.data.master_api_key,
+              role: role.id,
+              role_name: role.name,
+            },
+          ],
+        })
       })
-
-    //   const roleExists = this.state.roles.some(
-    //     (existingRole) => existingRole.id === role.id,
-    //   )
-
-    //   if (!roleExists) {
-    //     this.setState({
-    //       roles: [
-    //         ...(this.state.roles || []),
-    //         {
-    //           id: role.id,
-    //           master_api_key: role.master_api_key,
-    //           role: role.role,
-    //           role_name: role.name,
-    //         },
-    //       ],
-    //     })
-    //   }
+    } else {
+      this.setState({
+        roles: [
+          ...(this.state.roles || []),
+          {
+            role: role.id,
+            role_name: role.name,
+          },
+        ],
+      })
     }
-    this.setState({
-      roles: [
-        ...(this.state.roles || []),
-        {
-          role: role.id,
-          role_name: role.name,
-        },
-      ],
-    })
-    console.log('DEBUG: this.state.roles:', this.state.roles)
   }
 
   render() {
@@ -217,8 +207,12 @@ export class CreateAPIKey extends PureComponent {
                           isRoleApiKey
                           orgId={AccountStore.getOrganisation().id}
                           value={roles.map((v) => v.role)}
-                          onAdd={this.addRole}
-                          onRemove={this.removeRoleApiKey}
+                          onAdd={(role) =>
+                            this.addRole(role, this.props.isEdit)
+                          }
+                          onRemove={(roleId) =>
+                            this.removeRoleApiKey(roleId, this.props.isEdit)
+                          }
                           isOpen={showRoles}
                           onToggle={() =>
                             this.setState({ showRoles: !showRoles })

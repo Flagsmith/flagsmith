@@ -12,7 +12,7 @@ export const roleMasterApiKeyService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'RoleMasterApiKey' }],
         query: (query: Req['createRoleMasterApiKey']) => ({
-          body: query,
+          body: query.body,
           method: 'POST',
           url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/`,
         }),
