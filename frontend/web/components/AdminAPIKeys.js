@@ -1,4 +1,6 @@
 import React, { PureComponent } from 'react'
+import { close as closeIcon } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
 import InfoMessage from './InfoMessage'
 import Token from './Token'
@@ -8,6 +10,11 @@ import DateSelect from './DateSelect'
 import Icon from './Icon'
 import Switch from './Switch'
 import MyRoleSelect from './MyRoleSelect'
+import { getStore } from '../../common/store'
+import {
+  createRoleMasterApiKey,
+  deleteRoleMasterApiKey,
+} from '../../common/services/useRoleMasterApiKey'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -17,6 +24,10 @@ export class CreateAPIKey extends PureComponent {
     name: '',
     roles: [],
     showRoles: false,
+  }
+
+  componentDidMount() {
+    this.getApiKeyByPrefix(this.props.prefix)
   }
 
   submit = () => {
@@ -55,8 +66,7 @@ export class CreateAPIKey extends PureComponent {
           revoked: false,
         },
       )
-      .then((res) => {
-        // console.log('DEBUG: res:', res)
+      .then(() => {
         this.props.onSuccess()
       })
   }
@@ -69,16 +79,29 @@ export class CreateAPIKey extends PureComponent {
         }/master-api-keys/${prefix}/`,
       )
       .then((res) => {
+        console.log('DEBUG: res:', res)
         this.setState({
           expiry_date: res.expiry_date,
           is_admin: res.is_admin,
           name: res.name,
+          roles: res.roles,
         })
       })
   }
 
-  componentDidMount() {
-    this.getApiKeyByPrefix(this.props.prefix)
+  removeRoleApiKey = (roleId) => {
+    const roleSelected = this.state.roles.find((item) => item.id === roleId)
+    console.log('DEBUG: roleSelected:', roleSelected)
+    deleteRoleMasterApiKey(getStore(), {
+      id: roleSelected.id,
+      org_id: AccountStore.getOrganisation().id,
+      role_id: roleSelected.role,
+    }).then(() => {
+      toast('Role API Key was removed')
+    })
+    this.setState({
+      roles: (this.state.roles || []).filter((v) => v.id !== roleId),
+    })
   }
 
   render() {
@@ -117,28 +140,48 @@ export class CreateAPIKey extends PureComponent {
                 />
               </Row>
               {!is_admin && (
-                <Row className='mb-3 mt-4'>
-                  <Button
-                    theme='text'
-                    onClick={() => this.setState({ showRoles: !showRoles })}
-                  >
-                    Select roles
-                  </Button>
-                  {Utils.getFlagsmithHasFeature('show_role_management') && (
-                    <div className='px-4'>
-                      <MyRoleSelect
-                        orgId={AccountStore.getOrganisation().id}
-                        // value={rolesSelected.map((v) => v.role)}
-                        // onAdd={addRole}
-                        // onRemove={removeOwner}
-                        isOpen={showRoles}
-                        onToggle={() =>
-                          this.setState({ showRoles: !showRoles })
-                        }
-                      />
-                    </div>
-                  )}
-                </Row>
+                <>
+                  <Row className='mb-3 mt-4'>
+                    <label className='mr-2'>Roles:</label>
+                    {roles?.map((r) => (
+                      <Row
+                        key={r.id}
+                        onClick={() => this.removeRoleApiKey(r.id)}
+                        className='chip'
+                      >
+                        <span className='font-weight-bold'>{r.role_name}</span>
+                        <span className='chip-icon ion'>
+                          <IonIcon
+                            icon={closeIcon}
+                            style={{ fontSize: '13px' }}
+                          />
+                        </span>
+                      </Row>
+                    ))}
+                  </Row>
+                  <Row className='mb-3 mt-4'>
+                    <Button
+                      theme='text'
+                      onClick={() => this.setState({ showRoles: !showRoles })}
+                    >
+                      Select roles
+                    </Button>
+                    {Utils.getFlagsmithHasFeature('show_role_management') && (
+                      <div className='px-4'>
+                        <MyRoleSelect
+                          orgId={AccountStore.getOrganisation().id}
+                          value={roles.map((v) => v.role)}
+                          // onAdd={addRole}
+                          onRemove={this.removeRoleApiKey}
+                          isOpen={showRoles}
+                          onToggle={() =>
+                            this.setState({ showRoles: !showRoles })
+                          }
+                        />
+                      </div>
+                    )}
+                  </Row>
+                </>
               )}
               <Flex>
                 <div>
@@ -234,7 +277,6 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   editAPIKey = (name, masterAPIKey, prefix) => {
-    console.log('DEBUG: masterAPIKey:', masterAPIKey, prefix)
     openModal(
       `${name} API Key`,
       <CreateAPIKey

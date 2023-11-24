@@ -14,7 +14,7 @@ export const roleMasterApiKeyService = service
         query: (query: Req['createRoleMasterApiKey']) => ({
           body: query,
           method: 'POST',
-          url: `organisations/${org_id}/roles/${role_id}/master-api-keys/`,
+          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/`,
         }),
       }),
       deleteRoleMasterApiKey: builder.mutation<
@@ -23,9 +23,8 @@ export const roleMasterApiKeyService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'RoleMasterApiKey' }],
         query: (query: Req['deleteRoleMasterApiKey']) => ({
-          body: query,
           method: 'DELETE',
-          url: `organisations/${org_id}/roles/${role_id}/master-api-keys/${id}`,
+          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${query.id}`,
         }),
       }),
       getRoleMasterApiKey: builder.query<
@@ -34,7 +33,7 @@ export const roleMasterApiKeyService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'RoleMasterApiKey' }],
         query: (query: Req['getRoleMasterApiKey']) => ({
-          url: `organisations/${org_id}/roles/${role_id}/master-api-keys/${id}`,
+          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${id}`,
         }),
       }),
       updateRoleMasterApiKey: builder.mutation<
@@ -48,7 +47,7 @@ export const roleMasterApiKeyService = service
         query: (query: Req['updateRoleMasterApiKey']) => ({
           body: query,
           method: 'PUT',
-          url: `organisations/${org_id}/roles/${role_id}/master-api-keys/${id}`,
+          url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${id}`,
         }),
       }),
       // END OF ENDPOINTS
@@ -62,14 +61,11 @@ export async function createRoleMasterApiKey(
     typeof roleMasterApiKeyService.endpoints.createRoleMasterApiKey.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     roleMasterApiKeyService.endpoints.createRoleMasterApiKey.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(roleMasterApiKeyService.util.getRunningQueriesThunk()),
   )
 }
 export async function deleteRoleMasterApiKey(
@@ -79,14 +75,11 @@ export async function deleteRoleMasterApiKey(
     typeof roleMasterApiKeyService.endpoints.deleteRoleMasterApiKey.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     roleMasterApiKeyService.endpoints.deleteRoleMasterApiKey.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(roleMasterApiKeyService.util.getRunningQueriesThunk()),
   )
 }
 export async function getRoleMasterApiKey(
@@ -96,14 +89,11 @@ export async function getRoleMasterApiKey(
     typeof roleMasterApiKeyService.endpoints.getRoleMasterApiKey.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     roleMasterApiKeyService.endpoints.getRoleMasterApiKey.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(roleMasterApiKeyService.util.getRunningQueriesThunk()),
   )
 }
 export async function updateRoleMasterApiKey(
@@ -113,14 +103,11 @@ export async function updateRoleMasterApiKey(
     typeof roleMasterApiKeyService.endpoints.updateRoleMasterApiKey.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     roleMasterApiKeyService.endpoints.updateRoleMasterApiKey.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(roleMasterApiKeyService.util.getRunningQueriesThunk()),
   )
 }
 // END OF FUNCTION_EXPORTS
