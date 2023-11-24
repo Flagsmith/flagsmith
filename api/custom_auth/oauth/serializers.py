@@ -58,10 +58,10 @@ class OAuthLoginSerializer(AuthControllerMixin, serializers.Serializer):
         token, _ = Token.objects.get_or_create(user=user)
 
         # signal successful login
-        user.last_login = timezone.now()
-        user.save()
+        token.user.last_login = timezone.now()
+        token.user.save()
         user_logged_in.send(
-            sender=UserModel, request=self.context.get("request"), user=user
+            sender=UserModel, request=self.context.get("request"), user=token.user
         )
 
         return token
