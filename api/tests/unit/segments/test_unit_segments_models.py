@@ -1,32 +1,50 @@
+from unittest import TestCase
+
 import pytest
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 
-from segments.models import (
-    EQUAL,
-    PERCENTAGE_SPLIT,
-    Condition,
-    Segment,
-    SegmentRule,
-)
+from environments.identities.models import Identity
+from environments.models import Environment
+from organisations.models import Organisation
+from projects.models import Project
+from segments.models import Condition, Segment, SegmentRule
 
 
-def test_percentage_split_calculation_divides_value_by_100_before_comparison(
-    mocker, segment, segment_rule, identity
-):
-    # Given
-    mock_get_hashed_percentage_for_object_ids = mocker.patch(
-        "segments.models.get_hashed_percentage_for_object_ids"
-    )
+@pytest.mark.django_db
+class SegmentRuleTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name="Test Org")
+        self.project = Project.objects.create(
+            name="Test Project", organisation=self.organisation
+        )
+        self.environment = Environment.objects.create(
+            name="Test Environment", project=self.project
+        )
+        self.identity = Identity.objects.create(
+            environment=self.environment, identifier="test_identity"
+        )
+        self.segment = Segment.objects.create(project=self.project, name="test_segment")
 
-    condition = Condition.objects.create(
-        rule=segment_rule, operator=PERCENTAGE_SPLIT, value=10
-    )
-    mock_get_hashed_percentage_for_object_ids.return_value = 0.2
+    def test_get_segment_returns_parent_segment_for_nested_rule(self):
+        # Given
+        parent_rule = SegmentRule.objects.create(
+            segment=self.segment, type=SegmentRule.ALL_RULE
+        )
+        child_rule = SegmentRule.objects.create(
+            rule=parent_rule, type=SegmentRule.ALL_RULE
+        )
+        grandchild_rule = SegmentRule.objects.create(
+            rule=child_rule, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator=PERCENTAGE_SPLIT, value=0.1, rule=grandchild_rule
+        )
 
-    # When
-    result = condition.does_identity_match(identity)
+        # When
+        segment = grandchild_rule.get_segment()
 
-    # Then
-    assert not result
+        # Then
+        assert segment == self.segment
 
 
 def test_condition_get_create_log_message_for_condition_created_with_segment(

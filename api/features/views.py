@@ -38,6 +38,7 @@ from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
+from .features_service import get_overrides_data
 from .models import Feature, FeatureState
 from .permissions import (
     CreateSegmentOverridePermissions,
@@ -68,6 +69,10 @@ from .serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
+from .versioning.versioning_service import (
+    get_environment_flags_list,
+    get_environment_flags_queryset,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -154,8 +159,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 user=self.request.user,
             )
         if self.action == "list" and "environment" in self.request.query_params:
-            environment_id = self.request.query_params["environment"]
-            context["overrides_data"] = Feature.get_overrides_data(environment_id)
+            environment = get_object_or_404(
+                Environment, id=self.request.query_params["environment"]
+            )
+            context["overrides_data"] = get_overrides_data(environment)
 
         return context
 
@@ -359,8 +366,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         try:
             environment = Environment.objects.get(api_key=environment_api_key)
-            queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment.id,
+            queryset = get_environment_flags_queryset(
+                environment=environment,
                 feature_name=self.request.query_params.get("feature_name"),
             )
             queryset = self._apply_query_param_filters(queryset)
@@ -561,13 +568,11 @@ class SimpleFeatureStateViewSet(
             return FeatureState.objects.all()
 
         try:
-            environment_id = self.request.query_params.get("environment")
-            if not environment_id:
+            if not (environment_id := self.request.query_params.get("environment")):
                 raise ValidationError("'environment' GET parameter is required.")
 
-            queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment_id
-            )
+            environment = get_object_or_404(Environment, id=environment_id)
+            queryset = get_environment_flags_queryset(environment=environment)
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
             )
@@ -620,8 +625,8 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-            feature_states = FeatureState.get_environment_flags_list(
-                environment_id=request.environment.id,
+            feature_states = get_environment_flags_list(
+                environment=request.environment,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
             )
@@ -638,8 +643,8 @@ class SDKFeatureStates(GenericAPIView):
             data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                FeatureState.get_environment_flags_list(
-                    environment_id=request.environment.id,
+                get_environment_flags_list(
+                    environment=request.environment,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
@@ -667,8 +672,8 @@ class SDKFeatureStates(GenericAPIView):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                FeatureState.get_environment_flags_list(
-                    environment_id=environment.id,
+                get_environment_flags_list(
+                    environment=environment,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
