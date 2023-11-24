@@ -109,6 +109,9 @@ django-multiselectfield = "~0.1.12"
 [tool.poetry.group.saml.dependencies]
 pysaml2 = "^7.0.0"
 
+[tool.poetry.group.ldap]
+optional = true
+
 [tool.poetry.group.ldap.dependencies]
 flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.0.1" }
 
