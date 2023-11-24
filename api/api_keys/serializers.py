@@ -3,6 +3,9 @@ from rest_framework import serializers
 
 from .models import MasterAPIKey
 
+if settings.IS_RBAC_INSTALLED:
+    from rbac.serializers import MasterAPIKeyRoleSerializer
+
 
 class MasterAPIKeySerializer(serializers.ModelSerializer):
     key = serializers.CharField(
@@ -11,6 +14,8 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
         "for every endpoint apart from create",
     )
     is_admin = serializers.BooleanField(default=True)
+    if settings.IS_RBAC_INSTALLED:
+        roles = MasterAPIKeyRoleSerializer(many=True, read_only=True, source="role")
 
     class Meta:
         model = MasterAPIKey
@@ -23,6 +28,7 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
             "expiry_date",
             "key",
             "is_admin",
+            *([] if not settings.IS_RBAC_INSTALLED else ["roles"]),
         )
         read_only_fields = ("prefix", "created", "key")
 
@@ -37,3 +43,21 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):
                 "RBAC is not installed, cannot create non-admin key"
             )
         return is_admin
+
+    def to_representation(self, instance):
+        if self.context["view"].action == "retrieve":
+            is_admin = instance.is_admin if hasattr(instance, "is_admin") else False
+            if is_admin is False and not settings.IS_RBAC_INSTALLED:
+                raise serializers.ValidationError(
+                    "RBAC is not installed, cannot create non-admin key"
+                )
+            if is_admin:
+                data = super().to_representation(instance)
+                data.pop("roles", None)
+                return data
+
+            return super().to_representation(instance)
+        else:
+            data = super().to_representation(instance)
+            data.pop("roles", None)
+            return data
