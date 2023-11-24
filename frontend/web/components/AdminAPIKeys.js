@@ -49,6 +49,18 @@ export class CreateAPIKey extends PureComponent {
           isSaving: false,
           key: res.key,
         })
+        Promise.all(
+          this.state.roles.map(({ role }) =>
+            createRoleMasterApiKey(getStore(), {
+              body: { master_api_key: res.id },
+              org_id: AccountStore.getOrganisation().id,
+              role_id: role,
+            }).then(() => {
+              toast('Role API Key was Created')
+            }),
+          ),
+        )
+
         this.props.onSuccess()
       })
   }
