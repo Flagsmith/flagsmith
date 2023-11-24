@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in, user_login_failed
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import APIException, PermissionDenied
@@ -57,12 +56,13 @@ class OAuthLoginSerializer(AuthControllerMixin, serializers.Serializer):
         # create token
         token, _ = Token.objects.get_or_create(user=user)
 
-        # signal successful login
-        token.user.last_login = timezone.now()
-        token.user.save()
+        # signal successful login (django.contrib.auth will update last_login)
         user_logged_in.send(
-            sender=UserModel, request=self.context.get("request"), user=token.user
+            sender=UserModel, request=self.context.get("request"), user=user
         )
+
+        # return token with latest user model
+        token.user.refresh_from_db()
 
         return token
 
