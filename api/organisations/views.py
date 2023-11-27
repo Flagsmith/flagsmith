@@ -20,7 +20,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.chargebee import webhook_handlers
+from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
@@ -274,10 +274,12 @@ def chargebee_webhook(request: Request) -> Response:
     """
     event_type = request.data.get("event_type")
 
-    if event_type == "payment_failed":
+    if event_type == webhook_event_types.PAYMENT_FAILED:
         return webhook_handlers.payment_failed(request)
-    if event_type == "payment_succeeded":
+    if event_type == webhook_event_types.PAYMENT_SUCCEEDED:
         return webhook_handlers.payment_succeeded(request)
+    if event_type in webhook_event_types.CACHE_REBUILD_TYPES:
+        return webhook_handlers.cache_rebuild_event(request)
 
     if request.data.get("content") and "subscription" in request.data.get("content"):
         subscription_data: dict = request.data["content"]["subscription"]

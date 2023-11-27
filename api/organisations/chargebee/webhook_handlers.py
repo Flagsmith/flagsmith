@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import Subscription
 from organisations.subscriptions.constants import (
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
@@ -14,6 +15,12 @@ from organisations.subscriptions.constants import (
 from .serializers import PaymentFailedSerializer, PaymentSucceededSerializer
 
 logger = logging.getLogger(__name__)
+
+
+def cache_rebuild_event(request: Request) -> Response:
+    logger.info("Chargebee plan or addon webhook fired, rebuilding cache.")
+    update_chargebee_cache.delay()
+    return Response(status=status.HTTP_200_OK)
 
 
 def payment_failed(request: Request) -> Response:

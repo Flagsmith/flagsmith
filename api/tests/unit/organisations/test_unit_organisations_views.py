@@ -1497,9 +1497,50 @@ def test_payment_failed_chargebee_webhook_no_subscription_id(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
 
 
+def test_cache_rebuild_event_chargebee_webhook(
+    staff_client: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    data = {
+        "id": "ev_XpbG6hnQqGFm2n3O",
+        "occurred_at": 1341085213,
+        "source": "api",
+        "user": "full_access_key_v1",
+        "object": "event",
+        "api_version": "v2",
+        "content": {
+            "addon": {
+                "id": "support",
+                "name": "Support",
+                "description": "This is addon added when support is needed",
+                "type": "quantity",
+                "charge_type": "recurring",
+                "price": 1000,
+                "period": 1,
+                "period_unit": "month",
+                "status": "deleted",
+            }
+        },
+        "event_type": "addon_deleted",
+    }
+
+    url = reverse("api-v1:chargebee-webhook")
+    task = mocker.patch(
+        "organisations.chargebee.webhook_handlers.update_chargebee_cache"
+    )
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == 200
+    task.delay.assert_called_once_with()
+
+
 def test_payment_succeeded_chargebee_webhook(
     staff_client: FFAdminUser, subscription: Subscription
-):
+) -> None:
     # Given
     subscription.billing_status = SUBSCRIPTION_BILLING_STATUS_DUNNING
     subscription.subscription_id = "best_id"
