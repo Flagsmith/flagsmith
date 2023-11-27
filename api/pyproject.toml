@@ -103,8 +103,14 @@ pydantic = "~1.10.9"
 pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 
+[tool.poetry.group.auth-controller]
+optional = true
+
 [tool.poetry.group.auth-controller.dependencies]
 django-multiselectfield = "~0.1.12"
+
+[tool.poetry.group.saml]
+optional = true
 
 [tool.poetry.group.saml.dependencies]
 pysaml2 = "^7.0.0"
