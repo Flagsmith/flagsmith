@@ -16,6 +16,7 @@ from features.models import (
 )
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import BOOLEAN, INTEGER, STRING
+from features.versioning.versioning_service import get_environment_flags_list
 from projects.models import Project
 from task_processor.decorators import (
     register_recurring_task,
@@ -55,8 +56,9 @@ def export_features_for_environment(
     if tag_ids:
         additional_filters &= Q(feature__tags__in=tag_ids)
 
-    feature_states = FeatureState.get_environment_flags_list(
-        environment_id=environment_id,
+    environment = Environment.objects.get(id=environment_id)
+    feature_states = get_environment_flags_list(
+        environment=environment,
         additional_filters=additional_filters,
     )
 
