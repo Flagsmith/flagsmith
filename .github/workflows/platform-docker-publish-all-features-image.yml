@@ -22,7 +22,7 @@ jobs:
         id: start
         with:
           github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
-          aws-access-key-id: AKIAUM26IRCPEOZZ6S4L
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID_EC2_RUNNER }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
 
   build-dockerhub:
