@@ -907,7 +907,7 @@ TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
-FASTLY_LOGS_AWS_BUCKET_NAME = env.str("FASTLY_LOGS_AWS_BUCKET_NAME", None)
+AWS_FASTLY_LOGS_BUCKET_NAME = env.str("AWS_FASTLY_LOGS_BUCKET_NAME", None)
 SSE_INFLUXDB_BUCKET = env.str("SSE_INFLUXDB_BUCKET", None)
 
 
@@ -943,6 +943,7 @@ AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
+SKIP_GPG_TESTS = env.bool("SKIP_GPG_TESTS", True)
 
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
