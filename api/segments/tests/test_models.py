@@ -1,13 +1,12 @@
 from unittest import TestCase
 
 import pytest
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
 
 from environments.identities.models import Identity
 from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db
