@@ -1535,7 +1535,7 @@ def test_cache_rebuild_event_chargebee_webhook(
     )
     # Then
     assert response.status_code == 200
-    task.delay.assert_called_once()
+    task.delay.assert_called_once_with()
 
 
 def test_payment_succeeded_chargebee_webhook(
