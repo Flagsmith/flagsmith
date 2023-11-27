@@ -1526,15 +1526,16 @@ def test_cache_rebuild_event_chargebee_webhook(
     }
 
     url = reverse("api-v1:chargebee-webhook")
-    task = mocker.patch("organisations.chargebee.tasks.ChargebeeCache")
-
+    task = mocker.patch(
+        "organisations.chargebee.webhook_handlers.update_chargebee_cache"
+    )
     # When
     response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
     assert response.status_code == 200
-    task.assert_called_once()
+    task.delay.assert_called_once()
 
 
 def test_payment_succeeded_chargebee_webhook(
