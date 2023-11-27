@@ -1,15 +1,14 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from django.db.models import Manager
-
-from integrations.integration import IDENTITY_INTEGRATIONS
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
+    from integrations.integration import IntegrationConfig
 
 
-class IdentityManager(Manager):
+class IdentityManager(Manager["Identity"]):
     def get_by_natural_key(self, identifier, environment_api_key):
         return self.get(identifier=identifier, environment__api_key=environment_api_key)
 
@@ -17,6 +16,7 @@ class IdentityManager(Manager):
         self,
         identifier: str,
         environment: "Environment",
+        integrations: Iterable["IntegrationConfig"],
     ) -> tuple["Identity", bool]:
         return (
             self.select_related(
@@ -24,7 +24,7 @@ class IdentityManager(Manager):
                 "environment__project",
                 *[
                     f"environment__{integration['relation_name']}"
-                    for integration in IDENTITY_INTEGRATIONS
+                    for integration in integrations
                 ],
             )
             .prefetch_related("identity_traits")

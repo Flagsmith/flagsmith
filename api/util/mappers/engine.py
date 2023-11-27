@@ -45,7 +45,32 @@ __all__ = (
     "map_feature_to_engine",
     "map_identity_to_engine",
     "map_mv_option_to_engine",
+    "map_segment_to_engine",
+    "map_traits_to_engine",
 )
+
+
+def map_traits_to_engine(traits: Iterable["Trait"]) -> list[TraitModel]:
+    return [
+        TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
+        for trait in traits
+    ]
+
+
+def map_segment_to_engine(
+    segment: "Segment",
+) -> SegmentModel:
+    segment_rules = segment.rules.all()
+
+    # No reading from ORM past this point!
+
+    return SegmentModel(
+        id=segment.pk,
+        name=segment.name,
+        rules=[
+            map_segment_rule_to_engine(segment_rule) for segment_rule in segment_rules
+        ],
+    )
 
 
 def map_segment_rule_to_engine(
@@ -352,10 +377,7 @@ def map_identity_to_engine(identity: "Identity") -> IdentityModel:
         )
         for feature_state in identity_feature_states
     ]
-    identity_trait_models = [
-        TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
-        for trait in identity_traits
-    ]
+    identity_trait_models = map_traits_to_engine(identity_traits)
 
     return IdentityModel(
         # Attributes:

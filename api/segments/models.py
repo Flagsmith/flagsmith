@@ -12,6 +12,7 @@ from core.models import (
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
+from flag_engine.segments import constants
 
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
@@ -20,11 +21,6 @@ from environments.identities.helpers import (
 )
 from features.models import Feature
 from projects.models import Project
-
-if typing.TYPE_CHECKING:
-    from environments.identities.models import Identity
-    from environments.identities.traits.models import Trait
-
 
 logger = logging.getLogger(__name__)
 
@@ -35,22 +31,6 @@ try:
 except ImportError:
     logger.warning("Unable to import re2. Falling back to re.")
     import re
-
-# Condition Types
-EQUAL = "EQUAL"
-GREATER_THAN = "GREATER_THAN"
-LESS_THAN = "LESS_THAN"
-LESS_THAN_INCLUSIVE = "LESS_THAN_INCLUSIVE"
-CONTAINS = "CONTAINS"
-GREATER_THAN_INCLUSIVE = "GREATER_THAN_INCLUSIVE"
-NOT_CONTAINS = "NOT_CONTAINS"
-NOT_EQUAL = "NOT_EQUAL"
-REGEX = "REGEX"
-PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
-MODULO = "MODULO"
-IS_SET = "IS_SET"
-IS_NOT_SET = "IS_NOT_SET"
-IN = "IN"
 
 
 class Segment(
@@ -105,14 +85,6 @@ class Segment(
                     return True
 
         return False
-
-    def does_identity_match(
-        self, identity: "Identity", traits: typing.List["Trait"] = None
-    ) -> bool:
-        rules = self.rules.all()
-        return rules.count() > 0 and all(
-            rule.does_identity_match(identity, traits) for rule in rules
-        )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
@@ -203,20 +175,20 @@ class Condition(
     related_object_type = RelatedObjectType.SEGMENT
 
     CONDITION_TYPES = (
-        (EQUAL, "Exactly Matches"),
-        (GREATER_THAN, "Greater than"),
-        (LESS_THAN, "Less than"),
-        (CONTAINS, "Contains"),
-        (GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
-        (LESS_THAN_INCLUSIVE, "Less than or equal to"),
-        (NOT_CONTAINS, "Does not contain"),
-        (NOT_EQUAL, "Does not match"),
-        (REGEX, "Matches regex"),
-        (PERCENTAGE_SPLIT, "Percentage split"),
-        (MODULO, "Modulo Operation"),
-        (IS_SET, "Is set"),
-        (IS_NOT_SET, "Is not set"),
-        (IN, "In"),
+        (constants.EQUAL, "Exactly Matches"),
+        (constants.GREATER_THAN, "Greater than"),
+        (constants.LESS_THAN, "Less than"),
+        (constants.CONTAINS, "Contains"),
+        (constants.GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
+        (constants.LESS_THAN_INCLUSIVE, "Less than or equal to"),
+        (constants.NOT_CONTAINS, "Does not contain"),
+        (constants.NOT_EQUAL, "Does not match"),
+        (constants.REGEX, "Matches regex"),
+        (constants.PERCENTAGE_SPLIT, "Percentage split"),
+        (constants.MODULO, "Modulo Operation"),
+        (constants.IS_SET, "Is set"),
+        (constants.IS_NOT_SET, "Is not set"),
+        (constants.IN, "In"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)

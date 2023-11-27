@@ -31,7 +31,10 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import SDKFeatureStateSerializer
-from integrations.integration import identify_integrations
+from integrations.integration import (
+    IDENTITY_INTEGRATIONS,
+    identify_integrations,
+)
 from util.views import SDKAPIView
 
 
@@ -112,6 +115,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             identity, _ = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
+                integrations=IDENTITY_INTEGRATIONS,
             )
         else:
             return Response(
@@ -171,6 +175,7 @@ class SDKIdentities(SDKAPIView):
         identity, _ = Identity.objects.get_or_create_for_sdk(
             identifier=identifier,
             environment=request.environment,
+            integrations=IDENTITY_INTEGRATIONS,
         )
         self.identity = identity
 

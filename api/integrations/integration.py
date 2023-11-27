@@ -1,11 +1,20 @@
+from typing import Type, TypedDict
+
 from integrations.amplitude.amplitude import AmplitudeWrapper
+from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from integrations.heap.heap import HeapWrapper
 from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.rudderstack.rudderstack import RudderstackWrapper
 from integrations.segment.segment import SegmentWrapper
 from integrations.webhook.webhook import WebhookWrapper
 
-IDENTITY_INTEGRATIONS = [
+
+class IntegrationConfig(TypedDict):
+    relation_name: str
+    wrapper: Type[AbstractBaseIdentityIntegrationWrapper]
+
+
+IDENTITY_INTEGRATIONS: list[IntegrationConfig] = [
     {"relation_name": "amplitude_config", "wrapper": AmplitudeWrapper},
     {"relation_name": "segment_config", "wrapper": SegmentWrapper},
     {"relation_name": "heap_config", "wrapper": HeapWrapper},
