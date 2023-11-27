@@ -97,6 +97,7 @@ class Identity(models.Model):
             full_query &= additional_filters
 
         select_related_args = [
+            "environment",
             "feature",
             "feature_state_value",
             "feature_segment",
