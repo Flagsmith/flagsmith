@@ -7,6 +7,7 @@ import pytest
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -848,6 +849,35 @@ class SDKIdentitiesTestCase(APITestCase):
         assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
             self.environment.updated_at.timestamp()
         )
+
+    def test_get_identities_nplus1(self) -> None:
+        """
+        Specific test to reproduce N+1 issue found after deployment of
+        v2 feature versioning.
+
+        TODO: move this (and other tests) to /api/tests/...
+        """
+        url = "%s?identifier=%s" % (
+            reverse("api-v1:sdk-identities"),
+            self.identity.identifier,
+        )
+
+        # let's get a baseline with only a single version of a flag
+        with self.assertNumQueries(6):
+            self.client.get(url)
+
+        # now let's create some new versions of the same flag
+        # and verify that the query count doesn't increase
+        v1_flag = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature_1
+        )
+        now = timezone.now()
+        for i in range(2, 13):
+            v1_flag.clone(env=self.environment, version=i, live_from=now)
+
+        # in fact it is lower because the
+        with self.assertNumQueries(5):
+            self.client.get(url)
 
 
 def test_get_identities_with_hide_sensitive_data_with_feature_name(
