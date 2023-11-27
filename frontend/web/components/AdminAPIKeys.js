@@ -218,7 +218,7 @@ export class CreateAPIKey extends PureComponent {
                         <MyRoleSelect
                           isRoleApiKey
                           orgId={AccountStore.getOrganisation().id}
-                          value={roles.map((v) => v.role)}
+                          value={roles?.map((v) => v.role)}
                           onAdd={(role) =>
                             this.addRole(role, this.props.isEdit)
                           }
@@ -288,7 +288,7 @@ export class CreateAPIKey extends PureComponent {
                   disabled={
                     this.state.isSaving ||
                     !this.state.name ||
-                    (!is_admin && !roles.length)
+                    (!is_admin && !roles?.length)
                   }
                 >
                   {this.state.isSaving ? buttonSavingText : buttonText}
