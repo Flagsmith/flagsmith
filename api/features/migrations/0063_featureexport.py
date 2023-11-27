@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('environments', '0032_rename_use_mv_v2_evaluation_to_use_in_percentage_split_evaluation'),
-        ('features', '0060_feature_group_owners'),
+        ('features', '0062_alter_feature_segment_unique_together'),
     ]
 
     operations = [
