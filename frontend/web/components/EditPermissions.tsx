@@ -44,13 +44,11 @@ import {
 import {
   useCreateRolesPermissionUsersMutation,
   useDeleteRolesPermissionUsersMutation,
-  useGetRolesPermissionUsersQuery,
 } from 'common/services/useRolesUser'
 
 import {
   useCreateRolePermissionGroupMutation,
   useDeleteRolePermissionGroupMutation,
-  useGetRolePermissionGroupQuery,
 } from 'common/services/useRolePermissionGroup'
 
 import MyRoleSelect from './MyRoleSelect'
@@ -64,6 +62,7 @@ type EditPermissionModalType = {
   level: PermissionLevel
   name: string
   onSave: () => void
+  onRemoveOrAddRole: () => void
   parentId?: string
   parentLevel?: string
   parentSettingsLink?: string
@@ -105,6 +104,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       isGroup,
       level,
       name,
+      onRemoveOrAddRole,
       onSave,
       parentId,
       parentLevel,
@@ -477,6 +477,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             role_id: roleId,
             user_id: roleSelected.user_role_id,
           })
+          onRemoveOrAddRole?.()
         }
         if (group) {
           deleteRolePermissionGroup({
@@ -492,6 +493,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
 
     useEffect(() => {
       if (userAdded || groupAdded) {
+        onRemoveOrAddRole?.()
         if (user) {
           setRolesSelected(
             (rolesSelected || []).concat({

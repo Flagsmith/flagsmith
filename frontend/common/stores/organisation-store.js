@@ -329,7 +329,11 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
   switch (action.actionType) {
     case Actions.GET_ORGANISATION:
-      controller.getOrganisation(action.id || store.id, action.force)
+      controller.getOrganisation(
+        action.id,
+        action.force || store.id,
+        action.force,
+      )
       break
     case Actions.CREATE_PROJECT:
       controller.createProject(action.name)

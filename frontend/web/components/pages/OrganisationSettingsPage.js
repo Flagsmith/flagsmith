@@ -233,8 +233,9 @@ const OrganisationSettingsPage = class extends Component {
         id={AccountStore.getOrganisation().id}
         onSave={() => {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
-          console.log('DEBUG: save:')
-          this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
+        }}
+        onRemoveOrAddRole={()=>{
+          AppActions.getOrganisation(AccountStore.getOrganisation().id, true)
         }}
         level='organisation'
         roles={roles}
