@@ -12,4 +12,4 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "user": "100000/day",
 }
 
-AWS_FASTLY_LOGS_BUCKET_NAME = "test_bucket"
+AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"

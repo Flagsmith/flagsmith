@@ -39,22 +39,24 @@ def send_environment_update_message(environment_key: str, updated_at):
     response.raise_for_status()
 
 
-@register_recurring_task(
-    run_every=timedelta(seconds=60),
-)
-def update_sse_usage():
-    with influxdb_client.write_api(
-        write_options=WriteOptions(batch_size=1000, flush_interval=2000)
-    ) as write_api:
-        for log in sse_service.stream_access_logs():
-            environment = Environment.get_from_cache(log.api_key)
+if settings.AWS_SSE_LOGS_BUCKET_NAME:
 
-            if not environment:
-                logger.warning("Invalid  api_key %s", log.api_key)
-                continue
+    @register_recurring_task(
+        run_every=timedelta(seconds=60),
+    )
+    def update_sse_usage():
+        with influxdb_client.write_api(
+            write_options=WriteOptions(batch_size=1000, flush_interval=2000)
+        ) as write_api:
+            for log in sse_service.stream_access_logs():
+                environment = Environment.get_from_cache(log.api_key)
 
-            record = _get_influx_point(environment, log.generated_at)
-            write_api.write(bucket=settings.SSE_INFLUXDB_BUCKET, record=record)
+                if not environment:
+                    logger.warning("Invalid  api_key %s", log.api_key)
+                    continue
+
+                record = _get_influx_point(environment, log.generated_at)
+                write_api.write(bucket=settings.SSE_INFLUXDB_BUCKET, record=record)
 
 
 def _get_influx_point(environment: Environment, event_time: str) -> Point:

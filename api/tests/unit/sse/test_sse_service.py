@@ -126,7 +126,7 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
     patch_resource(s3)
 
     # Next, let's create a bucket and add some objects to it
-    bucket_name = settings.AWS_FASTLY_LOGS_BUCKET_NAME
+    bucket_name = settings.AWS_SSE_LOGS_BUCKET_NAME
     s3_client = boto3.client("s3", region_name="eu-west-2")
     s3_client.create_bucket(
         Bucket=bucket_name,

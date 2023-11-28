@@ -13,8 +13,6 @@ from sse.dataclasses import SSEAccessLogs
 s3 = boto3.resource("s3")
 gpg = gnupg.GPG()
 
-bucket = s3.Bucket(settings.AWS_FASTLY_LOGS_BUCKET_NAME)
-
 
 def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
     """
@@ -57,6 +55,7 @@ def send_environment_update_message_for_environment(environment):
 
 
 def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
+    bucket = s3.Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
     for log_file in bucket.objects.all():
         encrypted_body = log_file.get()["Body"].read()
         decrypted_body = gpg.decrypt(encrypted_body)
@@ -66,4 +65,4 @@ def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
         for row in reader:
             yield SSEAccessLogs(*row)
 
-        # log_file.delete()
+        log_file.delete()
