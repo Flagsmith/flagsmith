@@ -29,6 +29,11 @@ RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y 
 ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
+# Install gnupp if secret key is provided
+RUN --mount=type=secret,id=gpg_pkey  if [ -f /run/secrets/gpg_pkey ]; then \
+  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/gpg_pkey;  fi;
+
+
 # Copy the python venv from step 2
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 # Copy the bin folder as well to copy the executables created in package installation
