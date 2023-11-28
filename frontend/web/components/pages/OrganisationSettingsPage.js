@@ -26,7 +26,7 @@ import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 
-const widths = [450, 150, 100]
+const widths = [450, 150, 100, 250, 235, 255]
 const rolesWidths = [250, 600, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
@@ -955,11 +955,16 @@ const OrganisationSettingsPage = class extends Component {
                                                   <Flex className='table-column px-3'>
                                                     User
                                                   </Flex>
-                                                  <Flex className='table-column'>
+                                                  <Flex
+                                                    className='table-column'
+                                                    style={{
+                                                      minWidth: widths[5],
+                                                    }}
+                                                  >
                                                     Role
                                                   </Flex>
                                                   <div
-                                                    style={{ width: widths[0] }}
+                                                    style={{ width: widths[3] }}
                                                     className='table-column'
                                                   >
                                                     Action
@@ -1021,7 +1026,11 @@ const OrganisationSettingsPage = class extends Component {
                                                     </Flex>
 
                                                     <Flex className='table-column'>
-                                                      <div>
+                                                      <div
+                                                        style={{
+                                                          minWidth: widths[4],
+                                                        }}
+                                                      >
                                                         {organisation.role ===
                                                           'ADMIN' &&
                                                         id !==
@@ -1095,7 +1104,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     {role !== 'ADMIN' ? (
                                                       <div
                                                         style={{
-                                                          width: widths[0],
+                                                          width: widths[3],
                                                         }}
                                                         onClick={onEditClick}
                                                         className='table-column'
@@ -1115,7 +1124,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     ) : (
                                                       <div
                                                         style={{
-                                                          width: widths[0],
+                                                          width: widths[3],
                                                         }}
                                                       ></div>
                                                     )}
