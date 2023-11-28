@@ -943,7 +943,6 @@ AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
-SKIP_GPG_TESTS = env.bool("SKIP_GPG_TESTS", True)
 
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
