@@ -11,12 +11,11 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
-
-# TODO #2797 add audit log checks after user/group/organisation changes
 
 
 @pytest.mark.django_db
@@ -58,6 +57,23 @@ class UserTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert self.organisation in self.user.organisations.all()
 
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: test org"
+        )
+
     def test_join_organisation_via_link(self):
         # Given
         invite = InviteLink.objects.create(organisation=self.organisation)
@@ -70,6 +86,23 @@ class UserTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert self.organisation in self.user.organisations.all()
+
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: test org"
+        )
 
     def test_cannot_join_organisation_via_expired_link(self):
         # Given
@@ -106,6 +139,23 @@ class UserTestCase(TestCase):
             and self.organisation in self.user.organisations.all()
         )
 
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == new_organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: New org"
+        )
+
     def test_cannot_join_organisation_with_different_email_address_than_invite(self):
         # Given
         invite = Invite.objects.create(
@@ -137,6 +187,23 @@ class UserTestCase(TestCase):
         # Then
         assert self.user.is_organisation_admin(self.organisation)
 
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: test org"
+        )
+
     def test_admin_can_update_role_for_a_user_in_organisation(self):
         # Given
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
@@ -159,6 +226,64 @@ class UserTestCase(TestCase):
         assert (
             organisation_user.get_organisation_role(self.organisation)
             == OrganisationRole.ADMIN.name
+        )
+
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == organisation_user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {organisation_user.email}; role changed: test org"
+        )
+
+    def test_admin_remove_user_from_organisation(self):
+        # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+        organisation_user.add_organisation(self.organisation)
+        url = reverse(
+            "api-v1:organisations:organisation-users-update-role",
+            args=[self.organisation.pk, organisation_user.pk],
+        )
+        data = {"role": OrganisationRole.ADMIN.name}
+
+        # When
+        res = self.client.delete(url, data=data)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert (
+            organisation_user.get_organisation_role(self.organisation)
+            == OrganisationRole.ADMIN.name
+        )
+
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_id == organisation_user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {organisation_user.email}; role changed: test org"
         )
 
     def test_admin_can_get_users_in_organisation(self):
@@ -325,6 +450,23 @@ class UserPermissionGroupViewSetTestCase(TestCase):
             user in group.users.all() for user in [self.admin, self.regular_user]
         )
 
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GROUP.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.admin.pk
+        assert audit_log.related_object_id == group.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"Group users updated: Test Group; added: {self.admin.email}; added: {self.regular_user.email}"
+        )
+
     def test_cannot_add_user_from_another_organisation(self):
         # Given
         another_organisation = Organisation.objects.create(name="Another organisation")
@@ -381,6 +523,23 @@ class UserPermissionGroupViewSetTestCase(TestCase):
 
         # but admin user still remains
         assert self.admin in group.users.all()
+
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GROUP.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.admin.pk
+        assert audit_log.related_object_id == group.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"Group users updated: Test Group; removed: {self.regular_user.email}"
+        )
 
     def test_remove_users_silently_fails_if_user_not_in_group(self):
         # Given
