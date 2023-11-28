@@ -112,11 +112,11 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     def get(self, request, identifier, *args, **kwargs):
         # if we have identifier fetch, or create if does not exist
         if identifier:
-            identity, _ = Identity.objects.get_or_create(
+            identity, _ = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
+                integrations=IDENTITY_INTEGRATIONS,
             )
-
         else:
             return Response(
                 {"detail": "Missing identifier"}, status=status.HTTP_400_BAD_REQUEST
@@ -172,17 +172,10 @@ class SDKIdentities(SDKAPIView):
                 {"detail": "Missing identifier"}
             )  # TODO: add 400 status - will this break the clients?
 
-        identity, _ = (
-            Identity.objects.select_related(
-                "environment",
-                "environment__project",
-                *[
-                    f"environment__{integration['relation_name']}"
-                    for integration in IDENTITY_INTEGRATIONS
-                ],
-            )
-            .prefetch_related("identity_traits")
-            .get_or_create(identifier=identifier, environment=request.environment)
+        identity, _ = Identity.objects.get_or_create_for_sdk(
+            identifier=identifier,
+            environment=request.environment,
+            integrations=IDENTITY_INTEGRATIONS,
         )
         self.identity = identity
 

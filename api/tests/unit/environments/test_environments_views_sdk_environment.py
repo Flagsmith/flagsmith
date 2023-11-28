@@ -1,11 +1,12 @@
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
+from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 
 def test_get_environment_document(
