@@ -25,6 +25,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
+import OrganisationStore from 'common/stores/organisation-store'
 
 const widths = [450, 150, 100]
 const rolesWidths = [250, 600, 100]
@@ -232,6 +233,8 @@ const OrganisationSettingsPage = class extends Component {
         id={AccountStore.getOrganisation().id}
         onSave={() => {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
+          console.log('DEBUG: save:')
+          this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
         }}
         level='organisation'
         roles={roles}

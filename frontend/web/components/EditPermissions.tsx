@@ -265,47 +265,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         },
       )
 
-    const hasResults = useRef(false)
-
-    const userQueries = roles?.map((role) => {
-      return useGetRolesPermissionUsersQuery(
-        {
-          organisation_id: role.organisation,
-          role_id: role.id,
-        },
-        { skip: !role },
-      )
-    })
-
-    const mergedResults = userQueries
-      ?.filter((query) => query.status === 'fulfilled' && query.isSuccess)
-      .map((query) => query.data.results)
-      .flat()
-
-    const mergedRolesAndResults = roles
-      ?.map((role) => {
-        const matchingResult = mergedResults?.find(
-          (result) => result.role === role.id,
-        )
-
-        if (matchingResult) {
-          return {
-            role: role.id,
-            user_role_id: matchingResult.id,
-          }
-        }
-
-        return null
-      })
-      .filter((item) => item !== null)
 
     useEffect(() => {
-      if (!rolesSelected.length && hasResults.current === false && mergedRolesAndResults.length) {
-        // console.log('DEBUG: hasResults.current:')
-        setRolesSelected(mergedRolesAndResults)
-      }
-      // hasResults.current = true
-    }, [rolesSelected])
+
+      const resultArray = user.roles.map((userRole) => ({
+        role: userRole.role,
+        user_role_id: userRole.id,
+      }))
+      setRolesSelected(resultArray)
+    }, [])
 
     useEffect(() => {
       if (
@@ -350,7 +318,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
                 (v) => v === `VIEW_${parentLevel.toUpperCase()}`,
               )
             ) {
-              // e.g. trying to set an environment permission but don't have view_projec
+              // e.g. trying to set an environment permission but don't have view_project
               setParentError(true)
             } else {
               setParentError(false)
@@ -520,7 +488,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       }
       setRolesSelected((rolesSelected || []).filter((v) => v.role !== roleId))
       toast('User role was removed')
-      hasResults.current = true
     }
 
     useEffect(() => {
