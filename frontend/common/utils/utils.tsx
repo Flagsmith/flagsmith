@@ -203,6 +203,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
+  getFlagsmithJSONValue(key: string, defaultValue: any) {
+    return flagsmith.getValue(key, { fallback: defaultValue, json: true })
+  },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
