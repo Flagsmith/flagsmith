@@ -17,8 +17,6 @@ from users.models import SignUpType
 
 UserModel = get_user_model()
 
-# TODO #2797 add audit log checks for login success and login failure
-
 
 @pytest.mark.django_db
 class OAuthLoginSerializerTestCase(TestCase):
@@ -34,11 +32,14 @@ class OAuthLoginSerializerTestCase(TestCase):
             "google_user_id": self.test_id,
         }
         rf = RequestFactory()
-        self.request = rf.post("placeholer-login-url")
+        self.request = rf.post("placeholder-login-url")
 
-    @mock.patch("custom_auth.oauth.serializers.get_user_info")
-    def test_create(self, mock_get_user_info):
+    @mock.patch("django.contrib.auth.models.timezone", autospec=True)
+    def test_create(self, mock_timezone):
         # Given
+        now = timezone.now()
+        mock_timezone.now.return_value = now
+
         access_token = "access-token"
         sign_up_type = "NO_INVITE"
         data = {"access_token": access_token, "sign_up_type": sign_up_type}
@@ -49,21 +50,24 @@ class OAuthLoginSerializerTestCase(TestCase):
 
         # When
         serializer.is_valid()
-        response = serializer.save()
+        token = serializer.save()
 
         # Then
         assert UserModel.objects.filter(
             email=self.test_email, sign_up_type=sign_up_type
         ).exists()
-        assert isinstance(response, Token)
-        assert (timezone.now() - response.user.last_login).seconds < 5
-        assert response.user.email == self.test_email
+        assert isinstance(token, Token)
+        assert token.user.email == self.test_email
+        assert token.user.first_name == self.test_first_name
+        assert token.user.last_name == self.test_last_name
+        assert token.user.google_user_id == self.test_id
+        assert token.user.last_login == now
 
 
 class GoogleLoginSerializerTestCase(TestCase):
     def setUp(self) -> None:
         rf = RequestFactory()
-        self.request = rf.post("placeholer-login-url")
+        self.request = rf.post("placeholder-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_get_user_info(self, mock_get_user_info):
@@ -84,7 +88,7 @@ class GoogleLoginSerializerTestCase(TestCase):
 class GithubLoginSerializerTestCase(TestCase):
     def setUp(self) -> None:
         rf = RequestFactory()
-        self.request = rf.post("placeholer-login-url")
+        self.request = rf.post("placeholder-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.GithubUser")
     def test_get_user_info(self, MockGithubUser):
@@ -160,7 +164,11 @@ def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link
     serializer.is_valid(raise_exception=True)
 
     # When
-    user = serializer.save()
+    token = serializer.save()
 
     # Then
-    assert user
+    assert UserModel.objects.filter(
+        email=user_email, sign_up_type=SignUpType.INVITE_LINK
+    ).exists()
+    assert isinstance(token, Token)
+    assert token.user.email == user_email
