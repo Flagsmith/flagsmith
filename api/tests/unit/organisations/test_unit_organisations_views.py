@@ -18,6 +18,7 @@ from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
@@ -1196,6 +1197,23 @@ def test_make_user_group_admin_success(
         is True
     )
 
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_id == user_permission_group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: User permission group; group_admin changed: {another_user.email}"
+    )
+
 
 def test_make_user_group_admin_forbidden(
     staff_client: APIClient,
@@ -1261,6 +1279,23 @@ def test_remove_user_as_group_admin_success(
             userpermissiongroup=user_permission_group,
         ).group_admin
         is False
+    )
+
+    # and
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_id == user_permission_group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: User permission group; group_admin changed: {another_user.email}"
     )
 
 
