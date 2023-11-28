@@ -2,13 +2,13 @@
 
 from django.db import migrations
 
+from core.migration_helpers import PostgresOnlyRunSQL
 
 current_index_constraint_name = "features_featuresegment_feature_id_environment_i_e5499ca3_uniq"
 new_index_constraint_name = "features_featuresegment_feature_id_environment_i_f1fde686_uniq"
 
 # `atomic = False` only seems to work if each migration.RunSQL argument is a single SQL
 # statement. As such, we need to split the reverse code into 2 separate RunSQL operations.
-# TODO: this will need to be tweaked for Oracle support
 _drop_constraint_sql = f"ALTER TABLE features_featuresegment DROP CONSTRAINT {current_index_constraint_name};"
 _drop_constraint_reverse_sql_create_index = f"CREATE UNIQUE INDEX CONCURRENTLY {current_index_constraint_name} ON features_featuresegment USING btree (\"feature_id\", \"environment_id\", \"segment_id\", \"environment_feature_version_id\");"
 _drop_constraint_reverse_sql_add_constraint = f"ALTER TABLE features_featuresegment ADD CONSTRAINT {current_index_constraint_name} UNIQUE USING INDEX {current_index_constraint_name};"
@@ -42,12 +42,12 @@ class Migration(migrations.Migration):
                 ),
             ],
             database_operations=[
-                migrations.RunSQL(_drop_constraint_sql, reverse_sql=_drop_constraint_reverse_sql_add_constraint),
-                migrations.RunSQL(
+                PostgresOnlyRunSQL(_drop_constraint_sql, reverse_sql=_drop_constraint_reverse_sql_add_constraint),
+                PostgresOnlyRunSQL(
                     migrations.RunSQL.noop, reverse_sql=_drop_constraint_reverse_sql_create_index
                 ),
-                migrations.RunSQL(_create_index_sql, reverse_sql=_create_index_reverse_sql),
-                migrations.RunSQL(_add_constraint_sql, reverse_sql=_add_constraint_reverse_sql),
+                PostgresOnlyRunSQL(_create_index_sql, reverse_sql=_create_index_reverse_sql),
+                PostgresOnlyRunSQL(_add_constraint_sql, reverse_sql=_add_constraint_reverse_sql),
             ],
         )
     ]
