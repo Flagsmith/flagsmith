@@ -10,16 +10,21 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
-# TODO #2797 update tests for organisation-only audit logs
 
-
-def test_audit_log_can_be_filtered_by_environments(admin_client, project, environment):
+def test_audit_log_can_be_filtered_by_environments(
+    admin_client, organisation, project, environment
+):
     # Given
     audit_env = Environment.objects.create(name="env_n", project=project)
 
+    # new-style logs with organisation derived on creation
     AuditLog.objects.create(project=project)
     AuditLog.objects.create(project=project, environment=environment)
-    AuditLog.objects.create(project=project, environment=audit_env)
+    # old-style project-only log
+    pre_migration_log = AuditLog.objects.create(project=project, environment=audit_env)
+    pre_migration_log._organisation = None
+    pre_migration_log.save()
+    assert not AuditLog.objects.get(pk=pre_migration_log.pk)._organisation_id
 
     url = reverse("api-v1:audit-list")
     # When
@@ -28,15 +33,21 @@ def test_audit_log_can_be_filtered_by_environments(admin_client, project, enviro
     )
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["count"] == 1
-    assert response.json()["results"][0]["environment"]["id"] == audit_env.id
+    data = response.json()
+    assert data["count"] == 1
+    assert data["results"][0]["organisation"]["id"] == organisation.pk
+    assert data["results"][0]["project"]["id"] == project.pk
+    assert data["results"][0]["environment"]["id"] == audit_env.pk
 
 
-def test_audit_log_can_be_filtered_by_log_text(admin_client, project, environment):
+def test_audit_log_can_be_filtered_by_log_text(
+    admin_client, organisation, project, environment
+):
     # Given
     flag_state_updated_log = "Flag state updated"
     flag_state_deleted_log = "flag state deleted"
 
+    # new-style logs with organisation derived on creation
     AuditLog.objects.create(project=project, log="New flag created")
     AuditLog.objects.create(project=project, log=flag_state_updated_log)
     AuditLog.objects.create(project=project, log=flag_state_deleted_log)
@@ -49,18 +60,28 @@ def test_audit_log_can_be_filtered_by_log_text(admin_client, project, environmen
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["log"] == flag_state_deleted_log
-    assert response.json()["results"][1]["log"] == flag_state_updated_log
+    data = response.json()
+    assert data["count"] == 2
+    # results are in reverse order of creation
+    assert data["results"][0]["organisation"]["id"] == organisation.pk
+    assert data["results"][0]["log"] == flag_state_deleted_log
+    assert data["results"][1]["organisation"]["id"] == organisation.pk
+    assert data["results"][1]["log"] == flag_state_updated_log
 
 
 def test_audit_log_can_be_filtered_by_project(
-    admin_client, project, environment, organisation
+    admin_client, organisation, project, environment
 ):
     # Given
     another_project = Project.objects.create(
         name="another_project", organisation=organisation
     )
-    AuditLog.objects.create(project=project)
+    # old-style project-only log
+    pre_migration_log = AuditLog.objects.create(project=project)
+    pre_migration_log._organisation = None
+    pre_migration_log.save()
+    assert not AuditLog.objects.get(pk=pre_migration_log.pk)._organisation_id
+    # new-style logs with organisation derived on creation
     AuditLog.objects.create(project=project, environment=environment)
     AuditLog.objects.create(project=another_project)
 
@@ -70,10 +91,58 @@ def test_audit_log_can_be_filtered_by_project(
     response = admin_client.get(url, {"project": project.id})
 
     # Then
-    assert response.json()["count"] == 2
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["project"]["id"] == project.id
-    assert response.json()["results"][1]["project"]["id"] == project.id
+    data = response.json()
+    assert data["count"] == 2
+    # results are in reverse order of creation
+    assert data["results"][0]["organisation"]["id"] == organisation.pk
+    assert data["results"][0]["project"]["id"] == project.pk
+    assert data["results"][0]["environment"]["id"] == environment.pk
+    assert data["results"][1]["organisation"]["id"] == organisation.pk
+    assert data["results"][1]["project"]["id"] == project.pk
+
+
+def test_audit_log_can_be_filtered_by_organisation(
+    admin_client, organisation, project, environment
+):
+    # Given
+    another_project = Project.objects.create(
+        name="another_project", organisation=organisation
+    )
+
+    # old-style project-only log
+    pre_migration_log = AuditLog.objects.create(project=project)
+    pre_migration_log._organisation = None
+    pre_migration_log.save()
+    assert not AuditLog.objects.get(pk=pre_migration_log.pk)._organisation_id
+    # new-style logs with organisation derived on creation
+    AuditLog.objects.create(environment=environment)
+    AuditLog.objects.create(project=another_project)
+    # new-style organisation-only log
+    AuditLog.objects.create(organisation=organisation)
+
+    url = reverse("api-v1:audit-list")
+
+    # When
+    response = admin_client.get(url, {"organisation": organisation.id})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["count"] == 4
+    # results are in reverse order of creation
+    assert data["results"][0]["organisation"]["id"] == organisation.pk
+    assert not data["results"][0]["project"]
+    assert not data["results"][0]["environment"]
+    assert data["results"][1]["organisation"]["id"] == organisation.pk
+    assert data["results"][1]["project"]["id"] == another_project.pk
+    assert not data["results"][1]["environment"]
+    assert data["results"][2]["organisation"]["id"] == organisation.pk
+    assert data["results"][2]["project"]["id"] == project.pk
+    assert data["results"][2]["environment"]["id"] == environment.pk
+    assert data["results"][3]["organisation"]["id"] == organisation.pk
+    assert data["results"][3]["project"]["id"] == project.pk
+    assert not data["results"][3]["environment"]
 
 
 def test_audit_log_can_be_filtered_by_is_system_event(
@@ -91,8 +160,8 @@ def test_audit_log_can_be_filtered_by_is_system_event(
     response = admin_client.get(url, {"is_system_event": True})
 
     # Then
-    assert response.json()["count"] == 1
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 1
     assert response.json()["results"][0]["is_system_event"] is True
 
 
