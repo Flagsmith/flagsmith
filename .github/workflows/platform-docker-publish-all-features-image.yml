@@ -16,7 +16,7 @@ env:
 jobs:
   build-dockerhub:
     name: Platform Publish Docker Image
-    runs-on: self-hosted
+    runs-on: matt
 
     steps:
       - name: Cloning repo
