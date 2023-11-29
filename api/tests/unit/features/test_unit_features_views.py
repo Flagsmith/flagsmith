@@ -2337,3 +2337,32 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_list_features_n_plus_1(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}"
+
+    # add some more versions to test for N+1 issues
+    v1_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment
+    )
+    for i in range(5):
+        v1_feature_state.clone(env=environment, version=2 + i, live_from=timezone.now())
+
+    # When
+    with django_assert_num_queries(13):
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
