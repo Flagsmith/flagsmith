@@ -23,13 +23,7 @@ from util.drf_writable_nested.serializers import (
 from .feature_segments.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import (
-    Feature,
-    FeatureExport,
-    FeatureImport,
-    FeatureState,
-    FeatureStateValue,
-)
+from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
     NestedMultivariateFeatureOptionSerializer,
@@ -512,30 +506,3 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
                     "environment": "The environment has reached the maximum allowed segments overrides limit."
                 }
             )
-
-
-class CreateFeatureExportSerializer(serializers.Serializer):
-    environment_id = serializers.IntegerField(required=True)
-    tag_ids = serializers.ListField(child=serializers.IntegerField())
-
-
-class FeatureExportSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = FeatureExport
-        fields = (
-            "id",
-            "name",
-            "environment_id",
-            "created_date",
-        )
-
-    def get_name(self, obj: FeatureExport) -> str:
-        return f"{obj.environment.name} | {obj.created_date.strftime('%Y-%m-%d %H:%M')} UTC"
-
-
-class FeatureImportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FeatureImport
-        fields = ("id", "environment_id", "created_date")
