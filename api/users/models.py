@@ -236,8 +236,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         self, organisation: typing.Union["Organisation", int]
     ) -> UserOrganisation:
         try:
-            return self.userorganisation_set.get(organisation=organisation)
-        except UserOrganisation.DoesNotExist:
+            return next(
+                filter(
+                    lambda uo: uo.organisation_id == organisation.id,
+                    self.userorganisation_set.all(),
+                )
+            )
+        except StopIteration:
             logger.warning(
                 "User %d is not part of organisation %d"
                 % (self.id, getattr(organisation, "id", organisation))
