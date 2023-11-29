@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import call
 
 import pytest
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
@@ -86,7 +87,9 @@ def test_auth_header_raises_exception_if_token_not_set(settings):
         get_auth_header()
 
 
-def test_track_sse_usage(mocker: MockerFixture, environment: Environment):
+def test_track_sse_usage(
+    mocker: MockerFixture, environment: Environment, settings: SettingsWrapper
+):
     # Given - two valid logs
     first_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
     second_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
@@ -98,6 +101,8 @@ def test_track_sse_usage(mocker: MockerFixture, environment: Environment):
         "sse.sse_service.stream_access_logs",
         return_value=[first_access_log, second_access_log, third_access_log],
     )
+    influxdb_bucket = "test_bucket"
+    settings.SSE_INFLUXDB_BUCKET = influxdb_bucket
 
     mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
     mocked_influx_point = mocker.patch("sse.tasks.Point")
@@ -115,11 +120,11 @@ def test_track_sse_usage(mocker: MockerFixture, environment: Environment):
     write_method.assert_has_calls(
         [
             call(
-                bucket="sse_dev",
+                bucket=influxdb_bucket,
                 record=mocked_influx_point().field().tag().tag().tag().time(),
             ),
             call(
-                bucket="sse_dev",
+                bucket=influxdb_bucket,
                 record=mocked_influx_point().field().tag().tag().tag().time(),
             ),
         ]

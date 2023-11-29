@@ -140,9 +140,9 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
         Body=second_encrypted_object_data, Bucket=bucket_name, Key="second_object"
     )
 
-    mocked_gpg = mocker.patch("sse.sse_service.gpg", autospec=True)
+    mocked_gpg = mocker.patch("sse.sse_service.gnupg.GPG", autospec=True)
 
-    mocked_gpg.decrypt.side_effect = [
+    mocked_gpg.return_value.decrypt.side_effect = [
         mocker.MagicMock(data=first_decrypted_object_data),
         mocker.MagicMock(data=second_decrypted_object_data),
     ]
@@ -154,7 +154,7 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
     assert access_logs == [first_log, second_log, third_log]
 
     # gpg decrypt was called correctly
-    mocked_gpg.decrypt.assert_has_calls(
+    mocked_gpg.return_value.decrypt.assert_has_calls(
         [
             mocker.call(first_encrypted_object_data),
             mocker.call(second_encrypted_object_data),
