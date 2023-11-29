@@ -27,7 +27,8 @@ export class CreateAPIKey extends PureComponent {
   }
 
   componentDidMount() {
-    this.getApiKeyByPrefix(this.props.prefix)
+    Utils.getFlagsmithHasFeature('show_role_management') &&
+      this.getApiKeyByPrefix(this.props.prefix)
   }
 
   submit = () => {
@@ -49,17 +50,18 @@ export class CreateAPIKey extends PureComponent {
           isSaving: false,
           key: res.key,
         })
-        Promise.all(
-          this.state.roles.map(({ role }) =>
-            createRoleMasterApiKey(getStore(), {
-              body: { master_api_key: res.id },
-              org_id: AccountStore.getOrganisation().id,
-              role_id: role,
-            }).then(() => {
-              toast('Role API Key was Created')
-            }),
-          ),
-        )
+        Utils.getFlagsmithHasFeature('show_role_management') &&
+          Promise.all(
+            this.state.roles.map(({ role }) =>
+              createRoleMasterApiKey(getStore(), {
+                body: { master_api_key: res.id },
+                org_id: AccountStore.getOrganisation().id,
+                role_id: role,
+              }).then(() => {
+                toast('Role API Key was Created')
+              }),
+            ),
+          )
 
         this.props.onSuccess()
       })
@@ -153,6 +155,9 @@ export class CreateAPIKey extends PureComponent {
     const { expiry_date, is_admin, roles, showRoles } = this.state
     const buttonText = this.props.isEdit ? 'Update' : 'Create'
     const buttonSavingText = this.props.isEdit ? 'Updating' : 'Creating'
+    const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
+      'show_role_management',
+    )
     return (
       <>
         <div className='modal-body flex flex-column flex-fill px-4'>
@@ -173,66 +178,76 @@ export class CreateAPIKey extends PureComponent {
                   placeholder='e.g. Admin API Key'
                 />
               </Flex>
-              <Row className='mb-3 mt-4'>
-                <label className='mr-2'>Is admin</label>
-                <Switch
-                  onChange={() => {
-                    this.setState({
-                      is_admin: !is_admin,
-                    })
-                  }}
-                  checked={is_admin}
-                />
-              </Row>
-              {!is_admin && (
+              {showRoleManagementEnabled && (
                 <>
                   <Row className='mb-3 mt-4'>
-                    <label className='mr-2'>Roles:</label>
-                    {roles?.map((r) => (
-                      <Row
-                        key={r.id}
-                        onClick={() =>
-                          this.removeRoleApiKey(r.role, this.props.isEdit)
-                        }
-                        className='chip'
-                      >
-                        <span className='font-weight-bold'>{r.role_name}</span>
-                        <span className='chip-icon ion'>
-                          <IonIcon
-                            icon={closeIcon}
-                            style={{ fontSize: '13px' }}
-                          />
-                        </span>
-                      </Row>
-                    ))}
+                    <label className='mr-2'>Is admin</label>
+                    <Switch
+                      onChange={() => {
+                        this.setState({
+                          is_admin: !is_admin,
+                        })
+                      }}
+                      checked={is_admin}
+                    />
                   </Row>
-                  <Row className='mb-3 mt-4'>
-                    <Button
-                      theme='text'
-                      onClick={() => this.setState({ showRoles: !showRoles })}
-                    >
-                      Select roles
-                    </Button>
-                    {Utils.getFlagsmithHasFeature('show_role_management') && (
-                      <div className='px-4'>
-                        <MyRoleSelect
-                          isRoleApiKey
-                          orgId={AccountStore.getOrganisation().id}
-                          value={roles?.map((v) => v.role)}
-                          onAdd={(role) =>
-                            this.addRole(role, this.props.isEdit)
-                          }
-                          onRemove={(roleId) =>
-                            this.removeRoleApiKey(roleId, this.props.isEdit)
-                          }
-                          isOpen={showRoles}
-                          onToggle={() =>
+                  {!is_admin && (
+                    <>
+                      <Row className='mb-3 mt-4'>
+                        <label className='mr-2'>Roles:</label>
+                        {roles?.map((r) => (
+                          <Row
+                            key={r.id}
+                            onClick={() =>
+                              this.removeRoleApiKey(r.role, this.props.isEdit)
+                            }
+                            className='chip'
+                          >
+                            <span className='font-weight-bold'>
+                              {r.role_name}
+                            </span>
+                            <span className='chip-icon ion'>
+                              <IonIcon
+                                icon={closeIcon}
+                                style={{ fontSize: '13px' }}
+                              />
+                            </span>
+                          </Row>
+                        ))}
+                      </Row>
+                      <Row className='mb-3 mt-4'>
+                        <Button
+                          theme='text'
+                          onClick={() =>
                             this.setState({ showRoles: !showRoles })
                           }
-                        />
-                      </div>
-                    )}
-                  </Row>
+                        >
+                          Select roles
+                        </Button>
+                        {Utils.getFlagsmithHasFeature(
+                          'show_role_management',
+                        ) && (
+                          <div className='px-4'>
+                            <MyRoleSelect
+                              isRoleApiKey
+                              orgId={AccountStore.getOrganisation().id}
+                              value={roles?.map((v) => v.role)}
+                              onAdd={(role) =>
+                                this.addRole(role, this.props.isEdit)
+                              }
+                              onRemove={(roleId) =>
+                                this.removeRoleApiKey(roleId, this.props.isEdit)
+                              }
+                              isOpen={showRoles}
+                              onToggle={() =>
+                                this.setState({ showRoles: !showRoles })
+                              }
+                            />
+                          </div>
+                        )}
+                      </Row>
+                    </>
+                  )}
                 </>
               )}
               <Flex>
@@ -384,6 +399,9 @@ export default class AdminAPIKeys extends PureComponent {
 
   render() {
     const apiKeys = this.state.apiKeys && this.state.apiKeys.results
+    const showRoleManagementEnabled = Utils.getFlagsmithHasFeature(
+      'show_role_management',
+    )
     return (
       <div>
         <JSONReference
@@ -393,9 +411,13 @@ export default class AdminAPIKeys extends PureComponent {
           json={apiKeys}
         />
         <Column className='my-4 ml-0 col-md-6'>
-          <h5 className='mb-1'>Manage API Keys</h5>
+          <h5 className='mb-1'>{`${
+            showRoleManagementEnabled ? 'Manage' : 'Terraform'
+          } API Keys`}</h5>
           <p className='mb-0 fs-small lh-sm'>
-            API keys are used to authenticate with the Admin API.
+            {`${
+              showRoleManagementEnabled ? '' : 'Terraform'
+            } API keys are used to authenticate with the Admin API.`}
           </p>
           <div className='mb-4 fs-small lh-sm'>
             <Button
@@ -404,11 +426,13 @@ export default class AdminAPIKeys extends PureComponent {
               target='_blank'
               className='fw-normal'
             >
-              Learn about Keys.
+              {`Learn about ${
+                showRoleManagementEnabled ? '' : 'Terraform'
+              } API Keys.`}
             </Button>
           </div>
           <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
-            Create API Key
+            {`Create ${showRoleManagementEnabled ? '' : 'Terraform'} API Key`}
           </Button>
         </Column>
         {this.state.isLoading && (
@@ -438,7 +462,10 @@ export default class AdminAPIKeys extends PureComponent {
                 <Row
                   className='list-item'
                   key={v.id}
-                  onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
+                  onClick={() =>
+                    showRoleManagementEnabled &&
+                    this.editAPIKey(v.name, v.id, v.prefix)
+                  }
                 >
                   <Flex className='table-column px-3'>
                     <div className='font-weight-medium mb-1'>{v.name}</div>
@@ -455,7 +482,7 @@ export default class AdminAPIKeys extends PureComponent {
                   >
                     <Button
                       onClick={(e) => {
-                        e.stopPropagation()
+                        showRoleManagementEnabled && e.stopPropagation()
                         this.remove(v)
                       }}
                       className='btn btn-with-icon'
