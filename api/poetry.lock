@@ -1501,7 +1501,7 @@ semver = "2.13.0"
 
 [[package]]
 name = "flagsmith-ldap"
-version = "0.0.1"
+version = "0.0.2"
 description = "LDAP plugin for Flagsmith application."
 optional = false
 python-versions = "^3.10"
@@ -1515,8 +1515,8 @@ django-python3-ldap = "^0.15.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
-reference = "v0.0.2-alpha1"
-resolved_reference = "1623ba7e28a4aa17569c1aa46d70ed9ca49b2fd6"
+reference = "v0.0.2"
+resolved_reference = "92cafa027e552642ff5dc72c999afa8f2e7349bf"
 
 [[package]]
 name = "flake8"
@@ -4384,4 +4384,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "84d231794a61026ae2381e1923ea2d348cb5c548f8aed4a7b9ee810dd8a87039"
+content-hash = "5bb4ae1878deaa542af80e69cb9c735f12fd24bc56379176e0b19715004c0c0f"
