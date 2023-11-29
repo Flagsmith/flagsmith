@@ -62,6 +62,10 @@ inputs:
     description: The flagsmith-rbac git revision to use when building deployment package.
     required: false
     default: main
+  sse_gpg_private_key:
+    description: Private gpg key used for encrypting/decrypting access logs
+    required: true
+
 outputs:
   api_ecr_image_url:
     description: The image URL from ECR
@@ -147,9 +151,11 @@ runs:
         ECR_REPOSITORY: ${{ inputs.aws_ecr_repository_arn }}
         DOCKER_BUILDKIT: '1'
       run: |
+        echo "Load gpg private key"
+        cat <<< ${{ input.sse_gpg_private_key }} > sse_gpg_pkey
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
+        docker build --secret id=sse_gpg_pkey,src=./sse_gpg_pkey -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       shell: bash
