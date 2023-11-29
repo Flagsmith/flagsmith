@@ -91,7 +91,7 @@ def test_track_sse_usage(mocker: MockerFixture, environment: Environment):
     first_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
     second_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
 
-    # one log with invalid api key
+    # and, another log with invalid api key
     third_access_log = SSEAccessLogs(datetime.now().isoformat(), "third_key")
 
     mocker.patch(
@@ -109,7 +109,8 @@ def test_track_sse_usage(mocker: MockerFixture, environment: Environment):
     write_method = (
         mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
     )
-    # two valid logs should be written to influxdb
+
+    # Only valid logs were written to InfluxDB
     assert write_method.call_count == 2
     write_method.assert_has_calls(
         [

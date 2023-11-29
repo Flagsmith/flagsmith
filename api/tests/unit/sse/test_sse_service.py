@@ -122,17 +122,17 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
         f"{third_log.generated_at},{third_log.api_key}".encode()
     )
 
-    # Now, we need to patch the s3 resource because it was created before the mock_s3 decorator was applied
+    # patch the s3 resource because it was created before the mock_s3 decorator was applied
     patch_resource(s3)
 
-    # Next, let's create a bucket and add some objects to it
+    # Next, let's create a bucket
     bucket_name = settings.AWS_SSE_LOGS_BUCKET_NAME
     s3_client = boto3.client("s3", region_name="eu-west-2")
     s3_client.create_bucket(
         Bucket=bucket_name,
         CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
     )
-
+    # put some objects
     s3_client.put_object(
         Body=first_encrypted_object_data, Bucket=bucket_name, Key="first_object"
     )
@@ -140,7 +140,6 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
         Body=second_encrypted_object_data, Bucket=bucket_name, Key="second_object"
     )
 
-    # mock gpg
     mocked_gpg = mocker.patch("sse.sse_service.gpg", autospec=True)
 
     mocked_gpg.decrypt.side_effect = [
@@ -151,8 +150,7 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
     # When
     access_logs = list(stream_access_logs())
 
-    # Then
-    # it returned correct logs
+    # The
     assert access_logs == [first_log, second_log, third_log]
 
     # gpg decrypt was called correctly

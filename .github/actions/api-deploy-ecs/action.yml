@@ -63,7 +63,7 @@ inputs:
     required: false
     default: main
   sse_gpg_private_key:
-    description: Private gpg key used for encrypting/decrypting access logs
+    description: Private GPG key used for encrypting/decrypting access logs
     required: true
 
 outputs:
