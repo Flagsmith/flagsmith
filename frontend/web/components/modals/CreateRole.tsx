@@ -418,6 +418,7 @@ const CreateRole: FC<CreateRoleType> = ({
             value={userGroupTab}
             onChange={setUserGroupTab}
             theme='pill m-0'
+            isRoles={true}
           >
             <TabItem
               tabLabel={<Row className='justify-content-center'>Users</Row>}
@@ -462,7 +463,6 @@ const CreateRole: FC<CreateRoleType> = ({
                   ))}
               </div>
             </TabItem>
-            {/* add padding:0*/}
             <TabItem
               tabLabel={<Row className='justify-content-center'>Groups</Row>}
             >

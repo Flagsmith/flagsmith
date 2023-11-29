@@ -265,14 +265,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         },
       )
 
-
     useEffect(() => {
-
-      const resultArray = user.roles.map((userRole) => ({
-        role: userRole.role,
-        user_role_id: userRole.id,
-      }))
-      setRolesSelected(resultArray)
+      if (user) {
+        const resultArray = user.roles.map((userRole) => ({
+          role: userRole.role,
+          user_role_id: userRole.id,
+        }))
+        setRolesSelected(resultArray)
+      }
     }, [])
 
     useEffect(() => {
