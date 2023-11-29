@@ -31,9 +31,8 @@ the above steps as it gives you hot reloading. To run using docker compose, run 
 root:
 
 ```bash
-git clone https://github.com/Flagsmith/self-hosted.git
-cd self-hosted
-docker-compose up
+curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.yml
+docker-compose -f docker-compose.yml up
 ```
 
 ## Databases
@@ -134,15 +133,11 @@ are required using your chosen CI/CD. Alternatively, you can add your own `optio
 
 ### Using Docker
 
-If you want to run the entire Flagsmith platform, including the front end dashboard, take a look at our
-[Flagsmith Docker repository](https://github.com/Flagsmith/self-hosted).
-
-The application can be configured to run using docker with the following command:
+If you want to run the entire Flagsmith platform, including the front end dashboard:
 
 ```bash
-git clone https://github.com/Flagsmith/self-hosted.git
-cd self-hosted
-docker-compose up
+curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.yml
+docker-compose -f docker-compose.yml up
 ```
 
 This will use some default settings created in the `docker-compose.yml` file located in the root of the project. These

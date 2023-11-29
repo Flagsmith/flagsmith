@@ -15,17 +15,17 @@ Flagsmith makes it easy to create and manage features flags across web, mobile, 
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
-Get up and running in less than a minute via our [Self Hosted Repository](https://github.com/Flagsmith/self-hosted):
+Get up and running in less than a minute:
 
 ```bash
-git clone git@github.com:flagsmith/self-hosted.git
-docker-compose -f self-hosted/docker-compose.yml up
+curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.yml
+docker-compose -f docker-compose.yml up
 ```
 
 The application will bootstrap an admin user, organisation, and project for you. You'll find a link to set your password
 in your Compose logs:
 
-```
+```txt
 Superuser "admin@example.com" created successfully.
 Please go to the following page and choose a password: https://localhost:8000/password-reset/confirm/.../...
 ```
@@ -51,7 +51,7 @@ You can try our hosted version for free at https://flagsmith.com/
 
 The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can try the application out using:
 
-- [Docker](https://github.com/Flagsmith/self-hosted)
+- [Docker](https://github.com/Flagsmith/flagsmith/blob/main/docker-compose.yml)
 - [Kubernetes](https://github.com/Flagsmith/flagsmith-charts)
 - [Redhat OpenShift](https://operatorhub.io/operator/flagsmith)
 
