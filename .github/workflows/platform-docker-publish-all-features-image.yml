@@ -98,11 +98,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Git credentials
-        run: |
-          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > $HOME/.git-credentials 
-          git config --global credential.helper store
-
       - name: Build and push images
         id: docker_build
         uses: docker/build-push-action@v3
@@ -115,3 +110,4 @@ jobs:
           build-args: |
             SAML_INSTALLED=1
             POETRY_OPTS=--with saml,auth-controller,ldap
+            GH_TOKEN=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
