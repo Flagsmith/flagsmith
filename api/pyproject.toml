@@ -115,6 +115,12 @@ optional = true
 [tool.poetry.group.saml.dependencies]
 pysaml2 = "^7.0.0"
 
+[tool.poetry.group.ldap]
+optional = true
+
+[tool.poetry.group.ldap.dependencies]
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.0.2" }
+
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
 responses = "~0.22.0"
