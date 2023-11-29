@@ -43,6 +43,7 @@ class FeatureSegmentViewSet(
         permitted_projects = self.request.user.get_permitted_projects(
             permission_key=VIEW_PROJECT
         )
+
         queryset = FeatureSegment.objects.filter(
             feature__project__in=permitted_projects
         )

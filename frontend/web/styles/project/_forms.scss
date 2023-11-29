@@ -42,11 +42,11 @@
 .dark {
     .input-container {
         input.input {
-            border: 1px solid $input-border-color-dark;
+            border: 1px solid $input-hover-border-color-dark;
             background-color: $input-bg-dark;
             color: $text-icon-light;
             &:hover {
-                border: 1px solid $input-hover-border-color-dark;
+                border: 1px solid $input-focus-border-color-dark;
             }
             &:focus {
                 border: 1px solid $input-focus-border-color-dark;

@@ -295,6 +295,19 @@ export type Account = {
   is_superuser: boolean
 }
 
+export type Role = {
+  id: number
+  name: string
+  description?: string
+  organisation: number
+}
+
+export type RolePermissionUser = {
+  user: number
+  role: number
+  id: number
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -354,9 +367,13 @@ export type Res = {
     }
     value: string
   }
+  roles: Role[]
+  rolePermission: { id: string }
 
   projectFlags: PagedResponse<ProjectFlag>
   identityFeatureStates: IdentityFeatureState[]
+  rolesPermissionUsers: RolePermissionUser
+  rolePermissionGroup: { id: string }
   getSubscriptionMetadata: { id: string }
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport

@@ -3,6 +3,8 @@ import TheInput from 'material-ui-chip-input'
 import Utils from 'common/utils/utils'
 import { filter } from 'lodash'
 import Chip from '@material-ui/core/Chip'
+import { close } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 type ChipInputType = {
   placeholder?: string
@@ -63,7 +65,11 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
           onClick={handleClick}
           onDelete={handleDelete}
           label={value}
-          deleteIcon={<span className='chip-icon ion ion-ios-close' />}
+          deleteIcon={
+            <span className='chip-icon ion'>
+              <IonIcon icon={close} />
+            </span>
+          }
         />
       )}
     />

@@ -87,6 +87,20 @@
     }
     .panel-content {
       background-color: transparent;
+      .search-list {
+        background-color: $bg-dark400;
+        border: 1px solid $white-alpha-16;
+        .list-item {
+          border-top: 1px solid $white-alpha-16;
+          &:first-child {
+            border-top: none;
+          }
+        }
+        &.change-request-list{
+          background-color: $bg-dark500;
+        }
+      }
+
       .chip {
         background-color: $panel-bg-darker;
       }
@@ -120,8 +134,8 @@
         }
       }
     }
-    .list-item:hover a {
-      color: $dark-highlight-color !important;
+    .list-item:hover a,.btn-link {
+      color: $primary !important;
     }
     .panel-icon {
       background-color: $panel-icon-background-color-dark;
@@ -139,8 +153,18 @@
       }
     }
     &.segment-overrides {
-      background-color: $bg-dark100;
+      background-color: $bg-dark400;
       border: 1px solid $white-alpha-16;
+    }
+    .panel-content {
+      .search-list {
+        border: 1px solid $panel-border-color-dark;
+        background-color: $bg-dark400;
+        .list-item {
+          border-top: 1px solid $panel-border-color-dark;
+          background-color: $bg-dark400;
+        }
+      }
     }
   }
 }
@@ -194,6 +218,28 @@ a.text-white {
     .panel-content {
       .search-list {
         border: none;
+        background-color: transparent;
+      }
+    }
+  }
+  &.panel-change-request {
+    .search-list {
+      border-color: rgba(149, 108, 255, 0.48);
+
+      .table-header {
+        color: #6837fc;
+        background-color: rgba(102, 51, 255, 0.08);
+      }
+
+      .change-request-item {
+        border-color: rgba(149, 108, 255, 0.48);
+      }
+    }
+
+    .change-request-updated-value {
+      input,
+      code.txt {
+        color: #6837fc;
       }
     }
   }

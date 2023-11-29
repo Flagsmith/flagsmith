@@ -60,9 +60,7 @@ class TheComponent extends Component {
     history.replaceState(
       {},
       null,
-      `${document.location.pathname}?feature=${projectFlag.id}${
-        tab ? `&tab=${tab}` : ''
-      }`,
+      `${document.location.pathname}?feature=${projectFlag.id}`,
     )
     openModal(
       `${this.props.permission ? 'Edit Feature' : 'Feature'}: ${
@@ -75,6 +73,7 @@ class TheComponent extends Component {
         projectFlag={projectFlag}
         noPermissions={!this.props.permission}
         environmentFlag={environmentFlag}
+        tab={tab}
         flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
@@ -105,11 +104,7 @@ class TheComponent extends Component {
     )
 
     if (this.props.condensed) {
-      return Utils.renderWithPermission(
-        permission,
-        Constants.environmentPermissions(
-          Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-        ),
+      return (
         <Flex
           onClick={() =>
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
@@ -169,14 +164,10 @@ class TheComponent extends Component {
               data-test={`feature-value-${this.props.index}`}
             />
           </Flex>
-        </Flex>,
+        </Flex>
       )
     }
-    return Utils.renderWithPermission(
-      permission,
-      Constants.environmentPermissions(
-        Utils.getManageFeaturePermissionDescription(changeRequestsEnabled),
-      ),
+    return (
       <Row
         className={`list-item ${readOnly ? '' : 'clickable'} ${
           this.props.widget ? 'py-1' : 'py-2'
@@ -222,22 +213,29 @@ class TheComponent extends Component {
                 </span>
 
                 {!!projectFlag.num_segment_overrides && (
-                  <Tooltip
-                    title={
-                      <span
-                        className='chip me-2 chip--xs bg-primary text-white'
-                        style={{ border: 'none' }}
-                      >
-                        <SegmentsIcon className='chip-svg-icon' />
-                        <span>{projectFlag.num_segment_overrides}</span>
-                      </span>
-                    }
-                    place='top'
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      this.editFeature(projectFlag, environmentFlags[id], 1)
+                    }}
                   >
-                    {`${projectFlag.num_segment_overrides} Segment Override${
-                      projectFlag.num_segment_overrides !== 1 ? 's' : ''
-                    }`}
-                  </Tooltip>
+                    <Tooltip
+                      title={
+                        <span
+                          className='chip me-2 chip--xs bg-primary text-white'
+                          style={{ border: 'none' }}
+                        >
+                          <SegmentsIcon className='chip-svg-icon' />
+                          <span>{projectFlag.num_segment_overrides}</span>
+                        </span>
+                      }
+                      place='top'
+                    >
+                      {`${projectFlag.num_segment_overrides} Segment Override${
+                        projectFlag.num_segment_overrides !== 1 ? 's' : ''
+                      }`}
+                    </Tooltip>
+                  </div>
                 )}
                 {!!projectFlag.num_identity_overrides && (
                   <Tooltip
@@ -409,7 +407,7 @@ class TheComponent extends Component {
             </Permission>
           )}
         </div>
-      </Row>,
+      </Row>
     )
   }
 }

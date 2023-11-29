@@ -267,13 +267,11 @@ $flagsmith = new Flagsmith('<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>');
 
 ```go
 import (
-  flagsmith "github.com/Flagsmith/flagsmith-go-client"
+  "os"
+  flagsmith "github.com/Flagsmith/flagsmith-go-client/v3"
 )
-ctx, cancel := context.WithCancel(context.Background())
-defer cancel()
-
 // Initialise the Flagsmith client
-client := flagsmith.NewClient('<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>', flagsmith.WithContext(ctx),)
+client := flagsmith.NewClient(os.Getenv("FLAGSMITH_ENVIRONMENT_KEY"))
 ```
 
 </TabItem>
@@ -387,7 +385,7 @@ $flags->getFeatureValue('secret_button');
 
 ```go
 // The method below triggers a network request
-flags, _ := client.GetEnvironmentFlags()
+flags, _ := client.GetEnvironmentFlags(ctx)
 showButton, _ := flags.IsFeatureEnabled("secret_button")
 buttonData, _ := flags.GetFeatureValue("secret_button")
 ```
@@ -517,7 +515,7 @@ trait := flagsmith.Trait{TraitKey: "trait", TraitValue: "trait_value"}
 traits = []*flagsmith.Trait{&trait}
 
 // The method below triggers a network request
-flags, _ := client.GetIdentityFlags(identifier, traits)
+flags, _ := client.GetIdentityFlags(ctx, identifier, traits)
 
 showButton, _ := flags.IsFeatureEnabled("secret_button")
 buttonData, _ := flags.GetFeatureValue("secret_button")
@@ -689,12 +687,17 @@ $flagsmith = (new Flagsmith('<FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY>'))
 <TabItem value="go" label="Go">
 
 ```go
-func defaultFlagHandler(featureName string) flagsmith.Flag {
-	return flagsmith.Flag{IsDefault: true, FeatureName: featureName, Value: `{"colour": "#ababab"}`}
+func DefaultFlagHandler(featureName string) (flagsmith.Flag, error) {
+	return flagsmith.Flag{
+		FeatureName: featureName,
+		IsDefault:   true,
+		Value:       `{"colour": "#FFFF00"}`,
+		Enabled:     true,
+	}, nil
 }
 
 client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
-		flagsmith.WithDefaultHandler(defaultFlagHandler),
+		flagsmith.WithDefaultHandler(DefaultFlagHandler),
 )
 
 ```
@@ -769,7 +772,7 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asnchronous network request to retrieve details about the Environment.
+- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
 - Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
   has is up to date.
 
@@ -792,6 +795,12 @@ flagsmith.close();
 // available from v2.2.1
 flagsmith.close();
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+Since PHP does not share state between requests, you **have** to implement caching to get the benefits of Local
+Evaluation mode. Please see [caching](#caching) below.
 
 </TabItem>
 </Tabs>
@@ -1233,7 +1242,7 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
         // Controls which mode to run in; local or remote evaluation.
         // See the `SDKs Overview Page` for more info
         // Defaults to False
-        flagsmith.WithLocalEvaluation(),
+        func WithLocalEvaluation(ctx context.Context),
 
         // The network timeout in seconds.
         flagsmith.WithRequestTimeout(10*time.Second),
@@ -1245,7 +1254,7 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
 
         // Controls whether Flag Analytics data is sent to the Flagsmith API
         // See https://docs.flagsmith.com/advanced-use/flag-analytics
-        flagsmith.WithAnalytics(),
+        flagsmith.WithAnalytics(ctx),
 
         // Sets `resty.Client` options.  `SetRetryCount` and `SetRetryWaitTime`
         // Ref: https://pkg.go.dev/github.com/go-resty/resty/v2#Client.SetRetryCount
@@ -1264,8 +1273,16 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_API_KEY"),
         // response
         flagsmith.WithDefaultHandler(defaultFlagHandler),
 
-        // You can specify the context to use.
-        flagsmith.WithContext(ctx),
+        // Allows the client to use any logger that implements the `Logger` interface.
+        flagsmith.WithLogger(ctx),
+
+        // WithProxy returns an Option function that sets the proxy(to be used by internal resty client).
+        // The proxyURL argument is a string representing the URL of the proxy server to use, e.g. "http://proxy.example.com:8080".
+        func WithProxy(proxyURL string) Option {
+            return func(c *Client) {
+                c.client.SetProxy(proxyURL)
+            }
+        }
 )
 ```
 
@@ -1571,6 +1588,51 @@ router.get('/', function (req, res, next) {
  });
 });
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+```php
+$flagsmith = (new Flagsmith(TOKEN));
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+It is recommended to use a psr simple-cache implementation to cache the environment document between multiple requests.
+
+```sh
+composer require symfony/cache
+```
+
+```php
+$flagsmith = (new Flagsmith(TOKEN))
+  ->withCache(new Psr16Cache(new FilesystemAdapter()));
+// Cache the environment call to reduce network calls for each and every evaluation.
+// This will load the environment from cache (or API, if cache does not exist.)
+$flagsmith->updateEnvironment();
+```
+
+An optional cron job can be added to refresh this cache at a set time depending on your choice. Please set
+EnvironmentTTL value for this purpose.
+
+```php
+// the environment will be cached for 100 seconds.
+$flagsmith = $flagsmith->withEnvironmentTtl(100);
+$flagsmith->updateEnvironment();
+```
+
+```sh
+* * * 1 40 php index.php # using cli
+* * * 1 40 curl http://localhost:8000/ # using http
+```
+
+Note:
+
+- For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
+  `ser.`.
+- The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with its
+  own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file system
+  one.
 
 </TabItem>
 </Tabs>

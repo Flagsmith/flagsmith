@@ -5,7 +5,6 @@ import pytest
 from django.utils import timezone
 
 from task_processor.decorators import register_task_handler
-from task_processor.exceptions import TaskQueueFullError
 from task_processor.models import RecurringTask, Task
 
 now = timezone.now()
@@ -24,7 +23,12 @@ def test_task_run():
     args = ["foo"]
     kwargs = {"arg_two": "bar"}
 
-    task = Task.create(my_callable.task_identifier, args=args, kwargs=kwargs)
+    task = Task.create(
+        my_callable.task_identifier,
+        scheduled_for=timezone.now(),
+        args=args,
+        kwargs=kwargs,
+    )
 
     # When
     result = task.run()
@@ -55,42 +59,3 @@ def test_recurring_task_run_should_execute_first_run_at(first_run_time, expected
         ).should_execute
         == expected
     )
-
-
-def test_schedule_task_raises_error_if_queue_is_full(db):
-    # Given
-    task_identifier = "my_callable"
-
-    # some incomplete task
-    for _ in range(10):
-        Task.objects.create(task_identifier=task_identifier)
-
-    # When
-    with pytest.raises(TaskQueueFullError):
-        Task.schedule_task(
-            schedule_for=timezone.now(), task_identifier=task_identifier, queue_size=9
-        )
-
-
-def test_can_schedule_task_raises_error_if_queue_is_not_full(db):
-    # Given
-    task_identifier = "my_callable"
-
-    # Some incomplete task
-    for _ in range(10):
-        Task.objects.create(task_identifier=task_identifier)
-
-        # tasks with different identifiers
-        Task.objects.create(task_identifier="task_with_different_identifier")
-
-        # failed tasks
-        Task.objects.create(
-            task_identifier="task_with_different_identifier", num_failures=3
-        )
-
-    # When
-    task = Task.schedule_task(
-        schedule_for=timezone.now(), task_identifier=task_identifier, queue_size=10
-    )
-    # Then
-    assert task is not None

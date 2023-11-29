@@ -13,6 +13,8 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
+import { rocket } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -583,8 +585,13 @@ const FeaturesPage = class extends Component {
                                 data-test='show-create-feature-btn'
                                 onClick={this.newFlag}
                               >
-                                <span className='icon ion-ios-rocket' /> Create
-                                your first Feature
+                                <span className='icon'>
+                                  <IonIcon
+                                    icon={rocket}
+                                    style={{ contain: 'none', height: '25px' }}
+                                  />
+                                </span>{' '}
+                                Create your first Feature
                               </Button>
                             </FormGroup>
                           ))}

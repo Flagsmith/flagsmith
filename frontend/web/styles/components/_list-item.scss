@@ -9,7 +9,7 @@
       vertical-align: sub;
     }
   }
-  &.change-request-item{
+  &.change-request-item {
     min-height: auto;
     padding: 20px 0px;
   }
@@ -39,10 +39,13 @@
   .list-item {
     color: $text-icon-light;
     &.clickable:hover .btn-link {
-      color: white;
+      color: $primary400;
     }
-    .btn-link {
-      color: white;
+      .btn-link {
+      color: $primary400;
+      path {
+        fill: $primary400;
+      }
     }
   }
 }

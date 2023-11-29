@@ -480,7 +480,7 @@ def test_add_single_seat_with_existing_addon(mocker):
                 {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": addon_quantity + 1}
             ],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
 
@@ -511,24 +511,26 @@ def test_add_single_seat_without_existing_addon(mocker):
         {
             "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
 
 
 def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(mocker, caplog):
     # Given
-
-    # Chargebee's APIError requires additional arguments to instantiate it so instead
-    # we mock it with our own exception here to test that it is caught correctly
-    class MockException(Exception):
-        pass
-
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
-    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
-
-    mocked_chargebee.Subscription.update.side_effect = MockException
+    # Typical non-payment related error from Chargebee.
+    chargebee_response_data = {
+        "message": "82sa2Sqa5 not found",
+        "type": "invalid_request",
+        "api_error_code": "resource_not_found",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+    mocked_chargebee.Subscription.update.side_effect = APIError(
+        http_code=404, json_obj=chargebee_response_data
+    )
 
     # Let's create a (mocked) subscription object
     subscription_id = "sub-id"
@@ -553,7 +555,7 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(mocker, c
         {
             "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
             "prorate": True,
-            "invoice_immediately": True,
+            "invoice_immediately": False,
         },
     )
     assert len(caplog.records) == 1
