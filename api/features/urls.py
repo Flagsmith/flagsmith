@@ -4,11 +4,13 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from features.feature_segments.views import FeatureSegmentViewSet
-from features.views import (
-    SimpleFeatureStateViewSet,
+from features.import_export.views import (
     create_feature_export,
     download_feature_export,
     feature_import,
+)
+from features.views import (
+    SimpleFeatureStateViewSet,
     get_feature_by_uuid,
     get_feature_state_by_uuid,
 )
