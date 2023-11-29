@@ -98,6 +98,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Git credentials
+        run: |
+          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > $HOME/.git-credentials 
+          git config credential.helper store
+
       - name: Build and push images
         id: docker_build
         uses: docker/build-push-action@v3
