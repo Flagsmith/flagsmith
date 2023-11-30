@@ -235,17 +235,18 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_user_organisation(
         self, organisation: typing.Union["Organisation", int]
     ) -> UserOrganisation:
+        organisation_id = getattr(organisation, "id", organisation)
+
         try:
             return next(
                 filter(
-                    lambda uo: uo.organisation_id == organisation.id,
+                    lambda uo: uo.organisation_id == organisation_id,
                     self.userorganisation_set.all(),
                 )
             )
         except StopIteration:
             logger.warning(
-                "User %d is not part of organisation %d"
-                % (self.id, getattr(organisation, "id", organisation))
+                "User %d is not part of organisation %d" % (self.id, organisation_id)
             )
 
     def get_permitted_projects(
