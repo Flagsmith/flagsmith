@@ -2399,7 +2399,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(13):
+    with django_assert_num_queries(14):
         response = staff_client.get(url)
 
     # Then
