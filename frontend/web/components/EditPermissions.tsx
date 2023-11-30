@@ -701,7 +701,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             <MyRoleSelect
               orgId={id}
               level={level}
-              value={rolesSelected.map((v) => v.role)}
+              value={rolesSelected?.map((v) => v.role)}
               onAdd={addRole}
               onRemove={removeOwner}
               isOpen={showRoles}
