@@ -235,12 +235,24 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_user_organisation(
         self, organisation: typing.Union["Organisation", int]
     ) -> UserOrganisation:
+        organisation_id = getattr(organisation, "id", organisation)
+
         try:
-            return self.userorganisation_set.get(organisation=organisation)
-        except UserOrganisation.DoesNotExist:
+            # Since the user list view relies on this data, we prefetch it in
+            # the queryset, hence we can't use `userorganisation_set.get()`
+            # and instead use this next(filter()) approach. Since most users
+            # won't have more than ~1 organisation, we can accept the performance
+            # hit in the case that we are only getting the organisation for a
+            # single user.
+            return next(
+                filter(
+                    lambda uo: uo.organisation_id == organisation_id,
+                    self.userorganisation_set.all(),
+                )
+            )
+        except StopIteration:
             logger.warning(
-                "User %d is not part of organisation %d"
-                % (self.id, getattr(organisation, "id", organisation))
+                "User %d is not part of organisation %d" % (self.id, organisation_id)
             )
 
     def get_permitted_projects(
