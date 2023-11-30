@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from features.import_export.constants import OVERWRITE_DESTRUCTIVE
 from features.import_export.models import FeatureExport, FeatureImport
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
@@ -164,17 +165,14 @@ def test_feature_import(
 ) -> None:
     # Given
     assert FeatureImport.objects.count() == 0
-    url = (
-        reverse(
-            "api-v1:features:feature-import",
-            args=[environment.id],
-        )
-        + "?strategy=overwrite-destructive"
+    url = reverse(
+        "api-v1:features:feature-import",
+        args=[environment.id],
     )
 
     file_data = b"[]"
     uploaded_file = SimpleUploadedFile("test.23.json", file_data)
-    data = {"file": uploaded_file}
+    data = {"file": uploaded_file, "strategy": OVERWRITE_DESTRUCTIVE}
 
     # When
     response = admin_client.post(url, data=data, format="multipart")
@@ -183,7 +181,7 @@ def test_feature_import(
     assert response.status_code == 201
     assert FeatureImport.objects.count() == 1
     feature_import = FeatureImport.objects.first()
-    assert feature_import.strategy == "OVERWRITE_DESTRUCTIVE"
+    assert feature_import.strategy == OVERWRITE_DESTRUCTIVE
 
 
 def test_feature_import_unauthorized(
