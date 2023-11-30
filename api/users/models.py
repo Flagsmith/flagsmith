@@ -42,6 +42,9 @@ if typing.TYPE_CHECKING:
         InviteLink,
     )
 
+if settings.IS_RBAC_INSTALLED:
+    from rbac.models import UserRole
+
 logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
 
@@ -242,6 +245,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 "User %d is not part of organisation %d"
                 % (self.id, getattr(organisation, "id", organisation))
             )
+
+    def get_user_roles(self):
+        user_roles = UserRole.objects.filter(user=self)
+        return user_roles
 
     def get_permitted_projects(
         self, permission_key: str, tag_ids: typing.List[int] = None
