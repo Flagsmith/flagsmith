@@ -5,12 +5,21 @@ import pytest
 from django.test import TestCase
 from rest_framework.test import override_settings
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     TRIAL_SUBSCRIPTION_ID,
     Organisation,
     OrganisationSubscriptionInformationCache,
     Subscription,
+)
+from organisations.permissions.models import (
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    MANAGE_USER_GROUPS,
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
@@ -393,3 +402,189 @@ def test_subscription_get_api_call_overage(
 
     # Then
     assert overage == expected_overage
+
+
+@pytest.mark.django_db()
+def test_create_update_delete_user_organisation_permissions_audit_log(
+    mocker, organisation, admin_user
+):
+    # Given
+    mocker.patch("core.models._get_request_user", return_value=admin_user)
+
+    # When
+    perm = UserOrganisationPermission.objects.create(
+        user=admin_user, organisation=organisation
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log == f"New Grant created: {admin_user.email} / {organisation.name}"
+    )
+
+    # When
+    perm.add_permission(MANAGE_USER_GROUPS)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 2
+    )
+
+    # When
+    perm.set_permissions([CREATE_PROJECT])
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 4
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    assert audit_logs[0]
+    assert audit_logs[0].author_id == admin_user.pk
+    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
+    assert audit_logs[0].related_object_id == perm.pk
+    assert audit_logs[0].organisation_id == organisation.pk
+    assert (
+        audit_logs[0].log
+        == f"Grant permissions updated: {admin_user.email} / {organisation.name}; added: {CREATE_PROJECT}"
+    )
+    assert audit_logs[1]
+    assert audit_logs[1].author_id == admin_user.pk
+    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
+    assert audit_logs[1].related_object_id == perm.pk
+    assert audit_logs[1].organisation_id == organisation.pk
+    assert (
+        audit_logs[1].log
+        == f"Grant permissions updated: {admin_user.email} / {organisation.name}; removed: {MANAGE_USER_GROUPS}"
+    )
+
+    # When
+    perm_pk = perm.pk
+    perm.delete()
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 5
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Grant deleted: {admin_user.email} / {organisation.name}"
+
+
+@pytest.mark.django_db()
+def test_create_update_delete_group_organisation_permissions_audit_log(
+    mocker, organisation, admin_user, user_permission_group
+):
+    # Given
+    mocker.patch("core.models._get_request_user", return_value=admin_user)
+
+    # When
+    perm = UserPermissionGroupOrganisationPermission.objects.create(
+        group=user_permission_group, organisation=organisation
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"New Grant created: {user_permission_group.name} / {organisation.name}"
+    )
+
+    # When
+    perm.add_permission(MANAGE_USER_GROUPS)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 2
+    )
+
+    # When
+    perm.set_permissions([CREATE_PROJECT])
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 4
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    assert audit_logs[0]
+    assert audit_logs[0].author_id == admin_user.pk
+    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
+    assert audit_logs[0].related_object_id == perm.pk
+    assert audit_logs[0].organisation_id == organisation.pk
+    assert (
+        audit_logs[0].log
+        == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
+        f"added: {CREATE_PROJECT}"
+    )
+    assert audit_logs[1]
+    assert audit_logs[1].author_id == admin_user.pk
+    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
+    assert audit_logs[1].related_object_id == perm.pk
+    assert audit_logs[1].organisation_id == organisation.pk
+    assert (
+        audit_logs[1].log
+        == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
+        f"removed: {MANAGE_USER_GROUPS}"
+    )
+
+    # When
+    perm_pk = perm.pk
+    perm.delete()
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 5
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Grant deleted: {user_permission_group.name} / {organisation.name}"
+    )
