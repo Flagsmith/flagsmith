@@ -3,6 +3,7 @@ from unittest import TestCase, mock
 import pytest
 from django.db.utils import IntegrityError
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -165,6 +166,51 @@ class FFAdminUserTestCase(TestCase):
                 organisation=self.organisation, permission_key=permission_key
             )
             for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+    @mock.patch("core.models._get_request_user")
+    def test_add_organistion_audit_log(self, get_request_user):
+        # Given
+        get_request_user.return_value = self.user
+        self.user.add_organisation(self.organisation)
+
+        # Then
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: Test Organisation"
+        )
+
+    @mock.patch("core.models._get_request_user")
+    def test_remove_organistion_audit_log(self, get_request_user):
+        # Given
+        get_request_user.return_value = self.user
+        self.user.add_organisation(self.organisation)
+        self.user.remove_organisation(self.organisation)
+
+        # Then
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 2
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; removed: Test Organisation"
         )
 
 
