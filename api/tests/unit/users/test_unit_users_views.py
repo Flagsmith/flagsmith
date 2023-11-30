@@ -1,6 +1,5 @@
 import json
 import typing
-from unittest import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -9,6 +8,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from djoser import utils
@@ -174,8 +174,16 @@ class UserTestCase(TestCase):
             "api-v1:organisations:organisation-users-list", args=[self.organisation.pk]
         )
 
+        # add some more users to test for N+1 issues
+        for i in range(2):
+            additional_user = FFAdminUser.objects.create(
+                email=f"additional_user_{i}@org.com"
+            )
+            additional_user.add_organisation(self.organisation)
+
         # When
-        res = self.client.get(url)
+        with self.assertNumQueries(5):
+            res = self.client.get(url)
 
         # Then
         assert res.status_code == status.HTTP_200_OK

@@ -2,7 +2,7 @@ from contextlib import suppress
 
 from core.helpers import get_current_site_url
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 from django.http import (
     Http404,
     HttpRequest,
@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.permissions import (
     MANAGE_USER_GROUPS,
     NestedIsOrganisationAdminPermission,
@@ -104,9 +104,12 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         if self.kwargs.get("organisation_pk"):
-            queryset = FFAdminUser.objects.filter(
-                organisations__id=self.kwargs.get("organisation_pk")
-            )
+            queryset = FFAdminUser.objects.prefetch_related(
+                Prefetch(
+                    "userorganisation_set",
+                    queryset=UserOrganisation.objects.select_related("organisation"),
+                )
+            ).filter(organisations__id=self.kwargs.get("organisation_pk"))
             queryset = self._apply_query_filters(queryset)
             return queryset
         else:
