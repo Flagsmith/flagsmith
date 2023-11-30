@@ -1,5 +1,6 @@
 import boto3
 import pytest
+from django.conf import settings
 from moto import mock_s3
 from moto.core import patch_resource
 from pytest_lazyfixture import lazy_fixture
@@ -106,7 +107,7 @@ def test_send_environment_update_message_for_environment_schedules_task_correctl
 
 
 @mock_s3
-def test_stream_access_logs(mocker: MockerFixture, settings):
+def test_stream_access_logs(mocker: MockerFixture):
     # Given - Some test data
     first_log = SSEAccessLogs("2023-11-27T06:42:47+0000", "key_one")
     second_log = SSEAccessLogs("2023-11-27T06:42:47+0000", "key_two")
@@ -123,6 +124,7 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
     )
 
     # patch the s3 resource because it was created before the mock_s3 decorator was applied
+    # ref: https://docs.getmoto.org/en/latest/docs/getting_started.html#patching-the-client-or-resource
     patch_resource(s3)
 
     # Next, let's create a bucket
@@ -150,7 +152,7 @@ def test_stream_access_logs(mocker: MockerFixture, settings):
     # When
     access_logs = list(stream_access_logs())
 
-    # The
+    # Then
     assert access_logs == [first_log, second_log, third_log]
 
     # gpg decrypt was called correctly

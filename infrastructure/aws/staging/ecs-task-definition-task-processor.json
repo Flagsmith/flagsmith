@@ -125,7 +125,7 @@
                 },
                 {
                     "name": "SSE_INFLUXDB_BUCKET",
-                    "value": "sse_dev"
+                    "value": "sse_staging"
                 },
                 {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",

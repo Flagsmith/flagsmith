@@ -111,40 +111,25 @@ def test_track_sse_usage(
     update_sse_usage()
 
     # Then
-    write_method = (
-        mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
-    )
-
-    # Only valid logs were written to InfluxDB
-    assert write_method.call_count == 2
-    write_method.assert_has_calls(
-        [
-            call(
-                bucket=influxdb_bucket,
-                record=mocked_influx_point().field().tag().tag().tag().time(),
-            ),
-            call(
-                bucket=influxdb_bucket,
-                record=mocked_influx_point().field().tag().tag().tag().time(),
-            ),
-        ]
-    )
-
     # Point was generated correctly
     mocked_influx_point.assert_has_calls(
         [
             call("sse_call"),
-            call().field("request_count", 1),
-            call().field().tag("organisation_id", environment.project.organisation_id),
-            call().field().tag().tag("project_id", environment.project_id),
-            call().field().tag().tag().tag("environment_id", environment.id),
-            call().field().tag().tag().tag().time(first_access_log.generated_at),
-            # Second log
-            call("sse_call"),
-            call().field("request_count", 1),
+            call().field("request_count", 2),
             call().field().tag("organisation_id", environment.project.organisation_id),
             call().field().tag().tag("project_id", environment.project_id),
             call().field().tag().tag().tag("environment_id", environment.id),
             call().field().tag().tag().tag().time(second_access_log.generated_at),
         ]
+    )
+
+    # Only valid logs were written to InfluxDB
+    write_method = (
+        mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
+    )
+
+    assert write_method.call_count == 1
+    write_method.assert_called_once_with(
+        bucket=influxdb_bucket,
+        record=mocked_influx_point().field().tag().tag().tag().time(),
     )

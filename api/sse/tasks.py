@@ -45,28 +45,37 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
         run_every=timedelta(seconds=60),
     )
     def update_sse_usage():
+        agg_request_count: dict[str, int] = {}
+        agg_last_event_generated_at: dict[str, str] = {}
+
+        for log in sse_service.stream_access_logs():
+            agg_request_count[log.api_key] = agg_request_count.get(log.api_key, 0) + 1
+            agg_last_event_generated_at[log.api_key] = log.generated_at
+
         with influxdb_client.write_api(
-            write_options=WriteOptions(batch_size=1000, flush_interval=2000)
+            write_options=WriteOptions(batch_size=100, flush_interval=1000)
         ) as write_api:
-            for log in sse_service.stream_access_logs():
-                environment = Environment.get_from_cache(log.api_key)
+            for api_key, request_count in agg_request_count.items():
+                environment = Environment.get_from_cache(api_key)
 
                 if not environment:
-                    logger.warning("Invalid  api_key %s", log.api_key)
+                    logger.warning("Invalid api_key %s", api_key)
                     continue
 
-                record = _get_influx_point(environment, log.generated_at)
+                record = _get_influx_point(
+                    environment, request_count, agg_last_event_generated_at[api_key]
+                )
                 write_api.write(bucket=settings.SSE_INFLUXDB_BUCKET, record=record)
 
 
-def _get_influx_point(environment: Environment, event_time: str) -> Point:
+def _get_influx_point(environment: Environment, count: int, time: str) -> Point:
     return (
         Point("sse_call")
-        .field("request_count", 1)
+        .field("request_count", count)
         .tag("organisation_id", environment.project.organisation_id)
         .tag("project_id", environment.project_id)
         .tag("environment_id", environment.id)
-        .time(event_time)
+        .time(time)
     )
 
 
