@@ -426,11 +426,16 @@ class HistoricalRecords(BaseHistoricalRecords):
         self.post_save(getattr(instance, instance_attr), False, **kwargs)
 
 
-def _get_history_user(
-    instance: models.Model, request: HttpRequest
-) -> typing.Optional["FFAdminUser"]:
+def _get_request_user(request: HttpRequest | None) -> FFAdminUser | None:
     user = getattr(request, "user", None)
     return None if getattr(user, "is_master_api_key_user", False) else user
+
+
+def _get_history_user(
+    instance: models.Model, request: HttpRequest | None
+) -> FFAdminUser | None:
+    # this indirection is necessary to allow unit test patching of _get_request_user
+    return _get_request_user(request)
 
 
 def _get_base_model(default_messages: bool):
