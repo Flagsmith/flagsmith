@@ -2,6 +2,10 @@
 # This will docker-compose file will run the entire Flagsmith Platform in Docker
 
 version: '3'
+
+volumes:
+  pgdata:
+
 services:
   postgres:
     image: postgres:11.12-alpine
@@ -9,27 +13,29 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
     container_name: flagsmith_postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   flagsmith:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
+    image: flagsmith/flagsmith:latest
     environment:
       # All environments variables are available here:
       # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
       # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
 
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
+
       ENV: prod # set to "prod" in production.
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      USE_POSTGRES_FOR_ANALYTICS: 'True' # Store API and Flag Analytics data in Postgres
-      # PREVENT_SIGNUP: 'True' # Uncomment to prevent additional signups
-      # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
-      # ALLOW_REGISTRATION_WITHOUT_INVITE: True
+      ALLOW_ADMIN_INITIATION_VIA_CLI: 'true' # Change this in production
+      FLAGSMITH_DOMAIN: 'localhost:8000' # Change this in production
+      DJANGO_SECRET_KEY: 'secret' # Change this in production
+      # PREVENT_SIGNUP: "true" # Uncomment to prevent additional signups
+      # ENABLE_ADMIN_ACCESS_USER_PASS: "true" # set to "true" to enable access to the /admin/ Django backend via your username and password
+      # ALLOW_REGISTRATION_WITHOUT_INVITE: "true"
 
       # Enable Task Processor
-      # To use task processor service, uncomment line below and additional 'flagsmith_processor'
-      # container below
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
       # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
       #
@@ -40,7 +46,7 @@ services:
       # EMAIL_HOST_USER: flagsmith@example.com
       # EMAIL_HOST_PASSWORD: smtp_account_password
       # EMAIL_PORT: 587 # optional
-      # EMAIL_USE_TLS: True # optional
+      # EMAIL_USE_TLS: "true" # optional
 
     ports:
       - '8000:8000'
@@ -49,22 +55,16 @@ services:
     links:
       - postgres
 
-  # Run the asynchronous task processor as a separate container alongside the API.
-  # When enabled, the API will write tasks to a queue (in the PostgreSQL database) for
-  # the processor to consume asynchronously.
-  # Documentation on the processor can be found here:
-  # https://docs.flagsmith.com/advanced-use/task-processor
+  # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
+  # in the application environment
   flagsmith_processor:
-    build:
-      dockerfile: Dockerfile
-      context: .
+    image: flagsmith/flagsmith:latest
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      USE_POSTGRES_FOR_ANALYTICS: 'True' # Store API and Flag Analytics data in Postgres
-    command:
-      - run-task-processor
+      USE_POSTGRES_FOR_ANALYTICS: 'true'
     depends_on:
       - flagsmith
       - postgres
     links:
       - postgres
+    command: run-task-processor

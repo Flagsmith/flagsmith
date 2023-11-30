@@ -160,6 +160,7 @@ export const testSegment2 = async () => {
   await click(byId('create-project-btn'))
   await waitForElementVisible(byId('features-page'))
 
+
   log('Create segments')
   await gotoSegments()
   await createSegment(0, 'segment_1', [

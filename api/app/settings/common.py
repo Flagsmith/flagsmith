@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     "environments.identities.traits",
     "features",
     "features.multivariate",
+    "features.versioning",
     "features.workflows.core",
     "segments",
     "app",
@@ -135,6 +136,7 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
+    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -474,6 +476,8 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+#  Identity for E2E segment tests
+E2E_IDENTITY = "test-identity"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
