@@ -7,7 +7,7 @@ from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
-from flag_engine.segments.constants import ALL_RULE
+from flag_engine.segments.constants import ALL_RULE, EQUAL
 from moto import mock_s3
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -42,7 +42,7 @@ from organisations.invites.models import InviteLink
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 
 def test_export_organisation(db):

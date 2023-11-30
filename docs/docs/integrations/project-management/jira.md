@@ -18,7 +18,7 @@ View your Flagsmith flags inside Jira.
 1. You need to provide your Flagsmith API key to Jira. You can get your API key by going to `Account > Keys` in
    Flagsmith.
 2. In Jira, add the app from the
-   [Atlassian Marketplace](https://developer.atlassian.com/console/install/3fd8c838-2ced-45a5-8807-0401ec45a096?signature=5f47a1c11336d3ecd75054fbd534d808e5b22dd98afe47ceacee5ea6918426bc19bb2c2f7e740f2fed79d1d96b5b1fd007a088a684e85681fada20617e227083&product=jira).
+   [Atlassian Marketplace](https://marketplace.atlassian.com/apps/1232743/flagsmith-for-jira).
 3. When prompted, add the Flagsmith API key.
 4. If you are a member of more than one Organisation, select the Organisation you want to associate with the
    Integration. Otherwise you can skip this step.

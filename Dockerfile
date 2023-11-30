@@ -28,6 +28,11 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
+ARG GH_TOKEN
+RUN if [ -n "${GH_TOKEN}" ]; \
+  then echo "https://${GH_TOKEN}:@github.com" > ${HOME}/.git-credentials \
+  && git config --global credential.helper store; fi;
+
 ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"
 
