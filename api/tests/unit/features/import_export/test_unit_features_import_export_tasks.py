@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
+from freezegun.api import FrozenDateTimeFactory
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -21,21 +22,13 @@ from projects.models import Project
 from projects.tags.models import Tag
 
 
-def test_clear_stale_feature_imports_and_exports(db: None, environment: Environment):
+def test_clear_stale_feature_imports_and_exports(
+    db: None, environment: Environment, freezer: FrozenDateTimeFactory
+):
     # Given
-    four_weeks_ago = timezone.now() - timedelta(days=28)
-    kept_feature_export = FeatureExport.objects.create(
-        data="{}",
-        environment=environment,
-    )
+    now = timezone.now()
+    freezer.move_to(now - timedelta(days=28))
     lost_feature_export = FeatureExport.objects.create(
-        data="{}",
-        environment=environment,
-    )
-    lost_feature_export.created_at = four_weeks_ago
-    lost_feature_export.save()
-
-    kept_feature_import = FeatureImport.objects.create(
         data="{}",
         environment=environment,
     )
@@ -43,8 +36,16 @@ def test_clear_stale_feature_imports_and_exports(db: None, environment: Environm
         data="{}",
         environment=environment,
     )
-    lost_feature_import.created_at = four_weeks_ago
-    lost_feature_import.save()
+
+    freezer.move_to(now)
+    kept_feature_export = FeatureExport.objects.create(
+        data="{}",
+        environment=environment,
+    )
+    kept_feature_import = FeatureImport.objects.create(
+        data="{}",
+        environment=environment,
+    )
 
     # When
     clear_stale_feature_imports_and_exports()
@@ -68,8 +69,6 @@ def test_export_and_import_features_for_environment_with_skip(
     feature_segment: FeatureSegment,
 ) -> None:
     # Given
-    # This environment should be ignored.
-    Environment.objects.create(name="Dig", project=project)
 
     # Features included in the export.
     Feature.objects.create(
@@ -138,7 +137,7 @@ def test_export_and_import_features_for_environment_with_skip(
     assert new_feature2.default_enabled is False
 
 
-def test_export_and_import_features_for_environment(
+def test_export_and_import_features_for_environment_with_overwrite_destructive(
     db: None,
     environment: Environment,
     project: Project,
