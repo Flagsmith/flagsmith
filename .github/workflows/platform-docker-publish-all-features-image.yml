@@ -12,23 +12,13 @@ env:
   FLAGSMITH_AUTH_CONTROLLER_REVISION: v0.0.1
 
 jobs:
-  start-runner:
-    runs-on: ubuntu-latest
-    outputs:
-      runner-label: ${{ steps.start.outputs.runner-label }}
-      instance-id: ${{ steps.start.outputs.instance-id }}
-    steps:
-      - uses: Flagsmith/actions/ec2-runner/start@v0.2.0
-        id: start
-        with:
-          github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID_EC2_RUNNER }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
-
   build-dockerhub:
     name: Platform Publish Docker Image
-    needs: [start-runner]
-    runs-on: ${{ needs.start-runner.outputs.runner-label }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Cloning repo
@@ -98,11 +88,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -112,10 +99,11 @@ jobs:
 
       - name: Build and push images
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: depot/build-push-action@v1
         with:
           platforms: linux/amd64,linux/arm64
           file: Dockerfile
+          project: qsrts2l4gr
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: .
@@ -123,16 +111,3 @@ jobs:
             SAML_INSTALLED=1
             POETRY_OPTS=--with saml,auth-controller,ldap
             GH_TOKEN=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-
-  stop-runner:
-    needs: [start-runner, build-dockerhub]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Flagsmith/actions/ec2-runner/stop@v0.2.0
-        with:
-          github-access-token: ${{ secrets.GH_RUNNER_TOKEN }}
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID_EC2_RUNNER }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_EC2_RUNNER }}
-          runner-label: ${{ needs.start-runner.outputs.runner-label }}
-          instance-id: ${{ needs.start-runner.outputs.instance-id }}
