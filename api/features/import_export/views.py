@@ -2,7 +2,6 @@ import json
 
 from django.db.models import QuerySet
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.request import Request
@@ -61,14 +60,7 @@ def feature_import(request: Request, environment_id: int) -> Response:
     serializer = FeatureImportUploadSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     uploaded_file = serializer.validated_data["file"]
-
-    strategy = request.query_params.get("strategy").replace("-", "_").upper()
-
-    if not strategy:
-        return Response(
-            {"detail": "A feature import strategy query param must be supplied."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    strategy = serializer.validated_data["strategy"]
 
     file_content = uploaded_file.read().decode("utf-8")
     feature_import = FeatureImport.objects.create(

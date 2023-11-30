@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .constants import MAX_FEATURE_IMPORT_SIZE
+from .constants import MAX_FEATURE_IMPORT_SIZE, OVERWRITE_DESTRUCTIVE, SKIP
 from .models import FeatureExport, FeatureImport
 
 
@@ -37,6 +37,7 @@ class FeatureImportUploadSerializer(serializers.Serializer):
     file = serializers.FileField(
         validators=[validate_feature_import_file_size],
     )
+    strategy = serializers.ChoiceField(choices=[SKIP, OVERWRITE_DESTRUCTIVE])
 
 
 class FeatureImportSerializer(serializers.ModelSerializer):
