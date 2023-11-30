@@ -1663,6 +1663,45 @@ def test_list_features_return_tags(client, project, feature):
     assert "tags" in feature
 
 
+def test_list_features_group_owners(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable[[list[str], int | None], UserProjectPermission],
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    feature = Feature.objects.create(name="test_feature", project=project)
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Second Group", organisation=organisation
+    )
+    feature.group_owners.add(group_1.id, group_2.id)
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+
+    feature = response_json["results"][1]
+    assert feature["group_owners"][0] == {
+        "id": group_1.id,
+        "name": group_1.name,
+    }
+    assert feature["group_owners"][1] == {
+        "id": group_2.id,
+        "name": group_2.name,
+    }
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -1699,7 +1738,6 @@ def test_get_feature_by_uuid(client, project, feature):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-
     assert response.json()["id"] == feature.id
     assert response.json()["uuid"] == str(feature.uuid)
 
