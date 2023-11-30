@@ -482,7 +482,7 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
     ],
 )
 def test_should_create_environments(
-    project, client, admin_user, is_admin_master_api_key_client
+    project, client, admin_user, organisation, is_admin_master_api_key_client
 ):
     # Given
     url = reverse("api-v1:environments:environment-list")
@@ -504,9 +504,28 @@ def test_should_create_environments(
 
     # and user is admin
     if not is_admin_master_api_key_client:
-        assert UserEnvironmentPermission.objects.filter(
-            user=admin_user, admin=True, environment__id=response.json()["id"]
-        ).exists()
+        assert (
+            permission := UserEnvironmentPermission.objects.get(
+                user=admin_user, admin=True, environment__id=response.json()["id"]
+            )
+        )
+
+        # and permission create is audited (environment does not have default logging)
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == admin_user.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == permission.pk
+        assert audit_log.organisation_id == organisation.pk
+        assert (
+            audit_log.log == f"New Grant created: {admin_user.email} / Test environment"
+        )
 
 
 @pytest.mark.parametrize(
@@ -785,7 +804,7 @@ def test_user_can_list_environment_permission(client, environment):
     )  # hard code how many permissions we expect there to be
 
 
-def test_environment_my_permissions_reruns_400_for_master_api_key(
+def test_environment_my_permissions_returns_400_for_master_api_key(
     admin_master_api_key_client, environment
 ):
     # Given

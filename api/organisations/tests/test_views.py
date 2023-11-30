@@ -1168,6 +1168,7 @@ def test_make_user_group_admin_success(
     audit_log = AuditLog.objects.first()
     assert audit_log
     assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
     assert audit_log.related_object_id == user_permission_group.pk
     assert audit_log.organisation_id == organisation.pk
     assert (
@@ -1231,6 +1232,7 @@ def test_remove_user_as_group_admin_success(
     audit_log = AuditLog.objects.first()
     assert audit_log
     assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
     assert audit_log.related_object_id == user_permission_group.pk
     assert audit_log.organisation_id == organisation.pk
     assert (

@@ -136,6 +136,10 @@ def test_create_update_delete_project_audit_log(mocker, organisation, admin_user
     assert audit_log.log == f"Project name updated: {new_name}"
 
     # When
+    perm = UserProjectPermission.objects.create(
+        user=admin_user, project=project, admin=True
+    )
+    perm_pk = perm.pk
     project.delete()
 
     # Then
@@ -145,13 +149,27 @@ def test_create_update_delete_project_audit_log(mocker, organisation, admin_user
         ).count()
         == 3
     )
-    audit_log = AuditLog.objects.first()
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 2
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    audit_log = audit_logs[0]
     assert audit_log
     assert audit_log.author_id == admin_user.pk
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
     assert audit_log.related_object_id == project.pk
     assert audit_log.organisation_id == organisation.pk
     assert audit_log.log == f"Project deleted: {new_name}"
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Grant deleted: {admin_user.email} / {project.name}"
 
 
 @pytest.mark.django_db()
@@ -215,22 +233,24 @@ def test_create_update_delete_user_project_permissions_audit_log(
         == 6
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {project.name}; added: {MANAGE_SEGMENTS}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {project.name}; removed: {CREATE_FEATURE}"
     )
 
@@ -319,22 +339,24 @@ def test_create_update_delete_group_project_permissions_audit_log(
         == 6
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {project.name}; added: {MANAGE_SEGMENTS}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {project.name}; removed: {CREATE_FEATURE}"
     )
 
