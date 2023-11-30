@@ -21,12 +21,11 @@ class MasterAPIKey(AbstractAPIKey, LifecycleModelMixin, SoftDeleteObject):
     objects = MasterAPIKeyManager()
     is_admin = models.BooleanField(default=True)
 
-    if settings.IS_RBAC_INSTALLED:
-
-        @hook(BEFORE_UPDATE, when="is_admin", was=False, is_now=True)
-        def delete_role_api_keys(
-            self,
-        ):
+    @hook(BEFORE_UPDATE, when="is_admin", was=False, is_now=True)
+    def delete_role_api_keys(
+        self,
+    ):
+        if settings.IS_RBAC_INSTALLED:
             from rbac.models import MasterAPIKeyRole
 
             MasterAPIKeyRole.objects.filter(master_api_key=self.id).delete()
