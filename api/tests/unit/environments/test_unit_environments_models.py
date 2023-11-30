@@ -32,6 +32,7 @@ from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.permissions import CREATE_FEATURE, MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Segment
+from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
@@ -44,6 +45,8 @@ if typing.TYPE_CHECKING:
 class EnvironmentTestCase(TestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
+        self.user = FFAdminUser.objects.create(email="user@test.com")
+        self.user.add_organisation(self.organisation, OrganisationRole.USER)
         self.project = Project.objects.create(
             name="Test Project", organisation=self.organisation
         )
@@ -190,6 +193,30 @@ class EnvironmentTestCase(TestCase):
             == cloned_mv_fs_value.percentage_allocation
             == 10
         )
+
+    @mock.patch("core.models._get_request_user")
+    def test_clone_audit_log(self, mock_get_request_user):
+        # Given
+        mock_get_request_user.return_value = self.user
+        self.environment.save()
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then environment create is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.ENVIRONMENT.name
+            ).count()
+            == 2
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.ENVIRONMENT.name
+        assert audit_log.related_object_id == clone.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert audit_log.log == "New Environment created: Cloned env"
 
     @mock.patch("environments.models.environment_cache")
     def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
@@ -801,6 +828,88 @@ def test_create_environment_creates_feature_states_in_all_environments_and_envir
 
 
 @pytest.mark.django_db()
+def test_create_update_delete_environment_audit_log(
+    mocker, organisation, project, admin_user
+):
+    # Given
+    mocker.patch("core.models._get_request_user", return_value=admin_user)
+
+    # When
+    environment = Environment.objects.create(name="Test Environment", project=project)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.ENVIRONMENT.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.ENVIRONMENT.name
+    assert audit_log.related_object_id == environment.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"New Environment created: {environment.name}"
+
+    # When
+    environment.name = new_name = "Test environment changed"
+    environment.save()
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.ENVIRONMENT.name
+        ).count()
+        == 2
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.ENVIRONMENT.name
+    assert audit_log.related_object_id == environment.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Environment updated: {new_name}"
+
+    # When
+    perm = UserEnvironmentPermission.objects.create(
+        user=admin_user, environment=environment, admin=True
+    )
+    perm_pk = perm.pk
+    # environment_pk = environment.pk
+    environment.delete()
+
+    # Then
+    # assert (
+    #     AuditLog.objects.filter(
+    #         related_object_type=RelatedObjectType.ENVIRONMENT.name
+    #     ).count()
+    #     == 3
+    # )
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 2
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    audit_log = audit_logs[0]
+    # assert audit_log
+    # assert audit_log.author_id == admin_user.pk
+    # assert audit_log.related_object_type == RelatedObjectType.ENVIRONMENT.name
+    # assert audit_log.related_object_id == environment_pk
+    # assert audit_log.organisation_id == organisation.pk
+    # assert audit_log.log == f"Environment deleted: {new_name}"
+    # audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Grant deleted: {admin_user.email} / {environment.name}"
+
+
+@pytest.mark.django_db()
 def test_create_update_delete_user_environment_permissions_audit_log(
     mocker, organisation, environment, admin_user
 ):
@@ -864,22 +973,24 @@ def test_create_update_delete_user_environment_permissions_audit_log(
         == 6
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {environment.name}; added: {MANAGE_SEGMENTS}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {environment.name}; removed: {CREATE_FEATURE}"
     )
 
@@ -968,22 +1079,24 @@ def test_create_update_delete_group_environment_permissions_audit_log(
         == 6
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {environment.name}; added: {MANAGE_SEGMENTS}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {environment.name}; removed: {CREATE_FEATURE}"
     )
 

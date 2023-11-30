@@ -495,22 +495,24 @@ def test_create_update_delete_user_organisation_permissions_audit_log(
         == 4
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {organisation.name}; added: {CREATE_PROJECT}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {admin_user.email} / {organisation.name}; removed: {MANAGE_USER_GROUPS}"
     )
 
@@ -586,23 +588,25 @@ def test_create_update_delete_group_organisation_permissions_audit_log(
         == 4
     )
     audit_logs = AuditLog.objects.all()[0:2]
-    assert audit_logs[0]
-    assert audit_logs[0].author_id == admin_user.pk
-    assert audit_logs[0].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[0].related_object_id == perm.pk
-    assert audit_logs[0].organisation_id == organisation.pk
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[0].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
         f"added: {CREATE_PROJECT}"
     )
-    assert audit_logs[1]
-    assert audit_logs[1].author_id == admin_user.pk
-    assert audit_logs[1].related_object_type == RelatedObjectType.GRANT.name
-    assert audit_logs[1].related_object_id == perm.pk
-    assert audit_logs[1].organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == perm.pk
+    assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_logs[1].log
+        audit_log.log
         == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
         f"removed: {MANAGE_USER_GROUPS}"
     )
