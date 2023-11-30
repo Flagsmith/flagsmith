@@ -246,9 +246,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                 % (self.id, getattr(organisation, "id", organisation))
             )
 
-        def get_user_roles(self):
-            user_roles = UserRole.objects.filter(user=self)
-            return user_roles
+    def get_user_roles(self):
+        user_roles = UserRole.objects.filter(user=self)
+        return user_roles
 
     def get_permitted_projects(
         self, permission_key: str, tag_ids: typing.List[int] = None
