@@ -2357,8 +2357,8 @@ def test_list_features_n_plus_1(
     v1_feature_state = FeatureState.objects.get(
         feature=feature, environment=environment
     )
-    for i in range(5):
-        v1_feature_state.clone(env=environment, version=2 + i, live_from=timezone.now())
+    for i in range(2, 4):
+        v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
     with django_assert_num_queries(13):

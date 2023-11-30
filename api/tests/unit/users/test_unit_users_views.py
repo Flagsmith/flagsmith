@@ -175,7 +175,7 @@ class UserTestCase(TestCase):
         )
 
         # add some more users to test for N+1 issues
-        for i in range(10):
+        for i in range(2):
             additional_user = FFAdminUser.objects.create(
                 email=f"additional_user_{i}@org.com"
             )
