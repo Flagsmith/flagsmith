@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - '*'
+    branches:
+      - feat/use-new-macos-runner-for-private-cloud-build
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
@@ -14,7 +16,7 @@ env:
 jobs:
   build-dockerhub:
     name: Platform Publish Docker Image
-    runs-on: self-hosted
+    runs-on: macos-latest-xlarge
 
     steps:
       - name: Cloning repo
@@ -107,5 +109,9 @@ jobs:
           context: .
           build-args: |
             SAML_INSTALLED=1
+<<<<<<< HEAD
             POETRY_OPTS=--with saml,auth-controller,ldap
             GH_TOKEN=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+=======
+            POETRY_OPTS=--with saml,auth-controller
+>>>>>>> c5f8e4c1 (chore: use new MacOS runner for private cloud build)
