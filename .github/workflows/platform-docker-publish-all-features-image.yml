@@ -87,8 +87,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - run: |
-          brew install docker orbstack
-          orb start
+          brew install docker
 
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
