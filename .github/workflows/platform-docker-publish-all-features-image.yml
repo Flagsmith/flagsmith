@@ -5,7 +5,7 @@ on:
     tags:
       - '*'
     branches:
-      - feat/use-new-macos-runner-for-private-cloud-build
+      - 'chore/use-new-macos-runner-for-private-cloud-build'
 
 env:
   FLAGSMITH_SAML_REVISION: v1.1.0
