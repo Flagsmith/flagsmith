@@ -267,7 +267,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
 
     useEffect(() => {
       if (user) {
-        const resultArray = user.roles.map((userRole) => ({
+        const resultArray = user.roles?.map((userRole) => ({
           role: userRole.role,
           user_role_id: userRole.id,
         }))
@@ -488,7 +488,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         }
       }
       setRolesSelected((rolesSelected || []).filter((v) => v.role !== roleId))
-      toast('User role was removed')
     }
 
     useEffect(() => {

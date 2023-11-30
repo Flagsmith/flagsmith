@@ -27,6 +27,9 @@ export const rolesUserService = service
           method: 'DELETE',
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/users/${query.user_id}/`,
         }),
+        transformResponse: () => {
+          toast('User role was removed')
+        },
       }),
       getRolesPermissionUsers: builder.query<
         Res['rolesUsers'],
