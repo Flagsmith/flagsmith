@@ -4,6 +4,7 @@ import typing
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
@@ -247,8 +248,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             )
 
     def get_user_roles(self):
-        user_roles = UserRole.objects.filter(user=self)
-        return user_roles
+        if not settings.IS_RBAC_INSTALLED:
+            raise ImproperlyConfigured(
+                "RBAC is not installed. Unable to retrieve user roles."
+            )
+
+        return UserRole.objects.filter(user=self)
 
     def get_permitted_projects(
         self, permission_key: str, tag_ids: typing.List[int] = None
