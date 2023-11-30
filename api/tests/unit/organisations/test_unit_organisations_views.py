@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db.models import Model
 from django.urls import reverse
+from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from pytz import UTC
@@ -588,7 +589,9 @@ class ChargeBeeWebhookTestCase(TestCase):
         )
         self.subscription = Subscription.objects.get(organisation=self.organisation)
 
-    @mock.patch("organisations.views.extract_subscription_metadata")
+    @mock.patch(
+        "organisations.chargebee.webhook_handlers.extract_subscription_metadata"
+    )
     def test_chargebee_webhook(
         self, mock_extract_subscription_metadata: MagicMock
     ) -> None:
@@ -633,12 +636,13 @@ class ChargeBeeWebhookTestCase(TestCase):
     ):
         # Given
         cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        current_term_end = int(datetime.timestamp(cancellation_date))
         data = {
             "content": {
                 "subscription": {
                     "status": "non_renewing",
                     "id": self.subscription_id,
-                    "current_term_end": datetime.timestamp(cancellation_date),
+                    "current_term_end": current_term_end,
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -651,7 +655,9 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # Then
         self.subscription.refresh_from_db()
-        assert self.subscription.cancellation_date == cancellation_date
+        assert self.subscription.cancellation_date == datetime.utcfromtimestamp(
+            current_term_end
+        ).replace(tzinfo=timezone.utc)
 
         # and
         assert len(mail.outbox) == 1
@@ -662,12 +668,13 @@ class ChargeBeeWebhookTestCase(TestCase):
     ):
         # Given
         cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        current_term_end = int(datetime.timestamp(cancellation_date))
         data = {
             "content": {
                 "subscription": {
                     "status": "cancelled",
                     "id": self.subscription_id,
-                    "current_term_end": datetime.timestamp(cancellation_date),
+                    "current_term_end": current_term_end,
                 },
                 "customer": {"email": self.cb_user.email},
             }
@@ -680,12 +687,16 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # Then
         self.subscription.refresh_from_db()
-        assert self.subscription.cancellation_date == cancellation_date
+        assert self.subscription.cancellation_date == datetime.utcfromtimestamp(
+            current_term_end
+        ).replace(tzinfo=timezone.utc)
 
         # and
         assert len(mail.outbox) == 1
 
-    @mock.patch("organisations.views.extract_subscription_metadata")
+    @mock.patch(
+        "organisations.chargebee.webhook_handlers.extract_subscription_metadata"
+    )
     def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
         self,
         mock_extract_subscription_metadata,
@@ -726,7 +737,7 @@ class ChargeBeeWebhookTestCase(TestCase):
 
 def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
     api_client: APIClient, caplog: LogCaptureFixture, django_user_model: Type[Model]
-):
+) -> None:
     # Given
     subscription_id = "some-random-id"
     cb_user = django_user_model.objects.create(email="test@example.com", is_staff=True)
@@ -748,7 +759,7 @@ def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
 
     assert len(caplog.records) == 1
     assert caplog.record_tuples[0] == (
-        "organisations.views",
+        "organisations.chargebee.webhook_handlers",
         30,
         f"Couldn't get unique subscription for ChargeBee id {subscription_id}",
     )
@@ -1036,7 +1047,7 @@ def test_organisation_get_influx_data(
     ],
 )
 @mock.patch("organisations.models.get_plan_meta_data")
-@mock.patch("organisations.views.extract_subscription_metadata")
+@mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
 def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
     mock_extract_subscription_metadata,
     mock_get_plan_meta_data,
@@ -1066,6 +1077,8 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(
         projects=max_projects,
         chargebee_email=chargebee_email,
     )
+    subscription.subscription_id = "sub-id"
+    subscription.save()
 
     data = {
         "content": {
@@ -1433,12 +1446,16 @@ def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
 ):
     # Given
     cancellation_date = datetime.now(tz=UTC)
+    current_term_end = int(datetime.timestamp(cancellation_date))
+    subscription.subscription_id = "subscription_id23"
+    subscription.save()
+
     data = {
         "content": {
             "subscription": {
                 "status": "cancelled",
                 "id": subscription.subscription_id,
-                "current_term_end": datetime.timestamp(cancellation_date),
+                "current_term_end": current_term_end,
             },
             "customer": {
                 "email": "chargebee@bullet-train.io",
@@ -1458,7 +1475,9 @@ def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
     assert response.status_code == 200
 
     subscription.refresh_from_db()
-    assert subscription.cancellation_date == cancellation_date
+    assert subscription.cancellation_date == datetime.utcfromtimestamp(
+        current_term_end
+    ).replace(tzinfo=timezone.utc)
     organisation.refresh_from_db()
     assert organisation.num_seats == 1
 
