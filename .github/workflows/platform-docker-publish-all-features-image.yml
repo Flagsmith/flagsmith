@@ -87,7 +87,9 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - run: |
-          brew install docker
+          softwareupdate --install-rosetta --agree-to-license
+          brew install --cask docker orbstack
+          orb start
 
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
