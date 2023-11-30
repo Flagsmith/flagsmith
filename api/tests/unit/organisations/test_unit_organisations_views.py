@@ -1624,7 +1624,7 @@ def test_list_organisations_shows_dunning(
 
 
 def test_list_group_summaries(
-    organisation: Organisation, admin_client: APIClient
+    organisation: Organisation, staff_client: APIClient
 ) -> None:
     # Given
     user_permission_group_1 = UserPermissionGroup.objects.create(
@@ -1639,7 +1639,7 @@ def test_list_group_summaries(
     )
 
     # When
-    response = admin_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
