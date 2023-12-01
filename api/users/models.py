@@ -25,6 +25,7 @@ from organisations.models import (
     OrganisationRole,
     UserOrganisation,
 )
+from organisations.permissions.models import UserOrganisationPermission
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
@@ -240,22 +241,31 @@ class FFAdminUser(
         if organisation.is_paid:
             mailer_lite.subscribe(self)
 
+        # add to organisation - raises integrity error if already added
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
-        # cannot use User.permission_groups reverse accessor
+        # add to default groups - cannot use User.permission_groups reverse accessor
         for group in organisation.permission_groups.filter(is_default=True):
             group.users.add(self)
 
     def remove_organisation(self, organisation):
-        UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
-        self.project_permissions.filter(project__organisation=organisation).delete()
-        self.environment_permissions.filter(
-            environment__project__organisation=organisation
-        ).delete()
-        # cannot use User.permission_groups reverse accessor
+        # remove from organisation using m2m field to ensure audit log is created
+        self.organisations.remove(organisation)
+        # remove from groups - cannot use User.permission_groups reverse accessor
         for group in organisation.permission_groups.filter(users=self):
             group.users.remove(self)
+
+        # delete permissions without creating audit log
+        UserOrganisationPermission.objects.filter(
+            user=self, organisation=organisation
+        ).delete()
+        UserProjectPermission.objects.filter(
+            user=self, project__organisation=organisation
+        ).delete()
+        UserEnvironmentPermission.objects.filter(
+            user=self, environment__project__organisation=organisation
+        ).delete()
 
     def get_organisation_role(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
@@ -372,14 +382,28 @@ class FFAdminUser(
         ).exists()
 
     def make_group_admin(self, group_id: int):
-        UserPermissionGroupMembership.objects.filter(
-            ffadminuser=self, userpermissiongroup__id=group_id
-        ).update(group_admin=True)
+        try:
+            membership = UserPermissionGroupMembership.objects.get(
+                ffadminuser=self, userpermissiongroup__id=group_id
+            )
+        except UserPermissionGroupMembership.DoesNotExist:
+            pass
+        else:
+            # update using model to ensure audit log is created
+            membership.group_admin = True
+            membership.save(update_fields=["group_admin"])
 
     def remove_as_group_admin(self, group_id: int):
-        UserPermissionGroupMembership.objects.filter(
-            ffadminuser=self, userpermissiongroup__id=group_id
-        ).update(group_admin=False)
+        try:
+            membership = UserPermissionGroupMembership.objects.get(
+                ffadminuser=self, userpermissiongroup__id=group_id
+            )
+        except UserPermissionGroupMembership.DoesNotExist:
+            pass
+        else:
+            # update using model to ensure audit log is created
+            membership.group_admin = False
+            membership.save(update_fields=["group_admin"])
 
     def get_organisations(
         self, delta: ModelDelta | None = None

@@ -853,7 +853,7 @@ def test_create_update_delete_environment_audit_log(
     assert audit_log.log == f"New Environment created: {environment.name}"
 
     # When
-    environment.name = new_name = "Test environment changed"
+    environment.name = new_name = "Test~~Environment"
     environment.save()
 
     # Then

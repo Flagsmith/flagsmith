@@ -187,7 +187,7 @@ def test_create_update_delete_project_audit_log(mocker, organisation, admin_user
     assert audit_log.log == f"New Project created: {project.name}"
 
     # When
-    project.name = new_name = "Test project changed"
+    project.name = new_name = "Test~~Project"
     project.save()
 
     # Then
