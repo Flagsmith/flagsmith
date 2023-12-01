@@ -101,7 +101,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
-
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
         "in the environment provided by the `environment` query parameter."
@@ -126,6 +126,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "multivariate_options",
             "is_archived",
             "owners",
+            "group_owners",
             "uuid",
             "project",
             "num_segment_overrides",
