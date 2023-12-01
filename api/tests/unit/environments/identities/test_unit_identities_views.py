@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.helpers import (
@@ -17,7 +18,13 @@ from environments.identities.helpers import (
 )
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
+from environments.identities.views import IdentityViewSet
 from environments.models import Environment, EnvironmentAPIKey
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
+from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
@@ -1037,3 +1044,80 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["flags"]
+
+
+def test_user_with_view_identities_permission_can_retrieve_identity(
+    environment,
+    identity,
+    test_user_client,
+    view_environment_permission,
+    view_identities_permission,
+    view_project_permission,
+    user_environment_permission,
+    user_project_permission,
+):
+    # Given
+
+    user_environment_permission.permissions.add(
+        view_environment_permission, view_identities_permission
+    )
+    user_project_permission.permissions.add(view_project_permission)
+
+    url = reverse(
+        "api-v1:environments:environment-identities-detail",
+        args=(environment.api_key, identity.id),
+    )
+
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_user_with_view_environment_permission_can_not_list_identities(
+    environment,
+    identity,
+    test_user_client,
+    view_environment_permission,
+    manage_identities_permission,
+    view_project_permission,
+    user_environment_permission,
+    user_project_permission,
+):
+    # Given
+
+    user_environment_permission.permissions.add(view_environment_permission)
+    user_project_permission.permissions.add(view_project_permission)
+
+    url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=(environment.api_key,),
+    )
+
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_identity_view_set_get_permissions():
+    # Given
+    view_set = IdentityViewSet()
+
+    # When
+    permissions = view_set.get_permissions()
+
+    # Then
+    assert isinstance(permissions[0], IsAuthenticated)
+    assert isinstance(permissions[1], NestedEnvironmentPermissions)
+
+    assert permissions[1].action_permission_map == {
+        "list": VIEW_IDENTITIES,
+        "retrieve": VIEW_IDENTITIES,
+        "create": MANAGE_IDENTITIES,
+        "update": MANAGE_IDENTITIES,
+        "partial_update": MANAGE_IDENTITIES,
+        "destroy": MANAGE_IDENTITIES,
+    }
