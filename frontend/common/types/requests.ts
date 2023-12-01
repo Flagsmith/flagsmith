@@ -136,5 +136,6 @@ export type Req = {
   updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   createRoleMasterApiKey: { org_id: number; role_id: number }
+  getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   // END OF TYPES
 }

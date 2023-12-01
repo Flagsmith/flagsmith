@@ -306,6 +306,7 @@ export type RolePermissionUser = {
   user: number
   role: number
   id: number
+  role_name: string
 }
 
 export type Res = {
@@ -379,5 +380,10 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  masterAPIKeyWithMasterAPIKeyRoles: {
+    id: string,
+    prefix: string,
+    roles: RolePermissionUser[]
+  }
   // END OF TYPES
 }

@@ -10,11 +10,13 @@ import DateSelect from './DateSelect'
 import Icon from './Icon'
 import Switch from './Switch'
 import MyRoleSelect from './MyRoleSelect'
-import { getStore } from '../../common/store'
+import { getStore } from 'common/store'
 import {
   createRoleMasterApiKey,
   deleteRoleMasterApiKey,
-} from '../../common/services/useRoleMasterApiKey'
+} from 'common/services/useRoleMasterApiKey'
+
+import { getMasterAPIKeyWithMasterAPIKeyRoles } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -86,20 +88,17 @@ export class CreateAPIKey extends PureComponent {
   }
 
   getApiKeyByPrefix = (prefix) => {
-    data
-      .get(
-        `${Project.api}organisations/${
-          AccountStore.getOrganisation().id
-        }/master-api-keys/${prefix}/`,
-      )
-      .then((res) => {
-        this.setState({
-          expiry_date: res.expiry_date,
-          is_admin: res.is_admin,
-          name: res.name,
-          roles: res.roles,
-        })
+    getMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
+      org_id: AccountStore.getOrganisation().id,
+      prefix: prefix,
+    }).then((res) => {
+      this.setState({
+        expiry_date: res.data.expiry_date,
+        is_admin: res.data.is_admin,
+        name: res.data.name,
+        roles: res.data.roles,
       })
+    })
   }
 
   removeRoleApiKey = (roleId, isEdit) => {

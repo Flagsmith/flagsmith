@@ -3,14 +3,19 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const roleMasterApiKeyService = service
-  .enhanceEndpoints({ addTagTypes: ['RoleMasterApiKey'] })
+  .enhanceEndpoints({
+    addTagTypes: ['RoleMasterApiKey'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createRoleMasterApiKey: builder.mutation<
         Res['roleMasterApiKey'],
         Req['createRoleMasterApiKey']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RoleMasterApiKey' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'RoleMasterApiKey' },
+          'MasterAPIKeyWithMasterAPIKeyRole',
+        ],
         query: (query: Req['createRoleMasterApiKey']) => ({
           body: query.body,
           method: 'POST',
@@ -21,7 +26,10 @@ export const roleMasterApiKeyService = service
         Res['roleMasterApiKey'],
         Req['deleteRoleMasterApiKey']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RoleMasterApiKey' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'RoleMasterApiKey' },
+          'MasterAPIKeyWithMasterAPIKeyRole',
+        ],
         query: (query: Req['deleteRoleMasterApiKey']) => ({
           method: 'DELETE',
           url: `organisations/${query.org_id}/roles/${query.role_id}/master-api-keys/${query.id}`,
