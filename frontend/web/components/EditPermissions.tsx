@@ -169,7 +169,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       { data: usersData, isSuccess: userAdded },
     ] = useCreateRolesPermissionUsersMutation()
 
-    const [deleteRolePermissionUser] = useDeleteRolesPermissionUsersMutation()
+    const [deleteRolePermissionUser, {isSuccess: userDeleted}] = useDeleteRolesPermissionUsersMutation()
 
     const [
       createRolePermissionGroup,
@@ -477,7 +477,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
             role_id: roleId,
             user_id: roleSelected.user_role_id,
           })
-          onRemoveOrAddRole?.()
         }
         if (group) {
           deleteRolePermissionGroup({
@@ -512,6 +511,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         toast('Role assigned')
       }
     }, [userAdded, usersData, groupsData, groupAdded])
+
+    useEffect(() => {
+      if (userDeleted) {
+        onRemoveOrAddRole?.()
+      }
+    }, [userDeleted])
 
     const getRoles = (roles = [], selectedRoles) => {
       return roles
