@@ -3,14 +3,14 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const rolesUserService = service
-  .enhanceEndpoints({ addTagTypes: ['RolesUser'] })
+  .enhanceEndpoints({ addTagTypes: ['RolesUser', 'User-role'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createRolesPermissionUsers: builder.mutation<
         Res['rolesUsers'],
         Req['createRolesPermissionUsers']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolesUser' }],
+        invalidatesTags: [{ type: 'User-role' }, { id: 'LIST', type: 'RolesUser' }],
         query: (query: Req['createRolesPermissionUsers']) => ({
           body: query.data,
           method: 'POST',
@@ -21,7 +21,7 @@ export const rolesUserService = service
         Res['rolesUsers'],
         Req['deleteRolesPermissionUsers']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolesUser' }],
+        invalidatesTags: [{ type: 'User-role' }, { id: 'LIST', type: 'RolesUser' }],
         query: (query: Req['deleteRolesPermissionUsers']) => ({
           body: query,
           method: 'DELETE',

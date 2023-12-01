@@ -378,5 +378,13 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  userWithRoles: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    last_login: string;
+    roles: RolePermissionUser[];
+  }
   // END OF TYPES
 }
