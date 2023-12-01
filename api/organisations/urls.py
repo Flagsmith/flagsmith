@@ -99,6 +99,7 @@ if settings.IS_RBAC_INSTALLED:
     from rbac.views import (
         GroupRoleViewSet,
         MasterAPIKeyRoleViewSet,
+        RBACUserDetailView,
         RoleEnvironmentPermissionsViewSet,
         RoleOrganisationPermissionViewSet,
         RoleProjectPermissionsViewSet,
@@ -107,6 +108,11 @@ if settings.IS_RBAC_INSTALLED:
     )
 
     organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
+    organisations_router.register(
+        "user-roles",
+        RBACUserDetailView,
+        basename="rbac-user",
+    )
     nested_roles_router = routers.NestedSimpleRouter(
         organisations_router, r"roles", lookup="role"
     )
