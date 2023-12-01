@@ -4,6 +4,7 @@ import pytest
 from django.db.utils import IntegrityError
 
 from audit.models import AuditLog, RelatedObjectType
+from audit.tasks import create_audit_log_from_historical_record
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -14,10 +15,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from projects.permissions import VIEW_PROJECT
-from users.models import FFAdminUser
-
-# TODO #2797 add audit log tests for user/group/orgaanisation operations not covered in views
-# including logging for correct organisation(s) according to operation
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 @pytest.mark.django_db
@@ -169,9 +167,156 @@ class FFAdminUserTestCase(TestCase):
         )
 
     @mock.patch("core.models._get_request_user")
-    def test_add_organistion_audit_log(self, get_request_user):
+    def test_create_user_audit_log(self, mock_get_request_user):
         # Given
-        get_request_user.return_value = self.user
+        mock_get_request_user.return_value = self.user
+
+        with mock.patch(
+            "audit.tasks.create_audit_log_from_historical_record.delay",
+            wraps=create_audit_log_from_historical_record.delay,
+        ) as mock_create_audit_log:
+            created_user = FFAdminUser.objects.create(email="test2@example.com")
+
+            # Then
+            # audit log called once for create user
+            assert mock_create_audit_log.call_count == 1
+            mock_create_audit_log.assert_called_with(
+                kwargs={
+                    "history_instance_id": created_user.history.last().pk,
+                    "history_user_id": self.user.pk,
+                    "history_record_class_path": "users.models.HistoricalFFAdminUser",
+                },
+                delay_until=None,
+            )
+
+        # no audit log for create user because no organisation associated at that moment
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 0
+        )
+
+    @mock.patch("core.models._get_request_user")
+    def test_delete_user_audit_log(self, mock_get_request_user):
+        # Given
+        mock_get_request_user.return_value = self.user
+        created_user = FFAdminUser.objects.create(email="test2@example.com")
+        created_user.add_organisation(self.organisation)
+        another_organisation = Organisation.objects.create(name="Another Organisation")
+        created_user.add_organisation(another_organisation)
+
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 2
+        )
+
+        with mock.patch(
+            "audit.tasks.create_audit_log_from_historical_record.delay",
+            wraps=create_audit_log_from_historical_record.delay,
+        ) as mock_create_audit_log:
+            deleted_user_pk = created_user.pk
+            created_user.delete()
+
+            # Then
+            # audit log called twice for organisation removal and once for delete
+            assert mock_create_audit_log.call_count == 3
+            mock_create_audit_log.assert_called_with(
+                kwargs={
+                    "history_instance_id": mock.ANY,
+                    "history_user_id": self.user.pk,
+                    "history_record_class_path": "users.models.HistoricalFFAdminUser",
+                },
+                delay_until=None,
+            )
+
+        # check that organisation removal is logged for each organisation
+        # no audit log for delete user because no organisation associated at that moment
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 4
+        )
+        # cross-organisation leak: on delete, the user is removed from all organisations in one operation,
+        # and all organisations get the same log message
+        expected_logs = [
+            "User organisations updated: test2@example.com",
+            # updates may appear in any order
+            "removed: Test Organisation",
+            "removed: Another Organisation",
+        ]
+        audit_logs = AuditLog.objects.all()[0:2]
+        audit_log = audit_logs[0]
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == deleted_user_pk
+        assert audit_log.organisation_id == another_organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+        audit_log = audit_logs[1]
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == deleted_user_pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+
+    @mock.patch("core.models._get_request_user")
+    def test_update_user_audit_log(self, mock_get_request_user):
+        # Given
+        mock_get_request_user.return_value = self.user
+        self.user.add_organisation(self.organisation)
+        another_organisation = Organisation.objects.create(name="Another Organisation")
+        self.user.add_organisation(another_organisation)
+
+        self.user.username = "test_username"
+        self.user.email = "test-changed@example.com"
+        self.user.first_name = "Test First"
+        self.user.last_name = "Test Last"
+        self.user.github_user_id = "123456"
+        self.user.google_user_id = "234567"
+        self.user.save()
+
+        # Then
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 4
+        )
+        # check that log is created for each organisation
+        expected_logs = [
+            # updates may appear in any order
+            "User username updated: test-changed@example.com",
+            "User email updated: test-changed@example.com",
+            "User first_name updated: test-changed@example.com",
+            "User last_name updated: test-changed@example.com",
+            "User github_user_id updated: test-changed@example.com",
+            "User google_user_id updated: test-changed@example.com",
+        ]
+        audit_logs = AuditLog.objects.all()[0:2]
+        audit_log = audit_logs[0]
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == another_organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+        audit_log = audit_logs[1]
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+
+    @mock.patch("core.models._get_request_user")
+    def test_update_user_organisations_audit_log(self, mock_get_request_user):
+        # Given
+        mock_get_request_user.return_value = self.user
         self.user.add_organisation(self.organisation)
 
         # Then
@@ -181,8 +326,11 @@ class FFAdminUserTestCase(TestCase):
             ).count()
             == 1
         )
+        # check that latest log relates to test organisation
         audit_log = AuditLog.objects.first()
         assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -190,12 +338,9 @@ class FFAdminUserTestCase(TestCase):
             == f"User organisations updated: {self.user.email}; added: Test Organisation"
         )
 
-    @mock.patch("core.models._get_request_user")
-    def test_remove_organistion_audit_log(self, get_request_user):
         # Given
-        get_request_user.return_value = self.user
-        self.user.add_organisation(self.organisation)
-        self.user.remove_organisation(self.organisation)
+        another_organisation = Organisation.objects.create(name="Another Organisation")
+        self.user.add_organisation(another_organisation)
 
         # Then
         assert (
@@ -204,8 +349,33 @@ class FFAdminUserTestCase(TestCase):
             ).count()
             == 2
         )
+        # check that latest log relates to another organisation (and not test organisation)
         audit_log = AuditLog.objects.first()
         assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == self.user.pk
+        assert audit_log.organisation_id == another_organisation.pk
+        assert (
+            audit_log.log
+            == f"User organisations updated: {self.user.email}; added: Another Organisation"
+        )
+
+        # Given
+        self.user.remove_organisation(self.organisation)
+
+        # Then
+        # check that latest log relates to test organisation (and not another organisation)
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 3
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -371,3 +541,139 @@ def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
 
 def test_user_email_domain_property():
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+
+
+@pytest.mark.django_db()
+def test_create_update_delete_group_audit_log(mocker, organisation, admin_user):
+    # Given
+    mocker.patch("core.models._get_request_user", return_value=admin_user)
+
+    # When
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"New Group created: {group.name}"
+
+    # When
+    group.name = new_name = "Test~~Group"
+    group.is_default = True
+    group.save()
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 2
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    expected_logs = [
+        # updates may appear in any order
+        f"Group name updated: {new_name}",
+        f"Group is_default set true: {new_name}",
+    ]
+    assert all(expected_log in audit_log.log for expected_log in expected_logs)
+
+    # When
+    second_user = FFAdminUser.objects.create(email="test2@example.com")
+    second_user.add_organisation(organisation)
+    group.add_users_by_id([admin_user.pk, second_user.pk])
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 4
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    expected_logs = [
+        # users may appear in any order
+        f"Group users updated: {new_name}; added: {second_user.email}",
+        f"Group users updated: {new_name}; added: {admin_user.email}",
+    ]
+    assert all(
+        expected_log in [audit_logs[0].log, audit_logs[1].log]
+        for expected_log in expected_logs
+    )
+
+    # When
+    group.remove_users_by_id([second_user.pk])
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 5
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"Group users updated: {new_name}; removed: {second_user.email}"
+    )
+
+    # When
+    group_pk = group.pk
+    group.delete()
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GROUP.name
+        ).count()
+        == 7
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Group deleted: {new_name}"
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GROUP.name
+    assert audit_log.related_object_id == group_pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log == f"Group users updated: {new_name}; removed: {admin_user.email}"
+    )

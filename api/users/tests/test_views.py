@@ -67,6 +67,7 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -97,6 +98,7 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -149,6 +151,7 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == new_organisation.pk
         assert (
@@ -197,6 +200,7 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -238,6 +242,7 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == organisation_user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -245,29 +250,28 @@ class UserTestCase(TestCase):
             == f"User organisations updated: {organisation_user.email}; role changed: test org"
         )
 
-    def test_admin_remove_user_from_organisation(self):
+    def test_admin_can_remove_user_from_organisation(self):
         # Given
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
         organisation_user.add_organisation(self.organisation)
         url = reverse(
-            "api-v1:organisations:organisation-users-update-role",
-            args=[self.organisation.pk, organisation_user.pk],
+            "api-v1:organisations:organisation-remove-users",
+            args=[self.organisation.pk],
         )
-        data = {"role": OrganisationRole.ADMIN.name}
+        data = [{"id": organisation_user.id}]
 
         # When
-        res = self.client.delete(url, data=data)
+        res = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert res.status_code == status.HTTP_200_OK
 
         # and
-        assert (
-            organisation_user.get_organisation_role(self.organisation)
-            == OrganisationRole.ADMIN.name
-        )
+        assert organisation_user.get_organisation_role(self.organisation) is None
 
         # and
         assert (
@@ -279,11 +283,12 @@ class UserTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
         assert audit_log.related_object_id == organisation_user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"User organisations updated: {organisation_user.email}; role changed: test org"
+            == f"User organisations updated: {organisation_user.email}; removed: test org"
         )
 
     def test_admin_can_get_users_in_organisation(self):
@@ -460,6 +465,7 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GROUP.name
         assert audit_log.related_object_id == group.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
@@ -534,6 +540,7 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         audit_log = AuditLog.objects.first()
         assert audit_log
         assert audit_log.author_id == self.admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GROUP.name
         assert audit_log.related_object_id == group.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
