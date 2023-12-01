@@ -2,17 +2,20 @@ from unittest import TestCase, mock
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 
+from audit.models import AuditLog, RelatedObjectType
 from custom_auth.oauth.serializers import (
     GithubLoginSerializer,
     GoogleLoginSerializer,
     OAuthLoginSerializer,
 )
+from organisations.models import Organisation
 from users.models import SignUpType
 
 UserModel = get_user_model()
@@ -62,6 +65,107 @@ class OAuthLoginSerializerTestCase(TestCase):
         assert token.user.last_name == self.test_last_name
         assert token.user.google_user_id == self.test_id
         assert token.user.last_login == now
+
+    @mock.patch("django.contrib.auth.models.timezone", autospec=True)
+    def test_save_existing(self, mock_timezone):
+        # Given
+        now = timezone.now()
+        mock_timezone.now.return_value = now
+
+        access_token = "access-token"
+        sign_up_type = "NO_INVITE"
+        data = {"access_token": access_token, "sign_up_type": sign_up_type}
+        serializer = OAuthLoginSerializer(data=data, context={"request": self.request})
+
+        # make existing user/organisation to audit log against
+        organisation = Organisation.objects.create(name="Test Org")
+        user = UserModel.objects.create(
+            **self.mock_user_data, sign_up_type=sign_up_type
+        )
+        user.organisations.add(organisation)
+
+        # monkey patch the get_user_info method to return the mock user data
+        serializer.get_user_info = lambda: self.mock_user_data
+
+        # When
+        serializer.is_valid()
+        token = serializer.save()
+
+        # Then
+        assert UserModel.objects.filter(
+            email=self.test_email, sign_up_type=sign_up_type
+        ).exists()
+        assert isinstance(token, Token)
+        assert token.user.email == self.test_email
+        assert token.user.first_name == self.test_first_name
+        assert token.user.last_name == self.test_last_name
+        assert token.user.google_user_id == self.test_id
+        assert token.user.last_login == now
+
+        # and
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == user.pk
+        assert audit_log.organisation_id == organisation.pk
+        assert audit_log.log == f"User logged in: {self.test_email}"
+
+    @override_settings(AUTH_CONTROLLER_INSTALLED=True)
+    @mock.patch("django.contrib.auth.models.timezone", autospec=True)
+    def test_save_denied(self, mock_timezone):
+        # Given
+        access_token = "access-token"
+        sign_up_type = "NO_INVITE"
+        data = {"access_token": access_token, "sign_up_type": sign_up_type}
+        serializer = OAuthLoginSerializer(data=data, context={"request": self.request})
+
+        # make existing user/organisation to audit log against
+        organisation = Organisation.objects.create(name="Test Org")
+        user = UserModel.objects.create(
+            **self.mock_user_data, sign_up_type=sign_up_type
+        )
+        user.organisations.add(organisation)
+
+        # monkey patch the get_user_info method to return the mock user data
+        serializer.get_user_info = lambda: self.mock_user_data
+
+        # monkey patch is_authentication_method_valid to raise AuthenticationFailed
+        mocked_auth_controller = mock.MagicMock()
+        mocked_auth_controller.is_authentication_method_valid.side_effect = (
+            AuthenticationFailed("Authentication controlled", code="invalid_auth_test")
+        )
+
+        # When
+        with mock.patch.dict(
+            "sys.modules", {"auth_controller.controller": mocked_auth_controller}
+        ):
+            serializer.is_valid()
+            with pytest.raises(AuthenticationFailed):
+                serializer.save()
+
+        # Then
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == user.pk
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == user.pk
+        assert audit_log.organisation_id == organisation.pk
+        assert (
+            audit_log.log == f"User login failed (invalid_auth_test): {self.test_email}"
+        )
 
 
 class GoogleLoginSerializerTestCase(TestCase):
