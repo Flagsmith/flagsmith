@@ -468,10 +468,13 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert audit_log.related_object_type == RelatedObjectType.GROUP.name
         assert audit_log.related_object_id == group.pk
         assert audit_log.organisation_id == self.organisation.pk
-        assert (
-            audit_log.log
-            == f"Group users updated: Test Group; added: {self.admin.email}; added: {self.regular_user.email}"
-        )
+        expected_logs = [
+            # updates may appear in any order
+            f"Group users updated: Test Group",
+            f"added: {self.admin.email}",
+            f"added: {self.regular_user.email}",
+        ]
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
 
     def test_cannot_add_user_from_another_organisation(self):
         # Given
