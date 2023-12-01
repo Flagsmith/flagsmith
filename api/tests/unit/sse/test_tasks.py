@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Callable
 from unittest.mock import call
 
 import pytest
@@ -88,7 +89,10 @@ def test_auth_header_raises_exception_if_token_not_set(settings):
 
 
 def test_track_sse_usage(
-    mocker: MockerFixture, environment: Environment, settings: SettingsWrapper
+    mocker: MockerFixture,
+    environment: Environment,
+    django_assert_num_queries: Callable,
+    settings: SettingsWrapper,
 ):
     # Given - two valid logs
     first_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
@@ -108,7 +112,8 @@ def test_track_sse_usage(
     mocked_influx_point = mocker.patch("sse.tasks.Point")
 
     # When
-    update_sse_usage()
+    with django_assert_num_queries(1):
+        update_sse_usage()
 
     # Then
     # Point was generated correctly
