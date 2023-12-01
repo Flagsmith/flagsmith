@@ -26,7 +26,7 @@ import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 
-const widths = [450, 150, 100, 250, 235, 255]
+const widths = [450, 255, 250, 235, 150, 100]
 const rolesWidths = [250, 600, 100]
 const OrganisationSettingsPage = class extends Component {
   static contextTypes = {
@@ -958,25 +958,25 @@ const OrganisationSettingsPage = class extends Component {
                                                   <Flex
                                                     className='table-column'
                                                     style={{
-                                                      minWidth: widths[5],
+                                                      minWidth: widths[1],
                                                     }}
                                                   >
                                                     Role
                                                   </Flex>
                                                   <div
-                                                    style={{ width: widths[3] }}
+                                                    style={{ width: widths[2] }}
                                                     className='table-column'
                                                   >
                                                     Action
                                                   </div>
                                                   <div
-                                                    style={{ width: widths[1] }}
+                                                    style={{ width: widths[4] }}
                                                     className='table-column'
                                                   >
                                                     Last logged in
                                                   </div>
                                                   <div
-                                                    style={{ width: widths[2] }}
+                                                    style={{ width: widths[5] }}
                                                     className='table-column text-center'
                                                   >
                                                     Remove
@@ -1028,7 +1028,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <Flex className='table-column'>
                                                       <div
                                                         style={{
-                                                          minWidth: widths[4],
+                                                          minWidth: widths[3],
                                                         }}
                                                       >
                                                         {organisation.role ===
@@ -1104,7 +1104,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     {role !== 'ADMIN' ? (
                                                       <div
                                                         style={{
-                                                          width: widths[3],
+                                                          width: widths[2],
                                                         }}
                                                         onClick={onEditClick}
                                                         className='table-column'
@@ -1124,13 +1124,13 @@ const OrganisationSettingsPage = class extends Component {
                                                     ) : (
                                                       <div
                                                         style={{
-                                                          width: widths[3],
+                                                          width: widths[2],
                                                         }}
                                                       ></div>
                                                     )}
                                                     <div
                                                       style={{
-                                                        width: widths[1],
+                                                        width: widths[4],
                                                       }}
                                                       className='table-column'
                                                     >
@@ -1142,7 +1142,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     </div>
                                                     <div
                                                       style={{
-                                                        width: widths[2],
+                                                        width: widths[5],
                                                       }}
                                                       className='table-column text-center'
                                                     >
@@ -1222,7 +1222,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     </div>
                                                     <div
                                                       style={{
-                                                        width: widths[2],
+                                                        width: widths[5],
                                                       }}
                                                       className='table-column text-center'
                                                     >
@@ -1289,7 +1289,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     <div
                                                       className='table-column text-center'
                                                       style={{
-                                                        width: widths[2],
+                                                        width: widths[5],
                                                       }}
                                                     >
                                                       <Button
