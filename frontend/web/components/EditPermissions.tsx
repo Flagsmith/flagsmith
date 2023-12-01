@@ -143,9 +143,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       useGetUserWithRolesQuery(
         {
           org_id: id,
-          user_id: user.id,
+          user_id: user?.id,
         },
-        { skip: level !== 'organisation' },
+        { skip: level !== 'organisation' || !user?.id },
       )
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
