@@ -11,7 +11,6 @@ const config = {
     projectName: 'flagsmith',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
-    plugins: ['@ionic-internal/docusaurus-plugin-tag-manager'],
 
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
