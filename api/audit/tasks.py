@@ -116,6 +116,7 @@ def create_audit_log_from_historical_record(
         related_object_type=related_object_type.name,
         log=log_message,
         master_api_key=history_instance.master_api_key,
+        created_date=history_instance.history_date,
         **instance.get_extra_audit_log_kwargs(history_instance),
     )
 
