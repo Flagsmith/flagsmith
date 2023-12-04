@@ -1,15 +1,9 @@
-// @ts-check
-// `@type` JSDoc annotations allow editor autocompletion and type checking
-// (when paired with `@ts-check`).
-// There are various equivalent ways to declare your Docusaurus config.
-// See: https://docusaurus.io/docs/api/docusaurus-config
-
 import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: 'Flagsmith Docs',
-    tagline: 'Open Source Feature Flags',
+    tagline: 'Open Source Feature Flags and Remote Config',
     url: 'https://docs.flagsmith.com',
     baseUrl: '/',
     favicon: 'img/favicon.ico',
@@ -18,6 +12,7 @@ const config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     plugins: ['@ionic-internal/docusaurus-plugin-tag-manager'],
+
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
         ({
@@ -136,9 +131,7 @@ const config = {
                 isCloseable: true,
             },
         }),
-    // Even if you don't use internationalization, you can use this field to set
-    // useful metadata like html lang. For example, if your site is Chinese, you
-    // may want to replace "en" with "zh-Hans".
+
     i18n: {
         defaultLocale: 'en',
         locales: ['en'],
