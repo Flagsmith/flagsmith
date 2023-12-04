@@ -137,7 +137,7 @@ const config = {
     },
 
     customFields: {
-        swaggerURL: 'https://raw.githubusercontent.com/dabeeeenster/api-spec/main/edge_api.json',
+        swaggerURL: '/api-static/edge-api.json',
     },
 
     presets: [
