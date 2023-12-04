@@ -191,7 +191,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    def paginate_queryset(self, queryset: QuerySet) -> QuerySet | None:
+    def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:
         if self.action == "summaries":
             return None
         return super().paginate_queryset(queryset)
