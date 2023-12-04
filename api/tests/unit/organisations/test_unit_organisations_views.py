@@ -1664,12 +1664,12 @@ def test_list_group_summaries(
     assert response.status_code == status.HTTP_200_OK
 
     response_json = response.json()
-    assert response_json["count"] == 2
-    assert response_json["results"][0] == {
+    assert len(response_json) == 2
+    assert response_json[0] == {
         "id": user_permission_group_1.id,
         "name": user_permission_group_1.name,
     }
-    assert response_json["results"][1] == {
+    assert response_json[1] == {
         "id": user_permission_group_2.id,
         "name": user_permission_group_2.name,
     }
