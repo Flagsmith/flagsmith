@@ -21,36 +21,6 @@ const config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
 
-    // Even if you don't use internationalization, you can use this field to set
-    // useful metadata like html lang. For example, if your site is Chinese, you
-    // may want to replace "en" with "zh-Hans".
-    i18n: {
-        defaultLocale: 'en',
-        locales: ['en'],
-    },
-
-    customFields: {
-        swaggerURL: 'https://raw.githubusercontent.com/dabeeeenster/api-spec/main/edge_api.json',
-    },
-
-    presets: [
-        [
-            'classic',
-            /** @type {import('@docusaurus/preset-classic').Options} */
-            ({
-                docs: {
-                    sidebarPath: require.resolve('./sidebars.js'),
-                    routeBasePath: '/',
-                    // Please change this to your repo.
-                    editUrl: 'https://github.com/flagsmith/flagsmith/tree/main/docs/',
-                },
-                theme: {
-                    customCss: './src/css/custom.css',
-                },
-            }),
-        ],
-    ],
-
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
         ({
@@ -169,6 +139,35 @@ const config = {
                 copyright: `Copyright © ${new Date().getFullYear()} Bullet Train Ltd. Built with Docusaurus.`,
             },
         }),
+    // Even if you don't use internationalization, you can use this field to set
+    // useful metadata like html lang. For example, if your site is Chinese, you
+    // may want to replace "en" with "zh-Hans".
+    i18n: {
+        defaultLocale: 'en',
+        locales: ['en'],
+    },
+
+    customFields: {
+        swaggerURL: 'https://raw.githubusercontent.com/dabeeeenster/api-spec/main/edge_api.json',
+    },
+
+    presets: [
+        [
+            'classic',
+            /** @type {import('@docusaurus/preset-classic').Options} */
+            ({
+                docs: {
+                    sidebarPath: require.resolve('./sidebars.js'),
+                    routeBasePath: '/',
+                    // Please change this to your repo.
+                    editUrl: 'https://github.com/flagsmith/flagsmith/tree/main/docs/',
+                },
+                theme: {
+                    customCss: './src/css/custom.css',
+                },
+            }),
+        ],
+    ],
 };
 
 export default config;
