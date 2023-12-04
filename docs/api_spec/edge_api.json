@@ -3,7 +3,7 @@
     "info": { "title": "Edge API", "version": "1" },
     "servers": [
         {
-            "url": "https://edge.api.flagsmith.com/api/v1/",
+            "url": "https://edge.api.flagsmith.com/api/v1",
             "description": "Edge API"
         }
     ],
@@ -40,7 +40,11 @@
                         "name": "identifier",
                         "in": "query",
                         "description": "Identity Key",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "The string referencing the Identity"
+                        }
                     }
                 ],
                 "responses": {
@@ -225,7 +229,7 @@
                                 "type": "integer"
                             },
                             {
-                                "type": "float"
+                                "type": "number"
                             }
                         ],
                         "description": "Can be any of the following types: string, integer, boolean, float"
@@ -281,7 +285,6 @@
                 }
             },
             "IdentitiesRequestData": {
-                "required": true,
                 "type": "object",
                 "properties": {
                     "traits": {
@@ -296,7 +299,6 @@
                 }
             },
             "BulkIdentitiesData": {
-                "required": true,
                 "properties": {
                     "data": {
                         "type": "array",
