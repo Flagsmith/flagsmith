@@ -185,7 +185,7 @@ The list of the flags and remote config we're currently using in production is b
 | `announcement`                        | Shows an announcement at the top of the app                                                                                                     | None                                                                                                         |
 | `butter_bar`                          | Show html in a butter bar for certain users                                                                                                     | None                                                                                                         |
 | `case_sensitive_flags`                | Enables the project setting to allow case sensitive flags                                                                                       | None                                                                                                         |
-| `change_email`                        | <https://github.com/orgs/Flagsmith/projects/2/views/1?pane=issue&itemId=25447990>                                                               | None                                                                                                         |
+| `change_email`                        | [https://github.com/orgs/Flagsmith/projects/2/views/1?pane=issue&itemId=25447990]                                                               | None                                                                                                         |
 | `compare_environments`                | Compare feature flag changes across environments                                                                                                | None                                                                                                         |
 | `compare_identities`                  |                                                                                                                                                 | None                                                                                                         |
 | `configure_hide_sensitive_data`       | If the value is true, the hide sensitive data switch will be displayed in the environment settings.                                             | None                                                                                                         |
@@ -573,7 +573,7 @@ Flagsmith has a soft dependency on InfluxDB to store time-series data. You don't
 platform; by default this data will be stored in Postgres. If you are running very high traffic loads, you might be
 interested in deploying InfluxDB.
 
-1. Create a user account in influxdb. You can visit <http://localhost:8086/>
+1. Create a user account in influxdb. You can visit [http://localhost:8086/]
 2. Go into Data > Buckets and create three new buckets called `default`, `default_downsampled_15m` and
    `default_downsampled_1h`
 3. Go into Data > Tokens and grab your access token.
