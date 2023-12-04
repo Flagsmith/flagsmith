@@ -497,6 +497,7 @@ class TheComponent extends Component {
       </div>,
       () => {
         this.props.value[i].toRemove = true
+        this.setState({ isLoading: false })
       },
       () => {
         this.setState({ isLoading: false })
