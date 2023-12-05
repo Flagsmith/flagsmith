@@ -63,7 +63,6 @@ const Payment = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.modals.PAYMENT)
-    firstpromoter()
   }
 
   onSave = () => {
@@ -723,6 +722,7 @@ module.exports = (props) => (
         site: Project.chargebee.site,
       })
       Chargebee.registerAgain()
+      firstpromoter()
       Chargebee.getInstance().setCheckoutCallbacks(() => ({
         success: (hostedPageId) => {
           AppActions.updateSubscription(hostedPageId)
