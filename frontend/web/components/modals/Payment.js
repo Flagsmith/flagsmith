@@ -5,7 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
-import firstpromoter from 'project/firstpromoter'
+import firstpromoter from 'project/firstPromoter'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
