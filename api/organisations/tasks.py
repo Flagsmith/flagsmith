@@ -61,3 +61,4 @@ def finish_subscription_cancellation():
         cancellation_date__gt=previously,
     ):
         subscription.organisation.cancel_users()
+        subscription.save_as_free_subscription()

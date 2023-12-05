@@ -132,7 +132,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
         if self.has_paid_subscription():
-            self.subscription.cancel()
+            self.subscription.prepare_for_cancel()
 
     @hook(AFTER_CREATE)
     def create_subscription(self):
@@ -198,7 +198,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=100, null=True, blank=True, default=FREE_PLAN_ID)
-    max_seats = models.IntegerField(default=1)
+    max_seats = models.IntegerField(default=MAX_SEATS_IN_FREE_PLAN)
     max_api_calls = models.BigIntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
@@ -237,13 +237,47 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             mailer_lite = MailerLite()
             mailer_lite.update_organisation_users(self.organisation.id)
 
-    def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
-        self.cancellation_date = cancellation_date
+    def save_as_free_subscription(self):
+        """
+        Wipes a subscription to a normal free plan.
+
+        The only normal field that is retained is the notes field.
+        """
+        self.subscription_id = None
+        self.subscription_date = None
+        self.plan = FREE_PLAN_ID
+        self.max_seats = MAX_SEATS_IN_FREE_PLAN
+        self.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        self.cancellation_date = None
+        self.customer_id = None
         self.billing_status = None
+        self.payment_method = None
         self.save()
-        # If the date is in the future, a recurring task takes it.
+
+        if not getattr(self.organisation, "subscription_information_cache"):
+            return
+
+        self.organisation.subscription_information_cache.delete()
+
+    def prepare_for_cancel(
+        self, cancellation_date=timezone.now(), update_chargebee=True
+    ) -> None:
+        """
+        This method get's a subscription ready for cancelation.
+
+        If cancellation_date is in the future some aspects are
+        reserved for a task after the date has passed.
+        """
+
         if cancellation_date <= timezone.now():
+            # Since the date is immediate, wipe data right away.
             self.organisation.cancel_users()
+            self.save_as_free_subscription()
+        else:
+            # Since the date is in the future, a task takes it.
+            self.cancellation_date = cancellation_date
+            self.billing_status = None
+            self.save()
 
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
