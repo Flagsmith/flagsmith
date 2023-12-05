@@ -1,6 +1,7 @@
 let initialised = false
 
 if (Project.fpr) {
+  // Load first promoter
   ;(function (w) {
     w.fpr =
       w.fpr ||
@@ -17,22 +18,16 @@ export default function () {
     return
   }
   initialised = true
+  // Pass First Promoter tid to chargebee as a custom field
   if (typeof fpr !== 'undefined') {
-    var chargebeeTrackFunc = function (fprom) {
-      let tid = fprom.tid
-      let chargebeeInstance
-      try {
-        chargebeeInstance = Chargebee.getInstance()
-      } catch (err) {}
-      if (tid && chargebeeInstance) {
-        let cart = chargebeeInstance.getCart()
-        cart.setCustomer({ cf_tid: tid })
-      } else if (tid) {
-        document.addEventListener('DOMContentLoaded', function () {
-          chargebeeTrackFunc(fprom)
-        })
-      }
+    let tid = fpr.tid
+    let chargebeeInstance
+    try {
+      chargebeeInstance = Chargebee.getInstance()
+    } catch (err) {}
+    if (tid && chargebeeInstance) {
+      let cart = chargebeeInstance.getCart()
+      cart.setCustomer({ cf_tid: tid })
     }
-    fpr('onReady', chargebeeTrackFunc)
   }
 }
