@@ -34,6 +34,6 @@ export default function () {
   }
   if (typeof fpr !== 'undefined') {
     fpr('onReady', track)
+    Utils.loadScriptPromise('https://cdn.firstpromoter.com/fpr.js')
   }
-  Utils.loadScriptPromise('https://cdn.firstpromoter.com/fpr.js')
 }
