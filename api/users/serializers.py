@@ -1,13 +1,9 @@
-from django.conf import settings
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
-
-if settings.IS_RBAC_INSTALLED:
-    from rbac.serializers import UserRoleSerializer
 
 from .models import FFAdminUser, UserPermissionGroup
 
@@ -60,14 +56,11 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
-    if settings.IS_RBAC_INSTALLED:
-        roles = UserRoleSerializer(many=True, read_only=True, source="get_user_roles")
 
     default_fields = ("id", "email", "first_name", "last_name", "last_login")
     organisation_users_fields = (
         "role",
         "date_joined",
-        *([] if not settings.IS_RBAC_INSTALLED else ["roles"]),
     )
 
     class Meta:
