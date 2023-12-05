@@ -18,16 +18,22 @@ export default function () {
     return
   }
   initialised = true
-  // Pass First Promoter tid to chargebee as a custom field
-  if (typeof fprom !== 'undefined' && fprom.data) {
-    const tid = fprom.data.tid
-    let chargebeeInstance
-    try {
-      chargebeeInstance = Chargebee.getInstance()
-    } catch (err) {}
-    if (tid && chargebeeInstance) {
-      let cart = chargebeeInstance.getCart()
-      cart.setCustomer({ cf_tid: tid })
+  const track = () => {
+    // Pass First Promoter tid to chargebee as a custom field
+    if (typeof fprom !== 'undefined' && fprom.data) {
+      const tid = fprom.data.tid
+      let chargebeeInstance
+      try {
+        chargebeeInstance = Chargebee.getInstance()
+      } catch (err) {}
+      if (tid && chargebeeInstance) {
+        let cart = chargebeeInstance.getCart()
+        cart.setCustomer({ cf_tid: tid })
+      }
     }
   }
+  if (typeof fpr !== 'undefined') {
+    fpr('onReady', track)
+  }
+  Utils.loadScriptPromise('https://cdn.firstpromoter.com/fpr.js')
 }
