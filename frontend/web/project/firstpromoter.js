@@ -19,7 +19,7 @@ export default function () {
   }
   initialised = true
   // Pass First Promoter tid to chargebee as a custom field
-  if (typeof fpr !== 'undefined' && fprom.data) {
+  if (typeof fprom !== 'undefined' && fprom.data) {
     const tid = fprom.data.tid
     let chargebeeInstance
     try {
