@@ -18,10 +18,10 @@ export default function () {
     return
   }
   initialised = true
-  const track = () => {
+  const track = (fprom) => {
     // Pass First Promoter tid to chargebee as a custom field
-    if (typeof FPROM !== 'undefined' && FPROM.data) {
-      const tid = FPROM.data.tid
+    if (typeof fprom !== 'undefined') {
+      const tid = fprom.tid
       let chargebeeInstance
       try {
         chargebeeInstance = Chargebee.getInstance()
