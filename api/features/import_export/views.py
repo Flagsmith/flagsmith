@@ -22,10 +22,7 @@ from .serializers import (
     FeatureImportSerializer,
     FeatureImportUploadSerializer,
 )
-from .tasks import (
-    export_features_for_environment,
-    import_features_for_environment,
-)
+from .tasks import import_features_for_environment
 
 
 @swagger_auto_schema(
@@ -38,13 +35,7 @@ from .tasks import (
 def create_feature_export(request: Request) -> Response:
     serializer = CreateFeatureExportSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
-    export_features_for_environment.delay(
-        kwargs={
-            "environment_id": serializer.validated_data["environment_id"],
-            "tag_ids": serializer.validated_data["tag_ids"],
-        }
-    )
+    serializer.save()
 
     return Response(serializer.validated_data, status=201)
 

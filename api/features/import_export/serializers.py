@@ -1,13 +1,23 @@
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .constants import MAX_FEATURE_IMPORT_SIZE, OVERWRITE_DESTRUCTIVE, SKIP
 from .models import FeatureExport, FeatureImport
+from .tasks import export_features_for_environment
 
 
 class CreateFeatureExportSerializer(serializers.Serializer):
     environment_id = serializers.IntegerField(required=True)
     tag_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def save(self) -> None:
+        export_features_for_environment.delay(
+            kwargs={
+                "environment_id": self.validated_data["environment_id"],
+                "tag_ids": self.validated_data["tag_ids"],
+            }
+        )
 
 
 class FeatureExportSerializer(serializers.ModelSerializer):
@@ -28,7 +38,7 @@ class FeatureExportSerializer(serializers.ModelSerializer):
         )
 
 
-def validate_feature_import_file_size(upload_file):
+def validate_feature_import_file_size(upload_file: InMemoryUploadedFile) -> None:
     if upload_file.size > MAX_FEATURE_IMPORT_SIZE:
         raise ValidationError("File size is too large.")
 
