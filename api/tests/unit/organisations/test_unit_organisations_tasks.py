@@ -8,10 +8,12 @@ from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
     OrganisationRole,
+    OrganisationSubscriptionInformationCache,
     UserOrganisation,
 )
 from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
@@ -76,7 +78,56 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(
     assert kwargs["subject"] == ALERT_EMAIL_SUBJECT
 
 
-def test_finish_subscription_cancellation(db: None):
+def test_subscription_cancellation(db: None) -> None:
+    # Given
+    organisation = Organisation.objects.create()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+    )
+    UserOrganisation.objects.create(
+        organisation=organisation,
+        user=FFAdminUser.objects.create(email=f"{uuid.uuid4()}@example.com"),
+        role=OrganisationRole.ADMIN,
+    )
+
+    assert organisation.subscription_information_cache
+    subscription = organisation.subscription
+    notes = "Notes to be kept"
+    subscription.subscription_id = "id"
+    subscription.subscription_date = timezone.now()
+    subscription.plan = "plan_code"
+    subscription.max_seats = 1_000_000
+    subscription.max_api_calls = 1_000_000
+    subscription.cancellation_date = timezone.now()
+    subscription.customer_id = "customer23"
+    subscription.billing_status = "ACTIVE"
+    subscription.payment_method = "CHARGEBEE"
+    subscription.notes = notes
+
+    subscription.save()
+
+    # When
+    finish_subscription_cancellation()
+
+    # Then
+    organisation.refresh_from_db()
+    subscription.refresh_from_db()
+    assert getattr(organisation, "subscription_information_cache", None) is None
+    assert subscription.subscription_id is None
+    assert subscription.subscription_date is None
+    assert subscription.plan == FREE_PLAN_ID
+    assert subscription.max_seats == MAX_SEATS_IN_FREE_PLAN
+    assert subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
+    assert subscription.cancellation_date is None
+    assert subscription.customer_id is None
+    assert subscription.billing_status is None
+    assert subscription.payment_method is None
+    assert subscription.cancellation_date is None
+    assert subscription.notes == notes
+
+
+def test_finish_subscription_cancellation(db: None) -> None:
+    # Given
     organisation1 = Organisation.objects.create()
     organisation2 = Organisation.objects.create()
     organisation3 = Organisation.objects.create()
@@ -91,7 +142,7 @@ def test_finish_subscription_cancellation(db: None):
             role=OrganisationRole.ADMIN,
         )
     future = timezone.now() + timedelta(days=20)
-    organisation1.subscription.cancel(cancellation_date=future)
+    organisation1.subscription.prepare_for_cancel(cancellation_date=future)
 
     # Two organisations are impacted.
     for __ in range(organisation_user_count):
@@ -101,7 +152,7 @@ def test_finish_subscription_cancellation(db: None):
             role=OrganisationRole.ADMIN,
         )
 
-    organisation2.subscription.cancel(
+    organisation2.subscription.prepare_for_cancel(
         cancellation_date=timezone.now() - timedelta(hours=2)
     )
 
@@ -111,7 +162,7 @@ def test_finish_subscription_cancellation(db: None):
             user=FFAdminUser.objects.create(email=f"{uuid.uuid4()}@example.com"),
             role=OrganisationRole.ADMIN,
         )
-    organisation3.subscription.cancel(
+    organisation3.subscription.prepare_for_cancel(
         cancellation_date=timezone.now() - timedelta(hours=4)
     )
 
