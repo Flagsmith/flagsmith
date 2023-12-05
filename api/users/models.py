@@ -4,7 +4,6 @@ import typing
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
@@ -42,9 +41,6 @@ if typing.TYPE_CHECKING:
         Invite,
         InviteLink,
     )
-
-if settings.IS_RBAC_INSTALLED:
-    from rbac.models import UserRole
 
 logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
@@ -258,14 +254,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             logger.warning(
                 "User %d is not part of organisation %d" % (self.id, organisation_id)
             )
-
-    def get_user_roles(self):
-        if not settings.IS_RBAC_INSTALLED:
-            raise ImproperlyConfigured(
-                "RBAC is not installed. Unable to retrieve user roles."
-            )
-
-        return UserRole.objects.filter(user=self)
 
     def get_permitted_projects(
         self, permission_key: str, tag_ids: typing.List[int] = None
