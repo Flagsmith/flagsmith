@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import firstpromoter from 'project/firstpromoter'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -62,6 +63,7 @@ const Payment = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.modals.PAYMENT)
+    firstpromoter()
   }
 
   onSave = () => {
