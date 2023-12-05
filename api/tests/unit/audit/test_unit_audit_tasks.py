@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
     FEATURE_STATE_WENT_LIVE_MESSAGE,
@@ -11,8 +13,9 @@ from audit.tasks import (
     create_segment_priorities_changed_audit_log,
 )
 from environments.models import Environment
-from features.models import FeatureSegment
+from features.models import Feature, FeatureSegment, FeatureState
 from segments.models import Segment
+from users.models import FFAdminUser
 
 
 def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_key(
@@ -163,7 +166,11 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     instance.get_audit_log_related_object_type.return_value = related_object_type
     instance.get_extra_audit_log_kwargs.return_value = {}
     history_instance = mocker.MagicMock(
-        history_id=1, instance=instance, master_api_key=None, history_type="+"
+        history_id=1,
+        instance=instance,
+        master_api_key=None,
+        history_type="+",
+        history_date=timezone.now(),
     )
 
     history_user = mocker.MagicMock()
@@ -205,12 +212,16 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
         related_object_type=related_object_type.name,
         log=log_message,
         master_api_key=None,
+        created_date=history_instance.history_date,
     )
 
 
 def test_create_segment_priorities_changed_audit_log(
-    admin_user, feature_segment, feature, environment
-):
+    admin_user: FFAdminUser,
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+) -> None:
     # Given
     another_segment = Segment.objects.create(
         project=environment.project, name="Another Segment"
@@ -218,6 +229,8 @@ def test_create_segment_priorities_changed_audit_log(
     another_feature_segment = FeatureSegment.objects.create(
         feature=feature, environment=environment, segment=another_segment
     )
+
+    now = timezone.now()
 
     # When
     create_segment_priorities_changed_audit_log(
@@ -227,16 +240,20 @@ def test_create_segment_priorities_changed_audit_log(
         ],
         feature_segment_ids=[feature_segment.id, another_feature_segment.id],
         user_id=admin_user.id,
+        changed_at=now.isoformat(),
     )
 
     # Then
     assert AuditLog.objects.filter(
         environment=environment,
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",
+        created_date=now,
     ).exists()
 
 
-def test_create_feature_state_went_live_audit_log(change_request_feature_state):
+def test_create_feature_state_went_live_audit_log(
+    change_request_feature_state: FeatureState,
+) -> None:
     # Given
     message = FEATURE_STATE_WENT_LIVE_MESSAGE % (
         change_request_feature_state.feature.name,
@@ -250,15 +267,18 @@ def test_create_feature_state_went_live_audit_log(change_request_feature_state):
     # Then
     assert (
         AuditLog.objects.filter(
-            related_object_id=feature_state_id, is_system_event=True, log=message
+            related_object_id=feature_state_id,
+            is_system_event=True,
+            log=message,
+            created_date=change_request_feature_state.live_from,
         ).count()
         == 1
     )
 
 
 def test_create_feature_state_updated_by_change_request_audit_log(
-    change_request_feature_state,
-):
+    change_request_feature_state: FeatureState,
+) -> None:
     # Given
     message = FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE % (
         change_request_feature_state.feature.name,
@@ -272,7 +292,10 @@ def test_create_feature_state_updated_by_change_request_audit_log(
     # Then
     assert (
         AuditLog.objects.filter(
-            related_object_id=feature_state_id, is_system_event=True, log=message
+            related_object_id=feature_state_id,
+            is_system_event=True,
+            log=message,
+            created_date=change_request_feature_state.live_from,
         ).count()
         == 1
     )

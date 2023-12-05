@@ -2,7 +2,7 @@ from contextlib import suppress
 
 from core.helpers import get_current_site_url
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 from django.http import (
     Http404,
     HttpRequest,
@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.permissions import (
     MANAGE_USER_GROUPS,
     NestedIsOrganisationAdminPermission,
@@ -104,9 +104,12 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         if self.kwargs.get("organisation_pk"):
-            queryset = FFAdminUser.objects.filter(
-                organisations__id=self.kwargs.get("organisation_pk")
-            )
+            queryset = FFAdminUser.objects.prefetch_related(
+                Prefetch(
+                    "userorganisation_set",
+                    queryset=UserOrganisation.objects.select_related("organisation"),
+                )
+            ).filter(organisations__id=self.kwargs.get("organisation_pk"))
             queryset = self._apply_query_filters(queryset)
             return queryset
         else:
@@ -173,23 +176,30 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         organisation = Organisation.objects.get(id=organisation_pk)
 
         qs = UserPermissionGroup.objects.filter(organisation=organisation)
-        if not self.request.user.has_organisation_permission(
-            organisation, MANAGE_USER_GROUPS
+        if (
+            self.action != "summaries"
+            and not self.request.user.has_organisation_permission(
+                organisation, MANAGE_USER_GROUPS
+            )
         ):
+            # my_groups and summaries return a very cut down set of data, we can safely allow all users
+            # of the groups / organisation to retrieve them in this case, otherwise they must be a group admin.
             q = Q(userpermissiongroupmembership__ffadminuser=self.request.user)
             if self.action != "my_groups":
-                # my-groups returns a very cut down set of data, we can safely allow all users
-                # of the groups to retrieve them in this case, otherwise they must be a group
-                # admin.
                 q = q & Q(userpermissiongroupmembership__group_admin=True)
             qs = qs.filter(q)
 
         return qs
 
+    def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:
+        if self.action == "summaries":
+            return None
+        return super().paginate_queryset(queryset)
+
     def get_serializer_class(self):
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
-        elif self.action == "my_groups":
+        elif self.action in ("my_groups", "summaries"):
             return UserPermissionGroupSummarySerializer
         return ListUserPermissionGroupSerializer
 
@@ -252,6 +262,13 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     def my_groups(self, request: Request, organisation_pk: int) -> Response:
         """
         Returns a list of summary group objects only for the groups a user is a member of.
+        """
+        return self.list(request, organisation_pk)
+
+    @action(detail=False, methods=["GET"])
+    def summaries(self, request: Request, organisation_pk: int) -> Response:
+        """
+        Returns a list of summary group objects for all groups in the organisation.
         """
         return self.list(request, organisation_pk)
 

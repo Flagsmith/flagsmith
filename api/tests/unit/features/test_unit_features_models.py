@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest import mock
 
+import freezegun
 import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -848,9 +849,10 @@ def test_feature_segment_update_priorities_when_changes(
     new_id_priority_pairs = [(feature_segment.id, 1), (another_feature_segment.id, 0)]
 
     # When
-    returned_feature_segments = FeatureSegment.update_priorities(
-        new_feature_segment_id_priorities=new_id_priority_pairs
-    )
+    with freezegun.freeze_time(now):
+        returned_feature_segments = FeatureSegment.update_priorities(
+            new_feature_segment_id_priorities=new_id_priority_pairs
+        )
 
     # Then
     assert sorted(
@@ -864,6 +866,7 @@ def test_feature_segment_update_priorities_when_changes(
             "feature_segment_ids": [feature_segment.id, another_feature_segment.id],
             "user_id": mocked_request.user.id,
             "master_api_key_id": mocked_request.master_api_key.id,
+            "changed_at": now.isoformat(),
         }
     )
 
