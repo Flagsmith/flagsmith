@@ -106,6 +106,7 @@ def get_feature_evaluation_data_from_local_db(
         FeatureEvaluationBucket.objects.filter(
             environment_id=environment_id,
             bucket_size=ANALYTICS_READ_BUCKET_SIZE,
+            feature_name=feature.name,
             created_at__date__lte=timezone.now(),
             created_at__date__gt=timezone.now() - timedelta(days=period),
         )

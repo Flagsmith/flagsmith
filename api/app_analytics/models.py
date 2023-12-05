@@ -57,8 +57,9 @@ class AbstractBucket(LifecycleModelMixin, models.Model):
 
         if overlapping_buckets.exists():
             raise ValidationError(
-                "Cannot create bucket starting at {self.created_at} with size {self.bucket_size} minutes,"
+                "Cannot create bucket starting at %s with size %s minutes,"
                 "because it overlaps with existing buckets"
+                % (self.created_at, self.bucket_size),
             )
 
 
