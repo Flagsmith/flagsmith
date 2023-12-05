@@ -15,6 +15,10 @@ from app_analytics.models import (
 )
 from django.conf import settings
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+
+from environments.models import Environment
+from features.models import Feature
 
 
 @pytest.mark.skipif(
@@ -138,7 +142,9 @@ def test_get_total_events_count(organisation, environment, settings):
     reason="Skip test if analytics database is configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_feature_evaluation_data_from_local_db(feature, environment, settings):
+def test_get_feature_evaluation_data_from_local_db(
+    feature: Feature, environment: Environment, settings: SettingsWrapper
+):
     environment_id = environment.id
     feature_name = feature.name
     now = timezone.now()
@@ -176,6 +182,15 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment, setting
         FeatureEvaluationBucket.objects.create(
             environment_id=99999,
             feature_name=feature_name,
+            total_count=10,
+            bucket_size=read_bucket_size,
+            created_at=now - timedelta(days=i),
+        )
+
+        # some data for different feature
+        FeatureEvaluationBucket.objects.create(
+            environment_id=environment_id,
+            feature_name="some_other_feature",
             total_count=10,
             bucket_size=read_bucket_size,
             created_at=now - timedelta(days=i),
