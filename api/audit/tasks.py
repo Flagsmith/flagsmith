@@ -1,7 +1,9 @@
 import logging
 import typing
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
@@ -55,6 +57,7 @@ def _create_feature_state_audit_log_for_change_request(
         project=feature_state.environment.project,
         log=log,
         is_system_event=True,
+        created_date=feature_state.live_from,
     )
 
 
@@ -113,6 +116,7 @@ def create_audit_log_from_historical_record(
         related_object_type=related_object_type.name,
         log=log_message,
         master_api_key=history_instance.master_api_key,
+        created_date=history_instance.history_date,
         **instance.get_extra_audit_log_kwargs(history_instance),
     )
 
@@ -123,6 +127,7 @@ def create_segment_priorities_changed_audit_log(
     feature_segment_ids: typing.List[int],
     user_id: int = None,
     master_api_key_id: int = None,
+    changed_at: str = None,
 ):
     """
     This needs to be a separate task called by the view itself. This is because the OrderedModelBase class
@@ -166,4 +171,7 @@ def create_segment_priorities_changed_audit_log(
         related_object_id=feature.id,
         related_object_type=RelatedObjectType.FEATURE.name,
         master_api_key_id=master_api_key_id,
+        created_date=datetime.fromisoformat(changed_at)
+        if changed_at is not None
+        else timezone.now(),
     )

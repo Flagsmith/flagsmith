@@ -328,6 +328,7 @@ class FeatureSegment(
                     "master_api_key_id": request.master_api_key.id
                     if hasattr(request, "master_api_key")
                     else None,
+                    "changed_at": timezone.now().isoformat(),
                 }
             )
 

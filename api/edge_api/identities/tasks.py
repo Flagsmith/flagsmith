@@ -1,6 +1,8 @@
 import logging
 import typing
 
+from django.utils import timezone
+
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment, Webhook
@@ -123,6 +125,7 @@ def generate_audit_log_records(
                 related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
                 related_object_uuid=identity_uuid,
                 master_api_key_id=master_api_key_id,
+                created_date=timezone.now(),
             )
         )
 
