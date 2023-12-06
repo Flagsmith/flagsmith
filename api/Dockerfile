@@ -30,8 +30,8 @@ ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Install GnuPG(and import private key) if secret file exists
-RUN --mount=type=secret,id=gpg_pkey  if [ -f /run/secrets/sse_gpg_pkey ]; then \
-  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/sse_gpg_pkey;  fi;
+RUN --mount=type=secret,id=pgp_pkey  if [ -f /run/secrets/sse_pgp_pkey ]; then \
+  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/sse_pgp_pkey;  fi;
 
 
 # Copy the python venv from step 2
