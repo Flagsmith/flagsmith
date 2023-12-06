@@ -13,6 +13,7 @@ from django_lifecycle import (
     LifecycleModelMixin,
     hook,
 )
+from simple_history.models import HistoricalRecords
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
@@ -217,6 +218,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         null=True,
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
+
+    # Intentionally avoid the AuditLog for subscriptions.
+    history = HistoricalRecords()
 
     def update_plan(self, plan_id):
         plan_metadata = get_plan_meta_data(plan_id)
