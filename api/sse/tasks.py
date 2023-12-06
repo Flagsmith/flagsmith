@@ -42,7 +42,7 @@ def send_environment_update_message(environment_key: str, updated_at):
 if settings.AWS_SSE_LOGS_BUCKET_NAME:
 
     @register_recurring_task(
-        run_every=timedelta(seconds=60),
+        run_every=timedelta(minutes=5),
     )
     def update_sse_usage():
         agg_request_count: dict[str, int] = {}
