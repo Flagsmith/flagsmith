@@ -313,7 +313,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if "is_stale" in query_serializer.initial_data:
             if query_serializer.validated_data["is_stale"] is True:
-                queryset = queryset.filter(
+                queryset = queryset.exclude(tags__is_permanent=True).filter(
                     last_modified_in_any_environment__lt=timezone.now()
                     - timedelta(days=project.stale_flags_limit_days)
                 )

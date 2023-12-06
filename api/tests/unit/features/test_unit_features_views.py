@@ -2522,10 +2522,17 @@ def test_list_stale_features(
     url = f"{base_url}?is_stale=True"
     with_project_permissions([VIEW_PROJECT])
 
-    # a stale flag
     now = timezone.now()
     with freeze_time(now - timedelta(days=project.stale_flags_limit_days + 1)):
+        # a stale flag
         stale_flag = Feature.objects.create(name="stale_flag", project=project)
+
+        # and a flag that is marked as permanent so excluded from stale flags
+        permanent_flag = Feature.objects.create(name="permanent_flag", project=project)
+        permanent_tag = Tag.objects.create(
+            label="permanent", project=project, is_permanent=True
+        )
+        permanent_flag.tags.add(permanent_tag)
 
     # When
     with django_assert_max_num_queries(12):

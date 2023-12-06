@@ -12,6 +12,15 @@ class Tag(AbstractBaseExportableModel):
     description = models.CharField(max_length=512, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tags")
 
+    is_system_tag = models.BooleanField(
+        default=False,
+        help_text="Indicates that a tag was created by the system, not the user.",
+    )
+    is_permanent = models.BooleanField(
+        default=False,
+        help_text="When applied to a feature, it means this feature should be excluded from stale flags logic.",
+    )
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
