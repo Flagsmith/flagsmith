@@ -11,6 +11,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
@@ -2506,3 +2507,33 @@ def test_list_features_with_intersection_tag(
 
     assert response.data["results"][0]["id"] == feature2.id
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
+
+
+def test_list_stale_features(
+    staff_client: APIClient,
+    with_project_permissions: Callable,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+    django_assert_max_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?is_stale=True"
+    with_project_permissions([VIEW_PROJECT])
+
+    # a stale flag
+    now = timezone.now()
+    with freeze_time(now - timedelta(days=project.stale_flags_limit_days + 1)):
+        stale_flag = Feature.objects.create(name="stale_flag", project=project)
+
+    # When
+    with django_assert_max_num_queries(12):
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == stale_flag.id
