@@ -876,7 +876,10 @@ EDGE_ENABLED = (
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
-SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
+DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
+SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
+    BASE_DIR + "/app/templates/webpack/index.html"
+)
 
 # Used to configure the number of application proxies that the API runs behind
 NUM_PROXIES = env.int("NUM_PROXIES", 1)
