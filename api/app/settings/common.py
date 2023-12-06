@@ -294,7 +294,7 @@ if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_TOKEN:
+    if INFLUXDB_BUCKET:
         raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
 
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")

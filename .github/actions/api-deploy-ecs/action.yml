@@ -144,6 +144,13 @@ runs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Write PGP key to a file
+      run: |
+        cat << EOF > sse_pgp_pkey
+        ${{ inputs.sse_pgp_private_key }}
+        EOF
+      shell: bash
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
@@ -151,8 +158,6 @@ runs:
         ECR_REPOSITORY: ${{ inputs.aws_ecr_repository_arn }}
         DOCKER_BUILDKIT: '1'
       run: |
-        echo "Load pgp private key"
-        cat <<< ${{ input.sse_pgp_private_key }} > sse_pgp_pkey
         echo "Building docker image with URL: "
         echo $ECR_REPOSITORY:$IMAGE_TAG
         docker build --secret id=sse_pgp_pkey,src=./sse_pgp_pkey -t $ECR_REPOSITORY:$IMAGE_TAG -f api/Dockerfile --build-arg SAML_INSTALLED=1 --build-arg POETRY_OPTS="--with saml,auth-controller" .
