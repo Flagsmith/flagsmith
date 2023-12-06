@@ -3,7 +3,7 @@ name: API Deploy to Staging ECS
 on:
   push:
     branches:
-      - main
+      - chore/fix-typo # TEMP
     paths:
       - api/**
       - .github/**
