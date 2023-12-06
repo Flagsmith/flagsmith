@@ -1,12 +1,20 @@
+from datetime import timedelta
 from unittest import mock
 
+import freezegun
 import pytest
+from django.utils import timezone
 
 from environments.models import Environment
+from features.constants import STALE_FLAGS_TAG_LABEL
 from features.models import Feature, FeatureState
-from features.tasks import trigger_feature_state_change_webhooks
+from features.tasks import (
+    tag_stale_flags,
+    trigger_feature_state_change_webhooks,
+)
 from organisations.models import Organisation
 from projects.models import Project
+from projects.tags.models import Tag
 from webhooks.webhooks import WebhookEventType
 
 
@@ -88,3 +96,73 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(
     assert data["new_state"] is None
     assert data["previous_state"]["feature_state_value"] == new_value
     assert event_type == WebhookEventType.FLAG_DELETED
+
+
+def test_tag_stale_flags(organisation: Organisation):
+    # Given
+    now = timezone.now()
+
+    # a project with a stale flag, a not-stale flag, and a permanent flag
+    project_1 = Project.objects.create(name="project_1", organisation=organisation)
+    Environment.objects.create(
+        name="p1_env", project=project_1, use_v2_feature_versioning=True
+    )
+    p1_not_stale_flag = Feature.objects.create(
+        name="p1_not_stale_flag", project=project_1
+    )
+    permanent_tag = Tag.objects.create(
+        label="permanent", project=project_1, is_permanent=True
+    )
+    p1_permanent_flag = Feature.objects.create(
+        name="p1_permanent_flag", project=project_1
+    )
+    p1_permanent_flag.tags.add(permanent_tag)
+
+    with freezegun.freeze_time(
+        now - timedelta(days=project_1.stale_flags_limit_days + 1)
+    ):
+        p1_stale_flag = Feature.objects.create(name="p1_stale_flag", project=project_1)
+
+    # and a project with no stale flags
+    project_2 = Project.objects.create(name="project_2", organisation=organisation)
+    Environment.objects.create(
+        name="p2_env", project=project_2, use_v2_feature_versioning=True
+    )
+    p2_not_stale_flag = Feature.objects.create(
+        name="p2_not_stale_flag", project=project_2
+    )
+
+    # and a project which has no environments using v2 feature versioning
+    project_3 = Project.objects.create(name="project_3", organisation=organisation)
+    Environment.objects.create(
+        name="p3_env", project=project_3, use_v2_feature_versioning=False
+    )
+    p3_not_stale_flag = Feature.objects.create(
+        name="p3_not_stale_flag", project=project_3
+    )
+
+    # When
+    tag_stale_flags()
+
+    # Then
+    # the stale flag in project 1 is tagged correctly
+    p1_stale_flags_tag = Tag.objects.filter(
+        project=project_1, label=STALE_FLAGS_TAG_LABEL
+    ).first()
+    assert p1_stale_flags_tag is not None
+    assert p1_stale_flags_tag in p1_stale_flag.tags.all()
+    # but the active flag and permanent flags are not tagged
+    assert p1_stale_flags_tag not in p1_not_stale_flag.tags.all()
+    assert p1_stale_flags_tag not in p1_permanent_flag.tags.all()
+
+    # and the tag is not created in project_2, and no tags are assigned to the active flag
+    assert not Tag.objects.filter(
+        project=project_2, label=STALE_FLAGS_TAG_LABEL
+    ).exists()
+    assert p2_not_stale_flag.tags.count() == 0
+
+    # and the tag is not created in project_3, and no tags are assigned to the active flag
+    assert not Tag.objects.filter(
+        project=project_3, label=STALE_FLAGS_TAG_LABEL
+    ).exists()
+    assert p3_not_stale_flag.tags.count() == 0

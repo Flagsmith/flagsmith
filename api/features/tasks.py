@@ -1,7 +1,13 @@
+from datetime import timedelta
 from threading import Thread
 
+from django.utils import timezone
+
 from environments.models import Webhook
-from features.models import FeatureState
+from features.models import Feature, FeatureState
+from projects.models import Project
+from projects.tags.models import Tag
+from task_processor.decorators import register_recurring_task
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
@@ -9,6 +15,7 @@ from webhooks.webhooks import (
     call_organisation_webhooks,
 )
 
+from .constants import STALE_FLAGS_TAG_LABEL
 from .models import HistoricalFeatureState
 
 
@@ -82,3 +89,27 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
         identity_identifier=getattr(feature_state.identity, "identifier", None),
         feature_segment=feature_state.feature_segment,
     )
+
+
+@register_recurring_task(run_every=timedelta(hours=3))
+def tag_stale_flags():
+    feature_tag_relationships = []
+
+    for project in Project.objects.filter(environments__use_v2_feature_versioning=True):
+        # TODO: can we centralise this query to get stale flags (FeatureManager?)
+        stale_flags = project.features.exclude(tags__is_permanent=True).filter(
+            feature_states__environment_feature_version__created_at__lt=timezone.now()
+            - timedelta(days=project.stale_flags_limit_days)
+        )
+
+        # TODO: should we delegate each project to a separate regular task?
+        if stale_flags.exists():
+            stale_flags_tag, _ = Tag.objects.get_or_create(
+                label=STALE_FLAGS_TAG_LABEL, project=project, is_system_tag=True
+            )
+            feature_tag_relationships.extend(
+                Feature.tags.through(feature=feature, tag=stale_flags_tag)
+                for feature in stale_flags.exclude(tags=stale_flags_tag)
+            )
+
+    Feature.tags.through.objects.bulk_create(feature_tag_relationships)
