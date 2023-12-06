@@ -85,7 +85,8 @@ class OrganisationTestCase(TestCase):
         )
         # refresh subscription object
         subscription.refresh_from_db()
-        assert subscription.cancellation_date
+        # Subscription has been immediately transformed to free.
+        assert subscription.cancellation_date is None
 
 
 def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
