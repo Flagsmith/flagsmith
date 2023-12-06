@@ -1,12 +1,19 @@
 from datetime import datetime
+from typing import Callable
+from unittest.mock import call
 
 import pytest
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
+from environments.models import Environment
+from sse.dataclasses import SSEAccessLogs
 from sse.exceptions import SSEAuthTokenNotSet
 from sse.tasks import (
     get_auth_header,
     send_environment_update_message,
     send_environment_update_message_for_project,
+    update_sse_usage,
 )
 
 
@@ -79,3 +86,55 @@ def test_auth_header_raises_exception_if_token_not_set(settings):
     # When
     with pytest.raises(SSEAuthTokenNotSet):
         get_auth_header()
+
+
+def test_track_sse_usage(
+    mocker: MockerFixture,
+    environment: Environment,
+    django_assert_num_queries: Callable,
+    settings: SettingsWrapper,
+):
+    # Given - two valid logs
+    first_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
+    second_access_log = SSEAccessLogs(datetime.now().isoformat(), environment.api_key)
+
+    # and, another log with invalid api key
+    third_access_log = SSEAccessLogs(datetime.now().isoformat(), "third_key")
+
+    mocker.patch(
+        "sse.sse_service.stream_access_logs",
+        return_value=[first_access_log, second_access_log, third_access_log],
+    )
+    influxdb_bucket = "test_bucket"
+    settings.SSE_INFLUXDB_BUCKET = influxdb_bucket
+
+    mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
+    mocked_influx_point = mocker.patch("sse.tasks.Point")
+
+    # When
+    with django_assert_num_queries(1):
+        update_sse_usage()
+
+    # Then
+    # Point was generated correctly
+    mocked_influx_point.assert_has_calls(
+        [
+            call("sse_call"),
+            call().field("request_count", 2),
+            call().field().tag("organisation_id", environment.project.organisation_id),
+            call().field().tag().tag("project_id", environment.project_id),
+            call().field().tag().tag().tag("environment_id", environment.id),
+            call().field().tag().tag().tag().time(second_access_log.generated_at),
+        ]
+    )
+
+    # Only valid logs were written to InfluxDB
+    write_method = (
+        mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
+    )
+
+    assert write_method.call_count == 1
+    write_method.assert_called_once_with(
+        bucket=influxdb_bucket,
+        record=mocked_influx_point().field().tag().tag().tag().time(),
+    )
