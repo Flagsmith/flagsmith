@@ -11,3 +11,5 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "signup": "100/min",
     "user": "100000/day",
 }
+
+AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"

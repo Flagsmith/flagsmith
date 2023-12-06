@@ -51,6 +51,7 @@ jobs:
           aws_ecs_service_name: flagsmith-task-processor-svc-eu-west-2-792c644
           aws_task_definitions_directory_path: infrastructure/aws/staging
           api_ecr_image_url: ${{ steps.deploy-api.outputs.api_ecr_image_url }}
+          sse_pgp_private_key: ${{ secrets.SSE_PGP_PRIVATE_KEY }}
 
   run-tests:
     runs-on: ubuntu-latest

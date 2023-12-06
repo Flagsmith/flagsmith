@@ -102,6 +102,7 @@ django-axes = "~5.32.0"
 pydantic = "~1.10.9"
 pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
+python-gnupg = "^0.5.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
