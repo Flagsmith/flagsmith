@@ -41,6 +41,7 @@ jobs:
           flagsmith_workflows_revision: v1.2.5
           flagsmith_auth_controller_revision: v0.0.1
           flagsmith_rbac_revision: v0.4.1
+          sse_pgp_private_key: ${{ secrets.SSE_PGP_PRIVATE_KEY }}
 
       - name: Deploy task processor to Staging
         uses: ./.github/actions/task-processor-deploy-ecs
@@ -51,7 +52,6 @@ jobs:
           aws_ecs_service_name: flagsmith-task-processor-svc-eu-west-2-792c644
           aws_task_definitions_directory_path: infrastructure/aws/staging
           api_ecr_image_url: ${{ steps.deploy-api.outputs.api_ecr_image_url }}
-          sse_pgp_private_key: ${{ secrets.SSE_PGP_PRIVATE_KEY }}
 
   run-tests:
     runs-on: ubuntu-latest

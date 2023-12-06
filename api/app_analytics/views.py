@@ -75,8 +75,7 @@ class SDKAnalyticsFlags(GenericAPIView):
             )
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation.delay(args=(request.environment.id, request.data))
-
-        if settings.INFLUXDB_TOKEN:
+        elif settings.INFLUXDB_TOKEN:
             track_feature_evaluation_influxdb(request.environment.id, request.data)
 
         return Response(status=status.HTTP_200_OK)
