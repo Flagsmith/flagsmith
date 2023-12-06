@@ -1212,7 +1212,7 @@ def test_make_user_group_admin_success(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Group users updated: User permission group; group_admin changed: {another_user.email}"
+        == f"Group users updated: {user_permission_group.name}; group_admin changed: {another_user.email}"
     )
 
 
@@ -1297,7 +1297,7 @@ def test_remove_user_as_group_admin_success(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Group users updated: User permission group; group_admin changed: {another_user.email}"
+        == f"Group users updated: {user_permission_group.name}; group_admin changed: {another_user.email}"
     )
 
 
