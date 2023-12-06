@@ -149,7 +149,6 @@ runs:
         cat << EOF > sse_pgp_pkey
         ${{ inputs.sse_pgp_private_key }}
         EOF
-
       shell: bash
 
     - name: Build, tag, and push image to Amazon ECR

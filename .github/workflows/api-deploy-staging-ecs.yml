@@ -3,7 +3,7 @@ name: API Deploy to Staging ECS
 on:
   push:
     branches:
-      - fix_workflow # TEMP
+      - main
     paths:
       - api/**
       - .github/**
