@@ -24,6 +24,9 @@ def index(request):
         )
         return HttpResponse(status=405, content_type="application/json")
 
+    if settings.DISABLE_FLAGSMITH_UI:
+        return HttpResponse(status=404)
+
     template = loader.get_template("webpack/index.html")
     return HttpResponse(template.render(request=request))
 
