@@ -252,9 +252,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.customer_id = None
         self.billing_status = None
         self.payment_method = None
+
         self.save()
 
-        if not getattr(self.organisation, "subscription_information_cache"):
+        if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
         self.organisation.subscription_information_cache.delete()
@@ -268,6 +269,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         If cancellation_date is in the future some aspects are
         reserved for a task after the date has passed.
         """
+        if self.payment_method == CHARGEBEE and update_chargebee:
+            cancel_chargebee_subscription(self.subscription_id)
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
@@ -278,9 +281,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             self.cancellation_date = cancellation_date
             self.billing_status = None
             self.save()
-
-        if self.payment_method == CHARGEBEE and update_chargebee:
-            cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:
