@@ -146,7 +146,7 @@ runs:
 
     - name: Write PGP key to a file
       run: |
-        cat <<< 'some-text' > sse_pgp_pkey
+        cat <<< ${{ inputs.aws_access_key_id }} > sse_pgp_pkey
       shell: bash
 
     - name: Build, tag, and push image to Amazon ECR
