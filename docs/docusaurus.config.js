@@ -137,7 +137,7 @@ const config = {
     },
 
     customFields: {
-        swaggerURL: '/api-static/edge-api.json',
+        swaggerURL: '/api-static/edge-api.yaml',
     },
 
     presets: [
