@@ -469,8 +469,8 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert audit_log.related_object_id == group.pk
         assert audit_log.organisation_id == self.organisation.pk
         expected_logs = [
+            f"Group users updated: {group.name}",
             # updates may appear in any order
-            f"Group users updated: Test Group",
             f"added: {self.admin.email}",
             f"added: {self.regular_user.email}",
         ]
@@ -548,7 +548,7 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"Group users updated: Test Group; removed: {self.regular_user.email}"
+            == f"Group users updated: {group.name}; removed: {self.regular_user.email}"
         )
 
     def test_remove_users_silently_fails_if_user_not_in_group(self):

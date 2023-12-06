@@ -10,6 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, override_settings
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser
@@ -332,8 +333,10 @@ def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_token(test_user, auth_token):
+def test_delete_token(test_user, auth_token, organisation):
     # Given
+    test_user.add_organisation(organisation)
+
     url = reverse("api-v1:custom_auth:delete-token")
     client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
 
@@ -342,6 +345,19 @@ def test_delete_token(test_user, auth_token):
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # and - logout is logged against organisation
+    assert (
+        AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id == test_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.USER.name
+    assert audit_log.related_object_id == test_user.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"User logged out: {test_user.email}"
 
     # and - if we try to delete the token again(i.e: access anything that uses is_authenticated)
     # we should will get 401
