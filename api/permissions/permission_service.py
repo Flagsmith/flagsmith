@@ -124,7 +124,10 @@ def get_permitted_environments_for_user(
     """
 
     if is_user_project_admin(user, project):
-        return project.environments.all()
+        queryset = project.environments.all()
+        if prefetch_metadata:
+            return queryset.prefetch_related("metadata")
+        return queryset
 
     base_filter = get_base_permission_filter(
         user, Environment, permission_key, tag_ids=tag_ids

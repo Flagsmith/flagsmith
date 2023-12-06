@@ -243,6 +243,8 @@ the below variables will be ignored.
 - `FLAGSMITH_DOMAIN`: A custom domain for URLs pointing to your Flagsmith instance in email notifications. Note: if set,
   the domain provided during [initial configuration](#environments-with-no-direct-console-access-eg-heroku-ecs) will be
   ignored.
+- `DISABLE_FLAGSMITH_UI`: Disable the Flagsmith UI which can be rendered by the API containers in a single container
+  environment. Use `True` to disable, defaults to `False`.
 
 #### Security Environment Variables
 
