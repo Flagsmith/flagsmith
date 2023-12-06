@@ -4,7 +4,10 @@ from rest_framework.exceptions import ValidationError
 
 from .constants import MAX_FEATURE_IMPORT_SIZE, OVERWRITE_DESTRUCTIVE, SKIP
 from .models import FeatureExport, FeatureImport
-from .tasks import export_features_for_environment
+from .tasks import (
+    export_features_for_environment,
+    import_features_for_environment,
+)
 
 
 class CreateFeatureExportSerializer(serializers.Serializer):
@@ -48,6 +51,21 @@ class FeatureImportUploadSerializer(serializers.Serializer):
         validators=[validate_feature_import_file_size],
     )
     strategy = serializers.ChoiceField(choices=[SKIP, OVERWRITE_DESTRUCTIVE])
+
+    def save(self, environment_id: int) -> FeatureImport:
+        self.is_valid(raise_exception=True)
+        uploaded_file = self.validated_data["file"]
+        strategy = self.validated_data["strategy"]
+        file_content = uploaded_file.read().decode("utf-8")
+        feature_import = FeatureImport.objects.create(
+            environment_id=environment_id,
+            strategy=strategy,
+            data=file_content,
+        )
+        import_features_for_environment.delay(
+            kwargs={"feature_import_id": feature_import.id}
+        )
+        return feature_import
 
 
 class FeatureImportSerializer(serializers.ModelSerializer):

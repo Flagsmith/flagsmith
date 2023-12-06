@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from environments.models import Environment
 
-from .models import FeatureExport, FeatureImport
+from .models import FeatureExport
 from .permissions import (
     CreateFeatureExportPermissions,
     DownloadFeatureExportPermissions,
@@ -22,7 +22,6 @@ from .serializers import (
     FeatureImportSerializer,
     FeatureImportUploadSerializer,
 )
-from .tasks import import_features_for_environment
 
 
 @swagger_auto_schema(
@@ -42,27 +41,15 @@ def create_feature_export(request: Request) -> Response:
 
 @swagger_auto_schema(
     method="POST",
-    request_body=FeatureImportUploadSerializer,
+    request_body=FeatureImportUploadSerializer(),
     responses={201: FeatureImportSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([FeatureImportPermissions])
 def feature_import(request: Request, environment_id: int) -> Response:
-    serializer = FeatureImportUploadSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    uploaded_file = serializer.validated_data["file"]
-    strategy = serializer.validated_data["strategy"]
-
-    file_content = uploaded_file.read().decode("utf-8")
-    feature_import = FeatureImport.objects.create(
-        environment_id=environment_id,
-        strategy=strategy,
-        data=file_content,
-    )
+    upload_serializer = FeatureImportUploadSerializer(data=request.data)
+    feature_import = upload_serializer.save(environment_id=environment_id)
     serializer = FeatureImportSerializer(feature_import)
-    import_features_for_environment.delay(
-        kwargs={"feature_import_id": feature_import.id}
-    )
     return Response(serializer.data, status=201)
 
 
