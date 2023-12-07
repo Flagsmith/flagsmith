@@ -175,6 +175,7 @@ class FFAdminUserTestCase(TestCase):
             "audit.tasks.create_audit_log_from_historical_record.delay",
             wraps=create_audit_log_from_historical_record.delay,
         ) as mock_create_audit_log:
+            # When
             created_user = FFAdminUser.objects.create(email="test2@example.com")
 
             # Then
@@ -200,24 +201,20 @@ class FFAdminUserTestCase(TestCase):
     @mock.patch("core.models._get_request_user")
     def test_delete_user_audit_log(self, mock_get_request_user):
         # Given
-        mock_get_request_user.return_value = self.user
+        mock_get_request_user.return_value = None
         created_user = FFAdminUser.objects.create(email="test2@example.com")
         created_user.add_organisation(self.organisation)
         another_organisation = Organisation.objects.create(name="Another Organisation")
         created_user.add_organisation(another_organisation)
-
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.USER.name
-            ).count()
-            == 2
-        )
+        created_user_pk = created_user.pk
+        # delete request comes from admin user
+        mock_get_request_user.return_value = self.user
 
         with mock.patch(
             "audit.tasks.create_audit_log_from_historical_record.delay",
             wraps=create_audit_log_from_historical_record.delay,
         ) as mock_create_audit_log:
-            deleted_user_pk = created_user.pk
+            # When
             created_user.delete()
 
             # Then
@@ -238,7 +235,7 @@ class FFAdminUserTestCase(TestCase):
             AuditLog.objects.filter(
                 related_object_type=RelatedObjectType.USER.name
             ).count()
-            == 4
+            == 2
         )
         # cross-organisation leak: on delete, the user is removed from all organisations in one operation,
         # and all organisations get the same log message
@@ -253,14 +250,77 @@ class FFAdminUserTestCase(TestCase):
         assert audit_log
         assert audit_log.author_id == self.user.pk
         assert audit_log.related_object_type == RelatedObjectType.USER.name
-        assert audit_log.related_object_id == deleted_user_pk
+        assert audit_log.related_object_id == created_user_pk
         assert audit_log.organisation_id == another_organisation.pk
         assert all(expected_log in audit_log.log for expected_log in expected_logs)
         audit_log = audit_logs[1]
         assert audit_log
         assert audit_log.author_id == self.user.pk
         assert audit_log.related_object_type == RelatedObjectType.USER.name
-        assert audit_log.related_object_id == deleted_user_pk
+        assert audit_log.related_object_id == created_user_pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+
+    @mock.patch("core.models._get_request_user")
+    def test_delete_self_audit_log(self, mock_get_request_user):
+        # Given
+        mock_get_request_user.return_value = None
+        created_user = FFAdminUser.objects.create(email="test2@example.com")
+        created_user.add_organisation(self.organisation)
+        another_organisation = Organisation.objects.create(name="Another Organisation")
+        created_user.add_organisation(another_organisation)
+        created_user_pk = created_user.pk
+        # delete request comes from self
+        mock_get_request_user.return_value = created_user
+
+        with mock.patch(
+            "audit.tasks.create_audit_log_from_historical_record.delay",
+            wraps=create_audit_log_from_historical_record.delay,
+        ) as mock_create_audit_log:
+            # When
+            created_user.delete()
+
+            # Then
+            # audit log called twice for organisation removal and once for delete
+            assert mock_create_audit_log.call_count == 3
+            mock_create_audit_log.assert_called_with(
+                kwargs={
+                    "history_instance_id": mock.ANY,
+                    "history_user_id": created_user_pk,
+                    "history_record_class_path": "users.models.HistoricalFFAdminUser",
+                },
+                delay_until=None,
+            )
+
+        # check that organisation removal is logged for each organisation
+        # no audit log for delete user because no organisation associated at that moment
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.USER.name
+            ).count()
+            == 2
+        )
+        # cross-organisation leak: on delete, the user is removed from all organisations in one operation,
+        # and all organisations get the same log message
+        expected_logs = [
+            "User organisations updated: test2@example.com",
+            # updates may appear in any order
+            "removed: Test Organisation",
+            "removed: Another Organisation",
+        ]
+        audit_logs = AuditLog.objects.all()[0:2]
+        audit_log = audit_logs[0]
+        assert audit_log
+        assert audit_log.author_id is None
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == created_user_pk
+        assert audit_log.organisation_id == another_organisation.pk
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+        audit_log = audit_logs[1]
+        assert audit_log
+        assert audit_log.author_id is None
+        assert audit_log.related_object_type == RelatedObjectType.USER.name
+        assert audit_log.related_object_id == created_user_pk
         assert audit_log.organisation_id == self.organisation.pk
         assert all(expected_log in audit_log.log for expected_log in expected_logs)
 
@@ -272,6 +332,7 @@ class FFAdminUserTestCase(TestCase):
         another_organisation = Organisation.objects.create(name="Another Organisation")
         self.user.add_organisation(another_organisation)
 
+        # When
         self.user.username = "test_username"
         self.user.email = "test-changed@example.com"
         self.user.first_name = "Test First"
@@ -317,6 +378,8 @@ class FFAdminUserTestCase(TestCase):
     def test_update_user_organisations_audit_log(self, mock_get_request_user):
         # Given
         mock_get_request_user.return_value = self.user
+
+        # When
         self.user.add_organisation(self.organisation)
 
         # Then
@@ -340,6 +403,8 @@ class FFAdminUserTestCase(TestCase):
 
         # Given
         another_organisation = Organisation.objects.create(name="Another Organisation")
+
+        # When
         self.user.add_organisation(another_organisation)
 
         # Then
@@ -361,7 +426,7 @@ class FFAdminUserTestCase(TestCase):
             == f"User organisations updated: {self.user.email}; added: Another Organisation"
         )
 
-        # Given
+        # When
         self.user.remove_organisation(self.organisation)
 
         # Then
