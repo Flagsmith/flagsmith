@@ -31,6 +31,7 @@ import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
 import FeatureValue from 'components/FeatureValue'
+import FlagOwnerGroups from 'components/FlagOwnerGroups'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -518,12 +519,20 @@ const CreateFlag = class extends Component {
           >
             {({ permission: projectAdmin }) =>
               projectAdmin && (
-                <FormGroup className='mb-5 setting'>
-                  <FlagOwners
-                    projectId={this.props.projectId}
-                    id={projectFlag.id}
-                  />
-                </FormGroup>
+                <>
+                  <FormGroup className='mb-5 setting'>
+                    <FlagOwners
+                      projectId={this.props.projectId}
+                      id={projectFlag.id}
+                    />
+                  </FormGroup>
+                  <FormGroup className='mb-5 setting'>
+                    <FlagOwnerGroups
+                      projectId={this.props.projectId}
+                      id={projectFlag.id}
+                    />
+                  </FormGroup>
+                </>
               )
             }
           </Permission>
