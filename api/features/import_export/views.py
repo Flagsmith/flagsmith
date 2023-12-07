@@ -48,8 +48,9 @@ def create_feature_export(request: Request) -> Response:
 @permission_classes([FeatureImportPermissions])
 def feature_import(request: Request, environment_id: int) -> Response:
     upload_serializer = FeatureImportUploadSerializer(data=request.data)
-    feature_import = upload_serializer.save(environment_id=environment_id)
-    serializer = FeatureImportSerializer(feature_import)
+    upload_serializer.is_valid(raise_exception=True)
+    _feature_import = upload_serializer.save(environment_id=environment_id)
+    serializer = FeatureImportSerializer(instance=_feature_import)
     return Response(serializer.data, status=201)
 
 

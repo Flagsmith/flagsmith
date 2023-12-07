@@ -53,7 +53,6 @@ class FeatureImportUploadSerializer(serializers.Serializer):
     strategy = serializers.ChoiceField(choices=[SKIP, OVERWRITE_DESTRUCTIVE])
 
     def save(self, environment_id: int) -> FeatureImport:
-        self.is_valid(raise_exception=True)
         uploaded_file = self.validated_data["file"]
         strategy = self.validated_data["strategy"]
         file_content = uploaded_file.read().decode("utf-8")
