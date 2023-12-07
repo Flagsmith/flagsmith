@@ -920,6 +920,8 @@ class FeatureStateValue(
     related_object_type = RelatedObjectType.FEATURE_STATE
     history_record_class_path = "features.models.HistoricalFeatureStateValue"
 
+    # After a FeatureState is created, a FeatureStateValue is
+    # automatically created in a post create hook.
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )

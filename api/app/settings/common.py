@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.import_export",
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",

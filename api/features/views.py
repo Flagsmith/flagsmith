@@ -736,7 +736,7 @@ def organisation_has_got_feature(request, organisation):
 @swagger_auto_schema(
     method="POST",
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])

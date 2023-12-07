@@ -31,6 +31,13 @@ class MultivariateFeatureOption(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
+    """
+    This class holds the *value* for a given multivariate feature
+    option. This value is the same for every environment, but the
+    percent allocation is set in MultivariateFeatureStateValue
+    which varies per-environment.
+    """
+
     history_record_class_path = (
         "features.multivariate.models.HistoricalMultivariateFeatureOption"
     )
