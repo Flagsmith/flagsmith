@@ -25,7 +25,6 @@ We have a number of example deployments across different providers and orchestra
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/36mGw8?referralCode=DGxv1S)
 
-
 ![Fly.io](/img/logos/fly.io.svg)
 
 We're big fans of [Fly.io](https://Fly.io)! You can deploy to fly.io really easily:
