@@ -49,7 +49,7 @@ class ButterBar extends Component {
             <Link to='/organisation-settings'>upgrade your plan</Link>.
           </div>
         )}
-        {Utils.getFlagsmithHasFeature('show_dunning_alert') &&
+        {Utils.getFlagsmithHasFeature('show_dunning_banner') &&
           billingStatus === 'DUNNING' && (
             <div className='alert-butter-bar'>
               <span className='icon-alert mr-2'>
