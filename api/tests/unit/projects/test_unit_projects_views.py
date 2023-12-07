@@ -9,6 +9,7 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
 from features.models import Feature, FeatureSegment
@@ -56,14 +57,48 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     assert response.json()["use_edge_identities"] is False
 
     # and user is admin
-    assert UserProjectPermission.objects.filter(
-        user=admin_user, project__id=response.json()["id"], admin=True
+    assert (
+        permission := UserProjectPermission.objects.get(
+            user=admin_user, project__id=response.json()["id"], admin=True
+        )
     )
 
     # and they can get the project
     url = reverse("api-v1:projects:project-detail", args=[response.json()["id"]])
     get_project_response = admin_client.get(url)
     assert get_project_response.status_code == status.HTTP_200_OK
+
+    # and project/permission create is audited
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.PROJECT.name
+        ).count()
+        == 1
+    )
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.GRANT.name
+        ).count()
+        == 1
+    )
+    audit_logs = AuditLog.objects.all()[0:2]
+    audit_log = audit_logs[0]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+    assert audit_log.related_object_id == permission.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert (
+        audit_log.log
+        == f"New User Project Grant created: {admin_user.email} / {project_name}"
+    )
+    audit_log = audit_logs[1]
+    assert audit_log
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
+    assert audit_log.related_object_id == Project.objects.get(name=project_name).pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"New Project created: {project_name}"
 
 
 def test_should_create_a_project_with_admin_master_api_key_client(
@@ -87,12 +122,32 @@ def test_should_create_a_project_with_admin_master_api_key_client(
     )
     assert response.json()["use_edge_identities"] is False
 
+    # and project create is audited (with no author)
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.PROJECT.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert audit_log.author_id is None
+    assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
+    assert audit_log.related_object_id == Project.objects.get(name=project_name).pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"New Project created: {project_name}"
+
 
 @pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    "client, is_admin_master_api_key_client",
+    [
+        (lazy_fixture("admin_master_api_key_client"), True),
+        (lazy_fixture("admin_client"), False),
+    ],
 )
-def test_can_update_project(client, project, organisation):
+def test_can_update_project(
+    client, project, organisation, admin_user, is_admin_master_api_key_client
+):
     # Given
     new_name = "New project name"
     data = {"name": new_name, "organisation": organisation.id}
@@ -104,6 +159,23 @@ def test_can_update_project(client, project, organisation):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == new_name
+
+    # and project update is audited (with no author if master API key)
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.PROJECT.name
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.first()
+    assert audit_log
+    assert (
+        audit_log.author_id is None if is_admin_master_api_key_client else admin_user.pk
+    )
+    assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
+    assert audit_log.related_object_id == project.pk
+    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.log == f"Project name updated: {new_name}"
 
 
 @pytest.mark.parametrize(
@@ -280,11 +352,11 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # create a project user
-        user = FFAdminUser.objects.create(email="user@test.com")
-        user.add_organisation(self.organisation, OrganisationRole.USER)
+        self.user = FFAdminUser.objects.create(email="user@test.com")
+        self.user.add_organisation(self.organisation, OrganisationRole.USER)
         read_permission = ProjectPermissionModel.objects.get(key=VIEW_PROJECT)
         self.user_project_permission = UserProjectPermission.objects.create(
-            user=user, project=self.project
+            user=self.user, project=self.project
         )
         self.user_project_permission.permissions.set([read_permission])
 
@@ -336,6 +408,38 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         )
         assert user_project_permission.permissions.count() == 2
 
+        # and permission create is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 2
+        )
+        audit_logs = AuditLog.objects.all()[0:2]
+        audit_log = audit_logs[0]
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == user_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        expected_logs = [
+            f"User Project Grant permissions updated: {new_user.email} / {self.project.name}",
+            # updates may appear in any order
+            f"added: {CREATE_ENVIRONMENT}",
+            f"added: {VIEW_PROJECT}",
+        ]
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+        audit_log = audit_logs[1]
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == user_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"New User Project Grant created: {new_user.email} / {self.project.name}"
+        )
+
     def test_user_can_update_user_permission_for_a_project(self):
         # Given
         data = {"permissions": [CREATE_FEATURE]}
@@ -353,6 +457,25 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
             "key", flat=True
         )
 
+        # and permission update is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 2
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == self.user_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User Project Grant permissions updated: {self.user.email} / {self.project.name}; "
+            f"added: {CREATE_FEATURE}"
+        )
+
     def test_user_can_delete_user_permission_for_a_project(self):
         # Given - set up data
 
@@ -364,6 +487,24 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert not UserProjectPermission.objects.filter(
             id=self.user_project_permission.id
         ).exists()
+
+        # and permission delete is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == self.user_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"User Project Grant deleted: {self.user.email} / {self.project.name}"
+        )
 
 
 @pytest.mark.django_db
@@ -448,6 +589,38 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         )
         assert user_group_project_permission.permissions.count() == 2
 
+        # and permission create is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 2
+        )
+        audit_logs = AuditLog.objects.all()[0:2]
+        audit_log = audit_logs[0]
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == user_group_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        expected_logs = [
+            f"Group Project Grant permissions updated: {new_group.name} / {self.project.name}",
+            # updates may appear in any order
+            f"added: {CREATE_ENVIRONMENT}",
+            f"added: {VIEW_PROJECT}",
+        ]
+        assert all(expected_log in audit_log.log for expected_log in expected_logs)
+        audit_log = audit_logs[1]
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == user_group_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"New Group Project Grant created: {new_group.name} / {self.project.name}"
+        )
+
     def test_user_can_update_user_group_permission_for_a_project(self):
         # Given
         data = {"permissions": [CREATE_FEATURE]}
@@ -468,6 +641,25 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
             )
         )
 
+        # and permission update is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 2
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == self.user_group_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"Group Project Grant permissions updated: {self.user_permission_group.name} / {self.project.name}; "
+            f"added: {CREATE_FEATURE}"
+        )
+
     def test_user_can_delete_user_permission_for_a_project(self):
         # Given - set up data
 
@@ -479,6 +671,24 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert not UserPermissionGroupProjectPermission.objects.filter(
             id=self.user_group_project_permission.id
         ).exists()
+
+        # and permission delete is audited
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.GRANT.name
+            ).count()
+            == 1
+        )
+        audit_log = AuditLog.objects.first()
+        assert audit_log
+        assert audit_log.author_id == self.org_admin.pk
+        assert audit_log.related_object_type == RelatedObjectType.GRANT.name
+        assert audit_log.related_object_id == self.user_group_project_permission.pk
+        assert audit_log.organisation_id == self.organisation.pk
+        assert (
+            audit_log.log
+            == f"Group Project Grant deleted: {self.user_permission_group.name} / {self.project.name}"
+        )
 
 
 def test_project_migrate_to_edge_calls_trigger_migration(

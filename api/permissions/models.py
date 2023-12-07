@@ -31,10 +31,15 @@ class AbstractBasePermissionModel(
         default_messages=True,
     ),
 ):
+    permissions = models.ManyToManyField(PermissionModel, blank=True)
+
     class Meta:
         abstract = True
 
-    permissions = models.ManyToManyField(PermissionModel, blank=True)
+    grant_type: str
+
+    def get_audit_log_model_name(self, history_instance) -> str:
+        return f"{self.grant_type} {super().get_audit_log_model_name(history_instance)}"
 
     def add_permission(self, permission_key: str):
         permission = PermissionModel.objects.get(key=permission_key)
