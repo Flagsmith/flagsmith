@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import firstpromoter from 'project/firstPromoter'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -742,6 +743,7 @@ module.exports = (props) => (
         site: Project.chargebee.site,
       })
       Chargebee.registerAgain()
+      firstpromoter()
       Chargebee.getInstance().setCheckoutCallbacks(() => ({
         success: (hostedPageId) => {
           AppActions.updateSubscription(hostedPageId)
