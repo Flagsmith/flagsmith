@@ -13,13 +13,6 @@ export const hasProtectedTag = (
     ).data || []
   return !!projectFlag.tags?.find((id) => {
     const tag = tags.find((tag) => tag.id === id)
-    if (tag) {
-      const label = tag.label.toLowerCase().replace(/[ _]/g, '')
-      return (
-        label === 'protected' ||
-        label === 'donotdelete' ||
-        label === 'permanent'
-      )
-    }
+    return tag?.is_permanent
   })
 }
