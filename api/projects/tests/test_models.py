@@ -169,7 +169,10 @@ def test_create_update_delete_project_audit_log(mocker, organisation, admin_user
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"Grant deleted: {admin_user.email} / {project.name}"
+    assert (
+        audit_log.log
+        == f"User Project Grant deleted: {admin_user.email} / {project.name}"
+    )
 
 
 @pytest.mark.django_db()
@@ -197,7 +200,10 @@ def test_create_update_delete_user_project_permissions_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm.pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"New Grant created: {admin_user.email} / {project.name}"
+    assert (
+        audit_log.log
+        == f"New User Project Grant created: {admin_user.email} / {project.name}"
+    )
 
     # When
     perm.add_permission(VIEW_PROJECT)
@@ -219,7 +225,8 @@ def test_create_update_delete_user_project_permissions_audit_log(
     assert audit_log.related_object_id == perm.pk
     assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_log.log == f"Grant admin set false: {admin_user.email} / {project.name}"
+        audit_log.log
+        == f"User Project Grant admin set false: {admin_user.email} / {project.name}"
     )
 
     # When
@@ -241,7 +248,7 @@ def test_create_update_delete_user_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {project.name}; added: {MANAGE_SEGMENTS}"
+        == f"User Project Grant permissions updated: {admin_user.email} / {project.name}; added: {MANAGE_SEGMENTS}"
     )
     audit_log = audit_logs[1]
     assert audit_log
@@ -251,7 +258,7 @@ def test_create_update_delete_user_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {project.name}; removed: {CREATE_FEATURE}"
+        == f"User Project Grant permissions updated: {admin_user.email} / {project.name}; removed: {CREATE_FEATURE}"
     )
 
     # When
@@ -271,7 +278,10 @@ def test_create_update_delete_user_project_permissions_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"Grant deleted: {admin_user.email} / {project.name}"
+    assert (
+        audit_log.log
+        == f"User Project Grant deleted: {admin_user.email} / {project.name}"
+    )
 
 
 @pytest.mark.django_db()
@@ -301,7 +311,7 @@ def test_create_update_delete_group_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"New Grant created: {user_permission_group.name} / {project.name}"
+        == f"New Group Project Grant created: {user_permission_group.name} / {project.name}"
     )
 
     # When
@@ -325,7 +335,7 @@ def test_create_update_delete_group_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant admin set false: {user_permission_group.name} / {project.name}"
+        == f"Group Project Grant admin set false: {user_permission_group.name} / {project.name}"
     )
 
     # When
@@ -347,7 +357,8 @@ def test_create_update_delete_group_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {project.name}; added: {MANAGE_SEGMENTS}"
+        == f"Group Project Grant permissions updated: {user_permission_group.name} / {project.name}; "
+        f"added: {MANAGE_SEGMENTS}"
     )
     audit_log = audit_logs[1]
     assert audit_log
@@ -357,7 +368,8 @@ def test_create_update_delete_group_project_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {project.name}; removed: {CREATE_FEATURE}"
+        == f"Group Project Grant permissions updated: {user_permission_group.name} / {project.name}; "
+        f"removed: {CREATE_FEATURE}"
     )
 
     # When
@@ -378,5 +390,6 @@ def test_create_update_delete_group_project_permissions_audit_log(
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_log.log == f"Grant deleted: {user_permission_group.name} / {project.name}"
+        audit_log.log
+        == f"Group Project Grant deleted: {user_permission_group.name} / {project.name}"
     )

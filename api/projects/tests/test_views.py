@@ -87,7 +87,10 @@ def test_should_create_a_project(settings, admin_user, admin_client, organisatio
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == permission.pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"New Grant created: {admin_user.email} / {project_name}"
+    assert (
+        audit_log.log
+        == f"New User Project Grant created: {admin_user.email} / {project_name}"
+    )
     audit_log = audit_logs[1]
     assert audit_log
     assert audit_log.author_id == admin_user.pk
@@ -419,7 +422,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.related_object_id == user_project_permission.pk
         assert audit_log.organisation_id == self.organisation.pk
         expected_logs = [
-            f"Grant permissions updated: {new_user.email} / {self.project.name}",
+            f"User Project Grant permissions updated: {new_user.email} / {self.project.name}",
             # updates may appear in any order
             f"added: {CREATE_ENVIRONMENT}",
             f"added: {VIEW_PROJECT}",
@@ -433,7 +436,7 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"New Grant created: {new_user.email} / {self.project.name}"
+            == f"New User Project Grant created: {new_user.email} / {self.project.name}"
         )
 
     def test_user_can_update_user_permission_for_a_project(self):
@@ -468,7 +471,8 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"Grant permissions updated: {self.user.email} / {self.project.name}; added: {CREATE_FEATURE}"
+            == f"User Project Grant permissions updated: {self.user.email} / {self.project.name}; "
+            f"added: {CREATE_FEATURE}"
         )
 
     def test_user_can_delete_user_permission_for_a_project(self):
@@ -497,7 +501,8 @@ class UserProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.related_object_id == self.user_project_permission.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert (
-            audit_log.log == f"Grant deleted: {self.user.email} / {self.project.name}"
+            audit_log.log
+            == f"User Project Grant deleted: {self.user.email} / {self.project.name}"
         )
 
 
@@ -598,7 +603,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.related_object_id == user_group_project_permission.pk
         assert audit_log.organisation_id == self.organisation.pk
         expected_logs = [
-            f"Grant permissions updated: {new_group.name} / {self.project.name}",
+            f"Group Project Grant permissions updated: {new_group.name} / {self.project.name}",
             # updates may appear in any order
             f"added: {CREATE_ENVIRONMENT}",
             f"added: {VIEW_PROJECT}",
@@ -612,7 +617,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"New Grant created: {new_group.name} / {self.project.name}"
+            == f"New Group Project Grant created: {new_group.name} / {self.project.name}"
         )
 
     def test_user_can_update_user_group_permission_for_a_project(self):
@@ -650,7 +655,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"Grant permissions updated: {self.user_permission_group.name} / {self.project.name}; "
+            == f"Group Project Grant permissions updated: {self.user_permission_group.name} / {self.project.name}; "
             f"added: {CREATE_FEATURE}"
         )
 
@@ -681,7 +686,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert audit_log.organisation_id == self.organisation.pk
         assert (
             audit_log.log
-            == f"Grant deleted: {self.user_permission_group.name} / {self.project.name}"
+            == f"Group Project Grant deleted: {self.user_permission_group.name} / {self.project.name}"
         )
 
 

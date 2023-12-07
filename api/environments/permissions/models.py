@@ -31,6 +31,8 @@ class UserEnvironmentPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "User Environment"
+
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.environment.name}"
 
@@ -56,6 +58,8 @@ class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
                 name="unique_group_environment_permission",
             )
         ]
+
+    grant_type = "Group Environment"
 
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.environment.name}"

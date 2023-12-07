@@ -494,7 +494,10 @@ def test_create_update_delete_environment_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"Grant deleted: {admin_user.email} / {environment.name}"
+    assert (
+        audit_log.log
+        == f"User Environment Grant deleted: {admin_user.email} / {environment.name}"
+    )
 
 
 @pytest.mark.django_db()
@@ -523,7 +526,8 @@ def test_create_update_delete_user_environment_permissions_audit_log(
     assert audit_log.related_object_id == perm.pk
     assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_log.log == f"New Grant created: {admin_user.email} / {environment.name}"
+        audit_log.log
+        == f"New User Environment Grant created: {admin_user.email} / {environment.name}"
     )
 
     # When
@@ -547,7 +551,7 @@ def test_create_update_delete_user_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant admin set false: {admin_user.email} / {environment.name}"
+        == f"User Environment Grant admin set false: {admin_user.email} / {environment.name}"
     )
 
     # When
@@ -569,7 +573,8 @@ def test_create_update_delete_user_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {environment.name}; added: {MANAGE_SEGMENTS}"
+        == f"User Environment Grant permissions updated: {admin_user.email} / {environment.name}; "
+        f"added: {MANAGE_SEGMENTS}"
     )
     audit_log = audit_logs[1]
     assert audit_log
@@ -579,7 +584,8 @@ def test_create_update_delete_user_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {environment.name}; removed: {CREATE_FEATURE}"
+        == f"User Environment Grant permissions updated: {admin_user.email} / {environment.name}; "
+        f"removed: {CREATE_FEATURE}"
     )
 
     # When
@@ -599,7 +605,10 @@ def test_create_update_delete_user_environment_permissions_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"Grant deleted: {admin_user.email} / {environment.name}"
+    assert (
+        audit_log.log
+        == f"User Environment Grant deleted: {admin_user.email} / {environment.name}"
+    )
 
 
 @pytest.mark.django_db()
@@ -629,7 +638,7 @@ def test_create_update_delete_group_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"New Grant created: {user_permission_group.name} / {environment.name}"
+        == f"New Group Environment Grant created: {user_permission_group.name} / {environment.name}"
     )
 
     # When
@@ -653,7 +662,7 @@ def test_create_update_delete_group_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant admin set false: {user_permission_group.name} / {environment.name}"
+        == f"Group Environment Grant admin set false: {user_permission_group.name} / {environment.name}"
     )
 
     # When
@@ -675,7 +684,8 @@ def test_create_update_delete_group_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {environment.name}; added: {MANAGE_SEGMENTS}"
+        == f"Group Environment Grant permissions updated: {user_permission_group.name} / {environment.name}; "
+        f"added: {MANAGE_SEGMENTS}"
     )
     audit_log = audit_logs[1]
     assert audit_log
@@ -685,7 +695,8 @@ def test_create_update_delete_group_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {environment.name}; removed: {CREATE_FEATURE}"
+        == f"Group Environment Grant permissions updated: {user_permission_group.name} / {environment.name}; "
+        f"removed: {CREATE_FEATURE}"
     )
 
     # When
@@ -707,5 +718,5 @@ def test_create_update_delete_group_environment_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant deleted: {user_permission_group.name} / {environment.name}"
+        == f"Group Environment Grant deleted: {user_permission_group.name} / {environment.name}"
     )

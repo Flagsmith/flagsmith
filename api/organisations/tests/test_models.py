@@ -430,7 +430,8 @@ def test_create_update_delete_user_organisation_permissions_audit_log(
     assert audit_log.related_object_id == perm.pk
     assert audit_log.organisation_id == organisation.pk
     assert (
-        audit_log.log == f"New Grant created: {admin_user.email} / {organisation.name}"
+        audit_log.log
+        == f"New User Organisation Grant created: {admin_user.email} / {organisation.name}"
     )
 
     # When
@@ -463,7 +464,8 @@ def test_create_update_delete_user_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {organisation.name}; added: {CREATE_PROJECT}"
+        == f"User Organisation Grant permissions updated: {admin_user.email} / {organisation.name}; "
+        f"added: {CREATE_PROJECT}"
     )
     audit_log = audit_logs[1]
     assert audit_log
@@ -473,7 +475,8 @@ def test_create_update_delete_user_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {admin_user.email} / {organisation.name}; removed: {MANAGE_USER_GROUPS}"
+        == f"User Organisation Grant permissions updated: {admin_user.email} / {organisation.name}; "
+        f"removed: {MANAGE_USER_GROUPS}"
     )
 
     # When
@@ -493,7 +496,10 @@ def test_create_update_delete_user_organisation_permissions_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.GRANT.name
     assert audit_log.related_object_id == perm_pk
     assert audit_log.organisation_id == organisation.pk
-    assert audit_log.log == f"Grant deleted: {admin_user.email} / {organisation.name}"
+    assert (
+        audit_log.log
+        == f"User Organisation Grant deleted: {admin_user.email} / {organisation.name}"
+    )
 
 
 @pytest.mark.django_db()
@@ -523,7 +529,7 @@ def test_create_update_delete_group_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"New Grant created: {user_permission_group.name} / {organisation.name}"
+        == f"New Group Organisation Grant created: {user_permission_group.name} / {organisation.name}"
     )
 
     # When
@@ -556,7 +562,7 @@ def test_create_update_delete_group_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
+        == f"Group Organisation Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
         f"added: {CREATE_PROJECT}"
     )
     audit_log = audit_logs[1]
@@ -567,7 +573,7 @@ def test_create_update_delete_group_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
+        == f"Group Organisation Grant permissions updated: {user_permission_group.name} / {organisation.name}; "
         f"removed: {MANAGE_USER_GROUPS}"
     )
 
@@ -590,5 +596,5 @@ def test_create_update_delete_group_organisation_permissions_audit_log(
     assert audit_log.organisation_id == organisation.pk
     assert (
         audit_log.log
-        == f"Grant deleted: {user_permission_group.name} / {organisation.name}"
+        == f"Group Organisation Grant deleted: {user_permission_group.name} / {organisation.name}"
     )

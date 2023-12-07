@@ -524,7 +524,8 @@ def test_should_create_environments(
         assert audit_log.related_object_id == permission.pk
         assert audit_log.organisation_id == organisation.pk
         assert (
-            audit_log.log == f"New Grant created: {admin_user.email} / Test environment"
+            audit_log.log
+            == f"New User Environment Grant created: {admin_user.email} / Test environment"
         )
 
 

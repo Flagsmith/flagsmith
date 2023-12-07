@@ -23,6 +23,8 @@ class UserOrganisationPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "User Organisation"
+
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.organisation.name}"
 
@@ -45,6 +47,8 @@ class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
                 name="unique_group_organisation_permission",
             )
         ]
+
+    grant_type = "Group Organisation"
 
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.organisation.name}"

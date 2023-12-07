@@ -221,6 +221,8 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
             )
         ]
 
+    grant_type = "Group Project"
+
     def get_audit_log_identity(self) -> str:
         return f"{self.group.name} / {self.project.name}"
 
@@ -241,6 +243,8 @@ class UserProjectPermission(AbstractBasePermissionModel):
                 fields=["user", "project"], name="unique_user_project_permission"
             )
         ]
+
+    grant_type = "User Project"
 
     def get_audit_log_identity(self) -> str:
         return f"{self.user.email} / {self.project.name}"
