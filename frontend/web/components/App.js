@@ -478,7 +478,12 @@ const App = class extends Component {
                   )}
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
-                      <ButterBar />
+                      <ButterBar
+                        billingStatus={
+                          AccountStore.getOrganisation()?.subscription
+                            .billing_status
+                        }
+                      />
                       {projectNotLoaded ? (
                         <div className='text-center'>
                           <Loader />
