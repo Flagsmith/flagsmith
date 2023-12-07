@@ -492,14 +492,12 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    {Utils.getFlagsmithHasFeature('import_project') && (
-                      <TabItem data-test='js-import-page' tabLabel='Import'>
-                        <ImportPage
-                          projectId={this.props.match.params.projectId}
-                          projectName={project.name}
-                        />
-                      </TabItem>
-                    )}
+                    <TabItem data-test='js-import-page' tabLabel='Import'>
+                      <ImportPage
+                        projectId={this.props.match.params.projectId}
+                        projectName={project.name}
+                      />
+                    </TabItem>
                   </Tabs>
                 }
               </div>
