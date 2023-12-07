@@ -25,7 +25,6 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import OrganisationStore from 'common/stores/organisation-store'
 
 const widths = [450, 150, 100]
 const rolesWidths = [250, 600, 100]

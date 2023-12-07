@@ -50,7 +50,7 @@ import {
   useDeleteRolePermissionGroupMutation,
 } from 'common/services/useRolePermissionGroup'
 
-import { useGetUserWithRolesQuery, useDeleteUserWithRolesMutation } from 'common/services/useUserWithrole'
+import { useGetUserWithRolesQuery, useDeleteUserWithRolesMutation } from 'common/services/useUserWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
