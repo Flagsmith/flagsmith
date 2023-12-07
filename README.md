@@ -56,13 +56,6 @@ The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. 
 - [Kubernetes](https://github.com/Flagsmith/flagsmith-charts)
 - [Redhat OpenShift](https://operatorhub.io/operator/flagsmith)
 
-### Flagsmith Self-Hosted
-Deploy a self-hosted version in one-click with [Dome](https://app.trydome.io/signup?package=flagsmith):
-
-[![Deploy to Dome](https://trydome.io/button.svg)](https://app.trydome.io/signup?package=flagsmith)
-
-
-
 We also have options for deploying to AWS, GCP, Azure and On-Premise. If you need help getting up and running, please
 [get in touch!](mailto:support@flagsmith.com)
 
