@@ -50,7 +50,7 @@ import {
   useDeleteRolePermissionGroupMutation,
 } from 'common/services/useRolePermissionGroup'
 
-import { useGetUserWithRolesQuery } from 'common/services/useUserWithrole'
+import { useGetUserWithRolesQuery, useDeleteUserWithRolesMutation } from 'common/services/useUserWithrole'
 
 import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
@@ -72,6 +72,7 @@ type EditPermissionModalType = {
   role?: Role
   permissionChanged: () => void
   editPermissionsFromSettings?: boolean
+  isEditUserPermission?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -101,6 +102,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       envId,
       group,
       id,
+      isEditUserPermission,
       isGroup,
       level,
       name,
@@ -149,9 +151,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       )
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
-        const resultArray = userWithRolesData?.roles?.map((userRole) => ({
-          role: userRole.role,
-          user_role_id: userRole.id,
+        const resultArray = userWithRolesData?.results?.map((userRole) => ({
+          role: userRole.id,
+          user_role_id: user?.id,
         }))
         setRolesSelected(resultArray)
       }
@@ -187,7 +189,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     ] = useCreateRolesPermissionUsersMutation()
 
     const [deleteRolePermissionUser] = useDeleteRolesPermissionUsersMutation()
-
+    const [deleteUserWithRoles] = useDeleteUserWithRolesMutation()
     const [
       createRolePermissionGroup,
       { data: groupsData, isSuccess: groupAdded },
@@ -479,11 +481,19 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       const roleSelected = rolesAdded.find((item) => item.id === roleId)
       if (level === 'organisation') {
         if (user) {
-          deleteRolePermissionUser({
-            organisation_id: id,
-            role_id: roleId,
-            user_id: roleSelected.user_role_id,
-          })
+          if (isEditUserPermission) {
+            deleteUserWithRoles({
+              org_id: id,
+              role_id: roleId,
+              user_id: user?.id,
+            })
+          } else {
+            deleteRolePermissionUser({
+              organisation_id: id,
+              role_id: roleId,
+              user_id: roleSelected.user_role_id,
+            })
+          }
         }
         if (group) {
           deleteRolePermissionGroup({

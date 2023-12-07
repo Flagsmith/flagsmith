@@ -234,9 +234,7 @@ const OrganisationSettingsPage = class extends Component {
         onSave={() => {
           AppActions.getOrganisation(AccountStore.getOrganisation().id)
         }}
-        onRemoveOrAddRole={()=>{
-          AppActions.getOrganisation(AccountStore.getOrganisation().id, true)
-        }}
+        isEditUserPermission
         level='organisation'
         roles={roles}
         user={user}

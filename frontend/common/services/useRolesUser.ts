@@ -10,7 +10,10 @@ export const rolesUserService = service
         Res['rolesUsers'],
         Req['createRolesPermissionUsers']
       >({
-        invalidatesTags: [{ type: 'User-role' }, { id: 'LIST', type: 'RolesUser' }],
+        invalidatesTags: [
+          { type: 'User-role' },
+          { id: 'LIST', type: 'RolesUser' },
+        ],
         query: (query: Req['createRolesPermissionUsers']) => ({
           body: query.data,
           method: 'POST',
@@ -21,7 +24,10 @@ export const rolesUserService = service
         Res['rolesUsers'],
         Req['deleteRolesPermissionUsers']
       >({
-        invalidatesTags: [{ type: 'User-role' }, { id: 'LIST', type: 'RolesUser' }],
+        invalidatesTags: [
+          { type: 'User-role' },
+          { id: 'LIST', type: 'RolesUser' },
+        ],
         query: (query: Req['deleteRolesPermissionUsers']) => ({
           body: query,
           method: 'DELETE',

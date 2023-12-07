@@ -12,12 +12,22 @@ export const userWithRolesService = service
       >({
         invalidatesTags: [{ type: 'User-role' }],
         providesTags: (result, error, userId) => {
-          const tags = result ? [{ type: 'User-role', id: userId }] : []
+          const tags = result ? [{ id: userId, type: 'User-role' }] : []
           return tags
         },
         query: (query: Req['getUserWithRoles']) => ({
-          url: `organisations/${query.org_id}/user-roles/${query.user_id}/`,
+          url: `organisations/${query.org_id}/users/${query.user_id}/roles/`,
         }),
+      }),
+      deleteUserWithRoles: builder.mutation<Res['User-role'], Req['deleteUserWithRoles']>({
+        invalidatesTags: [{ type: 'User-role' }],
+        query: (query: Req['deleteUserWithRoles']) => ({
+          method: 'DELETE',
+          url: `organisations/${query.org_id}/users/${query.user_id}/roles/${query.role_id}/`,
+        }),
+        transformResponse: () => {
+          toast('User role was removed')
+        },
       }),
       // END OF ENDPOINTS
     }),
@@ -34,10 +44,23 @@ export async function getUserWithRoles(
     userWithRolesService.endpoints.getUserWithRoles.initiate(data, options),
   )
 }
+
+export async function deleteUserRole(
+  store: any,
+  data: Req['deleteUserWithRoles'],
+  options?: Parameters<
+    typeof UserRoleService.endpoints.deleteUserWithRoles.initiate
+  >[1],
+) {
+  return store.dispatch(
+    UserRoleService.endpoints.deleteUserWithRoles.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useGetUserWithRolesQuery,
+  useDeleteUserWithRolesMutation,
   // END OF EXPORTS
 } = userWithRolesService
 

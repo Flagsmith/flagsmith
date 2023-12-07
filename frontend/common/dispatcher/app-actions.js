@@ -287,7 +287,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_ORGANISATION,
       id: organisationId,
-      force,
     })
   },
   getProject(projectId) {
