@@ -20,13 +20,13 @@ class TheComponent extends Component {
       id: this.props.id,
       project: this.props.projectId,
     }).then((res) => {
-      const owners = (res.data.group_owners || []).map((v) => v.id)
-      this.setState({ owners })
+      const groupOwners = (res.data.group_owners || []).map((v) => v.id)
+      this.setState({ groupOwners })
     })
   }
 
   addOwner = (id) => {
-    this.setState({ owners: (this.state.owners || []).concat(id) })
+    this.setState({ groupOwners: (this.state.groupOwners || []).concat(id) })
     data.post(
       `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/add-group-owners/`,
       {
@@ -36,7 +36,9 @@ class TheComponent extends Component {
   }
 
   removeOwner = (id) => {
-    this.setState({ owners: (this.state.owners || []).filter((v) => v !== id) })
+    this.setState({
+      groupOwners: (this.state.groupOwners || []).filter((v) => v !== id),
+    })
     data.post(
       `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/remove-group-owners/`,
       {
@@ -45,8 +47,8 @@ class TheComponent extends Component {
     )
   }
 
-  getOwners = (users, owners) =>
-    users ? users.filter((v) => owners.includes(v.id)) : []
+  getGroupOwners = (users, groupOwners) =>
+    users ? users.filter((v) => groupOwners.includes(v.id)) : []
 
   render() {
     const hasPermission = Utils.getPlansPermission('FLAG_OWNERS')
@@ -54,7 +56,10 @@ class TheComponent extends Component {
     return (
       <OrganisationProvider>
         {({ groups }) => {
-          const ownerUsers = this.getOwners(groups, this.state.owners || [])
+          const ownerUsers = this.getGroupOwners(
+            groups,
+            this.state.groupOwners || [],
+          )
           const res = (
             <div>
               <Row
@@ -88,7 +93,7 @@ class TheComponent extends Component {
               </Row>
               <GroupSelect
                 groups={groups}
-                value={this.state.owners}
+                value={this.state.groupOwners}
                 isOpen={this.state.showUsers}
                 size={null}
                 onAdd={this.addOwner}
