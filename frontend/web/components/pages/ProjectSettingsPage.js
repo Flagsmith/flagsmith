@@ -494,7 +494,16 @@ const ProjectSettingsPage = class extends Component {
                       />
                     </TabItem>
                     {Utils.getFlagsmithHasFeature('import_project') && (
-                      <TabItem data-test='js-import-page' tabLabel='Import'>
+                      <TabItem
+                        data-test='js-import-page'
+                        tabLabel={
+                          Utils.getFlagsmithHasFeature(
+                            'flagsmith_import_export',
+                          )
+                            ? 'Import / Export'
+                            : 'Import'
+                        }
+                      >
                         <ImportPage
                           projectId={this.props.match.params.projectId}
                           projectName={project.name}
