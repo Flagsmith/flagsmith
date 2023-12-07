@@ -30,9 +30,9 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class IdentityOverridesStorageType(models.Choices):
-    IDENTITY_RECORD = "Identity Record"
-    FLAGSMITH_OVERRIDES = "Flagsmith Overrides"
+class IdentityOverridesStorageType(models.TextChoices):
+    IDENTITY_RECORD = "IDENTITY_RECORD", "Identity Record"
+    FLAGSMITH_OVERRIDES = "FLAGSMITH_OVERRIDES", "Flagsmith Overrides"
 
 
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
