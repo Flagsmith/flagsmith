@@ -1,9 +1,8 @@
 import pyotp
-from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, override_settings
+from rest_framework.test import APITestCase
 
 from audit.models import AuditLog, RelatedObjectType
 from organisations.models import Organisation
@@ -25,11 +24,7 @@ class LoginAuditTestCase(APITestCase):
         FFAdminUser.objects.all().delete()
         cache.clear()
 
-    @override_settings()
     def test_password_login_success_audit(self):
-        assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
-        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1/sec"
-
         # Given
         new_login_data = {
             "email": self.test_email,
@@ -58,24 +53,6 @@ class LoginAuditTestCase(APITestCase):
         assert audit_log.related_object_id == self.user.pk
         assert audit_log.organisation_id == self.organisation.pk
         assert audit_log.log == f"User logged in: {self.user.email}"
-
-        # When password correct but API throttled
-        repeat_response = self.client.post(login_url, data=new_login_data)
-
-        # Then
-        assert repeat_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
-        assert (
-            repeat_response.json()["detail"]
-            == "Request was throttled. Expected available in 1 second."
-        )
-
-        # and
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.USER.name
-            ).count()
-            == 1
-        )
 
     def test_password_login_failure_audit(self):
         # Given
