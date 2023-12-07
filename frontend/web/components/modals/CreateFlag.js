@@ -1235,16 +1235,9 @@ const CreateFlag = class extends Component {
                                                           manageSegmentsOverrides,
                                                       }) => {
                                                         return Utils.renderWithPermission(
-                                                          manageSegmentOverridesEnabled
-                                                            ? manageSegmentsOverrides
-                                                            : savePermission,
+                                                          manageSegmentsOverrides,
                                                           Constants.environmentPermissions(
-                                                            manageSegmentOverridesEnabled
-                                                              ? 'Manage segment overrides'
-                                                              : Utils.getManageFeaturePermissionDescription(
-                                                                  is4Eyes,
-                                                                  identity,
-                                                                ),
+                                                            'Manage segment overrides',
                                                           ),
                                                           <Button
                                                             onClick={
@@ -1257,10 +1250,7 @@ const CreateFlag = class extends Component {
                                                               isSaving ||
                                                               !name ||
                                                               invalid ||
-                                                              (!manageSegmentOverridesEnabled &&
-                                                                !savePermission) ||
-                                                              (manageSegmentOverridesEnabled &&
-                                                                !manageSegmentsOverrides)
+                                                              !manageSegmentsOverrides
                                                             }
                                                           >
                                                             {isSaving
