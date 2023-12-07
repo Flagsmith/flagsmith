@@ -411,7 +411,7 @@ const App = class extends Component {
                                       >
                                         {({ permission }) => (
                                           <>
-                                            {(!!permission && (
+                                            {!!permission && (
                                               <NavLink
                                                 id='org-settings-link'
                                                 activeClassName='active'
