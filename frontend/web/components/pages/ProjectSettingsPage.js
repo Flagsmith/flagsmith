@@ -374,51 +374,50 @@ const ProjectSettingsPage = class extends Component {
                           />
                         )}
                       </FormGroup>
-                      {!Utils.getIsEdge() &&
-                        this.props.hasFeature('edge_identities') && (
-                          <FormGroup className='mt-4 col-md-6'>
-                            <Row className='mb-2'>
-                              <h5 className='mb-0 mr-3'>
-                                Global Edge API Opt in
-                              </h5>
-                              <Button
-                                disabled={isSaving || Utils.isMigrating()}
-                                onClick={() =>
-                                  openConfirm(
-                                    'Are you sure?',
-                                    'This will migrate your project to the Global Edge API.',
-                                    () => {
-                                      this.migrate(project)
-                                    },
-                                  )
-                                }
-                                size='xSmall'
-                                theme='outline'
-                              >
-                                {this.state.migrating || Utils.isMigrating()
-                                  ? 'Migrating to Edge'
-                                  : 'Start Migration'}{' '}
-                                <Icon
-                                  name='arrow-right'
-                                  width={16}
-                                  fill='#6837FC'
-                                />
-                              </Button>
-                            </Row>
-                            <p className='fs-small lh-sm'>
-                              Migrate your project onto our Global Edge API.
-                              Existing Core API endpoints will continue to work
-                              whilst the migration takes place. Find out more{' '}
-                              <a
-                                href='https://docs.flagsmith.com/advanced-use/edge-api'
-                                className='btn-link'
-                              >
-                                here
-                              </a>
-                              .
-                            </p>
-                          </FormGroup>
-                        )}
+                      {!Utils.getIsEdge() && (
+                        <FormGroup className='mt-4 col-md-6'>
+                          <Row className='mb-2'>
+                            <h5 className='mb-0 mr-3'>
+                              Global Edge API Opt in
+                            </h5>
+                            <Button
+                              disabled={isSaving || Utils.isMigrating()}
+                              onClick={() =>
+                                openConfirm(
+                                  'Are you sure?',
+                                  'This will migrate your project to the Global Edge API.',
+                                  () => {
+                                    this.migrate(project)
+                                  },
+                                )
+                              }
+                              size='xSmall'
+                              theme='outline'
+                            >
+                              {this.state.migrating || Utils.isMigrating()
+                                ? 'Migrating to Edge'
+                                : 'Start Migration'}{' '}
+                              <Icon
+                                name='arrow-right'
+                                width={16}
+                                fill='#6837FC'
+                              />
+                            </Button>
+                          </Row>
+                          <p className='fs-small lh-sm'>
+                            Migrate your project onto our Global Edge API.
+                            Existing Core API endpoints will continue to work
+                            whilst the migration takes place. Find out more{' '}
+                            <a
+                              href='https://docs.flagsmith.com/advanced-use/edge-api'
+                              className='btn-link'
+                            >
+                              here
+                            </a>
+                            .
+                          </p>
+                        </FormGroup>
+                      )}
                       <hr className='py-0 my-4' />
                       <FormGroup className='mt-4 col-md-6'>
                         <Row space>
