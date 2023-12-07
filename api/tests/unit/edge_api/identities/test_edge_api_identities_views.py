@@ -1,13 +1,19 @@
+from typing import Callable
+
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.test import APIClient
 
 from edge_api.identities.views import EdgeIdentityViewSet
+from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
 )
 from environments.permissions.permissions import NestedEnvironmentPermissions
+from features.models import Feature
 
 
 def test_edge_identity_view_set_get_permissions():
@@ -85,3 +91,46 @@ def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_cli
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_get_edge_identity_overrides_for_a_feature(
+    staff_client: APIClient,
+    with_environment_permissions: Callable,
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+    edge_identity_override_document: dict,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:get-edge-identity-overrides", args=[environment.pk]
+    )
+    with_environment_permissions([VIEW_IDENTITIES])
+
+    mock_dynamodb_wrapper = mocker.MagicMock()
+    mocker.patch(
+        "edge_api.identities.edge_identity_service.ddb_environment_v2_wrapper",
+        mock_dynamodb_wrapper,
+    )
+    mock_dynamodb_wrapper.get_identity_overrides.return_value = [
+        edge_identity_override_document
+    ]
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["results"] == [
+        {
+            "feature_state_value": None,
+            "multivariate_feature_state_values": [],
+            "identity": {"identity_uuid": "", "identifier": "identity1"},
+            "uuid": "1f74f8ff-3436-4090-bf48-65eea35d107e",
+            "enabled": None,
+            "feature": feature.id,
+            "environment": environment.id,
+        }
+    ]

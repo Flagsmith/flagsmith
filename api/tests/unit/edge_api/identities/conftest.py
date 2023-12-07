@@ -1,6 +1,8 @@
 import pytest
 
 from edge_api.identities.models import EdgeIdentity
+from environments.models import Environment
+from features.models import Feature
 
 
 @pytest.fixture()
@@ -45,3 +47,24 @@ def identity_document_without_fs(environment):
 @pytest.fixture()
 def edge_identity_model(identity_document_without_fs):
     return EdgeIdentity.from_identity_document(identity_document_without_fs)
+
+
+@pytest.fixture()
+def edge_identity_override_document(
+    environment: Environment, feature: Feature, edge_identity_model: EdgeIdentity
+) -> dict:
+    return {
+        "environment_id": environment.id,
+        "document_key": f"identity_override|{feature.id}|{edge_identity_model.identity_uuid}",
+        "environment_api_key": environment.api_key,
+        "identifier": edge_identity_model.identifier,
+        "feature_state": {
+            "django_id": None,
+            "enabled": True,
+            "feature": {"id": feature.id, "name": feature.name, "type": feature.type},
+            "featurestate_uuid": "6f345434-dc8a-4bb8-afc7-607896330278",
+            "feature_segment": None,
+            "feature_state_value": None,
+            "multivariate_feature_state_values": [],
+        },
+    }

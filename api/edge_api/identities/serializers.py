@@ -1,5 +1,6 @@
 import copy
 import typing
+import uuid
 
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel as EngineFeatureModel
@@ -227,3 +228,16 @@ class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
     feature = serializers.IntegerField(
         required=False, help_text="ID of the feature to filter by"
     )
+
+
+class GetEdgeIdentityOverridesQuerySerializer(serializers.Serializer):
+    feature = serializers.IntegerField(required=False)
+
+
+class GetEdgeIdentityOverridesResultSerializer(EdgeIdentityFeatureStateSerializer):
+    def get_identity_uuid(self, obj=None) -> str:
+        return str(uuid.uuid4())
+
+
+class GetEdgeIdentityOverridesSerializer(serializers.Serializer):
+    results = EdgeIdentityFeatureStateSerializer(many=True)

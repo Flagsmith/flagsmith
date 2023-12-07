@@ -32,14 +32,17 @@ class DynamoWrapper:
 
     def __init__(self):
         self._table = None
-        if self.table_name:
+        if table_name := self.get_table_name():
             self._table = boto3.resource(
                 "dynamodb", config=Config(tcp_keepalive=True)
-            ).Table(self.table_name)
+            ).Table(table_name)
 
     @property
     def is_enabled(self) -> bool:
         return self._table is not None
+
+    def get_table_name(self) -> str:
+        return self.table_name
 
 
 class DynamoIdentityWrapper(DynamoWrapper):
@@ -159,6 +162,39 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
             return self._table.get_item(Key={"api_key": api_key})["Item"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
+
+
+class DynamoEnvironmentV2Wrapper(DynamoWrapper):
+    ENVIRONMENT_ID_ATTRIBUTE = "environment_id"
+    DOCUMENT_KEY_ATTRIBUTE = "document_key"
+
+    def write_environment(self, environment: "Environment"):
+        self.write_environments([environment])
+
+    def write_environments(self, environments: Iterable["Environment"]):
+        # TODO handle v2
+        raise NotImplementedError()
+
+    def get_identity_overrides(
+        self, environment_id: int, feature_id: int = None
+    ) -> typing.List[dict]:  # TODO better typing?
+        document_key_begins_with = "identity_override"
+        if feature_id:
+            document_key_begins_with += f":{feature_id}"
+        key_expression_condition = Key(self.ENVIRONMENT_ID_ATTRIBUTE).eq(
+            environment_id
+        ) & Key(self.DOCUMENT_KEY_ATTRIBUTE).begins_with(document_key_begins_with)
+
+        try:
+            response = self._table.query(
+                KeyConditionExpression=key_expression_condition
+            )
+            return response["Items"]
+        except KeyError as e:
+            raise ObjectDoesNotExist() from e
+
+    def get_table_name(self) -> str:
+        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
 
 class DynamoEnvironmentAPIKeyWrapper(DynamoWrapper):

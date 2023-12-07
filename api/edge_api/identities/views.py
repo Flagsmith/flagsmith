@@ -11,7 +11,7 @@ from flag_engine.identities.builders import build_identity_model
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import (
     NotFound,
     PermissionDenied,
@@ -24,6 +24,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -40,6 +41,8 @@ from edge_api.identities.serializers import (
     EdgeIdentityTraitsSerializer,
     EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
     EdgeIdentityWithIdentifierFeatureStateRequestBody,
+    GetEdgeIdentityOverridesQuerySerializer,
+    GetEdgeIdentityOverridesSerializer,
 )
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
@@ -55,6 +58,7 @@ from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
 from util.mappers import map_engine_identity_to_identity_document
 
+from . import edge_identity_service
 from .exceptions import TraitPersistenceError
 from .models import EdgeIdentity
 from .permissions import EdgeIdentityWithIdentifierViewPermissions
@@ -334,3 +338,26 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
                 master_api_key=getattr(request, "master_api_key", None),
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(
+    method="GET",
+    query_serializer=GetEdgeIdentityOverridesQuerySerializer(),
+    responses={200: GetEdgeIdentityOverridesSerializer()},
+)
+@api_view(http_method_names=["GET"])
+@permission_classes([])  # TODO
+def get_edge_identity_overrides(
+    request: Request, environment_pk: int, **kwargs
+) -> Response:
+    query_serializer = GetEdgeIdentityOverridesQuerySerializer(
+        data=request.query_params
+    )
+    query_serializer.is_valid(raise_exception=True)
+    items = edge_identity_service.get_edge_identity_overrides(
+        environment_pk, query_serializer.validated_data.get("feature")
+    )
+    response_serializer = GetEdgeIdentityOverridesQuerySerializer(
+        instance={"results": items}
+    )
+    return Response(response_serializer.data)
