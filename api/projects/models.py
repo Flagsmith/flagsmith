@@ -30,6 +30,11 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
+class IdentityOverridesStorageType(models.Choices):
+    IDENTITY_RECORD = "Identity Record"
+    FLAGSMITH_OVERRIDES = "Flagsmith Overrides"
+
+
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -70,6 +75,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     max_segment_overrides_allowed = models.IntegerField(
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
+    )
+    identity_overrides_storage_type = models.CharField(
+        max_length=50,
+        choices=IdentityOverridesStorageType.choices,
+        default=IdentityOverridesStorageType.IDENTITY_RECORD,
     )
 
     objects = ProjectManager()
