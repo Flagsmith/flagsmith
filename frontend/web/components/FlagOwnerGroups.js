@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import GroupSelect from './GroupSelect'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 
@@ -19,7 +20,7 @@ class TheComponent extends Component {
       id: this.props.id,
       project: this.props.projectId,
     }).then((res) => {
-      const owners = (res.data.owners || []).map((v) => v.id)
+      const owners = (res.data.group_owners || []).map((v) => v.id)
       this.setState({ owners })
     })
   }
@@ -27,9 +28,9 @@ class TheComponent extends Component {
   addOwner = (id) => {
     this.setState({ owners: (this.state.owners || []).concat(id) })
     data.post(
-      `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/add-owners/`,
+      `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/add-group-owners/`,
       {
-        user_ids: [id],
+        group_ids: [id],
       },
     )
   }
@@ -37,9 +38,9 @@ class TheComponent extends Component {
   removeOwner = (id) => {
     this.setState({ owners: (this.state.owners || []).filter((v) => v !== id) })
     data.post(
-      `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/remove-owners/`,
+      `${Project.api}projects/${this.props.projectId}/features/${this.props.id}/remove-group-owners/`,
       {
-        user_ids: [id],
+        group_ids: [id],
       },
     )
   }
@@ -52,8 +53,8 @@ class TheComponent extends Component {
 
     return (
       <OrganisationProvider>
-        {({ users }) => {
-          const ownerUsers = this.getOwners(users, this.state.owners || [])
+        {({ groups }) => {
+          const ownerUsers = this.getOwners(groups, this.state.owners || [])
           const res = (
             <div>
               <Row
@@ -63,7 +64,7 @@ class TheComponent extends Component {
                 }}
               >
                 <label className='cols-sm-2 control-label'>
-                  Assigned users{' '}
+                  Assigned groups{' '}
                   <Icon name='setting' width={20} fill={'#656D7B'} />
                 </label>
               </Row>
@@ -75,25 +76,23 @@ class TheComponent extends Component {
                       onClick={() => this.removeOwner(u.id)}
                       className='chip mr-2'
                     >
-                      <span className='font-weight-bold'>
-                        {u.first_name} {u.last_name}
-                      </span>
+                      <span className='font-weight-bold'>{u.name}</span>
                       <span className='chip-icon ion'>
                         <IonIcon icon={close} />
                       </span>
                     </Row>
                   ))}
                 {!ownerUsers.length && (
-                  <div>This flag has no assigned users</div>
+                  <div>This flag has no assigned groups</div>
                 )}
               </Row>
-
-              <UserSelect
-                users={users}
+              <GroupSelect
+                groups={groups}
                 value={this.state.owners}
+                isOpen={this.state.showUsers}
+                size={null}
                 onAdd={this.addOwner}
                 onRemove={this.removeOwner}
-                isOpen={this.state.showUsers}
                 onToggle={() =>
                   this.setState({ showUsers: !this.state.showUsers })
                 }
