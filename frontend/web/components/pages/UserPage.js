@@ -655,6 +655,7 @@ const UserPage = class extends Component {
                                                       control value of this
                                                       feature is{' '}
                                                       <FeatureValue
+                                                        className='ml-1 chip--xs'
                                                         includeEmpty
                                                         data-test={`user-feature-original-value-${i}`}
                                                         value={`${flagValue}`}
@@ -671,6 +672,7 @@ const UserPage = class extends Component {
                                                       overriden by segments and
                                                       would normally be{' '}
                                                       <FeatureValue
+                                                        className='ml-1 chip--xs'
                                                         includeEmpty
                                                         data-test={`user-feature-original-value-${i}`}
                                                         value={`${flagValue}`}
