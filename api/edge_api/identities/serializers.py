@@ -129,7 +129,7 @@ class EdgeFeatureField(serializers.Field):
         swagger_schema_fields = {"type": "integer/string"}
 
 
-class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
+class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     feature_state_value = FeatureStateValueEdgeIdentityField(
         allow_null=True, required=False, default=None
     )
@@ -138,8 +138,12 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
         many=True, required=False
     )
     enabled = serializers.BooleanField(required=False, default=False)
+    identity_uuid = serializers.SerializerMethodField()
 
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
+
+    def get_identity_uuid(self, obj=None):
+        return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
         view = self.context["view"]
@@ -201,13 +205,6 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
         return self.instance
 
 
-class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
-    identity_uuid = serializers.SerializerMethodField()
-
-    def get_identity_uuid(self, obj=None):
-        return self.context["view"].identity.identity_uuid
-
-
 class EdgeIdentityIdentifierSerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True, max_length=2000)
 
@@ -241,17 +238,15 @@ class GetEdgeIdentityOverridesQuerySerializer(serializers.Serializer):
     feature = serializers.IntegerField(required=False)
 
 
-class GetEdgeIdentityOverridesResultSerializer(serializers.Serializer):
-    class EdgeIdentityOverridesFeatureStateSerializer(
-        BaseEdgeIdentityFeatureStateSerializer
-    ):
-        identity_uuid = serializers.SerializerMethodField()
-
-        def get_identity_uuid(self, obj=None) -> str:
-            return str(uuid.uuid4())
-
+class GetEdgeIdentityOverridesResultSerializer(EdgeIdentityFeatureStateSerializer):
     identifier = serializers.CharField()
-    feature_state = EdgeIdentityOverridesFeatureStateSerializer()
+    identity_uuid = serializers.CharField()
+
+    def get_identity_uuid(self, obj=None):
+        # TODO: remove this as it's wrong for 2 reasons:
+        #  - see the comment on the super method
+        #  - it's returning a static string...
+        return str(uuid.uuid4())
 
 
 class GetEdgeIdentityOverridesSerializer(serializers.Serializer):

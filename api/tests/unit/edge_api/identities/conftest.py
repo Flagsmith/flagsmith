@@ -50,8 +50,16 @@ def edge_identity_model(identity_document_without_fs):
 
 
 @pytest.fixture()
+def edge_identity_override_feature_state_uuid() -> str:
+    return "a7495917-ee57-41d1-a64e-e0697dbc57fb"
+
+
+@pytest.fixture()
 def edge_identity_override_document(
-    environment: Environment, feature: Feature, edge_identity_model: EdgeIdentity
+    environment: Environment,
+    feature: Feature,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_override_feature_state_uuid: str,
 ) -> dict:
     return {
         "environment_id": environment.id,
@@ -62,7 +70,7 @@ def edge_identity_override_document(
             "django_id": None,
             "enabled": True,
             "feature": {"id": feature.id, "name": feature.name, "type": feature.type},
-            "featurestate_uuid": "6f345434-dc8a-4bb8-afc7-607896330278",
+            "featurestate_uuid": edge_identity_override_feature_state_uuid,
             "feature_segment": None,
             "feature_state_value": None,
             "multivariate_feature_state_values": [],

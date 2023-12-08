@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.views import EdgeIdentityViewSet
 from environments.models import Environment
 from environments.permissions.constants import (
@@ -100,6 +101,8 @@ def test_get_edge_identity_overrides_for_a_feature(
     feature: Feature,
     environment: Environment,
     edge_identity_override_document: dict,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_override_feature_state_uuid: str,
 ) -> None:
     # Given
     url = reverse(
@@ -123,14 +126,13 @@ def test_get_edge_identity_overrides_for_a_feature(
     assert response.status_code == status.HTTP_200_OK
 
     response_json = response.json()
-    assert response_json["results"] == [
-        {
-            "feature_state_value": None,
-            "multivariate_feature_state_values": [],
-            "identity": {"identity_uuid": "", "identifier": "identity1"},
-            "uuid": "1f74f8ff-3436-4090-bf48-65eea35d107e",
-            "enabled": None,
-            "feature": feature.id,
-            "environment": environment.id,
-        }
-    ]
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0] == {
+        "feature_state_value": None,
+        "multivariate_feature_state_values": [],
+        "identity_uuid": edge_identity_model.identity_uuid,
+        "identifier": edge_identity_model.identifier,
+        "featurestate_uuid": edge_identity_override_feature_state_uuid,
+        "enabled": True,
+        "feature": feature.id,
+    }
