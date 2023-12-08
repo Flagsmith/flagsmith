@@ -56,7 +56,7 @@ export default class Rule extends PureComponent<{
             <Flex className='or-divider__line' />
           </Row>
         )}
-        <Row noWrap className='rule align-items-start justify-content-between'>
+        <Row noWrap className='rule align-items-center justify-content-between'>
           <Tooltip
             title={
               <Input
