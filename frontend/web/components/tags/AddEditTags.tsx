@@ -62,7 +62,11 @@ const AddEditTags: FC<AddEditTagsType> = ({
     openConfirm(
       'Please confirm',
       <div>
-        Are you sure you wish to delete the tag <strong>{tag.label}</strong>?
+        Are you sure you wish to delete the tag{' '}
+        <div className='d-inline-block'>
+          <Tag tag={tag} />
+        </div>
+        ?
       </div>,
       () => {
         onChange(loFilter(value || [], (id) => id !== tag.id))
