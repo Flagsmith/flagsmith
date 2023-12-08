@@ -2,8 +2,17 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
 
+from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
+from edge_api.identities.types import IdentityChangeset
+from environments.dynamodb.constants import (
+    ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_TEMPLATE,
+)
+from environments.dynamodb.types import (
+    IdentityOverridesV2Changeset,
+    IdentityOverrideV2Document,
+)
 from util.mappers.engine import (
     map_environment_api_key_to_engine,
     map_environment_to_engine,
@@ -61,6 +70,69 @@ def map_identity_to_identity_document(
     identity: "Identity",
 ) -> Document:
     return map_engine_identity_to_identity_document(map_identity_to_engine(identity))
+
+
+def map_engine_feature_state_to_identity_override_document(
+    *,
+    feature_state: "FeatureStateModel",
+    identity_uuid: str,
+    environment_api_key: str,
+    environment_id: int,
+) -> list[IdentityOverrideV2Document]:
+    return IdentityOverrideV2Document(
+        document_key=ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_TEMPLATE.format(
+            feature_id=feature_state.feature.id,
+            identity_uuid=identity_uuid,
+        ),
+        environment_id=str(environment_id),
+        environment_api_key=environment_api_key,
+        feature_state=feature_state,
+    )
+
+
+def map_identity_changeset_to_identity_override_changeset(
+    *,
+    identity_changeset: "IdentityChangeset",
+    identity_uuid: str,
+    environment_api_key: str,
+    environment_id: int,
+) -> "IdentityOverridesV2Changeset":
+    to_delete: list[IdentityOverrideV2Document] = []
+    to_put: list[IdentityOverrideV2Document] = []
+
+    for _, change_details in identity_changeset["feature_overrides"].items():
+        match change_details["change_type"]:
+            case "-":
+                feature_state = FeatureStateModel.parse_obj(change_details["old"])
+                to_delete.append(
+                    map_engine_feature_state_to_identity_override_document(
+                        feature_state=feature_state,
+                        identity_uuid=identity_uuid,
+                        environment_api_key=environment_api_key,
+                        environment_id=environment_id,
+                    )
+                )
+            case _:
+                feature_state = FeatureStateModel.parse_obj(change_details["new"])
+                to_put.append(
+                    map_engine_feature_state_to_identity_override_document(
+                        feature_state=feature_state,
+                        identity_uuid=identity_uuid,
+                        environment_api_key=environment_api_key,
+                        environment_id=environment_id,
+                    )
+                )
+
+    return IdentityOverridesV2Changeset(to_delete=to_delete, to_put=to_put)
+
+
+def map_identity_override_to_identity_override_document(
+    identity_override: IdentityOverrideV2Document,
+) -> Document:
+    return {
+        field_name: _map_value_to_document_value(value)
+        for field_name, value in identity_override
+    }
 
 
 T = TypeVar("T")

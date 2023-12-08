@@ -1,7 +1,7 @@
 import logging
 import typing
 from contextlib import suppress
-from typing import Iterable
+from typing import Any, Iterable
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -14,9 +14,19 @@ from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
+from environments.dynamodb.constants import (
+    ENVIRONMENTS_V2_ENVIRONMENT_SORT_KEY_META_VALUE,
+    ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX,
+    ENVIRONMENTS_V2_PARTITION_KEY,
+    ENVIRONMENTS_V2_SECONDARY_INDEX,
+    ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY,
+    ENVIRONMENTS_V2_SORT_KEY,
+)
+from environments.dynamodb.types import IdentityOverridesV2Changeset
 from util.mappers import (
     map_environment_api_key_to_environment_api_key_document,
     map_environment_to_environment_document,
+    map_identity_override_to_identity_override_document,
     map_identity_to_identity_document,
 )
 
@@ -32,7 +42,7 @@ class BaseDynamoWrapper:
 
     def __init__(self):
         self._table = None
-        if table_name := self.table_name:
+        if table_name := self.get_table_name():
             self._table = boto3.resource(
                 "dynamodb", config=Config(tcp_keepalive=True)
             ).Table(table_name)
@@ -40,6 +50,9 @@ class BaseDynamoWrapper:
     @property
     def is_enabled(self) -> bool:
         return self._table is not None
+
+    def get_table_name(self):
+        return self.table_name
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
@@ -167,19 +180,15 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    table_name = settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
+    def get_table_name(self):
+        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
-    ENVIRONMENT_ID_ATTRIBUTE = "environment_id"
-    DOCUMENT_KEY_ATTRIBUTE = "document_key"
-    ENVIRONMENT_API_KEY_ATTRIBUTE = "environment_api_key"
-    ENVIRONMENT_API_KEY_INDEX_NAME = "environment_api_key-index"
-
-    def get_environment_by_api_key(self, environment_api_key: str) -> dict:
+    def get_environment_by_api_key(self, environment_api_key: str) -> dict[str, Any]:
         get_item_kwargs = {
-            "IndexName": self.ENVIRONMENT_API_KEY_INDEX_NAME,
+            "IndexName": ENVIRONMENTS_V2_SECONDARY_INDEX,
             "Key": {
-                self.ENVIRONMENT_API_KEY_ATTRIBUTE: environment_api_key,
-                self.DOCUMENT_KEY_ATTRIBUTE: "META",
+                ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY: environment_api_key,
+                ENVIRONMENTS_V2_SORT_KEY: ENVIRONMENTS_V2_ENVIRONMENT_SORT_KEY_META_VALUE,
             },
         }
         try:
@@ -189,13 +198,16 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
 
     def get_identity_overrides(
         self, environment_id: int, feature_id: int = None
-    ) -> typing.List[dict]:  # TODO better typing?
-        document_key_begins_with = "identity_override"
+    ) -> typing.List[dict[str, Any]]:
         if feature_id:
-            document_key_begins_with += f":{feature_id}"
-        key_expression_condition = Key(self.ENVIRONMENT_ID_ATTRIBUTE).eq(
+            sort_key_begins_with = (
+                f"{ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX}{feature_id}:"
+            )
+        else:
+            sort_key_begins_with = ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX
+        key_expression_condition = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
             environment_id
-        ) & Key(self.DOCUMENT_KEY_ATTRIBUTE).begins_with(document_key_begins_with)
+        ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(sort_key_begins_with)
 
         try:
             response = self._table.query(
@@ -204,6 +216,25 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             return response["Items"]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
+
+    def update_identity_overrides(
+        self,
+        changeset: IdentityOverridesV2Changeset,
+    ) -> None:
+        with self._table.batch_writer() as writer:
+            for identity_override_to_delete in changeset.to_delete:
+                writer.delete_item(
+                    Key={
+                        ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
+                        ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
+                    },
+                )
+            for identity_override_to_put in changeset.to_put:
+                writer.put_item(
+                    Item=map_identity_override_to_identity_override_document(
+                        identity_override_to_put
+                    ),
+                )
 
 
 class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
