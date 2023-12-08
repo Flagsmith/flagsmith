@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
+
+from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from edge_api.identities.models import EdgeIdentity
