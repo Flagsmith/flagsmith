@@ -1,13 +1,15 @@
 import json
 from typing import Callable
 
+import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
-from features.import_export.constants import OVERWRITE_DESTRUCTIVE
+from features.import_export.constants import OVERWRITE_DESTRUCTIVE, PROCESSING
 from features.import_export.models import FeatureExport, FeatureImport
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
@@ -207,9 +209,11 @@ def test_feature_import_unauthorized(
     assert response.status_code == 403
 
 
+@pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
 def test_create_feature_export(
     admin_client: APIClient,
     environment: Environment,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     tag = Tag.objects.create(
@@ -218,6 +222,9 @@ def test_create_feature_export(
         color="#228B22",
     )
 
+    task_mock = mocker.patch(
+        "features.import_export.serializers.export_features_for_environment"
+    )
     url = reverse("api-v1:features:create-feature-export")
     data = {"environment_id": environment.id, "tag_ids": [tag.id]}
     assert FeatureExport.objects.count() == 0
@@ -229,16 +236,23 @@ def test_create_feature_export(
 
     # Then
     assert response.status_code == 201
-    assert response.data == {
-        "environment_id": environment.id,
-        "tag_ids": [tag.id],
-    }
-    assert FeatureExport.objects.count() == 1
 
-    # Created by export_features_for_environment task.
+    assert FeatureExport.objects.count() == 1
     feature_export = FeatureExport.objects.all().first()
-    assert feature_export.data
-    assert feature_export.environment == environment
+    # Picked up later by task for processing.
+
+    assert feature_export.data is None
+    assert response.data == {
+        "created_at": "2023-12-08T06:05:47.320000Z",
+        "environment_id": environment.id,
+        "id": feature_export.id,
+        "name": "Test Environment | 2023-12-08 06:05 UTC",
+        "status": PROCESSING,
+    }
+
+    task_mock.delay.assert_called_once_with(
+        kwargs={"feature_export_id": feature_export.id, "tag_ids": [tag.id]},
+    )
 
 
 def test_create_feature_export_unauthorized(
