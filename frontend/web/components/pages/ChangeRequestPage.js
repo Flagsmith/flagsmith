@@ -520,11 +520,7 @@ const ChangeRequestsPage = class extends Component {
                       }
                     />
 
-                    <div
-                      style={{
-                        maxWidth: changeRequest.committed_at ? '530px' : '',
-                      }}
-                    >
+                    <div>
                       <Panel
                         title={
                           isScheduled ? 'Scheduled Change' : 'Change Request'
@@ -652,102 +648,97 @@ const ChangeRequestsPage = class extends Component {
                             </div>
                           </Panel>
                         </Flex>
-
-                        {!changeRequest.committed_at && (
-                          <Flex>
-                            <Panel className='no-pad panel-change-request'>
-                              <div className='search-list'>
-                                <Row className='table-header px-4'>
-                                  {isScheduled
-                                    ? 'Scheduled Change'
-                                    : 'Change Request'}
-                                </Row>
-                                <Row className='list-item change-request-item px-4'>
-                                  <div
-                                    className='font-weight-medium mr-3'
-                                    style={{ width: labelWidth }}
-                                  >
-                                    Enabled:
-                                  </div>
-                                  <Switch
-                                    checked={newEnabled}
-                                    disabled
-                                    style={{
-                                      opacity:
-                                        newEnabled === oldEnabled ? 0.25 : 1,
-                                    }}
+                        <Flex>
+                          <Panel className='no-pad panel-change-request'>
+                            <div className='search-list'>
+                              <Row className='table-header px-4'>
+                                {isScheduled
+                                  ? 'Scheduled Change'
+                                  : 'Change Request'}
+                              </Row>
+                              <Row className='list-item change-request-item px-4'>
+                                <div
+                                  className='font-weight-medium mr-3'
+                                  style={{ width: labelWidth }}
+                                >
+                                  Enabled:
+                                </div>
+                                <Switch
+                                  checked={newEnabled}
+                                  disabled
+                                  style={{
+                                    opacity:
+                                      newEnabled === oldEnabled ? 0.25 : 1,
+                                  }}
+                                />
+                              </Row>
+                              <Row className='list-item change-request-item px-4 align-items-start'>
+                                <div
+                                  className='font-weight-medium mr-3'
+                                  style={{ width: labelWidth }}
+                                >
+                                  Value:
+                                </div>
+                                <Flex
+                                  style={{
+                                    opacity: oldValue === newValue ? 0.25 : 1,
+                                  }}
+                                >
+                                  <label>Value</label>
+                                  <ValueEditor
+                                    value={newValue}
+                                    className={classnames('code-medium', {
+                                      'change-request-updated-value':
+                                        oldValue !== newValue,
+                                    })}
                                   />
-                                </Row>
-                                <Row className='list-item change-request-item px-4 align-items-start'>
-                                  <div
-                                    className='font-weight-medium mr-3'
-                                    style={{ width: labelWidth }}
-                                  >
-                                    Value:
-                                  </div>
-                                  <Flex
-                                    style={{
-                                      opacity: oldValue === newValue ? 0.25 : 1,
-                                    }}
-                                  >
-                                    <label>Value</label>
-                                    <ValueEditor
-                                      value={newValue}
-                                      className={classnames('code-medium', {
-                                        'change-request-updated-value':
-                                          oldValue !== newValue,
-                                      })}
-                                    />
-                                  </Flex>
-                                </Row>
+                                </Flex>
+                              </Row>
 
-                                {isMv &&
-                                  mvData.map((v, i) => (
-                                    <Row
-                                      key={i}
-                                      className='list-item px-4 align-start change-request-item'
+                              {isMv &&
+                                mvData.map((v, i) => (
+                                  <Row
+                                    key={i}
+                                    className='list-item px-4 align-start change-request-item'
+                                  >
+                                    <div
+                                      style={{ width: labelWidth }}
+                                      className='font-weight-medium flex flex-row align-items-center mr-3'
                                     >
-                                      <div
-                                        style={{ width: labelWidth }}
-                                        className='font-weight-medium flex flex-row align-items-center mr-3'
-                                      >
-                                        <div className='flex flex-row align-items-center align-self-start'>
-                                          <span className='mr-1'>
-                                            Variation {i + 1}
-                                          </span>
-                                          <Tooltip
-                                            place='bottom'
-                                            title={
-                                              <Icon name='info-outlined' />
-                                            }
-                                            className='ml-1'
-                                            noIcon
-                                          >
-                                            {Utils.getTypedValue(v.value)}
-                                          </Tooltip>
-                                        </div>
+                                      <div className='flex flex-row align-items-center align-self-start'>
+                                        <span className='mr-1'>
+                                          Variation {i + 1}
+                                        </span>
+                                        <Tooltip
+                                          place='bottom'
+                                          title={<Icon name='info-outlined' />}
+                                          className='ml-1'
+                                          noIcon
+                                        >
+                                          {Utils.getTypedValue(v.value)}
+                                        </Tooltip>
                                       </div>
-                                      <Flex
-                                        style={{
-                                          opacity: !v.changed ? 0.25 : 1,
-                                        }}
-                                      >
-                                        <label>Environment Weight %</label>
-                                        <Input
-                                          value={v.newValue}
-                                          className={classnames('code-medium', {
-                                            'change-request-updated-value':
-                                              v.changed,
-                                          })}
-                                          style={{ pointerEvents: 'none' }}
-                                        />
-                                      </Flex>
-                                    </Row>
-                                  ))}
-                              </div>
-                            </Panel>
-                          </Flex>
-                        )}
+                                    </div>
+                                    <Flex
+                                      style={{
+                                        opacity: !v.changed ? 0.25 : 1,
+                                      }}
+                                    >
+                                      <label>Environment Weight %</label>
+                                      <Input
+                                        value={v.newValue}
+                                        className={classnames('code-medium', {
+                                          'change-request-updated-value':
+                                            v.changed,
+                                        })}
+                                        style={{ pointerEvents: 'none' }}
+                                      />
+                                    </Flex>
+                                  </Row>
+                                ))}
+                            </div>
+                          </Panel>
+                        </Flex>
                       </Flex>
                     </div>
                   </div>
