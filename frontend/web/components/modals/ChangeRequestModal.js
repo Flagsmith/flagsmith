@@ -178,8 +178,8 @@ const ChangeRequestModal = class extends Component {
                                     {u.first_name} {u.last_name}
                                   </span>
                                   <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
-                      </span>
+                                    <IonIcon icon={close} />
+                                  </span>
                                 </Row>
                               ))}
                               <Button

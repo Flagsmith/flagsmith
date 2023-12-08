@@ -65,17 +65,16 @@ const Tooltip = ({
         <span className='ion ion-ios-help' data-for={id} data-tip />
       )}
       {!!children && (
-          <ReactTooltip
-              html
-              id={id}
-              place={place || 'top'}
-              type='dark'
-              effect='solid'
-          >
-            {tooltipStyler(plainText, children, noIcon)}
-          </ReactTooltip>
+        <ReactTooltip
+          html
+          id={id}
+          place={place || 'top'}
+          type='dark'
+          effect='solid'
+        >
+          {tooltipStyler(plainText, children, noIcon)}
+        </ReactTooltip>
       )}
-
     </span>
   )
 }

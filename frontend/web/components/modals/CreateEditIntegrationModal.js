@@ -185,7 +185,9 @@ const CreateEditIntegration = class extends Component {
                 </div>
                 {this.props.readOnly ? (
                   <div className='mb-3'>
-                    {field.hidden ? this.state.data[field.key].replace(/./g, '*') : this.state.data[field.key]}
+                    {field.hidden
+                      ? this.state.data[field.key].replace(/./g, '*')
+                      : this.state.data[field.key]}
                   </div>
                 ) : field.options ? (
                   <div className='full-width mb-2'>

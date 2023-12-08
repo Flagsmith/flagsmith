@@ -68,7 +68,11 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       })
   }
 
-  const createImportLDProjects = (LDKey: string, key: string, projectId: string) => {
+  const createImportLDProjects = (
+    LDKey: string,
+    key: string,
+    projectId: string,
+  ) => {
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,
@@ -85,7 +89,8 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       )}
       <div className='mt-4'>
         <InfoMessage>
-          Import operations will overwrite existing environments and flags in your project.
+          Import operations will overwrite existing environments and flags in
+          your project.
         </InfoMessage>
         <h5>Import LaunchDarkly Projects</h5>
         <label>Set LaunchDarkly key</label>
@@ -124,7 +129,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                   listClassName='row mt-n2 gy-4'
                   title='LaunchDarkly Projects'
                   items={projects}
-                  renderRow={({ name, key }, i) => {
+                  renderRow={({ key, name }, i) => {
                     return (
                       <>
                         <Button
@@ -133,9 +138,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                             openConfirm(
                               'Import LaunchDarkly project',
                               <span>
-                                Flagsmith will import{' '}
-                                {<strong>{name}</strong>} to {<strong>{projectName}</strong>}.
-                                Are you sure?
+                                Flagsmith will import {<strong>{name}</strong>}{' '}
+                                to {<strong>{projectName}</strong>}. Are you
+                                sure?
                               </span>,
                               () => {
                                 createImportLDProjects(LDKey, key, projectId)

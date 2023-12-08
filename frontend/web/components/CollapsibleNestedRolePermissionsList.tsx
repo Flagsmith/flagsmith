@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react'
-import Icon from 'components/Icon'
-import { EditPermissionsModal } from 'components/EditPermissions'
+import Icon from './Icon'
+import { EditPermissionsModal } from './EditPermissions'
 import {
   useGetRoleProjectPermissionsQuery,
   useGetRoleEnvironmentPermissionsQuery,

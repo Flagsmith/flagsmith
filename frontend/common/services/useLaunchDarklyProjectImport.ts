@@ -47,7 +47,10 @@ export async function createLaunchDarklyProjectImport(
   >[1],
 ) {
   return store.dispatch(
-    launchDarklyService.endpoints.createLaunchDarklyProjectImport.initiate(data, options),
+    launchDarklyService.endpoints.createLaunchDarklyProjectImport.initiate(
+      data,
+      options,
+    ),
   )
 }
 export async function getLaunchDarklyProjectImport(
