@@ -946,6 +946,9 @@ const CreateFlag = class extends Component {
                                           }).name
                                         }
                                       </strong>
+                                      .{' '}
+                                      {!!multivariate_options?.length &&
+                                        'Changing existing multivariate values that are in use can change the value that an end user receives.'}
                                     </div>
 
                                     <Permission
