@@ -13,6 +13,8 @@ import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import TabItem from 'components/base/forms/TabItem'
 import FeatureExport from 'components/FeatureExport'
+import { createFeatureExport } from 'common/services/useFeatureExport';
+import { getStore } from 'common/store';
 
 type ImportPageType = {
   projectId: string
@@ -37,10 +39,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     data: status,
     isSuccess: statusLoaded,
     refetch,
-  } = useGetLaunchDarklyProjectImportQuery({
-    import_id: importId,
-    project_id: projectId,
-  })
+  } = useGetLaunchDarklyProjectImportQuery(
+    {
+      import_id: importId,
+      project_id: projectId,
+    },
+    { skip: !importId },
+  )
 
   useEffect(() => {
     const checkImportStatus = async () => {
@@ -85,6 +90,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     key: string,
     projectId: string,
   ) => {
+    createFeatureExport(getStore(),{})
     createLaunchDarklyProjectImport({
       body: { project_key: key, token: LDKey },
       project_id: projectId,

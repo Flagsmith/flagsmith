@@ -171,7 +171,7 @@ class TheComponent extends Component {
       <Row
         className={`list-item ${readOnly ? '' : 'clickable'} ${
           this.props.widget ? 'py-1' : 'py-2'
-        }`}
+        } ${this.props.size ? `list-item-${this.props.size}` : ''}`}
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
@@ -203,7 +203,14 @@ class TheComponent extends Component {
                         </span>
                       }
                     >
-                      {`Created ${moment(created_date).format(
+                      {`${
+                        this.props.descriptionInTooltip &&
+                        `${
+                          this.props.description
+                            ? `${this.props.description}\n`
+                            : ''
+                        }`
+                      } Created ${moment(created_date).format(
                         'Do MMM YYYY HH:mma',
                       )}`}
                     </Tooltip>
@@ -216,7 +223,9 @@ class TheComponent extends Component {
                   <div
                     onClick={(e) => {
                       e.stopPropagation()
-                      this.editFeature(projectFlag, environmentFlags[id], 1)
+                      if (!readOnly) {
+                        this.editFeature(projectFlag, environmentFlags[id], 1)
+                      }
                     }}
                   >
                     <Tooltip
@@ -278,7 +287,7 @@ class TheComponent extends Component {
                   value={projectFlag.tags}
                 />
               </Row>
-              {description && (
+              {description && !this.props.descriptionInTooltip && (
                 <div
                   className='list-item-subtitle mt-1'
                   style={{ lineHeight: '20px', width: width[4] }}
@@ -334,79 +343,83 @@ class TheComponent extends Component {
             }}
           />
         </div>
-        <div
-          className='table-column'
-          style={{ width: width[2] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      this.context.router.history.push(
-                        `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
+        {!this.props.hideAudit && (
+          <div
+            className='table-column'
+            style={{ width: width[2] }}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            {AccountStore.getOrganisationRole() === 'ADMIN' &&
+              !this.props.hideAudit && (
+                <Tooltip
+                  html
+                  title={
+                    <div
+                      onClick={() => {
+                        this.context.router.history.push(
+                          `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                        )
+                      }}
+                      data-test={`feature-history-${this.props.index}`}
+                    >
+                      <Icon name='clock' width={24} fill='#9DA4AE' />
+                    </div>
+                  }
+                >
+                  Feature history
+                </Tooltip>
+              )}
+          </div>
+        )}
+        {!this.props.hideRemove && (
+          <div
+            className='table-column'
+            style={{ width: width[3] }}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            {!this.props.hideRemove && (
+              <Permission
+                level='project'
+                permission='DELETE_FEATURE'
+                id={projectId}
               >
-                Feature history
-              </Tooltip>
+                {({ permission: removeFeaturePermission }) =>
+                  Utils.renderWithPermission(
+                    removeFeaturePermission,
+                    Constants.projectPermissions('Delete Feature'),
+                    <Tooltip
+                      html
+                      title={
+                        <Button
+                          disabled={
+                            !removeFeaturePermission || readOnly || isProtected
+                          }
+                          onClick={() =>
+                            this.confirmRemove(projectFlag, () => {
+                              removeFlag(projectId, projectFlag)
+                            })
+                          }
+                          className='btn btn-with-icon'
+                          data-test={`remove-feature-btn-${this.props.index}`}
+                        >
+                          <Icon name='trash-2' width={20} fill='#656D7B' />
+                        </Button>
+                      }
+                    >
+                      {isProtected
+                        ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
+                        : 'Remove feature'}
+                    </Tooltip>,
+                  )
+                }
+              </Permission>
             )}
-        </div>
-        <div
-          className='table-column'
-          style={{ width: width[3] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          {!this.props.hideRemove && (
-            <Permission
-              level='project'
-              permission='DELETE_FEATURE'
-              id={projectId}
-            >
-              {({ permission: removeFeaturePermission }) =>
-                Utils.renderWithPermission(
-                  removeFeaturePermission,
-                  Constants.projectPermissions('Delete Feature'),
-                  <Tooltip
-                    html
-                    title={
-                      <Button
-                        disabled={
-                          !removeFeaturePermission || readOnly || isProtected
-                        }
-                        onClick={() =>
-                          this.confirmRemove(projectFlag, () => {
-                            removeFlag(projectId, projectFlag)
-                          })
-                        }
-                        className='btn btn-with-icon'
-                        data-test={`remove-feature-btn-${this.props.index}`}
-                      >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
-                    }
-                  >
-                    {isProtected
-                      ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>'
-                      : 'Remove feature'}
-                  </Tooltip>,
-                )
-              }
-            </Permission>
-          )}
-        </div>
+          </div>
+        )}
       </Row>
     )
   }
