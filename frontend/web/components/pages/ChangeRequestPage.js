@@ -351,22 +351,24 @@ const ChangeRequestsPage = class extends Component {
                 </nav>
                 <PageTitle
                   cta={
-                    <Row>
-                      <Button
-                        theme='secondary'
-                        onClick={this.deleteChangeRequest}
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          this.editChangeRequest(projectFlag, environmentFlag)
-                        }
-                        className='ml-2'
-                      >
-                        Edit
-                      </Button>
-                    </Row>
+                    !changeRequest?.committed_at && (
+                      <Row>
+                        <Button
+                          theme='secondary'
+                          onClick={this.deleteChangeRequest}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            this.editChangeRequest(projectFlag, environmentFlag)
+                          }
+                          className='ml-2'
+                        >
+                          Edit
+                        </Button>
+                      </Row>
+                    )
                   }
                   title={changeRequest.title}
                 >
