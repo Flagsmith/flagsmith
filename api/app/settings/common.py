@@ -773,6 +773,9 @@ DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True
 # DynamoDB table name for storing environment
 ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
+# V2 was created to improve storage over overrides data.
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 
