@@ -32,7 +32,7 @@ class BaseDynamoWrapper:
 
     def __init__(self):
         self._table = None
-        if table_name := self.table_name:
+        if table_name := self.get_table_name():
             self._table = boto3.resource(
                 "dynamodb", config=Config(tcp_keepalive=True)
             ).Table(table_name)
@@ -40,6 +40,9 @@ class BaseDynamoWrapper:
     @property
     def is_enabled(self) -> bool:
         return self._table is not None
+
+    def get_table_name(self):
+        return self.table_name
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
@@ -167,12 +170,13 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    table_name = settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
-
     ENVIRONMENT_ID_ATTRIBUTE = "environment_id"
     DOCUMENT_KEY_ATTRIBUTE = "document_key"
     ENVIRONMENT_API_KEY_ATTRIBUTE = "environment_api_key"
     ENVIRONMENT_API_KEY_INDEX_NAME = "environment_api_key-index"
+
+    def get_table_name(self):
+        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
     def get_environment_by_api_key(self, environment_api_key: str) -> dict:
         get_item_kwargs = {

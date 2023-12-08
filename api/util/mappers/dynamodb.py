@@ -39,6 +39,16 @@ def map_environment_to_environment_document(
     }
 
 
+def map_environment_to_environment_v2_document(
+    environment: "Environment",
+) -> Document:
+    return {
+        **map_environment_to_environment_document(environment),
+        "document_key": "META",
+        "environment_id": environment.id,
+    }
+
+
 def map_environment_api_key_to_environment_api_key_document(
     environment_api_key: "EnvironmentAPIKey",
 ) -> Document:
