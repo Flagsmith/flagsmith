@@ -572,9 +572,7 @@ const Aside = class extends Component {
                                 href='https://docs.flagsmith.com'
                               >
                                 <i className='icon mr-2 aside__nav-item--icon'>
-                                  <IonIcon
-                                    icon={star}
-                                  />
+                                  <IonIcon icon={star} />
                                 </i>
                                 Super cool demo feature!
                               </a>

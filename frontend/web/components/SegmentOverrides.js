@@ -13,7 +13,7 @@ import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
-import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 
