@@ -61,7 +61,13 @@ const AddEditTags: FC<AddEditTagsType> = ({
   const confirmDeleteTag = (tag: TTag) => {
     openConfirm(
       'Please confirm',
-      'Are you sure you wish to delete this tag?',
+      <div>
+        Are you sure you wish to delete the tag{' '}
+        <div className='d-inline-block'>
+          <Tag tag={tag} />
+        </div>
+        ?
+      </div>,
       () => {
         onChange(loFilter(value || [], (id) => id !== tag.id))
         deleteTag({
