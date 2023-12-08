@@ -1,6 +1,7 @@
 from django.db import models
 
 from features.import_export.constants import (
+    FEATURE_EXPORT_STATUSES,
     FEATURE_IMPORT_STATUSES,
     FEATURE_IMPORT_STRATEGIES,
     MAX_FEATURE_EXPORT_SIZE,
@@ -25,9 +26,21 @@ class FeatureExport(models.Model):
         swappable=True,
     )
 
+    status = models.CharField(
+        choices=FEATURE_EXPORT_STATUSES,
+        max_length=50,
+        blank=False,
+        null=False,
+        default=PROCESSING,
+    )
+
     # This is a JSON string of data used for file download
-    # once the task has completed assembly.
-    data = models.CharField(max_length=MAX_FEATURE_EXPORT_SIZE)
+    # once the task has completed assembly. It is null on upload.
+    data = models.CharField(
+        max_length=MAX_FEATURE_EXPORT_SIZE,
+        blank=True,
+        null=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
 

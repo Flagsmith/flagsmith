@@ -27,16 +27,17 @@ from .serializers import (
 @swagger_auto_schema(
     method="POST",
     request_body=CreateFeatureExportSerializer(),
-    responses={201: CreateFeatureExportSerializer()},
+    responses={201: FeatureExportSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateFeatureExportPermissions])
 def create_feature_export(request: Request) -> Response:
     serializer = CreateFeatureExportSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    feature_export = serializer.save()
+    response_serializer = FeatureExportSerializer(feature_export)
 
-    return Response(serializer.validated_data, status=201)
+    return Response(response_serializer.data, status=201)
 
 
 @swagger_auto_schema(
