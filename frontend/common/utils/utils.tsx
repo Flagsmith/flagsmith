@@ -349,6 +349,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (
       project &&
       project.use_edge_identities &&
+      project.show_edge_identity_overrides_for_feature &&
       !Utils.getFlagsmithHasFeature('show_edge_identity_overrides')
     ) {
       return true
