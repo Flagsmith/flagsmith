@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ProjectStore from 'common/stores/project-store'
 import ReactMarkdown from 'react-markdown'
+import Icon from './Icon'
 
 class ButterBar extends Component {
   static contextTypes = {
@@ -14,6 +15,7 @@ class ButterBar extends Component {
   }
 
   render() {
+    const { billingStatus } = this.props
     const matches = document.location.href.match(/\/environment\/([^/]*)/)
     const environment = matches && matches[1]
     if (environment) {
@@ -35,7 +37,8 @@ class ButterBar extends Component {
     return (
       <>
         {Utils.getFlagsmithValue('butter_bar') &&
-          !Utils.getFlagsmithHasFeature('read_only_mode') && (
+          !Utils.getFlagsmithHasFeature('read_only_mode') &&
+          (!billingStatus || billingStatus === 'ACTIVE') && (
             <ReactMarkdown className='butter-bar'>
               {Utils.getFlagsmithValue('butter_bar')}
             </ReactMarkdown>
@@ -46,6 +49,16 @@ class ButterBar extends Component {
             <Link to='/organisation-settings'>upgrade your plan</Link>.
           </div>
         )}
+        {Utils.getFlagsmithHasFeature('show_dunning_banner') &&
+          billingStatus === 'DUNNING' && (
+            <div className='alert-butter-bar'>
+              <span className='icon-alert mr-2'>
+                <Icon name='warning' fill='#fff' />
+              </span>
+              There was a problem with your paid subscription. Please check your payment
+              method to keep your subscription active.
+            </div>
+          )}
       </>
     )
   }
