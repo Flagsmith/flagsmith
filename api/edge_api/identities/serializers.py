@@ -78,8 +78,10 @@ class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):
 
 class FeatureStateValueEdgeIdentityField(serializers.Field):
     def to_representation(self, obj):
-        # TODO: I think this is probably giving the wrong value here
-        #  - it should be using the composite key
+        # TODO: I think this is probably giving the wrong value here (it
+        #  should be using the composite key) I think we've just gotten
+        #  away with it for now because identity overrides for MV features
+        #  only allow a single choice anyway (i.e. 100% on one option).
         identity_id = self.parent.get_identity_uuid()
         return obj.get_value(identity_id=identity_id)
 
