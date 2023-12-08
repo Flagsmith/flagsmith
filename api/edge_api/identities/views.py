@@ -365,7 +365,7 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
     responses={200: GetEdgeIdentityOverridesSerializer()},
 )
 @api_view(http_method_names=["GET"])
-@permission_classes([GetEdgeIdentityOverridesPermission])
+@permission_classes([IsAuthenticated, GetEdgeIdentityOverridesPermission])
 def get_edge_identity_overrides(
     request: Request, environment_pk: int, **kwargs
 ) -> Response:
