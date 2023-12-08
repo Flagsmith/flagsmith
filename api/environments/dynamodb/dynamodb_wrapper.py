@@ -27,22 +27,22 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger()
 
 
-class DynamoWrapper:
+class BaseDynamoWrapper:
     table_name: str = None
 
     def __init__(self):
         self._table = None
-        if self.table_name:
+        if table_name := self.table_name:
             self._table = boto3.resource(
                 "dynamodb", config=Config(tcp_keepalive=True)
-            ).Table(self.table_name)
+            ).Table(table_name)
 
     @property
     def is_enabled(self) -> bool:
         return self._table is not None
 
 
-class DynamoIdentityWrapper(DynamoWrapper):
+class DynamoIdentityWrapper(BaseDynamoWrapper):
     table_name = settings.IDENTITIES_TABLE_NAME_DYNAMO
 
     def query_items(self, *args, **kwargs):
@@ -141,11 +141,16 @@ class DynamoIdentityWrapper(DynamoWrapper):
         return []
 
 
-class DynamoEnvironmentWrapper(DynamoWrapper):
-    table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
-
-    def write_environment(self, environment: "Environment"):
+class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
+    def write_environment(self, environment: "Environment") -> None:
         self.write_environments([environment])
+
+    def write_environments(self, environments: Iterable["Environment"]) -> None:
+        raise NotImplementedError()
+
+
+class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
+    table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable["Environment"]):
         with self._table.batch_writer() as writer:
@@ -161,7 +166,47 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
             raise ObjectDoesNotExist() from e
 
 
-class DynamoEnvironmentAPIKeyWrapper(DynamoWrapper):
+class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
+    table_name = settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
+
+    ENVIRONMENT_ID_ATTRIBUTE = "environment_id"
+    DOCUMENT_KEY_ATTRIBUTE = "document_key"
+    ENVIRONMENT_API_KEY_ATTRIBUTE = "environment_api_key"
+    ENVIRONMENT_API_KEY_INDEX_NAME = "environment_api_key-index"
+
+    def get_environment_by_api_key(self, environment_api_key: str) -> dict:
+        get_item_kwargs = {
+            "IndexName": self.ENVIRONMENT_API_KEY_INDEX_NAME,
+            "Key": {
+                self.ENVIRONMENT_API_KEY_ATTRIBUTE: environment_api_key,
+                self.DOCUMENT_KEY_ATTRIBUTE: "META",
+            },
+        }
+        try:
+            return self._table.get_item(**get_item_kwargs)["Item"]
+        except IndexError:
+            raise ObjectDoesNotExist()
+
+    def get_identity_overrides(
+        self, environment_id: int, feature_id: int = None
+    ) -> typing.List[dict]:  # TODO better typing?
+        document_key_begins_with = "identity_override"
+        if feature_id:
+            document_key_begins_with += f":{feature_id}"
+        key_expression_condition = Key(self.ENVIRONMENT_ID_ATTRIBUTE).eq(
+            environment_id
+        ) & Key(self.DOCUMENT_KEY_ATTRIBUTE).begins_with(document_key_begins_with)
+
+        try:
+            response = self._table.query(
+                KeyConditionExpression=key_expression_condition
+            )
+            return response["Items"]
+        except KeyError as e:
+            raise ObjectDoesNotExist() from e
+
+
+class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
     table_name = settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
 
     def write_api_key(self, api_key: "EnvironmentAPIKey"):
