@@ -24,21 +24,17 @@ const controller = {
           )
         }
         prom.then((res) => {
-          if (Utils.getFlagsmithHasFeature('group_admins')) {
-            Promise.all(
-              (group.usersToAddAdmin || []).map((v) =>
-                createGroupAdmin(getStore(), {
-                  group: res.id,
-                  orgId,
-                  user: v.id,
-                }),
-              ),
-            ).then(() => {
-              controller.getGroups(orgId)
-            })
-          } else {
+          Promise.all(
+            (group.usersToAddAdmin || []).map((v) =>
+              createGroupAdmin(getStore(), {
+                group: res.id,
+                orgId,
+                user: v.id,
+              }),
+            ),
+          ).then(() => {
             controller.getGroups(orgId)
-          }
+          })
         })
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -80,31 +76,27 @@ const controller = {
             { user_ids: toRemove.map((u) => u.id) },
           ),
         ]).then(() => {
-          if (Utils.getFlagsmithHasFeature('group_admins')) {
-            Promise.all(
-              (group.usersToAddAdmin || [])
-                .map((v) =>
-                  createGroupAdmin(getStore(), {
+          Promise.all(
+            (group.usersToAddAdmin || [])
+              .map((v) =>
+                createGroupAdmin(getStore(), {
+                  group: group.id,
+                  orgId,
+                  user: v.id,
+                }),
+              )
+              .concat(
+                (group.usersToRemoveAdmin || []).map((v) =>
+                  deleteGroupAdmin(getStore(), {
                     group: group.id,
                     orgId,
                     user: v.id,
                   }),
-                )
-                .concat(
-                  (group.usersToRemoveAdmin || []).map((v) =>
-                    deleteGroupAdmin(getStore(), {
-                      group: group.id,
-                      orgId,
-                      user: v.id,
-                    }),
-                  ),
                 ),
-            ).then(() => {
-              controller.getGroups(orgId)
-            })
-          } else {
+              ),
+          ).then(() => {
             controller.getGroups(orgId)
-          }
+          })
         })
       })
 

@@ -563,47 +563,43 @@ const EnvironmentSettingsPage = class extends Component {
                         />
                         <div className='col-md-6'>
                           <form onSubmit={this.saveEnv}>
-                            {Utils.getFlagsmithHasFeature(
-                              'hide_disabled_flags_environment',
-                            ) && (
-                              <div>
-                                <h5 className='mb-2'>
-                                  Hide disabled flags from SDKs
-                                </h5>
-                                <Select
-                                  value={
-                                    showDisabledFlagOptions.find(
-                                      (v) =>
-                                        v.value ===
-                                        this.state.hide_disabled_flags,
-                                    ) || showDisabledFlagOptions[0]
-                                  }
-                                  onChange={(v) => {
-                                    this.setState(
-                                      { hide_disabled_flags: v.value },
-                                      this.saveEnv,
-                                    )
-                                  }}
-                                  options={showDisabledFlagOptions}
-                                  data-test='js-hide-disabled-flags'
-                                  disabled={isSaving}
-                                  className='full-width react-select mb-2'
-                                />
-                                <p className='mb-0 fs-small lh-sm'>
-                                  To prevent letting your users know about your
-                                  upcoming features and to cut down on payload,
-                                  enabling this will prevent the API from
-                                  returning features that are disabled. You can
-                                  also manage this in{' '}
-                                  <Link
-                                    to={`/project/${this.props.match.params.projectId}/settings`}
-                                  >
-                                    Project settings
-                                  </Link>
-                                  .
-                                </p>
-                              </div>
-                            )}
+                            <div>
+                              <h5 className='mb-2'>
+                                Hide disabled flags from SDKs
+                              </h5>
+                              <Select
+                                value={
+                                  showDisabledFlagOptions.find(
+                                    (v) =>
+                                      v.value ===
+                                      this.state.hide_disabled_flags,
+                                  ) || showDisabledFlagOptions[0]
+                                }
+                                onChange={(v) => {
+                                  this.setState(
+                                    { hide_disabled_flags: v.value },
+                                    this.saveEnv,
+                                  )
+                                }}
+                                options={showDisabledFlagOptions}
+                                data-test='js-hide-disabled-flags'
+                                disabled={isSaving}
+                                className='full-width react-select mb-2'
+                              />
+                              <p className='mb-0 fs-small lh-sm'>
+                                To prevent letting your users know about your
+                                upcoming features and to cut down on payload,
+                                enabling this will prevent the API from
+                                returning features that are disabled. You can
+                                also manage this in{' '}
+                                <Link
+                                  to={`/project/${this.props.match.params.projectId}/settings`}
+                                >
+                                  Project settings
+                                </Link>
+                                .
+                              </p>
+                            </div>
                             <div className='mt-4'>
                               <Row className='mb-2'>
                                 <Switch
@@ -624,47 +620,42 @@ const EnvironmentSettingsPage = class extends Component {
                                 from using the client key from setting traits.
                               </p>
                             </div>
-                            {Utils.getFlagsmithHasFeature(
-                              'consistent_hashing_setting',
-                            ) && (
-                              <div className='mt-4'>
-                                <Row className='mb-2'>
-                                  <Switch
-                                    checked={
-                                      use_identity_composite_key_for_hashing
-                                    }
-                                    onChange={(v) => {
-                                      this.setState(
-                                        {
-                                          use_identity_composite_key_for_hashing:
-                                            v,
-                                        },
-                                        this.saveEnv,
-                                      )
-                                    }}
-                                  />
-                                  <h5 className='mb-0 ml-3'>
-                                    Use Consistent Hashing
-                                  </h5>
-                                </Row>
-                                <p className='fs-small lh-sm'>
-                                  Enabling this setting will ensure that
-                                  multivariate and percentage split evaluations
-                                  made by the API are consistent with those made
-                                  by local evaluation mode in our server side
-                                  SDKs.
-                                  <div className='text-danger'>
-                                    Warning: Toggling this setting will mean
-                                    that some users will start receiving
-                                    different values for multivariate flags and
-                                    flags with a percentage split segment
-                                    override via the API / remote evaluation.
-                                    Values received in local evaluation mode
-                                    will not change.
-                                  </div>
-                                </p>
-                              </div>
-                            )}
+                            <div className='mt-4'>
+                              <Row className='mb-2'>
+                                <Switch
+                                  checked={
+                                    use_identity_composite_key_for_hashing
+                                  }
+                                  onChange={(v) => {
+                                    this.setState(
+                                      {
+                                        use_identity_composite_key_for_hashing:
+                                          v,
+                                      },
+                                      this.saveEnv,
+                                    )
+                                  }}
+                                />
+                                <h5 className='mb-0 ml-3'>
+                                  Use Consistent Hashing
+                                </h5>
+                              </Row>
+                              <p className='fs-small lh-sm'>
+                                Enabling this setting will ensure that
+                                multivariate and percentage split evaluations
+                                made by the API are consistent with those made
+                                by local evaluation mode in our server side
+                                SDKs.
+                                <div className='text-danger'>
+                                  Warning: Toggling this setting will mean that
+                                  some users will start receiving different
+                                  values for multivariate flags and flags with a
+                                  percentage split segment override via the API
+                                  / remote evaluation. Values received in local
+                                  evaluation mode will not change.
+                                </div>
+                              </p>
+                            </div>
                           </form>
                         </div>
                       </div>

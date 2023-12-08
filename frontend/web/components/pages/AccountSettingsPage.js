@@ -198,30 +198,28 @@ class TheComponent extends Component {
                             type='text'
                             name='Email Address'
                           />
-                          {Utils.getFlagsmithHasFeature('change_email') && (
-                            <div className='text-right mt-5'>
-                              <Button
-                                onClick={() =>
-                                  openModal(
-                                    'Change Email Address',
-                                    <ChangeEmailAddress
-                                      onComplete={() => {
-                                        closeModal()
-                                        AppActions.logout()
-                                      }}
-                                    />,
-                                    'p-0',
-                                  )
-                                }
-                                id='change-email-button'
-                                data-test='change-email-button'
-                                type='button'
-                                class='input-group-addon'
-                              >
-                                Change Email Address
-                              </Button>
-                            </div>
-                          )}
+                          <div className='text-right mt-5'>
+                            <Button
+                              onClick={() =>
+                                openModal(
+                                  'Change Email Address',
+                                  <ChangeEmailAddress
+                                    onComplete={() => {
+                                      closeModal()
+                                      AppActions.logout()
+                                    }}
+                                  />,
+                                  'p-0',
+                                )
+                              }
+                              id='change-email-button'
+                              data-test='change-email-button'
+                              type='button'
+                              class='input-group-addon'
+                            >
+                              Change Email Address
+                            </Button>
+                          </div>
                         </div>
                         <InputGroup
                           className='mt-2 mb-4'

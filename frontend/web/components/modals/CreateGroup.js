@@ -338,14 +338,12 @@ const CreateGroup = class extends Component {
                                     )}
                                 </div>
                               </Flex>
-                              {Utils.getFlagsmithHasFeature('group_admins') && (
-                                <div
-                                  style={{ paddingLeft: 5, width: widths[0] }}
-                                  className='table-column'
-                                >
-                                  Admin
-                                </div>
-                              )}
+                              <div
+                                style={{ paddingLeft: 5, width: widths[0] }}
+                                className='table-column'
+                              >
+                                Admin
+                              </div>
                               <div
                                 className='table-column text-center'
                                 style={{ width: widths[1] }}
@@ -375,16 +373,14 @@ const CreateGroup = class extends Component {
                                   {email}
                                 </div>
                               </Flex>
-                              {Utils.getFlagsmithHasFeature('group_admins') && (
-                                <div style={{ width: widths[0] }}>
-                                  <Switch
-                                    onChange={(e) => {
-                                      this.toggleUser(id, e, true)
-                                    }}
-                                    checked={isGroupAdmin}
-                                  />
-                                </div>
-                              )}
+                              <div style={{ width: widths[0] }}>
+                                <Switch
+                                  onChange={(e) => {
+                                    this.toggleUser(id, e, true)
+                                  }}
+                                  checked={isGroupAdmin}
+                                />
+                              </div>
                               <div
                                 className='table-column text-center'
                                 style={{ width: widths[1] }}

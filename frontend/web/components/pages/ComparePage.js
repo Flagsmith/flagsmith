@@ -50,16 +50,14 @@ class TheComponent extends Component {
               <CompareFeatures projectId={this.props.match.params.projectId} />
             </div>
           </TabItem>
-          {Utils.getFlagsmithHasFeature('compare_identities') && (
-            <TabItem tabLabel='Identities'>
-              <div className='mt-4'>
-                <CompareIdentities
-                  environmentId={this.props.match.params.environmentId}
-                  projectId={this.props.match.params.projectId}
-                />
-              </div>
-            </TabItem>
-          )}
+          <TabItem tabLabel='Identities'>
+            <div className='mt-4'>
+              <CompareIdentities
+                environmentId={this.props.match.params.environmentId}
+                projectId={this.props.match.params.projectId}
+              />
+            </div>
+          </TabItem>
         </Tabs>
       </div>
     )

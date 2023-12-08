@@ -480,9 +480,6 @@ const CreateFlag = class extends Component {
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
-    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
-      'manage_segment_overrides_env_role',
-    )
     let regexValid = true
     try {
       if (!isEdit && name && regex) {
@@ -558,7 +555,7 @@ const CreateFlag = class extends Component {
           />
         </FormGroup>
 
-        {!identity && Utils.getFlagsmithHasFeature('is_server_key_only') && (
+        {!identity && (
           <FormGroup className='mb-5 setting'>
             <Row>
               <Switch
@@ -1150,9 +1147,7 @@ const CreateFlag = class extends Component {
                                                   manageSegmentOverrides,
                                               }) => {
                                                 const isReadOnly =
-                                                  manageSegmentOverridesEnabled
-                                                    ? !manageSegmentOverrides
-                                                    : noPermissions
+                                                  !manageSegmentOverrides
                                                 return (
                                                   <SegmentOverrides
                                                     readOnly={isReadOnly}
@@ -1249,16 +1244,9 @@ const CreateFlag = class extends Component {
                                                           manageSegmentsOverrides,
                                                       }) => {
                                                         return Utils.renderWithPermission(
-                                                          manageSegmentOverridesEnabled
-                                                            ? manageSegmentsOverrides
-                                                            : savePermission,
+                                                          manageSegmentsOverrides,
                                                           Constants.environmentPermissions(
-                                                            manageSegmentOverridesEnabled
-                                                              ? 'Manage segment overrides'
-                                                              : Utils.getManageFeaturePermissionDescription(
-                                                                  is4Eyes,
-                                                                  identity,
-                                                                ),
+                                                            'Manage segment overrides',
                                                           ),
                                                           <Button
                                                             onClick={
@@ -1271,10 +1259,7 @@ const CreateFlag = class extends Component {
                                                               isSaving ||
                                                               !name ||
                                                               invalid ||
-                                                              (!manageSegmentOverridesEnabled &&
-                                                                !savePermission) ||
-                                                              (manageSegmentOverridesEnabled &&
-                                                                !manageSegmentsOverrides)
+                                                              !manageSegmentsOverrides
                                                             }
                                                           >
                                                             {isSaving
