@@ -459,63 +459,55 @@ const ChangeRequestsPage = class extends Component {
                               />
                             </div>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'enable_groups_as_reviewers',
-                          ) && (
-                            <div className='mb-4'>
-                              <Row
-                                onClick={() =>
-                                  this.setState({ showGroups: true })
-                                }
-                                className='font-weight-medium clickable'
-                              >
-                                <div className='mr-2'>Assigned groups</div>
-                                <Icon
-                                  name='setting'
-                                  width={20}
-                                  fill='#656D7B'
-                                />
-                              </Row>
-                              <Row className='mt-2'>
-                                {!!ownerGroups?.length &&
-                                  ownerGroups.map((g) => (
-                                    <Row
-                                      key={g.id}
-                                      onClick={() =>
-                                        this.removeOwner(g.id, false)
-                                      }
-                                      className='chip'
-                                      style={{
-                                        marginBottom: 4,
-                                        marginTop: 4,
-                                      }}
-                                    >
-                                      <span className='font-weight-bold'>
-                                        {g.name}
-                                      </span>
-                                      <span className='chip-icon ion'>
-                                        <IonIcon icon={close} />
-                                      </span>
-                                    </Row>
-                                  ))}
-                              </Row>
-                              <MyGroupsSelect
-                                orgId={AccountStore.getOrganisation().id}
-                                groups={orgGroups}
-                                value={
-                                  ownerGroups && ownerGroups.map((v) => v.id)
-                                }
-                                onAdd={this.addOwner}
-                                onRemove={this.removeOwner}
-                                isOpen={this.state.showGroups}
-                                onToggle={() =>
-                                  this.setState({
-                                    showGroups: !this.state.showGroups,
-                                  })
-                                }
-                              />
-                            </div>
-                          )}
+                          <div className='mb-4'>
+                            <Row
+                              onClick={() =>
+                                this.setState({ showGroups: true })
+                              }
+                              className='font-weight-medium clickable'
+                            >
+                              <div className='mr-2'>Assigned groups</div>
+                              <Icon name='setting' width={20} fill='#656D7B' />
+                            </Row>
+                            <Row className='mt-2'>
+                              {!!ownerGroups?.length &&
+                                ownerGroups.map((g) => (
+                                  <Row
+                                    key={g.id}
+                                    onClick={() =>
+                                      this.removeOwner(g.id, false)
+                                    }
+                                    className='chip'
+                                    style={{
+                                      marginBottom: 4,
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    <span className='font-weight-bold'>
+                                      {g.name}
+                                    </span>
+                                    <span className='chip-icon ion'>
+                                      <IonIcon icon={close} />
+                                    </span>
+                                  </Row>
+                                ))}
+                            </Row>
+                            <MyGroupsSelect
+                              orgId={AccountStore.getOrganisation().id}
+                              groups={orgGroups}
+                              value={
+                                ownerGroups && ownerGroups.map((v) => v.id)
+                              }
+                              onAdd={this.addOwner}
+                              onRemove={this.removeOwner}
+                              isOpen={this.state.showGroups}
+                              onToggle={() =>
+                                this.setState({
+                                  showGroups: !this.state.showGroups,
+                                })
+                              }
+                            />
+                          </div>
                         </>
                       }
                     />

@@ -560,9 +560,6 @@ class TheComponent extends Component {
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
-    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
-      'manage_segment_overrides_env_role',
-    )
     return (
       <div>
         <Permission
@@ -602,10 +599,7 @@ class TheComponent extends Component {
                           this.props.setShowCreateSegment(true)
                         }}
                         theme='outline'
-                        disabled={
-                          !!isLimitReached ||
-                          (manageSegmentOverridesEnabled && !manageSegments)
-                        }
+                        disabled={!!isLimitReached || !manageSegments}
                       >
                         Create Feature-Specific Segment
                       </Button>
