@@ -172,16 +172,19 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     ENVIRONMENT_ID_ATTRIBUTE = "environment_id"
     DOCUMENT_KEY_ATTRIBUTE = "document_key"
+    ENVIRONMENT_API_KEY_ATTRIBUTE = "environment_api_key"
+    ENVIRONMENT_API_KEY_INDEX_NAME = "environment_api_key-index"
 
     def get_environment_by_api_key(self, environment_api_key: str) -> dict:
-        filter_expression = Key("environment_api_key").eq(environment_api_key)
+        filter_expression = Key(self.ENVIRONMENT_API_KEY_ATTRIBUTE).eq(
+            environment_api_key
+        ) & Key(self.DOCUMENT_KEY_ATTRIBUTE).eq("META")
         query_kwargs = {
-            "IndexName": "environment_api_key-index",
-            "Limit": 1,
+            "IndexName": self.ENVIRONMENT_API_KEY_INDEX_NAME,
             "KeyConditionExpression": filter_expression,
         }
         try:
-            return self._table.query(**query_kwargs)["Items"][0]
+            return self._table.get_item(**query_kwargs)["Item"]
         except IndexError:
             raise ObjectDoesNotExist()
 
