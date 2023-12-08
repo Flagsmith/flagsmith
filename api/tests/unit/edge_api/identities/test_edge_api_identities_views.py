@@ -108,7 +108,7 @@ def test_get_edge_identity_overrides_for_a_feature(
 ) -> None:
     # Given
     base_url = reverse(
-        "api-v1:environments:get-edge-identity-overrides", args=[environment.pk]
+        "api-v1:environments:edge-identity-overrides", args=[environment.pk]
     )
     url = f"{base_url}?feature={feature.id}"
     with_environment_permissions([VIEW_IDENTITIES])
@@ -168,7 +168,7 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
 ) -> None:
     # Given
     base_url = reverse(
-        "api-v1:environments:get-edge-identity-overrides", args=[environment.pk]
+        "api-v1:environments:edge-identity-overrides", args=[environment.pk]
     )
     url = f"{base_url}?feature={feature.id}"
     with_environment_permissions([VIEW_ENVIRONMENT])

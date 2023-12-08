@@ -146,6 +146,6 @@ urlpatterns = [
     path(
         "<int:environment_pk>/edge-identity-overrides",
         get_edge_identity_overrides,
-        name="get-edge-identity-overrides",
+        name="edge-identity-overrides",
     ),
 ]
