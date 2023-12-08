@@ -15,7 +15,8 @@ import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import { rocket } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
+import TableFilter from 'components/tables/TableFilter'
+import TableSortFilter from 'components/tables/TableSortFilter'
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -156,7 +157,7 @@ const FeaturesPage = class extends Component {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
-
+    const includesArchived = this.state.tags?.includes('')
     return (
       <div
         data-test='features-page'
@@ -262,57 +263,23 @@ const FeaturesPage = class extends Component {
                               <PanelSearch
                                 className='no-pad'
                                 id='features-list'
-                                title='Features'
                                 renderSearchWithNoResults
                                 itemHeight={65}
                                 isLoading={FeatureListStore.isLoading}
                                 paging={FeatureListStore.paging}
-                                search={this.state.search}
                                 header={
                                   <Row className='table-header'>
-                                    <Flex className='table-column px-3'>
-                                      Name
-                                    </Flex>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[0] }}
-                                    >
-                                      Value
-                                    </div>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[1] }}
-                                    >
-                                      <Switch disabled />
-                                    </div>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[2] }}
-                                    ></div>
-                                    <div
-                                      className='table-column'
-                                      style={{ width: width[3] }}
-                                    >
-                                      Remove
+                                    <div className='table-column flex-fill'>
+                                      <Row className='justify-content-end'>
+                                        <TableFilter
+                                          className='me-5'
+                                          title='Tags'
+                                        />
+                                        <TableSortFilter />
+                                      </Row>
                                     </div>
                                   </Row>
                                 }
-                                onChange={(e) => {
-                                  this.setState(
-                                    { search: Utils.safeParseEventValue(e) },
-                                    () => {
-                                      AppActions.searchFeatures(
-                                        this.props.match.params.projectId,
-                                        this.props.match.params.environmentId,
-                                        true,
-                                        this.state.search,
-                                        this.state.sort,
-                                        0,
-                                        this.getFilter(),
-                                      )
-                                    },
-                                  )
-                                }}
                                 nextPage={() =>
                                   AppActions.getFeatures(
                                     this.props.match.params.projectId,
@@ -359,84 +326,7 @@ const FeaturesPage = class extends Component {
                                     )
                                   })
                                 }}
-                                sorting={[
-                                  {
-                                    default: true,
-                                    label: 'Name',
-                                    order: 'asc',
-                                    value: 'name',
-                                  },
-                                  {
-                                    label: 'Created Date',
-                                    order: 'asc',
-                                    value: 'created_date',
-                                  },
-                                ]}
                                 items={projectFlags}
-                                searchPanel={
-                                  <Row className='px-0 pt-0 pb-2'>
-                                    <TagFilter
-                                      showUntagged
-                                      showClearAll={
-                                        (this.state.tags &&
-                                          !!this.state.tags.length) ||
-                                        this.state.showArchived
-                                      }
-                                      onClearAll={() =>
-                                        this.setState(
-                                          { showArchived: false, tags: [] },
-                                          this.filter,
-                                        )
-                                      }
-                                      projectId={`${projectId}`}
-                                      value={this.state.tags}
-                                      onChange={(tags) => {
-                                        FeatureListStore.isLoading = true
-                                        if (
-                                          tags.includes('') &&
-                                          tags.length > 1
-                                        ) {
-                                          if (!this.state.tags.includes('')) {
-                                            this.setState(
-                                              { tags: [''] },
-                                              this.filter,
-                                            )
-                                          } else {
-                                            this.setState(
-                                              { tags: tags.filter((v) => !!v) },
-                                              this.filter,
-                                            )
-                                          }
-                                        } else {
-                                          this.setState({ tags }, this.filter)
-                                        }
-                                        AsyncStorage.setItem(
-                                          `${projectId}tags`,
-                                          JSON.stringify(tags),
-                                        )
-                                      }}
-                                    >
-                                      <Tag
-                                        selected={this.state.showArchived}
-                                        onClick={() => {
-                                          FeatureListStore.isLoading = true
-                                          this.setState(
-                                            {
-                                              showArchived:
-                                                !this.state.showArchived,
-                                            },
-                                            this.filter,
-                                          )
-                                        }}
-                                        className='px-2 py-2 ml-2 mr-2 chip-info'
-                                        tag={{
-                                          color: '#0AADDF',
-                                          label: 'Archived',
-                                        }}
-                                      />
-                                    </TagFilter>
-                                  </Row>
-                                }
                                 renderFooter={() => (
                                   <>
                                     <JSONReference
@@ -469,7 +359,6 @@ const FeaturesPage = class extends Component {
                                     projectFlag={projectFlag}
                                   />
                                 )}
-                                filterRow={() => true}
                               />
                             </FormGroup>
                           )}
