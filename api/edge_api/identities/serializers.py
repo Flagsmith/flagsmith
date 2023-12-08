@@ -244,11 +244,11 @@ class GetEdgeIdentityOverridesResultSerializer(EdgeIdentityFeatureStateSerialize
     identity_uuid = serializers.CharField()
 
     def to_representation(self, instance: EdgeIdentityFeatureStateOverrideModel):
-        # This is a bit of a hack :/ Since the FeatureStateValueEdgeIdentityField
-        # relies on having this data available to generate the value of the feature
-        # state, we need to set this and make it available to the field class.
-        # to_representation seems like the best place for this since we only care
-        # about serialization here.
+        # Since the FeatureStateValueEdgeIdentityField relies on having this data
+        # available to generate the value of the feature state, we need to set this
+        # and make it available to the field class. to_representation seems like the
+        # best place for this since we only care about serialization here (not
+        # deserialization).
         self.context["identity"] = EdgeIdentity.from_identity_document(
             {
                 "identifier": instance.identifier,
