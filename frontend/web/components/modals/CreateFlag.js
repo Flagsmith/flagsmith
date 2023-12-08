@@ -175,6 +175,29 @@ const CreateFlag = class extends Component {
 
   userOverridesPage = (page) => {
     if (Utils.getIsEdge()) {
+      if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
+        data
+          .get(
+            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides/?feature=${this.props.projectFlag.id}&page=${page}`,
+          )
+          .then((userOverrides) => {
+            this.setState({
+              userOverrides: userOverrides.results.map((v) => ({
+                ...v,
+                identity: {
+                  id: v.identity_uuid,
+                  identifier: v.identifier,
+                },
+              })),
+              userOverridesPaging: {
+                count: userOverrides.count,
+                currentPage: page,
+                next: userOverrides.next,
+              },
+            })
+          })
+      }
+
       return
     }
     data
