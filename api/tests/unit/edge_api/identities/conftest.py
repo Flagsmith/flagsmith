@@ -55,7 +55,7 @@ def edge_identity_override_document(
 ) -> dict:
     return {
         "environment_id": environment.id,
-        "document_key": f"identity_override|{feature.id}|{edge_identity_model.identity_uuid}",
+        "document_key": f"identity_override:{feature.id}:{edge_identity_model.identity_uuid}",
         "environment_api_key": environment.api_key,
         "identifier": edge_identity_model.identifier,
         "feature_state": {

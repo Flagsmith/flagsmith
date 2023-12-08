@@ -358,7 +358,7 @@ def get_edge_identity_overrides(
     items = edge_identity_service.get_edge_identity_overrides(
         environment_pk, feature_id=feature_id
     )
-    response_serializer = GetEdgeIdentityOverridesQuerySerializer(
+    response_serializer = GetEdgeIdentityOverridesSerializer(
         instance={"results": items}
     )
     return Response(response_serializer.data)
