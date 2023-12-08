@@ -1,6 +1,5 @@
 import copy
 import typing
-import uuid
 
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel as EngineFeatureModel
@@ -31,6 +30,7 @@ from util.mappers import (
 )
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
+from .edge_identity_service import EdgeIdentityFeatureStateOverrideModel
 from .models import EdgeIdentity
 from .tasks import call_environment_webhook_for_feature_state_change
 
@@ -78,11 +78,12 @@ class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):
 
 class FeatureStateValueEdgeIdentityField(serializers.Field):
     def to_representation(self, obj):
-        # TODO: I think this is probably giving the wrong value here (it
-        #  should be using the composite key) I think we've just gotten
-        #  away with it for now because identity overrides for MV features
-        #  only allow a single choice anyway (i.e. 100% on one option).
-        identity_id = self.parent.get_identity_uuid()
+        identity: EdgeIdentity = self.parent.context["identity"]
+        environment: Environment = self.parent.context["environment"]
+        identity_id = identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        )
+
         return obj.get_value(identity_id=identity_id)
 
     def get_attribute(self, instance):
@@ -242,11 +243,18 @@ class GetEdgeIdentityOverridesResultSerializer(EdgeIdentityFeatureStateSerialize
     identifier = serializers.CharField()
     identity_uuid = serializers.CharField()
 
-    def get_identity_uuid(self, obj=None):
-        # TODO: remove this as it's wrong for 2 reasons:
-        #  - see the comment on the super method
-        #  - it's returning a static string...
-        return str(uuid.uuid4())
+    def __init__(self):
+        super().__init__()
+
+    def to_representation(self, instance: EdgeIdentityFeatureStateOverrideModel):
+        self.context["identity"] = EdgeIdentity.from_identity_document(
+            {
+                "identifier": instance.identifier,
+                "identity_uuid": instance.identity_uuid,
+                "environment_api_key": self.context["environment"].api_key,
+            }
+        )
+        return super().to_representation(instance)
 
 
 class GetEdgeIdentityOverridesSerializer(serializers.Serializer):

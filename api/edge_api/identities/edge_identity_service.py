@@ -16,7 +16,7 @@ def get_edge_identity_overrides(
     environment_id: int, feature_id: int = None
 ) -> typing.List[EdgeIdentityFeatureStateOverrideModel]:
     override_items = ddb_environment_v2_wrapper.get_identity_overrides(
-        environment_id, feature_id
+        environment_id=environment_id, feature_id=feature_id
     )
     return [
         EdgeIdentityFeatureStateOverrideModel.parse_obj(

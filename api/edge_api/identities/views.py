@@ -242,6 +242,15 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
         return feature_state
 
+    def get_serializer_context(self) -> dict:
+        return {
+            **super().get_serializer_context(),
+            "identity": self.identity,
+            "environment": Environment.objects.get(
+                api_key=self.kwargs["environment_api_key"]
+            ),
+        }
+
     @swagger_auto_schema(query_serializer=EdgeIdentityFsQueryparamSerializer())
     def list(self, request, *args, **kwargs):
         q_params_serializer = EdgeIdentityFsQueryparamSerializer(
@@ -355,10 +364,11 @@ def get_edge_identity_overrides(
     )
     query_serializer.is_valid(raise_exception=True)
     feature_id = query_serializer.validated_data.get("feature")
+    environment = Environment.objects.get(pk=environment_pk)
     items = edge_identity_service.get_edge_identity_overrides(
         environment_pk, feature_id=feature_id
     )
     response_serializer = GetEdgeIdentityOverridesSerializer(
-        instance={"results": items}
+        instance={"results": items}, context={"environment": environment}
     )
     return Response(response_serializer.data)

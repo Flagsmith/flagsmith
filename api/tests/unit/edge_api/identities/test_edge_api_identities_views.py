@@ -101,13 +101,15 @@ def test_get_edge_identity_overrides_for_a_feature(
     feature: Feature,
     environment: Environment,
     edge_identity_override_document: dict,
+    edge_identity_override_document_2: dict,
     edge_identity_model: EdgeIdentity,
-    edge_identity_override_feature_state_uuid: str,
+    edge_identity_model_2: EdgeIdentity,
 ) -> None:
     # Given
-    url = reverse(
+    base_url = reverse(
         "api-v1:environments:get-edge-identity-overrides", args=[environment.pk]
     )
+    url = f"{base_url}?feature={feature.id}"
     with_environment_permissions([VIEW_IDENTITIES])
 
     mock_dynamodb_wrapper = mocker.MagicMock()
@@ -115,8 +117,10 @@ def test_get_edge_identity_overrides_for_a_feature(
         "edge_api.identities.edge_identity_service.ddb_environment_v2_wrapper",
         mock_dynamodb_wrapper,
     )
+
     mock_dynamodb_wrapper.get_identity_overrides.return_value = [
-        edge_identity_override_document
+        edge_identity_override_document,
+        edge_identity_override_document_2,
     ]
 
     # When
@@ -126,13 +130,30 @@ def test_get_edge_identity_overrides_for_a_feature(
     assert response.status_code == status.HTTP_200_OK
 
     response_json = response.json()
-    assert len(response_json["results"]) == 1
+    assert len(response_json["results"]) == 2
     assert response_json["results"][0] == {
         "feature_state_value": None,
         "multivariate_feature_state_values": [],
         "identity_uuid": edge_identity_model.identity_uuid,
         "identifier": edge_identity_model.identifier,
-        "featurestate_uuid": edge_identity_override_feature_state_uuid,
+        "featurestate_uuid": edge_identity_override_document["feature_state"][
+            "featurestate_uuid"
+        ],
         "enabled": True,
         "feature": feature.id,
     }
+    assert response_json["results"][1] == {
+        "feature_state_value": None,
+        "multivariate_feature_state_values": [],
+        "identity_uuid": edge_identity_model_2.identity_uuid,
+        "identifier": edge_identity_model_2.identifier,
+        "featurestate_uuid": edge_identity_override_document_2["feature_state"][
+            "featurestate_uuid"
+        ],
+        "enabled": True,
+        "feature": feature.id,
+    }
+
+    mock_dynamodb_wrapper.get_identity_overrides.assert_called_once_with(
+        environment_id=environment.id, feature_id=feature.id
+    )
