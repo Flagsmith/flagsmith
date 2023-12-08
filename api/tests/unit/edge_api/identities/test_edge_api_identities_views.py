@@ -11,6 +11,7 @@ from edge_api.identities.views import EdgeIdentityViewSet
 from environments.models import Environment
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -157,3 +158,23 @@ def test_get_edge_identity_overrides_for_a_feature(
     mock_dynamodb_wrapper.get_identity_overrides.assert_called_once_with(
         environment_id=environment.id, feature_id=feature.id
     )
+
+
+def test_user_without_manage_identities_permission_cannot_get_edge_identity_overrides_for_a_feature(
+    staff_client: APIClient,
+    with_environment_permissions: Callable,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:environments:get-edge-identity-overrides", args=[environment.pk]
+    )
+    url = f"{base_url}?feature={feature.id}"
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

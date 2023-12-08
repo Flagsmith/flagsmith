@@ -61,7 +61,10 @@ from util.mappers import map_engine_identity_to_identity_document
 from . import edge_identity_service
 from .exceptions import TraitPersistenceError
 from .models import EdgeIdentity
-from .permissions import EdgeIdentityWithIdentifierViewPermissions
+from .permissions import (
+    EdgeIdentityWithIdentifierViewPermissions,
+    GetEdgeIdentityOverridesPermission,
+)
 
 
 @method_decorator(
@@ -355,7 +358,7 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
     responses={200: GetEdgeIdentityOverridesSerializer()},
 )
 @api_view(http_method_names=["GET"])
-@permission_classes([])  # TODO
+@permission_classes([GetEdgeIdentityOverridesPermission])
 def get_edge_identity_overrides(
     request: Request, environment_pk: int, **kwargs
 ) -> Response:
