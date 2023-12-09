@@ -74,7 +74,7 @@ class DynamoProjectMetadata:
 
 
 class IdentityOverrideV2(BaseModel):
-    environment_id: int
+    environment_id: str
     document_key: str
     environment_api_key: str
     feature_state: FeatureStateModel

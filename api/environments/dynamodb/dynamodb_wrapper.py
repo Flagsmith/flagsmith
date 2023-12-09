@@ -190,7 +190,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         try:
             response = self._table.query(
                 KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                    environment_id,
+                    str(environment_id),
                 )
                 & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
                     get_environments_v2_identity_override_document_key(

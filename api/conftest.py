@@ -580,7 +580,7 @@ def flagsmith_environments_v2_table(dynamodb) -> Table:
             },
         ],
         AttributeDefinitions=[
-            {"AttributeName": "environment_id", "AttributeType": "N"},
+            {"AttributeName": "environment_id", "AttributeType": "S"},
             {"AttributeName": "document_key", "AttributeType": "S"},
         ],
         BillingMode="PAY_PER_REQUEST",
