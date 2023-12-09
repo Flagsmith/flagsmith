@@ -15,14 +15,13 @@ from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb.constants import (
-    ENVIRONMENTS_V2_ENVIRONMENT_SORT_KEY_META_VALUE,
-    ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX,
     ENVIRONMENTS_V2_PARTITION_KEY,
-    ENVIRONMENTS_V2_SECONDARY_INDEX,
-    ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY,
     ENVIRONMENTS_V2_SORT_KEY,
 )
 from environments.dynamodb.types import IdentityOverridesV2Changeset
+from environments.dynamodb.utils import (
+    get_environments_v2_identity_override_document_key,
+)
 from util.mappers import (
     map_environment_api_key_to_environment_api_key_document,
     map_environment_to_environment_document,
@@ -183,35 +182,19 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def get_table_name(self):
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
-    def get_environment_by_api_key(self, environment_api_key: str) -> dict[str, Any]:
-        get_item_kwargs = {
-            "IndexName": ENVIRONMENTS_V2_SECONDARY_INDEX,
-            "Key": {
-                ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY: environment_api_key,
-                ENVIRONMENTS_V2_SORT_KEY: ENVIRONMENTS_V2_ENVIRONMENT_SORT_KEY_META_VALUE,
-            },
-        }
-        try:
-            return self._table.get_item(**get_item_kwargs)["Item"]
-        except IndexError:
-            raise ObjectDoesNotExist()
-
-    def get_identity_overrides(
-        self, environment_id: int, feature_id: int = None
+    def get_identity_overrides_by_feature_id(
+        self, environment_id: int, feature_id: int
     ) -> typing.List[dict[str, Any]]:
-        if feature_id:
-            sort_key_begins_with = (
-                f"{ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX}{feature_id}:"
-            )
-        else:
-            sort_key_begins_with = ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_PREFIX
-        key_expression_condition = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-            environment_id
-        ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(sort_key_begins_with)
-
         try:
             response = self._table.query(
-                KeyConditionExpression=key_expression_condition
+                KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+                    environment_id,
+                )
+                & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+                    get_environments_v2_identity_override_document_key(
+                        feature_id=feature_id,
+                    ),
+                )
             )
             return response["Items"]
         except KeyError as e:

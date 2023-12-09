@@ -6,12 +6,12 @@ from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
 from edge_api.identities.types import IdentityChangeset
-from environments.dynamodb.constants import (
-    ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_TEMPLATE,
-)
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2Document,
+)
+from environments.dynamodb.utils import (
+    get_environments_v2_identity_override_document_key,
 )
 from util.mappers.engine import (
     map_environment_api_key_to_engine,
@@ -80,7 +80,7 @@ def map_engine_feature_state_to_identity_override_document(
     environment_id: int,
 ) -> list[IdentityOverrideV2Document]:
     return IdentityOverrideV2Document(
-        document_key=ENVIRONMENTS_V2_IDENTITY_OVERRIDE_DOCUMENT_KEY_TEMPLATE.format(
+        document_key=get_environments_v2_identity_override_document_key(
             feature_id=feature_state.feature.id,
             identity_uuid=identity_uuid,
         ),
