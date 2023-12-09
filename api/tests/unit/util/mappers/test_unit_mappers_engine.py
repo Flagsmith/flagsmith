@@ -224,7 +224,7 @@ def test_map_feature_state_to_engine__return_expected(
     # When
     result = engine.map_feature_state_to_engine(
         feature_state,
-        [],
+        mv_fs_values=[],
     )
 
     # Then
@@ -268,7 +268,7 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
     # When
     result = engine.map_feature_state_to_engine(
         segment_multivariate_feature_state,
-        [mv_fs_value],
+        mv_fs_values=[mv_fs_value],
     )
 
     # Then

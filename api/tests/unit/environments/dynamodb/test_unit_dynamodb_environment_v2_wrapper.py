@@ -1,40 +1,130 @@
-# import uuid
+import uuid
 
-# from mypy_boto3_dynamodb.service_resource import Table
-# from pytest_django.fixtures import SettingsWrapper
+from mypy_boto3_dynamodb.service_resource import Table
+from pytest_django.fixtures import SettingsWrapper
 
-# from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
-# from environments.models import Environment
-# from features.models import Feature
+from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
+from environments.dynamodb.types import (
+    IdentityOverridesV2Changeset,
+    IdentityOverrideV2,
+)
+from environments.models import Environment
+from features.models import Feature, FeatureState
+from util.mappers import (
+    map_environment_to_environment_v2_document,
+    map_feature_state_to_engine,
+    map_identity_override_to_identity_override_document,
+)
 
-# def test_environment_v2_wrapper_get_identity_overrides(
-#     settings: SettingsWrapper,
-#     environment: Environment,
-#     flagsmith_environments_v2_table: Table,
-#     feature: Feature,
-# ) -> None:
-#     # Given
-#     settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
-#     wrapper = DynamoEnvironmentV2Wrapper()
 
-#     identity_uuid = str(uuid.uuid4())
-#     identifier = "identity1"
-#     override_document = {
-#         "environment_id": environment.id,
-#         "document_key": f"identity_override:{feature.id}:{identity_uuid}",
-#         "environment_api_key": environment.api_key,
-#         "identifier": identifier,
-#         "feature_state": {},
-#     }
+def test_environment_v2_wrapper__get_identity_overrides__return_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
 
-#     environment_document = map_environment_to_environment_v2_document(environment)
+    identity_uuid = str(uuid.uuid4())
+    identifier = "identity1"
+    override_document = {
+        "environment_id": environment.id,
+        "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+        "environment_api_key": environment.api_key,
+        "identifier": identifier,
+        "feature_state": {},
+    }
 
-#     flagsmith_environments_v2_table.put_item(Item=override_document)
-#     flagsmith_environments_v2_table.put_item(Item=environment_document)
+    environment_document = map_environment_to_environment_v2_document(environment)
 
-#     # When
-#     results = wrapper.get_identity_overrides(environment_id=environment.id)
+    flagsmith_environments_v2_table.put_item(Item=override_document)
+    flagsmith_environments_v2_table.put_item(Item=environment_document)
 
-#     # Then
-#     assert len(results) == 1
-#     assert results[0] == override_document
+    # When
+    results = wrapper.get_identity_overrides_by_feature_id(
+        environment_id=environment.id,
+        feature_id=feature.id,
+    )
+
+    # Then
+    assert len(results) == 1
+    assert results[0] == override_document
+
+
+def test_environment_v2_wrapper__update_identity_overrides__put_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    identity_uuid = str(uuid.uuid4())
+    override_document = IdentityOverrideV2.parse_obj(
+        {
+            "environment_id": environment.id,
+            "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+            "environment_api_key": environment.api_key,
+            "feature_state": map_feature_state_to_engine(feature_state),
+        }
+    )
+
+    # When
+    wrapper.update_identity_overrides(
+        changeset=IdentityOverridesV2Changeset(
+            to_delete=[],
+            to_put=[override_document],
+        ),
+    )
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0] == map_identity_override_to_identity_override_document(
+        override_document,
+    )
+
+
+def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    identity_uuid = str(uuid.uuid4())
+    override_document_data = map_identity_override_to_identity_override_document(
+        IdentityOverrideV2.parse_obj(
+            {
+                "environment_id": environment.id,
+                "document_key": f"identity_override:{feature.id}:{identity_uuid}",
+                "environment_api_key": environment.api_key,
+                "feature_state": map_feature_state_to_engine(feature_state),
+            }
+        )
+    )
+
+    flagsmith_environments_v2_table.put_item(Item=override_document_data)
+
+    override_document = IdentityOverrideV2.parse_obj(override_document_data)
+
+    # When
+    wrapper.update_identity_overrides(
+        changeset=IdentityOverridesV2Changeset(
+            to_delete=[override_document],
+            to_put=[],
+        ),
+    )
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 0

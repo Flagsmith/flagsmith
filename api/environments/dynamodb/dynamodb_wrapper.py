@@ -183,7 +183,9 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
     def get_identity_overrides_by_feature_id(
-        self, environment_id: int, feature_id: int
+        self,
+        environment_id: int,
+        feature_id: int,
     ) -> typing.List[dict[str, Any]]:
         try:
             response = self._table.query(

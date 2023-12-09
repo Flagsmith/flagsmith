@@ -127,3 +127,67 @@ def test_map_identity_to_identity_document__call_expected(
         "identity_uuid": mocker.ANY,
     }
     assert uuid.UUID(result["identity_uuid"])
+
+
+def test_map_environment_to_environment_v2_document__call_expected(
+    environment: "Environment",
+    feature_state: "FeatureState",
+) -> None:
+    # Given
+    expected_api_key = environment.api_key
+    expected_updated_at = environment.updated_at.isoformat()
+    expected_featurestate_uuid = str(feature_state.uuid)
+
+    # When
+    result = dynamodb.map_environment_to_environment_v2_document(environment)
+
+    # Then
+    assert result == {
+        "document_key": "META",
+        "environment_id": Decimal(environment.id),
+        "allow_client_traits": True,
+        "amplitude_config": None,
+        "api_key": expected_api_key,
+        "dynatrace_config": None,
+        "feature_states": [
+            {
+                "django_id": Decimal(feature_state.pk),
+                "enabled": False,
+                "feature": {
+                    "id": Decimal(feature_state.feature.pk),
+                    "name": "Test Feature1",
+                    "type": "STANDARD",
+                },
+                "feature_segment": None,
+                "feature_state_value": None,
+                "featurestate_uuid": expected_featurestate_uuid,
+                "multivariate_feature_state_values": [],
+            }
+        ],
+        "heap_config": None,
+        "hide_disabled_flags": None,
+        "hide_sensitive_data": False,
+        "id": Decimal(environment.pk),
+        "mixpanel_config": None,
+        "name": "Test Environment",
+        "project": {
+            "enable_realtime_updates": False,
+            "hide_disabled_flags": False,
+            "id": Decimal(environment.project.pk),
+            "name": "Test Project",
+            "organisation": {
+                "feature_analytics": False,
+                "id": Decimal(environment.project.organisation.pk),
+                "name": "Test Org",
+                "persist_trait_data": True,
+                "stop_serving_flags": False,
+            },
+            "segments": [],
+            "server_key_only_feature_ids": [],
+        },
+        "rudderstack_config": None,
+        "segment_config": None,
+        "updated_at": expected_updated_at,
+        "use_identity_composite_key_for_hashing": True,
+        "webhook_config": None,
+    }

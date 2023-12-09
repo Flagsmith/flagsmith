@@ -73,7 +73,7 @@ class DynamoProjectMetadata:
         return project_metadata_table.put_item(Item=asdict(self))
 
 
-class IdentityOverrideV2Document(BaseModel):
+class IdentityOverrideV2(BaseModel):
     environment_id: int
     document_key: str
     environment_api_key: str
@@ -82,5 +82,5 @@ class IdentityOverrideV2Document(BaseModel):
 
 @dataclass
 class IdentityOverridesV2Changeset:
-    to_delete: list[IdentityOverrideV2Document]
-    to_put: list[IdentityOverrideV2Document]
+    to_delete: list[IdentityOverrideV2]
+    to_put: list[IdentityOverrideV2]
