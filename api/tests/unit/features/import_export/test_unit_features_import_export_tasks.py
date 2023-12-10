@@ -7,7 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
-from features.import_export.constants import OVERWRITE_DESTRUCTIVE, SKIP
+from features.import_export.constants import (
+    OVERWRITE_DESTRUCTIVE,
+    PROCESSING,
+    SKIP,
+)
 from features.import_export.models import FeatureExport, FeatureImport
 from features.import_export.tasks import (
     clear_stale_feature_imports_and_exports,
@@ -101,12 +105,15 @@ def test_export_and_import_features_for_environment_with_skip(
         initial_value="keepme",
     )
 
-    # When
-    export_features_for_environment(environment.id)
-
-    feature_export = FeatureExport.objects.get(
+    feature_export = FeatureExport.objects.create(
         environment=environment,
+        status=PROCESSING,
     )
+
+    # When
+    export_features_for_environment(feature_export.id)
+
+    feature_export.refresh_from_db()
     assert len(feature_export.data) > 200
 
     feature_import = FeatureImport.objects.create(
@@ -229,13 +236,15 @@ def test_export_and_import_features_for_environment_with_overwrite_destructive(
         project=project2,
         initial_value="keepme",
     )
+    feature_export = FeatureExport.objects.create(
+        environment=environment,
+        status=PROCESSING,
+    )
 
     # When
-    export_features_for_environment(environment.id, [design_tag.id])
+    export_features_for_environment(feature_export.id, [design_tag.id])
 
-    feature_export = FeatureExport.objects.get(
-        environment=environment,
-    )
+    feature_export.refresh_from_db()
     assert len(feature_export.data) > 200
 
     feature_import = FeatureImport.objects.create(
