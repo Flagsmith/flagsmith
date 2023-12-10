@@ -1,0 +1,5 @@
+ENVIRONMENTS_V2_PARTITION_KEY = "environment_id"
+ENVIRONMENTS_V2_SORT_KEY = "document_key"
+
+ENVIRONMENTS_V2_SECONDARY_INDEX = "environment_api_key-index"
+ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY = "environment_api_key"

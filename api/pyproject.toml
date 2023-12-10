@@ -103,6 +103,7 @@ pydantic = "~1.10.9"
 pyngo = "~1.6.0"
 flagsmith = "^3.4.0"
 python-gnupg = "^0.5.1"
+multimethod = "^1.10"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -145,6 +146,7 @@ requests-mock = "^1.11.0"
 django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
 django-capture-on-commit-callbacks = "^1.11.0"
+mypy-boto3-dynamodb = "^1.33.0"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]

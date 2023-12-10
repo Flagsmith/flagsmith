@@ -30,6 +30,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     mock_dynamo_wrapper = mocker.patch(
         "edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper"
     )
+    mocker.patch("edge_api.identities.tasks.DynamoEnvironmentV2Wrapper")
 
     # When
     serializer.is_valid(raise_exception=True)
@@ -73,6 +74,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     )
 
     mocker.patch("edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper")
+    mocker.patch("edge_api.identities.tasks.DynamoEnvironmentV2Wrapper")
     mock_call_environment_webhook = mocker.patch(
         "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )
