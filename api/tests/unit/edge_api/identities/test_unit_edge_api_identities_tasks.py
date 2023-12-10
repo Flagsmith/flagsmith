@@ -357,6 +357,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
     )
     dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
     identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
+    identifier = "identity1"
     changes = {
         "feature_overrides": {
             "test_feature": {
@@ -401,6 +402,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "document_key": f"identity_override:3:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
+                    "identifier": identifier,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "deleted",
@@ -420,6 +422,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "document_key": f"identity_override:1:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
+                    "identifier": identifier,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "updated",
@@ -437,6 +440,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "document_key": f"identity_override:2:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
+                    "identifier": identifier,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "new",
@@ -457,6 +461,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
         changes=changes,
+        identifier=identifier,
     )
 
     # Then
@@ -475,6 +480,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call
     )
     dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
     identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
+    identifier = "identity1"
     changes = {"feature_overrides": []}
 
     # When
@@ -482,6 +488,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
         changes=changes,
+        identifier=identifier,
     )
 
     # Then

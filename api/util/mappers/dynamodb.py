@@ -87,9 +87,10 @@ def map_engine_feature_state_to_identity_override(
     *,
     feature_state: "FeatureStateModel",
     identity_uuid: str,
+    identifier: str,
     environment_api_key: str,
     environment_id: int,
-) -> list[IdentityOverrideV2]:
+) -> IdentityOverrideV2:
     return IdentityOverrideV2(
         document_key=get_environments_v2_identity_override_document_key(
             feature_id=feature_state.feature.id,
@@ -98,6 +99,7 @@ def map_engine_feature_state_to_identity_override(
         environment_id=str(environment_id),
         environment_api_key=environment_api_key,
         feature_state=feature_state,
+        identifier=identifier,
     )
 
 
@@ -105,6 +107,7 @@ def map_identity_changeset_to_identity_override_changeset(
     *,
     identity_changeset: "IdentityChangeset",
     identity_uuid: str,
+    identifier: str,
     environment_api_key: str,
     environment_id: int,
 ) -> "IdentityOverridesV2Changeset":
@@ -119,6 +122,7 @@ def map_identity_changeset_to_identity_override_changeset(
                     map_engine_feature_state_to_identity_override(
                         feature_state=feature_state,
                         identity_uuid=identity_uuid,
+                        identifier=identifier,
                         environment_api_key=environment_api_key,
                         environment_id=environment_id,
                     )
@@ -129,6 +133,7 @@ def map_identity_changeset_to_identity_override_changeset(
                     map_engine_feature_state_to_identity_override(
                         feature_state=feature_state,
                         identity_uuid=identity_uuid,
+                        identifier=identifier,
                         environment_api_key=environment_api_key,
                         environment_id=environment_id,
                     )

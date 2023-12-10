@@ -65,12 +65,14 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
     wrapper = DynamoEnvironmentV2Wrapper()
 
     identity_uuid = str(uuid.uuid4())
+    identifier = "identity1"
     override_document = IdentityOverrideV2.parse_obj(
         {
             "environment_id": str(environment.id),
             "document_key": f"identity_override:{feature.id}:{identity_uuid}",
             "environment_api_key": environment.api_key,
             "feature_state": map_feature_state_to_engine(feature_state),
+            "identifier": identifier,
         }
     )
 
@@ -102,6 +104,7 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
     wrapper = DynamoEnvironmentV2Wrapper()
 
     identity_uuid = str(uuid.uuid4())
+    identifier = "identity1"
     override_document_data = map_identity_override_to_identity_override_document(
         IdentityOverrideV2.parse_obj(
             {
@@ -109,6 +112,7 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
                 "document_key": f"identity_override:{feature.id}:{identity_uuid}",
                 "environment_api_key": environment.api_key,
                 "feature_state": map_feature_state_to_engine(feature_state),
+                "identifier": identifier,
             }
         )
     )
