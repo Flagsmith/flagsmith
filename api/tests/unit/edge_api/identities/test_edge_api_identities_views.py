@@ -119,7 +119,7 @@ def test_get_edge_identity_overrides_for_a_feature(
         mock_dynamodb_wrapper,
     )
 
-    mock_dynamodb_wrapper.get_identity_overrides.return_value = [
+    mock_dynamodb_wrapper.get_identity_overrides_by_feature_id.return_value = [
         edge_identity_override_document,
         edge_identity_override_document_2,
     ]
@@ -133,29 +133,33 @@ def test_get_edge_identity_overrides_for_a_feature(
     response_json = response.json()
     assert len(response_json["results"]) == 2
     assert response_json["results"][0] == {
-        "feature_state_value": None,
-        "multivariate_feature_state_values": [],
         "identity_uuid": edge_identity_model.identity_uuid,
         "identifier": edge_identity_model.identifier,
-        "featurestate_uuid": edge_identity_override_document["feature_state"][
-            "featurestate_uuid"
-        ],
-        "enabled": True,
-        "feature": feature.id,
+        "feature_state": {
+            "feature_state_value": None,
+            "multivariate_feature_state_values": [],
+            "featurestate_uuid": edge_identity_override_document["feature_state"][
+                "featurestate_uuid"
+            ],
+            "enabled": True,
+            "feature": feature.id,
+        },
     }
     assert response_json["results"][1] == {
-        "feature_state_value": None,
-        "multivariate_feature_state_values": [],
         "identity_uuid": edge_identity_model_2.identity_uuid,
         "identifier": edge_identity_model_2.identifier,
-        "featurestate_uuid": edge_identity_override_document_2["feature_state"][
-            "featurestate_uuid"
-        ],
-        "enabled": True,
-        "feature": feature.id,
+        "feature_state": {
+            "feature_state_value": None,
+            "multivariate_feature_state_values": [],
+            "featurestate_uuid": edge_identity_override_document_2["feature_state"][
+                "featurestate_uuid"
+            ],
+            "enabled": True,
+            "feature": feature.id,
+        },
     }
 
-    mock_dynamodb_wrapper.get_identity_overrides.assert_called_once_with(
+    mock_dynamodb_wrapper.get_identity_overrides_by_feature_id.assert_called_once_with(
         environment_id=environment.id, feature_id=feature.id
     )
 
