@@ -1,6 +1,7 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import TableFilter from './TableFilter'
 import Icon from 'components/Icon'
+import classNames from 'classnames'
 
 export type SortType = {
   value: string
@@ -33,7 +34,7 @@ const TableSortFilter: FC<TableFilterType> = ({
   console.log('isloading', isLoading)
   return (
     <div className={isLoading ? 'disabled' : ''}>
-      <TableFilter title={'Sort'}>
+      <TableFilter hideTitle title={'Sort'}>
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
           return (
@@ -56,18 +57,16 @@ const TableSortFilter: FC<TableFilterType> = ({
             >
               <Row space className='px-3 py-2'>
                 <div>{sortOption.label}</div>
-                {isActive && (
-                  <div>
-                    <Icon
-                      className='text-body'
-                      name={
-                        value?.sortOrder === 'asc'
-                          ? 'chevron-up'
-                          : 'chevron-down'
-                      }
-                    />
-                  </div>
-                )}
+                <div>
+                  <Icon
+                    className={classNames('text-body', {
+                      'opacity-0': !isActive,
+                    })}
+                    name={
+                      value?.sortOrder === 'asc' ? 'chevron-up' : 'chevron-down'
+                    }
+                  />
+                </div>
               </Row>
             </a>
           )

@@ -6,6 +6,7 @@ import classNames from 'classnames'
 
 type TableFilterType = {
   title: string
+  hideTitle?: boolean
   dropdownTitle?: ReactNode | string
   className?: string
   children: ReactNode
@@ -15,6 +16,7 @@ const TableFilter: FC<TableFilterType> = ({
   children,
   className,
   dropdownTitle,
+  hideTitle,
   title,
 }) => {
   const [open, setOpen] = useState(false)
@@ -42,7 +44,7 @@ const TableFilter: FC<TableFilterType> = ({
       {open && (
         <InlineModal
           hideClose
-          title={dropdownTitle || title}
+          title={hideTitle ? null : dropdownTitle || title}
           isOpen={open}
           onClose={() => {
             setTimeout(() => {
