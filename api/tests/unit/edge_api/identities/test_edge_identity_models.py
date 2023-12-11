@@ -320,6 +320,7 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
             "environment_api_key": edge_identity_model.environment_api_key,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )
 
@@ -386,6 +387,7 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
             "environment_api_key": edge_identity_model.environment_api_key,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )
 
@@ -474,5 +476,6 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
             "environment_api_key": edge_identity_model.environment_api_key,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
+            "identifier": edge_identity_model.identifier,
         }
     )

@@ -19,6 +19,7 @@ from pyngo import drf_error_details
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from environments.dynamodb.types import IdentityOverrideV2
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
@@ -77,7 +78,12 @@ class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):
 
 class FeatureStateValueEdgeIdentityField(serializers.Field):
     def to_representation(self, obj):
-        identity_id = self.parent.get_identity_uuid()
+        identity: EdgeIdentity = self.parent.context["identity"]
+        environment: Environment = self.parent.context["environment"]
+        identity_id = identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        )
+
         return obj.get_value(identity_id=identity_id)
 
     def get_attribute(self, instance):
@@ -124,7 +130,7 @@ class EdgeFeatureField(serializers.Field):
         swagger_schema_fields = {"type": "integer/string"}
 
 
-class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
+class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):
     feature_state_value = FeatureStateValueEdgeIdentityField(
         allow_null=True, required=False, default=None
     )
@@ -133,12 +139,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         many=True, required=False
     )
     enabled = serializers.BooleanField(required=False, default=False)
-    identity_uuid = serializers.SerializerMethodField()
-
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
-
-    def get_identity_uuid(self, obj=None):
-        return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
         view = self.context["view"]
@@ -200,6 +201,13 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         return self.instance
 
 
+class EdgeIdentityFeatureStateSerializer(BaseEdgeIdentityFeatureStateSerializer):
+    identity_uuid = serializers.SerializerMethodField()
+
+    def get_identity_uuid(self, obj=None):
+        return self.context["view"].identity.identity_uuid
+
+
 class EdgeIdentityIdentifierSerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True, max_length=2000)
 
@@ -227,3 +235,32 @@ class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
     feature = serializers.IntegerField(
         required=False, help_text="ID of the feature to filter by"
     )
+
+
+class GetEdgeIdentityOverridesQuerySerializer(serializers.Serializer):
+    feature = serializers.IntegerField(required=False)
+
+
+class GetEdgeIdentityOverridesResultSerializer(serializers.Serializer):
+    identifier = serializers.CharField()
+    identity_uuid = serializers.CharField()
+    feature_state = BaseEdgeIdentityFeatureStateSerializer()
+
+    def to_representation(self, instance: IdentityOverrideV2):
+        # Since the FeatureStateValueEdgeIdentityField relies on having this data
+        # available to generate the value of the feature state, we need to set this
+        # and make it available to the field class. to_representation seems like the
+        # best place for this since we only care about serialization here (not
+        # deserialization).
+        self.context["identity"] = EdgeIdentity.from_identity_document(
+            {
+                "identifier": instance.identifier,
+                "identity_uuid": instance.identity_uuid,
+                "environment_api_key": self.context["environment"].api_key,
+            }
+        )
+        return super().to_representation(instance)
+
+
+class GetEdgeIdentityOverridesSerializer(serializers.Serializer):
+    results = GetEdgeIdentityOverridesResultSerializer(many=True)

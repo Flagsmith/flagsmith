@@ -139,6 +139,7 @@ def generate_audit_log_records(
 def update_flagsmith_environments_v2_identity_overrides(
     environment_api_key: str,
     identity_uuid: str,
+    identifier: str,
     changes: IdentityChangeset,
 ) -> None:
     feature_override_changes = changes["feature_overrides"]
@@ -153,5 +154,6 @@ def update_flagsmith_environments_v2_identity_overrides(
         identity_uuid=identity_uuid,
         environment_api_key=environment_api_key,
         environment_id=environment.id,
+        identifier=identifier,
     )
     dynamodb_wrapper_v2.update_identity_overrides(identity_override_changeset)

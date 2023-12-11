@@ -183,6 +183,7 @@ class EdgeIdentity:
                     "environment_api_key": self.environment_api_key,
                     "changes": changes,
                     "identity_uuid": str(self.identity_uuid),
+                    "identifier": self.identifier,
                 }
             )
         self._reset_initial_state()
