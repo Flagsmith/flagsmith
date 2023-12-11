@@ -200,6 +200,7 @@ runs:
       shell: bash
 
     - name: Deploy Amazon ECS web task definition
+      id: deploy-task-definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
@@ -249,4 +250,10 @@ runs:
       run:
         aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{
         inputs.aws_ecs_service_name }}
+      shell: bash
+
+    - name: Verify new task definition
+      run: |
+        export RUNNING_TASK_DEFINITION_ARN=$(aws ecs describe-services --services ${{ inputs.aws_ecs_service_name }} --cluster ${{ inputs.aws_ecs_cluster_name }} | jq .services[0].taskDefinition) 
+        if [ $RUNNING_TASK_DEFINITION_ARN != ${{ steps.register-migrate-task.outputs.task_definition_arn}} ]; then echo "New task definition version failed to start" && exit 1; fi
       shell: bash
