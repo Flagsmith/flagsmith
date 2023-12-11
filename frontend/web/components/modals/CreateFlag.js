@@ -178,12 +178,12 @@ const CreateFlag = class extends Component {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
         data
           .get(
-            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides/?feature=${this.props.projectFlag.id}&page=${page}`,
+            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
           )
           .then((userOverrides) => {
             this.setState({
               userOverrides: userOverrides.results.map((v) => ({
-                ...v,
+                ...v.feature_state,
                 identity: {
                   id: v.identity_uuid,
                   identifier: v.identifier,
