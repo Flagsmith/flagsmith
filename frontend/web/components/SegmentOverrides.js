@@ -13,7 +13,7 @@ import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
-import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 
@@ -497,6 +497,7 @@ class TheComponent extends Component {
       </div>,
       () => {
         this.props.value[i].toRemove = true
+        this.setState({ isLoading: false })
       },
       () => {
         this.setState({ isLoading: false })
@@ -559,9 +560,6 @@ class TheComponent extends Component {
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
-    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
-      'manage_segment_overrides_env_role',
-    )
     return (
       <div>
         <Permission
@@ -601,10 +599,7 @@ class TheComponent extends Component {
                           this.props.setShowCreateSegment(true)
                         }}
                         theme='outline'
-                        disabled={
-                          !!isLimitReached ||
-                          (manageSegmentOverridesEnabled && !manageSegments)
-                        }
+                        disabled={!!isLimitReached || !manageSegments}
                       >
                         Create Feature-Specific Segment
                       </Button>

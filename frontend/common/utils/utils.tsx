@@ -133,11 +133,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return 'edge-featurestates'
     }
     return 'featurestates'
@@ -211,11 +207,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return 'edge-identities'
     }
     return 'identities'
@@ -223,11 +215,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      ProjectStore.model &&
-      model?.use_edge_identities
-    ) {
+    if (ProjectStore.model && model?.use_edge_identities) {
       return true
     }
     return false
@@ -350,11 +338,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getSDKEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return Project.flagsmithClientEdgeAPI
     }
     return Project.api
@@ -362,11 +346,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return true
     }
     return false
@@ -374,11 +354,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldSendIdentityToTraits(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return false
     }
     return true
@@ -386,11 +362,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldUpdateTraitOnDelete(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      project &&
-      project.use_edge_identities
-    ) {
+    if (project && project.use_edge_identities) {
       return true
     }
     return false
@@ -403,20 +375,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getTraitEndpoint(environmentId: string, userId: string) {
     const model = ProjectStore.model as null | ProjectType
 
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      model?.use_edge_identities
-    ) {
+    if (model?.use_edge_identities) {
       return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`
     }
     return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`
   },
 
   getTraitEndpointMethod(id?: number) {
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (ProjectStore.model as ProjectType | null)?.use_edge_identities
-    ) {
+    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
       return 'put'
     }
     return id ? 'put' : 'post'
@@ -456,10 +422,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getUpdateTraitEndpoint(environmentId: string, userId: string, id?: string) {
-    if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (ProjectStore.model as ProjectType | null)?.use_edge_identities
-    ) {
+    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
       return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`
     }
     return `${
@@ -476,9 +439,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
-      Utils.getFlagsmithHasFeature('edge_identities') &&
-      (model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
-        model?.migration_status === 'MIGRATION_SCHEDULED')
+      model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
+      model?.migration_status === 'MIGRATION_SCHEDULED'
     ) {
       return true
     }
