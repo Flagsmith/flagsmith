@@ -30,9 +30,10 @@ project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class IdentityOverridesStorageType(models.TextChoices):
-    IDENTITY_RECORD = "IDENTITY_RECORD", "Identity Record"
-    FLAGSMITH_OVERRIDES = "FLAGSMITH_OVERRIDES", "Flagsmith Overrides"
+class IdentityOverridesMigrationStatus(models.TextChoices):
+    NOT_STARTED = "NOT_STARTED", "Not Started"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETE = "COMPLETE", "Complete"
 
 
 class Project(LifecycleModelMixin, SoftDeleteExportableModel):
@@ -76,10 +77,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
-    identity_overrides_storage_type = models.CharField(
+    identity_overrides_migration_status = models.CharField(
         max_length=50,
-        choices=IdentityOverridesStorageType.choices,
-        default=IdentityOverridesStorageType.IDENTITY_RECORD,
+        choices=IdentityOverridesMigrationStatus.choices,
+        default=IdentityOverridesMigrationStatus.NOT_STARTED,
     )
 
     objects = ProjectManager()
@@ -157,6 +158,13 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         return (
             not self.feature_name_regex
             or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
+        )
+
+    @property
+    def show_edge_identity_overrides_for_feature(self) -> bool:
+        return (
+            self.identity_overrides_migration_status
+            == IdentityOverridesMigrationStatus.COMPLETE
         )
 
 
