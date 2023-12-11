@@ -30,7 +30,7 @@ const TableTagFilter: FC<TableFilterType> = ({
       ? data?.filter((v) => v.label.toLowerCase().includes(filter))
       : data
   }, [data, filter])
-  const length = !!value?.length + (showArchived ? 1 : 0)
+  const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <>
       <TableFilter

@@ -203,7 +203,9 @@ const FeaturesPage = class extends Component {
                           title={'Features'}
                           cta={
                             <>
-                              {projectFlags && projectFlags.length
+                              {(projectFlags && projectFlags.length) ||
+                              this.state.showArchived ||
+                              this.state.tags?.length
                                 ? this.createFeaturePermission((perm) => (
                                     <div className='text-right'>
                                       <Button
