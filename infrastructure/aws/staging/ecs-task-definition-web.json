@@ -72,6 +72,10 @@
                     "value": "flagsmith_environments"
                 },
                 {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
                     "name": "ENABLE_FE_E2E",
                     "value": "True"
                 },
@@ -124,8 +128,8 @@
                     "value": "flagsmith_environment_api_key"
                 },
                 {
-                    "name":"EDGE_RELEASE_DATETIME",
-                    "value":"2022-05-18T09:45:00Z"
+                    "name": "EDGE_RELEASE_DATETIME",
+                    "value": "2022-05-18T09:45:00Z"
                 },
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
@@ -144,7 +148,7 @@
                     "value": "60"
                 },
                 {
-                    "name":  "LOG_LEVEL",
+                    "name": "LOG_LEVEL",
                     "value": "INFO"
                 },
                 {
@@ -211,9 +215,8 @@
                 },
                 {
                     "name": "EDGE_REQUEST_SIGNING_KEY",
-                    "valueFrom":"arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:EDGE_REQUEST_SIGNING_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:EDGE_REQUEST_SIGNING_KEY::"
                 },
-
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
