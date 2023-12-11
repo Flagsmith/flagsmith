@@ -1430,6 +1430,7 @@ const CreateFlag = class extends Component {
                                                         identity,
                                                       })
                                                     }
+                                                    disabled={Utils.getIsEdge()}
                                                   />
                                                 </div>
                                                 <div className='font-weight-medium fs-small lh-sm'>
