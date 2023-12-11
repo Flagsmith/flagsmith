@@ -77,6 +77,8 @@ class IdentityOverrideV2(BaseModel):
     environment_id: str
     document_key: str
     environment_api_key: str
+    identifier: str
+    identity_uuid: str
     feature_state: FeatureStateModel
 
 
