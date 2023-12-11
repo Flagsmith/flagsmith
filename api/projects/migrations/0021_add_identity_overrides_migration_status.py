@@ -8,7 +8,7 @@ from projects.models import IdentityOverridesV2MigrationStatus
 
 def apply_defaults(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     apps.get_model("projects", "Project").objects.all().update(
-        identity_overrides_migration_status=IdentityOverridesV2MigrationStatus.NOT_STARTED
+        identity_overrides_v2_migration_status=IdentityOverridesV2MigrationStatus.NOT_STARTED
     )
 
 
@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="project",
-            name="identity_overrides_migration_status",
+            name="identity_overrides_v2_migration_status",
             field=models.CharField(
                 choices=[
                     ("NOT_STARTED", "Not Started"),
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.RunPython(apply_defaults, reverse_code=migrations.RunPython.noop),
         migrations.AlterField(
             model_name="project",
-            name="identity_overrides_migration_status",
+            name="identity_overrides_v2_migration_status",
             field=models.CharField(
                 choices=[
                     ("NOT_STARTED", "Not Started"),
