@@ -14,6 +14,8 @@ import FeatureValue from './FeatureValue'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
+
+export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -108,7 +110,6 @@ class TheComponent extends Component {
       environment && environment.minimum_change_request_approvals,
     )
     const isCompact = getViewMode() === 'compact'
-    const width = isCompact ? [200, 60, 60, 60, 450] : [200, 65, 55, 70, 450]
     if (this.props.condensed) {
       return (
         <Flex
