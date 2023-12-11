@@ -37,9 +37,11 @@ const TableTagFilter: FC<TableFilterType> = ({
         className={className}
         dropdownTitle={
           <Input
+            autoFocus
             onChange={(e: InputEvent) => {
               setFilter(Utils.safeParseEventValue(e))
             }}
+            className='full-width'
             value={filter}
             type='text'
             size='xSmall'

@@ -6,7 +6,7 @@ import classNames from 'classnames'
 
 type TableFilterType = {
   title: string
-  dropdownTitle?: string
+  dropdownTitle?: ReactNode | string
   className?: string
   children: ReactNode
 }

@@ -119,7 +119,6 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                   >
                     Save Tag
                   </Button>
-                  ,
                 </div>,
               )
             }
@@ -131,7 +130,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         <InputGroup
           size='xSmall'
           value={tag?.label}
-          className='mb-2'
+          className='mb-0'
           id='tag-label'
           autoFocus
           inputProps={{
@@ -143,6 +142,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           onChange={(e: InputEvent) => update('label', e)}
         />
         <InputGroup
+          className='mb-0'
           title='Select a color'
           component={
             <Row className={'gap-3'}>
