@@ -16,7 +16,7 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
-from .constants import OVERWRITE_DESTRUCTIVE, SKIP
+from .constants import FAILED, OVERWRITE_DESTRUCTIVE, SKIP, SUCCESS
 from .models import FeatureExport, FeatureImport
 
 
@@ -29,10 +29,12 @@ def clear_stale_feature_imports_and_exports() -> None:
     FeatureImport.objects.filter(created_at__lt=two_weeks_ago).delete()
 
 
-@register_task_handler()
-def export_features_for_environment(
-    environment_id: int, tag_ids: Optional[list[int]] = None
+def _export_features_for_environment(
+    feature_export: FeatureExport, tag_ids: Optional[list[int]]
 ) -> None:
+    """
+    Caller for the export_features_for_environment to handle fails.
+    """
     additional_filters = Q(
         identity__isnull=True,
         feature_segment__isnull=True,
@@ -43,7 +45,7 @@ def export_features_for_environment(
     if tag_ids:
         additional_filters &= Q(feature__tags__in=tag_ids)
 
-    environment = Environment.objects.get(id=environment_id)
+    environment = feature_export.environment
     feature_states = get_environment_flags_list(
         environment=environment,
         additional_filters=additional_filters,
@@ -76,9 +78,24 @@ def export_features_for_environment(
             }
         )
 
-    FeatureExport.objects.create(
-        environment_id=environment_id, data=json.dumps(payload)
-    )
+    feature_export.status = SUCCESS
+    feature_export.data = json.dumps(payload)
+    feature_export.save()
+
+
+@register_task_handler()
+def export_features_for_environment(
+    feature_export_id: int, tag_ids: Optional[list[int]] = None
+) -> None:
+    feature_export = FeatureExport.objects.get(id=feature_export_id)
+
+    try:
+        _export_features_for_environment(feature_export, tag_ids)
+        assert feature_export.status == SUCCESS
+    except Exception:
+        feature_export.status = FAILED
+        feature_export.save()
+        raise
 
 
 @register_task_handler()
