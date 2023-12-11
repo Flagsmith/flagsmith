@@ -24,8 +24,8 @@ class EdgeIdentityWithIdentifierViewPermissions(BasePermission):
 
 class GetEdgeIdentityOverridesPermission(BasePermission):
     def has_permission(self, request: HttpRequest, view: View) -> bool:
-        environment_pk = view.kwargs.get("environment_pk")
+        environment_api_key = view.kwargs.get("environment_api_key")
         with suppress(Environment.DoesNotExist):
-            environment = Environment.objects.get(pk=environment_pk)
+            environment = Environment.objects.get(api_key=environment_api_key)
             return request.user.has_environment_permission(VIEW_IDENTITIES, environment)
         return False
