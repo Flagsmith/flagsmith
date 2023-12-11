@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("NOT_STARTED", "Not Started"),
+                    ("IN_PROGRESS", "In Progress"),
                     ("COMPLETE", "Complete"),
                 ],
                 default=None,
@@ -38,6 +39,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("NOT_STARTED", "Not Started"),
+                    ("IN_PROGRESS", "In Progress"),
                     ("COMPLETE", "Complete"),
                 ],
                 default="NOT_STARTED",

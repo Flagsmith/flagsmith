@@ -32,6 +32,7 @@ environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 class IdentityOverridesMigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
     COMPLETE = "COMPLETE", "Complete"
 
 
