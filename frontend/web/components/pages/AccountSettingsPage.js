@@ -16,9 +16,6 @@ import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { Link } from 'react-router-dom'
-import Radio from 'components/base/forms/Radio'
-import { getViewMode, setViewMode } from 'common/useViewMode'
-import ExampleFeatureRow from 'components/ExampleFeatureRow'
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -141,7 +138,6 @@ class TheComponent extends Component {
         ? this.state.organisations?.filter((o) => o?.num_seats == 1)
         : []
 
-    const viewMode = getViewMode()
     return (
       <AccountProvider>
         {({}) => {
@@ -291,29 +287,6 @@ class TheComponent extends Component {
                         entities such as features within the platform.
                       </p>
                     </div>
-                    <hr className='py-0 my-4' />
-                    <div className='col-md-6'>
-                      <Row className='mt-4' space>
-                        <div className='col-md-7 pl-0'>
-                          <h5>View Mode</h5>
-                        </div>
-                        <Radio
-                          onChange={() => {
-                            setViewMode('default')
-                          }}
-                          checked={getViewMode() !== 'compact'}
-                          label={'Default'}
-                        />
-                        <Radio
-                          onChange={() => {
-                            setViewMode('compact')
-                          }}
-                          checked={getViewMode() === 'compact'}
-                          label={'Compact'}
-                        />
-                      </Row>
-                    </div>
-                    <ExampleFeatureRow />
                     <hr className='py-0 my-4' />
                     <div className='col-md-6'>
                       <Row className='mt-4' space>
