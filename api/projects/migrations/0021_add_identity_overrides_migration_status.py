@@ -3,12 +3,12 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
-from projects.models import IdentityOverridesStorageType
+from projects.models import IdentityOverridesMigrationStatus
 
 
 def apply_defaults(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     apps.get_model("projects", "Project").objects.all().update(
-        identity_overrides_storage_type=IdentityOverridesStorageType.IDENTITY_RECORD
+        identity_overrides_migration_status=IdentityOverridesMigrationStatus.NOT_STARTED
     )
 
 
@@ -20,11 +20,12 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="project",
-            name="identity_overrides_storage_type",
+            name="identity_overrides_migration_status",
             field=models.CharField(
                 choices=[
-                    ("IDENTITY_RECORD", "Identity Record"),
-                    ("FLAGSMITH_OVERRIDES", "Flagsmith Overrides"),
+                    ("NOT_STARTED", "Not Started"),
+                    ("IN_PROGRESS", "In Progress"),
+                    ("COMPLETE", "Complete"),
                 ],
                 default=None,
                 max_length=50,
@@ -34,13 +35,14 @@ class Migration(migrations.Migration):
         migrations.RunPython(apply_defaults, reverse_code=migrations.RunPython.noop),
         migrations.AlterField(
             model_name="project",
-            name="identity_overrides_storage_type",
+            name="identity_overrides_migration_status",
             field=models.CharField(
                 choices=[
-                    ("IDENTITY_RECORD", "Identity Record"),
-                    ("FLAGSMITH_OVERRIDES", "Flagsmith Overrides"),
+                    ("NOT_STARTED", "Not Started"),
+                    ("IN_PROGRESS", "In Progress"),
+                    ("COMPLETE", "Complete"),
                 ],
-                default="IDENTITY_RECORD",
+                default="NOT_STARTED",
                 max_length=50,
             ),
         ),

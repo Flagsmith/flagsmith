@@ -5,7 +5,7 @@ import pytest
 from django.conf import settings
 from django.utils import timezone
 
-from projects.models import Project
+from projects.models import IdentityOverridesMigrationStatus, Project
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -133,4 +133,23 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
     # Then
     mock_environments_wrapper.write_environments.assert_called_once_with(
         [dynamo_enabled_project_environment_one, dynamo_enabled_project_environment_two]
+    )
+
+
+@pytest.mark.parametrize(
+    "identity_overrides_migration_status, expected_value",
+    (
+        (IdentityOverridesMigrationStatus.NOT_STARTED, False),
+        (IdentityOverridesMigrationStatus.COMPLETE, True),
+    ),
+)
+def test_show_edge_identity_overrides_for_feature(
+    identity_overrides_migration_status: IdentityOverridesMigrationStatus,
+    expected_value: bool,
+):
+    assert (
+        Project(
+            identity_overrides_migration_status=identity_overrides_migration_status
+        ).show_edge_identity_overrides_for_feature
+        == expected_value
     )
