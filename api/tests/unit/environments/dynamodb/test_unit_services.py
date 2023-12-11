@@ -57,7 +57,7 @@ def test_migrate_environments_to_v2__environment_with_overrides__writes_expected
     assert results[1] == expected_identity_override_document
 
 
-def test_migrate_environments_to_v2__wrappes_disabled__does_not_write(
+def test_migrate_environments_to_v2__wrapper_disabled__does_not_write(
     mocker: MockerFixture,
 ) -> None:
     # Given
