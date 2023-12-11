@@ -40,7 +40,7 @@ jobs:
           flagsmith_saml_revision: v1.1.0
           flagsmith_workflows_revision: v1.2.5
           flagsmith_auth_controller_revision: v0.0.1
-          flagsmith_rbac_revision: v0.4.1
+          flagsmith_rbac_revision: v0.5.0
           sse_pgp_private_key: ${{ secrets.SSE_PGP_PRIVATE_KEY }}
 
       - name: Deploy task processor to Staging
