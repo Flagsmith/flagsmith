@@ -98,7 +98,7 @@ const PanelSearch = class extends Component {
         </div>
       )
     }
-    if (children && children.length > 100 && this.props.itemHeight) {
+    if (children && children?.length > 100 && this.props.itemHeight) {
       return (
         <div>
           <AutoSizer disableHeight>
@@ -116,7 +116,7 @@ const PanelSearch = class extends Component {
         </div>
       )
     }
-    return children.map(this.props.renderRow)
+    return children?.map(this.props.renderRow)
   }
 
   render() {

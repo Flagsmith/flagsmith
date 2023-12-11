@@ -3,19 +3,24 @@ import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
 import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
+import TableFilterItem from './TableFilterItem'
 
 type TableFilterType = {
   title: string
   dropdownTitle?: ReactNode | string
   className?: string
-  children: ReactNode
+  options: { label: string; value: string }[]
+  onChange: (value: string) => void
+  value: string
 }
 
 const TableFilter: FC<TableFilterType> = ({
-  children,
   className,
   dropdownTitle,
+  onChange,
+  options,
   title,
+  value,
 }) => {
   const [open, setOpen] = useState(false)
   const toggle = function () {
@@ -42,7 +47,7 @@ const TableFilter: FC<TableFilterType> = ({
       {open && (
         <InlineModal
           hideClose
-          title={dropdownTitle || title}
+          title={null}
           isOpen={open}
           onClose={() => {
             setTimeout(() => {
@@ -52,7 +57,17 @@ const TableFilter: FC<TableFilterType> = ({
           containerClassName='px-0'
           className='inline-modal table-filter inline-modal--sm right'
         >
-          {children}
+          {options.map((v) => (
+            <TableFilterItem
+              key={v.value}
+              title={v.label}
+              onClick={() => {
+                setOpen(false)
+                onChange(v.value)
+              }}
+              isActive={value === v.value}
+            />
+          ))}
         </InlineModal>
       )}
     </>

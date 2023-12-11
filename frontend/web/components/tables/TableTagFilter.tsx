@@ -4,7 +4,8 @@ import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from 'components/tags/Tag'
-import ModalHR from 'components/modals/ModalHR'
+import TableFilterItem from './TableFilterItem'
+import Constants from 'common/constants'
 
 type TableFilterType = {
   projectId: string
@@ -56,37 +57,49 @@ const TableTagFilter: FC<TableFilterType> = ({
           </Row>
         }
       >
-        <div className='inline-modal__list gap-2 d-flex flex-column'>
+        <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
           {filteredTags?.length === 0 && (
             <div className='text-center'>No tags</div>
           )}
-          <Row>
-            <Tag
-              onClick={onToggleArchived}
-              selected={showArchived}
-              className='px-2 py-2 mr-1'
-              tag={{
-                color: '#0AADDF',
-                label: 'Archived',
-              }}
-            />
-          </Row>
+          <TableFilterItem
+            onClick={onToggleArchived}
+            isActive={showArchived}
+            title={
+              <Row>
+                <Tag
+                  isDot
+                  selected={showArchived}
+                  className='px-2 py-2 mr-1'
+                  tag={Constants.archivedTag}
+                />
+                <div className='ml-2'>archived</div>
+              </Row>
+            }
+          />
           {filteredTags?.map((tag) => (
-            <Row key={tag.id}>
-              <Tag
-                key={tag.id}
-                selected={value?.includes(tag.id)}
-                onClick={() => {
-                  if (value?.includes(tag.id)) {
-                    onChange((value || []).filter((v) => v !== tag.id))
-                  } else {
-                    onChange((value || []).concat([tag.id]))
-                  }
-                }}
-                className='px-2 py-2 mr-1'
-                tag={tag}
-              />
-            </Row>
+            <TableFilterItem
+              onClick={() => {
+                if (value?.includes(tag.id)) {
+                  onChange((value || []).filter((v) => v !== tag.id))
+                } else {
+                  onChange((value || []).concat([tag.id]))
+                }
+              }}
+              isActive={value?.includes(tag.id)}
+              title={
+                <Row>
+                  <Tag
+                    key={tag.id}
+                    isDot
+                    selected={value?.includes(tag.id)}
+                    className='px-2 py-2 mr-1'
+                    tag={tag}
+                  />
+                  <div className='ml-2'>{tag.label}</div>
+                </Row>
+              }
+              key={tag.id}
+            />
           ))}
         </div>
       </TableFilter>

@@ -420,10 +420,7 @@ const UserPage = class extends Component {
                                             )
                                           }}
                                           className='px-2 py-2 ml-2 mr-2'
-                                          tag={{
-                                            color: '#0AADDF',
-                                            label: 'Archived',
-                                          }}
+                                          tag={Constants.archivedTag}
                                         />
                                       </TagFilter>
                                     </div>

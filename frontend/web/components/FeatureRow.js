@@ -13,6 +13,7 @@ import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
+import Tag from './tags/Tag'
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -289,6 +290,9 @@ class TheComponent extends Component {
                       'Prevent this feature from being accessed with client-side SDKs.'
                     }
                   </Tooltip>
+                )}
+                {projectFlag.is_archived && (
+                  <Tag className='chip--xs' tag={Constants.archivedTag} />
                 )}
                 <TagValues
                   inline

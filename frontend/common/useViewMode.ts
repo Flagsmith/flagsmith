@@ -6,7 +6,7 @@ export function getViewMode() {
   if (viewMode === 'compact') {
     return 'compact' as ViewMode
   }
-  return 'normal' as ViewMode
+  return 'default' as ViewMode
 }
 export function setViewMode(viewMode: ViewMode) {
   return flagsmith.setTrait('view_mode', viewMode)

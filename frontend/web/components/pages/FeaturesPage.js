@@ -16,6 +16,9 @@ import { IonIcon } from '@ionic/react'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
+import { setViewMode } from 'common/useViewMode'
+import TableFilterOptions from 'components/tables/TableFilterOptions'
+import { getViewMode } from 'common/useViewMode'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -157,7 +160,6 @@ const FeaturesPage = class extends Component {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
-    const includesArchived = this.state.tags?.includes('')
     return (
       <div
         data-test='features-page'
@@ -354,8 +356,37 @@ const FeaturesPage = class extends Component {
                                             )
                                           }}
                                         />
+                                        <TableFilterOptions
+                                          title={'View'}
+                                          className={'me-4'}
+                                          value={getViewMode()}
+                                          onChange={setViewMode}
+                                          options={[
+                                            {
+                                              label: 'Default',
+                                              value: 'default',
+                                            },
+                                            {
+                                              label: 'Compact',
+                                              value: 'compact',
+                                            },
+                                          ]}
+                                        />
                                         <TableSortFilter
                                           value={this.state.sort}
+                                          options={[
+                                            {
+                                              default: true,
+                                              label: 'Name',
+                                              order: 'asc',
+                                              value: 'name',
+                                            },
+                                            {
+                                              label: 'Created Date',
+                                              order: 'asc',
+                                              value: 'created_date',
+                                            },
+                                          ]}
                                           onChange={(sort) => {
                                             this.setState({ sort }, () => {
                                               AppActions.getFeatures(

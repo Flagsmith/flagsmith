@@ -161,7 +161,12 @@
     background: $bt-brand-primary !important;
 }
 .dark {
-
+    .text-body {
+        color: white;
+        >path{
+            fill: white;
+        }
+    }
     .bg-primary {
         background: $bt-brand-primary-dark !important;
     }
