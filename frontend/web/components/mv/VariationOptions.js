@@ -34,8 +34,9 @@ export default function VariationOptions({
         <p className='mb-4'>
           <InfoMessage>
             Variation values are shared amongst environments, their weights are
-            specific to this Environment. These values will only apply when you
-            identify via the SDK.{' '}
+            specific to this Environment. Changing existing multivariate values
+            that are in use can change the value that an end user receives.
+            These values will only apply when you identify via the SDK.
             <a
               target='_blank'
               href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'

@@ -952,16 +952,6 @@ const CreateFlag = class extends Component {
                                           }).name
                                         }
                                       </strong>
-                                      .{' '}
-                                      {!!multivariate_options?.length && (
-                                        <div>
-                                          Changing existing variation values
-                                          will affect{' '}
-                                          <strong>All Environments</strong> and
-                                          the existing value that an end user
-                                          receives.
-                                        </div>
-                                      )}
                                     </div>
 
                                     <Permission
