@@ -367,16 +367,16 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
 @api_view(http_method_names=["GET"])
 @permission_classes([IsAuthenticated, GetEdgeIdentityOverridesPermission])
 def get_edge_identity_overrides(
-    request: Request, environment_pk: int, **kwargs
+    request: Request, environment_api_key: str, **kwargs
 ) -> Response:
     query_serializer = GetEdgeIdentityOverridesQuerySerializer(
         data=request.query_params
     )
     query_serializer.is_valid(raise_exception=True)
     feature_id = query_serializer.validated_data.get("feature")
-    environment = Environment.objects.get(pk=environment_pk)
+    environment = Environment.objects.get(api_key=environment_api_key)
     items = edge_identity_service.get_edge_identity_overrides(
-        environment_pk, feature_id=feature_id
+        environment_id=environment.id, feature_id=feature_id
     )
     response_serializer = GetEdgeIdentityOverridesSerializer(
         instance={"results": items}, context={"environment": environment}
