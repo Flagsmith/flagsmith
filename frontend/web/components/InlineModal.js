@@ -33,8 +33,8 @@ class InlineModal extends PureComponent {
         {this.props.isOpen && (
           <div className={cx('inline-modal', this.props.className)}>
             <div className='inline-modal__title'>
-              <Row space>
-                <Row>
+              <Row className='no-wrap' space>
+                <Row className='flex-fill'>
                   {this.props.showBack && (
                     <span
                       onClick={this.props.onBack}
@@ -43,19 +43,25 @@ class InlineModal extends PureComponent {
                       <Icon name='arrow-left' fill='#9DA4AE' />
                     </span>
                   )}
-                  <h5 className='mb-0'>{this.props.title}</h5>
+                  {typeof this.props.title === 'string' ? (
+                    <h5 className='mb-0'>{this.props.title}</h5>
+                  ) : (
+                    this.props.title
+                  )}
                 </Row>
-                <ModalClose type='button' onClick={this.props.onClose} />
+                {!this.props.hideClose && (
+                  <ModalClose type='button' onClick={this.props.onClose} />
+                )}
               </Row>
             </div>
             <ModalHR />
-            <div className='inline-modal__content m-4'>
+            <div className='inline-modal__content p-3'>
               {this.props.children}
             </div>
             {this.props.bottom && (
               <>
                 <ModalHR />
-                <div className='inline-modal__bottom m-3'>
+                <div className='inline-modal__bottom p-3'>
                   {this.props.bottom}
                 </div>
               </>

@@ -11,8 +11,8 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import UsersIcon from './svg/UsersIcon' // we need this to make JSX compile
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
-
-export const width = [200, 65, 48, 75, 450]
+import { getViewMode } from 'common/useViewMode'
+import classNames from 'classnames'
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -55,6 +55,9 @@ class TheComponent extends Component {
   }
 
   editFeature = (projectFlag, environmentFlag, tab) => {
+    if (this.props.disableControls) {
+      return
+    }
     API.trackEvent(Constants.events.VIEW_FEATURE)
 
     history.replaceState(
@@ -85,6 +88,7 @@ class TheComponent extends Component {
 
   render() {
     const {
+      disableControls,
       environmentFlags,
       environmentId,
       permission,
@@ -102,17 +106,23 @@ class TheComponent extends Component {
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
     )
-
+    const isCompact = getViewMode() === 'compact'
+    const width = isCompact ? [200, 60, 60, 60, 450] : [200, 65, 55, 70, 450]
     if (this.props.condensed) {
       return (
         <Flex
-          onClick={() =>
+          onClick={() => {
+            if (disableControls) return
             !readOnly && this.editFeature(projectFlag, environmentFlags[id])
-          }
+          }}
           style={{
             ...(this.props.style || {}),
           }}
-          className='flex-row'
+          className={
+            (classNames('flex-row'),
+            { 'fs-small': isCompact },
+            this.props.className)
+          }
         >
           <div
             className={`table-column ${this.props.fadeEnabled && 'faded'}`}
@@ -127,6 +137,7 @@ class TheComponent extends Component {
               }`}
               checked={environmentFlags[id] && environmentFlags[id].enabled}
               onChange={() => {
+                if (disableControls) return
                 if (changeRequestsEnabled) {
                   this.editFeature(projectFlag, environmentFlags[id])
                   return
@@ -169,9 +180,16 @@ class TheComponent extends Component {
     }
     return (
       <Row
-        className={`list-item ${readOnly ? '' : 'clickable'} ${
-          this.props.widget ? 'py-1' : 'py-2'
-        }`}
+        className={classNames(
+          `list-item ${readOnly ? '' : 'clickable'} ${
+            isCompact
+              ? 'py-0 list-item-xs fs-small'
+              : this.props.widget
+              ? 'py-1'
+              : 'py-2'
+          }`,
+          this.props.className,
+        )}
         key={id}
         space
         data-test={`feature-item-${this.props.index}`}
@@ -203,9 +221,9 @@ class TheComponent extends Component {
                         </span>
                       }
                     >
-                      {`Created ${moment(created_date).format(
-                        'Do MMM YYYY HH:mma',
-                      )}`}
+                      {`${isCompact && `${description}<br/>`}Created ${moment(
+                        created_date,
+                      ).format('Do MMM YYYY HH:mma')}`}
                     </Tooltip>
                   ) : (
                     name
@@ -278,7 +296,7 @@ class TheComponent extends Component {
                   value={projectFlag.tags}
                 />
               </Row>
-              {description && (
+              {description && !isCompact && (
                 <div
                   className='list-item-subtitle mt-1'
                   style={{ lineHeight: '20px', width: width[4] }}
@@ -335,7 +353,7 @@ class TheComponent extends Component {
           />
         </div>
         <div
-          className='table-column'
+          className='table-column text-right'
           style={{ width: width[2] }}
           onClick={(e) => {
             e.stopPropagation()
@@ -348,10 +366,12 @@ class TheComponent extends Component {
                 title={
                   <div
                     onClick={() => {
+                      if (disableControls) return
                       this.context.router.history.push(
                         `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                       )
                     }}
+                    className='text-center'
                     data-test={`feature-history-${this.props.index}`}
                   >
                     <Icon name='clock' width={24} fill='#9DA4AE' />
@@ -363,7 +383,7 @@ class TheComponent extends Component {
             )}
         </div>
         <div
-          className='table-column'
+          className='table-column text-right'
           style={{ width: width[3] }}
           onClick={(e) => {
             e.stopPropagation()
@@ -386,15 +406,22 @@ class TheComponent extends Component {
                         disabled={
                           !removeFeaturePermission || readOnly || isProtected
                         }
-                        onClick={() =>
+                        onClick={() => {
+                          if (disableControls) return
                           this.confirmRemove(projectFlag, () => {
                             removeFlag(projectId, projectFlag)
                           })
-                        }
-                        className='btn btn-with-icon'
+                        }}
+                        className={classNames('btn btn-with-icon', {
+                          'btn-sm': isCompact,
+                        })}
                         data-test={`remove-feature-btn-${this.props.index}`}
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                        <Icon
+                          name='trash-2'
+                          width={isCompact ? 16 : 20}
+                          fill='#656D7B'
+                        />
                       </Button>
                     }
                   >

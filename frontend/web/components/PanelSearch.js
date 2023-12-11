@@ -269,7 +269,7 @@ const PanelSearch = class extends Component {
                       }}
                       type='text'
                       value={search}
-                      className='ml-3'
+                      className='me-3'
                       size='small'
                       placeholder='Search'
                       search

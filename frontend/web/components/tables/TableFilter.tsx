@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, ReactNode, useState } from 'react'
 import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
 import { caretDown } from 'ionicons/icons'
@@ -6,15 +6,29 @@ import classNames from 'classnames'
 
 type TableFilterType = {
   title: string
+  dropdownTitle?: string
   className?: string
+  children: ReactNode
 }
 
-const TableFilter: FC<TableFilterType> = ({ className, title }) => {
+const TableFilter: FC<TableFilterType> = ({
+  children,
+  className,
+  dropdownTitle,
+  title,
+}) => {
   const [open, setOpen] = useState(false)
-
+  const toggle = function () {
+    if (!open) {
+      setOpen(true)
+    }
+  }
   return (
     <>
-      <Row className={classNames('cursor-pointer', className)}>
+      <Row
+        onClick={toggle}
+        className={classNames('cursor-pointer user-select-none', className)}
+      >
         <span>{title} </span>
         <IonIcon
           style={{
@@ -25,14 +39,21 @@ const TableFilter: FC<TableFilterType> = ({ className, title }) => {
           icon={caretDown}
         />
       </Row>
-      <InlineModal
-        title='Roles'
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        className='inline-modal--tags'
-      >
-        <div>Hi</div>
-      </InlineModal>
+      {open && (
+        <InlineModal
+          hideClose
+          title={dropdownTitle || title}
+          isOpen={open}
+          onClose={() => {
+            setTimeout(() => {
+              setOpen(false)
+            }, 10)
+          }}
+          className='inline-modal table-filter inline-modal--sm right'
+        >
+          {children}
+        </InlineModal>
+      )}
     </>
   )
 }

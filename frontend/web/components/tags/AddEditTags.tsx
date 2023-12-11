@@ -96,19 +96,32 @@ const AddEditTags: FC<AddEditTagsType> = ({
       </Row>
       {tab === 'SELECT' && !noTags && (
         <InlineModal
-          title='Tags'
+          hideClose
+          title={
+            <Input
+              autoFocus
+              value={filter}
+              onChange={(e: InputEvent) =>
+                setFilter(Utils.safeParseEventValue(e))
+              }
+              size='xSmall'
+              className='full-width'
+              placeholder='Search tags...'
+              search
+            />
+          }
           isOpen={isOpen}
           onBack={() => setTab('SELECT')}
           showBack={tab !== 'SELECT'}
           onClose={toggle}
-          className='inline-modal--tags pb-0'
+          className='inline-modal--sm pb-0'
           bottom={
             !readOnly && (
               <div className='text-right'>
                 {Utils.renderWithPermission(
                   projectAdminPermission,
                   Constants.projectPermissions('Admin'),
-                  <div className='inline-modal__buttons'>
+                  <div className='text-center'>
                     <Button
                       className=''
                       disabled={!projectAdminPermission}
@@ -120,7 +133,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     >
                       Add New Tag
                     </Button>
-                    ,
                   </div>,
                 )}
               </div>
@@ -128,25 +140,16 @@ const AddEditTags: FC<AddEditTagsType> = ({
           }
         >
           <div>
-            <Input
-              value={filter}
-              onChange={(e: InputEvent) =>
-                setFilter(Utils.safeParseEventValue(e))
-              }
-              className='full-width'
-              placeholder='Search tags...'
-              search
-            />
             {tagsLoading && !projectTags && (
               <div className='text-center'>
                 <Loader />
               </div>
             )}
-            <div className='tag-list'>
+            <div className='tag-list d-flex flex-column gap-4'>
               {filteredTags &&
                 filteredTags.map((tag) => (
                   <div key={tag.id}>
-                    <Row className='mt-4'>
+                    <Row>
                       <Flex>
                         <Tag
                           className='px-2 py-2'

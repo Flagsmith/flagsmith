@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
-import TagFilter from 'components/tags/TagFilter'
-import Tag from 'components/tags/Tag'
-import FeatureRow, { width } from 'components/FeatureRow'
+import FeatureRow from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
@@ -15,8 +13,10 @@ import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import { rocket } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import TableFilter from 'components/tables/TableFilter'
 import TableSortFilter from 'components/tables/TableSortFilter'
+import TableSearchFilter from 'components/tables/TableSearchFilter'
+import TableTagFilter from 'components/tables/TableTagFilter'
+
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
@@ -261,7 +261,7 @@ const FeaturesPage = class extends Component {
                           {({ permission }) => (
                             <FormGroup className='mb-4'>
                               <PanelSearch
-                                className='no-pad'
+                                className='no-pad overflow-visible'
                                 id='features-list'
                                 renderSearchWithNoResults
                                 itemHeight={65}
@@ -269,13 +269,107 @@ const FeaturesPage = class extends Component {
                                 paging={FeatureListStore.paging}
                                 header={
                                   <Row className='table-header'>
-                                    <div className='table-column flex-fill'>
-                                      <Row className='justify-content-end'>
-                                        <TableFilter
-                                          className='me-5'
+                                    <div className='table-column flex-row flex-fill'>
+                                      <TableSearchFilter
+                                        onChange={(e) => {
+                                          this.setState(
+                                            {
+                                              search:
+                                                Utils.safeParseEventValue(e),
+                                            },
+                                            () => {
+                                              AppActions.searchFeatures(
+                                                this.props.match.params
+                                                  .projectId,
+                                                this.props.match.params
+                                                  .environmentId,
+                                                true,
+                                                this.state.search,
+                                                this.state.sort,
+                                                0,
+                                                this.getFilter(),
+                                              )
+                                            },
+                                          )
+                                        }}
+                                        value={this.state.search}
+                                      />
+                                      <Row className='flex-fill justify-content-end'>
+                                        <TableTagFilter
+                                          projectId={projectId}
+                                          className='me-4'
                                           title='Tags'
+                                          value={this.state.tags}
+                                          onToggleArchived={() => {
+                                            FeatureListStore.isLoading = true
+                                            this.setState(
+                                              {
+                                                showArchived:
+                                                  !this.state.showArchived,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
+                                          showArchived={this.state.showArchived}
+                                          onClearAll={() =>
+                                            this.setState(
+                                              { showArchived: false, tags: [] },
+                                              this.filter,
+                                            )
+                                          }
+                                          onChange={(tags) => {
+                                            FeatureListStore.isLoading = true
+                                            if (
+                                              tags.includes('') &&
+                                              tags.length > 1
+                                            ) {
+                                              if (
+                                                !this.state.tags.includes('')
+                                              ) {
+                                                this.setState(
+                                                  { tags: [''] },
+                                                  this.filter,
+                                                )
+                                              } else {
+                                                this.setState(
+                                                  {
+                                                    tags: tags.filter(
+                                                      (v) => !!v,
+                                                    ),
+                                                  },
+                                                  this.filter,
+                                                )
+                                              }
+                                            } else {
+                                              this.setState(
+                                                { tags },
+                                                this.filter,
+                                              )
+                                            }
+                                            AsyncStorage.setItem(
+                                              `${projectId}tags`,
+                                              JSON.stringify(tags),
+                                            )
+                                          }}
                                         />
-                                        <TableSortFilter />
+                                        <TableSortFilter
+                                          value={this.state.sort}
+                                          onChange={(sort) => {
+                                            this.setState({ sort }, () => {
+                                              AppActions.getFeatures(
+                                                this.props.match.params
+                                                  .projectId,
+                                                this.props.match.params
+                                                  .environmentId,
+                                                true,
+                                                this.state.search,
+                                                this.state.sort,
+                                                0,
+                                                this.getFilter(),
+                                              )
+                                            })
+                                          }}
+                                        />
                                       </Row>
                                     </div>
                                   </Row>
@@ -313,19 +407,6 @@ const FeaturesPage = class extends Component {
                                     this.getFilter(),
                                   )
                                 }
-                                onSortChange={(sort) => {
-                                  this.setState({ sort }, () => {
-                                    AppActions.getFeatures(
-                                      this.props.match.params.projectId,
-                                      this.props.match.params.environmentId,
-                                      true,
-                                      this.state.search,
-                                      this.state.sort,
-                                      0,
-                                      this.getFilter(),
-                                    )
-                                  })
-                                }}
                                 items={projectFlags}
                                 renderFooter={() => (
                                   <>

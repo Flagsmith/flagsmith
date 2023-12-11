@@ -28,6 +28,9 @@
   &-sm {
     min-height: 60px;
   }
+  &-xs {
+    min-height: 50px;
+  }
   a:hover svg {
     path {
       fill: $primary;
