@@ -403,6 +403,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
+                    "identity_uuid": identity_uuid,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "deleted",
@@ -423,6 +424,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
+                    "identity_uuid": identity_uuid,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "updated",
@@ -441,6 +443,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
+                    "identity_uuid": identity_uuid,
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "new",

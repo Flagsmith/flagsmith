@@ -73,6 +73,7 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
             "environment_api_key": environment.api_key,
             "feature_state": map_feature_state_to_engine(feature_state),
             "identifier": identifier,
+            "identity_uuid": identity_uuid,
         }
     )
 
@@ -113,6 +114,7 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
                 "environment_api_key": environment.api_key,
                 "feature_state": map_feature_state_to_engine(feature_state),
                 "identifier": identifier,
+                "identity_uuid": identity_uuid,
             }
         )
     )

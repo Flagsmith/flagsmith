@@ -100,6 +100,7 @@ def map_engine_feature_state_to_identity_override(
         environment_api_key=environment_api_key,
         feature_state=feature_state,
         identifier=identifier,
+        identity_uuid=identity_uuid,
     )
 
 

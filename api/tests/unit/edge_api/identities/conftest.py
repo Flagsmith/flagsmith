@@ -60,6 +60,7 @@ def edge_identity_override_document(
         "document_key": f"identity_override:{feature.id}:{edge_identity_model.identity_uuid}",
         "environment_api_key": environment.api_key,
         "identifier": edge_identity_model.identifier,
+        "identity_uuid": edge_identity_model.identity_uuid,
         "feature_state": {
             "django_id": None,
             "enabled": True,
@@ -102,6 +103,7 @@ def edge_identity_override_document_2(
         "document_key": f"identity_override:{feature.id}:{edge_identity_model_2.identity_uuid}",
         "environment_api_key": environment.api_key,
         "identifier": edge_identity_model_2.identifier,
+        "identity_uuid": edge_identity_model_2.identity_uuid,
         "feature_state": {
             "django_id": None,
             "enabled": True,

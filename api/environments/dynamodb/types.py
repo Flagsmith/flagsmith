@@ -78,11 +78,8 @@ class IdentityOverrideV2(BaseModel):
     document_key: str
     environment_api_key: str
     identifier: str
+    identity_uuid: str
     feature_state: FeatureStateModel
-
-    @property
-    def identity_uuid(self) -> str:
-        return self.document_key.rsplit(":", maxsplit=1)[1]
 
 
 @dataclass
