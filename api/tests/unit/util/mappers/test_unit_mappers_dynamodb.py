@@ -143,7 +143,7 @@ def test_map_environment_to_environment_v2_document__call_expected(
 
     # Then
     assert result == {
-        "document_key": "META",
+        "document_key": "_META",
         "environment_id": str(environment.id),
         "allow_client_traits": True,
         "amplitude_config": None,

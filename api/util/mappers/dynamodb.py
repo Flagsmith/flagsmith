@@ -54,7 +54,7 @@ def map_environment_to_environment_v2_document(
 ) -> Document:
     return {
         **map_environment_to_environment_document(environment),
-        "document_key": "META",
+        "document_key": "_META",
         "environment_id": str(environment.id),
     }
 
