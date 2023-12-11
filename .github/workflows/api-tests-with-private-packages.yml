@@ -18,7 +18,7 @@ env:
 
 jobs:
   test:
-    # NOTE: we need to include pull_request trigger to trigger `merge_group event
+    # NOTE: we need to include pull_request trigger to trigger `merge_group` event
     # ref: https://github.com/orgs/community/discussions/51120#discussioncomment-6312578
     if: ${{ github.event_name == 'merge_group' }}
     runs-on: ubuntu-latest
