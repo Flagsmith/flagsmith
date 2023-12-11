@@ -3,12 +3,12 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
-from projects.models import IdentityOverridesMigrationStatus
+from projects.models import IdentityOverridesV2MigrationStatus
 
 
 def apply_defaults(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     apps.get_model("projects", "Project").objects.all().update(
-        identity_overrides_migration_status=IdentityOverridesMigrationStatus.NOT_STARTED
+        identity_overrides_migration_status=IdentityOverridesV2MigrationStatus.NOT_STARTED
     )
 
 
