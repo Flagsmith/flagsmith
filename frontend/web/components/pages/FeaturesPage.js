@@ -388,19 +388,7 @@ const FeaturesPage = class extends Component {
                                             },
                                           ]}
                                           onChange={(sort) => {
-                                            this.setState({ sort }, () => {
-                                              AppActions.getFeatures(
-                                                this.props.match.params
-                                                  .projectId,
-                                                this.props.match.params
-                                                  .environmentId,
-                                                true,
-                                                this.state.search,
-                                                this.state.sort,
-                                                0,
-                                                this.getFilter(),
-                                              )
-                                            })
+                                            this.setState({ sort }, this.filter)
                                           }}
                                         />
                                       </Row>

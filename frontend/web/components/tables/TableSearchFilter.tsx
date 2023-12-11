@@ -10,7 +10,7 @@ type TableFilterType = {
   onChange: (v: string) => void
 }
 
-const TableSortFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
+const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
   return (
     <>
       <Input
@@ -29,4 +29,4 @@ const TableSortFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
   )
 }
 
-export default TableSortFilter
+export default TableSearchFilter
