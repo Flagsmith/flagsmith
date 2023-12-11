@@ -754,7 +754,9 @@ def test_get_project_list_data(client, organisation):
     "client",
     (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
 )
-def test_get_project_data_by_id(client, organisation, project):
+def test_get_project_data_by_id(
+    client: APIClient, organisation: Organisation, project: Project
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
 
@@ -772,9 +774,12 @@ def test_get_project_data_by_id(client, organisation, project):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["name"] == project.name
-    assert response.json()["max_segments_allowed"] == 100
-    assert response.json()["max_features_allowed"] == 400
-    assert response.json()["max_segment_overrides_allowed"] == 100
-    assert response.json()["total_features"] == num_features
-    assert response.json()["total_segments"] == num_segments
+
+    response_json = response.json()
+    assert response_json["name"] == project.name
+    assert response_json["max_segments_allowed"] == 100
+    assert response_json["max_features_allowed"] == 400
+    assert response_json["max_segment_overrides_allowed"] == 100
+    assert response_json["total_features"] == num_features
+    assert response_json["total_segments"] == num_segments
+    assert response_json["show_edge_identity_overrides_for_feature"] is False

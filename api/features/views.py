@@ -117,7 +117,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
-            "multivariate_options", "owners", "tags"
+            "multivariate_options", "owners", "tags", "group_owners"
         )
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
@@ -736,7 +736,7 @@ def organisation_has_got_feature(request, organisation):
 @swagger_auto_schema(
     method="POST",
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])

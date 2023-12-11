@@ -118,7 +118,7 @@ if settings.IS_RBAC_INSTALLED:
     nested_user_roles_routes.register(
         prefix="roles",
         viewset=RolesByUserViewSet,
-        basename="user-roles",
+        basename="role-users",
     )
     nested_roles_router.register(
         "environments-permissions",

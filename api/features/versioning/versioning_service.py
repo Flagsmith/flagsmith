@@ -46,6 +46,7 @@ def get_environment_flags_list(
 
     feature_states = (
         FeatureState.objects.select_related(
+            "environment",
             "feature",
             "feature_state_value",
             "environment_feature_version",
