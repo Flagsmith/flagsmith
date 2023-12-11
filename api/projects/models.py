@@ -24,7 +24,10 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
-from projects.tasks import write_environments_to_dynamodb
+from projects.tasks import (
+    migrate_project_environments_to_v2,
+    write_environments_to_dynamodb,
+)
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
@@ -135,6 +138,15 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         environment_cache.delete_many(
             list(self.environments.values_list("api_key", flat=True))
         )
+
+    @hook(
+        AFTER_SAVE,
+        when="identity_overrides_v2_migration_status",
+        has_changed=True,
+        is_now=IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+    )
+    def trigger_environments_v2_migration(self) -> None:
+        migrate_project_environments_to_v2.delay(kwargs={"project_id": self.id})
 
     @hook(AFTER_UPDATE)
     def write_to_dynamo(self):

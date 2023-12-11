@@ -1,4 +1,5 @@
 from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 
 from environments.dynamodb.dynamodb_wrapper import (
     DynamoEnvironmentV2Wrapper,
@@ -54,3 +55,26 @@ def test_migrate_environments_to_v2__environment_with_overrides__writes_expected
     assert len(results) == 2
     assert results[0] == expected_environment_document
     assert results[1] == expected_identity_override_document
+
+
+def test_migrate_environments_to_v2__wrappes_disabled__does_not_write(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocked_dynamodb_identity_wrapper = mocker.patch(
+        "environments.dynamodb.services.DynamoIdentityWrapper",
+        autospec=True,
+        return_value=mocker.MagicMock(is_enabled=False),
+    )
+    mocked_dynamodb_v2_wrapper = mocker.patch(
+        "environments.dynamodb.services.DynamoEnvironmentV2Wrapper",
+        autospec=True,
+        return_value=mocker.MagicMock(is_enabled=False),
+    )
+
+    # When
+    migrate_environments_to_v2(project_id=mocker.Mock())
+
+    # Then
+    mocked_dynamodb_identity_wrapper.return_value.assert_not_called()
+    mocked_dynamodb_v2_wrapper.return_value.assert_not_called()

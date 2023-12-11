@@ -16,11 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 def migrate_environments_to_v2(project_id: int) -> None:
+    dynamo_wrapper_v2 = DynamoEnvironmentV2Wrapper()
+    identity_wrapper = DynamoIdentityWrapper()
+
+    if not (dynamo_wrapper_v2.is_enabled and identity_wrapper.is_enabled):
+        return
+
     logger.info("Migrating environments to v2 for project %d", project_id)
 
     environments_to_migrate = Environment.objects.filter(project_id=project_id)
     identity_overrides_to_migrate = _iter_paginated_overrides(
-        environments_to_migrate,
+        identity_wrapper=identity_wrapper,
+        environments=environments_to_migrate,
     )
 
     changeset = IdentityOverridesV2Changeset(
@@ -32,7 +39,6 @@ def migrate_environments_to_v2(project_id: int) -> None:
         project_id,
     )
 
-    dynamo_wrapper_v2 = DynamoEnvironmentV2Wrapper()
     dynamo_wrapper_v2.write_environments(environments_to_migrate)
     dynamo_wrapper_v2.update_identity_overrides(changeset)
 
@@ -40,10 +46,10 @@ def migrate_environments_to_v2(project_id: int) -> None:
 
 
 def _iter_paginated_overrides(
+    *,
+    identity_wrapper: DynamoIdentityWrapper,
     environments: Iterable[Environment],
 ) -> Generator[IdentityOverrideV2, None, None]:
-    identity_wrapper = DynamoIdentityWrapper()
-
     for environment in environments:
         environment_api_key = environment.api_key
         for identity in identity_wrapper.iter_all_items_paginated(
