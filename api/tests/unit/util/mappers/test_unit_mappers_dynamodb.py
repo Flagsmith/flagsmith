@@ -2,6 +2,9 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from environments.dynamodb.constants import (
+    ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
+)
 from util.mappers import dynamodb
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -143,7 +146,7 @@ def test_map_environment_to_environment_v2_document__call_expected(
 
     # Then
     assert result == {
-        "document_key": "_META",
+        "document_key": ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
         "environment_id": str(environment.id),
         "allow_client_traits": True,
         "amplitude_config": None,
