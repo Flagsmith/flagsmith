@@ -15,8 +15,8 @@ const TableFilterItem: FC<TableFilterItemType> = ({
 }) => {
   return (
     <a href={'#'} onClick={onClick} className='popover-bt__list-item'>
-      <Row space className='px-3 py-2'>
-        <div>{title}</div>
+      <Row space className='px-3 no-wrap overflow-hidden py-2'>
+        {title}
         <div>
           <Icon
             className={classNames('text-body', { 'opacity-0': !isActive })}

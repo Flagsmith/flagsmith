@@ -167,7 +167,8 @@ $side-width: 660px;
     top:12px;
   }
   &--sm {
-    width: 300px;
+    min-width: 200px;
+    max-width: 350px;
     .inline-modal__title {
       padding: 8px 12px;
       * {

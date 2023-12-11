@@ -65,14 +65,14 @@ const TableTagFilter: FC<TableFilterType> = ({
             onClick={onToggleArchived}
             isActive={showArchived}
             title={
-              <Row>
+              <Row className='overflow-hidden'>
                 <Tag
                   isDot
                   selected={showArchived}
                   className='px-2 py-2 mr-1'
                   tag={Constants.archivedTag}
                 />
-                <div className='ml-2'>archived</div>
+                <div className='ml-2 text-overflow'>archived</div>
               </Row>
             }
           />
