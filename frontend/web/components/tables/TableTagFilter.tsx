@@ -10,6 +10,7 @@ import Constants from 'common/constants'
 type TableFilterType = {
   projectId: string
   value: number[] | undefined
+  isLoading: boolean
   onChange: (value: number[]) => void
   showArchived: boolean
   onToggleArchived: () => void
@@ -18,6 +19,7 @@ type TableFilterType = {
 
 const TableTagFilter: FC<TableFilterType> = ({
   className,
+  isLoading,
   onChange,
   onToggleArchived,
   projectId,
@@ -33,7 +35,7 @@ const TableTagFilter: FC<TableFilterType> = ({
   }, [data, filter])
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
-    <>
+    <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
         className={className}
         dropdownTitle={
@@ -62,7 +64,11 @@ const TableTagFilter: FC<TableFilterType> = ({
             <div className='text-center'>No tags</div>
           )}
           <TableFilterItem
-            onClick={onToggleArchived}
+            onClick={() => {
+              if (!isLoading) {
+                onToggleArchived()
+              }
+            }}
             isActive={showArchived}
             title={
               <Row className='overflow-hidden'>
@@ -79,6 +85,9 @@ const TableTagFilter: FC<TableFilterType> = ({
           {filteredTags?.map((tag) => (
             <TableFilterItem
               onClick={() => {
+                if (isLoading) {
+                  return
+                }
                 if (value?.includes(tag.id)) {
                   onChange((value || []).filter((v) => v !== tag.id))
                 } else {
@@ -103,7 +112,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           ))}
         </div>
       </TableFilter>
-    </>
+    </div>
   )
 }
 

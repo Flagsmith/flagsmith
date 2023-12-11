@@ -300,6 +300,7 @@ const FeaturesPage = class extends Component {
                                       />
                                       <Row className='flex-fill justify-content-end'>
                                         <TableTagFilter
+                                          isLoading={FeatureListStore.isLoading}
                                           projectId={projectId}
                                           className='me-4'
                                           title='Tags'
@@ -315,12 +316,13 @@ const FeaturesPage = class extends Component {
                                             )
                                           }}
                                           showArchived={this.state.showArchived}
-                                          onClearAll={() =>
+                                          onClearAll={() => {
+                                            FeatureListStore.isLoading = true
                                             this.setState(
                                               { showArchived: false, tags: [] },
                                               this.filter,
                                             )
-                                          }
+                                          }}
                                           onChange={(tags) => {
                                             FeatureListStore.isLoading = true
                                             if (
@@ -373,6 +375,7 @@ const FeaturesPage = class extends Component {
                                           ]}
                                         />
                                         <TableSortFilter
+                                          isLoading={FeatureListStore.isLoading}
                                           value={this.state.sort}
                                           options={[
                                             {
@@ -388,6 +391,7 @@ const FeaturesPage = class extends Component {
                                             },
                                           ]}
                                           onChange={(sort) => {
+                                            FeatureListStore.isLoading = true
                                             this.setState({ sort }, this.filter)
                                           }}
                                         />

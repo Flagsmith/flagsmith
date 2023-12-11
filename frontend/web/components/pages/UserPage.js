@@ -368,6 +368,7 @@ const UserPage = class extends Component {
                                       <div className='table-column flex-row flex-fill'>
                                         <TableSearchFilter
                                           onChange={(e) => {
+                                            FeatureListStore.isLoading = true
                                             this.setState(
                                               {
                                                 search:
@@ -384,6 +385,9 @@ const UserPage = class extends Component {
                                             className='me-4'
                                             title='Tags'
                                             value={this.state.tags}
+                                            isLoading={
+                                              FeatureListStore.isLoading
+                                            }
                                             onToggleArchived={() => {
                                               FeatureListStore.isLoading = true
                                               this.setState(
@@ -397,7 +401,8 @@ const UserPage = class extends Component {
                                             showArchived={
                                               this.state.showArchived
                                             }
-                                            onClearAll={() =>
+                                            onClearAll={() => {
+                                              FeatureListStore.isLoading = true
                                               this.setState(
                                                 {
                                                   showArchived: false,
@@ -405,7 +410,7 @@ const UserPage = class extends Component {
                                                 },
                                                 this.filter,
                                               )
-                                            }
+                                            }}
                                             onChange={(tags) => {
                                               FeatureListStore.isLoading = true
                                               if (
@@ -459,6 +464,9 @@ const UserPage = class extends Component {
                                           />
                                           <TableSortFilter
                                             value={this.state.sort}
+                                            isLoading={
+                                              FeatureListStore.isLoading
+                                            }
                                             options={[
                                               {
                                                 default: true,
@@ -473,6 +481,7 @@ const UserPage = class extends Component {
                                               },
                                             ]}
                                             onChange={(sort) => {
+                                              FeatureListStore.isLoading = true
                                               this.setState(
                                                 { sort },
                                                 this.filter,

@@ -14,24 +14,25 @@ export type SortValue = {
 }
 type TableFilterType = {
   options: SortType[]
+  isLoading: boolean
   value: SortValue
   onChange: (v: SortValue) => void
 }
 
 const TableSortFilter: FC<TableFilterType> = ({
+  isLoading,
   onChange,
   options,
   value: _value,
 }) => {
-  const [open, setOpen] = useState(false)
-
   const value = _value || {
     label: options[0].label,
     sortBy: options[0].value,
     sortOrder: 'asc',
   }
+  console.log('isloading', isLoading)
   return (
-    <>
+    <div className={isLoading ? 'disabled' : ''}>
       <TableFilter title={'Sort'}>
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
@@ -41,6 +42,7 @@ const TableSortFilter: FC<TableFilterType> = ({
               className='popover-bt__list-item'
               href='#'
               onClick={() => {
+                if (isLoading) return
                 onChange({
                   label: sortOption.label,
                   sortBy: sortOption.value,
@@ -71,7 +73,7 @@ const TableSortFilter: FC<TableFilterType> = ({
           )
         })}
       </TableFilter>
-    </>
+    </div>
   )
 }
 
