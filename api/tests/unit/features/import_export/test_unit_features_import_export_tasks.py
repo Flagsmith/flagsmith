@@ -1,8 +1,10 @@
+import json
 from datetime import timedelta
 
 import pytest
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
+from pytest_django.fixtures import SettingsWrapper
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -11,10 +13,16 @@ from features.import_export.constants import (
     OVERWRITE_DESTRUCTIVE,
     PROCESSING,
     SKIP,
+    SUCCESS,
 )
-from features.import_export.models import FeatureExport, FeatureImport
+from features.import_export.models import (
+    FeatureExport,
+    FeatureImport,
+    FlagsmithOnFlagsmithFeatureExport,
+)
 from features.import_export.tasks import (
     clear_stale_feature_imports_and_exports,
+    create_flagsmith_on_flagsmith_feature_export,
     export_features_for_environment,
     import_features_for_environment,
 )
@@ -314,3 +322,44 @@ def test_export_and_import_features_for_environment_with_overwrite_destructive(
     assert new_feature_state3.enabled is True
     assert new_feature_state3.feature_state_value.type == STRING
     assert new_feature_state3.feature_state_value.value == "changed"
+
+
+def test_create_flagsmith_on_flagsmith_feature_export(
+    db: None,
+    settings: SettingsWrapper,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    flagsmith_tag = Tag.objects.create(
+        label="flagsmith-on-flagsmith", project=project, color="#228B22"
+    )
+    feature = Feature.objects.create(
+        name="fof_feature",
+        project=project,
+        initial_value="200",
+        is_server_key_only=True,
+        default_enabled=False,
+    )
+    feature.tags.add(flagsmith_tag)
+    feature_state = feature.feature_states.get(environment=environment)
+    feature_state.enabled = True
+    feature_state.save()
+
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = environment.id
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = flagsmith_tag.id
+    assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 0
+
+    # When
+    create_flagsmith_on_flagsmith_feature_export()
+
+    # Then
+    assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 1
+    fof = FlagsmithOnFlagsmithFeatureExport.objects.first()
+    assert fof.feature_export.status == SUCCESS
+
+    data = json.loads(fof.feature_export.data)
+    assert len(data) == 1
+    assert data[0]["name"] == "fof_feature"
+    assert data[0]["default_enabled"] is False
+    assert data[0]["enabled"] is True
