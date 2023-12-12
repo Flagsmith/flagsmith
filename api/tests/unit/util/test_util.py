@@ -23,13 +23,15 @@ def test__iter_paired_chunks__second_empty():
 
 def test__iter_paired_chunks__first_shorter():
     assert list(iter_paired_chunks([1, 2, 3], [4, 5, 6, 7, 8], chunk_size=3)) == [
-        ([1, 2, 3], [4, 5, 6]),
-        ([7, 8], []),
+        ([1, 2], [4]),
+        ([3], [5, 6]),
+        ([], [7, 8]),
     ]
 
 
 def test__iter_pair_chunks__second_shorter():
     assert list(iter_paired_chunks([1, 2, 3, 4, 5], [6, 7, 8], chunk_size=3)) == [
-        ([1, 2, 3], [6, 7, 8]),
-        ([4, 5], []),
+        ([1, 2], [6]),
+        ([3, 4], [7]),
+        ([5], [8]),
     ]
