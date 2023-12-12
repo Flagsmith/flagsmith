@@ -6,6 +6,9 @@ from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
 from edge_api.identities.types import IdentityChangeset
+from environments.dynamodb.constants import (
+    ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
+)
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
@@ -54,7 +57,7 @@ def map_environment_to_environment_v2_document(
 ) -> Document:
     return {
         **map_environment_to_environment_document(environment),
-        "document_key": "META",
+        "document_key": ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
         "environment_id": str(environment.id),
     }
 
