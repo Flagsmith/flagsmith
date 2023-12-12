@@ -152,7 +152,6 @@ def test_map_environment_to_environment_v2_document__call_expected(
         "environment_api_key": expected_api_key,
         "allow_client_traits": True,
         "amplitude_config": None,
-        "api_key": expected_api_key,
         "dynatrace_config": None,
         "feature_states": [
             {

@@ -55,10 +55,12 @@ def map_environment_to_environment_document(
 def map_environment_to_environment_v2_document(
     environment: "Environment",
 ) -> Document:
+    environment_document = map_environment_to_environment_document(environment)
+    environment_api_key = environment_document.pop("api_key")
     return {
-        **map_environment_to_environment_document(environment),
+        **environment_document,
         "document_key": ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
-        "environment_api_key": environment.api_key,
+        "environment_api_key": environment_api_key,
         "environment_id": str(environment.id),
     }
 
