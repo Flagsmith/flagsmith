@@ -11,6 +11,7 @@ from util.mappers.dynamodb import (
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_feature_to_engine,
+    map_identity_to_engine,
     map_mv_option_to_engine,
 )
 
@@ -24,6 +25,7 @@ __all__ = (
     "map_feature_to_engine",
     "map_identity_changeset_to_identity_override_changeset",
     "map_identity_override_to_identity_override_document",
+    "map_identity_to_engine",
     "map_identity_to_identity_document",
     "map_mv_option_to_engine",
 )

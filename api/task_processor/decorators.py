@@ -6,7 +6,6 @@ from inspect import getmodule
 from threading import Thread
 
 from django.conf import settings
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db.transaction import on_commit
 from django.utils import timezone
 
@@ -18,8 +17,6 @@ from task_processor.task_run_method import TaskRunMethod
 P = typing.ParamSpec("P")
 
 logger = logging.getLogger(__name__)
-
-_django_json_encoder_default = DjangoJSONEncoder().default
 
 
 class TaskHandler(typing.Generic[P]):

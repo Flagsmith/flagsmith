@@ -134,3 +134,23 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
     # Then
     results = flagsmith_environments_v2_table.scan()["Items"]
     assert len(results) == 0
+
+
+def test_environment_v2_wrapper__write_environments__put_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    # When
+    wrapper.write_environments(
+        environments=[environment],
+    )
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0] == map_environment_to_environment_v2_document(environment)
