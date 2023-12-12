@@ -34,6 +34,12 @@ that group, but not the permissions the group has on other entities.
 
 ### Roles
 
+:::info
+
+Roles are still in active development and are not yet publicly available.
+
+:::
+
 A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at Organization,
 Project, and Environment levels. You can assign a role, along with its associated permissions, to a User or Group. You
 will also be able to assign API keys to a Role in future versions.
