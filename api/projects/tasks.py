@@ -17,8 +17,8 @@ def migrate_project_environments_to_v2(project_id: int):
 
     with transaction.atomic():
         project = Project.objects.select_for_update().get(id=project_id)
-        migrate_environments_to_v2(project_id=project_id)
-        project.identity_overrides_v2_migration_status = (
-            IdentityOverridesV2MigrationStatus.COMPLETE
-        )
-        project.save()
+        if migrate_environments_to_v2(project_id=project_id):
+            project.identity_overrides_v2_migration_status = (
+                IdentityOverridesV2MigrationStatus.COMPLETE
+            )
+            project.save()
