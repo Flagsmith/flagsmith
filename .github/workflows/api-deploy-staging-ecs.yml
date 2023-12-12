@@ -3,7 +3,7 @@ name: API Deploy to Staging ECS
 on:
   push:
     branches:
-      - fix-pgp-secret-id
+      - main
     paths:
       - api/**
       - .github/**
