@@ -6,6 +6,7 @@ from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
 from util.mappers import dynamodb
+from util.mappers.engine import map_feature_state_to_engine
 
 if TYPE_CHECKING:  # pragma: no cover
     from pytest_mock import MockerFixture
@@ -194,3 +195,31 @@ def test_map_environment_to_environment_v2_document__call_expected(
         "use_identity_composite_key_for_hashing": True,
         "webhook_config": None,
     }
+
+
+def test_map_identity_override_to_identity_override_document__decimal_feature_state_value__return_expected(
+    identity: "Identity",
+    identity_featurestate: "FeatureState",
+) -> None:
+    # Given
+    expected_feature_state_value = Decimal("1.111")
+
+    engine_feature_state = map_feature_state_to_engine(identity_featurestate)
+    engine_feature_state.feature_state_value = expected_feature_state_value
+    identity_override = dynamodb.map_engine_feature_state_to_identity_override(
+        feature_state=engine_feature_state,
+        identity_uuid=str(uuid.uuid4()),
+        identifier=identity.identifier,
+        environment_api_key=identity.environment.api_key,
+        environment_id=identity.environment.id,
+    )
+
+    # When
+    result = dynamodb.map_identity_override_to_identity_override_document(
+        identity_override
+    )
+
+    # Then
+    feature_state_value = result["feature_state"]["feature_state_value"]
+    assert isinstance(feature_state_value, Decimal)
+    assert feature_state_value == expected_feature_state_value

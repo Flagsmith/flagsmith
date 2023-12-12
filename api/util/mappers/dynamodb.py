@@ -192,6 +192,7 @@ DOCUMENT_VALUE_ENCODERS_BY_TYPE = {
     int: _decimal_encoder,
     float: _decimal_encoder,
     datetime: _isoformat_encoder,
+    Decimal: _noop_encoder,
 }
 
 
