@@ -26,7 +26,7 @@ def project_v2_migration_in_progress(
         ),
         (
             None,
-            IdentityOverridesV2MigrationStatus.NOT_STARTED,
+            IdentityOverridesV2MigrationStatus.IN_PROGRESS,
         ),
     ),
 )
