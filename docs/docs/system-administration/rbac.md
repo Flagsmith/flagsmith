@@ -58,8 +58,6 @@ Once the role is created you can assign the corresponding permissions.
 - Go to the Projects tab.
 - Select a Project and enable the relevant permissions.
 
-![RoleListProject](/img/roles/role-project-permissions.png)
-
 ### Assign Role to Users or Groups
 
 After creating the Role, you can assign it to Users or Groups.
@@ -70,10 +68,6 @@ After creating the Role, you can assign it to Users or Groups.
 - Go to the Members tab.
 - Select the Users tab.
 - Click assign role to user button and select a user.
-
-**List of assigned users:**
-
-![RoleListUsers](/img/roles/role-user-assigned-list.png)
 
 ## Permissions
 
