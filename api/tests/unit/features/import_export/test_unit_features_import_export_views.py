@@ -4,13 +4,18 @@ from typing import Callable
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.import_export.constants import OVERWRITE_DESTRUCTIVE, PROCESSING
-from features.import_export.models import FeatureExport, FeatureImport
+from features.import_export.models import (
+    FeatureExport,
+    FeatureImport,
+    FlagsmithOnFlagsmithFeatureExport,
+)
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
@@ -278,3 +283,59 @@ def test_create_feature_export_unauthorized(
     assert response.json() == {
         "detail": "You do not have permission to perform this action."
     }
+
+
+def test_download_flagsmith_on_flagsmith_when_none(
+    api_client: APIClient,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    tag = Tag.objects.create(
+        label="flagsmith-on-flagsmith",
+        project=environment.project,
+        color="#228B22",
+    )
+
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = environment.id
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = tag.id
+
+    url = reverse("api-v1:features:download-flagsmith-on-flagsmith")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == 404
+
+
+def test_download_flagsmith_on_flagsmith_when_success(
+    api_client: APIClient,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    tag = Tag.objects.create(
+        label="flagsmith-on-flagsmith",
+        project=environment.project,
+        color="#228B22",
+    )
+
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = environment.id
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = tag.id
+
+    feature_export = FeatureExport.objects.create(
+        environment=environment,
+        data='[{"feature": "data"}]',
+    )
+    FlagsmithOnFlagsmithFeatureExport.objects.create(
+        feature_export=feature_export,
+    )
+    url = reverse("api-v1:features:download-flagsmith-on-flagsmith")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == 200
+    assert response.data == [{"feature": "data"}]
