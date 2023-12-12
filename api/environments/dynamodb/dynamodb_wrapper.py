@@ -15,6 +15,7 @@ from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb.constants import (
+    DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
     ENVIRONMENTS_V2_PARTITION_KEY,
     ENVIRONMENTS_V2_SORT_KEY,
 )
@@ -28,6 +29,7 @@ from util.mappers import (
     map_identity_override_to_identity_override_document,
     map_identity_to_identity_document,
 )
+from util.util import iter_paired_chunks
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -206,20 +208,25 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         changeset: IdentityOverridesV2Changeset,
     ) -> None:
-        with self._table.batch_writer() as writer:
-            for identity_override_to_delete in changeset.to_delete:
-                writer.delete_item(
-                    Key={
-                        ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
-                        ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
-                    },
-                )
-            for identity_override_to_put in changeset.to_put:
-                writer.put_item(
-                    Item=map_identity_override_to_identity_override_document(
-                        identity_override_to_put
-                    ),
-                )
+        for to_put, to_delete in iter_paired_chunks(
+            changeset.to_put,
+            changeset.to_delete,
+            chunk_size=DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
+        ):
+            with self._table.batch_writer() as writer:
+                for identity_override_to_delete in to_delete:
+                    writer.delete_item(
+                        Key={
+                            ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
+                            ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
+                        },
+                    )
+                for identity_override_to_put in to_put:
+                    writer.put_item(
+                        Item=map_identity_override_to_identity_override_document(
+                            identity_override_to_put
+                        ),
+                    )
 
 
 class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
