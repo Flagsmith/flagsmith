@@ -5,11 +5,14 @@ from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from edge_api.identities.types import IdentityChangeset
+from environments.dynamodb.dynamodb_wrapper import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
 from task_processor.decorators import register_task_handler
 from task_processor.models import TaskPriority
 from users.models import FFAdminUser
+from util.mappers import map_identity_changeset_to_identity_override_changeset
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 
 logger = logging.getLogger(__name__)
@@ -89,7 +92,7 @@ def sync_identity_document_features(identity_uuid: str):
     )
 
     identity.synchronise_features(valid_feature_names)
-    EdgeIdentity.dynamo_wrapper.put_item(identity.to_document())
+    identity.save()
 
 
 @register_task_handler()
@@ -97,13 +100,13 @@ def generate_audit_log_records(
     environment_api_key: str,
     identifier: str,
     identity_uuid: str,
-    changes: dict,
-    user_id: int = None,
-    master_api_key_id: int = None,
-):
+    changes: IdentityChangeset,
+    user_id: int | None = None,
+    master_api_key_id: int | None = None,
+) -> None:
     audit_records = []
 
-    feature_override_changes = changes.get("feature_overrides")
+    feature_override_changes = changes["feature_overrides"]
     if not feature_override_changes:
         return
 
@@ -113,7 +116,7 @@ def generate_audit_log_records(
 
     for feature_name, change_details in feature_override_changes.items():
         action = {"+": "created", "-": "deleted", "~": "updated"}.get(
-            change_details.get("change_type")
+            change_details["change_type"]
         )
         log = f"Feature override {action} for feature '{feature_name}' and identity '{identifier}'"
         audit_records.append(
@@ -130,3 +133,27 @@ def generate_audit_log_records(
         )
 
     AuditLog.objects.bulk_create(audit_records)
+
+
+@register_task_handler()
+def update_flagsmith_environments_v2_identity_overrides(
+    environment_api_key: str,
+    identity_uuid: str,
+    identifier: str,
+    changes: IdentityChangeset,
+) -> None:
+    feature_override_changes = changes["feature_overrides"]
+    if not feature_override_changes:
+        return
+
+    environment = Environment.objects.get(api_key=environment_api_key)
+    dynamodb_wrapper_v2 = DynamoEnvironmentV2Wrapper()
+
+    identity_override_changeset = map_identity_changeset_to_identity_override_changeset(
+        identity_changeset=changes,
+        identity_uuid=identity_uuid,
+        environment_api_key=environment_api_key,
+        environment_id=environment.id,
+        identifier=identifier,
+    )
+    dynamodb_wrapper_v2.update_identity_overrides(identity_override_changeset)

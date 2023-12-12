@@ -346,10 +346,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
-    if (project && project.use_edge_identities) {
-      return true
+    if (!Utils.getIsEdge()) {
+      return false
     }
-    return false
+
+    return !!(
+      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
+      (project &&
+        project.use_edge_identities &&
+        !project.show_edge_identity_overrides_for_feature)
+    )
   },
 
   getShouldSendIdentityToTraits(_project: ProjectType) {

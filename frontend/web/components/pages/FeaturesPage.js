@@ -580,13 +580,17 @@ const FeaturesPage = class extends Component {
                                 data-test='show-create-feature-btn'
                                 onClick={this.newFlag}
                               >
-                                <span className='icon'>
+                                <div className='flex-row justify-content-center'>
                                   <IonIcon
+                                    className='me-1'
                                     icon={rocket}
-                                    style={{ contain: 'none', height: '25px' }}
+                                    style={{
+                                      contain: 'none',
+                                      height: '25px',
+                                    }}
                                   />
-                                </span>{' '}
-                                Create your first Feature
+                                  <span>Create your first Feature</span>
+                                </div>
                               </Button>
                             </FormGroup>
                           ))}

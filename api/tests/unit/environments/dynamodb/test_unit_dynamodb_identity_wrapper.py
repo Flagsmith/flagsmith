@@ -4,7 +4,7 @@ import pytest
 from boto3.dynamodb.conditions import Key
 from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.identities.builders import build_identity_model
+from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.constants import IN
 from rest_framework.exceptions import NotFound
 
@@ -246,17 +246,14 @@ def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
 def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Given
     table_name = "random_table_name"
-    mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
-        table_name,
-    )
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
     mocked_config = mocker.patch("environments.dynamodb.dynamodb_wrapper.Config")
     mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
 
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
-    # Then
 
+    # Then
     assert dynamo_identity_wrapper.is_enabled is True
     mocked_boto3.resource.assert_called_with(
         "dynamodb", config=mocked_config(tcp_keepalive=True)
@@ -381,7 +378,7 @@ def test_get_segment_ids_with_identity_model(identity, environment, mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     identity_document = map_identity_to_identity_document(identity)
-    identity_model = build_identity_model(identity_document)
+    identity_model = IdentityModel.parse_obj(identity_document)
 
     mocker.patch.object(
         dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
@@ -398,3 +395,63 @@ def test_get_segment_ids_with_identity_model(identity, environment, mocker):
 
     # Then
     assert segment_ids == []
+
+
+def test_identity_wrapper__iter_all_items_paginated__returns_expected(
+    environment: "Environment",
+    identity: "Identity",
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    identity_document = map_identity_to_identity_document(identity)
+    environment_api_key = "test_api_key"
+    limit = 1
+
+    expected_engine_identity = IdentityModel.parse_obj(identity_document)
+    expected_next_page_key = "next_page_key"
+
+    environment_document = map_environment_to_environment_document(environment)
+    mocked_environment_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper",
+        autospec=True,
+    )
+    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    mocked_get_all_items = mocker.patch.object(
+        dynamo_identity_wrapper,
+        "get_all_items",
+        autospec=True,
+    )
+    mocked_get_all_items.side_effect = [
+        {"Items": [identity_document], "LastEvaluatedKey": "next_page_key"},
+        {"Items": [identity_document], "LastEvaluatedKey": None},
+    ]
+
+    # When
+    iterator = dynamo_identity_wrapper.iter_all_items_paginated(
+        environment_api_key=environment_api_key, limit=limit
+    )
+    result_1 = next(iterator)
+    result_2 = next(iterator)
+
+    # Then
+    with pytest.raises(StopIteration):
+        next(iterator)
+
+    assert result_1 == expected_engine_identity
+    assert result_2 == expected_engine_identity
+
+    mocked_get_all_items.assert_has_calls(
+        [
+            mocker.call(
+                environment_api_key=environment_api_key,
+                limit=limit,
+            ),
+            mocker.call(
+                environment_api_key=environment_api_key,
+                limit=limit,
+                start_key=expected_next_page_key,
+            ),
+        ]
+    )
