@@ -1442,7 +1442,8 @@ const CreateFlag = class extends Component {
                                                   className='table-column'
                                                   style={{ width: '188px' }}
                                                 >
-                                                  {feature_state_value && (
+                                                  {feature_state_value !==
+                                                    null && (
                                                     <FeatureValue
                                                       value={
                                                         feature_state_value
