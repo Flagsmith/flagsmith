@@ -61,6 +61,7 @@ export type Project = {
   enable_dynamo_db: boolean
   migration_status: string
   use_edge_identities: boolean
+  show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
   enable_realtime_updates: boolean
   max_segments_allowed?: number | null
@@ -78,11 +79,11 @@ export type LaunchDarklyProjectImport = {
   updated_at: string
   completed_at: string
   status: {
-      requested_environment_count: number
-      requested_flag_count: number
-      result: string || null
-      error_message: string || null
-  },
+    requested_environment_count: number
+    requested_flag_count: number
+    result: string | null
+    error_message: string | null
+  }
   project: number
 }
 
@@ -257,6 +258,7 @@ export type ProjectFlag = {
   num_identity_overrides: number | null
   num_segment_overrides: number | null
   owners: User[]
+  owner_groups: UserGroupSummary[]
   project: number
   tags: number[]
   type: string
@@ -371,6 +373,7 @@ export type Res = {
   rolePermission: { id: string }
 
   projectFlags: PagedResponse<ProjectFlag>
+  projectFlag: ProjectFlag
   identityFeatureStates: IdentityFeatureState[]
   rolesPermissionUsers: RolePermissionUser
   rolePermissionGroup: { id: string }
