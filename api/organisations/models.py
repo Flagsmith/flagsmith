@@ -273,8 +273,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         If cancellation_date is in the future some aspects are
         reserved for a task after the date has passed.
         """
+        # Avoid circular import.
+        from users.models import FFAdminUser
+
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
+
+        FFAdminUser.send_alert_to_admin_users(
+            subject=f"Organisation {self.organisation.name} has cancelled their subscription",
+            message=f"Organisation {self.organisation.name} has cancelled their subscription on {cancellation_date}",
+        )
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
