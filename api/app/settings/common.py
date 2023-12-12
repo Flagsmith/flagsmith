@@ -822,8 +822,7 @@ MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
 MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
-SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
-SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
 if SAML_INSTALLED:
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
