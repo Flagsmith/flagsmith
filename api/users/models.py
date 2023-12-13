@@ -17,7 +17,7 @@ from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 from trench.models import MFAMethod
 
-from audit.models import RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import (
@@ -165,7 +165,13 @@ class FFAdminUser(
     ):
         if delete_orphan_organisations:
             self.delete_orphan_organisations()
+        deleted_user_id = self.pk
         super().delete()
+        # avoid "insert or update ... violates foreign key constraint" when user self-deletes
+        self.__class__.history.filter(history_user_id=deleted_user_id).update(
+            history_user_id=None
+        )
+        AuditLog.objects.filter(author_id=deleted_user_id).update(author_id=None)
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
