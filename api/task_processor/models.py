@@ -3,12 +3,15 @@ import uuid
 from datetime import datetime
 
 import simplejson as json
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
 from task_processor.exceptions import TaskProcessingError, TaskQueueFullError
 from task_processor.managers import RecurringTaskManager, TaskManager
 from task_processor.task_registry import registered_tasks
+
+_django_json_encoder_default = DjangoJSONEncoder().default
 
 
 class TaskPriority(models.IntegerChoices):
@@ -44,8 +47,7 @@ class AbstractBaseTask(models.Model):
 
     @staticmethod
     def serialize_data(data: typing.Any):
-        # TODO: add datetime support if needed
-        return json.dumps(data)
+        return json.dumps(data, default=_django_json_encoder_default)
 
     @staticmethod
     def deserialize_data(data: typing.Any):

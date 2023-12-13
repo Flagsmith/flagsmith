@@ -6,6 +6,7 @@ from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
     EdgeIdentityViewSet,
     EdgeIdentityWithIdentifierFeatureStateView,
+    get_edge_identity_overrides,
 )
 from features.views import (
     EnvironmentFeatureStateViewSet,
@@ -141,5 +142,10 @@ urlpatterns = [
         "<str:environment_api_key>/features/<int:feature_pk>/create-segment-override/",
         create_segment_override,
         name="create-segment-override",
+    ),
+    path(
+        "<str:environment_api_key>/edge-identity-overrides",
+        get_edge_identity_overrides,
+        name="edge-identity-overrides",
     ),
 ]

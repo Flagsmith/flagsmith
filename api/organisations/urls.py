@@ -102,13 +102,23 @@ if settings.IS_RBAC_INSTALLED:
         RoleEnvironmentPermissionsViewSet,
         RoleOrganisationPermissionViewSet,
         RoleProjectPermissionsViewSet,
+        RolesByUserViewSet,
         RoleViewSet,
         UserRoleViewSet,
+    )
+
+    nested_user_roles_routes = routers.NestedSimpleRouter(
+        parent_router=organisations_router, parent_prefix=r"users", lookup="user"
     )
 
     organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
     nested_roles_router = routers.NestedSimpleRouter(
         organisations_router, r"roles", lookup="role"
+    )
+    nested_user_roles_routes.register(
+        prefix="roles",
+        viewset=RolesByUserViewSet,
+        basename="role-users",
     )
     nested_roles_router.register(
         "environments-permissions",
@@ -134,5 +144,6 @@ if settings.IS_RBAC_INSTALLED:
         [
             url(r"^", include(organisations_router.urls)),
             url(r"^", include(nested_roles_router.urls)),
+            url(r"^", include(nested_user_roles_routes.urls)),
         ]
     )

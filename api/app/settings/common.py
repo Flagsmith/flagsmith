@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.import_export",
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",
@@ -772,6 +773,9 @@ DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True
 # DynamoDB table name for storing environment
 ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
+# V2 was created to improve storage over overrides data.
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 
@@ -818,8 +822,7 @@ MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
 MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
-SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
-SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
 if SAML_INSTALLED:
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"

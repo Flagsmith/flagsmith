@@ -44,6 +44,10 @@
                     "value": "flagsmith_environments"
                 },
                 {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
                     "name": "GITHUB_CLIENT_ID",
                     "value": "cd16a9c1574074756876"
                 },
@@ -68,8 +72,8 @@
                     "value": "937916178726.2904626318658"
                 },
                 {
-                    "name":"EDGE_API_URL",
-                    "value":"https://edge.bullet-train-staging.win/api/v1/"
+                    "name": "EDGE_API_URL",
+                    "value": "https://edge.bullet-train-staging.win/api/v1/"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",

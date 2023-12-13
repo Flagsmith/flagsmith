@@ -411,10 +411,7 @@ const App = class extends Component {
                                       >
                                         {({ permission }) => (
                                           <>
-                                            {(!!permission ||
-                                              Utils.getFlagsmithHasFeature(
-                                                'group_admins',
-                                              )) && (
+                                            {!!permission && (
                                               <NavLink
                                                 id='org-settings-link'
                                                 activeClassName='active'
@@ -478,7 +475,12 @@ const App = class extends Component {
                   )}
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
-                      <ButterBar />
+                      <ButterBar
+                        billingStatus={
+                          AccountStore.getOrganisation()?.subscription
+                            .billing_status
+                        }
+                      />
                       {projectNotLoaded ? (
                         <div className='text-center'>
                           <Loader />
