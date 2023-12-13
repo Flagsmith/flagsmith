@@ -6,7 +6,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 export default function Redoc() {
     const { siteConfig } = useDocusaurusContext();
     return (
-        <Layout title="Relay proxy endpoints documentation">
+        <Layout title="API Specification">
             <div>
                 <RedocStandalone
                     specUrl={siteConfig.customFields.swaggerURL}
