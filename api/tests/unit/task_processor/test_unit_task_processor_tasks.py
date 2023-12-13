@@ -167,7 +167,7 @@ def test_clean_up_old_recurring_task_runs_does_not_run_if_disabled(
 ) -> None:
     # Given
     settings.RECURRING_TASK_RUN_RETENTION_DAYS = 2
-    settings.ENABLE_CLEAN_UP_OLD_TASKS = True
+    settings.ENABLE_CLEAN_UP_OLD_TASKS = False
 
     recurring_task = RecurringTask.objects.create(
         task_identifier="some_identifier", run_every=timedelta(seconds=1)
