@@ -60,7 +60,7 @@ jobs:
       - name: Update flagsmith-charts values.yaml with latest docker version
         uses: fjogeleit/yaml-update-action@main
         with:
-          token: ${{ secrets.GITHUB_TOKEN_FLAGSMITH_CHARTS }}
+          token: ${{ secrets.FLAGSMITH_CHARTS_GITHUB_TOKEN }}
           repository: flagsmith/flagsmith-charts
           workDir: chart
           masterBranchName: 'main'
