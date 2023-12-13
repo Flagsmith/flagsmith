@@ -18,7 +18,7 @@ export default function (props) {
           : null
       }
       onClick={props.onClick}
-      className={cx('chip mr-2 mt-0 clickable', props.className)}
+      className={cx('chip no-wrap mr-2 mt-0 clickable', props.className)}
     >
       <span
         style={{

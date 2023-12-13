@@ -171,7 +171,10 @@ const Input = class extends React.Component {
               sizeClassNames[size],
             )}
           >
-            <Icon name='search' width={20} />
+            <Icon
+              name='search'
+              width={this.props.size === 'xSmall' ? 16 : 20}
+            />
           </span>
         )}
       </div>

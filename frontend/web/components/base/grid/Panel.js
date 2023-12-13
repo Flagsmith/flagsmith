@@ -13,9 +13,11 @@ const Panel = class extends PureComponent {
         {(this.props.title || this.props.action) && (
           <div className='panel-heading mb-2'>
             <Row space>
-              <Row className='flex-1'>
-                <h5 className='m-b-0 title'>{this.props.title}</h5>{' '}
-              </Row>
+              {!!this.props.title && (
+                <Row className='flex-1 mr-3'>
+                  <h5 className='m-b-0 title'>{this.props.title}</h5>{' '}
+                </Row>
+              )}
               {this.props.action}
             </Row>
           </div>

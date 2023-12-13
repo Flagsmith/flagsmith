@@ -154,28 +154,33 @@ $side-width: 660px;
     font-size: $font-sm;
     line-height: $line-height-sm;
   }
-  .select-colour label {
-    margin-bottom: 1.5rem;
-  }
   .assignees-list-item {
     color: $bg-dark100;
     font-weight: 500;
     padding: 16px 0;
     border-bottom: 1px solid $basic-alpha-16;
   }
-}
-
-.inline-modal--tags {
-  width: 500px;
-  input.input {
-    border: 1px solid $input-border-color !important;
+  &.right {
+    right:0;
   }
-}
+  &.table-filter {
+    top:12px;
+  }
+  &--sm {
+    min-width: 200px;
+    max-width: 350px;
+    .inline-modal__title {
+      padding: 8px 12px;
+      * {
+        font-size: $font-sm !important;
+        line-height: $line-height-sm !important;
+      }
+    }
+  }
 
-.inline-modal--tags-sm {
-  width: 450px;
-  input.input {
-    border: 1px solid $input-border-color !important;
+  &__list {
+    overflow-y: auto;
+    max-height: 350px;
   }
 }
 

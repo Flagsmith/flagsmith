@@ -133,7 +133,7 @@
     min-width: 16px;
     color: #fff;
     text-align: center;
-    line-height: 17px;
+    line-height: 16px;
     font-size: 11px;
     cursor: pointer;
     position: relative;
@@ -161,7 +161,12 @@
     background: $bt-brand-primary !important;
 }
 .dark {
-
+    .text-body {
+        color: white;
+        >path{
+            fill: white;
+        }
+    }
     .bg-primary {
         background: $bt-brand-primary-dark !important;
     }
@@ -174,4 +179,11 @@
         text-decoration: none;
         color: $bt-brand-primary-dark
     }
+}
+
+.text-overflow {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
