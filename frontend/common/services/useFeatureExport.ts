@@ -23,7 +23,16 @@ export const featureExportService = service
       >({
         providesTags: (res) => [{ id: res?.id, type: 'FeatureExport' }],
         query: (query: Req['getFeatureExport']) => ({
-          url: `features/download-feature-export/${query.id}`,
+          url: `features/download-feature-export/${query.id}/`,
+        }),
+      }),
+      getFeatureExports: builder.query<
+        Res['featureExports'],
+        Req['getFeatureExports']
+      >({
+        providesTags: [{ id: 'LIST', type: 'FeatureExport' }],
+        query: (query) => ({
+          url: `projects/${query.projectId}/feature-exports/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -37,11 +46,8 @@ export async function createFeatureExport(
     typeof featureExportService.endpoints.createFeatureExport.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     featureExportService.endpoints.createFeatureExport.initiate(data, options),
-  )
-  return Promise.all(
-    store.dispatch(featureExportService.util.getRunningQueriesThunk()),
   )
 }
 export async function getFeatureExport(
@@ -51,11 +57,19 @@ export async function getFeatureExport(
     typeof featureExportService.endpoints.getFeatureExport.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     featureExportService.endpoints.getFeatureExport.initiate(data, options),
   )
-  return Promise.all(
-    store.dispatch(featureExportService.util.getRunningQueriesThunk()),
+}
+export async function getFeatureExports(
+  store: any,
+  data: Req['getFeatureExports'],
+  options?: Parameters<
+    typeof featureExportService.endpoints.getFeatureExports.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureExportService.endpoints.getFeatureExports.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS
@@ -63,6 +77,7 @@ export async function getFeatureExport(
 export const {
   useCreateFeatureExportMutation,
   useGetFeatureExportQuery,
+  useGetFeatureExportsQuery,
   // END OF EXPORTS
 } = featureExportService
 

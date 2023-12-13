@@ -102,6 +102,7 @@
     "react-datepicker": "4.16.0",
     "react-device-detect": "1.9.9",
     "react-dom": "16.9.0",
+    "react-dropzone": "^14.2.3",
     "react-markdown": "^8.0.5",
     "react-maskedinput": "4.0.1",
     "react-redux": "8.0.2",

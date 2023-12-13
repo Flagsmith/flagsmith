@@ -16,8 +16,8 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import ImportPage from './ImportPage'
-import FeatureExport from 'components/FeatureExport'
+import ImportPage from 'components/import-export/ImportPage'
+import FeatureExport from 'components/import-export/FeatureExport'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -195,7 +195,7 @@ const ProjectSettingsPage = class extends Component {
               <div>
                 <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs className='mt-0' uncontrolled>
+                  <Tabs className='mt-0' value={3}>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference
@@ -498,8 +498,7 @@ const ProjectSettingsPage = class extends Component {
                         projectId={this.props.match.params.projectId}
                         projectName={project.name}
                       />
-                      </TabItem>
-                    )}
+                    </TabItem>
                     {Utils.getFlagsmithHasFeature(
                       'flagsmith_import_export',
                     ) && (
@@ -507,7 +506,8 @@ const ProjectSettingsPage = class extends Component {
                         <FeatureExport
                           projectId={this.props.match.params.projectId}
                         />
-                    </TabItem>
+                      </TabItem>
+                    )}
                   </Tabs>
                 }
               </div>

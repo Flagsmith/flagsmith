@@ -72,6 +72,14 @@ export type Project = {
   environments: Environment[]
 }
 
+export type ExportStatus = 'SUCCESS' | 'PROCESSING' | 'FAILED'
+export type FeatureExport = {
+  id: string
+  name: string
+  environment_id: string
+  status: ExportStatus
+  created_at: string
+}
 export type LaunchDarklyProjectImport = {
   id: number
   created_by: string
@@ -382,5 +390,7 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   featureExport: { id: string }
+  featureExports: PagedResponse<FeatureExport>
+  flagsmithProjectImport: { id: string }
   // END OF TYPES
 }

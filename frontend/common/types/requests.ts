@@ -7,6 +7,7 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -142,6 +143,13 @@ export type Req = {
   }
   getFeatureExport: {
     id: string
+  }
+  getFeatureExports: {
+    projectId: string
+  }
+  createFlagsmithProjectImport: {
+    environment_id: number | string
+    strategy: ImportStrategy
   }
   // END OF TYPES
 }

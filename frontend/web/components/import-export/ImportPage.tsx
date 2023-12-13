@@ -12,9 +12,10 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import TabItem from 'components/base/forms/TabItem'
-import FeatureExport from 'components/FeatureExport'
+import FeatureExport from './FeatureExport'
 import { createFeatureExport } from 'common/services/useFeatureExport'
 import { getStore } from 'common/store'
+import FeatureImport from './FeatureImport'
 
 type ImportPageType = {
   projectId: string
@@ -211,7 +212,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
           <Tabs value={tab} onChange={setTab} theme='pill'>
             <TabItem tabLabel={'Flagsmith'}>
               <div className='mt-4'>
-                <FeatureExport projectId={projectId} />
+                <FeatureImport projectId={projectId} />
               </div>
             </TabItem>
             <TabItem tabLabel={'LaunchDarkly'}>
