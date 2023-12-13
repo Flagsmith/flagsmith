@@ -105,6 +105,7 @@ if settings.IS_RBAC_INSTALLED:
         RolesByUserViewSet,
         RoleViewSet,
         UserRoleViewSet,
+        RolesbyMasterAPIPrefixViewSet,
     )
 
     nested_user_roles_routes = routers.NestedSimpleRouter(
@@ -145,5 +146,8 @@ if settings.IS_RBAC_INSTALLED:
             url(r"^", include(organisations_router.urls)),
             url(r"^", include(nested_roles_router.urls)),
             url(r"^", include(nested_user_roles_routes.urls)),
+            path('api/v1/organisations/<int:organisation_pk>/roles-api-key/<str:prefix>/',
+                RolesbyMasterAPIPrefixViewSet.as_view({'get': 'list'}),
+                name='roles_api_keys_by_prefix'),
         ]
     )
