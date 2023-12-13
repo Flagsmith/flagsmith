@@ -9,7 +9,7 @@
     .chip-icon {
       margin-left: 5px;
     }
-    width: 70px;
+    width: 40px;
     line-height: 32px;
 
     user-select: none;
@@ -18,7 +18,7 @@
     -webkit-user-select: none;
     .chip {
       margin: 0 !important;
-      height: 48px;
+      height: 34px;
       justify-content: center;
     }
   }
@@ -81,4 +81,10 @@
   .tag {
     border-color: transparent;
   }
+}
+
+.tag--dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
 }

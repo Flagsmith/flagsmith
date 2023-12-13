@@ -15,12 +15,14 @@ type TagType = {
   selected?: boolean
   tag: Partial<TTag>
   isTruncated?: boolean
+  isDot?: boolean
 }
 
 const Tag: FC<TagType> = ({
   className,
   deselectedColor,
   hideNames,
+  isDot,
   isTruncated,
   onClick,
   selected,
@@ -36,6 +38,14 @@ const Tag: FC<TagType> = ({
     return deselectedColor || tag.color
   }
 
+  if (isDot) {
+    return (
+      <div
+        className={'tag--dot'}
+        style={{ backgroundColor: `${color(getColor()).darken(0.1)}` }}
+      />
+    )
+  }
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
