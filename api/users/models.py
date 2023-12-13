@@ -37,7 +37,7 @@ from permissions.permission_service import (
     is_user_project_admin,
     user_has_organisation_permission,
 )
-from projects.models import Project
+from projects.models import Project, UserProjectPermission
 from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -45,7 +45,6 @@ from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
-    from environments.models import Environment
     from organisations.invites.models import (
         AbstractBaseInviteModel,
         Invite,

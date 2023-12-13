@@ -16,6 +16,7 @@ from djoser.email import PasswordResetEmail
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
@@ -487,7 +488,6 @@ class UserPermissionGroupViewSetTestCase(TestCase):
             f"added: {self.regular_user.email}",
         ]
         assert all(expected_log in audit_log.log for expected_log in expected_logs)
-
 
     def test_cannot_add_user_from_another_organisation(self):
         # Given
