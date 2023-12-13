@@ -10,6 +10,7 @@ from importlib import reload
 from django.core.management import BaseCommand
 from django.utils import timezone
 
+from custom_auth import tasks as auth_tasks
 from sse import tasks as sse_tasks
 from task_processor import tasks as processor_tasks
 from task_processor.task_registry import registered_tasks
@@ -21,7 +22,7 @@ from task_processor.threads import TaskRunner
 
 logger = logging.getLogger(__name__)
 
-TASKS_MODULES_TO_RELOAD = [processor_tasks, sse_tasks]
+TASKS_MODULES_TO_RELOAD = [processor_tasks, sse_tasks, auth_tasks]
 
 
 class Command(BaseCommand):

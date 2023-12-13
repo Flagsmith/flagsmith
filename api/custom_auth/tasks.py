@@ -8,10 +8,10 @@ from task_processor.decorators import register_recurring_task
 
 
 @register_recurring_task(
-    run_every=timedelta(days=1),
+    run_every=timedelta(seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN),
 )
 def clean_up_user_password_reset_request():
     UserPasswordResetRequest.objects.filter(
-        requested_at__lte=timezone.now()
+        requested_at__lt=timezone.now()
         - timedelta(seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN)
     ).delete()
