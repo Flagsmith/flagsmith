@@ -195,7 +195,7 @@ const ProjectSettingsPage = class extends Component {
               <div>
                 <PageTitle title={'Project Settings'} />
                 {
-                  <Tabs className='mt-0' value={3}>
+                  <Tabs className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
                       <div className='mt-4'>
                         <JSONReference

@@ -1,23 +1,28 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
 import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
-import {
-  useCreateFeatureExportMutation,
-  useGetFeatureExportsQuery,
-} from 'common/services/useFeatureExport'
+import { useGetFeatureExportsQuery } from 'common/services/useFeatureExport'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/requests'
 import JSONUpload from 'components/JSONUpload'
 import PanelSearch from 'components/PanelSearch'
-import Utils from 'common/utils/utils'
-import FeatureListStore from 'common/stores/feature-list-store'
-import { FeatureImportItem, ProjectFlag } from 'common/types/responses'
+import {
+  FeatureImportItem,
+  FeatureState,
+  MultivariateFeatureStateValue,
+  MultivariateOption,
+  ProjectFlag,
+  User,
+  UserGroupSummary,
+} from 'common/types/responses'
 import FeatureRow from 'components/FeatureRow'
 import Button from 'components/base/forms/Button'
+import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlagsmithProjectImport'
+import ErrorMessage from 'components/ErrorMessage'
 
 type FeatureExportType = {
   projectId: string
@@ -30,6 +35,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState()
   const [page, setPage] = useState(0)
+  const env = ProjectStore.getEnvironment(environment)
+  const [file, setFile] = useState<File | null>(null)
+  const [fileData, setFileData] = useState<FeatureImportItem[] | null>(null)
 
   useEffect(() => {
     if (environment) {
@@ -39,23 +47,75 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       })
     }
   }, [environment, tags, search, projectId, page])
-  const [createFeatureExport, { isLoading: isCreating, isSuccess }] =
-    useCreateFeatureExportMutation({})
 
+  const [createImport, { error, isLoading }] =
+    useCreateFlagsmithProjectImportMutation({})
   const { data: exports } = useGetFeatureExportsQuery({ projectId })
+
   const onSubmit = () => {
-    const env = ProjectStore.getEnvironment(environment)
-    createFeatureExport({
-      environment_id: env.id,
-      tag_ids: tags,
-    })
+    if (env && file) {
+      createImport({
+        environment_id: env.id,
+        file,
+        strategy,
+      }).then((res) => {
+        if (res?.data) {
+          toast('Your import is processing')
+        } else {
+          toast('Failed to import flags')
+        }
+      })
+    }
   }
 
   const [strategy, setStrategy] = useState<ImportStrategy>('SKIP')
 
-  const [file, setFile] = useState<File | null>(null)
-  const [fileData, setFileData] = useState<FeatureImportItem[] | null>(null)
-
+  const {
+    featureStates,
+    projectFlags,
+  }: {
+    projectFlags: ProjectFlag[] | null
+    featureStates: FeatureState[] | null
+  } = useMemo(() => {
+    if (fileData) {
+      const createdDate = new Date().toISOString()
+      const projectFlags: ProjectFlag[] = fileData.map((importItem, i) => {
+        return {
+          created_date: createdDate,
+          default_enabled: importItem.enabled,
+          description: null,
+          id: i,
+          initial_value: importItem.value,
+          is_archived: false,
+          is_server_key_only: importItem.is_server_key_only,
+          multivariate_options: importItem.multivariate,
+          name: importItem.name,
+          num_identity_overrides: 0,
+          num_segment_overrides: 0,
+          owner_groups: [],
+          owners: [],
+          project: ProjectStore.model!.id,
+          tags: [],
+          type: 'STANDARD',
+          uuid: `${i}`,
+        }
+      })
+      const featureStates: FeatureState[] = fileData.map((importItem, i) => {
+        return {
+          created_at: createdDate,
+          enabled: importItem.enabled,
+          environment: env!.id,
+          feature: i,
+          feature_state_value: importItem.value,
+          id: i,
+          multivariate_feature_state_values: importItem.multivariate,
+          uuid: `${i}`,
+        }
+      })
+      return { featureStates, projectFlags }
+    }
+    return { featureStates: null, projectFlags: null }
+  }, [fileData, env])
   return (
     <div className='mt-4'>
       <div className='mb-2'>
@@ -107,7 +167,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           setFileData(data)
         }}
       />
-      {!!fileData && (
+      {!!projectFlags && (
         <>
           <div className='my-2'>
             <strong>Preview</strong>
@@ -117,14 +177,14 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             id='features-list'
             renderSearchWithNoResults
             search={search}
-            items={fileData}
+            items={projectFlags}
             renderRow={(projectFlag: ProjectFlag, i: number) => (
               <FeatureRow
                 hideAudit
                 disableControls
                 size='sm'
-                environmentFlags={[]}
-                projectFlags={[]}
+                environmentFlags={featureStates}
+                projectFlags={projectFlags}
                 environmentId={environment}
                 projectId={projectId}
                 index={i}
@@ -134,8 +194,11 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             prevPage={() => setPage(page - 1)}
             goToPage={setPage}
           />
+          <ErrorMessage>{error}</ErrorMessage>
           <div className='mt-4 text-right'>
-            <Button onClick={onSubmit}>Import Features</Button>
+            <Button disabled={isLoading} onClick={onSubmit}>
+              Import Features
+            </Button>
           </div>
         </>
       )}

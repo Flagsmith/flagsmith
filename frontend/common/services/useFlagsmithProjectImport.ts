@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import toFormData from 'common/utils/toFormData'
 
 export const flagsmithProjectImportService = service
   .enhanceEndpoints({ addTagTypes: ['FlagsmithProjectImport'] })
@@ -11,11 +12,17 @@ export const flagsmithProjectImportService = service
         Req['createFlagsmithProjectImport']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FlagsmithProjectImport' }],
-        query: (query: Req['createFlagsmithProjectImport']) => ({
-          body: query,
-          method: 'POST',
-          url: `flagsmithProjectImport`,
-        }),
+        queryFn: async (query, { dispatch }, _2, baseQuery) => {
+          const { environment_id, ...rest } = query
+          const formData = toFormData({ ...rest })
+
+          const { data, error } = await baseQuery({
+            body: formData,
+            method: 'POST',
+            url: `features/feature-import/${environment_id}`,
+          })
+          return { data, error }
+        },
       }),
       // END OF ENDPOINTS
     }),

@@ -24,7 +24,7 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
         let json
         try {
           json = JSON.parse(reader.result)
-          onChange(file, json)
+          onChange(acceptedFiles[0], json)
         } catch (e) {
           setError('File is not valid JSON')
         }
@@ -61,32 +61,36 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
     onDrop,
   })
 
-  return file ? (
-    <Row>
-      <div {...getRootProps()}>
-        <input {...getInputProps()} />
-        <div className='flex-row droparea droparea--condensed text-center'>
-          <DropIcon width={24} height={24} />
-          <div className='ml-2'>
-            <strong className={'fs-small'}>{file.name}</strong>
+  return (
+    <div className='cursor-pointer'>
+      {file ? (
+        <Row>
+          <div {...getRootProps()}>
+            <input {...getInputProps()} />
+            <div className='flex-row droparea droparea--condensed text-center'>
+              <DropIcon width={24} height={24} />
+              <div className='ml-2'>
+                <strong className={'fs-small'}>{file.name}</strong>
+              </div>
+              <Button size='small' className={'ml-2'}>
+                Select File
+              </Button>
+            </div>
           </div>
-          <Button size='small' className={'ml-2'}>
-            Select File
-          </Button>
+        </Row>
+      ) : (
+        <div {...getRootProps()}>
+          <input {...getInputProps()} />
+          <div className='droparea text-center'>
+            <DropIcon />
+            <div className='mb-2'>
+              <strong>Select a file or drag and drop here</strong>
+            </div>
+            <div className='text-muted fs-small mb-4'>.json File</div>
+            <Button>Select File</Button>
+          </div>
         </div>
-      </div>
-    </Row>
-  ) : (
-    <div {...getRootProps()}>
-      <input {...getInputProps()} />
-      <div className='droparea text-center'>
-        <DropIcon />
-        <div className='mb-2'>
-          <strong>Select a file or drag and drop here</strong>
-        </div>
-        <div className='text-muted fs-small mb-4'>.json File</div>
-        <Button>Select File</Button>
-      </div>
+      )}
     </div>
   )
 }

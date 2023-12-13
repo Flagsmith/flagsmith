@@ -49,6 +49,12 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     createFeatureExport({
       environment_id: env.id,
       tag_ids: tags,
+    }).then((res) => {
+      if (res?.data) {
+        toast('Your export is processing')
+      } else {
+        toast('Failed to export features')
+      }
     })
   }
 

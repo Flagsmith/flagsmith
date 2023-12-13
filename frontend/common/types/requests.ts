@@ -150,6 +150,7 @@ export type Req = {
   createFlagsmithProjectImport: {
     environment_id: number | string
     strategy: ImportStrategy
+    file: File
   }
   // END OF TYPES
 }
