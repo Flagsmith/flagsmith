@@ -222,7 +222,7 @@ const ProjectSelectPage = class extends Component {
                             {({ permission }) => {
                               return Utils.renderWithPermission(
                                 permission,
-                                Constants.environmentPermissions(
+                                Constants.organisationPermissions(
                                   Utils.getCreateProjectPermissionDescription(
                                     AccountStore.getOrganisation(),
                                   ),
