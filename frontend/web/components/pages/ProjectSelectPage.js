@@ -143,14 +143,18 @@ const ProjectSelectPage = class extends Component {
                               <div className='col-md-6 col-xl-3'>
                                 <Permission
                                   level='organisation'
-                                  permission='CREATE_PROJECT'
+                                  permission={Utils.getCreateProjectPermission(
+                                    AccountStore.getOrganisation(),
+                                  )}
                                   id={AccountStore.getOrganisation().id}
                                 >
                                   {({ permission }) => {
                                     return Utils.renderWithPermission(
                                       permission,
-                                      Constants.environmentPermissions(
-                                        'Create Project',
+                                      Constants.organisationPermissions(
+                                        Utils.getCreateProjectPermissionDescription(
+                                          AccountStore.getOrganisation(),
+                                        ),
                                       ),
                                       <Button
                                         disabled={!permission}
@@ -210,14 +214,18 @@ const ProjectSelectPage = class extends Component {
                         <div>
                           <Permission
                             level='organisation'
-                            permission='CREATE_PROJECT'
+                            permission={Utils.getCreateProjectPermission(
+                              AccountStore.getOrganisation(),
+                            )}
                             id={AccountStore.getOrganisation().id}
                           >
                             {({ permission }) => {
                               return Utils.renderWithPermission(
                                 permission,
-                                Constants.environmentPermissions(
-                                  'Create Project',
+                                Constants.organisationPermissions(
+                                  Utils.getCreateProjectPermissionDescription(
+                                    AccountStore.getOrganisation(),
+                                  ),
                                 ),
                                 <div className='col-md-6 col-xl-3'>
                                   <Button

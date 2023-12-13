@@ -223,6 +223,9 @@ button.btn {
     &.btn-project-create {
       background-color: transparent;
       border: 1px dashed $basic-alpha-24;
+      &:disabled {
+        color: $body-text;
+      }
       &:hover {
         background-color: transparent;
         & .btn-project-icon {
