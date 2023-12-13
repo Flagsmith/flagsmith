@@ -16,7 +16,10 @@ class FeatureImportPermissions(IsAuthenticated):
             return False
 
         environment = Environment.objects.get(id=view.kwargs["environment_id"])
-        return request.user.is_environment_admin(environment)
+        organisation = environment.project.organisation
+
+        # Since feature imports can be destructive, use org admin.
+        return request.user.is_organisation_admin(organisation)
 
 
 class CreateFeatureExportPermissions(IsAuthenticated):

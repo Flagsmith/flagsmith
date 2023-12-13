@@ -88,7 +88,6 @@ class FeatureExportListView(ListAPIView):
             if user.is_environment_admin(environment):
                 environment_ids.append(environment.id)
 
-        # Order by environment name to match environment list order.
         return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
-            "environment__name"
+            "-created_at"
         )

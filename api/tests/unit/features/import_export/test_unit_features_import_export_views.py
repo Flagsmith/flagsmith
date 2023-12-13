@@ -47,13 +47,13 @@ def test_list_feature_exports(
 
     # Then
     assert response.status_code == 200
-    assert response.data["results"][0]["environment_id"] == environment.id
-    assert response.data["results"][0]["id"] == feature_export1.id
-    assert response.data["results"][0]["name"].startswith(f"{environment.name} | ")
+    assert response.data["results"][0]["environment_id"] == environment2.id
+    assert response.data["results"][0]["id"] == feature_export2.id
+    assert response.data["results"][0]["name"].startswith(f"{environment2.name} | ")
 
-    assert response.data["results"][1]["environment_id"] == environment2.id
-    assert response.data["results"][1]["id"] == feature_export2.id
-    assert response.data["results"][1]["name"].startswith(f"{environment2.name} | ")
+    assert response.data["results"][1]["environment_id"] == environment.id
+    assert response.data["results"][1]["id"] == feature_export1.id
+    assert response.data["results"][1]["name"].startswith(f"{environment.name} | ")
 
 
 def test_list_feature_export_with_filtered_environments(
