@@ -6,6 +6,7 @@ const DropIcon = (props: SVGProps<SVGSVGElement>) => (
     width={55}
     height={54}
     fill='none'
+    viewBox='0 0 55 54'
     {...props}
   >
     <path

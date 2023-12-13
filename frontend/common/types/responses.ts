@@ -80,6 +80,15 @@ export type FeatureExport = {
   status: ExportStatus
   created_at: string
 }
+export type FeatureImportItem = {
+  name: string
+  default_enabled: boolean
+  is_server_key_only: boolean
+  initial_value: FlagsmithValue
+  value: FlagsmithValue
+  enabled: false
+  multivariate: []
+}
 export type LaunchDarklyProjectImport = {
   id: number
   created_by: string

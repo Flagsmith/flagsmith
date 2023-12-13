@@ -66,9 +66,9 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
       <div {...getRootProps()}>
         <input {...getInputProps()} />
         <div className='flex-row droparea droparea--condensed text-center'>
-          <DropIcon />
+          <DropIcon width={24} height={24} />
           <div className='ml-2'>
-            <strong>{file.name}</strong>
+            <strong className={'fs-small'}>{file.name}</strong>
           </div>
           <Button size='small' className={'ml-2'}>
             Select File
@@ -84,7 +84,7 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
         <div className='mb-2'>
           <strong>Select a file or drag and drop here</strong>
         </div>
-        <div className='text-muted mb-4'>.json File</div>
+        <div className='text-muted fs-small mb-4'>.json File</div>
         <Button>Select File</Button>
       </div>
     </div>

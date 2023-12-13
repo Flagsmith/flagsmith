@@ -12,6 +12,12 @@ import {
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/requests'
 import JSONUpload from 'components/JSONUpload'
+import PanelSearch from 'components/PanelSearch'
+import Utils from 'common/utils/utils'
+import FeatureListStore from 'common/stores/feature-list-store'
+import { FeatureImportItem, ProjectFlag } from 'common/types/responses'
+import FeatureRow from 'components/FeatureRow'
+import Button from 'components/base/forms/Button'
 
 type FeatureExportType = {
   projectId: string
@@ -46,6 +52,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   }
 
   const [strategy, setStrategy] = useState<ImportStrategy>('SKIP')
+
+  const [file, setFile] = useState<File | null>(null)
+  const [fileData, setFileData] = useState<FeatureImportItem[] | null>(null)
 
   return (
     <div className='mt-4'>
@@ -92,7 +101,44 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       <div className='my-2'>
         <strong>Import File</strong>
       </div>
-      <JSONUpload />
+      <JSONUpload
+        onChange={(file, data) => {
+          setFile(file)
+          setFileData(data)
+        }}
+      />
+      {!!fileData && (
+        <>
+          <div className='my-2'>
+            <strong>Preview</strong>
+          </div>
+          <PanelSearch
+            className='no-pad'
+            id='features-list'
+            renderSearchWithNoResults
+            search={search}
+            items={fileData}
+            renderRow={(projectFlag: ProjectFlag, i: number) => (
+              <FeatureRow
+                hideAudit
+                disableControls
+                size='sm'
+                environmentFlags={[]}
+                projectFlags={[]}
+                environmentId={environment}
+                projectId={projectId}
+                index={i}
+                projectFlag={projectFlag}
+              />
+            )}
+            prevPage={() => setPage(page - 1)}
+            goToPage={setPage}
+          />
+          <div className='mt-4 text-right'>
+            <Button onClick={onSubmit}>Import Features</Button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
