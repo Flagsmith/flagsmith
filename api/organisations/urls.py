@@ -102,10 +102,10 @@ if settings.IS_RBAC_INSTALLED:
         RoleEnvironmentPermissionsViewSet,
         RoleOrganisationPermissionViewSet,
         RoleProjectPermissionsViewSet,
+        RolesbyMasterAPIPrefixViewSet,
         RolesByUserViewSet,
         RoleViewSet,
         UserRoleViewSet,
-        RolesbyMasterAPIPrefixViewSet,
     )
 
     nested_user_roles_routes = routers.NestedSimpleRouter(
