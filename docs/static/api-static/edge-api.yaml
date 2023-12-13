@@ -147,23 +147,19 @@ components:
       name: X-Environment-Key
   schemas:
     Flags:
-      type: array
-      items:
-        anyOf:
-          - $ref: '#/components/schemas/FeatureStateEnabled'
-          - $ref: '#/components/schemas/FeatureStateDisabled'
-    FeatureStateEnabled:
+      type: object
+      properties:
+        flags:
+          type: array
+          $ref: '#/components/schemas/FeatureState'
+    FeatureState:
       type: object
       properties:
         enabled:
           type: boolean
-        feature:
-          $ref: '#/components/schemas/Feature'
-    FeatureStateDisabled:
-      type: object
-      properties:
-        enabled:
-          type: boolean
+        feature_state_value:
+          type: string
+          example: 'a-remote-config-value'
         feature:
           $ref: '#/components/schemas/Feature'
     Feature:
