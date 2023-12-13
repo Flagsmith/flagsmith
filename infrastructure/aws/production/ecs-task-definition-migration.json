@@ -19,8 +19,8 @@
                     "value": "app.settings.production"
                 },
                 {
-                    "name":"IDENTITIES_TABLE_NAME_DYNAMO",
-                    "value":"flagsmith_identities"
+                    "name": "IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_identities"
                 },
                 {
                     "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
@@ -29,6 +29,10 @@
                 {
                     "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environments"
+                },
+                {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
                 },
                 {
                     "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
