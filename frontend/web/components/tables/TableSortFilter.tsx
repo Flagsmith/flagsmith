@@ -31,7 +31,6 @@ const TableSortFilter: FC<TableFilterType> = ({
     sortBy: options[0].value,
     sortOrder: 'asc',
   }
-  console.log('isloading', isLoading)
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter hideTitle title={'Sort'}>
