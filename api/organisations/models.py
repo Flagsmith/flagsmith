@@ -274,25 +274,30 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         reserved for a task after the date has passed.
         """
         # Avoid circular import.
-        from users.models import FFAdminUser
+        from organisations.tasks import send_org_subscription_cancelled_alert
 
         if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 
-        FFAdminUser.send_alert_to_admin_users(
-            subject=f"Organisation {self.organisation.name} has cancelled their subscription",
-            message=f"Organisation {self.organisation.name} has cancelled their subscription on {cancellation_date}",
+        send_org_subscription_cancelled_alert.delay(
+            kwargs={
+                "organisation_name": self.organisation.name,
+                "formatted_cancellation_date": cancellation_date.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+            }
         )
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
             self.organisation.cancel_users()
             self.save_as_free_subscription()
-        else:
-            # Since the date is in the future, a task takes it.
-            self.cancellation_date = cancellation_date
-            self.billing_status = None
-            self.save()
+            return
+
+        # Since the date is in the future, a task takes it.
+        self.cancellation_date = cancellation_date
+        self.billing_status = None
+        self.save()
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:
