@@ -23,6 +23,7 @@ import FeatureRow from 'components/FeatureRow'
 import Button from 'components/base/forms/Button'
 import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlagsmithProjectImport'
 import ErrorMessage from 'components/ErrorMessage'
+import InfoMessage from 'components/InfoMessage'
 
 type FeatureExportType = {
   projectId: string
@@ -118,6 +119,12 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   }, [fileData, env])
   return (
     <div className='mt-4'>
+      <InfoMessage>
+        Import operations will overwrite existing environments and flags in your
+        project. The selected environment will inherit the imported
+        environment's values where as all other environments will inherit the
+        default values.
+      </InfoMessage>
       <div className='mb-2'>
         <Tooltip
           title={
@@ -151,7 +158,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         <div>
           <Radio
             label={
-              'Overwrite Destructive (existing features will be overwritten)'
+              'Overwrite Destructive (existing features will be overwritten).'
             }
             onChange={() => setStrategy('OVERWRITE_DESTRUCTIVE')}
             checked={strategy === 'OVERWRITE_DESTRUCTIVE'}
