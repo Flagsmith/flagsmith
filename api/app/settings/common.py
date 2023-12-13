@@ -910,6 +910,9 @@ TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
 )
 TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
 TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
+RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
+    "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
 
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)

@@ -61,6 +61,6 @@ def clean_up_old_recurring_task_runs():
         return
 
     now = timezone.now()
-    delete_before = now - timedelta(days=settings.TASK_DELETE_RETENTION_DAYS)
+    delete_before = now - timedelta(days=settings.RECURRING_TASK_RUN_RETENTION_DAYS)
 
     RecurringTaskRun.objects.filter(finished_at__lt=delete_before).delete()
