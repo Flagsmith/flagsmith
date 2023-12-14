@@ -734,7 +734,10 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.SEARCH_FLAGS:
+    case Actions.SEARCH_FLAGS: {
+      if (action.sort) {
+        store.sort = action.sort
+      }
       controller.searchFeatures(
         action.search,
         action.environmentId,
@@ -743,6 +746,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.pageSize,
       )
       break
+    }
     case Actions.GET_FLAGS:
       store.search = action.search || ''
       if (action.sort) {
