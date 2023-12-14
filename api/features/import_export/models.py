@@ -79,6 +79,14 @@ class FeatureImport(models.Model):
 
 
 class FlagsmithOnFlagsmithFeatureExport(models.Model):
+    """
+    This model is internal to Flagsmith in order to support people
+    running their own instances of Flagsmith with exports of the
+    feature flags that Flagsmith uses to enable or disable
+    features of flagsmith. This model should not be considered
+    to be useful by third-party developers.
+    """
+
     feature_export = models.ForeignKey(
         FeatureExport,
         related_name="flagsmith_on_flagsmith",
