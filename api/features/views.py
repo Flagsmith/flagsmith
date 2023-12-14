@@ -291,15 +291,15 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if "tags" in query_serializer.initial_data:
             if query_data.get("tags", "") == "":
                 queryset = queryset.filter(tags__isnull=True)
-            elif query_data["tag_strategy"] == INTERSECTION:
+            elif query_data["tag_strategy"] == UNION:
+                queryset = queryset.filter(tags__in=query_data["tags"])
+            else:
+                assert query_data["tag_strategy"] == INTERSECTION
                 queryset = reduce(
                     lambda qs, tag_id: qs.filter(tags=tag_id),
                     query_data["tags"],
                     queryset,
                 )
-            else:
-                assert query_data["tag_strategy"] == UNION
-                queryset = queryset.filter(tags__in=query_data["tags"])
 
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
