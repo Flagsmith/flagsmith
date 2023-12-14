@@ -15,12 +15,12 @@ from util.mappers import map_engine_feature_state_to_identity_override
 logger = logging.getLogger(__name__)
 
 
-def migrate_environments_to_v2(project_id: int) -> None:
+def migrate_environments_to_v2(project_id: int) -> IdentityOverridesV2Changeset | None:
     dynamo_wrapper_v2 = DynamoEnvironmentV2Wrapper()
     identity_wrapper = DynamoIdentityWrapper()
 
     if not (dynamo_wrapper_v2.is_enabled and identity_wrapper.is_enabled):
-        return
+        return None
 
     logger.info("Migrating environments to v2 for project %d", project_id)
 
@@ -43,6 +43,7 @@ def migrate_environments_to_v2(project_id: int) -> None:
     dynamo_wrapper_v2.update_identity_overrides(changeset)
 
     logger.info("Finished migrating environments to v2 for project %d", project_id)
+    return changeset
 
 
 def _iter_paginated_overrides(
