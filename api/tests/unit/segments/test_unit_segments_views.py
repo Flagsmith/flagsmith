@@ -303,8 +303,8 @@ def test_get_segment_by_uuid(client, project, segment):
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 11),
-        (lazy_fixture("admin_client"), 10),
+        (lazy_fixture("admin_master_api_key_client"), 16),
+        (lazy_fixture("admin_client"), 15),
     ],
 )
 def test_list_segments(django_assert_num_queries, project, client, num_queries):
@@ -573,3 +573,45 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     assert response.status_code == status.HTTP_200_OK
 
     assert segment_rule.conditions.count() == 0
+
+
+@pytest.mark.parametrize(
+    "client",
+    [
+        lazy_fixture("admin_master_api_key_client"),
+        lazy_fixture("admin_client")
+    ],
+)
+def test_create_segment_with_required_metadata_returns_201(
+    project,
+    client,
+    required_a_segment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+    print('DEBUG: response.json():', response.json())
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.field.id
+    )
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)

@@ -6,7 +6,10 @@ from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
 from projects.models import Project
+from metadata.models import Metadata
 from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
+from metadata.serializers import MetadataSerializer
+from django.contrib.contenttypes.models import ContentType
 
 
 class ConditionSerializer(serializers.ModelSerializer):
@@ -40,6 +43,7 @@ class RuleSerializer(serializers.ModelSerializer):
 
 class SegmentSerializer(serializers.ModelSerializer):
     rules = RuleSerializer(many=True)
+    metadata = MetadataSerializer(required=False, many=True)
 
     class Meta:
         model = Segment
@@ -57,12 +61,14 @@ class SegmentSerializer(serializers.ModelSerializer):
         self.validate_project_segment_limit(project)
 
         rules_data = validated_data.pop("rules", [])
+        metadata_data = validated_data.pop("metadata", [])
 
         # create segment with nested rules and conditions
         segment = Segment.objects.create(**validated_data)
         self._update_or_create_segment_rules(
             rules_data, segment=segment, is_create=True
         )
+        self._update_or_create_metadata(metadata_data, segment=segment)
         return segment
 
     def validate_project_segment_limit(self, project: Project) -> None:
@@ -119,6 +125,22 @@ class SegmentSerializer(serializers.ModelSerializer):
                 child_rules, rule=child_rule, is_create=is_create
             )
 
+    def _update_or_create_metadata(self, metadata_data, segment=None):
+
+        for metadata_item in metadata_data:
+            metadata_id = metadata_item.pop("id", None)
+            if metadata_item.get("delete"):
+                Metadata.objects.filter(id=metadata_id).delete()
+                continue
+
+            Metadata.objects.update_or_create(
+                id=metadata_id,
+                defaults={
+                    **metadata_item,
+                    "content_type": ContentType.objects.get_for_model(Segment),
+                    "object_id": segment.id,
+                },
+            )
     @staticmethod
     def _update_or_create_segment_rule(
         rule_data: dict, segment: Segment = None, rule: SegmentRule = None
