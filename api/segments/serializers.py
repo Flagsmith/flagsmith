@@ -127,7 +127,6 @@ class SegmentSerializer(serializers.ModelSerializer):
             )
 
     def _update_or_create_metadata(self, metadata_data, segment=None):
-
         for metadata_item in metadata_data:
             metadata_id = metadata_item.pop("id", None)
             if metadata_item.get("delete"):
@@ -142,6 +141,7 @@ class SegmentSerializer(serializers.ModelSerializer):
                     "object_id": segment.id,
                 },
             )
+
     @staticmethod
     def _update_or_create_segment_rule(
         rule_data: dict, segment: Segment = None, rule: SegmentRule = None

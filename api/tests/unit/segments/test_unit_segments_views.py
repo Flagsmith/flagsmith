@@ -578,10 +578,7 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
 
 @pytest.mark.parametrize(
     "client",
-    [
-        lazy_fixture("admin_master_api_key_client"),
-        lazy_fixture("admin_client")
-    ],
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segment_with_required_metadata_returns_201(
     project,
@@ -607,7 +604,7 @@ def test_create_segment_with_required_metadata_returns_201(
 
     # When
     response = client.post(url, data=json.dumps(data), content_type="application/json")
-    print('DEBUG: response.json():', response.json())
+    print("DEBUG: response.json():", response.json())
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
