@@ -20,6 +20,7 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
+from .constants import INTERSECTION, UNION
 from .feature_segments.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -81,8 +82,16 @@ class FeatureQuerySerializer(serializers.Serializer):
     sort_direction = serializers.ChoiceField(choices=("ASC", "DESC"), default="ASC")
 
     tags = serializers.CharField(
-        required=False, help_text="Comma separated list of tag ids to filter on (AND)"
+        required=False,
+        help_text=(
+            "Comma separated list of tag ids to filter on (AND with "
+            "INTERSECTION, and OR with UNION via tag_strategy)"
+        ),
     )
+    tag_strategy = serializers.ChoiceField(
+        choices=(UNION, INTERSECTION), default=INTERSECTION
+    )
+
     is_archived = serializers.BooleanField(required=False)
     environment = serializers.IntegerField(
         required=False,
