@@ -1,11 +1,12 @@
-from unittest import TestCase, mock
+from typing import Callable
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 
 from features.models import Feature
 from features.permissions import FeaturePermissions
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import (
     Project,
@@ -20,374 +21,492 @@ from projects.permissions import (
 )
 from users.models import FFAdminUser, UserPermissionGroup
 
-mock_view = mock.MagicMock()
-mock_request = mock.MagicMock()
-
-feature_permissions = FeaturePermissions()
 
-
-@pytest.mark.django_db
-class FeaturePermissionsTestCase(TestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test")
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-
-        self.feature = Feature.objects.create(name="Test feature", project=self.project)
-
-        self.user = FFAdminUser.objects.create(email="user@test.com")
-        self.user.add_organisation(self.organisation, OrganisationRole.USER)
-
-        self.org_admin = FFAdminUser.objects.create(email="admin@test.com")
-        self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
-
-        self.group = UserPermissionGroup.objects.create(
-            name="Test group", organisation=self.organisation
-        )
-        self.group.users.add(self.user)
-
-        mock_view.kwargs = {}
-        mock_request.data = {}
-
-    def test_organisation_admin_can_list_features(self):
-        # Given
-        mock_view.action = "list"
-        mock_view.detail = False
-        mock_view.kwargs["project_pk"] = self.project.id
-        mock_request.user = self.org_admin
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_project_admin_can_list_features(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.user, admin=True, project=self.project
-        )
-
-        mock_view.action = "list"
-        mock_view.detail = False
-        mock_view.kwargs["project_pk"] = self.project.id
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_project_user_with_read_access_can_list_features(self):
-        # Given
-        user_project_permission = UserProjectPermission.objects.create(
-            user=self.user, admin=False, project=self.project
-        )
-        user_project_permission.set_permissions([VIEW_PROJECT])
-
-        mock_view.action = "list"
-        mock_view.detail = False
-        mock_view.kwargs["project_pk"] = self.project.id
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_user_with_no_project_permissions_cannot_list_features(self):
-        # Given
-        mock_view.action = "list"
-        mock_view.detail = False
-        mock_view.kwargs["project_pk"] = self.project.id
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert not result
-
-    def test_organisation_admin_can_create_feature(self):
-        # Given
-        mock_view.action = "create"
-        mock_view.detail = False
-        mock_request.user = self.org_admin
-        mock_request.data = {"project": self.project.id, "name": "new feature"}
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_project_admin_can_create_feature(self):
-        # Given
-        # use a group to test groups work too
-        UserPermissionGroupProjectPermission.objects.create(
-            group=self.group, project=self.project, admin=True
-        )
-        mock_view.action = "create"
-        mock_view.detail = False
-        mock_request.user = self.user
-        mock_request.data = {"project": self.project.id, "name": "new feature"}
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_project_user_with_create_feature_permission_can_create_feature(self):
-        # Given
-        # use a group to test groups work too
-        user_group_permission = UserPermissionGroupProjectPermission.objects.create(
-            group=self.group, project=self.project, admin=False
-        )
-        user_group_permission.add_permission(CREATE_FEATURE)
-        mock_view.action = "create"
-        mock_view.detail = False
-        mock_request.user = self.user
-        mock_request.data = {"project": self.project.id, "name": "new feature"}
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert result
-
-    def test_project_user_without_create_feature_permission_cannot_create_feature(self):
-        # Given
-        mock_view.action = "create"
-        mock_view.detail = False
-        mock_request.user = self.user
-        mock_request.data = {"project": self.project.id, "name": "new feature"}
-
-        # When
-        result = feature_permissions.has_permission(mock_request, mock_view)
-
-        # Then
-        assert not result
-
-    def test_organisation_admin_can_view_feature(self):
-        # Given
-        mock_view.action = "retrieve"
-        mock_view.detail = True
-        mock_request.user = self.org_admin
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_admin_can_view_feature(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.user, project=self.project, admin=True
-        )
-        mock_request.user = self.user
-        mock_view.action = "retrieve"
-        mock_view.detail = True
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_with_view_project_permission_can_view_feature(self):
-        # Given
-        user_permission = UserProjectPermission.objects.create(
-            user=self.user, project=self.project, admin=False
-        )
-        user_permission.set_permissions([VIEW_PROJECT])
-        mock_request.user = self.user
-        mock_view.action = "retrieve"
-        mock_view.detail = True
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_without_view_project_permission_cannot_view_feature(self):
-        # Given
-        mock_request.user = self.user
-        mock_view.action = "retrieve"
-        mock_view.detail = True
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert not result
-
-    def test_organisation_admin_can_edit_feature(self):
-        # Given
-        mock_view.action = "update"
-        mock_view.detail = True
-        mock_request.user = self.org_admin
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_admin_can_edit_feature(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.user, project=self.project, admin=True
-        )
-        mock_view.action = "update"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_cannot_edit_feature(self):
-        # Given
-        mock_view.action = "update"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert not result
-
-    def test_organisation_admin_can_delete_feature(self):
-        # Given
-        mock_view.action = "destroy"
-        mock_view.detail = True
-        mock_request.user = self.org_admin
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_admin_can_delete_feature(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.user, project=self.project, admin=True
-        )
-        mock_view.action = "destroy"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_with_delete_feature_permission_can_delete_feature(self):
-        # Given
-        user_project_permission = UserProjectPermission.objects.create(
-            user=self.user, project=self.project
-        )
-        user_project_permission.add_permission(DELETE_FEATURE)
-
-        mock_view.action = "destroy"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_without_delete_feature_permission_cannot_delete_feature(self):
-        # Given
-        mock_view.action = "destroy"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert not result
-
-    def test_organisation_admin_can_update_feature_segments(self):
-        # Given
-        mock_view.action = "segments"
-        mock_view.detail = True
-        mock_request.user = self.org_admin
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_admin_can_update_feature_segments(self):
-        # Given
-        UserProjectPermission.objects.create(
-            user=self.user, project=self.project, admin=True
-        )
-        mock_view.action = "segments"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert result
-
-    def test_project_user_cannot_update_feature_segments(self):
-        # Given
-        mock_view.action = "segments"
-        mock_view.detail = True
-        mock_request.user = self.user
-
-        # When
-        result = feature_permissions.has_object_permission(
-            mock_request, mock_view, self.feature
-        )
-
-        # Then
-        assert not result
+def test_organisation_admin_can_list_features(
+    admin_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "list"
+    mock_view.detail = False
+    mock_view.kwargs["project_pk"] = project.id
+    mock_request.user = admin_user
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_list_features(
+    admin_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "list"
+    mock_view.detail = False
+    mock_view.kwargs["project_pk"] = project.id
+    mock_request.user = admin_user
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_with_read_access_can_list_features(
+    staff_user: FFAdminUser,
+    project: Project,
+    with_project_permissions: Callable[[list[str], int], None],
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    with_project_permissions([VIEW_PROJECT])
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "list"
+    mock_view.detail = False
+    mock_view.kwargs["project_pk"] = project.id
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_user_with_no_project_permissions_cannot_list_features(
+    staff_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "list"
+    mock_view.detail = False
+    mock_view.kwargs["project_pk"] = project.id
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is False
+
+
+def test_organisation_admin_can_create_feature(
+    admin_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"project": project.id, "name": "new feature"}
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_create_feature(
+    organisation: Organisation,
+    project: Project,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    # use a group to test groups work too
+    group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    UserPermissionGroupProjectPermission.objects.create(
+        group=group, project=project, admin=True
+    )
+    group.users.add(staff_user)
+
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = staff_user
+    mock_request.data = {"project": project.id, "name": "new feature"}
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_with_create_feature_permission_can_create_feature(
+    staff_user: FFAdminUser,
+    project: Project,
+    organisation: Organisation,
+) -> None:
+    # Given
+    # use a group to test groups work too
+    group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    group.users.add(staff_user)
+    user_group_permission = UserPermissionGroupProjectPermission.objects.create(
+        group=group, project=project, admin=False
+    )
+    user_group_permission.add_permission(CREATE_FEATURE)
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = staff_user
+    mock_request.data = {"project": project.id, "name": "new feature"}
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_without_create_feature_permission_cannot_create_feature(
+    staff_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = staff_user
+    mock_request.data = {"project": project.id, "name": "new feature"}
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert result is False
+
+
+def test_organisation_admin_can_view_feature(
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "retrieve"
+    mock_view.detail = True
+    mock_request.user = admin_user
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_view_feature(
+    staff_user: FFAdminUser,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_request.user = staff_user
+    mock_view.action = "retrieve"
+    mock_view.detail = True
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_with_view_project_permission_can_view_feature(
+    staff_user: FFAdminUser,
+    project: Project,
+    with_project_permissions: Callable[[list[str], int], None],
+    feature: Feature,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_request.user = staff_user
+    mock_view.action = "retrieve"
+    mock_view.detail = True
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_without_view_project_permission_cannot_view_feature(
+    staff_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_request.user = staff_user
+    mock_view.action = "retrieve"
+    mock_view.detail = True
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is False
+
+
+def test_organisation_admin_can_edit_feature(
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.kwargs = {}
+    mock_request.data = {}
+    mock_view.action = "update"
+    mock_view.detail = True
+    mock_request.user = admin_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_edit_feature(
+    staff_user: FFAdminUser,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "update"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_cannot_edit_feature(
+    staff_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "update"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is False
+
+
+def test_organisation_admin_can_delete_feature(
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "destroy"
+    mock_view.detail = True
+    mock_request.user = admin_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_delete_feature(
+    staff_user: FFAdminUser,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "destroy"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_with_delete_feature_permission_can_delete_feature(
+    staff_user: FFAdminUser,
+    with_project_permissions: Callable[[list[str], int], None],
+    feature: Feature,
+) -> None:
+    # Given
+    with_project_permissions([DELETE_FEATURE])
+
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "destroy"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_without_delete_feature_permission_cannot_delete_feature(
+    staff_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "destroy"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is False
+
+
+def test_organisation_admin_can_update_feature_segments(
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "segments"
+    mock_view.detail = True
+    mock_request.user = admin_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_admin_can_update_feature_segments(
+    staff_user: FFAdminUser,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "segments"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is True
+
+
+def test_project_user_cannot_update_feature_segments(
+    staff_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock()
+    mock_request = mock.MagicMock()
+    mock_view.action = "segments"
+    mock_view.detail = True
+    mock_request.user = staff_user
+
+    # When
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+
+    # Then
+    assert result is False
 
 
 @pytest.mark.parametrize(
