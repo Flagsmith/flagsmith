@@ -17,7 +17,7 @@ from util.mappers import (
 )
 
 
-def test_environment_v2_wrapper__get_identity_overrides__return_expected(
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id_and_feature_id__return_expected(
     settings: SettingsWrapper,
     environment: Environment,
     flagsmith_environments_v2_table: Table,
@@ -43,7 +43,7 @@ def test_environment_v2_wrapper__get_identity_overrides__return_expected(
     flagsmith_environments_v2_table.put_item(Item=environment_document)
 
     # When
-    results = wrapper.get_identity_overrides_by_feature_id(
+    results = wrapper.get_identity_overrides_by_environment_id_and_feature_id(
         environment_id=environment.id,
         feature_id=feature.id,
     )
