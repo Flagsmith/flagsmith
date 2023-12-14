@@ -1,16 +1,16 @@
 import typing
 
+from django.contrib.contenttypes.models import ContentType
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
-from projects.models import Project
 from metadata.models import Metadata
-from segments.models import Condition, Segment, SegmentRule
 from metadata.serializers import MetadataSerializer
-from django.contrib.contenttypes.models import ContentType
+from projects.models import Project
+from segments.models import Condition, Segment, SegmentRule
 
 
 class ConditionSerializer(serializers.ModelSerializer):
