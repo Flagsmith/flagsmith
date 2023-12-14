@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Index
 from django.utils import timezone
 
+from audit.related_object_type import RelatedObjectType
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.signals import environment_feature_version_published
 
@@ -22,7 +23,7 @@ if typing.TYPE_CHECKING:
 
 class EnvironmentFeatureVersion(
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(),
+    abstract_base_auditable_model_factory(RelatedObjectType.FEATURE, ["uuid"]),
 ):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4)
     environment = models.ForeignKey(
