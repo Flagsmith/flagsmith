@@ -3,6 +3,7 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model, Q
+from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
     BEFORE_CREATE,
@@ -19,7 +20,7 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
 class AuditLog(LifecycleModel):
-    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    created_date = models.DateTimeField("DateCreated")
 
     project = models.ForeignKey(
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
@@ -102,6 +103,11 @@ class AuditLog(LifecycleModel):
     def add_project(self):
         if self.environment and self.project is None:
             self.project = self.environment.project
+
+    @hook(BEFORE_CREATE)
+    def add_created_date(self) -> None:
+        if not self.created_date:
+            self.created_date = timezone.now()
 
     @hook(
         AFTER_CREATE,

@@ -351,22 +351,24 @@ const ChangeRequestsPage = class extends Component {
                 </nav>
                 <PageTitle
                   cta={
-                    <Row>
-                      <Button
-                        theme='secondary'
-                        onClick={this.deleteChangeRequest}
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          this.editChangeRequest(projectFlag, environmentFlag)
-                        }
-                        className='ml-2'
-                      >
-                        Edit
-                      </Button>
-                    </Row>
+                    !changeRequest?.committed_at && (
+                      <Row>
+                        <Button
+                          theme='secondary'
+                          onClick={this.deleteChangeRequest}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            this.editChangeRequest(projectFlag, environmentFlag)
+                          }
+                          className='ml-2'
+                        >
+                          Edit
+                        </Button>
+                      </Row>
+                    )
                   }
                   title={changeRequest.title}
                 >
@@ -374,8 +376,10 @@ const ChangeRequestsPage = class extends Component {
                   {moment(changeRequest.created_at).format(
                     'Do MMM YYYY HH:mma',
                   )}{' '}
-                  by {changeRequest.user && user.first_name}{' '}
-                  {user && user.last_name}
+                  by{' '}
+                  {user
+                    ? `${user.first_name} ${user.last_name}`
+                    : 'Unknown user'}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
                 <div className='row'>
@@ -459,72 +463,60 @@ const ChangeRequestsPage = class extends Component {
                               />
                             </div>
                           )}
-                          {Utils.getFlagsmithHasFeature(
-                            'enable_groups_as_reviewers',
-                          ) && (
-                            <div className='mb-4'>
-                              <Row
-                                onClick={() =>
-                                  this.setState({ showGroups: true })
-                                }
-                                className='font-weight-medium clickable'
-                              >
-                                <div className='mr-2'>Assigned groups</div>
-                                <Icon
-                                  name='setting'
-                                  width={20}
-                                  fill='#656D7B'
-                                />
-                              </Row>
-                              <Row className='mt-2'>
-                                {!!ownerGroups?.length &&
-                                  ownerGroups.map((g) => (
-                                    <Row
-                                      key={g.id}
-                                      onClick={() =>
-                                        this.removeOwner(g.id, false)
-                                      }
-                                      className='chip'
-                                      style={{
-                                        marginBottom: 4,
-                                        marginTop: 4,
-                                      }}
-                                    >
-                                      <span className='font-weight-bold'>
-                                        {g.name}
-                                      </span>
-                                      <span className='chip-icon ion'>
-                                        <IonIcon icon={close} />
-                                      </span>
-                                    </Row>
-                                  ))}
-                              </Row>
-                              <MyGroupsSelect
-                                orgId={AccountStore.getOrganisation().id}
-                                groups={orgGroups}
-                                value={
-                                  ownerGroups && ownerGroups.map((v) => v.id)
-                                }
-                                onAdd={this.addOwner}
-                                onRemove={this.removeOwner}
-                                isOpen={this.state.showGroups}
-                                onToggle={() =>
-                                  this.setState({
-                                    showGroups: !this.state.showGroups,
-                                  })
-                                }
-                              />
-                            </div>
-                          )}
+                          <div className='mb-4'>
+                            <Row
+                              onClick={() =>
+                                this.setState({ showGroups: true })
+                              }
+                              className='font-weight-medium clickable'
+                            >
+                              <div className='mr-2'>Assigned groups</div>
+                              <Icon name='setting' width={20} fill='#656D7B' />
+                            </Row>
+                            <Row className='mt-2'>
+                              {!!ownerGroups?.length &&
+                                ownerGroups.map((g) => (
+                                  <Row
+                                    key={g.id}
+                                    onClick={() =>
+                                      this.removeOwner(g.id, false)
+                                    }
+                                    className='chip'
+                                    style={{
+                                      marginBottom: 4,
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    <span className='font-weight-bold'>
+                                      {g.name}
+                                    </span>
+                                    <span className='chip-icon ion'>
+                                      <IonIcon icon={close} />
+                                    </span>
+                                  </Row>
+                                ))}
+                            </Row>
+                            <MyGroupsSelect
+                              orgId={AccountStore.getOrganisation().id}
+                              groups={orgGroups}
+                              value={
+                                ownerGroups && ownerGroups.map((v) => v.id)
+                              }
+                              onAdd={this.addOwner}
+                              onRemove={this.removeOwner}
+                              isOpen={this.state.showGroups}
+                              onToggle={() =>
+                                this.setState({
+                                  showGroups: !this.state.showGroups,
+                                })
+                              }
+                            />
+                          </div>
                         </>
                       }
                     />
 
-                    <div
-                      style={{
-                        maxWidth: changeRequest.committed_at ? '530px' : '',
-                      }}
-                    >
+                    <div>
                       <Panel
                         title={
                           isScheduled ? 'Scheduled Change' : 'Change Request'
@@ -652,102 +644,97 @@ const ChangeRequestsPage = class extends Component {
                             </div>
                           </Panel>
                         </Flex>
-
-                        {!changeRequest.committed_at && (
-                          <Flex>
-                            <Panel className='no-pad panel-change-request'>
-                              <div className='search-list'>
-                                <Row className='table-header px-4'>
-                                  {isScheduled
-                                    ? 'Scheduled Change'
-                                    : 'Change Request'}
-                                </Row>
-                                <Row className='list-item change-request-item px-4'>
-                                  <div
-                                    className='font-weight-medium mr-3'
-                                    style={{ width: labelWidth }}
-                                  >
-                                    Enabled:
-                                  </div>
-                                  <Switch
-                                    checked={newEnabled}
-                                    disabled
-                                    style={{
-                                      opacity:
-                                        newEnabled === oldEnabled ? 0.25 : 1,
-                                    }}
+                        <Flex>
+                          <Panel className='no-pad panel-change-request'>
+                            <div className='search-list'>
+                              <Row className='table-header px-4'>
+                                {isScheduled
+                                  ? 'Scheduled Change'
+                                  : 'Change Request'}
+                              </Row>
+                              <Row className='list-item change-request-item px-4'>
+                                <div
+                                  className='font-weight-medium mr-3'
+                                  style={{ width: labelWidth }}
+                                >
+                                  Enabled:
+                                </div>
+                                <Switch
+                                  checked={newEnabled}
+                                  disabled
+                                  style={{
+                                    opacity:
+                                      newEnabled === oldEnabled ? 0.25 : 1,
+                                  }}
+                                />
+                              </Row>
+                              <Row className='list-item change-request-item px-4 align-items-start'>
+                                <div
+                                  className='font-weight-medium mr-3'
+                                  style={{ width: labelWidth }}
+                                >
+                                  Value:
+                                </div>
+                                <Flex
+                                  style={{
+                                    opacity: oldValue === newValue ? 0.25 : 1,
+                                  }}
+                                >
+                                  <label>Value</label>
+                                  <ValueEditor
+                                    value={newValue}
+                                    className={classnames('code-medium', {
+                                      'change-request-updated-value':
+                                        oldValue !== newValue,
+                                    })}
                                   />
-                                </Row>
-                                <Row className='list-item change-request-item px-4 align-items-start'>
-                                  <div
-                                    className='font-weight-medium mr-3'
-                                    style={{ width: labelWidth }}
-                                  >
-                                    Value:
-                                  </div>
-                                  <Flex
-                                    style={{
-                                      opacity: oldValue === newValue ? 0.25 : 1,
-                                    }}
-                                  >
-                                    <label>Value</label>
-                                    <ValueEditor
-                                      value={newValue}
-                                      className={classnames('code-medium', {
-                                        'change-request-updated-value':
-                                          oldValue !== newValue,
-                                      })}
-                                    />
-                                  </Flex>
-                                </Row>
+                                </Flex>
+                              </Row>
 
-                                {isMv &&
-                                  mvData.map((v, i) => (
-                                    <Row
-                                      key={i}
-                                      className='list-item px-4 align-start change-request-item'
+                              {isMv &&
+                                mvData.map((v, i) => (
+                                  <Row
+                                    key={i}
+                                    className='list-item px-4 align-start change-request-item'
+                                  >
+                                    <div
+                                      style={{ width: labelWidth }}
+                                      className='font-weight-medium flex flex-row align-items-center mr-3'
                                     >
-                                      <div
-                                        style={{ width: labelWidth }}
-                                        className='font-weight-medium flex flex-row align-items-center mr-3'
-                                      >
-                                        <div className='flex flex-row align-items-center align-self-start'>
-                                          <span className='mr-1'>
-                                            Variation {i + 1}
-                                          </span>
-                                          <Tooltip
-                                            place='bottom'
-                                            title={
-                                              <Icon name='info-outlined' />
-                                            }
-                                            className='ml-1'
-                                            noIcon
-                                          >
-                                            {Utils.getTypedValue(v.value)}
-                                          </Tooltip>
-                                        </div>
+                                      <div className='flex flex-row align-items-center align-self-start'>
+                                        <span className='mr-1'>
+                                          Variation {i + 1}
+                                        </span>
+                                        <Tooltip
+                                          place='bottom'
+                                          title={<Icon name='info-outlined' />}
+                                          className='ml-1'
+                                          noIcon
+                                        >
+                                          {Utils.getTypedValue(v.value)}
+                                        </Tooltip>
                                       </div>
-                                      <Flex
-                                        style={{
-                                          opacity: !v.changed ? 0.25 : 1,
-                                        }}
-                                      >
-                                        <label>Environment Weight %</label>
-                                        <Input
-                                          value={v.newValue}
-                                          className={classnames('code-medium', {
-                                            'change-request-updated-value':
-                                              v.changed,
-                                          })}
-                                          style={{ pointerEvents: 'none' }}
-                                        />
-                                      </Flex>
-                                    </Row>
-                                  ))}
-                              </div>
-                            </Panel>
-                          </Flex>
-                        )}
+                                    </div>
+                                    <Flex
+                                      style={{
+                                        opacity: !v.changed ? 0.25 : 1,
+                                      }}
+                                    >
+                                      <label>Environment Weight %</label>
+                                      <Input
+                                        value={v.newValue}
+                                        className={classnames('code-medium', {
+                                          'change-request-updated-value':
+                                            v.changed,
+                                        })}
+                                        style={{ pointerEvents: 'none' }}
+                                      />
+                                    </Flex>
+                                  </Row>
+                                ))}
+                            </div>
+                          </Panel>
+                        </Flex>
                       </Flex>
                     </div>
                   </div>

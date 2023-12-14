@@ -53,6 +53,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
+MAX_PROJECTS_IN_FREE_PLAN = 1
+
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
 GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
@@ -117,7 +119,9 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.import_export",
     "features.multivariate",
+    "features.versioning",
     "features.workflows.core",
     "segments",
     "app",
@@ -133,6 +137,7 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
+    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -290,7 +295,7 @@ if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_TOKEN:
+    if INFLUXDB_BUCKET:
         raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
 
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
@@ -393,10 +398,25 @@ EMAIL_CONFIGURATION = {
 AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
 AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
-# Used on init to create admin user for the site, update accordingly before hitting /auth/init
-ALLOW_ADMIN_INITIATION_VIA_URL = True
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_INITIAL_PASSWORD = "password"
+# Initialisation settings
+# If `ALLOW_ADMIN_INITIATION_VIA_CLI` setting is set to True, Flagsmith will attempt to create
+#   1. A superuser
+#   2. An organisation
+#   3. A project
+# with initial values on startup.
+# Initialisation is skipped if it's been performed before or if `ALLOW_ADMIN_INITIATION_VIA_CLI` is set to False.
+# Tweak (or set via environment) the settings below for custom names, etc.
+ALLOW_ADMIN_INITIATION_VIA_URL = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_URL", default=True
+)
+ALLOW_ADMIN_INITIATION_VIA_CLI = env.bool(
+    "ALLOW_ADMIN_INITIATION_VIA_CLI", default=False
+)
+
+ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")
+ORGANISATION_NAME = env("ORGANISATION_NAME", default="Default Organisation")
+PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
+
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
@@ -457,6 +477,8 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+#  Identity for E2E segment tests
+E2E_IDENTITY = "test-identity"
 
 # SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
@@ -751,6 +773,9 @@ DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True
 # DynamoDB table name for storing environment
 ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
+# V2 was created to improve storage over overrides data.
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 
@@ -797,8 +822,7 @@ MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
 MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
-SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
-SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
 if SAML_INSTALLED:
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
@@ -855,7 +879,10 @@ EDGE_ENABLED = (
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
-SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
+DISABLE_FLAGSMITH_UI = env.bool("DISABLE_FLAGSMITH_UI", default=False)
+SERVE_FE_ASSETS = not DISABLE_FLAGSMITH_UI and os.path.exists(
+    BASE_DIR + "/app/templates/webpack/index.html"
+)
 
 # Used to configure the number of application proxies that the API runs behind
 NUM_PROXIES = env.int("NUM_PROXIES", 1)
@@ -886,6 +913,9 @@ TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
+AWS_SSE_LOGS_BUCKET_NAME = env.str("AWS_SSE_LOGS_BUCKET_NAME", None)
+SSE_INFLUXDB_BUCKET = env.str("SSE_INFLUXDB_BUCKET", None)
+
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 
@@ -948,13 +978,23 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
 )
 
+FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
+    "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID",
+    default=None,
+)
+FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
+    "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID",
+    default=None,
+)
+
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
-if LDAP_INSTALLED:
-    # The URL of the LDAP server.
-    LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
-    if LDAP_AUTH_URL:
-        AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+# The URL of the LDAP server.
+LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+
+if LDAP_INSTALLED and LDAP_AUTH_URL:
+    AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
+    INSTALLED_APPS.append("flagsmith_ldap")
 
     # Initiate TLS on connection.
     LDAP_AUTH_USE_TLS = env.bool("LDAP_AUTH_USE_TLS", False)

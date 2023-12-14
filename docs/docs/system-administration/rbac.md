@@ -34,6 +34,12 @@ that group, but not the permissions the group has on other entities.
 
 ### Roles
 
+:::info
+
+Roles are still in active development and are not yet publicly available.
+
+:::
+
 A _Role_ is an entity to which you can attach a set of permissions. Permissions can allow privileges at Organization,
 Project, and Environment levels. You can assign a role, along with its associated permissions, to a User or Group. You
 will also be able to assign API keys to a Role in future versions.
@@ -52,8 +58,6 @@ Once the role is created you can assign the corresponding permissions.
 - Go to the Projects tab.
 - Select a Project and enable the relevant permissions.
 
-![RoleListProject](/img/roles/role-project-permissions.png)
-
 ### Assign Role to Users or Groups
 
 After creating the Role, you can assign it to Users or Groups.
@@ -64,10 +68,6 @@ After creating the Role, you can assign it to Users or Groups.
 - Go to the Members tab.
 - Select the Users tab.
 - Click assign role to user button and select a user.
-
-**List of assigned users:**
-
-![RoleListUsers](/img/roles/role-user-assigned-list.png)
 
 ## Permissions
 
@@ -94,12 +94,13 @@ Permissions can be assigned at 3 levels: Organisation, Project, and Environment.
 
 ### Environment
 
-| **Permission**         | **Ability**                                               |
-| ---------------------- | --------------------------------------------------------- |
-| Administrator          | Can modify Feature Flag, Remote Config and Segment values |
-| View Environment       | Can see the Environment within their account              |
-| Update Feature State   | Update the state or value for a given feature             |
-| Manage Identities      | View and update Identities                                |
-| Create Change Request  | Creating a new Change Request                             |
-| Approve Change Request | Approving or denying existing Change Requests             |
-| View Identities        | Viewing Identities                                        |
+| **Permission**           | **Ability**                                                     |
+| ------------------------ | --------------------------------------------------------------- |
+| Administrator            | Can modify Feature Flag, Remote Config and Segment values       |
+| View Environment         | Can see the Environment within their account                    |
+| Update Feature State     | Update the state or value for a given feature                   |
+| Manage Identities        | View and update Identities                                      |
+| Manage Segment Overrides | Permission to manage segment overrides in the given environment |
+| Create Change Request    | Creating a new Change Request                                   |
+| Approve Change Request   | Approving or denying existing Change Requests                   |
+| View Identities          | Viewing Identities                                              |

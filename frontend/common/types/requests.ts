@@ -114,6 +114,7 @@ export type Req = {
     user: string
   }
   getProjectFlags: { project: string }
+  getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
     organisation_id: string

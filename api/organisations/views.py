@@ -2,30 +2,28 @@
 from __future__ import unicode_literals
 
 import logging
-from datetime import datetime
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
-from django.contrib.sites.shortcuts import get_current_site
-from django.utils import timezone
+from core.helpers import get_current_site_url
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
     Organisation,
     OrganisationRole,
-    OrganisationSubscriptionInformationCache,
     OrganisationWebhook,
-    Subscription,
 )
 from organisations.permissions.models import OrganisationPermissionModel
 from organisations.permissions.permissions import (
@@ -52,8 +50,6 @@ from projects.serializers import ProjectListSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
-
-from .chargebee import extract_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +185,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         organisation = self.get_object()
         if not organisation.has_paid_subscription():
             raise OrganisationHasNoPaidSubscription()
-        redirect_url = get_current_site(request)
+        redirect_url = get_current_site_url(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
         )
@@ -255,9 +251,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
 @api_view(["POST"])
 @authentication_classes([BasicAuthentication])
-def chargebee_webhook(request):
+def chargebee_webhook(request: Request) -> Response:
     """
     Endpoint to handle webhooks from chargebee.
+
+    Payment failure and payment succeeded webhooks are filtered out and processed
+    to determine which of our subscriptions are in a dunning state.
+
+    The remaining webhooks are processed if they have subscription data:
 
      - If subscription is active, check to see if plan has changed and update if so. Always update cancellation date to
        None to ensure that if a subscription is reactivated, it is updated on our end.
@@ -265,50 +266,17 @@ def chargebee_webhook(request):
      - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
        send alert to admin users.
     """
-    if request.data.get("content") and "subscription" in request.data.get("content"):
-        subscription_data: dict = request.data["content"]["subscription"]
-        customer_email: str = request.data["content"]["customer"]["email"]
+    event_type = request.data.get("event_type")
 
-        try:
-            existing_subscription = Subscription.objects.get(
-                subscription_id=subscription_data.get("id")
-            )
-        except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
-            error_message: str = (
-                "Couldn't get unique subscription for ChargeBee id %s"
-                % subscription_data.get("id")
-            )
-            logger.warning(error_message)
-            return Response(status=status.HTTP_200_OK)
-        subscription_status = subscription_data.get("status")
-        if subscription_status == "active":
-            if subscription_data.get("plan_id") != existing_subscription.plan:
-                existing_subscription.update_plan(subscription_data.get("plan_id"))
-            subscription_metadata = extract_subscription_metadata(
-                chargebee_subscription=subscription_data,
-                customer_email=customer_email,
-            )
-            OrganisationSubscriptionInformationCache.objects.update_or_create(
-                organisation_id=existing_subscription.organisation_id,
-                defaults={
-                    "chargebee_updated_at": timezone.now(),
-                    "allowed_30d_api_calls": subscription_metadata.api_calls,
-                    "allowed_seats": subscription_metadata.seats,
-                    "organisation_id": existing_subscription.organisation_id,
-                    "allowed_projects": subscription_metadata.projects,
-                    "chargebee_email": subscription_metadata.chargebee_email,
-                },
-            )
+    if event_type == webhook_event_types.PAYMENT_FAILED:
+        return webhook_handlers.payment_failed(request)
+    if event_type == webhook_event_types.PAYMENT_SUCCEEDED:
+        return webhook_handlers.payment_succeeded(request)
+    if event_type in webhook_event_types.CACHE_REBUILD_TYPES:
+        return webhook_handlers.cache_rebuild_event(request)
 
-        elif subscription_status in ("non_renewing", "cancelled"):
-            existing_subscription.cancel(
-                datetime.fromtimestamp(
-                    subscription_data.get("current_term_end")
-                ).replace(tzinfo=timezone.utc),
-                update_chargebee=False,
-            )
-
-    return Response(status=status.HTTP_200_OK)
+    # Catchall handlers for finding subscription related processing data.
+    return webhook_handlers.process_subscription(request)
 
 
 class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixin):

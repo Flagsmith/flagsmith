@@ -20,6 +20,7 @@ const keywords = {
 }
 
 export default {
+  archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
     'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
       '.NET': require('./code-help/create-user/create-user-dotnet')(

@@ -1,3 +1,4 @@
+@import "../variables";
 .step-list {
   list-style-type: none;
   padding-left: 0;
@@ -38,6 +39,11 @@
 .table-header {
   background-color: $panel-table-header-bc;
   color: $panel-table-header-color;
+  border-top-right-radius: $border-radius+2;
+  border-top-left-radius: $border-radius+2;
+  .text-muted {
+    color: $panel-table-header-color-muted !important;
+  }
   font-weight: 500;
   font-size: $panel-table-header-font-size;
   line-height: $line-height-xsm;

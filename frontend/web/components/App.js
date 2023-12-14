@@ -282,12 +282,13 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const announcementValue = JSON.parse(
-      Utils.getFlagsmithValue('announcement'),
-    )
+    const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
     const dismissed = flagsmith.getTrait('dismissed_announcement')
     const showBanner =
-      announcementValue && (!dismissed || dismissed !== announcementValue.id)
+      announcementValue &&
+      (!dismissed || dismissed !== announcementValue.id) &&
+      Utils.getFlagsmithHasFeature('announcement') &&
+      this.state.showAnnouncement
 
     return (
       <Provider store={getStore()}>
@@ -410,10 +411,7 @@ const App = class extends Component {
                                       >
                                         {({ permission }) => (
                                           <>
-                                            {(!!permission ||
-                                              Utils.getFlagsmithHasFeature(
-                                                'group_admins',
-                                              )) && (
+                                            {!!permission && (
                                               <NavLink
                                                 id='org-settings-link'
                                                 activeClassName='active'
@@ -477,7 +475,12 @@ const App = class extends Component {
                   )}
                   {isMobile && pageHasAside && asideIsVisible ? null : (
                     <div>
-                      <ButterBar />
+                      <ButterBar
+                        billingStatus={
+                          AccountStore.getOrganisation()?.subscription
+                            .billing_status
+                        }
+                      />
                       {projectNotLoaded ? (
                         <div className='text-center'>
                           <Loader />
@@ -489,27 +492,24 @@ const App = class extends Component {
                               id={AccountStore.getOrganisation()?.id}
                             />
                           )}
-                          {user &&
-                            showBanner &&
-                            Utils.getFlagsmithHasFeature('announcement') &&
-                            this.state.showAnnouncement && (
-                              <Row>
-                                <InfoMessage
-                                  title={announcementValue.title}
-                                  infoMessageClass={'announcement'}
-                                  isClosable={announcementValue.isClosable}
-                                  close={() =>
-                                    this.closeAnnouncement(announcementValue.id)
-                                  }
-                                  buttonText={announcementValue.buttonText}
-                                  url={announcementValue.url}
-                                >
-                                  <div>
-                                    <div>{announcementValue.description}</div>
-                                  </div>
-                                </InfoMessage>
-                              </Row>
-                            )}
+                          {user && showBanner && (
+                            <Row>
+                              <InfoMessage
+                                title={announcementValue.title}
+                                infoMessageClass={'announcement'}
+                                isClosable={announcementValue.isClosable}
+                                close={() =>
+                                  this.closeAnnouncement(announcementValue.id)
+                                }
+                                buttonText={announcementValue.buttonText}
+                                url={announcementValue.url}
+                              >
+                                <div>
+                                  <div>{announcementValue.description}</div>
+                                </div>
+                              </InfoMessage>
+                            </Row>
+                          )}
                           {this.props.children}
                         </Fragment>
                       )}

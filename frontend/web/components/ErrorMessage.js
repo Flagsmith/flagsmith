@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
 import Icon from './Icon'
-import PaymentModal from './modals/Payment'
+import Button from './base/forms/Button'
 
 export default class ErrorMessage extends PureComponent {
   static displayName = 'ErrorMessage'
@@ -27,11 +27,7 @@ export default class ErrorMessage extends PureComponent {
           <Button
             className='btn ml-3'
             onClick={() => {
-              openModal(
-                'Payment plans',
-                <PaymentModal viewOnly={false} />,
-                'modal-lg',
-              )
+              document.location.replace('/organisation-settings')
             }}
           >
             Upgrade plan

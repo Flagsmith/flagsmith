@@ -10,9 +10,12 @@ $primary900: #1d113e;
 $danger: #ef4d56;
 $danger400: #f57c78;
 $success: #27ab95;
+$success400: #56ccad;
+$success600: #13787b;
 $info: #0aaddf;
 $warning: #ff9f43;
 $secondary400: #fae392;
+$secondary500: #f7d56e;
 $secondary600: #d4b050;
 $secondary: #fae392;
 $text-icon-dark: #1a2634;
@@ -117,7 +120,7 @@ $hr-border-color: $basic-alpha-16;
 $hr-opacity: 1;
 //todo: replace with bootstrap 5.3 dark mode theme
 .dark hr {
-  border-color: $white-alpha-16;
+  border-color: $basic-alpha-16;
 }
 
 //Modal
@@ -211,7 +214,7 @@ $input-hover-border-color-dark: $white-alpha-8;
 $input-placeholder-color: $text-icon-light-grey;
 $input-padding: 12px 12px 12px 16px;
 $input-padding-sm: 8px 12px 8px 14px;
-$input-padding-xsm: 6px 12px;
+$input-padding-xsm: 6px 8px;
 $input-padding-lg: 16px 12px 16px 20px;
 $textarea-height: 120px;
 $textarea-height-sm: 100px;
@@ -280,9 +283,11 @@ $code-bg: $bg-dark200;
 
 //Panels
 $panel-border-color: $basic-alpha-16;
+$panel-border-color-dark: $white-alpha-16;
 $panel-border-radius: $border-radius-lg;
 $panel-table-header-bc: $bg-light200;
 $panel-table-header-color: $text-icon-grey;
+$panel-table-header-color-muted: $text-icon-light-grey;
 $panel-table-header-font-size: $font-caption;
 $panel-table-header-line-height: $line-height-xsm;
 $panel-table-header-min-height: 44px;

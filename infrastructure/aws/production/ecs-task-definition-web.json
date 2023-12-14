@@ -68,6 +68,10 @@
                     "value": "flagsmith_environments"
                 },
                 {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
                     "name": "ENABLE_FE_E2E",
                     "value": "True"
                 },
@@ -174,10 +178,6 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
-                    "name":"EDGE_API_URL",
-                    "value":"https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
