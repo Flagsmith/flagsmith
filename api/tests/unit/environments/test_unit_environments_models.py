@@ -2,7 +2,7 @@ import typing
 from copy import copy
 from datetime import timedelta
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from core.constants import STRING
@@ -25,7 +25,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation, OrganisationRole
-from projects.models import Project
+from projects.models import IdentityOverridesV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 
@@ -482,6 +482,82 @@ def test_write_environments_to_dynamodb_with_environment_and_project(
         args[0],
         Environment.objects.filter(id=dynamo_enabled_project_environment_one.id),
     )
+
+
+def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_expected(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamo_enabled_project_environment_two: Environment,
+    mock_dynamo_env_wrapper: Mock,
+    mock_dynamo_env_v2_wrapper: Mock,
+) -> None:
+    # Given
+    dynamo_enabled_project.identity_overrides_v2_migration_status = (
+        IdentityOverridesV2MigrationStatus.COMPLETE
+    )
+    dynamo_enabled_project.save()
+    mock_dynamo_env_v2_wrapper.is_enabled = True
+
+    # When
+    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+
+    # Then
+    args, kwargs = mock_dynamo_env_v2_wrapper.write_environments.call_args
+    assert kwargs == {}
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0], Environment.objects.filter(project=dynamo_enabled_project)
+    )
+
+
+def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapper_disabled__wrapper_not_called(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamo_enabled_project_environment_two: Environment,
+    mock_dynamo_env_wrapper: Mock,
+    mock_dynamo_env_v2_wrapper: Mock,
+) -> None:
+    # Given
+    mock_dynamo_env_v2_wrapper.is_enabled = False
+    dynamo_enabled_project.identity_overrides_v2_migration_status = (
+        IdentityOverridesV2MigrationStatus.COMPLETE
+    )
+    dynamo_enabled_project.save()
+
+    # When
+    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+
+    # Then
+    mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "identity_overrides_v2_migration_status",
+    (
+        IdentityOverridesV2MigrationStatus.NOT_STARTED,
+        IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+    ),
+)
+def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__wrapper_not_called(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamo_enabled_project_environment_two: Environment,
+    mock_dynamo_env_wrapper: Mock,
+    mock_dynamo_env_v2_wrapper: Mock,
+    identity_overrides_v2_migration_status: str,
+) -> None:
+    # Given
+    dynamo_enabled_project.identity_overrides_v2_migration_status = (
+        identity_overrides_v2_migration_status
+    )
+    dynamo_enabled_project.save()
+    mock_dynamo_env_v2_wrapper.is_enabled = True
+
+    # When
+    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+
+    # Then
+    mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
 
 
 @pytest.mark.parametrize(
