@@ -60,13 +60,11 @@ class BaseDynamoWrapper:
             self._table = self.get_table()
         return self._table
 
-    @classmethod
-    def get_table_name(cls) -> str:
-        return cls.table_name
+    def get_table_name(self) -> str:
+        return self.table_name
 
-    @classmethod
-    def get_table(cls) -> typing.Optional["Table"]:
-        if table_name := cls.get_table_name():
+    def get_table(self) -> typing.Optional["Table"]:
+        if table_name := self.get_table_name():
             return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
                 table_name
             )
@@ -77,7 +75,6 @@ class BaseDynamoWrapper:
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
-    @classmethod
     def get_table_name(cls) -> str | None:
         return settings.IDENTITIES_TABLE_NAME_DYNAMO
 
@@ -225,11 +222,10 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    @classmethod
     def get_table_name(cls) -> str | None:
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
-    def get_identity_overrides_by_environment_id_and_feature_id(
+    def get_identity_overrides_by_environment_id(
         self,
         environment_id: int,
         feature_id: int | None = None,
