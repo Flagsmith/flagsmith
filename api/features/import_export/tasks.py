@@ -206,16 +206,25 @@ def _create_new_feature(
     feature_state.save()
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=24),
-)
-def create_flagsmith_on_flagsmith_feature_export():
-    if (
-        not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
-        or not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
-    ):
-        # No explicit settings on both feature settings, hence exit.
-        return
+# Should only run on official flagsmith instance.
+if (
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
+    and settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
+):
+
+    @register_recurring_task(
+        run_every=timedelta(hours=24),
+    )
+    def create_flagsmith_on_flagsmith_feature_export_task():
+        # Defined in a one off function for testing import.
+        _create_flagsmith_on_flagsmith_feature_export()
+
+
+def _create_flagsmith_on_flagsmith_feature_export():
+    """
+    This is called by create_flagsmith_on_flagsmith_feature_export_task
+    and by tests. Should not be used by normal applications.
+    """
     environment_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
     tag_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
 
