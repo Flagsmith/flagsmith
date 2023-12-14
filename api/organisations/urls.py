@@ -112,6 +112,10 @@ if settings.IS_RBAC_INSTALLED:
         parent_router=organisations_router, parent_prefix=r"users", lookup="user"
     )
 
+    nested_api_key_roles_routes = routers.NestedSimpleRouter(
+        parent_router=organisations_router, parent_prefix=r"master-api-keys", lookup="api_key"
+    )
+
     organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
     nested_roles_router = routers.NestedSimpleRouter(
         organisations_router, r"roles", lookup="role"
@@ -120,6 +124,11 @@ if settings.IS_RBAC_INSTALLED:
         prefix="roles",
         viewset=RolesByUserViewSet,
         basename="role-users",
+    )
+    nested_api_key_roles_routes.register(
+        prefix="roles",
+        viewset=RolesbyMasterAPIPrefixViewSet,
+        basename="role-api-keys",
     )
     nested_roles_router.register(
         "environments-permissions",
@@ -146,10 +155,6 @@ if settings.IS_RBAC_INSTALLED:
             url(r"^", include(organisations_router.urls)),
             url(r"^", include(nested_roles_router.urls)),
             url(r"^", include(nested_user_roles_routes.urls)),
-            path(
-                "api/v1/organisations/<int:organisation_pk>/roles-api-key/<str:prefix>/",
-                RolesbyMasterAPIPrefixViewSet.as_view({"get": "list"}),
-                name="roles_api_keys_by_prefix",
-            ),
+            url(r"^", include(nested_api_key_roles_routes.urls)),
         ]
     )
