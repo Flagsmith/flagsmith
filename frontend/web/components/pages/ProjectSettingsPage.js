@@ -609,16 +609,18 @@ const ProjectSettingsPage = class extends Component {
                     {metadataEnable && (
                       <TabItem tabLabel='Metadata'>
                         <div>
-                          <p className='fs-small lh-sm my-4'>
+                          <Row space className='mt-4'>
+                            <h5 className='m-b-0'>Metadata</h5>
+                            <Button onClick={() => this.createMetadata()}>
+                              {'Create Metadata'}
+                            </Button>
+                          </Row>
+                          <p className='fs-small lh-sm'>
                             Add metadata to your entities
                           </p>
-                          <Button onClick={() => this.createMetadata()}>
-                            {'Create Metadata'}
-                          </Button>
                           <FormGroup className='mt-4'>
                             <PanelSearch
                               id='webhook-list'
-                              title={'Metadata'}
                               items={mergeMetadata}
                               header={
                                 <Row className='table-header'>
