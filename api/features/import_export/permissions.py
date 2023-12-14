@@ -15,7 +15,9 @@ class FeatureImportPermissions(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        environment = Environment.objects.get(id=view.kwargs["environment_id"])
+        environment = Environment.objects.select_related(
+            "project__organisation",
+        ).get(id=view.kwargs["environment_id"])
         organisation = environment.project.organisation
 
         # Since feature imports can be destructive, use org admin.
