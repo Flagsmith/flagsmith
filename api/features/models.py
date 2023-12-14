@@ -72,8 +72,8 @@ from features.value_types import (
     INTEGER,
     STRING,
 )
-from metadata.models import Metadata
 from features.versioning.models import EnvironmentFeatureVersion
+from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
 
