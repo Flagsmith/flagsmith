@@ -21,8 +21,8 @@ from features.import_export.models import (
     FlagsmithOnFlagsmithFeatureExport,
 )
 from features.import_export.tasks import (
+    _create_flagsmith_on_flagsmith_feature_export,
     clear_stale_feature_imports_and_exports,
-    create_flagsmith_on_flagsmith_feature_export,
     export_features_for_environment,
     import_features_for_environment,
 )
@@ -351,7 +351,7 @@ def test_create_flagsmith_on_flagsmith_feature_export(
     assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 0
 
     # When
-    create_flagsmith_on_flagsmith_feature_export()
+    _create_flagsmith_on_flagsmith_feature_export()
 
     # Then
     assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 1
