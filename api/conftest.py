@@ -9,7 +9,6 @@ from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -624,14 +623,8 @@ def flagsmith_environments_v2_table(dynamodb: DynamoDBServiceResource) -> Table:
 def dynamodb_identity_wrapper(
     settings: SettingsWrapper,
     flagsmith_identities_table: Table,
-    mocker: MockerFixture,
 ) -> DynamoIdentityWrapper:
     settings.IDENTITIES_TABLE_NAME_DYNAMO = flagsmith_identities_table.name
-    mocker.patch.object(
-        DynamoIdentityWrapper,
-        "get_table",
-        return_value=flagsmith_identities_table,
-    )
     return DynamoIdentityWrapper()
 
 
@@ -639,12 +632,6 @@ def dynamodb_identity_wrapper(
 def dynamodb_wrapper_v2(
     settings: SettingsWrapper,
     flagsmith_environments_v2_table: Table,
-    mocker: MockerFixture,
 ) -> DynamoEnvironmentV2Wrapper:
     settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
-    mocker.patch.object(
-        DynamoEnvironmentV2Wrapper,
-        "get_table",
-        return_value=flagsmith_environments_v2_table,
-    )
     return DynamoEnvironmentV2Wrapper()
