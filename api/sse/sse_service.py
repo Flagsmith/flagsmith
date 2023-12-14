@@ -54,7 +54,7 @@ def send_environment_update_message_for_environment(environment):
 
 
 def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
-    gpg = gnupg.GPG(gnupghome=GNUPG_HOME, verbose=True)
+    gpg = gnupg.GPG(gnupghome=GNUPG_HOME)
     bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
 
     for log_file in bucket.objects.all():
