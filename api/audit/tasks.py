@@ -114,8 +114,9 @@ def create_audit_log_from_historical_record(
     audit_logs = [
         AuditLog(
             created_date=history_instance.history_date,
-            environment=environment,
+            organisation=organisation,
             project=project,
+            environment=environment,
             related_object_id=related_object_id,
             related_object_type=related_object_type.name,
             log=log_message,
@@ -205,6 +206,7 @@ def create_audit_log_user_logged_in(
 
     audit_logs = [
         AuditLog(
+            created_date=timezone.now(),
             organisation=organisation,
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
@@ -236,6 +238,7 @@ def create_audit_log_user_logged_out(
 
     audit_logs = [
         AuditLog(
+            created_date=timezone.now(),
             organisation=organisation,
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
@@ -271,6 +274,7 @@ def create_audit_log_user_login_failed(
 
     audit_logs = [
         AuditLog(
+            created_date=timezone.now(),
             organisation=organisation,
             related_object_id=user.pk,
             related_object_type=RelatedObjectType.USER.name,
