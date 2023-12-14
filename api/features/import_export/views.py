@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.db.models import QuerySet
+from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -84,8 +85,6 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 def download_flagsmith_on_flagsmith(request: Request) -> Response:
-    from django.http import Http404
-
     if (
         not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
         or not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
