@@ -21,9 +21,9 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    let integrations = Utils.getFlagsmithValue('integrations') || '[]'
+    let integrations = Utils.getFlagsmithValue('integration_data') || '{}'
     try {
-      integrations = JSON.parse(integrations).sort()
+      integrations = Object.keys(JSON.parse(integrations)).sort()
     } catch (e) {
       integrations = []
     }
