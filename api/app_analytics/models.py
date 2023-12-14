@@ -15,7 +15,7 @@ class Resource(models.IntegerChoices):
     def get_lowercased_name(cls, resource: int) -> str:
         member = next(filter(lambda member: member.value == resource, cls), None)
         if not member:
-            raise ValueError("Invalid resource: {resource}")
+            raise ValueError(f"Invalid resource: {resource}")
 
         return member.name.lower()
 
@@ -24,7 +24,7 @@ class Resource(models.IntegerChoices):
         try:
             return getattr(cls, resource.upper().replace("-", "_")).value
         except (KeyError, AttributeError) as err:
-            raise ValueError("Invalid resource: {resource}") from err
+            raise ValueError(f"Invalid resource: {resource}") from err
 
 
 class APIUsageRaw(models.Model):
