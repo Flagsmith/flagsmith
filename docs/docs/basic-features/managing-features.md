@@ -96,3 +96,12 @@ other Environments within the Project.
 ### Multi-Variate Flag Use Cases
 
 The primary use case for using Multi-Variate flags is to drive [A/B tests](/advanced-use/ab-testing.md).
+
+### Use Metadata
+
+When creating or updating a feature, you can enhance its information by adding previously created and enabled metadata fields.
+To create and enable this you can do it in the metadata tab on the project settings page.
+
+Then, add it using the "Add Metadata" button within the feature.
+
+![Image](/img/metadata/metadata-feature-1.png)

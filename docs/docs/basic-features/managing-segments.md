@@ -241,3 +241,12 @@ More simply, the order of precedence is:
 1. Identity
 2. Segment
 3. Flag
+
+## Use Metadata
+
+When creating or updating a segment, you can enhance its information by adding previously created and enabled metadata fields.
+To create and enable this you can do it in the metadata tab on the project settings page.
+
+Then, add it using the "Add Metadata" button within the segment.
+
+![Image](/img/metadata/metadata-segment-1.png)
