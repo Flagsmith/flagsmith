@@ -19,6 +19,7 @@ import TableTagFilter from 'components/tables/TableTagFilter'
 import { setViewMode } from 'common/useViewMode'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode } from 'common/useViewMode'
+import { TagStrategy } from 'common/types/responses'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -33,6 +34,7 @@ const FeaturesPage = class extends Component {
       search: null,
       showArchived: false,
       sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+      tag_strategy: 'INTERSECTION',
       tags: [],
     }
     ES6Component(this)
@@ -101,6 +103,7 @@ const FeaturesPage = class extends Component {
 
   getFilter = () => ({
     is_archived: this.state.showArchived,
+    tag_strategy: this.state.tag_strategy,
     tags:
       !this.state.tags || !this.state.tags.length
         ? undefined
@@ -304,6 +307,15 @@ const FeaturesPage = class extends Component {
                                           projectId={projectId}
                                           className='me-4'
                                           title='Tags'
+                                          tagStrategy={this.state.tag_strategy}
+                                          onChangeStrategy={(tag_strategy) => {
+                                            this.setState(
+                                              {
+                                                tag_strategy,
+                                              },
+                                              this.filter,
+                                            )
+                                          }}
                                           value={this.state.tags}
                                           onToggleArchived={() => {
                                             FeatureListStore.isLoading = true

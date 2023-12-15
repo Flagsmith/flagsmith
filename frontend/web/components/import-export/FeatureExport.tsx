@@ -9,7 +9,7 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureRow from 'components/FeatureRow'
-import { FeatureState, ProjectFlag } from 'common/types/responses'
+import { FeatureState, ProjectFlag, TagStrategy } from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
@@ -31,15 +31,17 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState()
   const [page, setPage] = useState(0)
+  const [tagStrategy, setTagStrategy] = useState<TagStrategy>('UNION')
 
   useEffect(() => {
     if (environment) {
       AppActions.getFeatures(projectId, environment, true, null, null, page, {
         search,
+        tag_strategy: tagStrategy,
         tags: tags?.length ? tags : undefined,
       })
     }
-  }, [environment, tags, search, projectId, page])
+  }, [environment, tagStrategy, tags, search, projectId, page])
   const [createFeatureExport, { isLoading: isCreating, isSuccess }] =
     useCreateFeatureExportMutation({})
 
@@ -102,7 +104,8 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         <Tooltip
           title={
             <>
-              <strong>Filter</strong> <IonIcon icon={informationCircle} />
+              <strong>Filter Exported Features</strong>{' '}
+              <IonIcon icon={informationCircle} />
             </>
           }
         >
@@ -112,7 +115,10 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         </Tooltip>
       </div>
       <TagFilter
-        showUntagged
+        tagStrategy={tagStrategy}
+        onChangeStrategy={(tag_strategy) => {
+          setTagStrategy(tag_strategy)
+        }}
         showClearAll={!!tags?.length}
         onClearAll={() => setTags([])}
         projectId={`${projectId}`}

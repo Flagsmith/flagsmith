@@ -226,6 +226,7 @@ export type MultivariateOption = {
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
+export type TagStrategy = 'INTERSECTION' | 'UNION'
 
 export type IdentityFeatureState = {
   feature: {
