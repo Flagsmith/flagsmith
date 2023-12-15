@@ -31,7 +31,9 @@ RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y
 
 # Install GnuPG(and import private key) if secret file exists
 RUN --mount=type=secret,id=sse_pgp_pkey  if [ -f /run/secrets/sse_pgp_pkey ]; then \
-  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/sse_pgp_pkey;  fi;
+  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/sse_pgp_pkey; \
+  mv /root/.gnupg /app/; \
+  chown -R nobody /app/.gnupg ;  fi;
 
 
 # Copy the python venv from step 2
