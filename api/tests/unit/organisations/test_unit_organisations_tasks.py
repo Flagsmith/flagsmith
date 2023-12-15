@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
@@ -22,6 +23,7 @@ from organisations.tasks import (
     ALERT_EMAIL_SUBJECT,
     finish_subscription_cancellation,
     send_org_over_limit_alert,
+    send_org_subscription_cancelled_alert,
 )
 from users.models import FFAdminUser
 
@@ -126,9 +128,14 @@ def test_subscription_cancellation(db: None) -> None:
     assert subscription.notes == notes
 
 
-def test_finish_subscription_cancellation(db: None) -> None:
+@pytest.mark.freeze_time("2023-01-19T09:12:34+00:00")
+def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> None:
     # Given
-    organisation1 = Organisation.objects.create()
+    send_org_subscription_cancelled_alert_task = mocker.patch(
+        "organisations.tasks.send_org_subscription_cancelled_alert"
+    )
+
+    organisation1 = Organisation.objects.create(name="Nike")
     organisation2 = Organisation.objects.create()
     organisation3 = Organisation.objects.create()
     organisation4 = Organisation.objects.create()
@@ -143,6 +150,14 @@ def test_finish_subscription_cancellation(db: None) -> None:
         )
     future = timezone.now() + timedelta(days=20)
     organisation1.subscription.prepare_for_cancel(cancellation_date=future)
+
+    # Test one of the send org alerts.
+    send_org_subscription_cancelled_alert_task.delay.assert_called_once_with(
+        kwargs={
+            "organisation_name": organisation1.name,
+            "formatted_cancellation_date": "2023-02-08 09:12:34",
+        }
+    )
 
     # Two organisations are impacted.
     for __ in range(organisation_user_count):
@@ -187,3 +202,23 @@ def test_finish_subscription_cancellation(db: None) -> None:
     assert organisation2.num_seats == 1
     assert organisation3.num_seats == 1
     assert organisation4.num_seats == organisation_user_count
+
+
+def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) -> None:
+    # Given
+    send_mail_mock = mocker.patch("users.models.send_mail")
+
+    # When
+    send_org_subscription_cancelled_alert(
+        organisation_name="Nike",
+        formatted_cancellation_date="2023-02-08 09:12:34",
+    )
+
+    # Then
+    send_mail_mock.assert_called_once_with(
+        subject="Organisation Nike has cancelled their subscription",
+        message="Organisation Nike has cancelled their subscription on 2023-02-08 09:12:34",
+        from_email="noreply@flagsmith.com",
+        recipient_list=[],
+        fail_silently=True,
+    )
