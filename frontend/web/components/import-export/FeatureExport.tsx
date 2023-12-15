@@ -115,10 +115,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         </Tooltip>
       </div>
       <TagFilter
-        tagStrategy={tagStrategy}
-        onChangeStrategy={(tag_strategy) => {
-          setTagStrategy(tag_strategy)
-        }}
+        hideTagStrategy
         showClearAll={!!tags?.length}
         onClearAll={() => setTags([])}
         projectId={`${projectId}`}

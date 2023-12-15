@@ -11,7 +11,7 @@ type TagFilterType = {
   showClearAll?: boolean
   showUntagged?: boolean
   tagStrategy: TagStrategy
-  onChangeStrategy: (value: TagStrategy) => void
+  onChangeStrategy?: (value: TagStrategy) => void
   projectId: string
   onChange: (value: (number | string)[]) => void
   children?: ReactNode
@@ -52,37 +52,39 @@ const TagFilter: FC<TagFilterType> = ({
         <Row>
           <Flex>
             <Row className='tag-filter-list'>
-              <div style={{ width: 140 }}>
-                <Select
-                  size='select-xxsm'
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      '&:hover': { borderColor: '$bt-brand-secondary' },
-                      border: '1px solid $bt-brand-secondary',
-                      height: 18,
-                    }),
-                  }}
-                  onChange={(v) => {
-                    onChangeStrategy(v!.value)
-                  }}
-                  value={{
-                    label:
-                      tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
-                    value: tagStrategy,
-                  }}
-                  options={[
-                    {
-                      label: 'Has all',
-                      value: 'INTERSECTION',
-                    },
-                    {
-                      label: 'Has some',
-                      value: 'UNION',
-                    },
-                  ]}
-                />
-              </div>
+              {!!onChangeStrategy && (
+                <div style={{ width: 140 }}>
+                  <Select
+                    size='select-xxsm'
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        '&:hover': { borderColor: '$bt-brand-secondary' },
+                        border: '1px solid $bt-brand-secondary',
+                        height: 18,
+                      }),
+                    }}
+                    onChange={(v) => {
+                      onChangeStrategy(v!.value)
+                    }}
+                    value={{
+                      label:
+                        tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
+                      value: tagStrategy,
+                    }}
+                    options={[
+                      {
+                        label: 'Has all',
+                        value: 'INTERSECTION',
+                      },
+                      {
+                        label: 'Has some',
+                        value: 'UNION',
+                      },
+                    ]}
+                  />
+                </div>
+              )}
               {unTagged && (
                 <Tag
                   key={unTagged.id}

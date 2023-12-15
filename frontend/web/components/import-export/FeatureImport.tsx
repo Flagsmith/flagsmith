@@ -24,6 +24,7 @@ import Button from 'components/base/forms/Button'
 import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlagsmithProjectImport'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
+import WarningMessage from 'components/WarningMessage'
 
 type FeatureExportType = {
   projectId: string
@@ -165,6 +166,13 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           />
         </div>
       </div>
+      {strategy === 'OVERWRITE_DESTRUCTIVE' && (
+        <WarningMessage
+          warningMessage={
+            'This will overwrite existing features on all other environments to the defaults defined in the import, use with caution.'
+          }
+        />
+      )}
       <div className='my-2'>
         <strong>Import File</strong>
       </div>
