@@ -82,7 +82,7 @@ jobs:
 
       - name: Run Tests
         env:
-          DOTENV_OVERRIDE_FILE: "${{ github.event_name == 'pull_request' && '.env-ci-testmon' || '.env-ci' }}"
+          DOTENV_OVERRIDE_FILE: "${{ github.event_name == 'merge_group' && '.env-ci' || '.env-ci-testmon' }}"
         run: make test
 
       - name: Save testmon data cache
