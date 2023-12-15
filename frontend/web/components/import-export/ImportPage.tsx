@@ -16,6 +16,8 @@ import FeatureExport from './FeatureExport'
 import { createFeatureExport } from 'common/services/useFeatureExport'
 import { getStore } from 'common/store'
 import FeatureImport from './FeatureImport'
+import AccountStore from 'common/stores/account-store'
+import Constants from 'common/constants'
 
 type ImportPageType = {
   projectId: string
@@ -96,6 +98,19 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       body: { project_key: key, token: LDKey },
       project_id: projectId,
     })
+  }
+
+  const isAdmin = AccountStore.isAdmin()
+
+  if (!isAdmin) {
+    return (
+      <div
+        dangerouslySetInnerHTML={{
+          __html: Constants.organisationPermissions('Administrator'),
+        }}
+        className='mt-4'
+      />
+    )
   }
 
   const launchDarklyImport = (

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
@@ -43,7 +43,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [createFeatureExport, { isLoading: isCreating, isSuccess }] =
     useCreateFeatureExportMutation({})
 
-  const { data: exports } = useGetFeatureExportsQuery({ projectId })
+  const { data: exports, refetch } = useGetFeatureExportsQuery({ projectId })
   const onSubmit = () => {
     const env = ProjectStore.getEnvironment(environment)
     createFeatureExport({
@@ -57,7 +57,18 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       }
     })
   }
-
+  const timerRef = useRef<NodeJS.Timer>()
+  useEffect(() => {
+    if (
+      exports?.results.find(
+        (featureExport) => featureExport.status === 'PROCESSING',
+      )
+    ) {
+      timerRef.current = setTimeout(() => {
+        refetch()
+      }, 200)
+    }
+  }, [exports, refetch])
   return (
     <div className='mt-4'>
       <InfoMessage>
