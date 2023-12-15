@@ -2,6 +2,7 @@ const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
+import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 
 const controller = {
@@ -39,7 +40,7 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  confirmTwoFactor: (pin, onError) => {
+  confirmTwoFactor: (pin, onError, isLoginPage) => {
     store.saving()
 
     return data
@@ -50,6 +51,9 @@ const controller = {
         store.model.twoFactorConfirmed = true
 
         store.saved()
+        if (isLoginPage) {
+          window.location.href = `/projects`
+        }
       })
       .catch((e) => {
         if (onError) {
@@ -77,6 +81,7 @@ const controller = {
       // eslint-disable-next-line camelcase
       API.postEvent(`${name}`)
     }
+
     data.post(`${Project.api}organisations/`, { name }).then((res) => {
       store.model.organisations = store.model.organisations.concat([
         { ...res, role: 'ADMIN' },
@@ -84,6 +89,15 @@ const controller = {
       AsyncStorage.setItem('user', JSON.stringify(store.model))
       store.savedId = res.id
       store.saved()
+
+      const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+      const sendRelayEvent =
+        Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+      if (sendRelayEvent) {
+        dataRelay.sendEvent(AccountStore.getUser(), {
+          apiKey: relayEventKey,
+        })
+      }
     })
   },
   deleteOrganisation: () => {
@@ -158,7 +172,7 @@ const controller = {
       })
       .then((res) => {
         API.trackEvent(Constants.events.LOGIN)
-
+        store.samlOrOauth = false
         if (res.ephemeral_token) {
           store.ephemeral_token = res.ephemeral_token
           store.model = {
@@ -189,6 +203,7 @@ const controller = {
         },
       )
       .then((res) => {
+        store.samlOrOauth = true
         if (res.ephemeral_token) {
           store.ephemeral_token = res.ephemeral_token
           store.model = {
@@ -381,8 +396,12 @@ const store = Object.assign({}, BaseStore, {
       return false
     }
 
+    if (store.samlOrOauth) {
+      return false
+    }
+
     return (
-      Utils.getFlagsmithHasFeature('forced_2fa') &&
+      Utils.getFlagsmithHasFeature('force_2fa') &&
       store.getOrganisations() &&
       store.getOrganisations().find((o) => o.force_2fa)
     )
@@ -505,7 +524,11 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.enableTwoFactor()
       break
     case Actions.CONFIRM_TWO_FACTOR:
-      controller.confirmTwoFactor(action.pin, action.onError)
+      controller.confirmTwoFactor(
+        action.pin,
+        action.onError,
+        action.isLoginPage,
+      )
       break
     case Actions.DISABLE_TWO_FACTOR:
       controller.disableTwoFactor()

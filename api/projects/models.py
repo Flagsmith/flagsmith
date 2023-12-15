@@ -182,7 +182,11 @@ class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
 
 
 class UserProjectPermission(AbstractBasePermissionModel):
-    user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        "users.FFAdminUser",
+        on_delete=models.CASCADE,
+        related_name="project_permissions",
+    )
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_query_name="userpermission"
     )

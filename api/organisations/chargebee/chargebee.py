@@ -12,6 +12,7 @@ from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
     UpgradeSeatsError,
+    UpgradeSeatsPaymentFailure,
 )
 from .cache import ChargebeeCache
 from .constants import ADDITIONAL_SEAT_ADDON_ID
@@ -20,6 +21,15 @@ from .metadata import ChargebeeObjMetadata
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 logger = logging.getLogger(__name__)
+
+CHARGEBEE_PAYMENT_ERROR_CODES = [
+    "payment_processing_failed",
+    "payment_method_verification_failed",
+    "payment_method_not_present",
+    "payment_gateway_currency_incompatible",
+    "payment_intent_invalid",
+    "payment_intent_invalid_amount",
+]
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -155,7 +165,6 @@ def add_single_seat(subscription_id: str):
     try:
         subscription = chargebee.Subscription.retrieve(subscription_id).subscription
         addons = subscription.addons or []
-
         current_seats = next(
             (
                 addon.quantity
@@ -172,11 +181,20 @@ def add_single_seat(subscription_id: str):
                     {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": current_seats + 1}
                 ],
                 "prorate": True,
-                "invoice_immediately": True,
+                "invoice_immediately": False,
             },
         )
 
     except ChargebeeAPIError as e:
+        api_error_code = e.json_obj["api_error_code"]
+        if api_error_code in CHARGEBEE_PAYMENT_ERROR_CODES:
+            logger.warning(
+                f"Payment declined ({api_error_code}) during additional "
+                f"seat upgrade to a CB subscription for subscription_id "
+                f"{subscription_id}"
+            )
+            raise UpgradeSeatsPaymentFailure() from e
+
         msg = (
             "Failed to add additional seat to CB subscription for subscription id: %s"
             % subscription_id

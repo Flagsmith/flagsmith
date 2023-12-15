@@ -9,6 +9,11 @@ ARG POETRY_VIRTUALENVS_CREATE=false
 RUN make install-poetry
 ENV PATH="$PATH:/root/.local/bin"
 
+ARG GH_TOKEN
+RUN if [ -n "${GH_TOKEN}" ]; \
+  then echo "https://${GH_TOKEN}:@github.com" > ${HOME}/.git-credentials \
+  && git config --global credential.helper store; fi;
+
 ARG POETRY_OPTS
 RUN make install-packages opts="${POETRY_OPTS}"
 
@@ -23,6 +28,11 @@ RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y 
 # arm architecture platform builds need postgres drivers installing via apt
 ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+
+# Install GnuPG(and import private key) if secret file exists
+RUN --mount=type=secret,id=pgp_pkey  if [ -f /run/secrets/sse_pgp_pkey ]; then \
+  apt-get update && apt-get install -y gnupg && gpg --import  /run/secrets/sse_pgp_pkey;  fi;
+
 
 # Copy the python venv from step 2
 COPY --from=build-python /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages

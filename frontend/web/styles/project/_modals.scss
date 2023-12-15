@@ -172,6 +172,13 @@ $side-width: 660px;
   }
 }
 
+.inline-modal--tags-sm {
+  width: 450px;
+  input.input {
+    border: 1px solid $input-border-color !important;
+  }
+}
+
 .modal-back-btn {
   margin-right: 12px;
 }
@@ -182,7 +189,7 @@ $side-width: 660px;
 
 .modal-open {
   position: relative;
-  padding-right: 0 !important;
+  padding-right: 0;
   overflow: hidden;
 }
 

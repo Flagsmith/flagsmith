@@ -275,18 +275,20 @@ const App = class extends Component {
       )
     }
     if (AccountStore.forced2Factor()) {
-      return <AccountSettingsPage />
+      return <AccountSettingsPage isLoginPage={true} />
     }
     const projectNotLoaded =
       !ProjectStore.model && document.location.href.includes('project/')
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const announcementValue = JSON.parse(
-      Utils.getFlagsmithValue('announcement'),
-    )
+    const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
     const dismissed = flagsmith.getTrait('dismissed_announcement')
-    const showBanner = !dismissed || dismissed !== announcementValue.id
+    const showBanner =
+      announcementValue &&
+      (!dismissed || dismissed !== announcementValue.id) &&
+      Utils.getFlagsmithHasFeature('announcement') &&
+      this.state.showAnnouncement
 
     return (
       <Provider store={getStore()}>
@@ -488,27 +490,24 @@ const App = class extends Component {
                               id={AccountStore.getOrganisation()?.id}
                             />
                           )}
-                          {user &&
-                            showBanner &&
-                            Utils.getFlagsmithHasFeature('announcement') &&
-                            this.state.showAnnouncement && (
-                              <Row>
-                                <InfoMessage
-                                  title={announcementValue.title}
-                                  infoMessageClass={'announcement'}
-                                  isClosable={announcementValue.isClosable}
-                                  close={() =>
-                                    this.closeAnnouncement(announcementValue.id)
-                                  }
-                                  buttonText={announcementValue.buttonText}
-                                  url={announcementValue.url}
-                                >
-                                  <div>
-                                    <div>{announcementValue.description}</div>
-                                  </div>
-                                </InfoMessage>
-                              </Row>
-                            )}
+                          {user && showBanner && (
+                            <Row>
+                              <InfoMessage
+                                title={announcementValue.title}
+                                infoMessageClass={'announcement'}
+                                isClosable={announcementValue.isClosable}
+                                close={() =>
+                                  this.closeAnnouncement(announcementValue.id)
+                                }
+                                buttonText={announcementValue.buttonText}
+                                url={announcementValue.url}
+                              >
+                                <div>
+                                  <div>{announcementValue.description}</div>
+                                </div>
+                              </InfoMessage>
+                            </Row>
+                          )}
                           {this.props.children}
                         </Fragment>
                       )}

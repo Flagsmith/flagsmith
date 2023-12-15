@@ -1,8 +1,16 @@
+import re
+
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.http import HttpRequest
+from rest_framework.request import Request
+
+INSECURE_DOMAINS = ("localhost", "127.0.0.1")
+
+_insecure_domain_pattern = re.compile(rf'({"|".join(INSECURE_DOMAINS)})(:\d+)?')
 
 
-def get_current_site_url():
+def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
     if settings.DOMAIN_OVERRIDE:
         domain = settings.DOMAIN_OVERRIDE
     elif current_site := Site.objects.filter(id=settings.SITE_ID).first():
@@ -10,8 +18,14 @@ def get_current_site_url():
     else:
         domain = settings.DEFAULT_DOMAIN
 
-    url = "https://" + domain
-    return url
+    if request:
+        scheme = request.scheme
+    elif _insecure_domain_pattern.match(domain):
+        scheme = "http"
+    else:
+        scheme = "https"
+
+    return f"{scheme}://{domain}"
 
 
 def get_ip_address_from_request(request):

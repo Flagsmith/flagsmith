@@ -1,9 +1,11 @@
 import React, { FC } from 'react'
 import Icon from './Icon'
-import PaymentModal from './modals/Payment'
+import Button from './base/forms/Button'
 
 type WarningMessageType = {
   warningMessage: string
+  enabledButton?: boolean
+  warningMessageClass?: string
 }
 
 const WarningMessage: FC<WarningMessageType> = (props) => {
@@ -24,11 +26,7 @@ const WarningMessage: FC<WarningMessageType> = (props) => {
         <Button
           className='btn ml-3'
           onClick={() => {
-            openModal(
-              'Payment plans',
-              <PaymentModal viewOnly={false} />,
-              'modal-lg',
-            )
+            document.location.replace('/organisation-settings')
           }}
         >
           Upgrade plan

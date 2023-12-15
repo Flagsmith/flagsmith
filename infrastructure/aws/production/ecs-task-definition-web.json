@@ -125,11 +125,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.00006"
+                    "value": "0.00003"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.02"
+                    "value": "0.01"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -174,10 +174,6 @@
                 {
                     "name": "PIPEDRIVE_IGNORE_DOMAINS",
                     "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
-                    "name":"EDGE_API_URL",
-                    "value":"https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
