@@ -247,7 +247,7 @@ export type IdentityFeatureState = {
 
 export type FeatureState = {
   id: number
-  feature_state_value: string
+  feature_state_value: FlagsmithValue
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   identity?: string
   uuid: string
@@ -264,11 +264,11 @@ export type FeatureState = {
 }
 
 export type ProjectFlag = {
-  created_date: Date
+  created_date: string
   default_enabled: boolean
   description?: string
   id: number
-  initial_value: string
+  initial_value: FlagsmithValue
   is_archived: boolean
   is_server_key_only: boolean
   multivariate_options: MultivariateOption[]

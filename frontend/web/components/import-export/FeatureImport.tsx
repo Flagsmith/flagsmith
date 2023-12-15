@@ -16,6 +16,7 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   ProjectFlag,
+  Res,
   User,
   UserGroupSummary,
 } from 'common/types/responses'
@@ -25,6 +26,7 @@ import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlag
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
+import FeatureListStore from 'common/stores/feature-list-store'
 
 type FeatureExportType = {
   projectId: string
@@ -34,25 +36,50 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [environment, setEnvironment] = useState<string>(
     ProjectStore.getEnvs()?.[0]?.api_key,
   )
+  const [previewEnvironment, setPreviewEnvironment] = useState<string>(
+    ProjectStore.getEnvs()?.[0]?.api_key,
+  )
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState()
   const [page, setPage] = useState(0)
   const env = ProjectStore.getEnvironment(environment)
   const [file, setFile] = useState<File | null>(null)
   const [fileData, setFileData] = useState<FeatureImportItem[] | null>(null)
+  const [currentProjectflags, setCurrentProjectflags] =
+    useState<ProjectFlag[]>()
+  const [currentFeatureStates, setCurrentFeatureStates] =
+    useState<Record<number, FeatureState>>()
 
   useEffect(() => {
-    if (environment) {
-      AppActions.getFeatures(projectId, environment, true, null, null, page, {
-        search,
-        tags: tags?.length ? tags : undefined,
-      })
+    const callback = () => {
+      setCurrentProjectflags(FeatureListStore.getProjectFlags())
+      setCurrentFeatureStates(FeatureListStore.getEnvironmentFlags())
     }
-  }, [environment, tags, search, projectId, page])
+    FeatureListStore.on('change', callback)
+
+    return () => {
+      FeatureListStore.off('change', callback)
+    }
+  }, [])
+  useEffect(() => {
+    if (previewEnvironment) {
+      AppActions.getFeatures(
+        projectId,
+        previewEnvironment,
+        true,
+        null,
+        null,
+        page,
+        {
+          search,
+          tags: tags?.length ? tags : undefined,
+        },
+      )
+    }
+  }, [previewEnvironment, tags, search, projectId, page])
 
   const [createImport, { error, isLoading }] =
     useCreateFlagsmithProjectImportMutation({})
-  const { data: exports } = useGetFeatureExportsQuery({ projectId })
 
   const onSubmit = () => {
     if (env && file) {
@@ -72,6 +99,12 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
 
   const [strategy, setStrategy] = useState<ImportStrategy>('SKIP')
 
+  useEffect(() => {
+    AppActions.getFeatures(projectId, environment, true, null, null, page, {
+      search,
+      tags: tags?.length ? tags : undefined,
+    })
+  }, [projectId, tags])
   const {
     featureStates,
     projectFlags,
@@ -81,43 +114,72 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   } = useMemo(() => {
     if (fileData) {
       const createdDate = new Date().toISOString()
-      const projectFlags: ProjectFlag[] = fileData.map((importItem, i) => {
-        return {
-          created_date: createdDate,
-          default_enabled: importItem.enabled,
-          description: null,
-          id: i,
-          initial_value: importItem.value,
-          is_archived: false,
-          is_server_key_only: importItem.is_server_key_only,
-          multivariate_options: importItem.multivariate,
-          name: importItem.name,
-          num_identity_overrides: 0,
-          num_segment_overrides: 0,
-          owner_groups: [],
-          owners: [],
-          project: ProjectStore.model!.id,
-          tags: [],
-          type: 'STANDARD',
-          uuid: `${i}`,
-        }
-      })
-      const featureStates: FeatureState[] = fileData.map((importItem, i) => {
-        return {
-          created_at: createdDate,
-          enabled: importItem.enabled,
-          environment: env!.id,
-          feature: i,
-          feature_state_value: importItem.value,
-          id: i,
-          multivariate_feature_state_values: importItem.multivariate,
-          uuid: `${i}`,
-        }
-      })
+      const existingFlags: ProjectFlag[] =
+        !!fileData &&
+        !!currentFeatureStates &&
+        currentProjectflags?.map((projectFlag, i) => {
+          const featureState = currentFeatureStates[projectFlag.id]
+          const importItem = fileData.find((v) => v.name === projectFlag.name)
+          let newValue = featureState.value
+          let newEnabled = featureState.enabled
+          if (strategy === 'OVERWRITE_DESTRUCTIVE' && importItem) {
+            newEnabled = importItem.enabled
+            newValue = importItem.value
+          }
+          return {
+            ...projectFlag,
+            created_date: projectFlag.created_date,
+            default_enabled: newEnabled,
+            id: i,
+            initial_value: newValue,
+          }
+        })
+
+      const projectFlags = existingFlags.concat(
+        fileData
+          .filter((v) => {
+            return !existingFlags.find((flag) => flag.name === v.name)
+          })
+          .map(function (importItem, i) {
+            return {
+              created_date: createdDate,
+              default_enabled: importItem.enabled,
+              id: i,
+              initial_value: importItem.value,
+              is_archived: false,
+              is_server_key_only: importItem.is_server_key_only,
+              multivariate_options: importItem.multivariate,
+              name: importItem.name,
+              num_identity_overrides: 0,
+              num_segment_overrides: 0,
+              owner_groups: [],
+              owners: [],
+              project: ProjectStore.model!.id,
+              tags: [],
+              type: 'STANDARD',
+              uuid: `${i}`,
+            }
+          }),
+      )
+
+      const featureStates: FeatureState[] = projectFlags.map(
+        (projectFlag, i) => {
+          return {
+            created_at: createdDate,
+            enabled: projectFlag.default_enabled,
+            environment: env!.id,
+            feature: i,
+            feature_state_value: projectFlag.initial_value,
+            id: i,
+            multivariate_feature_state_values: projectFlag.multivariate_options,
+            uuid: `${i}`,
+          }
+        },
+      )
       return { featureStates, projectFlags }
     }
     return { featureStates: null, projectFlags: null }
-  }, [fileData, env])
+  }, [fileData, currentFeatureStates, currentProjectflags, strategy, env])
   return (
     <div className='mt-4'>
       <InfoMessage>
@@ -142,7 +204,10 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         <div className='my-2 col-6 col-lg-4'>
           <EnvironmentSelect
             projectId={projectId}
-            onChange={setEnvironment}
+            onChange={(e) => {
+              setEnvironment(e)
+              setPreviewEnvironment(e)
+            }}
             value={environment}
           />
         </div>
@@ -187,6 +252,15 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           <div className='my-2'>
             <strong>Preview</strong>
           </div>
+          <div className='my-2 col-6 col-lg-4'>
+            <EnvironmentSelect
+              projectId={projectId}
+              onChange={(e) => {
+                setPreviewEnvironment(e)
+              }}
+              value={previewEnvironment}
+            />
+          </div>
           <PanelSearch
             className='no-pad'
             id='features-list'
@@ -200,7 +274,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                 size='sm'
                 environmentFlags={featureStates}
                 projectFlags={projectFlags}
-                environmentId={environment}
+                environmentId={previewEnvironment}
                 projectId={projectId}
                 index={i}
                 projectFlag={projectFlag}
