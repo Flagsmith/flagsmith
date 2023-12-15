@@ -335,7 +335,7 @@ def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
 
 def test_delete_token(test_user, auth_token, organisation):
     # Given
-    test_user.add_organisation(organisation)
+    test_user.add_organisation(Organisation.objects.get(pk=organisation))
 
     url = reverse("api-v1:custom_auth:delete-token")
     client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
@@ -349,14 +349,14 @@ def test_delete_token(test_user, auth_token, organisation):
     # and - logout is logged against organisation
     assert (
         AuditLog.objects.filter(related_object_type=RelatedObjectType.USER.name).count()
-        == 1
+        == 2  # 1 for adding user to organisation, 1 for logout
     )
     audit_log = AuditLog.objects.first()
     assert audit_log
     assert audit_log.author_id == test_user.pk
     assert audit_log.related_object_type == RelatedObjectType.USER.name
     assert audit_log.related_object_id == test_user.pk
-    assert audit_log.organisation_id == organisation.pk
+    assert audit_log.organisation_id == organisation
     assert audit_log.log == f"User logged out: {test_user.email}"
 
     # and - if we try to delete the token again(i.e: access anything that uses is_authenticated)
