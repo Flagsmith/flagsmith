@@ -98,7 +98,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       onBack={onBack}
       showBack
       onClose={onClose}
-      className='inline-modal--tags pb-0'
+      className='inline-modal--sm pb-0'
       bottom={
         <Row className='justify-content-end'>
           <Button onClick={onClose} type='button' theme='secondary'>
@@ -119,7 +119,6 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                   >
                     Save Tag
                   </Button>
-                  ,
                 </div>,
               )
             }
@@ -129,8 +128,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     >
       <div>
         <InputGroup
+          size='xSmall'
           value={tag?.label}
+          className='mb-0'
           id='tag-label'
+          autoFocus
           inputProps={{
             className: 'full-width mb-2',
             name: 'create-tag-name',
@@ -140,9 +142,10 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           onChange={(e: InputEvent) => update('label', e)}
         />
         <InputGroup
+          className='mb-0'
           title='Select a color'
           component={
-            <Row className={'gap-4'}>
+            <Row className={'gap-3'}>
               {Constants.tagColors.map((color) => (
                 <div key={color} className='tag--select'>
                   <Tag

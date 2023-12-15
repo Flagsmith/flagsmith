@@ -38,6 +38,7 @@ from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
+from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
 from .models import Feature, FeatureState
 from .permissions import (
@@ -290,7 +291,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if "tags" in query_serializer.initial_data:
             if query_data.get("tags", "") == "":
                 queryset = queryset.filter(tags__isnull=True)
+            elif query_data["tag_strategy"] == UNION:
+                queryset = queryset.filter(tags__in=query_data["tags"])
             else:
+                assert query_data["tag_strategy"] == INTERSECTION
                 queryset = reduce(
                     lambda qs, tag_id: qs.filter(tags=tag_id),
                     query_data["tags"],
@@ -736,7 +740,7 @@ def organisation_has_got_feature(request, organisation):
 @swagger_auto_schema(
     method="POST",
     request_body=CreateSegmentOverrideFeatureStateSerializer(),
-    responses={200: CreateSegmentOverrideFeatureStateSerializer()},
+    responses={201: CreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])

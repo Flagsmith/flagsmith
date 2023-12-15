@@ -3,6 +3,7 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
+from features.import_export.views import FeatureExportListView
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
@@ -73,5 +74,10 @@ urlpatterns = [
         "<int:project_pk>/all-user-permissions/<int:user_pk>/",
         get_user_project_permissions,
         name="all-user-permissions",
+    ),
+    path(
+        "<int:project_id>/feature-exports/",
+        FeatureExportListView.as_view(),
+        name="feature-exports",
     ),
 ]

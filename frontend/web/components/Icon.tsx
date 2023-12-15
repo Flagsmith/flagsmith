@@ -276,6 +276,7 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -352,6 +353,7 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -646,7 +648,7 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
             fillRule='evenodd'
             clipRule='evenodd'
             d='M14.1667 13.1667C14.1667 13.8107 13.644 14.3333 13 14.3333C12.356 14.3333 11.8334 13.8107 11.8334 13.1667V8.50001C11.8334 7.85601 12.356 7.33334 13 7.33334C13.644 7.33334 14.1667 7.85601 14.1667 8.50001V13.1667ZM13 17.8333C12.356 17.8333 11.8334 17.3107 11.8334 16.6667C11.8334 16.0227 12.356 15.5 13 15.5C13.644 15.5 14.1667 16.0227 14.1667 16.6667C14.1667 17.3107 13.644 17.8333 13 17.8333ZM25.3212 17.0202L16.3705 2.18134C15.6717 1.02401 14.4117 0.333344 13 0.333344C11.5884 0.333344 10.3284 1.02401 9.62953 2.18134L0.67886 17.0202C0.0161932 18.1203 -0.00364009 19.4433 0.62636 20.5587C1.30186 21.7568 2.61436 22.5 4.04936 22.5H21.9507C23.3857 22.5 24.6982 21.7568 25.3737 20.5587C26.0037 19.4433 25.9839 18.1203 25.3212 17.0202Z'
-            fill='#FF9F43'
+            fill={fill || '#FF9F43'}
           />
         </svg>
       )
@@ -720,6 +722,7 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'

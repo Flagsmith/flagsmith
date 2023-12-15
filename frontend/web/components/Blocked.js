@@ -1,6 +1,6 @@
 import React from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Payment from 'components/modals/Payment'
+import Payment from './modals/Payment'
 
 const Blocked = class extends React.Component {
   static contextTypes = {

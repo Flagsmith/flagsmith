@@ -10,7 +10,7 @@ from django.conf import settings
 from sse import tasks
 from sse.dataclasses import SSEAccessLogs
 
-s3 = boto3.resource("s3")
+GNUPG_HOME = "/app/.gnupg"
 
 
 def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
@@ -54,8 +54,9 @@ def send_environment_update_message_for_environment(environment):
 
 
 def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
-    gpg = gnupg.GPG()
-    bucket = s3.Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
+    gpg = gnupg.GPG(gnupghome=GNUPG_HOME)
+    bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
+
     for log_file in bucket.objects.all():
         encrypted_body = log_file.get()["Body"].read()
         decrypted_body = gpg.decrypt(encrypted_body)
