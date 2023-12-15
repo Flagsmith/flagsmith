@@ -123,8 +123,13 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           let newValue = featureState.value
           let newEnabled = featureState.enabled
           if (strategy === 'OVERWRITE_DESTRUCTIVE' && importItem) {
-            newEnabled = importItem.enabled
-            newValue = importItem.value
+            if (environment === previewEnvironment) {
+              newEnabled = importItem.enabled
+              newValue = importItem.value
+            } else {
+              newEnabled = importItem.default_enabled
+              newValue = importItem.initial_value
+            }
           }
           return {
             ...projectFlag,
