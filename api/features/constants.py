@@ -6,3 +6,7 @@ ENVIRONMENT = "ENVIRONMENT"
 # Feature state statuses
 COMMITTED = "COMMITTED"
 DRAFT = "DRAFT"
+
+# Tag filtering strategy
+UNION = "UNION"
+INTERSECTION = "INTERSECTION"

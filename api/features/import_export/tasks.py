@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from typing import Optional, Union
 
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
@@ -16,8 +17,12 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
-from .constants import FAILED, OVERWRITE_DESTRUCTIVE, SKIP, SUCCESS
-from .models import FeatureExport, FeatureImport
+from .constants import FAILED, OVERWRITE_DESTRUCTIVE, PROCESSING, SKIP, SUCCESS
+from .models import (
+    FeatureExport,
+    FeatureImport,
+    FlagsmithOnFlagsmithFeatureExport,
+)
 
 
 @register_recurring_task(
@@ -88,7 +93,6 @@ def export_features_for_environment(
     feature_export_id: int, tag_ids: Optional[list[int]] = None
 ) -> None:
     feature_export = FeatureExport.objects.get(id=feature_export_id)
-
     try:
         _export_features_for_environment(feature_export, tag_ids)
         assert feature_export.status == SUCCESS
@@ -200,3 +204,42 @@ def _create_new_feature(
     )
     feature_state.enabled = feature_data["enabled"]
     feature_state.save()
+
+
+# Should only run on official flagsmith instance.
+if (
+    settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
+    and settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
+):
+
+    @register_recurring_task(
+        run_every=timedelta(hours=24),
+    )
+    def create_flagsmith_on_flagsmith_feature_export_task():
+        # Defined in a one off function for testing import.
+        _create_flagsmith_on_flagsmith_feature_export()
+
+
+def _create_flagsmith_on_flagsmith_feature_export():
+    """
+    This is called by create_flagsmith_on_flagsmith_feature_export_task
+    and by tests. Should not be used by normal applications.
+    """
+    environment_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
+    tag_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
+
+    feature_export = FeatureExport.objects.create(
+        environment_id=environment_id,
+        status=PROCESSING,
+    )
+
+    export_features_for_environment(
+        feature_export_id=feature_export.id,
+        tag_ids=[tag_id],
+    )
+
+    feature_export.refresh_from_db()
+
+    assert feature_export.status == SUCCESS
+
+    FlagsmithOnFlagsmithFeatureExport.objects.create(feature_export=feature_export)

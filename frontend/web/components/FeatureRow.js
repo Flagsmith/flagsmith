@@ -257,7 +257,7 @@ class TheComponent extends Component {
                     </Tooltip>
                   </div>
                 )}
-                {!!projectFlag.num_identity_overrides && (
+                {!!projectFlag.num_identity_overrides && !Utils.getIsEdge() && (
                   <Tooltip
                     title={
                       <span
