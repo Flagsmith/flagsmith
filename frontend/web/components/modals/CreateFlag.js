@@ -592,13 +592,21 @@ const CreateFlag = class extends Component {
                         className='chip'
                         style={{ marginBottom: 4, marginTop: 4 }}
                       >
-                        <span className='font-weight-bold'>{m.name}</span>
-                        <span className='chip-icon ion'>
-                          <IonIcon
-                            icon={closeIcon}
-                            style={{ fontSize: '13px' }}
-                          />
-                        </span>
+                        <Tooltip
+                          title={
+                            <Row>
+                              <span className='font-weight-bold'>{m.name}</span>
+                              <span className='chip-icon ion'>
+                                <IonIcon
+                                  icon={closeIcon}
+                                  style={{ fontSize: '13px' }}
+                                />
+                              </span>
+                            </Row>
+                          }
+                        >
+                          {m.description}
+                        </Tooltip>
                       </Row>
                     ))}
                     <Button
