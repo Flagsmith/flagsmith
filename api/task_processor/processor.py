@@ -57,9 +57,10 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
         task_runs = []
 
         for task in tasks:
-            # Remove the task if it's not registered anymore
             if not task.is_task_registered:
-                task.delete()
+                logger.warning(
+                    "Recurring task %s is not registered anymore", task.task_identifier
+                )
                 continue
 
             if task.should_execute:

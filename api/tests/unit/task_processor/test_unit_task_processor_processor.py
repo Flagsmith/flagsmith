@@ -1,3 +1,4 @@
+import logging
 import time
 import uuid
 from datetime import timedelta
@@ -150,10 +151,13 @@ def test_run_recurring_tasks_only_executes_tasks_after_interval_set_by_run_every
     assert RecurringTaskRun.objects.filter(task=task).count() == 1
 
 
-def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
-    db, run_by_processor
-):
+def test_run_recurring_tasks_generates_warning_if_task_is_not_registered(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
     # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
     task_identifier = "test_unit_task_processor_processor._a_task"
 
     @register_recurring_task(run_every=timedelta(milliseconds=100))
@@ -168,7 +172,13 @@ def test_run_recurring_tasks_deletes_the_task_if_it_is_not_registered(
 
     # Then
     assert len(task_runs) == 0
-    assert not RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+    assert RecurringTask.objects.filter(task_identifier=task_identifier).exists()
+    assert caplog.records[0].levelname == "WARNING"
+
+    assert (
+        caplog.records[0].message
+        == f"Recurring task {task_identifier} is not registered anymore"
+    )
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
