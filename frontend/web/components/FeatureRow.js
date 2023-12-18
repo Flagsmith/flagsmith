@@ -363,30 +363,57 @@ class TheComponent extends Component {
             e.stopPropagation()
           }}
         >
-          {AccountStore.getOrganisationRole() === 'ADMIN' &&
-            !this.props.hideAudit && (
-              <Tooltip
-                html
-                title={
-                  <div
-                    onClick={() => {
-                      if (disableControls) return
-                      this.context.router.history.push(
-                        Utils.getFlagsmithHasFeature('feature_versioning')
-                          ? `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`
-                          : `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
-                      )
-                    }}
-                    className='text-center'
-                    data-test={`feature-history-${this.props.index}`}
-                  >
-                    <Icon name='clock' width={24} fill='#9DA4AE' />
-                  </div>
-                }
-              >
-                Feature history
-              </Tooltip>
-            )}
+          {!this.props.hideAudit && (
+            <>
+              {Utils.getFlagsmithHasFeature('feature_versioning') ? (
+                <Tooltip
+                  html
+                  title={
+                    <div
+                      onClick={() => {
+                        if (disableControls) return
+                        this.context.router.history.push(
+                          `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
+                        )
+                      }}
+                      className='text-center'
+                      data-test={`feature-history-${this.props.index}`}
+                    >
+                      <Icon name='clock' width={24} fill='#9DA4AE' />
+                    </div>
+                  }
+                >
+                  Feature history
+                </Tooltip>
+              ) : (
+                AccountStore.getOrganisationRole() === 'ADMIN' && (
+                  <>
+                    <Tooltip
+                      html
+                      title={
+                        <div
+                          onClick={() => {
+                            if (disableControls) return
+                            this.context.router.history.push(
+                              Utils.getFlagsmithHasFeature('feature_versioning')
+                                ? `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`
+                                : `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                            )
+                          }}
+                          className='text-center'
+                          data-test={`feature-history-${this.props.index}`}
+                        >
+                          <Icon name='clock' width={24} fill='#9DA4AE' />
+                        </div>
+                      }
+                    >
+                      Feature history
+                    </Tooltip>
+                  </>
+                )
+              )}
+            </>
+          )}
         </div>
         <div
           className='table-column text-right'

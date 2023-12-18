@@ -482,9 +482,7 @@ const Aside = class extends Component {
                                                     </span>
                                                   ) : null}
                                                 </NavLink>
-                                                {Utils.getFlagsmithHasFeature(
-                                                  'feature_versioning',
-                                                ) && (
+                                                {environment.use_v2_feature_versioning && (
                                                   <NavLink
                                                     activeClassName='active'
                                                     className='aside__environment-list-item'

@@ -8,10 +8,9 @@ import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
 import PanelSearch from 'components/PanelSearch'
-import { FeatureVersion } from 'common/types/responses'
+import { Environment, FeatureVersion } from 'common/types/responses'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import FeatureDiff from 'components/FeatureDiff'
 import FeatureVersionDiff from 'components/FeatureVersionDiff' // we need this to make JSX compile
 
 const widths = [250, 100]
@@ -28,7 +27,9 @@ type FeatureHistoryPageType = {
 
 const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const feature = Utils.fromParam(router.route.location.search)?.feature
-  const env = ProjectStore.getEnvironment(match.params.environmentId)
+  const env: Environment | undefined = ProjectStore.getEnvironment(
+    match.params.environmentId,
+  ) as any
   // @ts-ignore
   const environmentId = `${env?.id}`
   const { data: users } = useGetUsersQuery({
@@ -46,7 +47,6 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const live = data?.results?.[0]
 
   const [diff, setDiff] = useState<null | string>(null)
-
   return (
     <div className='container app-container'>
       <PageTitle title={'Feature Versions'}>
