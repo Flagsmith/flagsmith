@@ -18,6 +18,11 @@ Infrastructure as Code tooling. [Learn more](/integrations/terraform).
 
 ## Analytics Platforms
 
+<a href="/integrations/analytics/adobe" alt="Adobe"><img width="40%" src="/img/integrations/adobe/adobe-logo.svg"/></a>
+
+You can integrate Flagsmith with Adobe Analytics. You can automate AB tests by connecting the Flagsmith platform with
+Adobe Analytics. [Learn more](/integrations/analytics/amplitude).
+
 <a href="/integrations/analytics/amplitude" alt="Amplitude"><img width="40%" src="/img/integrations/amplitude/amplitude-logo.svg"/></a>
 
 You can integrate Flagsmith with Amplitude. You can automate AB tests by connecting the Flagsmith platform with
@@ -75,6 +80,10 @@ You can integrate Flagsmith with AppDynamics. Send flag change events from Flags
 <a href="/integrations/project-management/jira" alt="Jira"><img width="30%" src="/img/integrations/jira/jira-logo.svg"/></a>
 
 View your Flagsmith flags inside Jira. [Learn more](/integrations/project-management/jira).
+
+<a href="/integrations/project-management/servicenow" alt="ServiceNow"><img width="30%" src="/img/integrations/servicenow/servicenow-logo.svg"/></a>
+
+Manage your Flagsmith Change Requests inside ServiceNow. [Learn more](/integrations/project-management/servicenow).
 
 <a href="/integrations/project-management/slack" alt="Slack"><img width="30%" src="/img/integrations/slack/slack-logo.svg"/></a>
 
