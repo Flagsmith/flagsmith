@@ -21,7 +21,7 @@ Infrastructure as Code tooling. [Learn more](/integrations/terraform).
 <a href="/integrations/analytics/adobe" alt="Adobe"><img width="40%" src="/img/integrations/adobe/adobe-logo.svg"/></a>
 
 You can integrate Flagsmith with Adobe Analytics. You can automate AB tests by connecting the Flagsmith platform with
-Adobe Analytics. [Learn more](/integrations/analytics/amplitude).
+Adobe Analytics.
 
 <a href="/integrations/analytics/amplitude" alt="Amplitude"><img width="40%" src="/img/integrations/amplitude/amplitude-logo.svg"/></a>
 
