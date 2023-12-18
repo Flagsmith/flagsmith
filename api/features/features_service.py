@@ -6,7 +6,7 @@ from edge_api.identities.edge_identity_service import (
 )
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.versioning.versioning_service import get_environment_flags_list
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import IdentityOverridesV2MigrationStatus
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -16,15 +16,15 @@ OverridesData = dict[int, EnvironmentFeatureOverridesData]
 
 
 def get_overrides_data(
-    project: Project,
     environment: "Environment",
 ) -> OverridesData:
     """
-    Get correct overrides counts for a given project.
+    Get correct overrides counts for a given environment.
 
     :param project: project to get overrides data for
     :return: overrides data getter
     """
+    project = environment.project
     match project.enable_dynamo_db, project.identity_overrides_v2_migration_status:
         case True, IdentityOverridesV2MigrationStatus.COMPLETE:
             # If v2 migration is complete, count segment overrides from Core

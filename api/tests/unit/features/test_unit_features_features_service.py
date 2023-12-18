@@ -11,7 +11,7 @@ from features.features_service import (
     get_overrides_data,
 )
 from features.models import Feature, FeatureSegment, FeatureState
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import IdentityOverridesV2MigrationStatus
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_identity_to_engine,
@@ -90,7 +90,6 @@ def distinct_identity_featurestate(
 )
 def test_feature_get_overrides_data__call_expected(
     mocker: "MockerFixture",
-    project: Project,
     environment: "Environment",
     enable_dynamo_db: bool,
     identity_overrides_v2_migration_status: str,
@@ -108,13 +107,13 @@ def test_feature_get_overrides_data__call_expected(
             autospec=True,
         ),
     }
-    project.enable_dynamo_db = enable_dynamo_db
-    project.identity_overrides_v2_migration_status = (
+    environment.project.enable_dynamo_db = enable_dynamo_db
+    environment.project.identity_overrides_v2_migration_status = (
         identity_overrides_v2_migration_status
     )
 
     # When
-    get_overrides_data(project, environment)
+    get_overrides_data(environment)
 
     # Then
     mocked_override_getters.pop(expected_overrides_getter_name).assert_called_once_with(
@@ -133,20 +132,19 @@ def test_feature_get_overrides_data__call_expected(
     ],
 )
 def test_feature_get_overrides_data__edge_project_not_migrated_to_v2__return_expected(
-    project: Project,
     environment: "Environment",
     distinct_identity_featurestate: FeatureState,
     distinct_segment_featurestate: FeatureState,
     identity_overrides_v2_migration_status: str,
 ) -> None:
     # Given
-    project.enable_dynamo_db = True
-    project.identity_overrides_v2_migration_status = (
+    environment.project.enable_dynamo_db = True
+    environment.project.identity_overrides_v2_migration_status = (
         identity_overrides_v2_migration_status
     )
 
     # When
-    overrides_data = get_overrides_data(project, environment)
+    overrides_data = get_overrides_data(environment)
 
     # Then
     assert (
