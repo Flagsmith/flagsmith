@@ -12,6 +12,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
+import InfoMessage from 'components/InfoMessage'
 
 type CreateEditTagType = {
   projectId: string
@@ -127,6 +128,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       }
     >
       <div>
+        <InfoMessage>
+          Creating a tag with the name <strong>permanent</strong> or
+          <strong> protected</strong> will prevent users from accidentally
+          deleting features.
+        </InfoMessage>
         <InputGroup
           size='xSmall'
           value={tag?.label}
