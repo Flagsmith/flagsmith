@@ -4,12 +4,12 @@ import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons' // we need this to make JSX compile
 
-type MyGroupsSelectType = GroupSelectType & {
+type ConnectedGroupSelectType = GroupSelectType & {
   orgId: string
   showValues?: boolean
 }
 
-const MyGroupsSelect: FC<MyGroupsSelectType> = ({
+const ConnectedGroupSelect: FC<ConnectedGroupSelectType> = ({
   orgId,
   showValues,
   ...props
@@ -43,4 +43,4 @@ const MyGroupsSelect: FC<MyGroupsSelectType> = ({
   )
 }
 
-export default MyGroupsSelect
+export default ConnectedGroupSelect
