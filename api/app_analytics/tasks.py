@@ -35,6 +35,32 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
 
 
+@register_recurring_task(
+    run_every=timedelta(days=1),
+)
+def clean_up_old_analytics_data():
+    # delete raw analytics data older than `RAW_ANALYTICS_DATA_RETENTION_DAYS`
+    APIUsageRaw.objects.filter(
+        created_at__lt=timezone.now()
+        - timedelta(days=settings.RAW_ANALYTICS_DATA_RETENTION_DAYS)
+    ).delete()
+    FeatureEvaluationRaw.objects.filter(
+        created_at__lt=timezone.now()
+        - timedelta(days=settings.RAW_ANALYTICS_DATA_RETENTION_DAYS)
+    ).delete()
+
+    # delete bucketed analytics data older than `BUCKETED_ANALYTICS_DATA_RETENTION_DAYS`
+    APIUsageBucket.objects.filter(
+        created_at__lt=timezone.now()
+        - timedelta(days=settings.BUCKETED_ANALYTICS_DATA_RETENTION_DAYS)
+    ).delete()
+
+    FeatureEvaluationBucket.objects.filter(
+        created_at__lt=timezone.now()
+        - timedelta(days=settings.BUCKETED_ANALYTICS_DATA_RETENTION_DAYS)
+    ).delete()
+
+
 @register_task_handler()
 def track_feature_evaluation(environment_id, feature_evaluations):
     feature_evaluation_objects = []

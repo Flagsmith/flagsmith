@@ -9,6 +9,7 @@ from app_analytics.models import (
     Resource,
 )
 from app_analytics.tasks import (
+    clean_up_old_analytics_data,
     populate_api_usage_bucket,
     populate_feature_evaluation_bucket,
     track_feature_evaluation,
@@ -16,6 +17,7 @@ from app_analytics.tasks import (
 )
 from django.conf import settings
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(
@@ -315,3 +317,99 @@ def _create_feature_evaluation_event(environment_id, feature_name, count, when):
     event.save()
 
     return event
+
+
+@pytest.mark.django_db(databases=["analytics"])
+def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
+    # When
+    clean_up_old_analytics_data()
+
+    # Then
+    # no exception was raised
+
+
+@pytest.mark.django_db(databases=["analytics"])
+def test_clean_up_old_analytics_data_removes_old_data(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    now = timezone.now()
+    settings.RAW_ANALYTICS_DATA_RETENTION_DAYS = 2
+    settings.BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = 4
+
+    environment_id = 1
+
+    # APIUsageRaw data that should not be removed
+    new_api_usage_raw_data = []
+    new_api_usage_raw_data.append(_create_api_usage_event(environment_id, now))
+    new_api_usage_raw_data.append(
+        _create_api_usage_event(environment_id, now - timezone.timedelta(days=1))
+    )
+
+    # APIUsageRaw data that should be removed
+    _create_api_usage_event(environment_id, now - timezone.timedelta(days=2))
+    _create_api_usage_event(environment_id, now - timezone.timedelta(days=3))
+
+    # APIUsageBucket data that should not be removed
+    new_api_usage_bucket = APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=100,
+        created_at=now,
+        bucket_size=5,
+    )
+    # APIUsageBucket data that should be removed
+    APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=100,
+        created_at=now - timezone.timedelta(days=5),
+        bucket_size=5,
+    )
+
+    # FeatureEvaluationRaw data that should not be removed
+    new_feature_evaluation_raw_data = []
+    new_feature_evaluation_raw_data.append(
+        _create_feature_evaluation_event(environment_id, "feature1", 1, now)
+    )
+    new_feature_evaluation_raw_data.append(
+        _create_feature_evaluation_event(
+            environment_id, "feature1", 1, now - timezone.timedelta(days=1)
+        )
+    )
+
+    # FeatureEvaluationRaw data that should be removed
+    _create_feature_evaluation_event(
+        environment_id, "feature1", 1, now - timezone.timedelta(days=3)
+    )
+    _create_feature_evaluation_event(
+        environment_id, "feature1", 1, now - timezone.timedelta(days=2)
+    )
+
+    # FeatureEvaluationBucket data that should not be removed
+    new_feature_evaluation_bucket = FeatureEvaluationBucket.objects.create(
+        environment_id=environment_id,
+        feature_name="feature1",
+        total_count=100,
+        created_at=now,
+        bucket_size=5,
+    )
+
+    # FeatureEvaluationBucket data that should be removed
+    FeatureEvaluationBucket.objects.create(
+        environment_id=environment_id,
+        feature_name="feature1",
+        total_count=100,
+        created_at=now - timezone.timedelta(days=5),
+        bucket_size=5,
+    )
+    # When
+    clean_up_old_analytics_data()
+
+    # Then
+    assert list(APIUsageRaw.objects.all()) == new_api_usage_raw_data
+    assert list(FeatureEvaluationRaw.objects.all()) == new_feature_evaluation_raw_data
+    assert list(FeatureEvaluationBucket.objects.all()) == [
+        new_feature_evaluation_bucket
+    ]
+    assert list(APIUsageBucket.objects.all()) == [new_api_usage_bucket]
