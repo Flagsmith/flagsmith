@@ -28,14 +28,12 @@ def test_organisation_admin_can_list_features(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "list"
-    mock_view.detail = False
-    mock_view.kwargs["project_pk"] = project.id
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": project.id},
+        detail=False,
+        action="list",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -50,14 +48,12 @@ def test_project_admin_can_list_features(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "list"
-    mock_view.detail = False
-    mock_view.kwargs["project_pk"] = project.id
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": project.id},
+        detail=False,
+        action="list",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -73,15 +69,13 @@ def test_project_user_with_read_access_can_list_features(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
     with_project_permissions([VIEW_PROJECT])
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "list"
-    mock_view.detail = False
-    mock_view.kwargs["project_pk"] = project.id
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": project.id},
+        detail=False,
+        action="list",
+    )
+    mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -96,14 +90,12 @@ def test_user_with_no_project_permissions_cannot_list_features(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "list"
-    mock_view.detail = False
-    mock_view.kwargs["project_pk"] = project.id
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": project.id},
+        detail=False,
+        action="list",
+    )
+    mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -118,14 +110,14 @@ def test_organisation_admin_can_create_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = admin_user
-    mock_request.data = {"project": project.id, "name": "new feature"}
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(
+        data={"project": project.id, "name": "new feature"}, user=admin_user
+    )
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -141,8 +133,6 @@ def test_project_admin_can_create_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
     # use a group to test groups work too
     group = UserPermissionGroup.objects.create(
         name="Test group", organisation=organisation
@@ -152,12 +142,14 @@ def test_project_admin_can_create_feature(
     )
     group.users.add(staff_user)
 
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = staff_user
-    mock_request.data = {"project": project.id, "name": "new feature"}
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(
+        data={"project": project.id, "name": "new feature"}, user=staff_user
+    )
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -182,14 +174,15 @@ def test_project_user_with_create_feature_permission_can_create_feature(
     )
     user_group_permission.add_permission(CREATE_FEATURE)
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = staff_user
-    mock_request.data = {"project": project.id, "name": "new feature"}
+
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(
+        data={"project": project.id, "name": "new feature"}, user=staff_user
+    )
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -204,14 +197,14 @@ def test_project_user_without_create_feature_permission_cannot_create_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = staff_user
-    mock_request.data = {"project": project.id, "name": "new feature"}
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(
+        data={"project": project.id, "name": "new feature"}, user=staff_user
+    )
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -226,13 +219,12 @@ def test_organisation_admin_can_view_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "retrieve"
-    mock_view.detail = True
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=True,
+        action="retrieve",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
 
@@ -247,13 +239,12 @@ def test_project_admin_can_view_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_request.user = staff_user
-    mock_view.action = "retrieve"
-    mock_view.detail = True
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=True,
+        action="retrieve",
+    )
+    mock_request = mock.MagicMock(data={}, user=staff_user)
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
 
     # When
@@ -272,13 +263,12 @@ def test_project_user_with_view_project_permission_can_view_feature(
     # Given
     with_project_permissions([VIEW_PROJECT])
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_request.user = staff_user
-    mock_view.action = "retrieve"
-    mock_view.detail = True
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=True,
+        action="retrieve",
+    )
+    mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -293,13 +283,12 @@ def test_project_user_without_view_project_permission_cannot_view_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_request.user = staff_user
-    mock_view.action = "retrieve"
-    mock_view.detail = True
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=True,
+        action="retrieve",
+    )
+    mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -314,13 +303,12 @@ def test_organisation_admin_can_edit_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.kwargs = {}
-    mock_request.data = {}
-    mock_view.action = "update"
-    mock_view.detail = True
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(
+        kwargs={},
+        detail=True,
+        action="update",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -337,11 +325,8 @@ def test_project_admin_can_edit_feature(
     # Given
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "update"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="update")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -356,11 +341,8 @@ def test_project_user_cannot_edit_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "update"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="update")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -375,11 +357,8 @@ def test_organisation_admin_can_delete_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "destroy"
-    mock_view.detail = True
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(detail=True, action="destroy")
+    mock_request = mock.MagicMock(user=admin_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -396,11 +375,8 @@ def test_project_admin_can_delete_feature(
     # Given
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "destroy"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="destroy")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -418,11 +394,8 @@ def test_project_user_with_delete_feature_permission_can_delete_feature(
     with_project_permissions([DELETE_FEATURE])
 
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "destroy"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="destroy")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -437,11 +410,8 @@ def test_project_user_without_delete_feature_permission_cannot_delete_feature(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "destroy"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="destroy")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -456,11 +426,8 @@ def test_organisation_admin_can_update_feature_segments(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "segments"
-    mock_view.detail = True
-    mock_request.user = admin_user
+    mock_view = mock.MagicMock(detail=True, action="segments")
+    mock_request = mock.MagicMock(user=admin_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -477,11 +444,8 @@ def test_project_admin_can_update_feature_segments(
     # Given
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "segments"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="segments")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
@@ -496,11 +460,8 @@ def test_project_user_cannot_update_feature_segments(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock()
-    mock_request = mock.MagicMock()
-    mock_view.action = "segments"
-    mock_view.detail = True
-    mock_request.user = staff_user
+    mock_view = mock.MagicMock(detail=True, action="segments")
+    mock_request = mock.MagicMock(user=staff_user)
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
