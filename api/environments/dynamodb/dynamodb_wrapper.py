@@ -75,7 +75,7 @@ class BaseDynamoWrapper:
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
-    def get_table_name(cls) -> str | None:
+    def get_table_name(self) -> str | None:
         return settings.IDENTITIES_TABLE_NAME_DYNAMO
 
     def query_items(self, *args, **kwargs) -> "QueryOutputTableTypeDef":
@@ -222,7 +222,7 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    def get_table_name(cls) -> str | None:
+    def get_table_name(self) -> str | None:
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
     def get_identity_overrides_by_environment_id(
