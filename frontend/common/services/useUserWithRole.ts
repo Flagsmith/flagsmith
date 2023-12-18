@@ -3,9 +3,22 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const userWithRolesService = service
-  .enhanceEndpoints({ addTagTypes: ['User-role'] })
+  .enhanceEndpoints({ addTagTypes: ['User-role', 'RolesUser'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      deleteUserWithRoles: builder.mutation<
+        Res['User-role'],
+        Req['deleteUserWithRoles']
+      >({
+        invalidatesTags: [{ type: 'User-role' }, { type: 'RolesUser' }],
+        query: (query: Req['deleteUserWithRoles']) => ({
+          method: 'DELETE',
+          url: `organisations/${query.org_id}/users/${query.user_id}/roles/${query.role_id}/`,
+        }),
+        transformResponse: () => {
+          toast('User role was removed')
+        },
+      }),
       getUserWithRoles: builder.query<
         Res['userWithRoles'],
         Req['getUserWithRoles']
@@ -18,16 +31,6 @@ export const userWithRolesService = service
         query: (query: Req['getUserWithRoles']) => ({
           url: `organisations/${query.org_id}/users/${query.user_id}/roles/`,
         }),
-      }),
-      deleteUserWithRoles: builder.mutation<Res['User-role'], Req['deleteUserWithRoles']>({
-        invalidatesTags: [{ type: 'User-role' }],
-        query: (query: Req['deleteUserWithRoles']) => ({
-          method: 'DELETE',
-          url: `organisations/${query.org_id}/users/${query.user_id}/roles/${query.role_id}/`,
-        }),
-        transformResponse: () => {
-          toast('User role was removed')
-        },
       }),
       // END OF ENDPOINTS
     }),
@@ -59,8 +62,8 @@ export async function deleteUserRole(
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useGetUserWithRolesQuery,
   useDeleteUserWithRolesMutation,
+  useGetUserWithRolesQuery,
   // END OF EXPORTS
 } = userWithRolesService
 

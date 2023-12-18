@@ -50,7 +50,15 @@ import {
   useDeleteRolePermissionGroupMutation,
 } from 'common/services/useRolePermissionGroup'
 
-import { useGetUserWithRolesQuery, useDeleteUserWithRolesMutation } from 'common/services/useUserWithRole'
+import {
+  useGetUserWithRolesQuery,
+  useDeleteUserWithRolesMutation,
+} from 'common/services/useUserWithRole'
+
+import {
+  useGetGroupWithRoleQuery,
+  useDeleteGroupWithRoleMutation,
+} from 'common/services/useGroupWithRole'
 
 import MyRoleSelect from './MyRoleSelect'
 const OrganisationProvider = require('common/providers/OrganisationProvider')
@@ -73,6 +81,7 @@ type EditPermissionModalType = {
   permissionChanged: () => void
   editPermissionsFromSettings?: boolean
   isEditUserPermission?: boolean
+  isEditGroupPermission?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -102,6 +111,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
       envId,
       group,
       id,
+      isEditGroupPermission,
       isEditUserPermission,
       isGroup,
       level,
@@ -149,6 +159,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         },
         { skip: level !== 'organisation' || !user?.id },
       )
+
+    const { data: groupWithRolesData, isSuccess: groupWithRolesDataSuccesfull } =
+      useGetGroupWithRoleQuery(
+        {
+          group_id: group?.id,
+          org_id: id,
+        },
+        { skip: level !== 'organisation' || !group?.id },
+      )
+
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
         const resultArray = userWithRolesData?.results?.map((userRole) => ({
@@ -158,6 +178,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setRolesSelected(resultArray)
       }
     }, [userWithRolesDataSuccesfull])
+
+    useEffect(() => {
+      if (group && groupWithRolesDataSuccesfull) {
+        const resultArray = groupWithRolesData?.results?.map((groupRole) => ({
+          group_role_id: group?.id,
+          role: groupRole.id,
+        }))
+        setRolesSelected(resultArray)
+      }
+    }, [groupWithRolesDataSuccesfull])
 
     const processResults = (results: (UserPermission & GroupPermission)[]) => {
       let entityPermissions:
@@ -190,6 +220,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
 
     const [deleteRolePermissionUser] = useDeleteRolesPermissionUsersMutation()
     const [deleteUserWithRoles] = useDeleteUserWithRolesMutation()
+    const [deleteGroupWithRoles] = useDeleteGroupWithRoleMutation()
     const [
       createRolePermissionGroup,
       { data: groupsData, isSuccess: groupAdded },
@@ -496,11 +527,19 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           }
         }
         if (group) {
-          deleteRolePermissionGroup({
-            group_id: roleSelected.group_role_id,
-            organisation_id: id,
-            role_id: roleId,
-          })
+          if (isEditGroupPermission) {
+            deleteGroupWithRoles({
+              group_id: group?.id,
+              org_id: id,
+              role_id: roleId,
+            })
+          } else {
+            deleteRolePermissionGroup({
+              group_id: roleSelected.group_role_id,
+              organisation_id: id,
+              role_id: roleId,
+            })
+          }
         }
       }
       setRolesSelected((rolesSelected || []).filter((v) => v.role !== roleId))

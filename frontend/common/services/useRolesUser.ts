@@ -26,7 +26,7 @@ export const rolesUserService = service
       >({
         invalidatesTags: [
           { type: 'User-role' },
-          { id: 'LIST', type: 'RolesUser' },
+          { type: 'RolesUser' },
         ],
         query: (query: Req['deleteRolesPermissionUsers']) => ({
           body: query,
