@@ -135,7 +135,7 @@ def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> No
         "organisations.tasks.send_org_subscription_cancelled_alert"
     )
 
-    organisation1 = Organisation.objects.create(name="Nike")
+    organisation1 = Organisation.objects.create(name="TestCorp")
     organisation2 = Organisation.objects.create()
     organisation3 = Organisation.objects.create()
     organisation4 = Organisation.objects.create()
@@ -210,14 +210,14 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
 
     # When
     send_org_subscription_cancelled_alert(
-        organisation_name="Nike",
+        organisation_name="TestCorp",
         formatted_cancellation_date="2023-02-08 09:12:34",
     )
 
     # Then
     send_mail_mock.assert_called_once_with(
-        subject="Organisation Nike has cancelled their subscription",
-        message="Organisation Nike has cancelled their subscription on 2023-02-08 09:12:34",
+        subject="Organisation TestCorp has cancelled their subscription",
+        message="Organisation TestCorp has cancelled their subscription on 2023-02-08 09:12:34",
         from_email="noreply@flagsmith.com",
         recipient_list=[],
         fail_silently=True,
