@@ -122,11 +122,15 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           const importItem = fileData.find((v) => v.name === projectFlag.name)
           let newValue = featureState.value
           let newEnabled = featureState.enabled
+
+          // Overwrite destructive replaces existing feature values
           if (strategy === 'OVERWRITE_DESTRUCTIVE' && importItem) {
+            // For the targeted environment it will use the imported feature values
             if (environment === previewEnvironment) {
               newEnabled = importItem.enabled
               newValue = importItem.value
             } else {
+              // For every other environment the features are overwritten with the imported default enabled state and value
               newEnabled = importItem.default_enabled
               newValue = importItem.initial_value
             }
@@ -161,7 +165,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
               owners: [],
               project: ProjectStore.model!.id,
               tags: [],
-              type: 'STANDARD',
+              type: importItem.multivariate?.length
+                ? 'MULTIVARIATE'
+                : 'STANDARD',
               uuid: `${i}`,
             }
           }),

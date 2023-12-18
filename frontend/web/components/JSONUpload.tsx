@@ -86,7 +86,7 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
             <div className='mb-2'>
               <strong>Select a file or drag and drop here</strong>
             </div>
-            <div className='text-muted fs-small mb-4'>.json File</div>
+            <div className='text-muted fs-small mb-4'>JSON File</div>
             <Button>Select File</Button>
           </div>
         </div>

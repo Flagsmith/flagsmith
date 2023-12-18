@@ -12,7 +12,7 @@ export const flagsmithProjectImportService = service
         Req['createFlagsmithProjectImport']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FlagsmithProjectImport' }],
-        queryFn: async (query, { dispatch }, _2, baseQuery) => {
+        queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
           const { environment_id, ...rest } = query
           const formData = toFormData({ ...rest })
 
