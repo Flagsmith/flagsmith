@@ -128,11 +128,6 @@ const CreateEditTag: FC<CreateEditTagType> = ({
       }
     >
       <div>
-        <InfoMessage>
-          Creating a tag with the name <strong>permanent</strong> or
-          <strong> protected</strong> will prevent users from accidentally
-          deleting features.
-        </InfoMessage>
         <InputGroup
           size='xSmall'
           value={tag?.label}
