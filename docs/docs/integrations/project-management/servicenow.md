@@ -10,6 +10,6 @@ You can integrate Flagsmith with ServiceNow. Manage your Flagsmith Change Reques
 
 :::tip
 
-The ServiceNow integration is in Beta - please contact us to join the Beta!
+The ServiceNow integration is in Alpha - please contact us to join the Alpha!
 
 :::

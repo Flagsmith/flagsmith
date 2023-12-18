@@ -11,6 +11,6 @@ Adobe Analytics.
 
 :::tip
 
-The Adobe Analytics integration is in Beta - please contact us to join the Beta!
+The Adobe Analytics integration is in Alpha - please contact us to join the Alpha!
 
 :::
