@@ -381,5 +381,6 @@ export type Res = {
   environment: Environment
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
+  groupSummaries: UserGroupSummary[]
   // END OF TYPES
 }
