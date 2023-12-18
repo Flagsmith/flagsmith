@@ -158,7 +158,7 @@ components:
         enabled:
           type: boolean
         feature_state_value:
-          type: string
+          type: Can be any of the following - string, integer, boolean, float
           example: 'a-remote-config-value'
         feature:
           $ref: '#/components/schemas/Feature'
