@@ -4,7 +4,6 @@ from contextlib import suppress
 from datetime import datetime
 
 import chargebee
-from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
 
@@ -141,7 +140,7 @@ def get_subscription_metadata_from_id(
         logger.warning("Subscription id is empty or None")
         return None
 
-    with suppress(ChargebeeAPIError):
+    with suppress(chargebee.APIError):
         chargebee_result = chargebee.Subscription.retrieve(subscription_id)
         chargebee_subscription = _convert_chargebee_subscription_to_dictionary(
             chargebee_result.subscription
@@ -155,7 +154,7 @@ def get_subscription_metadata_from_id(
 def cancel_subscription(subscription_id: str):
     try:
         chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
-    except ChargebeeAPIError as e:
+    except chargebee.APIError as e:
         msg = "Cannot cancel CB subscription for subscription id: %s" % subscription_id
         logger.error(msg)
         raise CannotCancelChargebeeSubscription(msg) from e
@@ -185,7 +184,7 @@ def add_single_seat(subscription_id: str):
             },
         )
 
-    except ChargebeeAPIError as e:
+    except chargebee.APIError as e:
         api_error_code = e.json_obj["api_error_code"]
         if api_error_code in CHARGEBEE_PAYMENT_ERROR_CODES:
             logger.warning(
