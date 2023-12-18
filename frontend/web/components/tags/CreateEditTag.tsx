@@ -12,6 +12,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
+import InfoMessage from 'components/InfoMessage'
 
 type CreateEditTagType = {
   projectId: string
