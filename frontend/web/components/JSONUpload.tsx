@@ -4,13 +4,13 @@ import Button from './base/forms/Button'
 import { useDropzone } from 'react-dropzone'
 
 type DropAreaType = {
+  value: File | null
   onChange: (file: File, json: Record<string, any>) => void
 }
 
-const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
+const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [file, setFile] = useState<File | null>(null)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setIsLoading(true)
@@ -50,7 +50,6 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
 
     if (acceptedFiles[0]) {
       reader.readAsText(acceptedFiles[0])
-      setFile(acceptedFiles[0])
     }
   }, [])
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
@@ -63,14 +62,14 @@ const JSONUpload: FC<DropAreaType> = ({ onChange }) => {
 
   return (
     <div className='cursor-pointer'>
-      {file ? (
+      {value ? (
         <Row>
           <div {...getRootProps()}>
             <input {...getInputProps()} />
             <div className='flex-row droparea droparea--condensed text-center'>
               <DropIcon width={24} height={24} />
               <div className='ml-2'>
-                <strong className={'fs-small'}>{file.name}</strong>
+                <strong className={'fs-small'}>{value.name}</strong>
               </div>
               <Button size='small' className={'ml-2'}>
                 Select File

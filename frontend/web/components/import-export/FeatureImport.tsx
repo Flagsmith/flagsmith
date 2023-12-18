@@ -27,6 +27,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import FeatureListStore from 'common/stores/feature-list-store'
+import SuccessMessage from 'components/SuccessMessage'
 
 type FeatureExportType = {
   projectId: string
@@ -81,6 +82,8 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [createImport, { error, isLoading }] =
     useCreateFlagsmithProjectImportMutation({})
 
+  const [success, setSuccess] = useState(false)
+
   const onSubmit = () => {
     if (env && file) {
       createImport({
@@ -89,7 +92,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         strategy,
       }).then((res) => {
         if (res?.data) {
-          toast('Your import is processing')
+          setSuccess(true)
+          setFile(null)
+          setFileData(null)
         } else {
           toast('Failed to import flags')
         }
@@ -193,12 +198,19 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   }, [fileData, currentFeatureStates, currentProjectflags, strategy, env])
   return (
     <div className='mt-4'>
-      <InfoMessage>
-        Import operations will overwrite existing environments and flags in your
-        project. The selected environment will inherit the imported
-        environment's values where as all other environments will inherit the
-        default values.
-      </InfoMessage>
+      {success ? (
+        <SuccessMessage>
+          Your import is processing, it may take several minutes for the import
+          to complete.
+        </SuccessMessage>
+      ) : (
+        <InfoMessage>
+          The selected environment will inherit the imported environment's
+          values where as all other environments will inherit the default
+          values.
+        </InfoMessage>
+      )}
+
       <div className='mb-2'>
         <Tooltip
           title={
@@ -253,6 +265,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         <strong>Import File</strong>
       </div>
       <JSONUpload
+        value={file}
         onChange={(file, data) => {
           setFile(file)
           setFileData(data)
