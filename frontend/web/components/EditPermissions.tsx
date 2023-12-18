@@ -105,6 +105,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
     const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [permissionWasCreated, setPermissionWasCreated] =
+      useState<boolean>(false)
     const [rolesSelected, setRolesSelected] = useState<Array>([])
     const {
       editPermissionsFromSettings,
@@ -160,14 +162,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         { skip: level !== 'organisation' || !user?.id },
       )
 
-    const { data: groupWithRolesData, isSuccess: groupWithRolesDataSuccesfull } =
-      useGetGroupWithRoleQuery(
-        {
-          group_id: group?.id,
-          org_id: id,
-        },
-        { skip: level !== 'organisation' || !group?.id },
-      )
+    const {
+      data: groupWithRolesData,
+      isSuccess: groupWithRolesDataSuccesfull,
+    } = useGetGroupWithRoleQuery(
+      {
+        group_id: group?.id,
+        org_id: id,
+      },
+      { skip: level !== 'organisation' || !group?.id },
+    )
 
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
@@ -252,6 +256,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
         setSaving(true)
       }
       if (isRolePermCreated || isRolePermUpdated) {
+        setPermissionWasCreated(true)
         toast(
           `${level.charAt(0).toUpperCase() + level.slice(1)} permissions Saved`,
         )
@@ -429,7 +434,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = forwardRef(
           body.admin = entityPermissions.admin
           body.environment = envId || id
         }
-        if (entityId) {
+        if (entityId || permissionWasCreated) {
           updateRolePermissions({
             body,
             id: entityId,

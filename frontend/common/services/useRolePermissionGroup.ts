@@ -10,7 +10,10 @@ export const rolePermissionGroupService = service
         Res['rolePermissionGroup'],
         Req['createRolePermissionGroup']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolePermissionGroup' }, { type: 'GroupWithRole' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'RolePermissionGroup' },
+          { type: 'GroupWithRole' },
+        ],
         query: (query: Req['createRolePermissionGroup']) => ({
           body: query.data,
           method: 'POST',
@@ -21,7 +24,10 @@ export const rolePermissionGroupService = service
         Res['rolePermissionGroup'],
         Req['deleteRolePermissionGroup']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'RolePermissionGroup' }, { type: 'GroupWithRole' }],
+        invalidatesTags: [
+          { type: 'RolePermissionGroup' },
+          { type: 'GroupWithRole' },
+        ],
         query: (query: Req['deleteRolePermissionGroup']) => ({
           body: query,
           method: 'DELETE',
