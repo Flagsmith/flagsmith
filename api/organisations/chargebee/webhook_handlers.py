@@ -126,7 +126,7 @@ def process_subscription(request: Request) -> Response:
         return Response(status=status.HTTP_200_OK)
 
     if subscription["status"] in ("non_renewing", "cancelled"):
-        existing_subscription.cancel(
+        existing_subscription.prepare_for_cancel(
             datetime.fromtimestamp(subscription.get("current_term_end")).replace(
                 tzinfo=timezone.utc
             ),

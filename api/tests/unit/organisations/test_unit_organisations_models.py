@@ -17,6 +17,7 @@ from organisations.models import (
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_ID,
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
@@ -85,7 +86,12 @@ class OrganisationTestCase(TestCase):
         )
         # refresh subscription object
         subscription.refresh_from_db()
-        assert subscription.cancellation_date
+        # Subscription has been immediately transformed to free.
+        assert subscription.cancellation_date is None
+        assert subscription.subscription_id is None
+        assert subscription.billing_status is None
+        assert subscription.payment_method is None
+        assert subscription.plan == FREE_PLAN_ID
 
 
 def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
