@@ -13,7 +13,7 @@ import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './Icon'
-import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
+import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 
@@ -496,7 +496,7 @@ class TheComponent extends Component {
       </div>,
       () => {
         this.props.value[i].toRemove = true
-        this.forceUpdate()
+        this.setState({ isLoading: false })
       },
       () => {},
     )
@@ -556,9 +556,6 @@ class TheComponent extends Component {
     const isLimitReached =
       segmentOverrideLimitAlert.percentage &&
       segmentOverrideLimitAlert.percentage >= 100
-    const manageSegmentOverridesEnabled = Utils.getFlagsmithHasFeature(
-      'manage_segment_overrides_env_role',
-    )
     return (
       <div>
         <Permission
@@ -598,10 +595,7 @@ class TheComponent extends Component {
                           this.props.setShowCreateSegment(true)
                         }}
                         theme='outline'
-                        disabled={
-                          !!isLimitReached ||
-                          (manageSegmentOverridesEnabled && !manageSegments)
-                        }
+                        disabled={!!isLimitReached || !manageSegments}
                       >
                         Create Feature-Specific Segment
                       </Button>
@@ -656,7 +650,7 @@ class TheComponent extends Component {
                 {visibleValues &&
                   !!visibleValues.length &&
                   !this.props.showCreateSegment && (
-              <div className='overflow-visible'>
+                    <div className='overflow-visible'>
                       {!this.props.id && (
                         <div className='my-4'>
                           <InfoMessage className='mb-4 text-left faint'>
@@ -684,7 +678,7 @@ class TheComponent extends Component {
                       {value && (
                         <>
                           <InnerComponent
-                      disabled={this.props.readOnly}
+                            disabled={this.props.readOnly}
                             id={this.props.id}
                             name={this.props.name}
                             controlValue={this.props.controlValue}

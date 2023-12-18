@@ -5,6 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
+import firstpromoter from 'project/firstPromoter'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -31,6 +32,9 @@ const PaymentButton = (props) => {
             },
             success: (res) => {
               AppActions.updateSubscription(res)
+              if (this.props.isDisableAccount) {
+                window.location.href = `/projects`
+              }
             },
           })
         }}
@@ -99,6 +103,20 @@ const Payment = class extends Component {
               <div className='col-md-12'>
                 <Row space className='mb-4'>
                   <h5>Manage Payment Plan</h5>
+                  {this.props.isDisableAccountText && (
+                    <Row>
+                      <h7>
+                        {this.props.isDisableAccountText}{' '}
+                        <a
+                          target='_blank'
+                          href='mailto:support@flagsmith.com'
+                          rel='noreferrer'
+                        >
+                          support@flagsmith.com
+                        </a>
+                      </h7>
+                    </Row>
+                  )}
                 </Row>
                 <Row className='pricing-container align-start'>
                   <Flex className='pricing-panel p-2'>
@@ -122,6 +140,7 @@ const Payment = class extends Component {
                             <PaymentButton
                               data-cb-plan-id='startup-annual-v2'
                               className='btn btn-primary full-width mt-3'
+                              isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
@@ -129,6 +148,7 @@ const Payment = class extends Component {
                             <PaymentButton
                               data-cb-plan-id='startup-v2'
                               className='btn btn-primary full-width mt-3'
+                              isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('startup') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
@@ -329,6 +349,7 @@ const Payment = class extends Component {
                             <PaymentButton
                               data-cb-plan-id='scale-up-annual-v2'
                               className='btn btn-success full-width mt-3'
+                              isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
@@ -336,6 +357,7 @@ const Payment = class extends Component {
                             <PaymentButton
                               data-cb-plan-id='scale-up-v2'
                               className='btn btn-success full-width mt-3'
+                              isDisableAccount={this.props.isDisableAccountText}
                             >
                               {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                             </PaymentButton>
@@ -721,6 +743,7 @@ module.exports = (props) => (
         site: Project.chargebee.site,
       })
       Chargebee.registerAgain()
+      firstpromoter()
       Chargebee.getInstance().setCheckoutCallbacks(() => ({
         success: (hostedPageId) => {
           AppActions.updateSubscription(hostedPageId)

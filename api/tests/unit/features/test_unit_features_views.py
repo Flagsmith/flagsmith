@@ -11,6 +11,7 @@ from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -915,14 +916,26 @@ def test_get_flags_is_not_throttled_by_user_throttle(
 
 
 def test_list_feature_states_from_simple_view_set(
-    environment, feature, admin_user, admin_client, django_assert_num_queries
-):
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    admin_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
     # Given
     base_url = reverse("api-v1:features:featurestates-list")
     url = f"{base_url}?environment={environment.id}"
 
     # add another feature
-    Feature.objects.create(name="another_feature", project=environment.project)
+    feature2 = Feature.objects.create(
+        name="another_feature", project=environment.project
+    )
+
+    # and a new version for the same feature to check for N+1 issues
+    v1_feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature2
+    )
+    v1_feature_state.clone(env=environment, version=2, live_from=timezone.now())
 
     # add another organisation with a project, environment and feature (which should be
     # excluded)
@@ -980,7 +993,16 @@ def test_list_feature_states_nested_environment_view_set(
     )
 
     # Add another feature
-    Feature.objects.create(name="another_feature", project=project)
+    second_feature = Feature.objects.create(name="another_feature", project=project)
+
+    # create some new versions to test N+1 issues
+    v1_feature_state = FeatureState.objects.get(
+        feature=second_feature, environment=environment
+    )
+    v2_feature_state = v1_feature_state.clone(
+        env=environment, version=2, live_from=timezone.now()
+    )
+    v2_feature_state.clone(env=environment, version=3, live_from=timezone.now())
 
     # When
     with django_assert_num_queries(8):
@@ -1663,6 +1685,45 @@ def test_list_features_return_tags(client, project, feature):
     assert "tags" in feature
 
 
+def test_list_features_group_owners(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable[[list[str], int | None], UserProjectPermission],
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+    feature = Feature.objects.create(name="test_feature", project=project)
+    organisation = project.organisation
+    group_1 = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group_2 = UserPermissionGroup.objects.create(
+        name="Second Group", organisation=organisation
+    )
+    feature.group_owners.add(group_1.id, group_2.id)
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+
+    feature = response_json["results"][1]
+    assert feature["group_owners"][0] == {
+        "id": group_1.id,
+        "name": group_1.name,
+    }
+    assert feature["group_owners"][1] == {
+        "id": group_2.id,
+        "name": group_2.name,
+    }
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -1699,7 +1760,6 @@ def test_get_feature_by_uuid(client, project, feature):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-
     assert response.json()["id"] == feature.id
     assert response.json()["uuid"] == str(feature.uuid)
 
@@ -2315,3 +2375,32 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_list_features_n_plus_1(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}"
+
+    # add some more versions to test for N+1 issues
+    v1_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment
+    )
+    for i in range(2, 4):
+        v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
+
+    # When
+    with django_assert_num_queries(14):
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

@@ -4,7 +4,7 @@ import {
   Tag,
   FeatureStateValue,
   FeatureState,
-  Role
+  Role,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -127,6 +127,7 @@ export type Req = {
     user: string
   }
   getProjectFlags: { project: string }
+  getProjectFlag: { project: string; id: string }
   getRolesPermissionUsers: { organisation_id: string; role_id: string }
   deleteRolesPermissionUsers: {
     organisation_id: string

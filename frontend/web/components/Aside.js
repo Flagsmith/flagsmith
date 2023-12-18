@@ -169,41 +169,36 @@ const Aside = class extends Component {
                               project && project.name ? (
                                 <Column className='mx-0'>
                                   <div>{project.name}</div>
-                                  {Utils.getFlagsmithHasFeature(
-                                    'edge_identities',
-                                  ) && (
-                                    <div className='mt-2'>
-                                      <span
-                                        style={{
-                                          border: 'none',
-                                        }}
-                                        className='chip chip--active bg-secondary'
+                                  <div className='mt-2'>
+                                    <span
+                                      style={{
+                                        border: 'none',
+                                      }}
+                                      className='chip chip--active bg-secondary'
+                                    >
+                                      <a
+                                        data-test={
+                                          Utils.getIsEdge()
+                                            ? 'edge-project'
+                                            : 'core-project'
+                                        }
+                                        href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
+                                        className='text-white font-weight-bold'
                                       >
-                                        <a
-                                          data-test={
-                                            Utils.getIsEdge()
-                                              ? 'edge-project'
-                                              : 'core-project'
-                                          }
-                                          href='https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api'
-                                          className='text-white font-weight-bold'
-                                        >
-                                          {Utils.getIsEdge() ? (
-                                            'Edge'
-                                          ) : Utils.isMigrating() ? (
-                                            <Tooltip title='Migrating to Edge'>
-                                              Depending on the amount of project
-                                              data, migrating can take a while.
-                                              Refresh the page to track
-                                              progress.
-                                            </Tooltip>
-                                          ) : (
-                                            'Core'
-                                          )}
-                                        </a>
-                                      </span>
-                                    </div>
-                                  )}
+                                        {Utils.getIsEdge() ? (
+                                          'Edge'
+                                        ) : Utils.isMigrating() ? (
+                                          <Tooltip title='Migrating to Edge'>
+                                            Depending on the amount of project
+                                            data, migrating can take a while.
+                                            Refresh the page to track progress.
+                                          </Tooltip>
+                                        ) : (
+                                          'Core'
+                                        )}
+                                      </a>
+                                    </span>
+                                  </div>
                                 </Column>
                               ) : (
                                 'No Project'
@@ -488,22 +483,22 @@ const Aside = class extends Component {
                                                   ) : null}
                                                 </NavLink>
                                                 {Utils.getFlagsmithHasFeature(
-                                                    'feature_versioning',
+                                                  'feature_versioning',
                                                 ) && (
-                                                    <NavLink
-                                                        activeClassName='active'
-                                                        className='aside__environment-list-item'
-                                                        id='history-link'
-                                                        to={`/project/${project.id}/environment/${environment.api_key}/history/`}
-                                                    >
+                                                  <NavLink
+                                                    activeClassName='active'
+                                                    className='aside__environment-list-item'
+                                                    id='history-link'
+                                                    to={`/project/${project.id}/environment/${environment.api_key}/history/`}
+                                                  >
                                                     <span className='mr-2'>
                                                       <Icon
-                                                          name='clock'
-                                                          fill='#9DA4AE'
+                                                        name='clock'
+                                                        fill='#9DA4AE'
                                                       />
                                                     </span>
-                                                      History
-                                                    </NavLink>
+                                                    History
+                                                  </NavLink>
                                                 )}
                                                 {Utils.renderWithPermission(
                                                   manageIdentityPermission,
@@ -590,9 +585,7 @@ const Aside = class extends Component {
                                 href='https://docs.flagsmith.com'
                               >
                                 <i className='icon mr-2 aside__nav-item--icon'>
-                                  <IonIcon
-                                    icon={star}
-                                  />
+                                  <IonIcon icon={star} />
                                 </i>
                                 Super cool demo feature!
                               </a>

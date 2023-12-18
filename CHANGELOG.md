@@ -1,5 +1,79 @@
 # Changelog
 
+## [2.87.0](https://github.com/Flagsmith/flagsmith/compare/v2.86.0...v2.87.0) (2023-12-05)
+
+
+### Features
+
+* add new endpoint to list summary objects of permission groups ([#3064](https://github.com/Flagsmith/flagsmith/issues/3064)) ([2880ef5](https://github.com/Flagsmith/flagsmith/commit/2880ef55cdf7eadfc50ef71217f57d20d7e83fff))
+
+
+### Bug Fixes
+
+* Add group owners to missing endpoint ([#3080](https://github.com/Flagsmith/flagsmith/issues/3080)) ([8fe2ea7](https://github.com/Flagsmith/flagsmith/commit/8fe2ea7a1ca9c069a0608c91d73660920414af22))
+* Move environments and features to test area ([#3081](https://github.com/Flagsmith/flagsmith/issues/3081)) ([05a3b37](https://github.com/Flagsmith/flagsmith/commit/05a3b37319cbad8ba0ccae38c76b9db4e503b966))
+* **postgres/feature-analytics:** use feature filter ([#3091](https://github.com/Flagsmith/flagsmith/issues/3091)) ([c0fc231](https://github.com/Flagsmith/flagsmith/commit/c0fc231a2c4d2c1b41e07aebd5721bd8a477a691))
+* Reading role permissions generates 500 error backend ([#3079](https://github.com/Flagsmith/flagsmith/issues/3079)) ([cee607a](https://github.com/Flagsmith/flagsmith/commit/cee607a7ef19c0d0eed91ecf01ee44476214f440))
+* Refactor existing Chargebee webhooks for subscriptions ([#3047](https://github.com/Flagsmith/flagsmith/issues/3047)) ([c89c56a](https://github.com/Flagsmith/flagsmith/commit/c89c56aaa694976e80e7b47d90b28921b0fdfece))
+* remove pagination from group summaries ([#3090](https://github.com/Flagsmith/flagsmith/issues/3090)) ([1065ad0](https://github.com/Flagsmith/flagsmith/commit/1065ad0258c36e76cca6a106d4888ffdc329d54e))
+* resolve outstanding N+1 issues ([#3066](https://github.com/Flagsmith/flagsmith/issues/3066)) ([661c42f](https://github.com/Flagsmith/flagsmith/commit/661c42f52c2c525d57a2c52954440b5444fd7fbf))
+* revert "fix: Reading role permissions generates 500 error backend" ([#3093](https://github.com/Flagsmith/flagsmith/issues/3093)) ([e57a01c](https://github.com/Flagsmith/flagsmith/commit/e57a01cf54ce07a18b757b4c5e9707c247c89639))
+
+## [2.86.0](https://github.com/Flagsmith/flagsmith/compare/v2.85.0...v2.86.0) (2023-11-30)
+
+
+### Features
+
+* **auth:** integrate ldap ([#3031](https://github.com/Flagsmith/flagsmith/issues/3031)) ([65f78f7](https://github.com/Flagsmith/flagsmith/commit/65f78f79c78fb272de1052ff1a2e6c830af50318))
+
+
+### Bug Fixes
+
+* only run index queries for Postgres DBs ([#3055](https://github.com/Flagsmith/flagsmith/issues/3055)) ([7664ea2](https://github.com/Flagsmith/flagsmith/commit/7664ea2073fcaed35f13a7ce6f4234d7b52fef2a))
+
+## [2.85.0](https://github.com/Flagsmith/flagsmith/compare/v2.84.2...v2.85.0) (2023-11-28)
+
+
+### Features
+
+* Rebuild chargebee caches ([#3028](https://github.com/Flagsmith/flagsmith/issues/3028)) ([aed15c3](https://github.com/Flagsmith/flagsmith/commit/aed15c351d19813667de04245e9cb41560c15651))
+
+
+### Bug Fixes
+
+* Move projects and integrations to tests ([#3044](https://github.com/Flagsmith/flagsmith/issues/3044)) ([0dc4e14](https://github.com/Flagsmith/flagsmith/commit/0dc4e14aa10fa4f0401c2cac200e91a390700e28))
+* Rely on Flagsmith Engine for segment evaluation, avoid N+1 queries ([#3038](https://github.com/Flagsmith/flagsmith/issues/3038)) ([616c6be](https://github.com/Flagsmith/flagsmith/commit/616c6be03a0b8c9dd742415c2fd2cde8cd08c95d))
+* Safely parse announcement Flag ([#3052](https://github.com/Flagsmith/flagsmith/issues/3052)) ([6994f6b](https://github.com/Flagsmith/flagsmith/commit/6994f6bfb08eed104133fc13967ef68cac19b58b))
+
+## [2.84.2](https://github.com/Flagsmith/flagsmith/compare/v2.84.1...v2.84.2) (2023-11-27)
+
+
+### Bug Fixes
+
+* Move organisation tests to proper location ([#3041](https://github.com/Flagsmith/flagsmith/issues/3041)) ([34c6d07](https://github.com/Flagsmith/flagsmith/commit/34c6d072adae2558c7fee4c58a61570a817fe23d))
+* resolve environment N+1 caused by feature versioning v2 ([#3040](https://github.com/Flagsmith/flagsmith/issues/3040)) ([5392480](https://github.com/Flagsmith/flagsmith/commit/5392480c3e35fd689347a80714901d4f70116367))
+
+## [2.84.1](https://github.com/Flagsmith/flagsmith/compare/v2.84.0...v2.84.1) (2023-11-27)
+
+
+### Bug Fixes
+
+* Revert to Core API segment evaluation ([#3036](https://github.com/Flagsmith/flagsmith/issues/3036)) ([e5058ae](https://github.com/Flagsmith/flagsmith/commit/e5058ae01cca1ceb783c38d2eb29c83f07a86a8c))
+
+## [2.84.0](https://github.com/Flagsmith/flagsmith/compare/v2.83.0...v2.84.0) (2023-11-27)
+
+
+### Features
+
+* Feature Versioning V2 ([#2382](https://github.com/Flagsmith/flagsmith/issues/2382)) ([bcfb10e](https://github.com/Flagsmith/flagsmith/commit/bcfb10ece60d4c9ce751ceef8681a1d264d69291))
+* Rely on Flagsmith Engine for segment evaluation ([#2865](https://github.com/Flagsmith/flagsmith/issues/2865)) ([322eb08](https://github.com/Flagsmith/flagsmith/commit/322eb08167a8cec4b052dabddd34b10e346dca9a))
+* **ui:** hide API keys from integrations list ([#3019](https://github.com/Flagsmith/flagsmith/issues/3019)) ([b02a524](https://github.com/Flagsmith/flagsmith/commit/b02a524ad5932e1cb0ef447e3bb8aa754e966118))
+
+
+### Bug Fixes
+
+* WIP Move groups of tests to proper location ([#3027](https://github.com/Flagsmith/flagsmith/issues/3027)) ([1592919](https://github.com/Flagsmith/flagsmith/commit/159291919541b2c20e8302339b6a2e04722ce191))
+
 ## [2.83.0](https://github.com/Flagsmith/flagsmith/compare/v2.82.0...v2.83.0) (2023-11-21)
 
 

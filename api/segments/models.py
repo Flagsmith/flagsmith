@@ -10,22 +10,11 @@ from core.models import (
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.segments import constants
-from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from audit.related_object_type import RelatedObjectType
 from features.models import Feature
 from projects.models import Project
-from util.mappers.engine import (
-    map_identity_to_engine,
-    map_segment_to_engine,
-    map_traits_to_trait_models,
-)
-
-if typing.TYPE_CHECKING:
-    from environments.identities.models import Identity
-    from environments.identities.traits.models import Trait
-
 
 logger = logging.getLogger(__name__)
 
@@ -82,23 +71,6 @@ class Segment(
                     return True
 
         return False
-
-    def does_identity_match(
-        self, identity: "Identity", traits: typing.List["Trait"] = None
-    ) -> bool:
-        segment_model = map_segment_to_engine(self)
-        identity_model = map_identity_to_engine(
-            identity,
-            with_overrides=False,
-            with_traits=not traits,
-        )
-        trait_models = map_traits_to_trait_models(traits) if traits else None
-
-        return evaluate_identity_in_segment(
-            identity=identity_model,
-            segment=segment_model,
-            override_traits=trait_models,
-        )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
