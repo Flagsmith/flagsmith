@@ -136,10 +136,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       actionType: Actions.EDIT_ENVIRONMENT_FLAG,
       environmentFlag,
       environmentId,
-      flag: {
-        ...projectFlag,
-        default_enabled: environmentFlag.enabled,
-      },
+      flag,
       mode,
       onComplete,
       projectFlag,

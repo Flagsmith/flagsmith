@@ -51,12 +51,12 @@ const FeatureListProvider = class extends React.Component {
     AppActions.editEnvironmentFlag(
       projectId,
       environmentId,
-      projectFlag,
-      projectFlag,
       {
-        ...environmentFlag,
-        enabled: !environmentFlag.enabled,
+        ...projectFlag,
+        default_enabled: !environmentFlag.enabled,
       },
+      projectFlag,
+      environmentFlag,
       null,
       'VALUE',
     )
