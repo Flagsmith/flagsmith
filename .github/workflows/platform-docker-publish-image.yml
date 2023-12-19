@@ -20,6 +20,13 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
+      - name: Checkout Target Repository
+        uses: actions/checkout@v3
+        with:
+          repository: dabeeeenster/flagsmith-charts
+          path: chart
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update flagsmith-charts values.yaml with latest docker version
         uses: fjogeleit/yaml-update-action@main
         with:
