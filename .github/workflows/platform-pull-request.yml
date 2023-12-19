@@ -104,6 +104,29 @@ jobs:
           tests: segment-part-3 signup flag invite project
           concurrency: 2
 
+  run-e2e-versioning-tests-docker-unified:
+    runs-on: ubuntu-latest
+    name: E2E Unified - Versioning, Environment
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Build unified docker container
+        uses: ./.github/actions/unified-e2e-tests
+        with:
+          github_actor: ${{github.actor}}
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          e2e_test_token_staging: ${{ secrets.E2E_TEST_TOKEN }}
+
+      - name: Run tests on unified docker image
+        working-directory: frontend
+        env:
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker compose -f docker-compose-e2e-tests.yml run frontend npx cross-env E2E_CONCURRENCY=1 npm run test -- versioning
+
   run-e2e-segments-1-tests-docker-unified:
     runs-on: ubuntu-latest
     name: E2E Unified - Segments-1, Environment

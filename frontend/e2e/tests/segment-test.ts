@@ -24,26 +24,15 @@ import {
   setText,
   viewFeature,
   waitAndRefresh,
-  waitForElementVisible,
-} from '../helpers.cafe'
+  waitForElementVisible, createOrganisationAndProject,
+} from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config'
 
 export const testSegment1 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
 
-  log('Create Organisation')
-  await click(byId('create-organisation-btn'))
-  await setText('[name="orgName"]', 'Bullet Train Ltd 2')
-  await click('#create-org-btn')
-  await waitForElementVisible(byId('project-select-page'))
-
-  log('Create Project')
-
-  await click('.btn-project-create')
-  await setText(byId('projectName'), 'My Segment Test Project')
-  await click(byId('create-project-btn'))
-  await waitForElementVisible(byId('features-page'))
+  await createOrganisationAndProject('Flagsmith Segment Org', 'Flagsmith Segment Project')
 
   log('Create Feature')
 
@@ -149,7 +138,7 @@ export const testSegment2 = async () => {
 
   log('Create Organisation')
   await click(byId('create-organisation-btn'))
-  await setText('[name="orgName"]', 'Bullet Train Ltd 3')
+  await setText('[name="orgName"]', 'Flagsmith Ltd 3')
   await click('#create-org-btn')
   await waitForElementVisible(byId('project-select-page'))
 
@@ -247,7 +236,7 @@ export const testSegment3 = async () => {
 
   log('Create Organisation')
   await click(byId('create-organisation-btn'))
-  await setText('[name="orgName"]', 'Bullet Train Ltd 4')
+  await setText('[name="orgName"]', 'Flagsmith Ltd 4')
   await click('#create-org-btn')
   await waitForElementVisible(byId('project-select-page'))
 

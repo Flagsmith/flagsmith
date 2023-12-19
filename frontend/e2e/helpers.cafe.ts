@@ -14,11 +14,16 @@ export type Rule = {
 }
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
-  return t
-    .selectText(selector)
-    .pressKey('delete')
-    .selectText(selector) // Prevents issue where input tabs out of focus
-    .typeText(selector, `${text}`)
+  if (text) {
+     return t
+      .selectText(selector)
+      .pressKey('delete')
+      .selectText(selector) // Prevents issue where input tabs out of focus
+      .typeText(selector, `${text}`)
+  } else {
+    return t.selectText(selector) // Prevents issue where input tabs out of focus
+      .pressKey('delete')
+  }
 }
 
 export const waitForElementVisible = async (selector: string) => {
@@ -281,6 +286,47 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+}
+
+export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
+  log('Create Organisation')
+  await click(byId('create-organisation-btn'))
+  await setText('[name="orgName"]', organisationName)
+  await click('#create-org-btn')
+  await waitForElementVisible(byId('project-select-page'))
+
+  log('Create Project')
+  await click('.btn-project-create')
+  await setText(byId('projectName'), projectName)
+  await click(byId('create-project-btn'))
+  await waitForElementVisible(byId('features-page'))
+}
+export const editRemoteConfig = async (
+  index: number,
+  value: string | number | boolean,
+  toggleFeature: boolean = false,
+  mvs: MultiVariate[] = [],
+) => {
+  const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`
+  await gotoFeatures()
+
+  await click(byId(`feature-item-${index}`))
+  await setText(byId('featureValue'), `${value}`)
+  if (toggleFeature) {
+    await click(byId('toggle-feature-button'))
+  }
+  await Promise.all(
+      mvs.map(async (v, i) => {
+        await setText(byId(`featureVariationValue${i}`), v.value)
+        await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
+      }),
+  )
+  await click(byId('update-feature-btn'))
+  await waitForElementVisible(byId(`feature-value-${index}`))
+  if(value) {
+    await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  }
+  await closeModal()
 }
 export const closeModal = async () => {
   await t.click('body', {

@@ -390,6 +390,7 @@ const EnvironmentSettingsPage = class extends Component {
                             <div className='col-md-6 mt-4'>
                               <Row>
                                 <Switch
+                                  data-test='enable-versioning'
                                   disabled={use_v2_feature_versioning}
                                   className='float-right'
                                   checked={use_v2_feature_versioning}
