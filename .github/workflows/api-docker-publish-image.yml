@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     name: API Publish Docker Image
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Cloning repo
         uses: actions/checkout@v3
@@ -42,10 +46,11 @@ jobs:
 
       - name: Build and push images
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: depot/build-push-action@v1
         with:
           platforms: linux/amd64,linux/arm64
           file: api/Dockerfile
+          project: qsrts2l4gr
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
