@@ -43,7 +43,7 @@ def test_organisation_admin_can_list_features(
 
 
 def test_project_admin_can_list_features(
-    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
     project: Project,
 ) -> None:
     # Given
@@ -53,7 +53,8 @@ def test_project_admin_can_list_features(
         detail=False,
         action="list",
     )
-    mock_request = mock.MagicMock(data={}, user=admin_user)
+    mock_request = mock.MagicMock(data={}, user=staff_user)
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
 
     # When
     result = feature_permissions.has_permission(mock_request, mock_view)
@@ -297,7 +298,9 @@ def test_project_user_without_view_project_permission_cannot_view_feature(
     assert result is False
 
 
+@pytest.mark.parametrize("action", (("update"), ("partial_update")))
 def test_organisation_admin_can_edit_feature(
+    action: str,
     admin_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -306,7 +309,7 @@ def test_organisation_admin_can_edit_feature(
     mock_view = mock.MagicMock(
         kwargs={},
         detail=True,
-        action="update",
+        action=action,
     )
     mock_request = mock.MagicMock(data={}, user=admin_user)
 
@@ -317,7 +320,9 @@ def test_organisation_admin_can_edit_feature(
     assert result is True
 
 
+@pytest.mark.parametrize("action", (("update"), ("partial_update")))
 def test_project_admin_can_edit_feature(
+    action: str,
     staff_user: FFAdminUser,
     project: Project,
     feature: Feature,
@@ -325,7 +330,7 @@ def test_project_admin_can_edit_feature(
     # Given
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock(detail=True, action="update")
+    mock_view = mock.MagicMock(detail=True, action=action)
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
@@ -335,14 +340,20 @@ def test_project_admin_can_edit_feature(
     assert result is True
 
 
+@pytest.mark.parametrize("action", (("update"), ("partial_update")))
 def test_project_user_cannot_edit_feature(
+    action: str,
     staff_user: FFAdminUser,
+    with_project_permissions: Callable[[list[str], int], None],
     feature: Feature,
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock(detail=True, action="update")
+    mock_view = mock.MagicMock(detail=True, action=action)
     mock_request = mock.MagicMock(user=staff_user)
+
+    # User can only view the project, not edit features.
+    with_project_permissions([VIEW_PROJECT])
 
     # When
     result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
