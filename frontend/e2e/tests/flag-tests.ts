@@ -52,7 +52,7 @@ export default async function () {
   await t.expect(json.header_enabled.enabled).eql(true)
 
   log('Update feature')
-  await editRemoteConfig(1,'12')
+  await editRemoteConfig(1,12)
 
   log('Try it again')
   await t.wait(2000)
@@ -67,7 +67,7 @@ export default async function () {
   await t.expect(json.header_size.value).eql(12)
 
   log('Change feature value to boolean')
-  await editRemoteConfig(1,'false')
+  await editRemoteConfig(1,false)
 
   log('Try it again 2')
   await t.wait(2000)
