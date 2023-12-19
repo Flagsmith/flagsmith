@@ -52,7 +52,6 @@ export const featureVersionService = service
                   featureState.toRemove &&
                   matchingVersionState.feature_segment
                 ) {
-                  console.log('Delete feature segment')
                   return deleteFeatureSegment(getStore(), {
                     id: matchingVersionState.feature_segment.id,
                   })

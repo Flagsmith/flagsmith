@@ -790,6 +790,8 @@ const controller = {
     },
     1000,
   ),
+
+  //todo: this function should be replaced with AppActions.editFeatureState
   toggleFlag: (
     index,
     environments,

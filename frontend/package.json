@@ -91,7 +91,6 @@
     "polyfill-react-native": "1.0.5",
     "postcss-loader": "4.3.0",
     "prettier": "^2.5.1",
-    "prism": "^1.0.0",
     "prismjs": "^1.29.0",
     "promise-polyfill": "7.1.2",
     "prop-types": "15.6.2",
