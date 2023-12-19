@@ -20,6 +20,7 @@ type FeatureDiffType = {
   newState: FeatureState[]
   featureId: number
   projectId: string
+  tabTheme?: string
 }
 
 const DiffFeature: FC<FeatureDiffType> = ({
@@ -27,6 +28,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   newState,
   oldState,
   projectId,
+  tabTheme,
 }) => {
   const oldEnv = oldState?.find((v) => !v.feature_segment)
   const newEnv = newState?.find((v) => !v.feature_segment)
@@ -52,7 +54,12 @@ const DiffFeature: FC<FeatureDiffType> = ({
           <Loader />
         </div>
       ) : (
-        <Tabs onChange={setValue} value={value}>
+        <Tabs
+          hideNavOnSingleTab
+          theme={tabTheme}
+          onChange={setValue}
+          value={value}
+        >
           <TabItem
             tabLabel={
               <div>
