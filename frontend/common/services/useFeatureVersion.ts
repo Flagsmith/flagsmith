@@ -86,7 +86,7 @@ export const featureVersionService = service
                   featureId: matchingVersionState.feature,
                   featureState: {
                     ...featureState,
-                    feature_segment: matchingVersionState
+                    feature_segment: matchingVersionState?.feature_segment
                       ? {
                           ...(matchingVersionState.feature_segment as any),
                           priority: featureState.feature_segment!.priority,

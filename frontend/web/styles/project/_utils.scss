@@ -185,20 +185,6 @@
     min-height: auto !important;
 }
 
-.git-diff {
-    padding:2px;
-    &--added {
-        background-color: rgba($success,0.16);
-        color: $success;
-    }
-
-    &--removed {
-        background-color: rgba($danger,0.16);
-        color: $danger;
-    }
-
-}
-
 .text-overflow {
     flex: 1;
     white-space: nowrap;

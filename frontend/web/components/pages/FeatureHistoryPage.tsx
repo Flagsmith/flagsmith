@@ -8,10 +8,18 @@ import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
 import PanelSearch from 'components/PanelSearch'
-import { Environment, FeatureVersion } from 'common/types/responses'
+import {
+  Environment,
+  FeatureVersion as TFeatureVersion,
+} from 'common/types/responses'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import FeatureVersionDiff from 'components/FeatureVersionDiff' // we need this to make JSX compile
+import FeatureVersion from 'components/FeatureVersion'
+import { IonIcon } from '@ionic/react'
+import { chevronDown } from 'ionicons/icons'
+import InlineModal from 'components/InlineModal'
+import TableFilterItem from 'components/tables/TableFilterItem'
+import moment from 'moment'
 
 const widths = [250, 100]
 type FeatureHistoryPageType = {
@@ -27,6 +35,8 @@ type FeatureHistoryPageType = {
 
 const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const feature = Utils.fromParam(router.route.location.search)?.feature
+  const [open, setOpen] = useState(false)
+
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any
@@ -44,7 +54,9 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
     },
     { skip: !env || !feature },
   )
+  const [selected, setSelected] = useState<TFeatureVersion | null>(null)
   const live = data?.results?.[0]
+  const [compareToLive, setCompareToLive] = useState(false)
 
   const [diff, setDiff] = useState<null | string>(null)
   return (
@@ -76,7 +88,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
       </div>
       <div>
         <PanelSearch
-          className='no-pad'
+          className='no-pad overflow-visible'
           items={data?.results}
           goToPage={setPage}
           header={
@@ -90,7 +102,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
               </div>
             </Row>
           }
-          renderRow={(v: FeatureVersion, i) => {
+          renderRow={(v: TFeatureVersion, i: number) => {
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
@@ -109,26 +121,92 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
 
                     <div className='table-column' style={{ width: widths[1] }}>
                       {i + 1 !== data!.results.length && (
-                        <Button
-                          onClick={() =>
-                            setDiff(diff === v.uuid ? null : v.uuid)
-                          }
-                          className='px-0 text-primary'
-                          theme='text'
-                          size='xSmall'
-                        >
-                          {diff === v.uuid ? 'Hide' : 'View'} Changes
-                        </Button>
+                        <>
+                          {diff === v.uuid ? (
+                            <Button
+                              onClick={() => {
+                                setSelected(null)
+                                setDiff(diff === v.uuid ? null : v.uuid)
+                              }}
+                              className='px-0 text-primary'
+                              theme='text'
+                              size='xSmall'
+                            >
+                              Hide Changes
+                            </Button>
+                          ) : (
+                            <div>
+                              <Button
+                                onClick={() => {
+                                  if (v.uuid === live!.uuid) {
+                                    setCompareToLive(false)
+                                    setDiff(v.uuid)
+                                  } else {
+                                    setSelected(v)
+                                    // setDiff(diff === v.uuid ? null : v.uuid)
+                                    setOpen(true)
+                                  }
+                                }}
+                                className='px-0 text-primary'
+                                theme='text'
+                                size='xSmall'
+                              >
+                                Compare
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       )}
+                      <InlineModal
+                        hideClose
+                        title={null}
+                        isOpen={open && selected === v}
+                        onClose={() => {
+                          setTimeout(() => {
+                            setOpen(false)
+                          }, 10)
+                        }}
+                        containerClassName='px-0'
+                        className='inline-modal table-filter inline-modal--sm right'
+                      >
+                        <TableFilterItem
+                          title={'Live Version'}
+                          onClick={() => {
+                            setCompareToLive(true)
+                            if (selected) {
+                              setDiff(
+                                diff === selected.uuid ? null : selected.uuid,
+                              )
+                            }
+                            setOpen(false)
+                          }}
+                        />
+                        <TableFilterItem
+                          title={'Previous Version'}
+                          onClick={() => {
+                            setCompareToLive(false)
+                            if (selected) {
+                              setDiff(
+                                diff === selected.uuid ? null : selected.uuid,
+                              )
+                            }
+                            setOpen(false)
+                          }}
+                        />
+                      </InlineModal>
                     </div>
                   </div>
                   {diff === v.uuid && (
-                    <FeatureVersionDiff
+                    <FeatureVersion
                       projectId={`${match.params.projectId}`}
                       featureId={feature}
                       environmentId={environmentId}
-                      newUUID={v.uuid}
-                      oldUUID={data!.results[i + 1]!.uuid}
+                      newUUID={compareToLive ? live!.uuid : v.uuid}
+                      oldUUID={
+                        compareToLive
+                          ? data!.results[i]!.uuid
+                          : data!.results[i + 1]!.uuid
+                      }
                     />
                   )}
                 </div>

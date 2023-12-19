@@ -8,16 +8,20 @@ import 'prismjs/components/prism-json'
 type DiffType = {
   oldValue: string
   newValue: string
+  compareMethod?: DiffMethod
 }
 
-const DiffString: FC<DiffType> = ({ newValue, oldValue }) => {
+const DiffString: FC<DiffType> = ({
+  compareMethod = DiffMethod.CHARS,
+  newValue,
+  oldValue,
+}) => {
   if (oldValue === newValue) {
     if (oldValue === null || oldValue === '') {
       return null
     }
     return (
       <div className='react-diff react-diff-line d-flex align-items-center'>
-        <div className='react-diff-marker' />
         <pre
           className='d-inline'
           dangerouslySetInnerHTML={{
@@ -31,7 +35,7 @@ const DiffString: FC<DiffType> = ({ newValue, oldValue }) => {
     <Diff
       oldValue={oldValue}
       newValue={newValue}
-      compareMethod={DiffMethod.CHARS}
+      compareMethod={compareMethod}
       hideLineNumbers={!(oldValue?.includes('\n') || newValue?.includes('\n'))}
       renderContent={(str) => (
         <pre

@@ -13,11 +13,21 @@ const DiffEnabled: FC<DiffType> = ({ newValue, oldValue }) => {
   }
   return (
     <>
-      <div className={'git-diff git-diff--removed'}>
-        - <Switch checked={oldValue} />
+      <div className={'flex-row'}>
+        <div className='react-diff-marker react-diff-marker--removed'>
+          <pre>-</pre>
+        </div>
+        <div className='react-diff-line react-diff-line--removed flex-fill'>
+          <Switch checked={oldValue} />
+        </div>
       </div>
-      <div className={'git-diff git-diff--added'}>
-        + <Switch checked={newValue} />
+      <div className={'flex-row'}>
+        <div className='react-diff-marker react-diff-marker--added'>
+          <pre>+</pre>
+        </div>
+        <div className='react-diff-line react-diff-line--added flex-fill'>
+          <Switch checked={newValue} />
+        </div>
       </div>
     </>
   )

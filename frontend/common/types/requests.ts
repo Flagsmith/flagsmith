@@ -60,7 +60,7 @@ export type Req = {
     identifiers: string[]
   }
   featureSegment: {
-    segment: string
+    segment: number
   }
   getIdentities: PagedRequest<{
     environmentId: string
@@ -110,7 +110,9 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
-    feature_segment: featureSegment
+    feature_segment: {
+      segment: number
+    }
     feature_state_value: FeatureStateValue
   }
   getRoles: { organisation_id: string }
@@ -148,17 +150,17 @@ export type Req = {
   getLaunchDarklyProjectsImport: { project_id: string; import_id: string }
   createAndPublishFeatureVersion: {
     environmentId: string
-    featureId: string
+    featureId: number
     featureStates: (FeatureState & { toRemove: boolean })[]
   }
   createFeatureVersion: {
     environmentId: string
-    featureId: string
+    featureId: number
   }
   publishFeatureVersion: {
     sha: string
     environmentId: string
-    featureId: string
+    featureId: number
   }
   createVersionFeatureState: CreateVersionFeatureState
   deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
@@ -169,7 +171,7 @@ export type Req = {
   getVersionFeatureState: {
     sha: string
     environmentId: string
-    featureId: string
+    featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
   deleteFeatureSegment: { id: number }
@@ -183,6 +185,5 @@ export type Req = {
     featureId: string
     uuid: string
   }
-  getProjectFlag: { project: string; id: string }
   // END OF TYPES
 }
