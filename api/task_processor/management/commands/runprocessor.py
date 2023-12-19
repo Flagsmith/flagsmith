@@ -1,18 +1,13 @@
 import logging
-import os
 import signal
 import time
 import typing
 from argparse import ArgumentParser
 from datetime import timedelta
-from importlib import reload
 
 from django.core.management import BaseCommand
 from django.utils import timezone
 
-from custom_auth import tasks as auth_tasks
-from sse import tasks as sse_tasks
-from task_processor import tasks as processor_tasks
 from task_processor.task_registry import registered_tasks
 from task_processor.thread_monitoring import (
     clear_unhealthy_threads,
@@ -22,29 +17,10 @@ from task_processor.threads import TaskRunner
 
 logger = logging.getLogger(__name__)
 
-TASKS_MODULES_TO_RELOAD = [processor_tasks, sse_tasks, auth_tasks]
-
 
 class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # The `register_recurring_task` decorator is executed in the global scope,
-        # meaning it will run whenever the code is executed, including when running
-        # `manage.py` commands such as `migrate` or `showmigrations`. However, this
-        # decorator saves the task to the database, which is not desired unless it is
-        # being run by processor, and to indicate the we set this `RUN_BY_PROCESSOR`
-        # environment variable.
-        os.environ["RUN_BY_PROCESSOR"] = "True"
-
-        # Since all the apps are loaded before the command is initialised,
-        # we need to reload some of those modules(that contains recurring tasks)
-        # to ensure the tasks are registered correctly
-        # e.g the tasks module is loaded by the ready method in TaskProcessorConfig
-        # which is run before the command is initialised
-
-        for module in TASKS_MODULES_TO_RELOAD:
-            reload(module)
 
         signal.signal(signal.SIGINT, self._exit_gracefully)
         signal.signal(signal.SIGTERM, self._exit_gracefully)
