@@ -106,7 +106,8 @@ export function MyComponent() {
 useFlags(requiredFlags:string[], requiredTraits?:string[])=> {[key:string]: IFlagsmithTrait  or IFlagsmithFeature}
 ```
 
-You can find the exact definitions of these types [in the SDK](https://github.com/Flagsmith/flagsmith-js-client/blob/main/types.d.ts).
+You can find the exact definitions of these types
+[in the SDK](https://github.com/Flagsmith/flagsmith-js-client/blob/main/types.d.ts).
 
 ## FlagsmithProvider API Reference
 
