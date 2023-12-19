@@ -529,6 +529,7 @@ const controller = {
     let prom
 
     if (mode !== 'VALUE') {
+      // Create a new version with segment overrides
       const featureStates = segmentOverrides?.map((override, i) => {
         return {
           enabled: override.enabled,
@@ -559,11 +560,13 @@ const controller = {
         })
       })
     } else if (environmentFlag) {
+      // Create a new version with feature state / multivariate options
       prom = data
         .get(
           `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
         )
         .then((environmentFeatureStates) => {
+          // Match all multivariate options to stored ids
           const multivariate_feature_state_values =
             environmentFeatureStates.multivariate_feature_state_values &&
             environmentFeatureStates.multivariate_feature_state_values.map(

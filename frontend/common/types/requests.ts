@@ -185,5 +185,8 @@ export type Req = {
     featureId: string
     uuid: string
   }
+  enableFeatureVersioning: {
+    environmentId: string
+  }
   // END OF TYPES
 }

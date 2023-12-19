@@ -34,10 +34,9 @@ export const featureVersionService = service
               featureId: query.featureId,
               sha: versionRes.data.uuid,
             })
-          // Step 3: For each of the new feature states
           const res = await Promise.all(
             query.featureStates.map((featureState) => {
-              // Step 4: Get the matching feature state from the new version
+              // Step 3: update, create or delete feature states from the new version
               const matchingVersionState = currentFeatureStates.data.find(
                 (feature) => {
                   return (
@@ -113,6 +112,7 @@ export const featureVersionService = service
             }),
           )
           const ret = { data: res, error: res.find((v) => !!v.error)?.error }
+          // Step 4: Publish the feature version
           await publishFeatureVersion(getStore(), {
             environmentId: query.environmentId,
             featureId: query.featureId,

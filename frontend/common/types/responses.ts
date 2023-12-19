@@ -409,6 +409,6 @@ export type Res = {
   featureSegment: { id: string }
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
-  projectFlag: ProjectFlag
+  enableFeatureVersioning: { id: string }
   // END OF TYPES
 }

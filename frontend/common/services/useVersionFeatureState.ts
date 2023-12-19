@@ -3,6 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
+//Converts a create / update version feature state to an API payload
 const convertFeatureState = (featureState: FeatureState) => {
   const res: FeatureVersionState = {
     enabled: featureState.enabled,

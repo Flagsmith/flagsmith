@@ -21,6 +21,7 @@ import { getRoles } from 'common/services/useRole'
 import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
+import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -145,7 +146,7 @@ const EnvironmentSettingsPage = class extends Component {
       !!this.state.use_v2_feature_versioning &&
       !env.use_v2_feature_versioning
     ) {
-      AppActions.enableFeatureVersioning(env)
+      enableFeatureVersioning(getStore(), { environmentId: env.api_key })
     }
   }
 
