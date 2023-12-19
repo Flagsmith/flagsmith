@@ -365,7 +365,7 @@ class TheComponent extends Component {
         >
           {!this.props.hideAudit && (
             <>
-              {Utils.getFlagsmithHasFeature('feature_versioning') ? (
+              {environment?.use_v2_feature_versioning ? (
                 <Tooltip
                   html
                   title={
@@ -395,9 +395,7 @@ class TheComponent extends Component {
                           onClick={() => {
                             if (disableControls) return
                             this.context.router.history.push(
-                              Utils.getFlagsmithHasFeature('feature_versioning')
-                                ? `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`
-                                : `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
+                              `/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`,
                             )
                           }}
                           className='text-center'
