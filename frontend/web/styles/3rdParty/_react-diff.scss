@@ -34,16 +34,19 @@
   }
 }
 .react-diff-line pre {
-   background-color: $black-alpha-8;
+  background-color: $black-alpha-8;
   display: flex;
   flex:1;
   line-height: 28px;
- }
+}
+.react-diff-42iver-word-diff {
+  padding:0 !important;
+}
 .react-diff-1p2tkx4-marker.react-diff-1fxlvce-diff-removed {
-    background-color: $danger-alfa-16 !important;
+  background-color: $danger-alfa-16 !important;
 }
 .react-diff-1p2tkx4-marker.react-diff-1fqrsd-diff-added {
-    background-color: $success-alfa-16 !important;
+  background-color: $success-alfa-16 !important;
 }
 .react-diff-hf3w1f-word-removed {
   background-color: $danger-alfa-8 !important;
@@ -57,10 +60,10 @@
   color: $body-text !important;
 }
 .react-diff-1fxlvce-diff-removed {
-   background-color: $danger-alfa-8 !important;
+  background-color: $danger-alfa-8 !important;
 }
 .react-diff-1fqrsd-diff-added {
-   background-color: $success-alfa-8 !important;
+  background-color: $success-alfa-8 !important;
 }
 
 .dark {
