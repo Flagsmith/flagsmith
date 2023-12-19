@@ -12,7 +12,9 @@ const Tabs = class extends React.Component {
     }
   }
   render() {
-    const children = this.props.children.filter((c) => !!c)
+    const children = (
+      this.props.children?.length ? this.props.children : [this.props.children]
+    ).filter((c) => !!c)
     const value = this.props.uncontrolled ? this.state.value : this.props.value
     return (
       <div className={`tabs ${this.props.className || ''}`}>

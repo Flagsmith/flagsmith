@@ -1,16 +1,9 @@
-import {
-  FeatureState,
-  FeatureVersion,
-  FeatureVersionState,
-  Res,
-} from 'common/types/responses'
+import { FeatureState, FeatureVersion, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import { awaitExpression } from '@babel/types'
 import { getStore } from 'common/store'
 import {
   createVersionFeatureState,
-  deleteVersionFeatureState,
   getVersionFeatureState,
   updateVersionFeatureState,
 } from './useVersionFeatureState'
@@ -28,20 +21,23 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndPublishFeatureVersion']) => {
-          // Create a version, update the feature state, publish the changes
+          // Step 1: Create a new feature version
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
             })
+          // Step 2: Get the feature states for the live version
           const currentFeatureStates: { data: FeatureState[] } =
             await getVersionFeatureState(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
               sha: versionRes.data.uuid,
             })
+          // Step 3: For each of the new feature states
           const res = await Promise.all(
             query.featureStates.map((featureState) => {
+              // Step 4: Get the matching feature state from the new version
               const matchingVersionState = currentFeatureStates.data.find(
                 (feature) => {
                   return (
@@ -50,15 +46,19 @@ export const featureVersionService = service
                   )
                 },
               )
+              // Matching feature state exists, meaning we need to either modify or delete it
               if (matchingVersionState) {
-                if (featureState.toRemove) {
-                  if (featureState.feature_segment) {
-                    // todo: this should actually just delete the matchingVersionState feature state
-                    return deleteFeatureSegment(getStore(), {
-                      id: featureState.feature_segment.id,
-                    })
-                  }
+                //Feature state is marked as to remove, delete it from the current version
+                if (
+                  featureState.toRemove &&
+                  matchingVersionState.feature_segment
+                ) {
+                  console.log('Delete feature segment')
+                  return deleteFeatureSegment(getStore(), {
+                    id: matchingVersionState.feature_segment.id,
+                  })
                 }
+                //Feature state is not marked as remove, so we update it
                 const multivariate_feature_state_values =
                   featureState.multivariate_feature_state_values
                     ? featureState.multivariate_feature_state_values?.map(
@@ -83,16 +83,26 @@ export const featureVersionService = service
 
                 return updateVersionFeatureState(getStore(), {
                   environmentId: query.environmentId,
-                  featureId: query.featureId,
+                  featureId: matchingVersionState.feature,
                   featureState: {
                     ...featureState,
-                    feature_segment: matchingVersionState.feature_segment,
+                    feature_segment: matchingVersionState
+                      ? {
+                          ...(matchingVersionState.feature_segment as any),
+                          priority: featureState.feature_segment!.priority,
+                        }
+                      : undefined,
+                    id: matchingVersionState.id,
                     multivariate_feature_state_values,
+                    uuid: matchingVersionState.uuid,
                   },
                   id: matchingVersionState.id,
                   sha: versionRes.data.uuid,
+                  uuid: matchingVersionState.uuid,
                 })
-              } else {
+              }
+              // Matching feature state does not exist, meaning we need to create it
+              else {
                 return createVersionFeatureState(getStore(), {
                   environmentId: query.environmentId,
                   featureId: query.featureId,

@@ -1,13 +1,27 @@
 @import "../variables";
 .react-diff-1n5o7vh-diff-container {
   background-color: transparent !important;
-  .token.property {
-    color: $success;
-  }
-  .token.number,.token.boolean {
-    color: $info;
-  }
+
 }
+.token.property {
+  color: $success;
+}
+.token.number,.token.boolean {
+  color: $info;
+}
+.react-diff-marker {
+  background-color: $black-alpha-16;
+  width: 28px;
+  height: 28px;
+
+}
+.react-diff-line pre {
+   background-color: $black-alpha-8;
+  display: flex;
+  flex:1;
+  line-height: 28px;
+  padding-left: 2px;
+ }
 .react-diff-1p2tkx4-marker.react-diff-1fxlvce-diff-removed {
     background-color: $danger-alfa-16 !important;
 }

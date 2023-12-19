@@ -26,20 +26,34 @@ export function getFeatureStateDiff(
   return diff
 }
 
+export type TSegmentDiff = {
+  newEnabled: boolean
+  newName: string
+  newPriority: number
+  newValue: string
+  oldEnabled: boolean
+  oldName: string
+  oldPriority: number
+  oldValue: string
+  totalChanges: number
+  created: boolean
+  deleted: boolean
+}
+
 export const getSegmentDiff = (
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
   segmentName: string,
 ) => {
   const oldName = oldFeatureState ? segmentName : ''
-  const oldEnabled = oldFeatureState ? `${!!oldFeatureState?.enabled}` : ''
+  const oldEnabled = !!oldFeatureState?.enabled
   const oldPriority = oldFeatureState?.feature_segment
-    ? `${oldFeatureState.feature_segment.priority + 1}`
-    : ''
+    ? oldFeatureState.feature_segment.priority + 1
+    : -1
   const newPriority = newFeatureState?.feature_segment
-    ? `${newFeatureState.feature_segment.priority + 1}`
-    : ''
-  const newEnabled = newFeatureState ? `${!!newFeatureState?.enabled}` : ''
+    ? newFeatureState.feature_segment.priority + 1
+    : -1
+  const newEnabled = !!newFeatureState?.enabled
 
   const oldValue = `${Utils.getTypedValue(
     oldFeatureState
@@ -57,6 +71,8 @@ export const getSegmentDiff = (
   const valueChanged = oldValue !== newValue
   const priorityChanged = oldPriority !== newPriority
   return {
+    created: !oldFeatureState,
+    deleted: !newFeatureState,
     enabledChanged,
     newEnabled,
     newName,
@@ -70,5 +86,5 @@ export const getSegmentDiff = (
       (enabledChanged ? 1 : 0) +
       (valueChanged ? 1 : 0) +
       (priorityChanged ? 1 : 0),
-  }
+  } as TSegmentDiff
 }

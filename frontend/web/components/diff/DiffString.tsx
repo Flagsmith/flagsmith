@@ -4,10 +4,6 @@ import { diffLines, formatLines } from 'unidiff'
 import Diff, { DiffMethod } from 'react-diff-viewer-continued'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-json'
-import 'prismjs/components/prism-ini'
-import 'prismjs/components/prism-yaml'
-import 'prismjs/components/prism-xml-doc'
-import ValueEditor from 'components/ValueEditor'
 
 type DiffType = {
   oldValue: string
@@ -16,9 +12,18 @@ type DiffType = {
 
 const DiffString: FC<DiffType> = ({ newValue, oldValue }) => {
   if (oldValue === newValue) {
+    if (oldValue === null || oldValue === '') {
+      return null
+    }
     return (
-      <div>
-        <ValueEditor value={oldValue} />
+      <div className='react-diff react-diff-line d-flex align-items-center'>
+        <div className='react-diff-marker' />
+        <pre
+          className='d-inline'
+          dangerouslySetInnerHTML={{
+            __html: Prism.highlight(newValue, Prism.languages.json, 'json'),
+          }}
+        />
       </div>
     )
   }

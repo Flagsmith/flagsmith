@@ -49,7 +49,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const [diff, setDiff] = useState<null | string>(null)
   return (
     <div className='container app-container'>
-      <PageTitle title={'Feature Versions'}>
+      <PageTitle title={'History'}>
         <div>
           View and rollback history of feature values, multivariate values and
           segment overrides.

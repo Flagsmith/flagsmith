@@ -16,7 +16,7 @@ export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
 export type CreateVersionFeatureState = {
   environmentId: string
-  featureId: string
+  featureId: number
   sha: string
   featureState: FeatureState
 }
@@ -162,7 +162,10 @@ export type Req = {
   }
   createVersionFeatureState: CreateVersionFeatureState
   deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
-  updateVersionFeatureState: CreateVersionFeatureState & { id: number }
+  updateVersionFeatureState: CreateVersionFeatureState & {
+    id: number
+    uuid: string
+  }
   getVersionFeatureState: {
     sha: string
     environmentId: string

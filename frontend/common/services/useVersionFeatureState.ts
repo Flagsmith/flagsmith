@@ -6,6 +6,7 @@ import Utils from 'common/utils/utils'
 const convertFeatureState = (featureState: FeatureState) => {
   const res: FeatureVersionState = {
     enabled: featureState.enabled,
+    feature: featureState.feature,
     feature_segment: featureState.feature_segment,
     feature_state_value: Utils.valueToFeatureState(
       featureState.feature_state_value,
@@ -62,7 +63,11 @@ export const versionFeatureStateService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'VersionFeatureState' }],
         query: (query: Req['updateVersionFeatureState']) => ({
-          body: { ...convertFeatureState(query.featureState), id: query.id },
+          body: {
+            ...convertFeatureState(query.featureState),
+            id: query.id,
+            uuid: query.uuid,
+          },
           method: 'PUT',
           url: `environments/${query.environmentId}/features/${query.featureId}/versions/${query.sha}/featurestates/${query.id}/`,
         }),

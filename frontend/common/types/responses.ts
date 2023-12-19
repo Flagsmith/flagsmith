@@ -14,6 +14,7 @@ export type FlagsmithValue = string | number | boolean | null
 
 export type FeatureVersionState = {
   enabled: boolean
+  feature: number
   feature_state_value: FeatureStateValue
   feature_segment: null | FeatureState['feature_segment']
   multivariate_feature_state_values: Omit<MultivariateFeatureStateValue, 'id'>[]
