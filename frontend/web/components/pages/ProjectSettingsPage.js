@@ -675,7 +675,7 @@ const ProjectSettingsPage = class extends Component {
                                       width: '185px',
                                     }}
                                   >
-                                    <div className='table-column'>
+                                    <div className='table-column d-flex text-center'>
                                       {metadata.content_type_fields.find(
                                         (m) =>
                                           m.content_type ===

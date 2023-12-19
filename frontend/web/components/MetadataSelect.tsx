@@ -36,7 +36,7 @@ const MetadataSelect: FC<MetadataSelectType> = ({
       title='Metadata'
       isOpen={isOpen}
       onClose={onToggle}
-      className='inline-modal--tags'
+      className='inline-modal--sm'
     >
       <Input
         disabled={disabled}
@@ -45,34 +45,35 @@ const MetadataSelect: FC<MetadataSelectType> = ({
         className='full-width mb-2'
         placeholder='Type or choose a Metadata'
       />
-      <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-        {metadataList &&
-          metadataList.map((v) => (
-            <div className='assignees-list-item clickable' key={v.id}>
-              <Row
-                onClick={() => {
-                  const isRemove = value?.includes(v.id)
-                  if (isRemove && onRemove) {
-                    onRemove(v.id)
-                  } else if (!isRemove && onAdd) {
-                    onAdd(v.id)
-                  }
-                }}
-                space
-              >
-                <Flex
-                  className={value?.includes(v.id) ? 'font-weight-bold' : ''}
+      <div className='inline-modal__list'>
+        {metadataList?.length
+          ? metadataList.map((v) => (
+              <div className='assignees-list-item clickable' key={v.id}>
+                <Row
+                  onClick={() => {
+                    const isRemove = value?.includes(v.id)
+                    if (isRemove && onRemove) {
+                      onRemove(v.id)
+                    } else if (!isRemove && onAdd) {
+                      onAdd(v.id)
+                    }
+                  }}
+                  space
                 >
-                  {v.name}
-                </Flex>
-                {value?.includes(v.id) && (
-                  <span className='mr-1'>
-                    <Icon name='checkmark' fill='#6837FC' />
-                  </span>
-                )}
-              </Row>
-            </div>
-          ))}
+                  <Flex
+                    className={value?.includes(v.id) ? 'font-weight-bold' : ''}
+                  >
+                    {v.name}
+                  </Flex>
+                  {value?.includes(v.id) && (
+                    <span className='mr-1'>
+                      <Icon name='checkmark' fill='#6837FC' />
+                    </span>
+                  )}
+                </Row>
+              </div>
+            ))
+          : 'No metadata items'}
       </div>
     </InlineModal>
   )

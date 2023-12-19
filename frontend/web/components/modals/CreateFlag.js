@@ -596,7 +596,7 @@ const CreateFlag = class extends Component {
                           title={
                             <Row>
                               <span className='font-weight-bold'>{m.name}</span>
-                              <span className='chip-icon ion'>
+                              <span className='fs-caption'>
                                 <IonIcon
                                   icon={closeIcon}
                                   style={{ fontSize: '13px' }}
