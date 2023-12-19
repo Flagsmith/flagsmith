@@ -2408,3 +2408,105 @@ def test_list_features_n_plus_1(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_list_features_with_union_tag(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    tag1 = Tag.objects.create(
+        label="Test Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project,
+    )
+    tag2 = Tag.objects.create(
+        label="Test Tag2",
+        color="#fffff",
+        description="Test Tag2 description",
+        project=project,
+    )
+    feature2 = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    feature3 = Feature.objects.create(
+        name="missing_feature", project=project, initial_value="gone"
+    )
+    feature2.tags.add(tag1)
+    feature3.tags.add(tag2)
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = (
+        f"{base_url}?environment={environment.id}&tags={tag1.id}"
+        f",{tag2.id}&tag_strategy=UNION"
+    )
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # The first feature has been filtered out of the results.
+    assert len(response.data["results"]) == 2
+
+    assert response.data["results"][0]["id"] == feature2.id
+    assert response.data["results"][0]["tags"] == [tag1.id]
+    assert response.data["results"][1]["id"] == feature3.id
+    assert response.data["results"][1]["tags"] == [tag2.id]
+
+
+def test_list_features_with_intersection_tag(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: Callable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])
+
+    tag1 = Tag.objects.create(
+        label="Test Tag",
+        color="#fffff",
+        description="Test Tag description",
+        project=project,
+    )
+    tag2 = Tag.objects.create(
+        label="Test Tag2",
+        color="#fffff",
+        description="Test Tag2 description",
+        project=project,
+    )
+    feature2 = Feature.objects.create(
+        name="another_feature", project=project, initial_value="initial_value"
+    )
+    feature3 = Feature.objects.create(
+        name="missing_feature", project=project, initial_value="gone"
+    )
+    feature2.tags.add(tag1, tag2)
+    feature3.tags.add(tag2)
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = (
+        f"{base_url}?environment={environment.id}&tags={tag1.id}"
+        f",{tag2.id}&tag_strategy=INTERSECTION"
+    )
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Only feature2 has both tags, so it is the only result.
+    assert len(response.data["results"]) == 1
+
+    assert response.data["results"][0]["id"] == feature2.id
+    assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]

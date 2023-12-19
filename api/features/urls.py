@@ -7,6 +7,7 @@ from features.feature_segments.views import FeatureSegmentViewSet
 from features.import_export.views import (
     create_feature_export,
     download_feature_export,
+    download_flagsmith_on_flagsmith,
     feature_import,
 )
 from features.views import (
@@ -28,6 +29,11 @@ urlpatterns = [
         "download-feature-export/<int:feature_export_id>/",
         download_feature_export,
         name="download-feature-export",
+    ),
+    path(
+        "download-flagsmith-on-flagsmith/",
+        download_flagsmith_on_flagsmith,
+        name="download-flagsmith-on-flagsmith",
     ),
     path(
         "feature-import/<int:environment_id>",

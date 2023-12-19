@@ -1516,9 +1516,9 @@ def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
     assert response.status_code == 200
 
     subscription.refresh_from_db()
-    assert subscription.cancellation_date == datetime.utcfromtimestamp(
-        current_term_end
-    ).replace(tzinfo=timezone.utc)
+
+    # Subscription is now a free plan.
+    assert subscription.cancellation_date is None
     organisation.refresh_from_db()
     assert organisation.num_seats == 1
 

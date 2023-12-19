@@ -36,6 +36,7 @@ from environments.api_keys import (
 )
 from environments.dynamodb import (
     DynamoEnvironmentAPIKeyWrapper,
+    DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
 )
 from environments.exceptions import EnvironmentHeaderNotPresentError
@@ -43,6 +44,7 @@ from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 from metadata.models import Metadata
+from projects.models import IdentityOverridesV2MigrationStatus, Project
 from segments.models import Segment
 from util.mappers import map_environment_to_environment_document
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -56,6 +58,7 @@ bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper(s) globaly
 environment_wrapper = DynamoEnvironmentWrapper()
+environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
@@ -232,7 +235,7 @@ class Environment(
         # grab the first project and verify that each environment is for the same
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
-        project = getattr(environments[0], "project", None)
+        project: Project | None = getattr(environments[0], "project", None)
         for environment in environments[1:]:
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
@@ -241,6 +244,13 @@ class Environment(
             return
 
         environment_wrapper.write_environments(environments)
+
+        if (
+            project.identity_overrides_v2_migration_status
+            == IdentityOverridesV2MigrationStatus.COMPLETE
+            and environment_v2_wrapper.is_enabled
+        ):
+            environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
         self, feature_id: int, filter_kwargs: dict = None
