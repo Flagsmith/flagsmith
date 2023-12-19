@@ -152,13 +152,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.kwargs.get("project_pk"):
-            context.update(
-                project=get_object_or_404(
-                    Project.objects.all(), pk=self.kwargs["project_pk"]
-                ),
-                user=self.request.user,
-            )
+        context.update(
+            project=get_object_or_404(
+                Project.objects.all(), pk=self.kwargs["project_pk"]
+            ),
+            user=self.request.user,
+        )
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]

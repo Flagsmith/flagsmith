@@ -1,23 +1,13 @@
-from multimethod import overload
-
-# TODO This might require type: ignores in the future, but it's just so nice!
-
-
-@overload
-def get_environments_v2_identity_override_document_key() -> str:
-    return "identity_override:"
-
-
-@overload
-def get_environments_v2_identity_override_document_key(  # noqa: F811
-    feature_id: int,
+def get_environments_v2_identity_override_document_key(
+    feature_id: int | None = None,
+    identity_uuid: str | None = None,
 ) -> str:
-    return f"identity_override:{feature_id}:"
-
-
-@overload
-def get_environments_v2_identity_override_document_key(  # noqa: F811
-    feature_id: int,
-    identity_uuid: str,
-) -> str:
+    if feature_id is None:
+        if identity_uuid:
+            raise ValueError(
+                "Cannot generate identity override document key without feature_id"
+            )
+        return "identity_override:"
+    if identity_uuid is None:
+        return f"identity_override:{feature_id}:"
     return f"identity_override:{feature_id}:{identity_uuid}"
