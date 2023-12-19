@@ -294,7 +294,7 @@ const Payment = class extends Component {
                                 fill='rgba(101, 109, 123, 0.16)'
                               />
                               <div className='ml-2 disabled'>
-                                Two Factor Authentication (2FA)
+                                Two-Factor Authentication (2FA)
                               </div>
                             </Row>
                           </li>
@@ -508,7 +508,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
-                                Two Factor Authentication (2FA)
+                                Two-Factor Authentication (2FA)
                               </div>
                             </Row>
                           </li>
