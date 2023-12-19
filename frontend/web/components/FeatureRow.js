@@ -257,23 +257,32 @@ class TheComponent extends Component {
                     </Tooltip>
                   </div>
                 )}
-                {!!projectFlag.num_identity_overrides && !Utils.getIsEdge() && (
-                  <Tooltip
-                    title={
-                      <span
-                        className='chip me-2 chip--xs bg-primary text-white'
-                        style={{ border: 'none' }}
-                      >
-                        <UsersIcon className='chip-svg-icon' />
-                        <span>{projectFlag.num_identity_overrides}</span>
-                      </span>
-                    }
-                    place='top'
+                {!!projectFlag.num_identity_overrides && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      this.editFeature(projectFlag, environmentFlags[id], 2)
+                    }}
                   >
-                    {`${projectFlag.num_identity_overrides} Identity Override${
-                      projectFlag.num_identity_overrides !== 1 ? 's' : ''
-                    }`}
-                  </Tooltip>
+                    <Tooltip
+                      title={
+                        <span
+                          className='chip me-2 chip--xs bg-primary text-white'
+                          style={{ border: 'none' }}
+                        >
+                          <UsersIcon className='chip-svg-icon' />
+                          <span>{projectFlag.num_identity_overrides}</span>
+                        </span>
+                      }
+                      place='top'
+                    >
+                      {`${
+                        projectFlag.num_identity_overrides
+                      } Identity Override${
+                        projectFlag.num_identity_overrides !== 1 ? 's' : ''
+                      }`}
+                    </Tooltip>
+                  </div>
                 )}
                 {projectFlag.is_server_key_only && (
                   <Tooltip
