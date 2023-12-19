@@ -77,6 +77,8 @@ the Control value.
 If you are getting the Flags for an Identity, the Flagsmith engine will send the value based on the defined Weightings,
 as specified within the Environment.
 
+<div style={{textAlign: 'center'}}><img width="75%" src="/img/multi-variate-flags.png"/></div>
+
 In the screenshot above, roughly half our user population will receive the value `normal`, roughly one quarter (25%)
 will receive `large` and roughly one quarter (25%) will receive `huge`. Note that you can use 100% as a weighting to
 ensure all your users receive the same variant.
