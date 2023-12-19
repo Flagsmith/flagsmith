@@ -18,6 +18,13 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v3
 
+      - name: Checkout Target Charts Repository to update yaml
+        uses: actions/checkout@v3
+        with:
+          repository: dabeeeenster/flagsmith-charts
+          path: chart
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v4
