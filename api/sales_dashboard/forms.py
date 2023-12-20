@@ -7,11 +7,12 @@ from django.core.mail import send_mail
 
 from environments.models import Environment
 from features.models import Feature
-from organisations.models import TRIAL_SUBSCRIPTION_ID, Organisation
+from organisations.models import Organisation
 from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    TRIAL_SUBSCRIPTION_ID,
 )
 from projects.models import Project
 from users.models import FFAdminUser

@@ -133,6 +133,11 @@ runs:
         echo ${{ github.sha }} > api/CI_COMMIT_SHA
       shell: bash
 
+    - name: Write file to indicate SaaS
+      run: |
+        echo '' > api/SAAS_DEPLOYMENT
+      shell: bash
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1-node16
       with:

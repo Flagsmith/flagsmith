@@ -39,6 +39,7 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
     projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
 )
 FREE_PLAN_ID = "free"
+TRIAL_SUBSCRIPTION_ID = "trial"
 
 
 class SubscriptionCacheEntity(Enum):

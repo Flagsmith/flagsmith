@@ -153,10 +153,11 @@ def xero_subscription(organisation):
 
 
 @pytest.fixture()
-def chargebee_subscription(organisation):
+def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
     subscription.payment_method = CHARGEBEE
     subscription.subscription_id = "subscription-id"
+    subscription.plan = "scale-up-v2"
     subscription.save()
 
     # refresh organisation to load subscription

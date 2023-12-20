@@ -12,6 +12,14 @@ def create_hash():
     return shortuuid.uuid()
 
 
+def is_enterprise():
+    return pathlib.Path("./ENTERPRISE_VERSION").exists()
+
+
+def is_saas():
+    return pathlib.Path("./SAAS_DEPLOYMENT").exists()
+
+
 def get_version_info() -> dict:
     """Reads the version info baked into src folder of the docker container"""
     version_json = {}
@@ -27,7 +35,8 @@ def get_version_info() -> dict:
     version_json = version_json | {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
         "image_tag": image_tag,
-        "is_enterprise": pathlib.Path("./ENTERPRISE_VERSION").exists(),
+        "is_enterprise": is_enterprise(),
+        "is_saas": is_saas(),
     }
 
     return version_json
