@@ -20,7 +20,11 @@ from task_processor.models import (
     TaskResult,
     TaskRun,
 )
-from task_processor.processor import run_recurring_tasks, run_tasks
+from task_processor.processor import (
+    UNREGISTERED_RECURRING_TASK_GRACE_PERIOD,
+    run_recurring_tasks,
+    run_tasks,
+)
 from task_processor.task_registry import registered_tasks
 
 
@@ -151,7 +155,7 @@ def test_run_recurring_tasks_only_executes_tasks_after_interval_set_by_run_every
     assert RecurringTaskRun.objects.filter(task=task).count() == 1
 
 
-def test_run_recurring_tasks_generates_warning_if_task_is_not_registered(
+def test_run_recurring_tasks_does_nothing_if_unregistered_task_is_new(
     db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     # Given
@@ -173,11 +177,36 @@ def test_run_recurring_tasks_generates_warning_if_task_is_not_registered(
     # Then
     assert len(task_runs) == 0
     assert RecurringTask.objects.filter(task_identifier=task_identifier).exists()
-    assert caplog.records[0].levelname == "WARNING"
 
+
+def test_run_recurring_tasks_deletes_the_task_if_unregistered_task_is_old(
+    db: None, run_by_processor: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Given
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+
+    task_identifier = "test_unit_task_processor_processor._a_task"
+
+    @register_recurring_task(run_every=timedelta(milliseconds=100))
+    def _a_task():
+        pass
+
+    # now - remove the task from the registry
+    registered_tasks.pop(task_identifier)
+
+    # make the task old
+    RecurringTask.objects.update(
+        created_at=timezone.now() - UNREGISTERED_RECURRING_TASK_GRACE_PERIOD
+    )
+
+    # When
+    task_runs = run_recurring_tasks()
+
+    # Then
+    assert len(task_runs) == 0
     assert (
-        caplog.records[0].message
-        == f"Recurring task {task_identifier} is not registered anymore"
+        RecurringTask.objects.filter(task_identifier=task_identifier).exists() is False
     )
 
 

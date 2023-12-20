@@ -1,6 +1,7 @@
 import logging
 import traceback
 import typing
+from datetime import timedelta
 
 from django.utils import timezone
 
@@ -13,6 +14,8 @@ from task_processor.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+UNREGISTERED_RECURRING_TASK_GRACE_PERIOD = timedelta(minutes=30)
 
 
 def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
@@ -58,9 +61,10 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
 
         for task in tasks:
             if not task.is_task_registered:
-                logger.warning(
-                    "Recurring task %s is not registered anymore", task.task_identifier
-                )
+                if (
+                    timezone.now() - task.created_at
+                ) > UNREGISTERED_RECURRING_TASK_GRACE_PERIOD:
+                    task.delete()
                 continue
 
             if task.should_execute:
