@@ -266,20 +266,18 @@ class IntegrationList extends Component {
           !this.state.isLoading &&
           this.state.activeIntegrations &&
           integrationList ? (
-            this.props.integrations.map((i, index) =>
-              integrationList[i] ? (
-                <Integration
-                  addIntegration={this.addIntegration}
-                  editIntegration={this.editIntegration}
-                  removeIntegration={this.removeIntegration}
-                  projectId={this.props.projectId}
-                  id={i}
-                  key={i}
-                  activeIntegrations={this.state.activeIntegrations[index]}
-                  integration={integrationList[i]}
-                />
-              ) : null,
-            )
+            this.props.integrations.map((i, index) => (
+              <Integration
+                addIntegration={this.addIntegration}
+                editIntegration={this.editIntegration}
+                removeIntegration={this.removeIntegration}
+                projectId={this.props.projectId}
+                id={i}
+                key={i}
+                activeIntegrations={this.state.activeIntegrations[index]}
+                integration={integrationList[i]}
+              />
+            ))
           ) : (
             <div className='text-center'>
               <Loader />
