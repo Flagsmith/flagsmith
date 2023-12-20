@@ -46,6 +46,7 @@ type PageType = {
 }
 
 type CreateSegmentType = {
+  className?: string
   projectId: number | string
   searchInput: string
   environmentId: string
@@ -67,6 +68,7 @@ type CreateSegmentType = {
 
 let _operators: Operator[] | null = null
 const CreateSegment: FC<CreateSegmentType> = ({
+  className,
   condensed,
   environmentId,
   feature,
@@ -656,7 +658,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className='my-3 mx-4'>{Tab1}</div>
+        <div className={className || 'my-3 mx-4'}>{Tab1}</div>
       )}
     </>
   )

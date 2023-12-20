@@ -171,6 +171,7 @@ const ChangeRequestsPage = class extends Component {
                     )}
                     renderRow={({
                       created_at,
+                      description,
                       id,
                       live_from,
                       title,
@@ -200,10 +201,11 @@ const ChangeRequestsPage = class extends Component {
                               )}
                             </div>
                             <div className='list-item-subtitle mt-1'>
-                              Created at{' '}
+                              Created{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
                               by {user && user.first_name}{' '}
                               {user && user.last_name}
+                              {description ? ` - ${description}` : ''}
                             </div>
                           </Flex>
                           <div className='table-column'>

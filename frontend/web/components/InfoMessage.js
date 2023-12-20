@@ -22,7 +22,7 @@ export default class InfoMessage extends PureComponent {
     return (
       <div className={infoMessageClass}>
         <span className={`icon-alert ${this.props.infoMessageClass} info-icon`}>
-          <Icon name='info' />
+          <Icon fill={'#0AADDF'} name={this.props.icon || 'info'} />
         </span>
         <div className={titleDescClass}>
           <div className='title'>{this.props.title || 'NOTE'}</div>

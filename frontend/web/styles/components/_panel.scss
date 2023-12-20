@@ -200,6 +200,10 @@ a.text-white {
         &:first-child {
           border-top: none;
         }
+        &:last-of-type {
+          border-bottom-left-radius: $border-radius-default;
+          border-bottom-right-radius: $border-radius-default;
+        }
       }
     }
   }
