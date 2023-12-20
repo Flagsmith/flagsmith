@@ -427,7 +427,7 @@ def test_get_subscription_metadata_for_manually_added_enterprise_saas_licenses(
 ) -> None:
     """
     Specific test to make sure that we can manually add subscriptions to
-    the saas platform and the values stored in the django database will
+    the SaaS platform and the values stored in the Django database will
     be correctly used.
     """
     # Given
