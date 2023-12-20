@@ -4,7 +4,7 @@ from contextlib import suppress
 from datetime import datetime
 
 import chargebee
-from chargebee import APIError as ChargebeeAPIError
+from chargebee.api_error import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
 
