@@ -124,6 +124,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                         <>
                           {diff === v.uuid ? (
                             <Button
+                              data-test={`history-item-${i}-hide`}
                               onClick={() => {
                                 setSelected(null)
                                 setDiff(diff === v.uuid ? null : v.uuid)
@@ -137,6 +138,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                           ) : (
                             <div>
                               <Button
+                                data-test={`history-item-${i}-compare`}
                                 onClick={() => {
                                   if (v.uuid === live!.uuid) {
                                     setCompareToLive(false)
@@ -170,6 +172,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                         className='inline-modal table-filter inline-modal--sm right'
                       >
                         <TableFilterItem
+                          data-test={`history-item-${i}-compare-live`}
                           title={'Live Version'}
                           onClick={() => {
                             setCompareToLive(true)
@@ -182,6 +185,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                           }}
                         />
                         <TableFilterItem
+                          data-test={`history-item-${i}-compare-previous`}
                           title={'Previous Version'}
                           onClick={() => {
                             setCompareToLive(false)

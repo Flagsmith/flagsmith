@@ -1,4 +1,5 @@
 import { RequestLogger, Selector, t } from 'testcafe'
+import { FlagsmithValue } from '../common/types/responses';
 
 export const LONG_TIMEOUT = 40000
 
@@ -258,6 +259,42 @@ export const logout = async (t) => {
   await waitForElementVisible('#login-page')
 }
 
+export const goToFeatureVersions = async (featureIndex:number) =>{
+  await gotoFeatures()
+  await click(byId(`feature-history-${featureIndex}`))
+}
+
+export const compareVersion = async (
+    featureIndex:number,
+    versionIndex:number,
+    compareOption: 'LIVE'|'PREVIOUS'|null,
+    oldEnabled:boolean,
+    newEnabled:boolean,
+    oldValue?:FlagsmithValue,
+    newValue?:FlagsmithValue
+) =>{
+  await goToFeatureVersions(featureIndex)
+  await click(byId(`history-item-${versionIndex}-compare`))
+  if(compareOption==='LIVE') {
+    await click(byId(`history-item-${versionIndex}-compare-live`))
+  } else if(compareOption==='PREVIOUS') {
+    await click(byId(`history-item-${versionIndex}-compare-previous`))
+  }
+
+  await assertTextContent(byId(`old-enabled`), `${oldEnabled}`)
+  await assertTextContent(byId(`new-enabled`), `${newEnabled}`)
+  if(oldValue) {
+    await assertTextContent(byId(`old-value`), `${oldValue}`)
+  }
+  if(newValue) {
+    await assertTextContent(byId(`old-value`), `${oldValue}`)
+  }
+}
+export const assertNumberOfVersions = async (index:number, versions:number) =>{
+  await goToFeatureVersions(index)
+  await waitForElementVisible(byId(`history-item-${versions-2}-compare`))
+}
+
 export const createRemoteConfig = async (
   index: number,
   name: string,
@@ -322,8 +359,8 @@ export const editRemoteConfig = async (
       }),
   )
   await click(byId('update-feature-btn'))
-  await waitForElementVisible(byId(`feature-value-${index}`))
   if(value) {
+    await waitForElementVisible(byId(`feature-value-${index}`))
     await assertTextContent(byId(`feature-value-${index}`), expectedValue)
   }
   await closeModal()
