@@ -91,8 +91,9 @@ const Aside = class extends Component {
 
   render() {
     const { asideIsVisible, disabled, toggleAside } = this.props
-    let integrations = Utils.getFlagsmithValue('integrations') || '[]'
-    integrations = JSON.parse(integrations)
+    const integrations = Object.keys(
+      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
+    )
     const environmentId =
       (this.props.environmentId !== 'create' && this.props.environmentId) ||
       (ProjectStore.model &&

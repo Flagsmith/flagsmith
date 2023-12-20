@@ -403,12 +403,6 @@ new features and bug fixes since our last release:
 The remote config to use this is as follows:
 
 ```json
-integrations:
-
-["data_dog"]
-```
-
-```json
 integration_data
 {
     "perEnvironment": false,
