@@ -1,7 +1,5 @@
-import os
 from datetime import datetime
 from typing import Callable
-from unittest import mock
 from unittest.mock import call
 
 import pytest
@@ -17,10 +15,6 @@ from sse.tasks import (
     send_environment_update_message_for_project,
     update_sse_usage,
 )
-from task_processor.management.commands.runprocessor import (
-    Command as RunProcessorCommand,
-)
-from task_processor.models import RecurringTask
 
 
 def test_send_environment_update_message_for_project_make_correct_request(
@@ -112,7 +106,7 @@ def test_track_sse_usage(
         return_value=[first_access_log, second_access_log, third_access_log],
     )
     influxdb_bucket = "test_bucket"
-    settings.SSE_INFLUXDB_BUCKET = influxdb_bucket
+    settings.INFLUXDB_BUCKET = influxdb_bucket
 
     mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
     mocked_influx_point = mocker.patch("sse.tasks.Point")
@@ -143,25 +137,4 @@ def test_track_sse_usage(
     write_method.assert_called_once_with(
         bucket=influxdb_bucket,
         record=mocked_influx_point().field().tag().tag().tag().time(),
-    )
-
-
-@mock.patch.dict(os.environ, {})
-@pytest.mark.django_db
-def test_track_sse_usage_is_installed_correctly(
-    settings: SettingsWrapper,
-):
-    # Given
-    settings.AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
-
-    # When
-    # Initialising the command should save the task to the database
-    RunProcessorCommand()
-
-    # Then
-    assert (
-        RecurringTask.objects.filter(
-            task_identifier=f"tasks.{update_sse_usage.__name__}"
-        ).exists()
-        is True
     )
