@@ -17,6 +17,6 @@ class RecurringTaskAdmin(admin.ModelAdmin):
     readonly_fields = ("args", "kwargs")
 
     def last_run_status(self, instance: RecurringTask) -> Optional[str]:
-        return getattr(
-            instance.task_runs.order_by("-started_at").first(), "result", None
-        )
+        if last_run := instance.task_runs.order_by("-started_at").first():
+            return last_run.result
+        return None
