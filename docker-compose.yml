@@ -52,7 +52,16 @@ services:
       # EMAIL_HOST_PASSWORD: smtp_account_password
       # EMAIL_PORT: 587 # optional
       # EMAIL_USE_TLS: 'true' # optional
-
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import requests;import sys;sys.exit(0 if requests.get(''http://localhost:8000/health'').status_code == 200 else 1)"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
     ports:
       - 8000:8000
     depends_on:
