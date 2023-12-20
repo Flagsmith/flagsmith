@@ -61,6 +61,9 @@ def run_recurring_tasks(num_tasks: int = 1) -> typing.List[RecurringTaskRun]:
 
         for task in tasks:
             if not task.is_task_registered:
+                # This is necessary to ensure that old instances of the task processor,
+                # which may still be running during deployment, do not remove tasks added by new instances.
+                # Reference: https://github.com/Flagsmith/flagsmith/issues/2551
                 if (
                     timezone.now() - task.created_at
                 ) > UNREGISTERED_RECURRING_TASK_GRACE_PERIOD:
