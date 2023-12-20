@@ -132,10 +132,6 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-                    "name": "SSE_INFLUXDB_BUCKET",
-                    "value": "sse_staging"
-                },
-                {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",
                     "value": "flagsmith-fastly-logs-staging"
                 }

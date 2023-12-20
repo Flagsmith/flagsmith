@@ -67,7 +67,7 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
                     agg_request_count[environment["api_key"]],
                     agg_last_event_generated_at[environment["api_key"]],
                 )
-                write_api.write(bucket=settings.SSE_INFLUXDB_BUCKET, record=record)
+                write_api.write(bucket=settings.INFLUXDB_BUCKET, record=record)
 
 
 def _get_influx_point(

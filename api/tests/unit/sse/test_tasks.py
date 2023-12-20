@@ -106,7 +106,7 @@ def test_track_sse_usage(
         return_value=[first_access_log, second_access_log, third_access_log],
     )
     influxdb_bucket = "test_bucket"
-    settings.SSE_INFLUXDB_BUCKET = influxdb_bucket
+    settings.INFLUXDB_BUCKET = influxdb_bucket
 
     mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
     mocked_influx_point = mocker.patch("sse.tasks.Point")
