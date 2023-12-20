@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "RUN_BY_PROCESSOR",
+                    "value": "True"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -74,10 +78,6 @@
                 {
                     "name": "INFLUXDB_URL",
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
-                },
-                {
-                    "name": "SSE_INFLUXDB_BUCKET",
-                    "value": "sse_prod"
                 },
                 {
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",

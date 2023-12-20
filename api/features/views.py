@@ -38,6 +38,7 @@ from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
+from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
 from .models import Feature, FeatureState
 from .permissions import (
@@ -151,13 +152,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.kwargs.get("project_pk"):
-            context.update(
-                project=get_object_or_404(
-                    Project.objects.all(), pk=self.kwargs["project_pk"]
-                ),
-                user=self.request.user,
-            )
+        context.update(
+            project=get_object_or_404(
+                Project.objects.all(), pk=self.kwargs["project_pk"]
+            ),
+            user=self.request.user,
+        )
         if self.action == "list" and "environment" in self.request.query_params:
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
@@ -290,7 +290,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if "tags" in query_serializer.initial_data:
             if query_data.get("tags", "") == "":
                 queryset = queryset.filter(tags__isnull=True)
+            elif query_data["tag_strategy"] == UNION:
+                queryset = queryset.filter(tags__in=query_data["tags"])
             else:
+                assert query_data["tag_strategy"] == INTERSECTION
                 queryset = reduce(
                     lambda qs, tag_id: qs.filter(tags=tag_id),
                     query_data["tags"],
