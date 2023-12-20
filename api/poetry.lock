@@ -1489,7 +1489,7 @@ semver = "2.13.0"
 
 [[package]]
 name = "flagsmith-ldap"
-version = "0.0.2"
+version = "0.0.3"
 description = "LDAP plugin for Flagsmith application."
 optional = false
 python-versions = "^3.10"
@@ -1503,8 +1503,8 @@ django-python3-ldap = "^0.15.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
-reference = "v0.0.2"
-resolved_reference = "92cafa027e552642ff5dc72c999afa8f2e7349bf"
+reference = "v0.0.3"
+resolved_reference = "86ac550165bc3cbd59782a1cb8026d64f79f5523"
 
 [[package]]
 name = "flake8"
@@ -2333,17 +2333,6 @@ files = [
     {file = "multidict-6.0.4-cp39-cp39-win32.whl", hash = "sha256:27c523fbfbdfd19c6867af7346332b62b586eed663887392cff78d614f9ec313"},
     {file = "multidict-6.0.4-cp39-cp39-win_amd64.whl", hash = "sha256:33029f5734336aa0d4c0384525da0387ef89148dc7191aae00ca5fb23d7aafc2"},
     {file = "multidict-6.0.4.tar.gz", hash = "sha256:3666906492efb76453c0e7b97f2cf459b0682e7402c0489a95484965dbc1da49"},
-]
-
-[[package]]
-name = "multimethod"
-version = "1.10"
-description = "Multiple argument dispatching."
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "multimethod-1.10-py3-none-any.whl", hash = "sha256:afd84da9c3d0445c84f827e4d63ad42d17c6d29b122427c6dee9032ac2d2a0d4"},
-    {file = "multimethod-1.10.tar.gz", hash = "sha256:daa45af3fe257f73abb69673fd54ddeaf31df0eb7363ad6e1251b7c9b192d8c5"},
 ]
 
 [[package]]
@@ -4408,4 +4397,4 @@ requests = ">=2.7,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "c4f455c206a45222736db051afd1ab7f00a37748ac7234253d4225b8b60764f7"
+content-hash = "728b7fd7a148eb3ff0b2e2152762e241c34e996612032587d01b15812f1d14ff"

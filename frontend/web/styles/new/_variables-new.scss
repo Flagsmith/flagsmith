@@ -341,3 +341,8 @@ $theme-colors: (
   dark: $text-icon-dark,
   // add any additional color below
 );
+.dark {
+  .bg-light200 {
+    background-color: $body-bg-dark !important;
+  }
+}
