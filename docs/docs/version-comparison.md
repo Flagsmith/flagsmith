@@ -56,4 +56,4 @@ organisation.
 - The Open Source version has **no** API request or Identity limits - you can run as many API instances in a cluster as
   you wish.
 - The Open Source version has **no** Dashboard User limits - you can have as many team members as you wish.
-- Deploy with one click to a number of different [IaaS and PaaS providers](deployment/overview#one-click-installers).
+- Deploy with one click to a number of different [IaaS and PaaS providers](/deployment/overview#one-click-installers).
