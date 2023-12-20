@@ -40,7 +40,7 @@ services:
       # ENABLE_ADMIN_ACCESS_USER_PASS: 'true' # Uncomment to enable access to the /admin/ Django backend via your username and password
       # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true'
 
-      # Enable Task Processor\
+      # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
 
       # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
