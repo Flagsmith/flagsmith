@@ -47,7 +47,7 @@ control whether the button shows. Create a flag called `show_demo_button`, and l
 OK so we've set up our flag; now let's bring it into our application. We have a (pretty small!) web page:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
  <head>
   <meta charset="utf-8" />
@@ -122,7 +122,7 @@ the state of the flag and set the display visibility based on the result.
 Our entire webpage now reads like this:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
  <head>
   <meta charset="utf-8" />
