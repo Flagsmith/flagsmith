@@ -291,14 +291,12 @@ if ENABLE_GZIP_COMPRESSION:
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
-if INFLUXDB_TOKEN:
-    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 if USE_POSTGRES_FOR_ANALYTICS:
-    if INFLUXDB_BUCKET:
-        raise RuntimeError("Cannot use both InfluxDB and Postgres for analytics")
-
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
+elif INFLUXDB_TOKEN:
+    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
