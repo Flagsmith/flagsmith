@@ -376,8 +376,10 @@ const ChangeRequestsPage = class extends Component {
                   {moment(changeRequest.created_at).format(
                     'Do MMM YYYY HH:mma',
                   )}{' '}
-                  by {changeRequest.user && user.first_name}{' '}
-                  {user && user.last_name}
+                  by{' '}
+                  {user
+                    ? `${user.first_name} ${user.last_name}`
+                    : 'Unknown user'}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
                 <div className='row'>
