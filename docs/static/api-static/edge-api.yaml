@@ -1,0 +1,225 @@
+openapi: 3.0.3
+info:
+  title: Edge API
+  version: '1'
+servers:
+  - url: https://edge.api.flagsmith.com/api/v1
+    description: Edge API
+security:
+  - EnvironmentKeyAuth: []
+tags: []
+paths:
+  /flags:
+    get:
+      tags: []
+      summary: Get flags
+      description: Retrieve the flags for an environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flags'
+  /identities:
+    get:
+      tags: []
+      summary: Get identity flags and traits
+      description:
+        'Retrieve the flags and traits for an identity. Note: identity will be lazily created if it does not already
+        exist.'
+      parameters:
+        - name: identifier
+          in: query
+          description: Identity Key
+          required: true
+          schema:
+            type: string
+            description: The string referencing the Identity
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IdentitiesResponse'
+    post:
+      tags: []
+      summary: Identify user
+      description: Identify a user and retrieve their flags and traits in response.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example: {}
+              $ref: '#/components/schemas/IdentitiesRequestData'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IdentitiesResponsePost'
+  /bulk-identities:
+    post:
+      tags: []
+      summary: Bulk insert identities (overwrite)
+      description: |+
+        Bulk uploading identities and traits. If there is an existing identity, using POST will overwrite the existing identity with the data from the request.
+
+        It has a limit of 100 identities per request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: {}
+              $ref: '#/components/schemas/BulkIdentitiesData'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Number of identities must not be more than 100
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Organisation is disabled from serving flags.
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Environment not found
+    put:
+      tags: []
+      summary: Bulk insert identities (update)
+      description: |+
+        Bulk uploading identities and traits. If there is an existing identity, using PUT will update the existing identity with the data from the request.
+
+        It has a limit of 100 identities per request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: {}
+              $ref: '#/components/schemas/BulkIdentitiesData'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Number of identities must not be more than 100
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Organisation is disabled from serving flags.
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Environment not found
+components:
+  securitySchemes:
+    EnvironmentKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Environment-Key
+  schemas:
+    Flags:
+      type: object
+      properties:
+        flags:
+          type: array
+          $ref: '#/components/schemas/FeatureState'
+    FeatureState:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        feature_state_value:
+          type: Can be any of the following - string, integer, boolean, float
+          example: 'a-remote-config-value'
+        feature:
+          $ref: '#/components/schemas/Feature'
+    Feature:
+      title: feature
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 42
+        name:
+          type: string
+          example: 'show_hero_banner'
+        type:
+          type: string
+          example: 'STANDARD'
+    Trait:
+      type: object
+      properties:
+        trait_key:
+          type: string
+          example: Name
+        trait_value:
+          type: string
+          example: B.A. Baracus
+    IdentitiesResponse:
+      type: object
+      properties:
+        flags:
+          type: array
+          $ref: '#/components/schemas/Flags'
+        traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trait'
+    IdentitiesResponsePost:
+      type: object
+      properties:
+        identifier:
+          type: string
+          example: ba@hotmail.com
+        flags:
+          type: array
+          $ref: '#/components/schemas/Flags'
+        traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trait'
+    IdentitiesRequestData:
+      type: object
+      properties:
+        traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trait'
+        identifier:
+          type: string
+    BulkIdentitiesData:
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentitiesRequestData'

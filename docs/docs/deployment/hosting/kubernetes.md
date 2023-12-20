@@ -105,7 +105,7 @@ Then, once any out-of-cluster DNS or CDN changes have been applied, access `http
 
 #### Minikube ingress
 
-(See <https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/> for more details.)
+(See [https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/] for more details.)
 
 If using minikube, enable ingress with `minikube addons enable ingress`.
 
@@ -225,7 +225,7 @@ TODO: create a pod-disruption-budget
 
 For each of the deployments, you can set `deploymentStrategy`. By default this is unset, meaning you get the default
 Kubernetes behaviour, but you can set this to an object to adjust this. See
-<https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy>.
+[https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy].
 
 Eg in the `charts/flagsmith/values.yaml` file:
 
@@ -245,7 +245,7 @@ By default, Flagsmith connects directly to the database - either in-cluster, or 
 
 ### All-in-one Docker image
 
-The Docker image at <https://hub.docker.com/r/flagsmith/flagsmith/> contains both the API and the frontend. To make use
+The Docker image at [https://hub.docker.com/r/flagsmith/flagsmith/] contains both the API and the frontend. To make use
 of this, set the following values:
 
 ```yaml
@@ -372,7 +372,7 @@ The following table lists the configurable parameters of the chart and their def
 | `postgresqlUsername`                               |                                                                  | `postgres`                     |
 | `postgresqlPassword`                               |                                                                  | `flagsmith`                    |
 | `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.    | `false`                        |
-| `databaseExternal.url`                             | See <https://github.com/kennethreitz/dj-database-url#url-schema> |                                |
+| `databaseExternal.url`                             | See [https://github.com/kennethreitz/dj-database-url#url-schema] |                                |
 | `databaseExternal.type`                            | Note: Only postgres supported by default images.                 | `postgres`                     |
 | `databaseExternal.port`                            |                                                                  | 5432                           |
 | `databaseExternal.database`                        | Name of the database within the server                           |                                |

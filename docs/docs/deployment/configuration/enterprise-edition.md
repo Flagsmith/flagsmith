@@ -125,13 +125,13 @@ When running with traditional Docker you can use the code snippet below to injec
 App Dynamics
 
 ```shell
-docker run -t {image_name} -v {config_file_path}:/etc/appdynamics.cfg -e APP_DYNAMICS=on
+docker run -t \{image_name\} -v \{config_file_path\}:/etc/appdynamics.cfg -e APP_DYNAMICS=on
 ```
 
 Replacing the values for:
 
-- **_{image_name}_**: the tagged name of the docker image you are using
-- **_{config_file_path}_**: the absolute path of the appdynamics.cfg file on your system
+- **_\{image_name\}_**: the tagged name of the docker image you are using
+- **_\{config_file_path\}_**: the absolute path of the appdynamics.cfg file on your system
 
 ### Running with docker-compose
 
@@ -140,16 +140,16 @@ as seen below:
 
 ```yaml
 api:
-   build:
-   context: .
-   dockerfile: docker/Dockerfile
-   env:
-      APP_DYNAMICS: "on"
-   volumes:
-   - {config_file_path}:/etc/appdynamics.cfg
+ build:
+ context: .
+ dockerfile: docker/Dockerfile
+ env:
+  APP_DYNAMICS: 'on'
+ volumes:
+  - \{config_file_path\}:/etc/appdynamics.cfg
 ```
 
-Replacing the value for **_{config_file_path}_** with the absolute path of the appdynamics.cfg file on your system.
+Replacing the value for **_\{config_file_path\}_** with the absolute path of the appdynamics.cfg file on your system.
 
 Running the command below will build the docker image with all the AppDynamics config included
 

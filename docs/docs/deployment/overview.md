@@ -567,7 +567,7 @@ Flagsmith has a soft dependency on InfluxDB to store time-series data. You don't
 platform; by default this data will be stored in Postgres. If you are running very high traffic loads, you might be
 interested in deploying InfluxDB.
 
-1. Create a user account in influxdb. You can visit <http://localhost:8086/>
+1. Create a user account in influxdb. You can visit [http://localhost:8086/]
 2. Go into Data > Buckets and create three new buckets called `default`, `default_downsampled_15m` and
    `default_downsampled_1h`
 3. Go into Data > Tokens and grab your access token.
