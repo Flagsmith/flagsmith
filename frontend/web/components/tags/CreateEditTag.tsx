@@ -128,7 +128,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                     onClick={save}
                     type='button'
                     disabled={
-                      existingTag ||
+                      !!existingTag ||
                       tagsSaving ||
                       !tag?.color ||
                       !tag?.label ||
