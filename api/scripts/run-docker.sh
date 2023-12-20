@@ -33,7 +33,7 @@ function run_task_processor() {
     if [[ -n "$ANALYTICS_DATABASE_URL" || -n "$DJANGO_DB_NAME_ANALYTICS" ]]; then
         python manage.py waitfordb --waitfor 30 --migrations --database analytics
     fi
-    python manage.py runprocessor --sleepintervalms 500
+    RUN_BY_PROCESSOR=1 python manage.py runprocessor --sleepintervalms 500
 }
 function migrate_identities(){
     python manage.py migrate_to_edge "$1"
