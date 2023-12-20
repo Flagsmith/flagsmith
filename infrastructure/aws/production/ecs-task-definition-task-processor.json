@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "RUN_BY_PROCESSOR",
+                    "value": "True"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
