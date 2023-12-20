@@ -205,7 +205,7 @@ The list of the flags and remote config we're currently using in production is b
 | `payments_enabled`                    | Determines whether to show payment UI / seats                                                                                                  | None                                                |
 | `plan_based_access`                   | Controls rbac and 2f based on plans                                                                                                            | None                                                |
 | `rotate_api_token`                    | Enables the ability to rotate a user's access token                                                                                            | [See Below](#oauth_google)                          |
-| `saml`                                | Enables SAML authentication                                                                                                                    | [See](deployment/configuration/authentication/SAML) |
+| `saml`                                | Enables SAML authentication                                                                                                                    | [See](/deployment/configuration/authentication/SAML)                                                         |
 | `segment_associated_features`         | Enables the ability to see features associated with a segment                                                                                  | None                                                |
 | `segment_operators`                   | Determines what rules are shown when creating a segment                                                                                        | [See Below](#segment_operators)                     |
 | `serverside_sdk_keys`                 | Enable Server-side Environment Keys                                                                                                            | None                                                |
@@ -660,7 +660,7 @@ The list of the flags and remote config we're currently using in production is b
 
 ### `oauth_github`
 
-Find instructions for GitHub Authentication [here](../deployment/configuration/authentication/oauth#github).
+Find instructions for GitHub Authentication [here](/deployment/configuration/authentication/oauth#github).
 
 Create an OAuth application in the GitHub Developer Console and then provide the following as the Flag value:
 
@@ -757,7 +757,7 @@ Flagsmith has a soft dependency on InfluxDB to store time-series data. You don't
 platform; by default this data will be stored in Postgres. If you are running very high traffic loads, you might be
 interested in deploying InfluxDB.
 
-1. Create a user account in influxdb. You can visit <http://localhost:8086/>
+1. Create a user account in influxdb. You can visit [http://localhost:8086/]
 2. Go into Data > Buckets and create three new buckets called `default`, `default_downsampled_15m` and
    `default_downsampled_1h`
 3. Go into Data > Tokens and grab your access token.
