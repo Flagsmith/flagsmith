@@ -60,6 +60,16 @@ from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
+# TODO:
+#   - move this file to the `tests/` dir and move these definitions to a `types.py` module.
+#   - migrate all existing typehints to use these
+WithProjectPermissionsCallable = typing.Callable[
+    [list[str], Project | None], UserProjectPermission
+]
+WithEnvironmentPermissionsCallable = typing.Callable[
+    [list[str], Project | None], UserEnvironmentPermission
+]
+
 trait_key = "key1"
 trait_value = "value1"
 
@@ -192,7 +202,7 @@ def environment(project):
 @pytest.fixture()
 def with_environment_permissions(
     environment: Environment, staff_user: FFAdminUser
-) -> typing.Callable[[list[str], int | None], UserEnvironmentPermission]:
+) -> WithEnvironmentPermissionsCallable:
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
@@ -215,7 +225,7 @@ def with_environment_permissions(
 @pytest.fixture()
 def with_project_permissions(
     project: Project, staff_user: FFAdminUser
-) -> typing.Callable:
+) -> WithProjectPermissionsCallable:
     """
     Add project permissions to the staff_user fixture.
     Defaults to associating to the project fixture.
