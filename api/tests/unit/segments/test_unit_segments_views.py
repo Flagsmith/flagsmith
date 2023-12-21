@@ -605,6 +605,22 @@ def test_create_segment_with_required_metadata_returns_201(
     # When
     response = client.post(url, data=json.dumps(data), content_type="application/json")
     print("DEBUG: response.json():", response.json())
+    print(
+        "DEBUG: required_a_segment_metadata_field.id:",
+        required_a_segment_metadata_field.id,
+    )
+    print(
+        "DEBUG: required_a_segment_metadata_field.field.id:",
+        required_a_segment_metadata_field.field.id,
+    )
+    print(
+        "DEBUG: required_a_segment_metadata_field.field:",
+        required_a_segment_metadata_field.field,
+    )
+    print(
+        "DEBUG: required_a_segment_metadata_field.content_type:",
+        required_a_segment_metadata_field.content_type,
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
