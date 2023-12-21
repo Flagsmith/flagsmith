@@ -284,8 +284,17 @@ const Payment = class extends Component {
                                 name='minus-circle'
                                 fill='rgba(101, 109, 123, 0.16)'
                               />
+                              <div className='ml-2 disabled'>Audit Logs</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <Icon
+                                name='minus-circle'
+                                fill='rgba(101, 109, 123, 0.16)'
+                              />
                               <div className='ml-2 disabled'>
-                                2FA and SAML Authentication
+                                Two-Factor Authentication (2FA)
                               </div>
                             </Row>
                           </li>
@@ -295,7 +304,9 @@ const Payment = class extends Component {
                                 name='minus-circle'
                                 fill='rgba(101, 109, 123, 0.16)'
                               />
-                              <div className='ml-2 disabled'>Audit Logs</div>
+                              <div className='ml-2 disabled'>
+                                SAML Authentication
+                              </div>
                             </Row>
                           </li>
                           <li>
@@ -488,9 +499,7 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
-                              <div className='ml-2'>
-                                2FA and SAML Authentication
-                              </div>
+                              <div className='ml-2'>Audit Logs</div>
                             </Row>
                           </li>
                           <li>
@@ -498,7 +507,20 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
-                              <div className='ml-2'>Audit Logs</div>
+                              <div className='ml-2'>
+                                Two-Factor Authentication (2FA)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <Icon
+                                name='minus-circle'
+                                fill='rgba(101, 109, 123, 0.16)'
+                              />
+                              <div className='ml-2 disabled'>
+                                SAML Authentication
+                              </div>
                             </Row>
                           </li>
                           <li>
