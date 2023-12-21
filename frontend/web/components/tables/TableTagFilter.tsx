@@ -6,7 +6,6 @@ import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from 'components/tags/Tag'
 import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
-import Radio from 'components/base/forms/Radio'
 import { TagStrategy } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
 
