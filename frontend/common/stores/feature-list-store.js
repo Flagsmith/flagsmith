@@ -576,6 +576,10 @@ const controller = {
               : Promise.resolve(),
           ])
             .then(([features, environmentFeatures, feature]) => {
+              if (store.filter !== filter) {
+                //The filter has been changed since, ignore the api response. This will be resolved when moving to RTK.
+                return
+              }
               store.paging.next = features.next
               store.paging.pageSize = PAGE_SIZE
               store.paging.count = features.count

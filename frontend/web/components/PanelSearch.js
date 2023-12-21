@@ -212,7 +212,7 @@ const PanelSearch = class extends Component {
               {!!this.props.filterRow && (
                 <Row>
                   {this.props.showExactFilter && (
-                    <div style={{ width: 140 }}>
+                    <div className='me-3' style={{ width: 140 }}>
                       <Select
                         size='select-sm'
                         styles={{
@@ -329,7 +329,9 @@ const PanelSearch = class extends Component {
             />
           )}
           {this.props.renderFooter && (
-            <div className='panel-footer'>{this.props.renderFooter()}</div>
+            <footer className='panel-footer'>
+              {this.props.renderFooter()}
+            </footer>
           )}
         </div>
       </Panel>
