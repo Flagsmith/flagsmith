@@ -16,7 +16,7 @@ class TheComponent extends Component {
         return `${v.first_name} ${v.last_name}`.toLowerCase().includes(search)
       })
     const value = this.props.value || []
-    const modalClassName = `inline-modal--tags${this.props.size}`
+    const modalClassName = `inline-modal--sm`
 
     return (
       <InlineModal

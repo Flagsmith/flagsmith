@@ -20,7 +20,7 @@ const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
         title='Select a colour'
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className='inline-modal--tags'
+        className='inline-modal--sm'
       >
         <div>
           <Row className='mb-2 gap-4'>

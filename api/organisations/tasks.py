@@ -39,6 +39,17 @@ def send_org_over_limit_alert(organisation_id):
 
 
 @register_task_handler()
+def send_org_subscription_cancelled_alert(
+    organisation_name: str,
+    formatted_cancellation_date: str,
+):
+    FFAdminUser.send_alert_to_admin_users(
+        subject=f"Organisation {organisation_name} has cancelled their subscription",
+        message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
+    )
+
+
+@register_task_handler()
 def update_organisation_subscription_information_influx_cache():
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
@@ -61,3 +72,4 @@ def finish_subscription_cancellation():
         cancellation_date__gt=previously,
     ):
         subscription.organisation.cancel_users()
+        subscription.save_as_free_subscription()
