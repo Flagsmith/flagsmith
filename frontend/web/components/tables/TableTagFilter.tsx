@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -6,6 +6,7 @@ import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from 'components/tags/Tag'
 import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
+import { AsyncStorage } from 'polyfill-react-native'
 
 type TableFilterType = {
   projectId: string
@@ -13,8 +14,9 @@ type TableFilterType = {
   isLoading: boolean
   onChange: (value: number[]) => void
   showArchived: boolean
-  onToggleArchived: () => void
+  onToggleArchived: (value: boolean) => void
   className?: string
+  useLocalStorage?: boolean
 }
 
 const TableTagFilter: FC<TableFilterType> = ({
@@ -24,6 +26,7 @@ const TableTagFilter: FC<TableFilterType> = ({
   onToggleArchived,
   projectId,
   showArchived,
+  useLocalStorage,
   value,
 }) => {
   const [filter, setFilter] = useState('')
@@ -34,6 +37,43 @@ const TableTagFilter: FC<TableFilterType> = ({
       : data
   }, [data, filter])
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
+  const checkedLocalStorage = useRef(false)
+  useEffect(() => {
+    if (useLocalStorage && checkedLocalStorage.current) {
+      AsyncStorage.setItem(`${projectId}-tags`, JSON.stringify(value))
+    }
+  }, [useLocalStorage, projectId, value])
+  useEffect(() => {
+    if (useLocalStorage && checkedLocalStorage.current) {
+      AsyncStorage.setItem(
+        `${projectId}-showArchived`,
+        showArchived ? 'true' : 'false',
+      )
+    }
+  }, [useLocalStorage, projectId, showArchived])
+  useEffect(() => {
+    const checkLocalStorage = async function () {
+      if (useLocalStorage && !checkedLocalStorage.current && data) {
+        checkedLocalStorage.current = true
+        const [tags, showArchived] = await Promise.all([
+          AsyncStorage.getItem(`${projectId}-tags`),
+          AsyncStorage.getItem(`${projectId}-showArchived`),
+        ])
+        if (tags) {
+          try {
+            const storedTags = JSON.parse(tags)
+            onChange(
+              storedTags.filter((v) => !!data.find((tag) => tag.id === v)),
+            )
+          } catch (e) {}
+        }
+        if (showArchived) {
+          onToggleArchived(showArchived === 'true')
+        }
+      }
+    }
+    checkLocalStorage()
+  }, [useLocalStorage, data])
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
@@ -66,7 +106,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           <TableFilterItem
             onClick={() => {
               if (!isLoading) {
-                onToggleArchived()
+                onToggleArchived(!showArchived)
               }
             }}
             isActive={showArchived}
