@@ -11,10 +11,6 @@ from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from tests.types import (
-    WithEnvironmentPermissionsCallable,
-    WithProjectPermissionsCallable,
-)
 
 from api_keys.models import MasterAPIKey
 from environments.dynamodb.dynamodb_wrapper import (
@@ -62,6 +58,10 @@ from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from task_processor.task_run_method import TaskRunMethod
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"

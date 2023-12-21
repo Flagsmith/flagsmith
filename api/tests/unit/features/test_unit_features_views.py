@@ -15,7 +15,6 @@ from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from tests.types import WithEnvironmentPermissionsCallable
 
 from audit.constants import (
     FEATURE_DELETED_MESSAGE,
@@ -46,6 +45,7 @@ from projects.models import Project, UserProjectPermission
 from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
+from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 from webhooks.webhooks import WebhookEventType

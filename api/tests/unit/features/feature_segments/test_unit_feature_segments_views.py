@@ -6,10 +6,6 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
-from tests.types import (
-    WithEnvironmentPermissionsCallable,
-    WithProjectPermissionsCallable,
-)
 
 from environments.models import Environment
 from environments.permissions.constants import (
@@ -22,6 +18,10 @@ from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project, UserProjectPermission
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 from users.models import FFAdminUser
 
 
