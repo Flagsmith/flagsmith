@@ -14,10 +14,12 @@ type TableFilterType = {
 const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
   const [localValue, setLocalValue] = useState(value)
   const searchItems = useThrottle(
-    useCallback((search) => {
+    useCallback((search: string) => {
       if (value !== search) {
         onChange(search)
       }
+      //Adding onChange as a dependency here would make this prone to infinite recursion issues
+      //eslint-disable-next-line
     }, []),
     100,
   )
